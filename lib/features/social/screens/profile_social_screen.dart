@@ -1720,13 +1720,16 @@ class _ActivityBadge extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hasUnread = ref.watch(hasUnreadActivitiesProvider);
+    final unreadCount = ref.watch(unreadActivityCountProvider);
 
-    if (!hasUnread) return child;
-    // Show a simple dot badge for unread activities
+    if (unreadCount == 0) return child;
+    // Show numeric badge for unread activities
     return Badge(
-      backgroundColor: context.accentColor,
-      smallSize: 10,
+      label: Text(
+        unreadCount > 99 ? '99+' : '$unreadCount',
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+      ),
+      backgroundColor: Colors.red,
       child: child,
     );
   }

@@ -23,6 +23,15 @@ enum SocialActivityType {
   /// Someone liked your signal
   signalLike,
 
+  /// Someone commented on your signal
+  signalComment,
+
+  /// Someone replied to your comment on a signal
+  signalCommentReply,
+
+  /// Someone upvoted your response/comment on a signal
+  signalResponseVote,
+
   /// Someone commented on your post
   postComment,
 
@@ -99,6 +108,12 @@ class SocialActivity {
         return '$actorName liked your post';
       case SocialActivityType.signalLike:
         return '$actorName liked your signal';
+      case SocialActivityType.signalComment:
+        return '$actorName commented on your signal';
+      case SocialActivityType.signalCommentReply:
+        return '$actorName replied to your comment';
+      case SocialActivityType.signalResponseVote:
+        return '$actorName upvoted your response';
       case SocialActivityType.postComment:
         return '$actorName commented on your post';
       case SocialActivityType.mention:
@@ -125,7 +140,11 @@ class SocialActivity {
         return 'person_add';
       case SocialActivityType.postComment:
       case SocialActivityType.commentReply:
+      case SocialActivityType.signalComment:
+      case SocialActivityType.signalCommentReply:
         return 'chat_bubble';
+      case SocialActivityType.signalResponseVote:
+        return 'thumb_up';
       case SocialActivityType.mention:
         return 'alternate_email';
     }

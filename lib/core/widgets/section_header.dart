@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import 'edge_fade.dart';
@@ -6,9 +8,9 @@ import 'edge_fade.dart';
 /// Shared section header widget used in list views with grouping
 class SectionHeader extends StatelessWidget {
   final String title;
-  final int count;
+  final int? count;
 
-  const SectionHeader({super.key, required this.title, required this.count});
+  const SectionHeader({super.key, required this.title, this.count});
 
   @override
   Widget build(BuildContext context) {
@@ -27,22 +29,24 @@ class SectionHeader extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              count.toString(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: context.textTertiary,
+          if (count != null) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: context.textTertiary,
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -50,11 +54,12 @@ class SectionHeader extends StatelessWidget {
 }
 
 /// Sticky header delegate for section headers in sliver lists
+/// Now includes backdrop blur effect for glass morphism
 class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
   final String title;
-  final int count;
+  final int? count;
 
-  SectionHeaderDelegate({required this.title, required this.count});
+  SectionHeaderDelegate({required this.title, this.count});
 
   @override
   Widget build(
@@ -63,10 +68,15 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     final showShadow = shrinkOffset > 0 || overlapsContent;
-    return StickyHeaderShadow(
-      blurRadius: showShadow ? 8 : 0,
-      offsetY: showShadow ? 2 : 0,
-      child: SectionHeader(title: title, count: count),
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: StickyHeaderShadow(
+          blurRadius: showShadow ? 8 : 0,
+          offsetY: showShadow ? 2 : 0,
+          child: _BlurredSectionHeader(title: title, count: count),
+        ),
+      ),
     );
   }
 
@@ -79,6 +89,54 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant SectionHeaderDelegate oldDelegate) {
     return title != oldDelegate.title || count != oldDelegate.count;
+  }
+}
+
+/// Section header with semi-transparent background for blur effect
+class _BlurredSectionHeader extends StatelessWidget {
+  final String title;
+  final int? count;
+
+  const _BlurredSectionHeader({required this.title, this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 40,
+      color: context.background.withValues(alpha: 0.8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: context.textSecondary,
+              letterSpacing: 0.5,
+            ),
+          ),
+          if (count != null) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: context.textTertiary,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 

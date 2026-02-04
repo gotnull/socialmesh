@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -27,6 +27,7 @@
 		AI0001012024120800000007 /* OpenNodeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000070 /* OpenNodeIntent.swift */; };
 		AI0001012024120800000008 /* OpenMapIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000080 /* OpenMapIntent.swift */; };
 		AI0001012024120800000009 /* OpenMessagesIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000090 /* OpenMessagesIntent.swift */; };
+		BD01B77A2F32F9D0004EA220 /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD01B7792F32F9D0004EA220 /* AdSupport.framework */; };
 		BD61F0312EDD022E00456D75 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD61F0302EDD022E00456D75 /* WidgetKit.framework */; };
 		BD61F0332EDD022E00456D75 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD61F0322EDD022E00456D75 /* SwiftUI.framework */; };
 		BD61F0422EDD022F00456D75 /* SocialmeshWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BD61F02F2EDD022E00456D75 /* SocialmeshWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -102,6 +103,7 @@
 		AI0001012024120800000080 /* OpenMapIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMapIntent.swift; sourceTree = "<group>"; };
 		AI0001012024120800000090 /* OpenMessagesIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMessagesIntent.swift; sourceTree = "<group>"; };
 		B650BA8105F19944EACCA749 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		BD01B7792F32F9D0004EA220 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
 		BD61F02F2EDD022E00456D75 /* SocialmeshWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SocialmeshWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BD61F0302EDD022E00456D75 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		BD61F0322EDD022E00456D75 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -156,6 +158,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				483CC0788F22D3B0387A2B98 /* Pods_Runner.framework in Frameworks */,
+				BD01B77A2F32F9D0004EA220 /* AdSupport.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -275,6 +278,7 @@
 		EFDDA3AC0E4C446E71E36131 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BD01B7792F32F9D0004EA220 /* AdSupport.framework */,
 				BD61F0302EDD022E00456D75 /* WidgetKit.framework */,
 				BD61F0322EDD022E00456D75 /* SwiftUI.framework */,
 				DC2A1E86DEDDE10438E51A05 /* Pods_Runner.framework */,
@@ -730,10 +734,15 @@
 				DEVELOPMENT_TEAM = U336GVDWCE;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -929,10 +938,15 @@
 				DEVELOPMENT_TEAM = U336GVDWCE;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -962,10 +976,15 @@
 				DEVELOPMENT_TEAM = U336GVDWCE;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";

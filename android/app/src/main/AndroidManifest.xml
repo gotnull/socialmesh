@@ -64,6 +64,10 @@
         android:label="Socialmesh"
         android:name=".SocialmeshApplication"
         android:icon="@mipmap/ic_launcher">
+        <!-- Disable Firebase automatic screen reporting for privacy -->
+        <meta-data
+            android:name="google_analytics_automatic_screen_reporting_enabled"
+            android:value="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

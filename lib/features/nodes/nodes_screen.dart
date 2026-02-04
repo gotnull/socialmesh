@@ -309,6 +309,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                 myNodeNum,
                 linkedNodeIds,
                 presenceMap,
+                isConnected: isConnected,
               ),
           ],
         ),
@@ -320,8 +321,9 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     List<MeshNode> nodesList,
     int? myNodeNum,
     List<int> linkedNodeIds,
-    Map<int, NodePresence> presenceMap,
-  ) {
+    Map<int, NodePresence> presenceMap, {
+    bool isConnected = false,
+  }) {
     final animationsEnabled = ref.watch(animationsEnabledProvider);
 
     // Find new nodes that haven't been seen yet for animation
@@ -380,6 +382,13 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     );
     final nonEmptySections = sections.where((s) => s.nodes.isNotEmpty).toList();
 
+    // Check if we should show loading placeholder:
+    // Connected, only have "Your Device" section, no other nodes yet
+    final hasOnlyMyDevice =
+        nonEmptySections.length == 1 &&
+        nonEmptySections.first.title == 'Your Device';
+    final showLoadingPlaceholder = isConnected && hasOnlyMyDevice;
+
     return [
       for (
         var sectionIndex = 0;
@@ -422,6 +431,23 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
               ),
             );
           }, childCount: nonEmptySections[sectionIndex].nodes.length),
+        ),
+      ],
+      // Show loading placeholder when waiting for more nodes to be discovered
+      if (showLoadingPlaceholder) ...[
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SectionHeaderDelegate(
+            title: 'Discovering',
+            count: null, // No count while loading
+          ),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) =>
+                Skeletonizer(enabled: true, child: const SkeletonNodeCard()),
+            childCount: 3,
+          ),
         ),
       ],
     ];

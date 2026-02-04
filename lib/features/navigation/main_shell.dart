@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:ui';
+
 import '../../core/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -55,6 +57,9 @@ import '../settings/admin_follow_requests_screen.dart';
 import '../signals/signals.dart';
 import '../profile/profile_screen.dart';
 import '../debug/device_logs_screen.dart';
+import '../social/screens/activity_timeline_screen.dart';
+import '../../providers/activity_providers.dart';
+import '../admin/screens/user_purchases_admin_screen.dart';
 
 /// Combined admin notification count provider
 /// Uses FutureProvider to properly handle the async stream states
@@ -250,6 +255,9 @@ class _DrawerMenuItem {
   final Color? iconColor;
   final bool requiresConnection;
 
+  /// Provider key for badge count - use 'activity' for activity count
+  final String? badgeProviderKey;
+
   const _DrawerMenuItem({
     required this.icon,
     required this.label,
@@ -258,6 +266,7 @@ class _DrawerMenuItem {
     this.sectionHeader,
     this.iconColor,
     this.requiresConnection = false,
+    this.badgeProviderKey,
   });
 }
 
@@ -318,12 +327,30 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Drawer menu items for quick access screens not in bottom nav
   /// Organized into logical sections with headers
   final List<_DrawerMenuItem> _drawerMenuItems = [
-    // Activity - require connection for mesh data
+    // Social section
+    _DrawerMenuItem(
+      icon: Icons.favorite_border,
+      label: 'Activity',
+      screen: const ActivityTimelineScreen(),
+      sectionHeader: 'SOCIAL',
+      iconColor: Colors.red.shade400,
+      requiresConnection: false,
+      badgeProviderKey: 'activity',
+    ),
+    // Dashboard moved from bottom nav
+    _DrawerMenuItem(
+      icon: Icons.dashboard_outlined,
+      label: 'Dashboard',
+      screen: const WidgetDashboardScreen(),
+      sectionHeader: 'HOME',
+      iconColor: Colors.blue.shade400,
+      requiresConnection: true,
+    ),
     _DrawerMenuItem(
       icon: Icons.timeline,
       label: 'Timeline',
       screen: const TimelineScreen(),
-      sectionHeader: 'ACTIVITY',
+      sectionHeader: 'MESH',
       iconColor: Colors.indigo.shade400,
       requiresConnection: true,
     ),
@@ -334,13 +361,10 @@ class _MainShellState extends ConsumerState<MainShell> {
       iconColor: Colors.green.shade400,
       requiresConnection: true,
     ),
-
-    // Mesh Features - all require connection
     _DrawerMenuItem(
       icon: Icons.public,
       label: 'World Map',
       screen: const WorldMeshScreen(),
-      sectionHeader: 'MESH FEATURES',
       iconColor: Colors.blue.shade400,
       requiresConnection: false, // Shows global mesh data from server
     ),
@@ -448,9 +472,9 @@ class _MainShellState extends ConsumerState<MainShell> {
       label: 'Nodes',
     ),
     _NavItem(
-      icon: Icons.dashboard_outlined,
-      activeIcon: Icons.dashboard,
-      label: 'Dashboard',
+      icon: Icons.favorite_outline,
+      activeIcon: Icons.favorite,
+      label: 'Activity',
     ),
   ];
 
@@ -480,10 +504,8 @@ class _MainShellState extends ConsumerState<MainShell> {
           child: NodesScreen(),
         );
       case 4:
-        return const ConnectionRequiredWrapper(
-          screenTitle: 'Dashboard',
-          child: WidgetDashboardScreen(),
-        );
+        // Activity doesn't require connection - it's social notifications
+        return const ActivityTimelineScreen();
       default:
         return const ConnectionRequiredWrapper(
           screenTitle: 'Messages',
@@ -591,6 +613,12 @@ class _MainShellState extends ConsumerState<MainShell> {
               // Check if item requires connection but we're not connected
               final needsConnection = item.requiresConnection && !isConnected;
 
+              // Get badge count for items with badge provider
+              int? badgeCount;
+              if (item.badgeProviderKey == 'activity') {
+                badgeCount = ref.watch(unreadActivityCountProvider);
+              }
+
               return Column(
                 children: [
                   _DrawerMenuTile(
@@ -604,6 +632,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                     showTryIt: isPremium && !hasAccess && upsellEnabled,
                     isDisabled: needsConnection,
                     iconColor: item.iconColor,
+                    badgeCount: badgeCount,
                     onTap: needsConnection
                         ? null
                         : () {
@@ -1117,19 +1146,27 @@ class _MainShellState extends ConsumerState<MainShell> {
                 final item = _navItems[index];
                 final isSelected = ref.watch(mainShellIndexProvider) == index;
 
-                // Show badge on Nodes tab (index 3) when new nodes discovered
-                final showNodesBadge = index == 3 && _hasNewNodes(ref);
-                // Show badge on Signals tab (index 2) when there are active signals
-                final showSignalsBadge = index == 2 && _hasActiveSignals(ref);
+                // Calculate badge count for each tab
+                int badgeCount = 0;
+                if (index == 0) {
+                  // Messages tab - show unread count
+                  badgeCount = ref.watch(unreadMessagesCountProvider);
+                } else if (index == 2) {
+                  // Signals tab - show active signal count
+                  badgeCount = ref.watch(activeSignalCountProvider);
+                } else if (index == 3) {
+                  // Nodes tab - show new nodes count
+                  badgeCount = ref.watch(newNodesCountProvider);
+                } else if (index == 4) {
+                  // Activity tab - show unread activity count
+                  badgeCount = ref.watch(unreadActivityCountProvider);
+                }
 
                 return _NavBarItem(
                   icon: isSelected ? item.activeIcon : item.icon,
                   label: item.label,
                   isSelected: isSelected,
-                  showBadge:
-                      (index == 0 && _hasUnreadMessages(ref)) ||
-                      showNodesBadge ||
-                      showSignalsBadge,
+                  badgeCount: badgeCount,
                   showWarningBadge: false,
                   showReconnectingBadge: false,
                   onTap: () {
@@ -1147,18 +1184,6 @@ class _MainShellState extends ConsumerState<MainShell> {
         ),
       ),
     );
-  }
-
-  bool _hasUnreadMessages(WidgetRef ref) {
-    return ref.watch(hasUnreadMessagesProvider);
-  }
-
-  bool _hasNewNodes(WidgetRef ref) {
-    return ref.watch(newNodesCountProvider) > 0;
-  }
-
-  bool _hasActiveSignals(WidgetRef ref) {
-    return ref.watch(activeSignalCountProvider) > 0;
   }
 }
 
@@ -1178,7 +1203,7 @@ class _NavBarItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool isSelected;
-  final bool showBadge;
+  final int badgeCount;
   final bool showWarningBadge;
   final bool showReconnectingBadge;
   final VoidCallback onTap;
@@ -1187,7 +1212,7 @@ class _NavBarItem extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.isSelected,
-    this.showBadge = false,
+    this.badgeCount = 0,
     this.showWarningBadge = false,
     this.showReconnectingBadge = false,
     required this.onTap,
@@ -1267,19 +1292,35 @@ class _NavBarItem extends StatelessWidget {
                           color: iconColor,
                         ),
                 ),
-                if (showBadge)
+                if (badgeCount > 0)
                   Positioned(
-                    right: -4,
-                    top: -4,
+                    right: -6,
+                    top: -6,
                     child: Container(
-                      width: 10,
-                      height: 10,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: badgeCount > 9 ? 4 : 0,
+                        vertical: 0,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red,
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: theme.scaffoldBackgroundColor,
                           width: 2,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          badgeCount > 99 ? '99+' : '$badgeCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -1919,6 +1960,18 @@ class _DrawerAdminSection extends ConsumerWidget {
                       onNavigate(const AdminFollowRequestsScreen());
                     },
                   ),
+
+                  // User Purchases Admin
+                  _DrawerMenuTile(
+                    icon: Icons.receipt_long,
+                    label: 'User Purchases',
+                    isSelected: false,
+                    iconColor: Colors.amber.shade400,
+                    onTap: () {
+                      ref.haptics.tabChange();
+                      onNavigate(const UserPurchasesAdminScreen());
+                    },
+                  ),
                 ],
               ),
             ),
@@ -1970,16 +2023,21 @@ class _DrawerStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return Container(
-      color: theme.scaffoldBackgroundColor,
-      padding: const EdgeInsets.only(left: 24, top: 8, bottom: 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 1.2,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          color: theme.scaffoldBackgroundColor.withValues(alpha: 0.8),
+          padding: const EdgeInsets.only(left: 24, top: 8, bottom: 8),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
         ),
       ),
     );

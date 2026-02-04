@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
@@ -63,6 +63,34 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     if (shouldShowTitle != _showTitle) {
       setState(() => _showTitle = shouldShowTitle);
     }
+  }
+
+  /// Styled icon button with semi-transparent background for visibility over images
+  Widget _buildStyledIconButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    Color? iconColor,
+  }) {
+    return Container(
+      margin: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: context.background.withValues(alpha: 0.7),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: iconColor ?? context.textPrimary, size: 22),
+        onPressed: onPressed,
+        padding: const EdgeInsets.all(8),
+        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      ),
+    );
   }
 
   @override
@@ -144,41 +172,43 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         final isFavorite =
             favoriteIdsAsync.value?.contains(product.id) ?? false;
 
-        return GlassScaffold(
-          title: _showTitle ? product.name : '',
-          controller: _scrollController,
+        return Scaffold(
+          backgroundColor: context.background,
           bottomNavigationBar: _buildBottomBar(
             product,
             isAdminAsync.value ?? false,
           ),
-          slivers: [
-            // App Bar with Image Gallery
-            _buildImageGallery(
-              product,
-              isFavorite,
-              user?.uid,
-              isAdminAsync.value ?? false,
-            ),
+          body: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              // App Bar with Image Gallery
+              _buildImageGallery(
+                product,
+                isFavorite,
+                user?.uid,
+                isAdminAsync.value ?? false,
+              ),
 
-            // Product Info
-            SliverToBoxAdapter(child: _buildProductInfo(product)),
+              // Product Info
+              SliverToBoxAdapter(child: _buildProductInfo(product)),
 
-            // Technical Specs
-            if (_hasSpecs(product))
-              SliverToBoxAdapter(child: _buildSpecsSection(product)),
+              // Technical Specs
+              if (_hasSpecs(product))
+                SliverToBoxAdapter(child: _buildSpecsSection(product)),
 
-            // Features
-            SliverToBoxAdapter(child: _buildFeaturesSection(product)),
+              // Features
+              SliverToBoxAdapter(child: _buildFeaturesSection(product)),
 
-            // Shipping Info
-            SliverToBoxAdapter(child: _buildShippingSection(product)),
+              // Shipping Info
+              SliverToBoxAdapter(child: _buildShippingSection(product)),
 
-            // Reviews Section
-            SliverToBoxAdapter(child: _ReviewsSection(productId: product.id)),
+              // Reviews Section
+              SliverToBoxAdapter(child: _ReviewsSection(productId: product.id)),
 
-            // Bottom padding for buy button
-            const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
-          ],
+              // Bottom padding for buy button
+              const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
+            ],
+          ),
         );
       },
     );
@@ -194,6 +224,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       backgroundColor: context.card,
       expandedHeight: 350,
       pinned: true,
+      leading: _buildStyledIconButton(
+        icon: Icons.arrow_back,
+        onPressed: () => Navigator.pop(context),
+      ),
       title: _showTitle
           ? AutoScrollText(
               product.name,
@@ -208,11 +242,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             )
           : null,
       actions: [
-        IconButton(
-          icon: Icon(
-            isFavorite ? Icons.favorite : Icons.favorite_outline,
-            color: isFavorite ? Colors.red : Colors.white,
-          ),
+        _buildStyledIconButton(
+          icon: isFavorite ? Icons.favorite : Icons.favorite_outline,
+          iconColor: isFavorite ? Colors.red : null,
           onPressed: () {
             if (userId != null) {
               ref
@@ -221,8 +253,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             }
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.share),
+        _buildStyledIconButton(
+          icon: Icons.share,
           onPressed: () => _shareProduct(product),
         ),
       ],
@@ -1020,6 +1052,9 @@ Price: ${product.formattedPrice}${product.purchaseUrl != null ? '\n\n${product.p
   }
 
   Future<void> _buyProduct(ShopProduct product) async {
+    // Capture navigator before async gap
+    final navigator = Navigator.of(context);
+
     // Log the buy now tap
     final logger = ref.read(deviceShopEventLoggerProvider);
     await logger.logBuyNowTap(
@@ -1034,11 +1069,18 @@ Price: ${product.formattedPrice}${product.purchaseUrl != null ? '\n\n${product.p
       screen: 'detail',
     );
 
+    if (!mounted) return;
+
     if (product.purchaseUrl != null) {
-      final uri = Uri.parse(product.purchaseUrl!);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
+      // Open purchase URL in in-app webview
+      navigator.push(
+        MaterialPageRoute(
+          builder: (_) => _PurchaseWebViewScreen(
+            title: product.name,
+            url: product.purchaseUrl!,
+          ),
+        ),
+      );
     } else {
       // Show in-app purchase dialog
       _showPurchaseDialog(product);
@@ -1071,7 +1113,101 @@ Price: ${product.formattedPrice}${product.purchaseUrl != null ? '\n\n${product.p
                 ),
               );
             },
-            child: Text('View Seller'),
+            child: Text('Contact Seller'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// In-app webview for purchase URLs
+class _PurchaseWebViewScreen extends StatefulWidget {
+  final String title;
+  final String url;
+
+  const _PurchaseWebViewScreen({required this.title, required this.url});
+
+  @override
+  State<_PurchaseWebViewScreen> createState() => _PurchaseWebViewScreenState();
+}
+
+class _PurchaseWebViewScreenState extends State<_PurchaseWebViewScreen> {
+  double _progress = 0;
+  InAppWebViewController? _webViewController;
+  bool _canGoBack = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final accentColor = Theme.of(context).colorScheme.primary;
+
+    return Scaffold(
+      backgroundColor: context.background,
+      appBar: AppBar(
+        backgroundColor: context.background,
+        title: Text(
+          widget.title,
+          style: const TextStyle(fontSize: 18),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          if (_canGoBack)
+            IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => _webViewController?.goBack(),
+              tooltip: 'Go back',
+            ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _webViewController?.reload(),
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Progress indicator
+          if (_progress < 1.0)
+            LinearProgressIndicator(
+              value: _progress,
+              backgroundColor: context.card,
+              valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+              minHeight: 2,
+            ),
+          // WebView
+          Expanded(
+            child: InAppWebView(
+              initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+              initialSettings: InAppWebViewSettings(
+                transparentBackground: true,
+                javaScriptEnabled: true,
+                useShouldOverrideUrlLoading: false,
+                mediaPlaybackRequiresUserGesture: false,
+                allowsInlineMediaPlayback: true,
+                iframeAllowFullscreen: true,
+              ),
+              onWebViewCreated: (controller) {
+                _webViewController = controller;
+              },
+              onLoadStart: (controller, url) {
+                setState(() => _progress = 0);
+              },
+              onProgressChanged: (controller, progress) {
+                setState(() => _progress = progress / 100);
+              },
+              onLoadStop: (controller, url) async {
+                setState(() => _progress = 1.0);
+                final canGoBack = await controller.canGoBack();
+                if (mounted) {
+                  setState(() => _canGoBack = canGoBack);
+                }
+              },
+            ),
           ),
         ],
       ),

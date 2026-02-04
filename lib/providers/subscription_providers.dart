@@ -394,6 +394,18 @@ class StoreProductInfo {
     required this.priceString,
     required this.price,
   });
+
+  /// Clean the product title by removing the app name suffix that Google Play
+  /// automatically appends (e.g., "Widget Pack (Socialmesh)" -> "Widget Pack")
+  static String cleanTitle(String rawTitle) {
+    // Google Play appends " (AppName)" to product titles on Android
+    // Remove any trailing parenthetical content
+    final parenIndex = rawTitle.lastIndexOf(' (');
+    if (parenIndex > 0 && rawTitle.endsWith(')')) {
+      return rawTitle.substring(0, parenIndex);
+    }
+    return rawTitle;
+  }
 }
 
 /// Provider for fetching real store product info from RevenueCat
@@ -429,12 +441,13 @@ final storeProductsProvider = FutureProvider<Map<String, StoreProductInfo>>((
       );
       for (final package in offering.availablePackages) {
         final product = package.storeProduct;
+        final cleanedTitle = StoreProductInfo.cleanTitle(product.title);
         AppLogging.subscriptions(
-          '💳 [StoreProducts]   Package: ${package.identifier} -> ${product.identifier}: ${product.priceString} (title: "${product.title}")',
+          '💳 [StoreProducts]   Package: ${package.identifier} -> ${product.identifier}: ${product.priceString} (title: "${product.title}" -> "$cleanedTitle")',
         );
         productMap[product.identifier] = StoreProductInfo(
           productId: product.identifier,
-          title: product.title,
+          title: cleanedTitle,
           description: product.description,
           priceString: product.priceString,
           price: product.price,
@@ -473,12 +486,13 @@ final storeProductsProvider = FutureProvider<Map<String, StoreProductInfo>>((
       );
 
       for (final product in products) {
+        final cleanedTitle = StoreProductInfo.cleanTitle(product.title);
         AppLogging.subscriptions(
-          '💳 [StoreProducts]   ${product.identifier}: "${product.title}" - ${product.priceString}',
+          '💳 [StoreProducts]   ${product.identifier}: "${product.title}" -> "$cleanedTitle" - ${product.priceString}',
         );
         productMap[product.identifier] = StoreProductInfo(
           productId: product.identifier,
-          title: product.title,
+          title: cleanedTitle,
           description: product.description,
           priceString: product.priceString,
           price: product.price,

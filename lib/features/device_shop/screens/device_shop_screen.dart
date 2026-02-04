@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1364,33 +1365,38 @@ class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return Container(
-      color: backgroundColor,
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: TextField(
-          controller: searchController,
-          focusNode: focusNode,
-          onChanged: onChanged,
-          style: TextStyle(color: textPrimary),
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: TextStyle(color: textTertiary),
-            prefixIcon: Icon(Icons.search, color: textTertiary),
-            suffixIcon: searchQuery.isNotEmpty
-                ? IconButton(
-                    icon: Icon(Icons.clear, color: textTertiary),
-                    onPressed: onClear,
-                  )
-                : null,
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          color: backgroundColor.withValues(alpha: 0.8),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TextField(
+              controller: searchController,
+              focusNode: focusNode,
+              onChanged: onChanged,
+              style: TextStyle(color: textPrimary),
+              decoration: InputDecoration(
+                hintText: hintText,
+                hintStyle: TextStyle(color: textTertiary),
+                prefixIcon: Icon(Icons.search, color: textTertiary),
+                suffixIcon: searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, color: textTertiary),
+                        onPressed: onClear,
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+              ),
             ),
           ),
         ),

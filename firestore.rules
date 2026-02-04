@@ -155,6 +155,20 @@ service cloud.firestore {
         // No updates - delete and recreate
         allow update: if false;
       }
+
+      // Entitlements subcollection - owner read, admins can read for admin dashboard
+      // Write via Cloud Functions only (RevenueCat webhook)
+      match /entitlements/{entitlementId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if false; // Managed by Cloud Functions
+      }
+
+      // Purchases subcollection - owner read, admins can read for admin dashboard
+      // Write via Cloud Functions only
+      match /purchases/{purchaseId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if false; // Managed by Cloud Functions
+      }
     }
     
     // User presence - public read, owner write
@@ -344,9 +358,10 @@ service cloud.firestore {
     // CLOUD SYNC / SUBSCRIPTION COLLECTIONS
     // =============================================================================
     
-    // User entitlements - owner read, write via Cloud Functions only
+    // User entitlements - owner read, admins can read all for admin dashboard
+    // Write via Cloud Functions only (RevenueCat webhook)
     match /user_entitlements/{userId} {
-      allow read: if isOwner(userId);
+      allow read: if isOwner(userId) || isAdmin();
       allow write: if false; // Managed by Cloud Functions (RevenueCat webhook)
     }
     

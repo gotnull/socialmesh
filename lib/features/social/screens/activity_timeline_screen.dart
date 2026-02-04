@@ -6,18 +6,21 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social_activity.dart';
 import '../../../providers/activity_providers.dart';
-import 'post_detail_screen.dart';
-import 'profile_social_screen.dart';
-import '../../signals/screens/signal_detail_screen.dart';
 import '../../../providers/signal_providers.dart';
+import '../../../providers/social_providers.dart';
+import '../../signals/screens/signal_detail_screen.dart';
 
-/// Activity timeline screen showing social interactions.
+/// Activity timeline screen showing signal interactions.
 ///
-/// Displays activities grouped by time periods (Today, Yesterday, This Week, etc.)
-/// with unread indicators and the ability to mark as read.
+/// Displays signal-related activities grouped by time periods
+/// (Today, Yesterday, This Week, etc.) with timeline icons.
+///
+/// Note: Only signal-related activities are shown since social
+/// features (posts, stories, follows) have been disabled.
 class ActivityTimelineScreen extends ConsumerStatefulWidget {
   const ActivityTimelineScreen({super.key});
 
@@ -28,24 +31,48 @@ class ActivityTimelineScreen extends ConsumerStatefulWidget {
 
 class _ActivityTimelineScreenState
     extends ConsumerState<ActivityTimelineScreen> {
+  /// Signal-related activity types to display
+  static const _signalActivityTypes = {
+    SocialActivityType.signalLike,
+    SocialActivityType.signalComment,
+    SocialActivityType.signalCommentReply,
+    SocialActivityType.signalResponseVote,
+  };
+
   @override
   Widget build(BuildContext context) {
     final feedState = ref.watch(activityFeedProvider);
+    final isAdmin = ref
+        .watch(isAdminProvider)
+        .maybeWhen(data: (value) => value, orElse: () => false);
+
+    // Only show signal-related activities
+    final signalActivities = feedState.activities
+        .where((a) => _signalActivityTypes.contains(a.type))
+        .toList();
 
     return GlassScaffold(
       title: 'Activity',
       actions: [
-        if (feedState.activities.isNotEmpty)
-          AppBarOverflowMenu<String>(
-            onSelected: (value) {
-              if (value == 'clear') {
+        AppBarOverflowMenu<String>(
+          onSelected: (value) {
+            switch (value) {
+              case 'clear':
                 _showClearConfirmation();
-              } else if (value == 'markAllRead') {
+              case 'markAllRead':
                 ref.read(activityFeedProvider.notifier).markAllAsRead();
-              }
-            },
-            itemBuilder: (context) => [
-              if (feedState.unreadCount > 0)
+              case 'injectTest':
+                ref.read(activityFeedProvider.notifier).injectTestActivities();
+              case 'clearTest':
+                ref.read(activityFeedProvider.notifier).clearTestActivities();
+            }
+          },
+          itemBuilder: (context) {
+            final hasActivities = signalActivities.isNotEmpty;
+            final hasUnread = signalActivities.any((a) => !a.isRead);
+
+            return [
+              if (hasUnread)
                 const PopupMenuItem(
                   value: 'markAllRead',
                   child: Row(
@@ -56,18 +83,44 @@ class _ActivityTimelineScreenState
                     ],
                   ),
                 ),
-              const PopupMenuItem(
-                value: 'clear',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_outline, size: 20),
-                    SizedBox(width: 12),
-                    Text('Clear all'),
-                  ],
+              if (hasActivities)
+                const PopupMenuItem(
+                  value: 'clear',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, size: 20),
+                      SizedBox(width: 12),
+                      Text('Clear all'),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              // Admin-only options (visible to admins in release builds)
+              if (isAdmin) ...[
+                if (hasActivities || hasUnread) const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'injectTest',
+                  child: Row(
+                    children: [
+                      Icon(Icons.science_outlined, size: 20),
+                      SizedBox(width: 12),
+                      Text('Add test activities'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'clearTest',
+                  child: Row(
+                    children: [
+                      Icon(Icons.clear_all, size: 20),
+                      SizedBox(width: 12),
+                      Text('Clear test data'),
+                    ],
+                  ),
+                ),
+              ],
+            ];
+          },
+        ),
       ],
       slivers: [
         if (feedState.isLoading)
@@ -76,10 +129,10 @@ class _ActivityTimelineScreenState
           )
         else if (feedState.error != null)
           SliverFillRemaining(child: _buildError(feedState.error!))
-        else if (feedState.activities.isEmpty)
+        else if (signalActivities.isEmpty)
           SliverFillRemaining(child: _buildEmpty())
         else
-          ..._buildActivitySlivers(feedState.activities),
+          ..._buildActivitySlivers(signalActivities),
       ],
     );
   }
@@ -92,30 +145,31 @@ class _ActivityTimelineScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
                 color: context.surface,
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
                 Icons.notifications_none_outlined,
-                size: 48,
+                size: 40,
                 color: context.textTertiary,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             Text(
               'No activity yet',
               style: TextStyle(
                 color: context.textPrimary,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'When people interact with you,\nyou\'ll see it here',
-              style: TextStyle(color: context.textSecondary, fontSize: 14),
+              'When people like your signals,\nyou\'ll see it here',
+              style: TextStyle(color: context.textTertiary, fontSize: 14),
               textAlign: TextAlign.center,
             ),
           ],
@@ -131,11 +185,27 @@ class _ActivityTimelineScreenState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: context.textTertiary),
-            const SizedBox(height: 16),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: context.surface,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.error_outline,
+                size: 40,
+                color: context.textTertiary,
+              ),
+            ),
+            const SizedBox(height: 24),
             Text(
               'Failed to load activity',
-              style: TextStyle(color: context.textPrimary, fontSize: 16),
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -158,23 +228,45 @@ class _ActivityTimelineScreenState
   List<Widget> _buildActivitySlivers(List<SocialActivity> activities) {
     // Group activities by time period
     final grouped = _groupActivities(activities);
+    final slivers = <Widget>[];
 
-    return [
-      SliverPadding(
-        padding: const EdgeInsets.only(bottom: 32),
-        sliver: SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
-            final group = grouped[index];
-            return _ActivityGroup(
-              title: group.title,
-              activities: group.activities,
-              onActivityTap: _handleActivityTap,
-              onActivityDismiss: _handleActivityDismiss,
-            );
-          }, childCount: grouped.length),
+    for (int i = 0; i < grouped.length; i++) {
+      final group = grouped[i];
+
+      // Section header with count
+      slivers.add(
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SectionHeaderDelegate(
+            title: group.title,
+            count: group.activities.length,
+          ),
         ),
-      ),
-    ];
+      );
+
+      // Activities in this section
+      slivers.add(
+        SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final activity = group.activities[index];
+            final isLast = index == group.activities.length - 1;
+            final isLastGroup = i == grouped.length - 1;
+
+            return _TimelineActivityTile(
+              activity: activity,
+              showLine: !isLast || !isLastGroup,
+              onTap: () => _handleActivityTap(activity),
+              onDismiss: () => _handleActivityDismiss(activity),
+            );
+          }, childCount: group.activities.length),
+        ),
+      );
+    }
+
+    // Bottom padding
+    slivers.add(const SliverToBoxAdapter(child: SizedBox(height: 32)));
+
+    return slivers;
   }
 
   List<_ActivityGroupData> _groupActivities(List<SocialActivity> activities) {
@@ -250,83 +342,34 @@ class _ActivityTimelineScreenState
       ref.read(activityFeedProvider.notifier).markAsRead(activity.id);
     }
 
-    // Navigate based on activity type
-    switch (activity.type) {
-      case SocialActivityType.follow:
-      case SocialActivityType.followRequest:
-        // User-focused activities - go to their profile
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ProfileSocialScreen(userId: activity.actorId),
+    // Navigate to signal detail
+    if (activity.contentId != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => FutureBuilder(
+            future: ref
+                .read(signalServiceProvider)
+                .getSignalById(activity.contentId!),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return Scaffold(
+                  appBar: AppBar(title: const Text('Loading Signal')),
+                  body: const Center(child: CircularProgressIndicator()),
+                );
+              }
+              final signal = snapshot.data;
+              if (signal == null) {
+                return Scaffold(
+                  appBar: AppBar(title: const Text('Signal not found')),
+                  body: const Center(child: Text('Signal not found')),
+                );
+              }
+              return SignalDetailScreen(signal: signal);
+            },
           ),
-        );
-        break;
-      case SocialActivityType.storyLike:
-      case SocialActivityType.storyView:
-        // Story activities - go to actor's profile (stories are on profile)
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ProfileSocialScreen(userId: activity.actorId),
-          ),
-        );
-        break;
-      case SocialActivityType.postLike:
-      case SocialActivityType.signalLike:
-      case SocialActivityType.postComment:
-      case SocialActivityType.mention:
-      case SocialActivityType.commentReply:
-      case SocialActivityType.commentLike:
-        // Content-related activities - navigate to content if content ID exists
-        if (activity.contentId != null) {
-          // Route to Post or Signal detail depending on the type
-          if (activity.type == SocialActivityType.signalLike) {
-            // Load the signal first, then navigate to the detail screen
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => FutureBuilder(
-                  future: ref
-                      .read(signalServiceProvider)
-                      .getSignalById(activity.contentId!),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState != ConnectionState.done) {
-                      return Scaffold(
-                        appBar: AppBar(title: const Text('Loading Signal')),
-                        body: const Center(child: CircularProgressIndicator()),
-                      );
-                    }
-                    final signal = snapshot.data;
-                    if (signal == null) {
-                      return Scaffold(
-                        appBar: AppBar(title: const Text('Signal not found')),
-                        body: const Center(child: Text('Signal not found')),
-                      );
-                    }
-                    return SignalDetailScreen(signal: signal);
-                  },
-                ),
-              ),
-            );
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => PostDetailScreen(postId: activity.contentId!),
-              ),
-            );
-          }
-        } else {
-          // Fallback to profile if no content ID
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ProfileSocialScreen(userId: activity.actorId),
-            ),
-          );
-        }
-        break;
+        ),
+      );
     }
   }
 
@@ -344,7 +387,8 @@ class _ActivityTimelineScreenState
           style: TextStyle(color: context.textPrimary),
         ),
         content: Text(
-          'This will remove all activity from your feed. This action cannot be undone.',
+          'This will remove all activity from your feed. '
+          'This action cannot be undone.',
           style: TextStyle(color: context.textSecondary),
         ),
         actions: [
@@ -368,263 +412,250 @@ class _ActivityTimelineScreenState
   }
 }
 
+// ============================================================================
+// TIMELINE ACTIVITY TILE
+// ============================================================================
+
+class _TimelineActivityTile extends StatelessWidget {
+  final SocialActivity activity;
+  final bool showLine;
+  final VoidCallback onTap;
+  final VoidCallback onDismiss;
+
+  const _TimelineActivityTile({
+    required this.activity,
+    required this.showLine,
+    required this.onTap,
+    required this.onDismiss,
+  });
+
+  /// Returns the appropriate icon and color for the activity type
+  Widget _buildActivityIcon(BuildContext context) {
+    final (IconData icon, Color color) = switch (activity.type) {
+      SocialActivityType.signalLike => (Icons.favorite, Colors.redAccent),
+      SocialActivityType.signalComment => (Icons.chat_bubble, Colors.blue),
+      SocialActivityType.signalCommentReply => (
+        Icons.chat_bubble_outline,
+        Colors.blue,
+      ),
+      SocialActivityType.signalResponseVote => (Icons.thumb_up, Colors.green),
+      _ => (Icons.notifications, Colors.grey),
+    };
+
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Center(child: Icon(icon, color: color, size: 18)),
+    );
+  }
+
+  /// Returns the action text for the activity type
+  String _getActionText() {
+    return switch (activity.type) {
+      SocialActivityType.signalLike => ' liked your signal',
+      SocialActivityType.signalComment => ' commented on your signal',
+      SocialActivityType.signalCommentReply => ' replied to your comment',
+      SocialActivityType.signalResponseVote => ' upvoted your response',
+      _ => ' interacted with your signal',
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dismissible(
+      key: Key(activity.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: Colors.red.withValues(alpha: 0.2),
+        child: const Icon(Icons.delete_outline, color: Colors.red),
+      ),
+      onDismissed: (_) => onDismiss(),
+      child: InkWell(
+        onTap: onTap,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Left edge spacing
+              const SizedBox(width: 12),
+              // Timeline indicator with continuous line
+              SizedBox(
+                width: 40,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 8),
+                    // Activity type icon (centered) - always heart for signal likes
+                    _buildActivityIcon(context),
+                    // Vertical line that extends to fill remaining space
+                    if (showLine)
+                      Expanded(
+                        child: Container(
+                          width: 2,
+                          margin: const EdgeInsets.only(top: 4),
+                          decoration: BoxDecoration(
+                            color: context.border.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              // Avatar with unread dot
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: context.surface,
+                      backgroundImage: activity.actorSnapshot?.avatarUrl != null
+                          ? NetworkImage(activity.actorSnapshot!.avatarUrl!)
+                          : null,
+                      child: activity.actorSnapshot?.avatarUrl == null
+                          ? Text(
+                              (activity.actorSnapshot?.displayName ?? 'U')[0]
+                                  .toUpperCase(),
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            )
+                          : null,
+                    ),
+                    // Unread indicator
+                    if (!activity.isRead)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: context.accentColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: context.background,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              // Content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text:
+                                  activity.actorSnapshot?.displayName ??
+                                  'Someone',
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            if (activity.actorSnapshot?.isVerified ??
+                                false) ...[
+                              const WidgetSpan(
+                                alignment: PlaceholderAlignment.middle,
+                                child: Padding(
+                                  padding: EdgeInsets.only(left: 4),
+                                  child: SimpleVerifiedBadge(size: 14),
+                                ),
+                              ),
+                            ],
+                            TextSpan(
+                              text: _getActionText(),
+                              style: TextStyle(
+                                color: context.textSecondary,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (activity.textContent != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          activity.textContent!,
+                          style: TextStyle(
+                            color: context.textSecondary,
+                            fontSize: 13,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      const SizedBox(height: 4),
+                      Text(
+                        timeago.format(activity.createdAt),
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Preview image if available
+              if (activity.previewImageUrl != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 12, top: 8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      activity.previewImageUrl!,
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+
+              // Right edge spacing
+              const SizedBox(width: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// DATA MODELS
+// ============================================================================
+
 class _ActivityGroupData {
   final String title;
   final List<SocialActivity> activities;
 
   const _ActivityGroupData({required this.title, required this.activities});
-}
-
-class _ActivityGroup extends StatelessWidget {
-  const _ActivityGroup({
-    required this.title,
-    required this.activities,
-    required this.onActivityTap,
-    required this.onActivityDismiss,
-  });
-
-  final String title;
-  final List<SocialActivity> activities;
-  final void Function(SocialActivity) onActivityTap;
-  final void Function(SocialActivity) onActivityDismiss;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
-          child: Text(
-            title,
-            style: TextStyle(
-              color: context.textSecondary,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-        ...activities.map(
-          (activity) => Dismissible(
-            key: Key(activity.id),
-            direction: DismissDirection.endToStart,
-            background: Container(
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 20),
-              color: Colors.red.withValues(alpha: 0.2),
-              child: const Icon(Icons.delete_outline, color: Colors.red),
-            ),
-            onDismissed: (_) => onActivityDismiss(activity),
-            child: _ActivityTile(
-              activity: activity,
-              onTap: () => onActivityTap(activity),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ActivityTile extends StatelessWidget {
-  const _ActivityTile({required this.activity, required this.onTap});
-
-  final SocialActivity activity;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: activity.isRead
-              ? Colors.transparent
-              : context.accentColor.withValues(alpha: 0.05),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Activity icon badge on avatar
-            Stack(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: context.surface,
-                  backgroundImage: activity.actorSnapshot?.avatarUrl != null
-                      ? NetworkImage(activity.actorSnapshot!.avatarUrl!)
-                      : null,
-                  child: activity.actorSnapshot?.avatarUrl == null
-                      ? Text(
-                          (activity.actorSnapshot?.displayName ?? 'U')[0]
-                              .toUpperCase(),
-                          style: TextStyle(
-                            color: context.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        )
-                      : null,
-                ),
-                Positioned(
-                  right: -2,
-                  bottom: -2,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: _getActivityColor(activity.type),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: context.background, width: 2),
-                    ),
-                    child: Icon(
-                      _getActivityIcon(activity.type),
-                      size: 10,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 12),
-            // Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text:
-                              activity.actorSnapshot?.displayName ?? 'Someone',
-                          style: TextStyle(
-                            color: context.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        if (activity.actorSnapshot?.isVerified ?? false) ...[
-                          const WidgetSpan(
-                            child: Padding(
-                              padding: EdgeInsets.only(left: 4),
-                              child: SimpleVerifiedBadge(size: 14),
-                            ),
-                          ),
-                        ],
-                        TextSpan(
-                          text: ' ${_getActionText(activity.type)}',
-                          style: TextStyle(
-                            color: context.textSecondary,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (activity.textContent != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      activity.textContent!,
-                      style: TextStyle(
-                        color: context.textSecondary,
-                        fontSize: 13,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  const SizedBox(height: 4),
-                  Text(
-                    timeago.format(activity.createdAt),
-                    style: TextStyle(color: context.textTertiary, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            // Preview image if available
-            if (activity.previewImageUrl != null) ...[
-              const SizedBox(width: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  activity.previewImageUrl!,
-                  width: 48,
-                  height: 48,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const SizedBox.shrink(),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _getActivityIcon(SocialActivityType type) {
-    switch (type) {
-      case SocialActivityType.storyLike:
-      case SocialActivityType.postLike:
-      case SocialActivityType.signalLike:
-      case SocialActivityType.commentLike:
-        return Icons.favorite;
-      case SocialActivityType.storyView:
-        return Icons.visibility;
-      case SocialActivityType.follow:
-      case SocialActivityType.followRequest:
-        return Icons.person_add;
-      case SocialActivityType.postComment:
-      case SocialActivityType.commentReply:
-        return Icons.chat_bubble;
-      case SocialActivityType.mention:
-        return Icons.alternate_email;
-    }
-  }
-
-  Color _getActivityColor(SocialActivityType type) {
-    switch (type) {
-      case SocialActivityType.storyLike:
-      case SocialActivityType.postLike:
-      case SocialActivityType.signalLike:
-      case SocialActivityType.commentLike:
-        return Colors.redAccent;
-      case SocialActivityType.storyView:
-        return Colors.blueAccent;
-      case SocialActivityType.follow:
-      case SocialActivityType.followRequest:
-        return Colors.teal;
-      case SocialActivityType.postComment:
-      case SocialActivityType.commentReply:
-        return Colors.orangeAccent;
-      case SocialActivityType.mention:
-        return Colors.purpleAccent;
-    }
-  }
-
-  String _getActionText(SocialActivityType type) {
-    switch (type) {
-      case SocialActivityType.storyLike:
-        return 'liked your story';
-      case SocialActivityType.storyView:
-        return 'viewed your story';
-      case SocialActivityType.follow:
-        return 'started following you';
-      case SocialActivityType.followRequest:
-        return 'requested to follow you';
-      case SocialActivityType.postLike:
-        return 'liked your post';
-      case SocialActivityType.signalLike:
-        return 'liked your signal';
-      case SocialActivityType.postComment:
-        return 'commented on your post';
-      case SocialActivityType.mention:
-        return 'mentioned you';
-      case SocialActivityType.commentReply:
-        return 'replied to your comment';
-      case SocialActivityType.commentLike:
-        return 'liked your comment';
-    }
-  }
 }
