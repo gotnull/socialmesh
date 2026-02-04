@@ -65,150 +65,140 @@ class TopStatusBanner extends ConsumerWidget {
     // The banner is tappable for navigation but does NOT block interactions below
     return SizedBox(
       height: bannerHeight,
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(12),
-          bottomRight: Radius.circular(12),
-        ),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: Container(
-            decoration: BoxDecoration(
-              color: theme.cardColor.withValues(alpha: 0.32),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(12),
-                bottomRight: Radius.circular(12),
-              ),
-              border: Border.all(
-                color: foregroundColor.withValues(alpha: 0.25),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.cardColor.withValues(alpha: 0.32),
+            border: Border.all(
+              color: foregroundColor.withValues(alpha: 0.25),
+              width: 1,
             ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap:
-                    ((isTerminalInvalidated ||
-                            isFailed ||
-                            (!isReconnecting && !autoReconnectEnabled)) &&
-                        onGoToScanner != null)
-                    ? onGoToScanner
-                    : null,
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: 12,
-                    right: 12,
-                    top: topPadding,
-                    bottom: 12,
-                  ),
-                  child: SizedBox(
-                    height: 44,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Icon(icon, size: 18, color: foregroundColor),
-                              if (isReconnecting)
-                                SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation(
-                                      foregroundColor,
-                                    ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap:
+                  ((isTerminalInvalidated ||
+                          isFailed ||
+                          (!isReconnecting && !autoReconnectEnabled)) &&
+                      onGoToScanner != null)
+                  ? onGoToScanner
+                  : null,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 12,
+                  right: 12,
+                  top: topPadding,
+                  bottom: 12,
+                ),
+                child: SizedBox(
+                  height: 44,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Icon(icon, size: 18, color: foregroundColor),
+                            if (isReconnecting)
+                              SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    foregroundColor,
                                   ),
                                 ),
-                            ],
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          message,
+                          style: TextStyle(
+                            color: foregroundColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            message,
-                            style: TextStyle(
-                              color: foregroundColor,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
+                      ),
+                      if (showRetryButton) ...[
+                        TextButton.icon(
+                          onPressed: onRetry,
+                          icon: Icon(
+                            Icons.refresh_rounded,
+                            size: 16,
+                            color: foregroundColor,
                           ),
-                        ),
-                        if (showRetryButton) ...[
-                          TextButton.icon(
-                            onPressed: onRetry,
-                            icon: Icon(
-                              Icons.refresh_rounded,
-                              size: 16,
-                              color: foregroundColor,
-                            ),
-                            label: Text(
-                              'Retry',
-                              style: TextStyle(
-                                color: foregroundColor,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            size: 18,
-                            color: foregroundColor.withValues(alpha: 0.7),
-                          ),
-                        ] else if (isTerminalInvalidated) ...[
-                          Text(
-                            'Scan for Devices',
+                          label: Text(
+                            'Retry',
                             style: TextStyle(
                               color: foregroundColor,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            size: 18,
-                            color: foregroundColor.withValues(alpha: 0.7),
-                          ),
-                        ] else if (!isReconnecting) ...[
-                          Text(
-                            'Connect',
-                            style: TextStyle(
-                              color: foregroundColor,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
                             ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            size: 18,
-                            color: foregroundColor.withValues(alpha: 0.7),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: foregroundColor.withValues(alpha: 0.7),
+                        ),
+                      ] else if (isTerminalInvalidated) ...[
+                        Text(
+                          'Scan for Devices',
+                          style: TextStyle(
+                            color: foregroundColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
-                        ],
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: foregroundColor.withValues(alpha: 0.7),
+                        ),
+                      ] else if (!isReconnecting) ...[
+                        Text(
+                          'Connect',
+                          style: TextStyle(
+                            color: foregroundColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: foregroundColor.withValues(alpha: 0.7),
+                        ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
               ),

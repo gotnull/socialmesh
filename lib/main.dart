@@ -2,14 +2,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -19,6 +17,7 @@ import 'firebase_options.dart';
 import 'core/theme.dart';
 import 'core/transport.dart';
 import 'core/logging.dart';
+import 'core/safety/error_handler.dart';
 import 'core/widgets/connecting_content.dart';
 import 'core/widgets/gradient_border_container.dart';
 import 'core/routing/route_guard.dart';
@@ -91,6 +90,9 @@ Future<bool> get firebaseReady => firebaseReadyCompleter.future;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize centralized error handler FIRST - catches errors during startup
+  AppErrorHandler.initialize();
+
   // Load environment variables
   await dotenv.load(fileName: '.env');
 
@@ -144,8 +146,10 @@ Future<void> _initializeFirebaseInBackground() async {
       }
     }
 
-    // Configure Crashlytics only if Firebase initialized successfully
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    // Note: FlutterError.onError and PlatformDispatcher.onError are now
+    // configured by AppErrorHandler.initialize() which provides better
+    // error classification (fatal vs non-fatal) and prevents image/lifecycle
+    // errors from crashing the app.
 
     // Initialize Firebase Analytics
     await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
@@ -155,12 +159,6 @@ Future<void> _initializeFirebaseInBackground() async {
 
     // Initialize push notifications for social features
     await PushNotificationService().initialize();
-
-    // Set up async error handler
-    ui.PlatformDispatcher.instance.onError = (error, stack) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      return true;
-    };
 
     // Signal that Firebase is ready
     AppLogging.debug('🔥 Firebase initialized successfully');

@@ -117,7 +117,7 @@ class SignalPresenceContext extends StatelessWidget {
   Widget _buildEncounterBadge(BuildContext context) {
     final formattedCount = NumberFormatUtils.formatCount(
       encounterCount!,
-      suffix: '×',
+      suffix: 'x',
     );
     return Text(
       'Seen $formattedCount',

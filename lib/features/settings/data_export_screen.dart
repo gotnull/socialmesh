@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../utils/share_utils.dart';
@@ -20,7 +21,8 @@ class DataExportScreen extends ConsumerStatefulWidget {
   ConsumerState<DataExportScreen> createState() => _DataExportScreenState();
 }
 
-class _DataExportScreenState extends ConsumerState<DataExportScreen> {
+class _DataExportScreenState extends ConsumerState<DataExportScreen>
+    with LifecycleSafeMixin<DataExportScreen> {
   final Set<String> _exportingTypes = {};
   final Set<String> _clearingTypes = {};
 
@@ -541,16 +543,23 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
   }
 
   Future<void> _handleClear(String type) async {
-    setState(() {
+    // Capture providers BEFORE await to avoid accessing disposed state
+    final messagesNotifier = ref.read(messagesProvider.notifier);
+    final routesNotifier = ref.read(routesProvider.notifier);
+    final automationsNotifier = ref.read(automationsProvider.notifier);
+    final automationRepo = ref.read(automationRepositoryProvider);
+
+    safeSetState(() {
       _clearingTypes.add(type);
     });
 
     try {
       final storage = await ref.read(telemetryStorageProvider.future);
+      if (!mounted) return;
 
       switch (type) {
         case 'messages':
-          ref.read(messagesProvider.notifier).clearMessages();
+          messagesNotifier.clearMessages();
           break;
         case 'device_metrics':
           await storage.clearDeviceMetrics();
@@ -569,38 +578,35 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           break;
         case 'routes':
           final routeStorage = await ref.read(routeStorageProvider.future);
+          if (!mounted) return;
           await routeStorage.clearAllRoutes();
-          ref.read(routesProvider.notifier).refresh();
+          if (!mounted) return;
+          routesNotifier.refresh();
           break;
         case 'traceroutes':
           await storage.clearTraceRouteLogs();
           break;
         case 'automations':
-          final repo = ref.read(automationRepositoryProvider);
-          for (final auto in repo.automations.toList()) {
-            await repo.deleteAutomation(auto.id);
+          for (final auto in automationRepo.automations.toList()) {
+            await automationRepo.deleteAutomation(auto.id);
+            if (!mounted) return;
           }
-          ref.read(automationsProvider.notifier).refresh();
+          automationsNotifier.refresh();
           break;
         case 'automation_log':
-          final repo = ref.read(automationRepositoryProvider);
-          await repo.clearLog();
+          await automationRepo.clearLog();
           break;
       }
 
-      if (mounted) {
-        showSuccessSnackBar(context, 'Data cleared');
-      }
+      if (!mounted) return;
+      showSuccessSnackBar(context, 'Data cleared');
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to clear data: $e');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to clear data: $e');
     } finally {
-      if (mounted) {
-        setState(() {
-          _clearingTypes.remove(type);
-        });
-      }
+      safeSetState(() {
+        _clearingTypes.remove(type);
+      });
     }
   }
 
@@ -617,37 +623,43 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       'automation_log',
     ];
 
+    // Capture providers BEFORE await
+    final messagesNotifier = ref.read(messagesProvider.notifier);
+    final routesNotifier = ref.read(routesProvider.notifier);
+    final automationRepo = ref.read(automationRepositoryProvider);
+
     for (final type in types) {
-      setState(() {
+      safeSetState(() {
         _clearingTypes.add(type);
       });
     }
 
     try {
       final storage = await ref.read(telemetryStorageProvider.future);
-      ref.read(messagesProvider.notifier).clearMessages();
+      if (!mounted) return;
+
+      messagesNotifier.clearMessages();
       await storage.clearAllData();
+      if (!mounted) return;
 
       final routeStorage = await ref.read(routeStorageProvider.future);
+      if (!mounted) return;
+
       await routeStorage.clearAllRoutes();
-      ref.read(routesProvider.notifier).refresh();
+      if (!mounted) return;
 
-      final repo = ref.read(automationRepositoryProvider);
-      await repo.clearLog();
+      routesNotifier.refresh();
+      await automationRepo.clearLog();
 
-      if (mounted) {
-        showSuccessSnackBar(context, 'All data cleared');
-      }
+      if (!mounted) return;
+      showSuccessSnackBar(context, 'All data cleared');
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to clear data: $e');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to clear data: $e');
     } finally {
-      if (mounted) {
-        setState(() {
-          _clearingTypes.clear();
-        });
-      }
+      safeSetState(() {
+        _clearingTypes.clear();
+      });
     }
   }
 

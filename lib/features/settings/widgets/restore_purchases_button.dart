@@ -7,7 +7,14 @@ import '../../../utils/snackbar.dart';
 import '../../../providers/subscription_providers.dart';
 
 class RestorePurchasesButton extends ConsumerStatefulWidget {
-  const RestorePurchasesButton({super.key});
+  /// If true, will pop the current route (e.g., dismiss a bottom sheet)
+  /// before showing the result snackbar so it's visible to the user.
+  final bool dismissSheetOnComplete;
+
+  const RestorePurchasesButton({
+    super.key,
+    this.dismissSheetOnComplete = false,
+  });
 
   @override
   ConsumerState<RestorePurchasesButton> createState() =>
@@ -26,6 +33,11 @@ class _RestorePurchasesButtonState
     final stateBefore = ref.read(purchaseStateProvider);
     final countBefore = stateBefore.purchasedProductIds.length;
 
+    // Capture navigator early to avoid BuildContext use across async gaps
+    final navigator = widget.dismissSheetOnComplete
+        ? Navigator.of(context)
+        : null;
+
     try {
       success = await restorePurchases(ref);
     } catch (e) {
@@ -41,6 +53,14 @@ class _RestorePurchasesButtonState
     final stateAfter = ref.read(purchaseStateProvider);
     final countAfter = stateAfter.purchasedProductIds.length;
     final restoredNew = countAfter > countBefore;
+
+    // Dismiss sheet first if requested, so snackbar is visible
+    if (navigator != null) {
+      navigator.pop();
+      // Small delay to allow sheet animation to complete
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      if (!mounted) return;
+    }
 
     // Post-frame callbacks avoid BuildContext use across async gaps
     WidgetsBinding.instance.addPostFrameCallback((_) {

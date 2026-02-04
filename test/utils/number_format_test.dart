@@ -75,8 +75,8 @@ void main() {
       });
 
       test('formats count with suffix', () {
-        expect(NumberFormatUtils.formatCount(1107, suffix: '×'), '1,107×');
-        expect(NumberFormatUtils.formatCount(5, suffix: '×'), '5×');
+        expect(NumberFormatUtils.formatCount(1107, suffix: 'x'), '1,107x');
+        expect(NumberFormatUtils.formatCount(5, suffix: 'x'), '5x');
         expect(
           NumberFormatUtils.formatCount(1000000, suffix: ' nodes'),
           '1,000,000 nodes',

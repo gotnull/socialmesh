@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -839,133 +841,151 @@ class _NodesControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return Container(
-      color: context.background,
-      child: Column(
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Container(
-              decoration: BoxDecoration(
-                color: context.card,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: TextField(
-                controller: searchController,
-                onChanged: onSearchChanged,
-                style: TextStyle(color: context.textPrimary),
-                decoration: InputDecoration(
-                  hintText: 'Find a node',
-                  hintStyle: TextStyle(color: context.textTertiary),
-                  prefixIcon: Icon(Icons.search, color: context.textTertiary),
-                  suffixIcon: searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.clear, color: context.textTertiary),
-                          onPressed: () {
-                            searchController.clear();
-                            onSearchChanged('');
-                          },
-                        )
-                      : null,
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          color: context.background.withValues(alpha: 0.8),
+          child: Column(
+            children: [
+              // Search bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-              ),
-            ),
-          ),
-          // Filter chips row with static controls at end
-          SizedBox(
-            height: 44,
-            child: Row(
-              children: [
-                // Scrollable filter chips and sort button with edge fade
-                Expanded(
-                  child: EdgeFade.end(
-                    fadeSize: 32,
-                    fadeColor: context.background,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.only(left: 16),
-                      children: [
-                        SectionFilterChip(
-                          label: 'All',
-                          count: nodeCount,
-                          isSelected: activeFilter == NodeFilter.all,
-                          onTap: () => onFilterChanged(NodeFilter.all),
-                        ),
-                        const SizedBox(width: 8),
-                        SectionFilterChip(
-                          label: 'Active',
-                          count: activeCount,
-                          isSelected: activeFilter == NodeFilter.active,
-                          color: AccentColors.green,
-                          onTap: () => onFilterChanged(NodeFilter.active),
-                        ),
-                        const SizedBox(width: 8),
-                        SectionFilterChip(
-                          label: 'Favorites',
-                          count: favoritesCount,
-                          isSelected: activeFilter == NodeFilter.favorites,
-                          color: AppTheme.warningYellow,
-                          icon: Icons.star,
-                          onTap: () => onFilterChanged(NodeFilter.favorites),
-                        ),
-                        const SizedBox(width: 8),
-                        SectionFilterChip(
-                          label: 'With Position',
-                          count: withPositionCount,
-                          isSelected: activeFilter == NodeFilter.withPosition,
-                          color: AccentColors.cyan,
-                          icon: Icons.location_on,
-                          onTap: () => onFilterChanged(NodeFilter.withPosition),
-                        ),
-                        const SizedBox(width: 8),
-                        SectionFilterChip(
-                          label: 'Inactive',
-                          count: inactiveCount,
-                          isSelected: activeFilter == NodeFilter.inactive,
-                          color: context.textTertiary,
-                          onTap: () => onFilterChanged(NodeFilter.inactive),
-                        ),
-                        const SizedBox(width: 8),
-                        SectionFilterChip(
-                          label: 'New',
-                          count: recentlyDiscoveredCount,
-                          isSelected:
-                              activeFilter == NodeFilter.recentlyDiscovered,
-                          color: AccentColors.purple,
-                          icon: Icons.fiber_new,
-                          onTap: () =>
-                              onFilterChanged(NodeFilter.recentlyDiscovered),
-                        ),
-                        const SizedBox(width: 8),
-                        _SortButton(
-                          sortOrder: sortOrder,
-                          onChanged: onSortChanged,
-                        ),
-                        const SizedBox(width: 8),
-                      ],
+                  child: TextField(
+                    controller: searchController,
+                    onChanged: onSearchChanged,
+                    style: TextStyle(color: context.textPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'Find a node',
+                      hintStyle: TextStyle(color: context.textTertiary),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: context.textTertiary,
+                      ),
+                      suffixIcon: searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.clear,
+                                color: context.textTertiary,
+                              ),
+                              onPressed: () {
+                                searchController.clear();
+                                onSearchChanged('');
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                 ),
-                // Static toggle at end
-                const SizedBox(width: 8),
-                SectionHeadersToggle(
-                  enabled: showSectionHeaders,
-                  onToggle: onToggleSectionHeaders,
+              ),
+              // Filter chips row with static controls at end
+              SizedBox(
+                height: 44,
+                child: Row(
+                  children: [
+                    // Scrollable filter chips and sort button with edge fade
+                    Expanded(
+                      child: EdgeFade.end(
+                        fadeSize: 32,
+                        fadeColor: context.background,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.only(left: 16),
+                          children: [
+                            SectionFilterChip(
+                              label: 'All',
+                              count: nodeCount,
+                              isSelected: activeFilter == NodeFilter.all,
+                              onTap: () => onFilterChanged(NodeFilter.all),
+                            ),
+                            const SizedBox(width: 8),
+                            SectionFilterChip(
+                              label: 'Active',
+                              count: activeCount,
+                              isSelected: activeFilter == NodeFilter.active,
+                              color: AccentColors.green,
+                              onTap: () => onFilterChanged(NodeFilter.active),
+                            ),
+                            const SizedBox(width: 8),
+                            SectionFilterChip(
+                              label: 'Favorites',
+                              count: favoritesCount,
+                              isSelected: activeFilter == NodeFilter.favorites,
+                              color: AppTheme.warningYellow,
+                              icon: Icons.star,
+                              onTap: () =>
+                                  onFilterChanged(NodeFilter.favorites),
+                            ),
+                            const SizedBox(width: 8),
+                            SectionFilterChip(
+                              label: 'With Position',
+                              count: withPositionCount,
+                              isSelected:
+                                  activeFilter == NodeFilter.withPosition,
+                              color: AccentColors.cyan,
+                              icon: Icons.location_on,
+                              onTap: () =>
+                                  onFilterChanged(NodeFilter.withPosition),
+                            ),
+                            const SizedBox(width: 8),
+                            SectionFilterChip(
+                              label: 'Inactive',
+                              count: inactiveCount,
+                              isSelected: activeFilter == NodeFilter.inactive,
+                              color: context.textTertiary,
+                              onTap: () => onFilterChanged(NodeFilter.inactive),
+                            ),
+                            const SizedBox(width: 8),
+                            SectionFilterChip(
+                              label: 'New',
+                              count: recentlyDiscoveredCount,
+                              isSelected:
+                                  activeFilter == NodeFilter.recentlyDiscovered,
+                              color: AccentColors.purple,
+                              icon: Icons.fiber_new,
+                              onTap: () => onFilterChanged(
+                                NodeFilter.recentlyDiscovered,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _SortButton(
+                              sortOrder: sortOrder,
+                              onChanged: onSortChanged,
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Static toggle at end
+                    const SizedBox(width: 8),
+                    SectionHeadersToggle(
+                      enabled: showSectionHeaders,
+                      onToggle: onToggleSectionHeaders,
+                    ),
+                    const SizedBox(width: 12),
+                  ],
                 ),
-                const SizedBox(width: 12),
-              ],
-            ),
+              ),
+              const SizedBox(height: 8), // Spacing before divider
+              // Divider
+              Container(
+                height: 1,
+                color: context.border.withValues(alpha: 0.3),
+              ),
+            ],
           ),
-          const SizedBox(height: 8), // Spacing before divider
-          // Divider
-          Container(height: 1, color: context.border.withValues(alpha: 0.3)),
-        ],
+        ),
       ),
     );
   }

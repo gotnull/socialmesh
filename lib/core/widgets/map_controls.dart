@@ -222,7 +222,7 @@ class MapControlLayout {
   static const double padding = 16.0;
   static const double controlSpacing = 8.0;
   static const double controlSize = 44.0;
-  static const double zoomControlsHeight = 136.0; // 3 buttons × 44 + 2 dividers
+  static const double zoomControlsHeight = 136.0; // 3 buttons x 44 + 2 dividers
 }
 
 /// Compass widget showing map rotation - shared across all map screens

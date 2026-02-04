@@ -543,9 +543,9 @@ void main() {
         lastSeen: DateTime.now(),
       );
 
-      // Text should be "Seen 401×" - short enough to not need truncation
-      final badgeText = 'Seen ${encounter.encounterCount}×';
-      expect(badgeText, equals('Seen 401×'));
+      // Text should be "Seen 401x" - short enough to not need truncation
+      final badgeText = 'Seen ${encounter.encounterCount}x';
+      expect(badgeText, equals('Seen 401x'));
       expect(badgeText.length, lessThan(15)); // Should be very short
     });
 

@@ -137,7 +137,7 @@ class AREngine {
       // Initialize calibration service
       await _calibration.initialize();
       AppLogging.app(
-        '[AREngine] Calibration initialized - FOV: ${_calibration.state.horizontalFov.toStringAsFixed(1)}°×${_calibration.state.verticalFov.toStringAsFixed(1)}°',
+        '[AREngine] Calibration initialized - FOV: ${_calibration.state.horizontalFov.toStringAsFixed(1)}°x${_calibration.state.verticalFov.toStringAsFixed(1)}°',
       );
 
       // Start high-frequency sensor streams

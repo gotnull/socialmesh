@@ -79,7 +79,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Seen 5×'), findsOneWidget);
+      expect(find.text('Seen 5x'), findsOneWidget);
     });
 
     testWidgets('renders encounter count with thousands separator', (
@@ -91,7 +91,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Seen 1,107×'), findsOneWidget);
+      expect(find.text('Seen 1,107x'), findsOneWidget);
     });
 
     testWidgets('does not render encounter count when 0', (tester) async {
@@ -162,7 +162,7 @@ void main() {
       // All elements should render
       expect(find.text('Emergency Standby'), findsOneWidget);
       expect(find.text('Monitoring for emergencies'), findsOneWidget);
-      expect(find.text('Seen 12×'), findsOneWidget);
+      expect(find.text('Seen 12x'), findsOneWidget);
       expect(find.text('Active recently'), findsOneWidget);
       expect(find.text('Back nearby'), findsOneWidget);
 
@@ -188,7 +188,7 @@ void main() {
 
       // All chips should still render (Wrap handles layout)
       expect(find.text('Camping'), findsOneWidget);
-      expect(find.text('Seen 5×'), findsOneWidget);
+      expect(find.text('Seen 5x'), findsOneWidget);
       expect(find.text('Seen this week'), findsOneWidget);
       expect(find.text('Back nearby'), findsOneWidget);
 

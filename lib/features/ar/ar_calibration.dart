@@ -248,7 +248,7 @@ class ARCalibrationService {
       );
 
       AppLogging.app(
-        '[ARCalibration] Detected FOV: ${fov.horizontal}° × ${fov.vertical}°',
+        '[ARCalibration] Detected FOV: ${fov.horizontal}° x ${fov.vertical}°',
       );
 
       return fov;

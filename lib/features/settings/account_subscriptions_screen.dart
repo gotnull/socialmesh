@@ -1964,8 +1964,8 @@ class _CloudSyncPaywallSheetState
 
           const SizedBox(height: 16),
 
-          // Restore
-          const RestorePurchasesButton(),
+          // Restore - dismiss sheet so snackbar is visible
+          const RestorePurchasesButton(dismissSheetOnComplete: true),
 
           const SizedBox(height: 8),
 

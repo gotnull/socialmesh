@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/safety/lifecycle_mixin.dart';
+import '../../core/safety/error_handler.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/content_moderation_warning.dart';
@@ -1657,7 +1659,8 @@ class _EditProfileSheet extends ConsumerStatefulWidget {
   ConsumerState<_EditProfileSheet> createState() => _EditProfileSheetState();
 }
 
-class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
+class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
+    with LifecycleSafeMixin {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _displayNameController;
   late TextEditingController _bioController;
@@ -1734,31 +1737,34 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
   void _onFieldChanged() {
     if (!_hasChanges) {
-      setState(() => _hasChanges = true);
+      safeSetState(() => _hasChanges = true);
     }
   }
 
   Future<void> _pickAvatar() async {
+    // Capture notifier before any async operation
+    final notifier = ref.read(userProfileProvider.notifier);
+
     final result = await FilePicker.platform.pickFiles(
       type: FileType.image,
       allowMultiple: false,
     );
 
     if (result != null && result.files.isNotEmpty) {
-      setState(() => _isUploadingAvatar = true);
+      safeSetState(() => _isUploadingAvatar = true);
       try {
         final file = File(result.files.first.path!);
-        await ref.read(userProfileProvider.notifier).saveAvatarFromFile(file);
-        // Force refresh to ensure parent screen sees new avatar
-        ref.invalidate(userProfileProvider);
+        await notifier.saveAvatarFromFile(file);
+        // Force refresh - safe because invalidate works even after dispose
         if (mounted) {
-          setState(() => _hasChanges = true);
-          showSuccessSnackBar(context, 'Avatar updated');
+          ref.invalidate(userProfileProvider);
+          safeSetState(() => _hasChanges = true);
+          safeShowSnackBar('Avatar updated');
         }
       } catch (e) {
-        if (mounted) {
-          if (e.toString().contains('Content policy violation') ||
-              e.toString().contains('violates content policy')) {
+        if (e.toString().contains('Content policy violation') ||
+            e.toString().contains('violates content policy')) {
+          if (mounted) {
             await ContentModerationWarning.show(
               context,
               result: ContentModerationCheckResult(
@@ -1767,60 +1773,64 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                 categories: ['Inappropriate Content'],
               ),
             );
-          } else {
-            showErrorSnackBar(context, 'Failed to upload avatar: $e');
           }
+        } else {
+          safeShowSnackBar(
+            'Failed to upload avatar: $e',
+            backgroundColor: Colors.red,
+          );
         }
       } finally {
-        if (mounted) {
-          setState(() => _isUploadingAvatar = false);
-        }
+        safeSetState(() => _isUploadingAvatar = false);
       }
     }
   }
 
   Future<void> _removeAvatar() async {
-    setState(() => _isUploadingAvatar = true);
+    // Capture notifier before async operation
+    final notifier = ref.read(userProfileProvider.notifier);
+
+    safeSetState(() => _isUploadingAvatar = true);
     try {
-      await ref.read(userProfileProvider.notifier).deleteAvatar();
-      // Force refresh to ensure parent screen sees avatar removed
-      ref.invalidate(userProfileProvider);
+      await notifier.deleteAvatar();
       if (mounted) {
-        setState(() => _hasChanges = true);
-        showSuccessSnackBar(context, 'Avatar removed');
+        ref.invalidate(userProfileProvider);
+        safeSetState(() => _hasChanges = true);
+        safeShowSnackBar('Avatar removed');
       }
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to remove avatar: $e');
-      }
+      safeShowSnackBar(
+        'Failed to remove avatar: $e',
+        backgroundColor: Colors.red,
+      );
     } finally {
-      if (mounted) {
-        setState(() => _isUploadingAvatar = false);
-      }
+      safeSetState(() => _isUploadingAvatar = false);
     }
   }
 
   Future<void> _pickBanner() async {
+    // Capture notifier before async operation
+    final notifier = ref.read(userProfileProvider.notifier);
+
     final result = await FilePicker.platform.pickFiles(
       type: FileType.image,
       allowMultiple: false,
     );
 
     if (result != null && result.files.isNotEmpty) {
-      setState(() => _isUploadingBanner = true);
+      safeSetState(() => _isUploadingBanner = true);
       try {
         final file = File(result.files.first.path!);
-        await ref.read(userProfileProvider.notifier).saveBannerFromFile(file);
-        // Force refresh to ensure parent screen sees new banner
-        ref.invalidate(userProfileProvider);
+        await notifier.saveBannerFromFile(file);
         if (mounted) {
-          setState(() => _hasChanges = true);
-          showSuccessSnackBar(context, 'Banner updated');
+          ref.invalidate(userProfileProvider);
+          safeSetState(() => _hasChanges = true);
+          safeShowSnackBar('Banner updated');
         }
       } catch (e) {
-        if (mounted) {
-          if (e.toString().contains('Content policy violation') ||
-              e.toString().contains('violates content policy')) {
+        if (e.toString().contains('Content policy violation') ||
+            e.toString().contains('violates content policy')) {
+          if (mounted) {
             await ContentModerationWarning.show(
               context,
               result: ContentModerationCheckResult(
@@ -1829,281 +1839,295 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                 categories: ['Inappropriate Content'],
               ),
             );
-          } else {
-            showErrorSnackBar(context, 'Failed to upload banner: $e');
           }
+        } else {
+          safeShowSnackBar(
+            'Failed to upload banner: $e',
+            backgroundColor: Colors.red,
+          );
         }
       } finally {
-        if (mounted) {
-          setState(() => _isUploadingBanner = false);
-        }
+        safeSetState(() => _isUploadingBanner = false);
       }
     }
   }
 
   Future<void> _removeBanner() async {
-    setState(() => _isUploadingBanner = true);
+    // Capture notifier before async operation
+    final notifier = ref.read(userProfileProvider.notifier);
+
+    safeSetState(() => _isUploadingBanner = true);
     try {
-      await ref.read(userProfileProvider.notifier).deleteBanner();
-      // Force refresh to ensure parent screen sees banner removed
-      ref.invalidate(userProfileProvider);
+      await notifier.deleteBanner();
       if (mounted) {
-        setState(() => _hasChanges = true);
-        showSuccessSnackBar(context, 'Banner removed');
+        ref.invalidate(userProfileProvider);
+        safeSetState(() => _hasChanges = true);
+        safeShowSnackBar('Banner removed');
       }
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to remove banner: $e');
-      }
+      safeShowSnackBar(
+        'Failed to remove banner: $e',
+        backgroundColor: Colors.red,
+      );
     } finally {
-      if (mounted) {
-        setState(() => _isUploadingBanner = false);
-      }
+      safeSetState(() => _isUploadingBanner = false);
     }
   }
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Show loading immediately when save is tapped
+    safeSetState(() => _isLoading = true);
+
+    // Add breadcrumb for crash context
+    AppErrorHandler.addBreadcrumb('Profile save started');
+
+    // CRITICAL: Capture ALL provider dependencies BEFORE any await
+    // This prevents accessing ref after widget disposal
     final moderationService = ref.read(contentModerationServiceProvider);
     final currentUser = ref.read(currentUserProvider);
+    final cloudSyncService = ref.read(profileCloudSyncServiceProvider);
+    final profileNotifier = ref.read(userProfileProvider.notifier);
 
-    // 1. Check Display Name - REJECT immediately if violates (no "post anyway")
-    final displayName = _displayNameController.text.trim();
-    if (displayName.isNotEmpty) {
-      final displayNameCheck = await moderationService.checkText(
-        displayName,
-        useServerCheck: true,
-      );
-
-      if (!displayNameCheck.passed ||
-          displayNameCheck.action == 'reject' ||
-          displayNameCheck.action == 'review' ||
-          displayNameCheck.action == 'flag') {
-        // Display name violations are NOT allowed - reject outright
-        if (!mounted) return;
-        await ContentModerationWarning.show(
-          context,
-          result: ContentModerationCheckResult(
-            passed: false,
-            action: 'reject',
-            categories: displayNameCheck.categories.map((c) => c.name).toList(),
-            details:
-                'Display names cannot contain inappropriate content. Please choose a different name.',
-          ),
+    try {
+      // 1. Check Display Name - REJECT immediately if violates (no "post anyway")
+      final displayName = _displayNameController.text.trim();
+      if (displayName.isNotEmpty) {
+        final displayNameCheck = await moderationService.checkText(
+          displayName,
+          useServerCheck: true,
         );
-        return;
+
+        if (!displayNameCheck.passed ||
+            displayNameCheck.action == 'reject' ||
+            displayNameCheck.action == 'review' ||
+            displayNameCheck.action == 'flag') {
+          // Display name violations are NOT allowed - reject outright
+          if (!mounted) return;
+          await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: displayNameCheck.categories
+                  .map((c) => c.name)
+                  .toList(),
+              details:
+                  'Display names cannot contain inappropriate content. Please choose a different name.',
+            ),
+          );
+          return;
+        }
+
+        // 1b. Check display name uniqueness - using pre-captured cloudSyncService
+        if (currentUser != null) {
+          final isTaken = await cloudSyncService.isDisplayNameTaken(
+            displayName,
+            currentUser.uid,
+          );
+          if (isTaken) {
+            if (!mounted) return;
+            showErrorSnackBar(
+              context,
+              'This display name is already taken. Please choose a different one.',
+            );
+            return;
+          }
+        }
       }
 
-      // 1b. Check display name uniqueness
-      if (currentUser != null) {
-        final isTaken = await ref
-            .read(profileCloudSyncServiceProvider)
-            .isDisplayNameTaken(displayName, currentUser.uid);
-        if (isTaken) {
+      // 2. Check Callsign - REJECT immediately if violates (no "post anyway")
+      final callsign = _callsignController.text.trim();
+      if (callsign.isNotEmpty) {
+        final callsignCheck = await moderationService.checkText(
+          callsign,
+          useServerCheck: true,
+        );
+
+        if (!callsignCheck.passed ||
+            callsignCheck.action == 'reject' ||
+            callsignCheck.action == 'review' ||
+            callsignCheck.action == 'flag') {
+          // Callsign violations are NOT allowed - reject outright
           if (!mounted) return;
-          showErrorSnackBar(
+          await ContentModerationWarning.show(
             context,
-            'This display name is already taken. Please choose a different one.',
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: callsignCheck.categories.map((c) => c.name).toList(),
+              details:
+                  'Callsigns cannot contain inappropriate content. Please use a valid callsign.',
+            ),
           );
           return;
         }
       }
-    }
 
-    // 2. Check Callsign - REJECT immediately if violates (no "post anyway")
-    final callsign = _callsignController.text.trim();
-    if (callsign.isNotEmpty) {
-      final callsignCheck = await moderationService.checkText(
-        callsign,
-        useServerCheck: true,
-      );
-
-      if (!callsignCheck.passed ||
-          callsignCheck.action == 'reject' ||
-          callsignCheck.action == 'review' ||
-          callsignCheck.action == 'flag') {
-        // Callsign violations are NOT allowed - reject outright
-        if (!mounted) return;
-        await ContentModerationWarning.show(
-          context,
-          result: ContentModerationCheckResult(
-            passed: false,
-            action: 'reject',
-            categories: callsignCheck.categories.map((c) => c.name).toList(),
-            details:
-                'Callsigns cannot contain inappropriate content. Please use a valid callsign.',
-          ),
+      // 3. Check Bio - REJECT immediately if violates (no "post anyway")
+      final bio = _bioController.text.trim();
+      if (bio.isNotEmpty) {
+        final bioCheck = await moderationService.checkText(
+          bio,
+          useServerCheck: true,
         );
-        return;
+
+        if (!bioCheck.passed || bioCheck.action == 'reject') {
+          // Bio content blocked - show error and stop
+          if (!mounted) return;
+          await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: bioCheck.categories.map((c) => c.name).toList(),
+              details: bioCheck.details,
+            ),
+          );
+          return;
+        }
       }
-    }
 
-    // 3. Check Bio - REJECT immediately if violates (no "post anyway")
-    final bio = _bioController.text.trim();
-    if (bio.isNotEmpty) {
-      final bioCheck = await moderationService.checkText(
-        bio,
-        useServerCheck: true,
-      );
-
-      if (!bioCheck.passed || bioCheck.action == 'reject') {
-        // Bio content blocked - show error and stop
-        if (!mounted) return;
-        await ContentModerationWarning.show(
-          context,
-          result: ContentModerationCheckResult(
-            passed: false,
-            action: 'reject',
-            categories: bioCheck.categories.map((c) => c.name).toList(),
-            details: bioCheck.details,
-          ),
+      // 4. Check Website - REJECT immediately if violates
+      final website = _websiteController.text.trim();
+      if (website.isNotEmpty) {
+        final websiteCheck = await moderationService.checkText(
+          website,
+          useServerCheck: true,
         );
-        return;
+
+        if (!websiteCheck.passed || websiteCheck.action == 'reject') {
+          if (!mounted) return;
+          await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: websiteCheck.categories.map((c) => c.name).toList(),
+              details: 'Website URL contains inappropriate content.',
+            ),
+          );
+          return;
+        }
       }
-    }
 
-    // 4. Check Website - REJECT immediately if violates
-    final website = _websiteController.text.trim();
-    if (website.isNotEmpty) {
-      final websiteCheck = await moderationService.checkText(
-        website,
-        useServerCheck: true,
-      );
-
-      if (!websiteCheck.passed || websiteCheck.action == 'reject') {
-        if (!mounted) return;
-        await ContentModerationWarning.show(
-          context,
-          result: ContentModerationCheckResult(
-            passed: false,
-            action: 'reject',
-            categories: websiteCheck.categories.map((c) => c.name).toList(),
-            details: 'Website URL contains inappropriate content.',
-          ),
+      // 5. Check Twitter - REJECT immediately if violates
+      final twitter = _twitterController.text.trim();
+      if (twitter.isNotEmpty) {
+        final twitterCheck = await moderationService.checkText(
+          twitter,
+          useServerCheck: true,
         );
-        return;
+
+        if (!twitterCheck.passed || twitterCheck.action == 'reject') {
+          if (!mounted) return;
+          await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: twitterCheck.categories.map((c) => c.name).toList(),
+              details: 'Twitter username contains inappropriate content.',
+            ),
+          );
+          return;
+        }
       }
-    }
 
-    // 5. Check Twitter - REJECT immediately if violates
-    final twitter = _twitterController.text.trim();
-    if (twitter.isNotEmpty) {
-      final twitterCheck = await moderationService.checkText(
-        twitter,
-        useServerCheck: true,
-      );
-
-      if (!twitterCheck.passed || twitterCheck.action == 'reject') {
-        if (!mounted) return;
-        await ContentModerationWarning.show(
-          context,
-          result: ContentModerationCheckResult(
-            passed: false,
-            action: 'reject',
-            categories: twitterCheck.categories.map((c) => c.name).toList(),
-            details: 'Twitter username contains inappropriate content.',
-          ),
+      // 6. Check Mastodon - REJECT immediately if violates
+      final mastodon = _mastodonController.text.trim();
+      if (mastodon.isNotEmpty) {
+        final mastodonCheck = await moderationService.checkText(
+          mastodon,
+          useServerCheck: true,
         );
-        return;
+
+        if (!mastodonCheck.passed || mastodonCheck.action == 'reject') {
+          if (!mounted) return;
+          await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: mastodonCheck.categories.map((c) => c.name).toList(),
+              details: 'Mastodon handle contains inappropriate content.',
+            ),
+          );
+          return;
+        }
       }
-    }
 
-    // 6. Check Mastodon - REJECT immediately if violates
-    final mastodon = _mastodonController.text.trim();
-    if (mastodon.isNotEmpty) {
-      final mastodonCheck = await moderationService.checkText(
-        mastodon,
-        useServerCheck: true,
-      );
-
-      if (!mastodonCheck.passed || mastodonCheck.action == 'reject') {
-        if (!mounted) return;
-        await ContentModerationWarning.show(
-          context,
-          result: ContentModerationCheckResult(
-            passed: false,
-            action: 'reject',
-            categories: mastodonCheck.categories.map((c) => c.name).toList(),
-            details: 'Mastodon handle contains inappropriate content.',
-          ),
+      // 7. Check GitHub - REJECT immediately if violates
+      final github = _githubController.text.trim();
+      if (github.isNotEmpty) {
+        final githubCheck = await moderationService.checkText(
+          github,
+          useServerCheck: true,
         );
-        return;
+
+        if (!githubCheck.passed || githubCheck.action == 'reject') {
+          if (!mounted) return;
+          await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: githubCheck.categories.map((c) => c.name).toList(),
+              details: 'GitHub username contains inappropriate content.',
+            ),
+          );
+          return;
+        }
       }
-    }
 
-    // 7. Check GitHub - REJECT immediately if violates
-    final github = _githubController.text.trim();
-    if (github.isNotEmpty) {
-      final githubCheck = await moderationService.checkText(
-        github,
-        useServerCheck: true,
-      );
-
-      if (!githubCheck.passed || githubCheck.action == 'reject') {
-        if (!mounted) return;
-        await ContentModerationWarning.show(
-          context,
-          result: ContentModerationCheckResult(
-            passed: false,
-            action: 'reject',
-            categories: githubCheck.categories.map((c) => c.name).toList(),
-            details: 'GitHub username contains inappropriate content.',
-          ),
+      // 8. Check Discord - REJECT immediately if violates
+      final discord = _discordController.text.trim();
+      if (discord.isNotEmpty) {
+        final discordCheck = await moderationService.checkText(
+          discord,
+          useServerCheck: true,
         );
-        return;
+
+        if (!discordCheck.passed || discordCheck.action == 'reject') {
+          if (!mounted) return;
+          await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: discordCheck.categories.map((c) => c.name).toList(),
+              details: 'Discord username contains inappropriate content.',
+            ),
+          );
+          return;
+        }
       }
-    }
 
-    // 8. Check Discord - REJECT immediately if violates
-    final discord = _discordController.text.trim();
-    if (discord.isNotEmpty) {
-      final discordCheck = await moderationService.checkText(
-        discord,
-        useServerCheck: true,
-      );
-
-      if (!discordCheck.passed || discordCheck.action == 'reject') {
-        if (!mounted) return;
-        await ContentModerationWarning.show(
-          context,
-          result: ContentModerationCheckResult(
-            passed: false,
-            action: 'reject',
-            categories: discordCheck.categories.map((c) => c.name).toList(),
-            details: 'Discord username contains inappropriate content.',
-          ),
+      // 9. Check Telegram - REJECT immediately if violates
+      final telegram = _telegramController.text.trim();
+      if (telegram.isNotEmpty) {
+        final telegramCheck = await moderationService.checkText(
+          telegram,
+          useServerCheck: true,
         );
-        return;
+
+        if (!telegramCheck.passed || telegramCheck.action == 'reject') {
+          if (!mounted) return;
+          await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: telegramCheck.categories.map((c) => c.name).toList(),
+              details: 'Telegram username contains inappropriate content.',
+            ),
+          );
+          return;
+        }
       }
-    }
 
-    // 9. Check Telegram - REJECT immediately if violates
-    final telegram = _telegramController.text.trim();
-    if (telegram.isNotEmpty) {
-      final telegramCheck = await moderationService.checkText(
-        telegram,
-        useServerCheck: true,
-      );
-
-      if (!telegramCheck.passed || telegramCheck.action == 'reject') {
-        if (!mounted) return;
-        await ContentModerationWarning.show(
-          context,
-          result: ContentModerationCheckResult(
-            passed: false,
-            action: 'reject',
-            categories: telegramCheck.categories.map((c) => c.name).toList(),
-            details: 'Telegram username contains inappropriate content.',
-          ),
-        );
-        return;
-      }
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
+      // All validation passed - now save the profile
       final socialLinks = ProfileSocialLinks(
         twitter: _twitterController.text.isEmpty
             ? null
@@ -2120,45 +2144,38 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
             : _telegramController.text,
       );
 
-      await ref
-          .read(userProfileProvider.notifier)
-          .updateProfile(
-            displayName: _displayNameController.text.trim(),
-            bio: _bioController.text.isEmpty
-                ? null
-                : _bioController.text.trim(),
-            callsign: _callsignController.text.isEmpty
-                ? null
-                : _callsignController.text.trim().toUpperCase(),
-            website: _websiteController.text.isEmpty
-                ? null
-                : _websiteController.text.trim(),
-            socialLinks: socialLinks.isEmpty ? null : socialLinks,
-            clearBio: _bioController.text.isEmpty,
-            clearCallsign: _callsignController.text.isEmpty,
-            clearWebsite: _websiteController.text.isEmpty,
-            clearSocialLinks: socialLinks.isEmpty,
-          );
+      // Use pre-captured profileNotifier instead of ref.read after await
+      await profileNotifier.updateProfile(
+        displayName: _displayNameController.text.trim(),
+        bio: _bioController.text.isEmpty ? null : _bioController.text.trim(),
+        callsign: _callsignController.text.isEmpty
+            ? null
+            : _callsignController.text.trim().toUpperCase(),
+        website: _websiteController.text.isEmpty
+            ? null
+            : _websiteController.text.trim(),
+        socialLinks: socialLinks.isEmpty ? null : socialLinks,
+        clearBio: _bioController.text.isEmpty,
+        clearCallsign: _callsignController.text.isEmpty,
+        clearWebsite: _websiteController.text.isEmpty,
+        clearSocialLinks: socialLinks.isEmpty,
+      );
 
-      if (mounted) {
-        Navigator.pop(
-          context,
-          true,
-        ); // Return true to indicate profile was updated
-        showSuccessSnackBar(context, 'Profile updated');
-      }
+      AppErrorHandler.addBreadcrumb('Profile save completed');
+
+      // Use safe navigation methods from LifecycleSafeMixin
+      safeNavigatorPop(true);
+      safeShowSnackBar('Profile updated', backgroundColor: Colors.green);
     } on DisplayNameTakenException catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, e.toString());
-      }
+      safeShowSnackBar(e.toString(), backgroundColor: Colors.red);
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to save profile: $e');
-      }
+      AppErrorHandler.addBreadcrumb('Profile save failed: $e');
+      safeShowSnackBar(
+        'Failed to save profile: $e',
+        backgroundColor: Colors.red,
+      );
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      safeSetState(() => _isLoading = false);
     }
   }
 

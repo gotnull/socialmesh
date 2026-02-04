@@ -95,17 +95,31 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall> {
         AppLogging.subscriptions(
           '☁️ Cloud Sync: Restore successful - full access granted',
         );
-        showSuccessSnackBar(context, 'Subscription restored');
+        // Dismiss sheet first, then show snackbar
         widget.onSubscribed?.call();
+        if (mounted) {
+          showSuccessSnackBar(context, 'Subscription restored');
+        }
       } else if (success) {
         // User has purchases but no cloud sync entitlement
         AppLogging.subscriptions(
           '☁️ Cloud Sync: Restore found purchases but no cloud sync entitlement',
         );
-        showInfoSnackBar(context, 'No Cloud Sync subscription found');
+        // Dismiss sheet first so snackbar is visible
+        widget.onDismiss?.call();
+        // Small delay to allow sheet to close before showing snackbar
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        if (mounted) {
+          showInfoSnackBar(context, 'No Cloud Sync subscription found');
+        }
       } else {
         AppLogging.subscriptions('☁️ Cloud Sync: Restore found no purchases');
-        showInfoSnackBar(context, 'No purchases found to restore');
+        // Dismiss sheet first so snackbar is visible
+        widget.onDismiss?.call();
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        if (mounted) {
+          showInfoSnackBar(context, 'No purchases found to restore');
+        }
       }
     } catch (e) {
       AppLogging.subscriptions('☁️ Cloud Sync: Restore error: $e');

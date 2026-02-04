@@ -12,7 +12,7 @@ class NumberFormatUtils {
   }
 
   /// Format count with thousands separators and optional suffix.
-  /// Example: formatCount(1107, suffix: '×') → "1,107×"
+  /// Example: formatCount(1107, suffix: 'x') → "1,107x"
   static String formatCount(int value, {String? suffix}) {
     final formatted = formatWithThousandsSeparators(value);
     return suffix != null ? '$formatted$suffix' : formatted;

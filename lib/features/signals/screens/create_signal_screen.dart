@@ -13,6 +13,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/gradient_border_container.dart';
@@ -48,7 +49,7 @@ class CreateSignalScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, LifecycleSafeMixin<CreateSignalScreen> {
   final TextEditingController _contentController = TextEditingController();
   final TextEditingController _statusController = TextEditingController();
   final FocusNode _contentFocusNode = FocusNode();
@@ -854,39 +855,39 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
   }
 
   Future<void> _getLocation() async {
-    setState(() => _isLoadingLocation = true);
+    // Capture providers BEFORE await
+    final myNodeNum = ref.read(myNodeNumProvider);
+    final nodes = ref.read(nodesProvider);
+
+    safeSetState(() => _isLoadingLocation = true);
     _locationLoadingController.forward();
 
     try {
       final settings = await ref.read(settingsServiceProvider.future);
-      final myNodeNum = ref.read(myNodeNumProvider);
+      if (!mounted) return;
+
       if (myNodeNum == null) {
-        if (mounted) {
-          showErrorSnackBar(context, 'No connected device location available');
-        }
+        showErrorSnackBar(context, 'No connected device location available');
         return;
       }
 
-      final nodes = ref.read(nodesProvider);
       final myNode = nodes[myNodeNum];
       final nodeLat = myNode?.latitude;
       final nodeLon = myNode?.longitude;
 
       if (nodeLat == null || nodeLon == null) {
-        if (mounted) {
-          showActionSnackBar(
-            context,
-            'Device has no location yet. Enable GPS or set a fixed position.',
-            actionLabel: 'Settings',
-            type: SnackBarType.warning,
-            onAction: () {
-              if (!context.mounted) return;
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SignalSettingsScreen()),
-              );
-            },
-          );
-        }
+        showActionSnackBar(
+          context,
+          'Device has no location yet. Enable GPS or set a fixed position.',
+          actionLabel: 'Settings',
+          type: SnackBarType.warning,
+          onAction: () {
+            if (!context.mounted) return;
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SignalSettingsScreen()),
+            );
+          },
+        );
         return;
       }
 
@@ -898,20 +899,15 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
         name: 'Approx. area (~${radiusMeters}m)',
       );
 
-      if (mounted) {
-        setState(() => _location = safeLocation);
-      }
+      safeSetState(() => _location = safeLocation);
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to get location');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to get location');
     } finally {
       if (mounted) {
         // Fade out the loading card, then update state
         await _locationLoadingController.reverse();
-        if (mounted) {
-          setState(() => _isLoadingLocation = false);
-        }
+        safeSetState(() => _isLoadingLocation = false);
       }
     }
   }
