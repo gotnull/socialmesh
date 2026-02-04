@@ -51,6 +51,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   String? _errorMessage;
   String? _savedDeviceNotFoundName;
   bool _showPairingInvalidationHint = false;
+  bool _showAutoReconnectDisabledHint = false;
   String? _savedDeviceId;
   String? _savedDeviceName;
   TransportType? _savedDeviceTransportType;
@@ -83,6 +84,24 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
           setState(() {
             _savedDeviceNotFoundName =
                 settings.lastDeviceName ?? 'Your saved device';
+          });
+        }
+      });
+    }
+
+    // Check if we're shown because auto-reconnect is disabled (but user has paired before)
+    // This happens when user explicitly disabled auto-reconnect in settings
+    if (!widget.isOnboarding && !widget.isInline) {
+      ref.read(settingsServiceProvider.future).then((settings) {
+        if (mounted &&
+            !settings.autoReconnect &&
+            settings.lastDeviceId != null) {
+          AppLogging.connection(
+            '📡 SCANNER: Shown because auto-reconnect is disabled',
+          );
+          setState(() {
+            _showAutoReconnectDisabledHint = true;
+            _savedDeviceName = settings.lastDeviceName;
           });
         }
       });
@@ -1285,6 +1304,68 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                           ),
                           onPressed: () =>
                               setState(() => _savedDeviceNotFoundName = null),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                // Info banner when auto-reconnect is disabled
+                if (_showAutoReconnectDisabledHint)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: context.accentColor.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.bluetooth_disabled,
+                          color: context.accentColor,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Auto-reconnect is disabled',
+                                style: TextStyle(
+                                  color: context.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _savedDeviceName != null
+                                    ? 'Select "$_savedDeviceName" below, or choose a different device to connect.'
+                                    : 'Select a device below to connect manually.',
+                                style: TextStyle(
+                                  color: context.textSecondary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.close,
+                            color: context.textSecondary,
+                            size: 20,
+                          ),
+                          onPressed: () => setState(
+                            () => _showAutoReconnectDisabledHint = false,
+                          ),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),

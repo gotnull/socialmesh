@@ -97,13 +97,23 @@ class AppInitNotifier extends Notifier<AppInitState> {
       _initializeBackgroundServices();
 
       // Determine initial state based on whether user has ever paired
+      // AND whether auto-reconnect is enabled
       if (hasEverPaired) {
-        // User has paired before - go directly to main UI
-        // Device connection will happen in background via DeviceConnectionNotifier
-        AppLogging.connection(
-          '🎯 AppInitNotifier: User has paired before, setting ready',
-        );
-        state = AppInitState.ready;
+        // User has paired before - check if auto-reconnect is enabled
+        if (settings.autoReconnect) {
+          // Auto-reconnect enabled - go to main UI, connection happens in background
+          AppLogging.connection(
+            '🎯 AppInitNotifier: User has paired before, auto-reconnect ON, setting ready',
+          );
+          state = AppInitState.ready;
+        } else {
+          // Auto-reconnect disabled - go to scanner so user can manually connect
+          // This respects the user's choice to not auto-connect
+          AppLogging.connection(
+            '🎯 AppInitNotifier: User has paired before but auto-reconnect OFF, setting needsScanner',
+          );
+          state = AppInitState.needsScanner;
+        }
       } else {
         // Never paired - need to go through scanner first
         AppLogging.connection(
