@@ -960,6 +960,10 @@ class _AccountSubscriptionsScreenState
       );
       // Force profile to reload with new auth state
       ref.invalidate(userProfileProvider);
+
+      // Sync RevenueCat with Firebase to link purchases to this account
+      AppLogging.subscriptions('║ 🔗 Syncing RevenueCat with Firebase...');
+      await syncRevenueCatWithFirebase(ref);
     } catch (e) {
       AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
@@ -1002,6 +1006,10 @@ class _AccountSubscriptionsScreenState
       );
       // Force profile to reload with new auth state
       ref.invalidate(userProfileProvider);
+
+      // Sync RevenueCat with Firebase to link purchases to this account
+      AppLogging.subscriptions('║ 🔗 Syncing RevenueCat with Firebase...');
+      await syncRevenueCatWithFirebase(ref);
     } catch (e) {
       AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
@@ -1044,6 +1052,36 @@ class _AccountSubscriptionsScreenState
       );
       // Force profile to reload with new auth state
       ref.invalidate(userProfileProvider);
+
+      // Sync RevenueCat with Firebase to link purchases to this account
+      AppLogging.subscriptions('║ 🔗 Syncing RevenueCat with Firebase...');
+      await syncRevenueCatWithFirebase(ref);
+    } on AccountLinkingRequiredException catch (e) {
+      AppLogging.subscriptions(
+        '╔══════════════════════════════════════════════════════════════',
+      );
+      AppLogging.subscriptions('║ ⚠️ GitHub sign-in requires account linking');
+      AppLogging.subscriptions('║    Email: ${e.email}');
+      AppLogging.subscriptions(
+        '║    Existing providers: ${e.existingProviders}',
+      );
+      AppLogging.subscriptions(
+        '╚══════════════════════════════════════════════════════════════',
+      );
+      if (mounted) {
+        await _showAccountLinkingDialog(context, e);
+      }
+    } on FirebaseAuthException catch (e) {
+      AppLogging.subscriptions(
+        '╔══════════════════════════════════════════════════════════════',
+      );
+      AppLogging.subscriptions('║ ❌ GitHub sign-in FAILED: ${e.code}');
+      AppLogging.subscriptions(
+        '╚══════════════════════════════════════════════════════════════',
+      );
+      if (mounted && e.code != 'web-context-cancelled') {
+        showErrorSnackBar(context, 'Sign in failed: ${e.message}');
+      }
     } catch (e) {
       AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
@@ -1053,11 +1091,83 @@ class _AccountSubscriptionsScreenState
         '╚══════════════════════════════════════════════════════════════',
       );
       AppLogging.app('GitHub sign-in error: $e');
-      if (mounted) {
-        showErrorSnackBar(context, 'Sign in failed: $e');
-      }
+      // User cancelled - don't show error
     } finally {
       if (mounted) setState(() => _isSigningIn = false);
+    }
+  }
+
+  Future<void> _showAccountLinkingDialog(
+    BuildContext context,
+    AccountLinkingRequiredException e,
+  ) async {
+    final providerName = e.existingProviders.contains('google.com')
+        ? 'Google'
+        : e.existingProviders.contains('apple.com')
+        ? 'Apple'
+        : e.existingProviders.first;
+
+    // Capture before async gap
+    final cardColor = context.card;
+    final messenger = ScaffoldMessenger.of(context);
+
+    final shouldLink = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: cardColor,
+        title: const Text('Link GitHub Account'),
+        content: Text(
+          'An account with ${e.email} already exists using $providerName.\n\n'
+          'Sign in with $providerName to link your GitHub account?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text('Sign in with $providerName'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLink == true && mounted) {
+      try {
+        final authService = ref.read(authServiceProvider);
+
+        // Sign in with the existing provider
+        if (e.existingProviders.contains('google.com')) {
+          await authService.signInWithGoogle();
+        } else if (e.existingProviders.contains('apple.com')) {
+          await authService.signInWithApple();
+        }
+
+        // Now link the GitHub credential
+        await authService.linkPendingCredential(e.pendingCredential);
+
+        if (mounted) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: const Text('GitHub account linked successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          ref.invalidate(userProfileProvider);
+          await syncRevenueCatWithFirebase(ref);
+        }
+      } catch (linkError) {
+        if (mounted) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: const Text('Failed to link accounts'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          AppLogging.auth('Account linking error: $linkError');
+        }
+      }
     }
   }
 

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -803,8 +804,18 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
 
   Future<void> _initializePurchases() async {
     try {
-      await ref.read(subscriptionServiceProvider.future);
+      final service = await ref.read(subscriptionServiceProvider.future);
       AppLogging.debug('💰 RevenueCat initialized');
+
+      // If user is already signed in, sync RevenueCat with Firebase UID
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      if (firebaseUser != null) {
+        AppLogging.subscriptions(
+          '💰 User already signed in, syncing RevenueCat with Firebase UID...',
+        );
+        await service.logIn(firebaseUser.uid);
+        AppLogging.subscriptions('💰 RevenueCat synced with Firebase UID');
+      }
 
       // Initialize cloud sync entitlement service
       final cloudSyncService = ref.read(cloudSyncEntitlementServiceProvider);
