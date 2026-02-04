@@ -38,6 +38,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   late ScrollController _scrollController;
   bool _showTitle = false;
 
+  // Variant selection state
+  ProductVariant? _selectedVariant;
+  final Map<String, String> _selectedOptions = {};
+
   @override
   void initState() {
     super.initState();
@@ -534,6 +538,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             ],
           ),
 
+          // Variant selection (if product has options)
+          if (product.hasOptions) ...[
+            const SizedBox(height: 20),
+            _buildVariantSelector(product),
+          ],
+
           const SizedBox(height: 20),
           Divider(color: context.border),
           SizedBox(height: 16),
@@ -576,6 +586,140 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   String _truncateDescription(String desc) {
     if (desc.length <= 200) return desc;
     return '${desc.substring(0, 200)}...';
+  }
+
+  /// Build the variant selector UI
+  Widget _buildVariantSelector(ShopProduct product) {
+    // Initialize selected variant if not set
+    if (_selectedVariant == null && product.variants.isNotEmpty) {
+      _selectedVariant = product.defaultVariant;
+      // Initialize selected options from default variant
+      if (_selectedVariant != null) {
+        if (_selectedVariant!.option1 != null && product.options.isNotEmpty) {
+          _selectedOptions[product.options[0].name] =
+              _selectedVariant!.option1!;
+        }
+        if (_selectedVariant!.option2 != null && product.options.length > 1) {
+          _selectedOptions[product.options[1].name] =
+              _selectedVariant!.option2!;
+        }
+        if (_selectedVariant!.option3 != null && product.options.length > 2) {
+          _selectedOptions[product.options[2].name] =
+              _selectedVariant!.option3!;
+        }
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final option in product.options) ...[
+          Text(
+            option.name,
+            style: TextStyle(
+              color: context.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: option.values.map((value) {
+              final isSelected = _selectedOptions[option.name] == value;
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedOptions[option.name] = value;
+                    // Find matching variant
+                    _selectedVariant = _findMatchingVariant(product);
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? context.accentColor.withValues(alpha: 0.15)
+                        : context.card,
+                    border: Border.all(
+                      color: isSelected ? context.accentColor : context.border,
+                      width: isSelected ? 2 : 1,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _formatOptionValue(value),
+                    style: TextStyle(
+                      color: isSelected
+                          ? context.accentColor
+                          : context.textPrimary,
+                      fontSize: 14,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+        ],
+        // Show selected variant price if different from base
+        if (_selectedVariant != null &&
+            _selectedVariant!.price != product.price) ...[
+          Row(
+            children: [
+              Icon(Icons.info_outline, size: 16, color: context.textTertiary),
+              const SizedBox(width: 6),
+              Text(
+                'Selected: \$${_selectedVariant!.price.toStringAsFixed(2)}',
+                style: TextStyle(color: context.textSecondary, fontSize: 14),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Find the variant matching current option selections
+  ProductVariant? _findMatchingVariant(ShopProduct product) {
+    for (final variant in product.variants) {
+      bool matches = true;
+
+      if (product.options.isNotEmpty) {
+        final opt1 = _selectedOptions[product.options[0].name];
+        if (opt1 != null && variant.option1 != opt1) matches = false;
+      }
+      if (product.options.length > 1) {
+        final opt2 = _selectedOptions[product.options[1].name];
+        if (opt2 != null && variant.option2 != opt2) matches = false;
+      }
+      if (product.options.length > 2) {
+        final opt3 = _selectedOptions[product.options[2].name];
+        if (opt3 != null && variant.option3 != opt3) matches = false;
+      }
+
+      if (matches) return variant;
+    }
+    return product.defaultVariant;
+  }
+
+  /// Format option value for display (clean up SKU codes)
+  String _formatOptionValue(String value) {
+    // Remove SKU codes in brackets like "[K257-01]" for cleaner display
+    return value.replaceAll(RegExp(r'\s*\[[^\]]+\]'), '').trim();
+  }
+
+  /// Get the effective price (selected variant or base price)
+  double _getEffectivePrice(ShopProduct product) {
+    return _selectedVariant?.price ?? product.price;
   }
 
   bool _hasSpecs(ShopProduct product) {
@@ -936,7 +1080,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         ),
                       ),
                       Text(
-                        product.formattedPrice,
+                        '\$${_getEffectivePrice(product).toStringAsFixed(2)}',
                         style: TextStyle(
                           color: context.accentColor,
                           fontSize: 22,

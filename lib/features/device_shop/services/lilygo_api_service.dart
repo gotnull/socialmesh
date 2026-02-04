@@ -252,53 +252,96 @@ class LilygoApiService {
     return false;
   }
 
-  /// Convert LILYGO product to ShopProduct
+  /// Convert LILYGO product to ShopProduct with full variant support
   ShopProduct _toShopProduct(LilygoProduct product) {
     AppLogging.shop('$_tag Converting: ${product.title}');
     AppLogging.shop('$_tag   Handle: ${product.handle}');
     AppLogging.shop('$_tag   Variants: ${product.variants.length}');
+    AppLogging.shop('$_tag   Options: ${product.options.length}');
     AppLogging.shop('$_tag   Images: ${product.images.length}');
     AppLogging.shop('$_tag   Tags: ${product.tags}');
 
-    // Find variants - note: Shopify 'available' field only reflects the
-    // DEFAULT warehouse inventory. LILYGO has multiple warehouses (China,
-    // US, Germany) and the website allows selecting different ones.
-    // A product is generally "in stock" if it's published on the store.
-    final availableVariants = product.variants
-        .where((v) => v.available)
+    // Convert LILYGO variants to ProductVariants
+    final productVariants = product.variants.map((v) {
+      // Find image for this variant if available
+      String? variantImage;
+      if (v.featuredImage != null) {
+        variantImage = v.featuredImage!.src;
+      }
+
+      return ProductVariant(
+        id: v.id.toString(),
+        title: v.title,
+        price: v.priceValue,
+        compareAtPrice: v.compareAtPriceValue,
+        sku: v.sku,
+        option1: v.option1,
+        option2: v.option2,
+        option3: v.option3,
+        available: v.available,
+        imageUrl: variantImage,
+      );
+    }).toList();
+
+    // Convert LILYGO options to ProductOptions
+    final productOptions = product.options
+        .map(
+          (o) => ProductOption(
+            name: o.name,
+            position: o.position,
+            values: o.values,
+          ),
+        )
         .toList();
-    AppLogging.shop(
-      '$_tag   Variants with available=true: ${availableVariants.length}',
-    );
-    AppLogging.shop(
-      '$_tag   Note: available=false may just mean default warehouse is out, '
-      'other warehouses may have stock',
-    );
 
-    final bestVariant = availableVariants.isNotEmpty
-        ? availableVariants.reduce(
-            (a, b) => a.priceValue < b.priceValue ? a : b,
-          )
-        : product.variants.isNotEmpty
-        ? product.variants.first
-        : null;
-    AppLogging.shop(
-      '$_tag   Best variant: ${bestVariant?.title ?? 'none'} @ \$${bestVariant?.priceValue ?? 0}',
-    );
+    // Calculate prices - exclude accessory-priced variants from main pricing
+    final allPrices = productVariants.map((v) => v.price).toList();
+    allPrices.sort();
 
-    // Calculate price range
-    final prices = product.variants.map((v) => v.priceValue).toList();
-    AppLogging.shop('$_tag   Variant prices: $prices');
-
-    final minPrice = prices.isNotEmpty
-        ? prices.reduce((a, b) => a < b ? a : b)
+    // Get median price to identify accessory outliers
+    final medianPrice = allPrices.isNotEmpty
+        ? allPrices[allPrices.length ~/ 2]
         : 0.0;
-    final maxPrice = prices.isNotEmpty
-        ? prices.reduce((a, b) => a > b ? a : b)
-        : 0.0;
+
+    // Filter out likely accessories (items priced < 20% of median)
+    // These are add-ons like "Shield Only", "Antenna Only", etc.
+    final mainProductVariants = productVariants.where((v) {
+      final isAccessory = v.isLikelyAccessory(medianPrice);
+      if (isAccessory) {
+        AppLogging.shop(
+          '$_tag   Excluding accessory variant: ${v.title} @ \$${v.price}',
+        );
+      }
+      return !isAccessory;
+    }).toList();
+
+    // Use main product variants for pricing, fall back to all if none left
+    final pricingVariants = mainProductVariants.isNotEmpty
+        ? mainProductVariants
+        : productVariants;
+
+    final prices = pricingVariants.map((v) => v.price).toList();
+    prices.sort();
+
+    // Primary price is the first (lowest) main product variant
+    final primaryPrice = prices.isNotEmpty ? prices.first : 0.0;
+    final minPrice = prices.isNotEmpty ? prices.first : 0.0;
+    final maxPrice = prices.isNotEmpty ? prices.last : 0.0;
+
+    AppLogging.shop('$_tag   All variant prices: $allPrices');
+    AppLogging.shop('$_tag   Main product prices: $prices');
+    AppLogging.shop(
+      '$_tag   Primary price: \$${primaryPrice.toStringAsFixed(2)}',
+    );
     AppLogging.shop(
       '$_tag   Price range: \$${minPrice.toStringAsFixed(2)} - \$${maxPrice.toStringAsFixed(2)}',
     );
+
+    // Find compare at price from any variant that has one
+    final compareAtPrice = pricingVariants
+        .where((v) => v.compareAtPrice != null && v.compareAtPrice! > v.price)
+        .map((v) => v.compareAtPrice!)
+        .firstOrNull;
 
     // Extract frequency bands from variants
     final frequencyBands = _extractFrequencyBands(product);
@@ -332,9 +375,11 @@ class LilygoApiService {
       category: category,
       tags: product.tags,
       imageUrls: imageUrls,
-      price: minPrice,
+      price: primaryPrice,
+      minPrice: minPrice,
+      maxPrice: maxPrice,
       currency: 'USD',
-      compareAtPrice: bestVariant?.compareAtPriceValue,
+      compareAtPrice: compareAtPrice,
       // Stock: Consider in-stock if published (multi-warehouse support)
       // The 'available' field only reflects default warehouse, but LILYGO
       // ships from China/US/Germany warehouses - check website for actual stock
@@ -342,6 +387,9 @@ class LilygoApiService {
       isInStock: product.publishedAt != null,
       isActive: true,
       isFeatured: _isFeaturedProduct(product),
+      // Variants and options for detail page
+      variants: productVariants,
+      options: productOptions,
       frequencyBands: frequencyBands,
       chipset: specs['chipset'],
       loraChip: specs['loraChip'],
@@ -357,14 +405,15 @@ class LilygoApiService {
       isMeshtasticCompatible: true,
       purchaseUrl: '$_baseUrl/products/${product.handle}',
       vendorVerified: true,
-      // Store extra data for UI
-      hardwareVersion: _formatPriceRange(minPrice, maxPrice),
     );
 
     AppLogging.shop('$_tag   Created ShopProduct:');
     AppLogging.shop('$_tag     id: ${shopProduct.id}');
     AppLogging.shop('$_tag     name: ${shopProduct.name}');
     AppLogging.shop('$_tag     price: \$${shopProduct.price}');
+    AppLogging.shop('$_tag     variants: ${shopProduct.variants.length}');
+    AppLogging.shop('$_tag     options: ${shopProduct.options.length}');
+    AppLogging.shop('$_tag     hasPriceRange: ${shopProduct.hasPriceRange}');
     AppLogging.shop('$_tag     inStock: ${shopProduct.isInStock}');
     AppLogging.shop('$_tag     isFeatured: ${shopProduct.isFeatured}');
     AppLogging.shop(
@@ -513,14 +562,6 @@ class LilygoApiService {
       return '${truncated.substring(0, lastSpace)}...';
     }
     return '$truncated...';
-  }
-
-  /// Format price range for display
-  String _formatPriceRange(double min, double max) {
-    if (min == max) {
-      return '\$${min.toStringAsFixed(2)}';
-    }
-    return '\$${min.toStringAsFixed(2)} - \$${max.toStringAsFixed(2)}';
   }
 
   /// Dispose of resources

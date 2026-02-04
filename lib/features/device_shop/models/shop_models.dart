@@ -46,6 +46,96 @@ enum FrequencyBand {
   }
 }
 
+/// Product variant - represents a specific configuration of a product
+/// (e.g., different frequency, color, warehouse location)
+class ProductVariant {
+  final String id;
+  final String title;
+  final double price;
+  final double? compareAtPrice;
+  final String? sku;
+  final String? option1;
+  final String? option2;
+  final String? option3;
+  final bool available;
+  final String? imageUrl;
+
+  const ProductVariant({
+    required this.id,
+    required this.title,
+    required this.price,
+    this.compareAtPrice,
+    this.sku,
+    this.option1,
+    this.option2,
+    this.option3,
+    this.available = true,
+    this.imageUrl,
+  });
+
+  /// Check if this variant is on sale
+  bool get isOnSale =>
+      compareAtPrice != null && compareAtPrice! > price && price > 0;
+
+  /// Get discount percentage
+  int get discountPercent {
+    if (!isOnSale) return 0;
+    return (((compareAtPrice! - price) / compareAtPrice!) * 100).round();
+  }
+
+  /// Check if this is likely an accessory/add-on (not the main product)
+  /// Accessories typically have very low prices compared to the main product
+  bool isLikelyAccessory(double medianPrice) {
+    // If price is less than 20% of median, it's probably an accessory
+    return price < medianPrice * 0.2;
+  }
+
+  ProductVariant copyWith({
+    String? id,
+    String? title,
+    double? price,
+    double? compareAtPrice,
+    String? sku,
+    String? option1,
+    String? option2,
+    String? option3,
+    bool? available,
+    String? imageUrl,
+  }) {
+    return ProductVariant(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      price: price ?? this.price,
+      compareAtPrice: compareAtPrice ?? this.compareAtPrice,
+      sku: sku ?? this.sku,
+      option1: option1 ?? this.option1,
+      option2: option2 ?? this.option2,
+      option3: option3 ?? this.option3,
+      available: available ?? this.available,
+      imageUrl: imageUrl ?? this.imageUrl,
+    );
+  }
+
+  @override
+  String toString() => 'ProductVariant($title, \$$price)';
+}
+
+/// Product option - a configuration dimension (e.g., Frequency, Color)
+class ProductOption {
+  final String name;
+  final int position;
+  final List<String> values;
+
+  const ProductOption({
+    required this.name,
+    required this.position,
+    required this.values,
+  });
+
+  @override
+  String toString() => 'ProductOption($name: $values)';
+}
+
 /// Seller/vendor profile
 class ShopSeller {
   final String id;
@@ -235,7 +325,9 @@ class ShopProduct {
   final List<String> tags;
   final List<String> imageUrls;
   final String? videoUrl;
-  final double price;
+  final double price; // Primary display price (first main variant)
+  final double? minPrice; // Lowest price across variants
+  final double? maxPrice; // Highest price across variants
   final String currency;
   final double? compareAtPrice; // Original price for sales
   final int stockQuantity;
@@ -243,6 +335,10 @@ class ShopProduct {
   final bool isActive;
   final bool isFeatured;
   final int featuredOrder; // Lower numbers appear first (0 = top)
+
+  // Variants and options
+  final List<ProductVariant> variants;
+  final List<ProductOption> options;
 
   // Technical specs
   final List<FrequencyBand> frequencyBands;
@@ -296,6 +392,8 @@ class ShopProduct {
     this.imageUrls = const [],
     this.videoUrl,
     required this.price,
+    this.minPrice,
+    this.maxPrice,
     this.currency = 'USD',
     this.compareAtPrice,
     this.stockQuantity = 0,
@@ -303,6 +401,8 @@ class ShopProduct {
     this.isActive = true,
     this.isFeatured = false,
     this.featuredOrder = 999,
+    this.variants = const [],
+    this.options = const [],
     this.frequencyBands = const [],
     this.chipset,
     this.loraChip,
@@ -333,6 +433,16 @@ class ShopProduct {
     this.approvedAt,
   });
 
+  /// Check if product has multiple variants
+  bool get hasVariants => variants.length > 1;
+
+  /// Check if product has configurable options
+  bool get hasOptions => options.isNotEmpty;
+
+  /// Check if product has a price range (different variant prices)
+  bool get hasPriceRange =>
+      minPrice != null && maxPrice != null && minPrice != maxPrice;
+
   /// Check if product is on sale
   bool get isOnSale => compareAtPrice != null && compareAtPrice! > price;
 
@@ -345,15 +455,45 @@ class ShopProduct {
   /// Get primary image
   String? get primaryImage => imageUrls.isNotEmpty ? imageUrls.first : null;
 
-  /// Get formatted price
+  /// Get formatted price - shows "From $X" if there's a price range
   String get formattedPrice {
+    if (hasPriceRange) {
+      return 'From \$${price.toStringAsFixed(2)}';
+    }
     return '\$${price.toStringAsFixed(2)}';
+  }
+
+  /// Get simple formatted price (no "From" prefix)
+  String get formattedPriceSimple => '\$${price.toStringAsFixed(2)}';
+
+  /// Get formatted price range
+  String get formattedPriceRange {
+    if (!hasPriceRange) return formattedPriceSimple;
+    return '\$${minPrice!.toStringAsFixed(2)} - \$${maxPrice!.toStringAsFixed(2)}';
   }
 
   /// Get formatted compare price
   String? get formattedComparePrice {
     if (compareAtPrice == null) return null;
     return '\$${compareAtPrice!.toStringAsFixed(2)}';
+  }
+
+  /// Get the default/first variant
+  ProductVariant? get defaultVariant =>
+      variants.isNotEmpty ? variants.first : null;
+
+  /// Find variant by selected options
+  ProductVariant? findVariant({
+    String? option1,
+    String? option2,
+    String? option3,
+  }) {
+    return variants.where((v) {
+      if (option1 != null && v.option1 != option1) return false;
+      if (option2 != null && v.option2 != option2) return false;
+      if (option3 != null && v.option3 != option3) return false;
+      return true;
+    }).firstOrNull;
   }
 
   factory ShopProduct.fromFirestore(DocumentSnapshot doc) {
@@ -488,6 +628,8 @@ class ShopProduct {
     List<String>? imageUrls,
     String? videoUrl,
     double? price,
+    double? minPrice,
+    double? maxPrice,
     String? currency,
     double? compareAtPrice,
     int? stockQuantity,
@@ -495,6 +637,8 @@ class ShopProduct {
     bool? isActive,
     bool? isFeatured,
     int? featuredOrder,
+    List<ProductVariant>? variants,
+    List<ProductOption>? options,
     List<FrequencyBand>? frequencyBands,
     String? chipset,
     String? loraChip,
@@ -536,6 +680,8 @@ class ShopProduct {
       imageUrls: imageUrls ?? this.imageUrls,
       videoUrl: videoUrl ?? this.videoUrl,
       price: price ?? this.price,
+      minPrice: minPrice ?? this.minPrice,
+      maxPrice: maxPrice ?? this.maxPrice,
       currency: currency ?? this.currency,
       compareAtPrice: compareAtPrice ?? this.compareAtPrice,
       stockQuantity: stockQuantity ?? this.stockQuantity,
@@ -543,6 +689,8 @@ class ShopProduct {
       isActive: isActive ?? this.isActive,
       isFeatured: isFeatured ?? this.isFeatured,
       featuredOrder: featuredOrder ?? this.featuredOrder,
+      variants: variants ?? this.variants,
+      options: options ?? this.options,
       frequencyBands: frequencyBands ?? this.frequencyBands,
       chipset: chipset ?? this.chipset,
       loraChip: loraChip ?? this.loraChip,
