@@ -9,6 +9,19 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../utils/snackbar.dart';
 
+/// Product prices in AUD for revenue calculation
+/// These should match RevenueCat product prices
+const _productPricesAud = <String, double>{
+  'theme_pack': 2.99,
+  'ringtone_pack': 2.99,
+  'widget_pack': 4.99,
+  'automations_pack': 4.99,
+  'ifttt_pack': 2.99,
+  'complete_pack': 14.99,
+  'cloud_monthly': 2.99,
+  'cloud_yearly': 24.99,
+};
+
 /// Admin screen to view Firebase users and their RevenueCat purchases
 class UserPurchasesAdminScreen extends ConsumerStatefulWidget {
   const UserPurchasesAdminScreen({super.key});
@@ -58,17 +71,17 @@ class _UserPurchasesAdminScreenState
         FirebaseFirestore.instance.collection('profiles').get(),
         FirebaseFirestore.instance.collection('user_entitlements').get(),
       ]);
-      
+
       final usersSnapshot = futures[0];
       final profilesSnapshot = futures[1];
       final entitlementsSnapshot = futures[2];
-      
+
       // Build lookup maps for O(1) access
       final profilesMap = <String, Map<String, dynamic>>{};
       for (final doc in profilesSnapshot.docs) {
         profilesMap[doc.id] = doc.data();
       }
-      
+
       final entitlementsMap = <String, Map<String, dynamic>>{};
       for (final doc in entitlementsSnapshot.docs) {
         entitlementsMap[doc.id] = doc.data();
@@ -89,6 +102,16 @@ class _UserPurchasesAdminScreenState
 
         // Check user_entitlements data (from batch fetch)
         if (entData != null) {
+          final cloudSync = entData['cloud_sync'] as String?;
+          final allProducts = entData['all_products'] as List<dynamic>?;
+          final purchasedAt =
+              (entData['purchase_date'] as Timestamp?)?.toDate() ??
+              (entData['created_at'] as Timestamp?)?.toDate();
+          final expiresAt = (entData['expires_at'] as Timestamp?)?.toDate();
+          final source =
+              entData['store'] as String? ??
+              entData['source'] as String? ??
+              'revenuecat';
 
           // If we have all_products array, show each product
           if (allProducts != null && allProducts.isNotEmpty) {
@@ -135,19 +158,16 @@ class _UserPurchasesAdminScreenState
           revenueCatId = entData['revenuecat_app_user_id'] as String?;
         }
 
-        // Also check for entitlements subcollection (legacy)
-        final entitlementsSnapshot = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .collection('entitlements')
-            .get();
-
         // Note: Legacy subcollections (users/{uid}/entitlements and users/{uid}/purchases)
         // are no longer queried to avoid N+1 query problems. All purchase data now comes
         // from the top-level user_entitlements collection populated by RevenueCat webhooks.
 
         if (purchases.isNotEmpty) {
           usersWithPurchases++;
+          // Calculate revenue from this user's purchases
+          for (final purchase in purchases) {
+            totalRevenue += _productPricesAud[purchase.productId] ?? 0;
+          }
         }
 
         users.add(
@@ -231,6 +251,10 @@ class _UserPurchasesAdminScreenState
           }
 
           usersWithPurchases++;
+          // Calculate revenue from this user's purchases
+          for (final purchase in purchases) {
+            totalRevenue += _productPricesAud[purchase.productId] ?? 0;
+          }
 
           users.add(
             _UserWithPurchases(
@@ -289,35 +313,38 @@ class _UserPurchasesAdminScreenState
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _StatCard(
-                    label: 'Total Users',
-                    value: _totalUsers.toString(),
-                    icon: Icons.people,
-                    color: Colors.blue,
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _StatCard(
+                      label: 'Total Users',
+                      value: _totalUsers.toString(),
+                      icon: Icons.people,
+                      color: Colors.blue,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _StatCard(
-                    label: 'With Purchases',
-                    value: _usersWithPurchases.toString(),
-                    icon: Icons.shopping_bag,
-                    color: Colors.green,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _StatCard(
+                      label: 'With Purchases',
+                      value: _usersWithPurchases.toString(),
+                      icon: Icons.shopping_bag,
+                      color: Colors.green,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _StatCard(
-                    label: 'Revenue',
-                    value: 'A\$${_totalRevenue.toStringAsFixed(2)}',
-                    icon: Icons.attach_money,
-                    color: Colors.orange,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _StatCard(
+                      label: 'Revenue',
+                      value: 'A\$${_totalRevenue.toStringAsFixed(2)}',
+                      icon: Icons.attach_money,
+                      color: Colors.orange,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -492,29 +519,34 @@ class _StatCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
               Icon(icon, size: 16, color: color),
               const SizedBox(width: 6),
-              Expanded(
+              Flexible(
                 child: Text(
                   label,
                   style: TextStyle(fontSize: 11, color: context.textSecondary),
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: context.textPrimary,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimary,
+              ),
             ),
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -1076,11 +1108,11 @@ class _PurchaseTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
               ],
-              if (purchase.price != null && purchase.price! > 0) ...[
+              if (_productPricesAud.containsKey(purchase.productId)) ...[
                 Icon(Icons.attach_money, size: 12, color: context.textTertiary),
                 const SizedBox(width: 4),
                 Text(
-                  '${purchase.currency ?? '\$'}${purchase.price!.toStringAsFixed(2)}',
+                  'A\$${_productPricesAud[purchase.productId]!.toStringAsFixed(2)}',
                   style: TextStyle(fontSize: 11, color: context.textSecondary),
                 ),
                 const SizedBox(width: 12),
@@ -1178,8 +1210,6 @@ class _Purchase {
   final String status;
   final DateTime? purchasedAt;
   final DateTime? expiresAt;
-  final double? price;
-  final String? currency;
   final String source;
 
   _Purchase({
@@ -1187,8 +1217,6 @@ class _Purchase {
     required this.status,
     this.purchasedAt,
     this.expiresAt,
-    this.price,
-    this.currency,
     required this.source,
   });
 }
