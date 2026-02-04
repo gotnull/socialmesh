@@ -180,6 +180,52 @@ class _UserPurchasesAdminScreenState
         );
       }
 
+      // Also check for any entitlements not linked to Firebase users
+      // (e.g., anonymous RevenueCat purchases before sign-in)
+      final existingUserIds = users.map((u) => u.userId).toSet();
+      final allEntitlementsSnapshot = await FirebaseFirestore.instance
+          .collection('user_entitlements')
+          .get();
+
+      for (final entDoc in allEntitlementsSnapshot.docs) {
+        final entUserId = entDoc.id;
+
+        // Skip if we already have this user
+        if (existingUserIds.contains(entUserId)) continue;
+
+        final entData = entDoc.data();
+        final cloudSync = entData['cloud_sync'] as String?;
+
+        if (cloudSync != null && cloudSync.isNotEmpty) {
+          final purchases = <_Purchase>[
+            _Purchase(
+              productId: entData['product_id'] as String? ?? 'Cloud Sync',
+              status: cloudSync,
+              purchasedAt: (entData['created_at'] as Timestamp?)?.toDate(),
+              expiresAt: (entData['expires_at'] as Timestamp?)?.toDate(),
+              source: entData['source'] as String? ?? 'revenuecat',
+            ),
+          ];
+
+          usersWithPurchases++;
+
+          users.add(
+            _UserWithPurchases(
+              userId: entUserId,
+              email: null,
+              displayName: entUserId.startsWith(r'$RCAnonymousID')
+                  ? 'Anonymous RevenueCat User'
+                  : null,
+              avatarUrl: null,
+              revenueCatId: entData['revenuecat_app_user_id'] as String?,
+              purchases: purchases,
+              createdAt: (entData['created_at'] as Timestamp?)?.toDate(),
+              isAnonymous: entUserId.startsWith(r'$RCAnonymousID'),
+            ),
+          );
+        }
+      }
+
       // Sort by purchase count (most purchases first)
       users.sort((a, b) => b.purchases.length.compareTo(a.purchases.length));
 
@@ -279,6 +325,41 @@ class _UserPurchasesAdminScreenState
                 ),
               ),
               onChanged: (_) => setState(() {}),
+            ),
+          ),
+        ),
+
+        // Info banner about data sources
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 18,
+                    color: Colors.blue.shade700,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Shows purchases synced via app login or RevenueCat webhooks. '
+                      'Users must open the app while signed in for their purchases to appear here.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -462,13 +543,41 @@ class _UserTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        user.displayName ?? 'Unknown User',
-                        style: TextStyle(
-                          color: context.textPrimary,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 15,
-                        ),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              user.displayName ?? 'Unknown User',
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 15,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (user.isAnonymous) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'Anonymous',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.orange.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       if (user.email != null) ...[
                         const SizedBox(height: 2),
@@ -631,13 +740,42 @@ class _UserDetailSheet extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                user.displayName ?? 'Unknown User',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: context.textPrimary,
-                                ),
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      user.displayName ?? 'Unknown User',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: context.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  if (user.isAnonymous) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.withValues(
+                                          alpha: 0.2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        'Anonymous',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.orange.shade700,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                               if (user.email != null)
                                 Text(
@@ -957,6 +1095,7 @@ class _PurchaseTile extends StatelessWidget {
     switch (status.toLowerCase()) {
       case 'active':
       case 'owned':
+      case 'lifetime_complete':
         return Colors.green;
       case 'expired':
         return Colors.red;
@@ -964,6 +1103,9 @@ class _PurchaseTile extends StatelessWidget {
         return Colors.orange;
       case 'grandfathered':
         return Colors.blue;
+      case 'feature_only':
+      case 'lifetime_features':
+        return Colors.purple; // Has feature packs but no cloud sync
       default:
         return Colors.grey;
     }
@@ -990,6 +1132,7 @@ class _UserWithPurchases {
   final String? revenueCatId;
   final List<_Purchase> purchases;
   final DateTime? createdAt;
+  final bool isAnonymous;
 
   _UserWithPurchases({
     required this.userId,
@@ -999,6 +1142,7 @@ class _UserWithPurchases {
     this.revenueCatId,
     required this.purchases,
     this.createdAt,
+    this.isAnonymous = false,
   });
 }
 

@@ -327,22 +327,22 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Drawer menu items for quick access screens not in bottom nav
   /// Organized into logical sections with headers
   final List<_DrawerMenuItem> _drawerMenuItems = [
-    // Social section
-    _DrawerMenuItem(
-      icon: Icons.favorite_border,
-      label: 'Activity',
-      screen: const ActivityTimelineScreen(),
-      sectionHeader: 'SOCIAL',
-      iconColor: Colors.red.shade400,
-      requiresConnection: false,
-      badgeProviderKey: 'activity',
-    ),
+    // Social section - Signals first, then Activity
     _DrawerMenuItem(
       icon: Icons.sensors_outlined,
       label: 'Signals',
       screen: const PresenceFeedScreen(),
+      sectionHeader: 'SOCIAL',
       iconColor: Colors.orange.shade400,
       requiresConnection: true,
+    ),
+    _DrawerMenuItem(
+      icon: Icons.favorite_border,
+      label: 'Activity',
+      screen: const ActivityTimelineScreen(),
+      iconColor: Colors.red.shade400,
+      requiresConnection: false,
+      badgeProviderKey: 'activity',
     ),
     // Dashboard moved from bottom nav
     _DrawerMenuItem(

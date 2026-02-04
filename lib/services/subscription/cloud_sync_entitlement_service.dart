@@ -25,6 +25,9 @@ enum CloudSyncEntitlementState {
   /// Subscription expired, read-only access
   expired,
 
+  /// User has feature packs but no cloud sync subscription
+  featureOnly,
+
   /// Never subscribed, no access
   none,
 }
@@ -474,6 +477,16 @@ class CloudSyncEntitlementService {
                     state: CloudSyncEntitlementState.grandfathered,
                     canWrite: true,
                     canRead: true,
+                  ),
+                );
+              } else if (status == 'feature_only') {
+                // User has feature packs but no cloud sync
+                // They can use local features but not cloud sync
+                _updateEntitlement(
+                  const CloudSyncEntitlement(
+                    state: CloudSyncEntitlementState.featureOnly,
+                    canWrite: false,
+                    canRead: false,
                   ),
                 );
               }
