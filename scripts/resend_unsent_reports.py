@@ -222,20 +222,46 @@ for docid, data in unsent:
 
     print(f"Sending {docid} -> {to_email} ... ")
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30) as server:
-            server.ehlo()
-            if SMTP_STARTTLS:
-                server.starttls()
-                server.ehlo()
-            server.login(SMTP_USER, SMTP_PASS)
-            server.send_message(msg)
-        db.collection('bugReports').document(docid).update({
-            'emailSent': True,
-            'emailSentAt': firestore.SERVER_TIMESTAMP,
-            'emailSentMethod': 'improvmx',
-            'emailError': firestore.DELETE_FIELD,
-        })
-        print("  sent OK")
+        sent = False
+        last_error = None
+        
+        # Strategy 1: Try STARTTLS on port 587 (if enabled)
+        if SMTP_STARTTLS:
+            try:
+                with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30) as server:
+                    server.ehlo()
+                    server.starttls()
+                    server.ehlo()
+                    server.login(SMTP_USER, SMTP_PASS)
+                    server.send_message(msg)
+                sent = True
+            except Exception as e:
+                last_error = e
+                print(f"  STARTTLS failed: {e}, trying SMTPS fallback...")
+        
+        # Strategy 2: Fallback to SMTPS on port 465 (implicit TLS)
+        if not sent:
+            try:
+                with smtplib.SMTP_SSL(SMTP_HOST, 465, timeout=30) as server:
+                    server.ehlo()
+                    server.login(SMTP_USER, SMTP_PASS)
+                    server.send_message(msg)
+                sent = True
+            except Exception as e:
+                last_error = e
+                print(f"  SMTPS fallback also failed: {e}")
+        
+        if sent:
+            db.collection('bugReports').document(docid).update({
+                'emailSent': True,
+                'emailSentAt': firestore.SERVER_TIMESTAMP,
+                'emailSentMethod': 'improvmx',
+                'emailError': firestore.DELETE_FIELD,
+            })
+            print("  sent OK")
+        else:
+            raise last_error or Exception("All send strategies failed")
+            
     except Exception as e:
         print("  send failed:", e)
         db.collection('bugReports').document(docid).update({
