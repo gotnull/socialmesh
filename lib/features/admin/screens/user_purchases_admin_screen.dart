@@ -80,17 +80,55 @@ class _UserPurchasesAdminScreenState
 
         if (userEntitlementDoc.exists) {
           final entData = userEntitlementDoc.data()!;
-
-          // Check for cloud_sync entitlement
           final cloudSync = entData['cloud_sync'] as String?;
-          if (cloudSync != null && cloudSync.isNotEmpty) {
+          final allProducts = entData['all_products'] as List<dynamic>?;
+          final purchasedAt =
+              (entData['purchase_date'] as Timestamp?)?.toDate() ??
+              (entData['created_at'] as Timestamp?)?.toDate();
+          final expiresAt = (entData['expires_at'] as Timestamp?)?.toDate();
+          final source =
+              entData['store'] as String? ??
+              entData['source'] as String? ??
+              'revenuecat';
+
+          // If we have all_products array, show each product
+          if (allProducts != null && allProducts.isNotEmpty) {
+            for (final product in allProducts) {
+              final productId = product as String;
+              // Determine status for this product
+              String status;
+              if (productId == 'cloud_monthly' || productId == 'cloud_yearly') {
+                // Subscription products
+                status = cloudSync ?? 'unknown';
+              } else {
+                // One-time purchase products are always "owned"
+                status = 'owned';
+              }
+
+              purchases.add(
+                _Purchase(
+                  productId: productId,
+                  status: status,
+                  purchasedAt: purchasedAt,
+                  expiresAt:
+                      (productId == 'cloud_monthly' ||
+                          productId == 'cloud_yearly')
+                      ? expiresAt
+                      : null,
+                  source: source,
+                ),
+              );
+            }
+          } else if (cloudSync != null && cloudSync.isNotEmpty) {
+            // Fallback: just show cloud_sync status if no all_products
+            final productId = entData['product_id'] as String? ?? 'Cloud Sync';
             purchases.add(
               _Purchase(
-                productId: 'Cloud Sync',
+                productId: productId,
                 status: cloudSync,
-                purchasedAt: (entData['created_at'] as Timestamp?)?.toDate(),
-                expiresAt: (entData['expires_at'] as Timestamp?)?.toDate(),
-                source: entData['source'] as String? ?? 'revenuecat',
+                purchasedAt: purchasedAt,
+                expiresAt: expiresAt,
+                source: source,
               ),
             );
           }
@@ -195,17 +233,55 @@ class _UserPurchasesAdminScreenState
 
         final entData = entDoc.data();
         final cloudSync = entData['cloud_sync'] as String?;
+        final allProducts = entData['all_products'] as List<dynamic>?;
 
         if (cloudSync != null && cloudSync.isNotEmpty) {
-          final purchases = <_Purchase>[
-            _Purchase(
-              productId: entData['product_id'] as String? ?? 'Cloud Sync',
-              status: cloudSync,
-              purchasedAt: (entData['created_at'] as Timestamp?)?.toDate(),
-              expiresAt: (entData['expires_at'] as Timestamp?)?.toDate(),
-              source: entData['source'] as String? ?? 'revenuecat',
-            ),
-          ];
+          final purchases = <_Purchase>[];
+          final purchasedAt =
+              (entData['purchase_date'] as Timestamp?)?.toDate() ??
+              (entData['created_at'] as Timestamp?)?.toDate();
+          final expiresAt = (entData['expires_at'] as Timestamp?)?.toDate();
+          final source =
+              entData['store'] as String? ??
+              entData['source'] as String? ??
+              'revenuecat';
+
+          // If we have all_products array, show each product
+          if (allProducts != null && allProducts.isNotEmpty) {
+            for (final product in allProducts) {
+              final productId = product as String;
+              String status;
+              if (productId == 'cloud_monthly' || productId == 'cloud_yearly') {
+                status = cloudSync;
+              } else {
+                status = 'owned';
+              }
+              purchases.add(
+                _Purchase(
+                  productId: productId,
+                  status: status,
+                  purchasedAt: purchasedAt,
+                  expiresAt:
+                      (productId == 'cloud_monthly' ||
+                          productId == 'cloud_yearly')
+                      ? expiresAt
+                      : null,
+                  source: source,
+                ),
+              );
+            }
+          } else {
+            // Fallback for old format
+            purchases.add(
+              _Purchase(
+                productId: entData['product_id'] as String? ?? 'Cloud Sync',
+                status: cloudSync,
+                purchasedAt: purchasedAt,
+                expiresAt: expiresAt,
+                source: source,
+              ),
+            );
+          }
 
           usersWithPurchases++;
 
