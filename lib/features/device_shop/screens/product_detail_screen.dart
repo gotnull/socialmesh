@@ -675,11 +675,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             _selectedVariant!.price != product.price) ...[
           Row(
             children: [
-              Icon(Icons.info_outline, size: 16, color: context.textTertiary),
+              Icon(Icons.info_outline, size: 16, color: context.accentColor),
               const SizedBox(width: 6),
               Text(
                 'Selected: \$${_selectedVariant!.price.toStringAsFixed(2)}',
-                style: TextStyle(color: context.textSecondary, fontSize: 14),
+                style: TextStyle(
+                  color: context.accentColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
