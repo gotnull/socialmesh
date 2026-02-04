@@ -337,6 +337,13 @@ class _MainShellState extends ConsumerState<MainShell> {
       requiresConnection: false,
       badgeProviderKey: 'activity',
     ),
+    _DrawerMenuItem(
+      icon: Icons.sensors_outlined,
+      label: 'Signals',
+      screen: const PresenceFeedScreen(),
+      iconColor: Colors.orange.shade400,
+      requiresConnection: true,
+    ),
     // Dashboard moved from bottom nav
     _DrawerMenuItem(
       icon: Icons.dashboard_outlined,
@@ -404,6 +411,16 @@ class _MainShellState extends ConsumerState<MainShell> {
       requiresConnection: true,
     ),
 
+    // Shop - below MESH section
+    _DrawerMenuItem(
+      icon: Icons.store_outlined,
+      label: 'Device Shop',
+      screen: const DeviceShopScreen(),
+      sectionHeader: 'SHOP',
+      iconColor: Colors.amber.shade600,
+      requiresConnection: false,
+    ),
+
     // Premium Features - mixed requirements
     _DrawerMenuItem(
       icon: Icons.palette_outlined,
@@ -441,16 +458,6 @@ class _MainShellState extends ConsumerState<MainShell> {
       screen: const IftttConfigScreen(),
       premiumFeature: PremiumFeature.iftttIntegration,
       iconColor: Colors.blue.shade300,
-    ),
-
-    // Shop - no section header, standalone item
-    _DrawerMenuItem(
-      icon: Icons.store_outlined,
-      label: 'Device Shop',
-      screen: const DeviceShopScreen(),
-      sectionHeader: 'SHOP',
-      iconColor: Colors.amber.shade600,
-      requiresConnection: false,
     ),
   ];
 

@@ -1363,16 +1363,44 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                           activeColor: context.accentColor,
                           onChanged: (value) async {
                             if (value) {
-                              // Enable auto-reconnect and trigger reconnection
-                              final settings = await ref.read(
-                                settingsServiceProvider.future,
+                              // Ask for confirmation before enabling
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Enable Auto-Reconnect?'),
+                                  content: Text(
+                                    _savedDeviceName != null
+                                        ? 'This will automatically connect to "$_savedDeviceName" now and whenever you open the app.'
+                                        : 'This will automatically connect to your last used device whenever you open the app.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    FilledButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text('Enable'),
+                                    ),
+                                  ],
+                                ),
                               );
-                              await settings.setAutoReconnect(true);
-                              setState(
-                                () => _showAutoReconnectDisabledHint = false,
-                              );
-                              // Trigger auto-reconnect attempt
-                              _tryAutoReconnect();
+
+                              if (confirmed == true && mounted) {
+                                // Enable auto-reconnect and trigger reconnection
+                                final settings = await ref.read(
+                                  settingsServiceProvider.future,
+                                );
+                                await settings.setAutoReconnect(true);
+                                if (!mounted) return;
+                                setState(
+                                  () => _showAutoReconnectDisabledHint = false,
+                                );
+                                // Trigger auto-reconnect attempt
+                                _tryAutoReconnect();
+                              }
                             }
                           },
                         ),
