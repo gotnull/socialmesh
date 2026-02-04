@@ -29,7 +29,9 @@ class _CategoryProductsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final productsAsync = ref.watch(categoryProductsProvider(widget.category));
+    final productsAsync = ref.watch(
+      lilygoCategoryProductsProvider(widget.category),
+    );
 
     return GlassScaffold(
       title: widget.category.label,
@@ -67,9 +69,7 @@ class _CategoryProductsScreenState
                     style: TextStyle(color: context.textPrimary),
                   ),
                   TextButton(
-                    onPressed: () => ref.invalidate(
-                      categoryProductsProvider(widget.category),
-                    ),
+                    onPressed: () => ref.invalidate(lilygoProductsProvider),
                     child: Text('Retry'),
                   ),
                 ],

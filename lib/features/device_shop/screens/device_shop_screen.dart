@@ -479,7 +479,8 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
   Widget _buildSearchResults() {
     return Consumer(
       builder: (context, ref, _) {
-        final productsAsync = ref.watch(shopProductsProvider);
+        // Use LILYGO API provider instead of Firebase
+        final productsAsync = ref.watch(lilygoProductsProvider);
 
         return productsAsync.when(
           data: (products) {
@@ -678,7 +679,8 @@ class _FeaturedSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(featuredProductsProvider);
+    // Use LILYGO API provider instead of Firebase
+    final productsAsync = ref.watch(lilygoFeaturedProductsProvider);
 
     return productsAsync.when(
       loading: () => _SectionLoading(title: 'Featured'),
@@ -821,7 +823,8 @@ class _NewArrivalsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(newArrivalsProvider);
+    // Use LILYGO API - sort by creation date for "new arrivals"
+    final productsAsync = ref.watch(lilygoProductsProvider);
 
     return productsAsync.when(
       loading: () => _SectionLoading(title: 'New Arrivals'),
@@ -829,10 +832,14 @@ class _NewArrivalsSection extends ConsumerWidget {
       data: (products) {
         if (products.isEmpty) return const SizedBox.shrink();
 
+        // Sort by creation date, newest first
+        final sorted = List<ShopProduct>.from(products)
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
         return _ProductSection(
           title: 'New Arrivals',
           titleIcon: Icons.fiber_new,
-          products: products.take(10).toList(),
+          products: sorted.take(10).toList(),
           onSeeAll: null,
         );
       },
@@ -840,24 +847,30 @@ class _NewArrivalsSection extends ConsumerWidget {
   }
 }
 
-/// Best sellers section
+/// Best sellers section - shows popular LILYGO products
 class _BestSellersSection extends ConsumerWidget {
   const _BestSellersSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(bestSellersProvider);
+    // Use LILYGO API - we don't have sales data, so show in-stock nodes
+    final productsAsync = ref.watch(lilygoProductsProvider);
 
     return productsAsync.when(
-      loading: () => _SectionLoading(title: 'Best Sellers'),
+      loading: () => _SectionLoading(title: 'Popular Devices'),
       error: (error, stack) => const SizedBox.shrink(),
       data: (products) {
-        if (products.isEmpty) return const SizedBox.shrink();
+        // Show in-stock devices (nodes category) as "popular"
+        final popular = products
+            .where((p) => p.isInStock && p.category == DeviceCategory.node)
+            .toList();
+
+        if (popular.isEmpty) return const SizedBox.shrink();
 
         return _ProductSection(
-          title: 'Best Sellers',
+          title: 'Popular Devices',
           titleIcon: Icons.local_fire_department,
-          products: products.take(10).toList(),
+          products: popular.take(10).toList(),
           onSeeAll: null,
         );
       },
@@ -865,24 +878,32 @@ class _BestSellersSection extends ConsumerWidget {
   }
 }
 
-/// On sale section
+/// On sale section - shows products with compare-at price
 class _OnSaleSection extends ConsumerWidget {
   const _OnSaleSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(onSaleProductsProvider);
+    // Use LILYGO API - show products with compareAtPrice (discounted)
+    final productsAsync = ref.watch(lilygoProductsProvider);
 
     return productsAsync.when(
       loading: () => const SizedBox.shrink(),
       error: (error, stack) => const SizedBox.shrink(),
       data: (products) {
-        if (products.isEmpty) return const SizedBox.shrink();
+        // Find products with a compare-at price (on sale)
+        final onSale = products
+            .where(
+              (p) => p.compareAtPrice != null && p.compareAtPrice! > p.price,
+            )
+            .toList();
+
+        if (onSale.isEmpty) return const SizedBox.shrink();
 
         return _ProductSection(
           title: 'On Sale',
           titleIcon: Icons.local_offer,
-          products: products.take(10).toList(),
+          products: onSale.take(10).toList(),
           onSeeAll: null,
           highlightColor: Colors.red,
         );

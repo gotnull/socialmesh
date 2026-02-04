@@ -304,7 +304,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
   }
 
   Widget _buildResults() {
-    final searchAsync = ref.watch(productSearchProvider(_query));
+    final searchAsync = ref.watch(lilygoSearchProvider(_query));
 
     return searchAsync.when(
       loading: () => Center(child: CircularProgressIndicator()),
@@ -316,7 +316,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
             const SizedBox(height: 16),
             Text('Search failed', style: TextStyle(color: context.textPrimary)),
             TextButton(
-              onPressed: () => ref.invalidate(productSearchProvider(_query)),
+              onPressed: () => ref.invalidate(lilygoProductsProvider),
               child: Text('Retry'),
             ),
           ],

@@ -51,6 +51,7 @@ class AppLogging {
   static bool? _marketplaceLoggingEnabled;
   static bool? _qrLoggingEnabled;
   static bool? _bugReportLoggingEnabled;
+  static bool? _shopLoggingEnabled;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
   static Logger? _noOpLogger;
@@ -223,6 +224,12 @@ class AppLogging {
     return _bugReportLoggingEnabled!;
   }
 
+  static bool get shopLoggingEnabled {
+    _shopLoggingEnabled ??=
+        _safeGetEnv('SHOP_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _shopLoggingEnabled!;
+  }
+
   static Logger get bleLogger {
     if (bleLoggingEnabled) {
       _bleLogger ??= Logger(
@@ -359,6 +366,10 @@ class AppLogging {
     if (bugReportLoggingEnabled) debugPrint('BugReport: $message');
   }
 
+  static void shop(String message) {
+    if (shopLoggingEnabled) debugPrint('Shop: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -387,6 +398,7 @@ class AppLogging {
     _marketplaceLoggingEnabled = null;
     _qrLoggingEnabled = null;
     _bugReportLoggingEnabled = null;
+    _shopLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }
