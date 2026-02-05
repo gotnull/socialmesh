@@ -436,7 +436,24 @@ class WidgetMarketplaceService {
     WidgetSchema widget,
     String authToken,
   ) async {
+    AppLogging.marketplace('───────────────────────────────────────────────');
+    AppLogging.marketplace('🔄 submitWidget() - START');
+    AppLogging.marketplace('───────────────────────────────────────────────');
+    AppLogging.marketplace('Widget name: ${widget.name}');
+    AppLogging.marketplace('Widget ID: ${widget.id}');
+    AppLogging.marketplace('Auth token length: ${authToken.length}');
+    AppLogging.marketplace('URL: $baseUrl/widgetsSubmit');
+
     try {
+      final requestBody = jsonEncode(widget.toJson());
+      AppLogging.marketplace(
+        'Request body length: ${requestBody.length} chars',
+      );
+      AppLogging.marketplace(
+        'Request body preview: ${requestBody.substring(0, requestBody.length > 200 ? 200 : requestBody.length)}...',
+      );
+
+      AppLogging.marketplace('📡 Sending POST request...');
       final response = await _client
           .post(
             Uri.parse('$baseUrl/widgetsSubmit'),
@@ -444,19 +461,42 @@ class WidgetMarketplaceService {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $authToken',
             },
-            body: jsonEncode(widget.toJson()),
+            body: requestBody,
           )
           .timeout(const Duration(seconds: 10));
 
+      AppLogging.marketplace('📬 Response received:');
+      AppLogging.marketplace('   Status code: ${response.statusCode}');
+      AppLogging.marketplace(
+        '   Response body length: ${response.body.length}',
+      );
+      AppLogging.marketplace(
+        '   Response body: ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}',
+      );
+
       if (response.statusCode == 201 || response.statusCode == 200) {
+        AppLogging.marketplace('✅ Submit successful (${response.statusCode})');
         final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return MarketplaceWidget.fromJson(json);
+        final result = MarketplaceWidget.fromJson(json);
+        AppLogging.marketplace('   Result widget ID: ${result.id}');
+        AppLogging.marketplace('   Result status: ${result.status}');
+        AppLogging.marketplace(
+          '───────────────────────────────────────────────',
+        );
+        AppLogging.marketplace('🔄 submitWidget() - SUCCESS');
+        AppLogging.marketplace(
+          '───────────────────────────────────────────────',
+        );
+        return result;
       } else if (response.statusCode == 401) {
+        AppLogging.marketplace('❌ 401 Unauthorized - Authentication required');
         throw MarketplaceException('Authentication required');
       } else if (response.statusCode == 409) {
         // Duplicate detected
+        AppLogging.marketplace('⚠️ 409 Conflict - Duplicate detected');
         final json = jsonDecode(response.body) as Map<String, dynamic>;
         final duplicateName = json['duplicateName'] as String?;
+        AppLogging.marketplace('   Duplicate name: $duplicateName');
         throw MarketplaceDuplicateException(
           'A similar widget already exists${duplicateName != null ? ': $duplicateName' : ''}',
           duplicateName: duplicateName,
@@ -464,13 +504,18 @@ class WidgetMarketplaceService {
       } else {
         final body = response.body;
         AppLogging.marketplace(
-          '⚠️ Submit widget failed: ${response.statusCode} - $body',
+          '❌ Unexpected status code: ${response.statusCode}',
         );
+        AppLogging.marketplace('   Response body: $body');
         throw MarketplaceException('Failed to submit widget');
       }
-    } catch (e) {
-      if (e is MarketplaceException) rethrow;
-      AppLogging.marketplace('⚠️ Submit widget error: $e');
+    } catch (e, stackTrace) {
+      if (e is MarketplaceException) {
+        AppLogging.marketplace('⚠️ MarketplaceException in submitWidget: $e');
+        rethrow;
+      }
+      AppLogging.marketplace('❌ Unexpected error in submitWidget: $e');
+      AppLogging.marketplace('   Stack trace: $stackTrace');
       rethrow;
     }
   }
@@ -480,7 +525,22 @@ class WidgetMarketplaceService {
     WidgetSchema widget,
     String authToken,
   ) async {
+    AppLogging.marketplace('───────────────────────────────────────────────');
+    AppLogging.marketplace('🔄 checkDuplicate() - START');
+    AppLogging.marketplace('───────────────────────────────────────────────');
+    AppLogging.marketplace('Widget name: ${widget.name}');
+    AppLogging.marketplace('URL: $baseUrl/widgetsCheckDuplicate');
+
     try {
+      final requestBody = jsonEncode({
+        'name': widget.name,
+        'schema': widget.toJson(),
+      });
+      AppLogging.marketplace(
+        'Request body length: ${requestBody.length} chars',
+      );
+
+      AppLogging.marketplace('📡 Sending POST request...');
       final response = await _client
           .post(
             Uri.parse('$baseUrl/widgetsCheckDuplicate'),
@@ -488,19 +548,45 @@ class WidgetMarketplaceService {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $authToken',
             },
-            body: jsonEncode({'name': widget.name, 'schema': widget.toJson()}),
+            body: requestBody,
           )
           .timeout(const Duration(seconds: 5));
 
+      AppLogging.marketplace('📬 Response received:');
+      AppLogging.marketplace('   Status code: ${response.statusCode}');
+      AppLogging.marketplace('   Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return DuplicateCheckResult.fromJson(json);
+        final result = DuplicateCheckResult.fromJson(json);
+        AppLogging.marketplace('✅ Duplicate check result:');
+        AppLogging.marketplace('   isDuplicate: ${result.isDuplicate}');
+        AppLogging.marketplace('   duplicateName: ${result.duplicateName}');
+        AppLogging.marketplace('   similarityScore: ${result.similarityScore}');
+        AppLogging.marketplace(
+          '───────────────────────────────────────────────',
+        );
+        AppLogging.marketplace('🔄 checkDuplicate() - SUCCESS');
+        AppLogging.marketplace(
+          '───────────────────────────────────────────────',
+        );
+        return result;
       } else {
+        AppLogging.marketplace(
+          '❌ Duplicate check failed with status: ${response.statusCode}',
+        );
         throw MarketplaceException('Failed to check for duplicates');
       }
-    } catch (e) {
-      if (e is MarketplaceException) rethrow;
+    } catch (e, stackTrace) {
+      if (e is MarketplaceException) {
+        AppLogging.marketplace('⚠️ MarketplaceException in checkDuplicate: $e');
+        rethrow;
+      }
       AppLogging.marketplace('⚠️ Check duplicate error: $e');
+      AppLogging.marketplace('   Stack trace: $stackTrace');
+      AppLogging.marketplace(
+        '   Returning isDuplicate=false to allow submission',
+      );
       // Return no duplicate on error to allow submission
       return DuplicateCheckResult(isDuplicate: false);
     }

@@ -62,26 +62,49 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
   }
 
   void _startWatching() {
-    final service = ref.read(socialActivityServiceProvider);
-    _activitySubscription?.cancel();
-    _activitySubscription = service.watchActivities().listen(
-      (activities) {
-        final unreadCount = activities.where((a) => !a.isRead).length;
-        state = ActivityFeedState(
-          activities: activities,
-          unreadCount: unreadCount,
-          hasMore: activities.length >= 50,
-        );
-      },
-      onError: (e) {
-        AppLogging.social('📬 [ActivityFeed] Error: $e');
-        state = ActivityFeedState(error: e.toString());
-      },
-    );
+    // Check if Firebase is initialized before accessing any Firebase services
+    if (Firebase.apps.isEmpty) {
+      AppLogging.social(
+        '📬 [ActivityFeed] Firebase not initialized, skipping activity stream',
+      );
+      state = const ActivityFeedState(isLoading: false);
+      return;
+    }
+
+    try {
+      final service = ref.read(socialActivityServiceProvider);
+      _activitySubscription?.cancel();
+      _activitySubscription = service.watchActivities().listen(
+        (activities) {
+          final unreadCount = activities.where((a) => !a.isRead).length;
+          state = ActivityFeedState(
+            activities: activities,
+            unreadCount: unreadCount,
+            hasMore: activities.length >= 50,
+          );
+        },
+        onError: (e) {
+          AppLogging.social('📬 [ActivityFeed] Error: $e');
+          state = ActivityFeedState(error: e.toString());
+        },
+      );
+    } catch (e) {
+      AppLogging.social('📬 [ActivityFeed] Failed to start watching: $e');
+      state = ActivityFeedState(error: e.toString());
+    }
   }
 
   /// Refresh the activity feed.
   Future<void> refresh() async {
+    // Check if Firebase is initialized
+    if (Firebase.apps.isEmpty) {
+      AppLogging.social(
+        '📬 [ActivityFeed] Firebase not initialized, cannot refresh',
+      );
+      state = state.copyWith(isLoading: false);
+      return;
+    }
+
     state = state.copyWith(isLoading: true);
     try {
       final service = ref.read(socialActivityServiceProvider);
@@ -93,12 +116,15 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
         hasMore: activities.length >= 20,
       );
     } catch (e) {
+      AppLogging.social('📬 [ActivityFeed] Refresh failed: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
   /// Mark all activities as read.
   Future<void> markAllAsRead() async {
+    if (Firebase.apps.isEmpty) return;
+
     try {
       final service = ref.read(socialActivityServiceProvider);
       await service.markAllAsRead();
@@ -115,6 +141,8 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
 
   /// Mark a single activity as read.
   Future<void> markAsRead(String activityId) async {
+    if (Firebase.apps.isEmpty) return;
+
     try {
       final service = ref.read(socialActivityServiceProvider);
       await service.markAsRead(activityId);

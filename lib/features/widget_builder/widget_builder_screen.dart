@@ -781,7 +781,17 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   }
 
   void _submitToMarketplace(WidgetSchema schema) async {
+    AppLogging.marketplace('═══════════════════════════════════════════════');
+    AppLogging.marketplace('📤 SUBMIT TO MARKETPLACE - START');
+    AppLogging.marketplace('═══════════════════════════════════════════════');
+    AppLogging.marketplace('Widget name: ${schema.name}');
+    AppLogging.marketplace('Widget ID: ${schema.id}');
+    AppLogging.marketplace('Widget size: ${schema.size}');
+    AppLogging.marketplace('Widget tags: ${schema.tags}');
+    AppLogging.marketplace('Widget description: ${schema.description}');
+
     // Show confirmation dialog with submission requirements
+    AppLogging.marketplace('📋 Showing confirmation dialog...');
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -862,9 +872,16 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       ),
     );
 
-    if (confirmed != true || !mounted) return;
+    if (confirmed != true || !mounted) {
+      AppLogging.marketplace('❌ User cancelled or widget unmounted');
+      AppLogging.marketplace('   confirmed=$confirmed, mounted=$mounted');
+      return;
+    }
+
+    AppLogging.marketplace('✅ User confirmed submission');
 
     // Show loading indicator
+    AppLogging.marketplace('⏳ Showing loading indicator...');
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -872,11 +889,17 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
     );
 
     try {
+      AppLogging.marketplace('🔑 Getting auth service and token...');
       final service = ref.read(marketplaceServiceProvider);
       final authService = ref.read(authServiceProvider);
       final token = await authService.getIdToken();
 
+      AppLogging.marketplace(
+        '   Token obtained: ${token != null ? "YES (${token.length} chars)" : "NO"}',
+      );
+
       if (token == null) {
+        AppLogging.marketplace('❌ No auth token - user not signed in');
         if (mounted) Navigator.pop(context);
         if (mounted) {
           showSignInRequiredSnackBar(context, 'Sign in to submit widgets');
@@ -885,11 +908,24 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       }
 
       // Check for duplicates first
+      AppLogging.marketplace('🔍 Checking for duplicates...');
+      AppLogging.marketplace('   Widget name: ${schema.name}');
       final duplicateCheck = await service.checkDuplicate(schema, token);
+      AppLogging.marketplace('   Duplicate check result:');
+      AppLogging.marketplace('   - isDuplicate: ${duplicateCheck.isDuplicate}');
+      AppLogging.marketplace(
+        '   - duplicateName: ${duplicateCheck.duplicateName}',
+      );
+      AppLogging.marketplace(
+        '   - similarityScore: ${duplicateCheck.similarityScore}',
+      );
 
       if (mounted) Navigator.pop(context); // Close loading
 
       if (duplicateCheck.isDuplicate) {
+        AppLogging.marketplace(
+          '⚠️ Duplicate detected - showing warning dialog',
+        );
         // Show duplicate warning
         if (mounted) {
           showDialog(
@@ -971,12 +1007,22 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       }
 
       // Submit to marketplace
-      await service.submitWidget(schema, token);
+      AppLogging.marketplace('📤 Submitting widget to marketplace...');
+      AppLogging.marketplace('   Calling service.submitWidget()');
+      final result = await service.submitWidget(schema, token);
+      AppLogging.marketplace('✅ Widget submitted successfully!');
+      AppLogging.marketplace('   Result ID: ${result.id}');
+      AppLogging.marketplace('   Result status: ${result.status}');
+      AppLogging.marketplace('═══════════════════════════════════════════════');
+      AppLogging.marketplace('📤 SUBMIT TO MARKETPLACE - COMPLETE');
+      AppLogging.marketplace('═══════════════════════════════════════════════');
 
       if (mounted) {
         showSuccessSnackBar(context, '${schema.name} submitted for review');
       }
     } on MarketplaceDuplicateException catch (e) {
+      AppLogging.marketplace('❌ MarketplaceDuplicateException: ${e.message}');
+      AppLogging.marketplace('   duplicateName: ${e.duplicateName}');
       if (mounted) {
         showErrorSnackBar(
           context,
@@ -984,10 +1030,13 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         );
       }
     } on MarketplaceException catch (e) {
+      AppLogging.marketplace('❌ MarketplaceException: ${e.message}');
       if (mounted) {
         showErrorSnackBar(context, e.message);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogging.marketplace('❌ Unexpected error: $e');
+      AppLogging.marketplace('   Stack trace: $stackTrace');
       if (mounted) {
         showErrorSnackBar(context, 'Failed to submit: $e');
       }
