@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
+import '../../core/widgets/admin_pin_dialog.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/connection_required_wrapper.dart';
 import '../../core/widgets/top_status_banner.dart';
@@ -47,19 +48,14 @@ import '../world_mesh/world_mesh_screen.dart';
 import '../settings/subscription_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import '../reachability/mesh_reachability_screen.dart';
-import '../device_shop/screens/device_shop_screen.dart';
-import '../device_shop/screens/shop_admin_dashboard.dart';
-import '../device_shop/screens/review_moderation_screen.dart';
 import '../device_shop/providers/admin_shop_providers.dart';
 import '../mesh_health/widgets/mesh_health_dashboard.dart';
-import '../social/screens/reported_content_screen.dart';
-import '../settings/admin_follow_requests_screen.dart';
 import '../signals/signals.dart';
 import '../profile/profile_screen.dart';
 import '../debug/device_logs_screen.dart';
 import '../social/screens/activity_timeline_screen.dart';
 import '../../providers/activity_providers.dart';
-import '../admin/screens/user_purchases_admin_screen.dart';
+import '../admin/screens/admin_screen.dart';
 
 /// Combined admin notification count provider
 /// Uses FutureProvider to properly handle the async stream states
@@ -1834,14 +1830,32 @@ class _SettingsButton extends StatelessWidget {
   }
 }
 
-/// Admin section in the drawer - only visible to shop admins
-class _DrawerAdminSection extends ConsumerWidget {
+/// Admin section in the drawer - visible to shop admins with PIN protection
+class _DrawerAdminSection extends ConsumerStatefulWidget {
   final void Function(Widget screen) onNavigate;
 
   const _DrawerAdminSection({required this.onNavigate});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_DrawerAdminSection> createState() =>
+      _DrawerAdminSectionState();
+}
+
+class _DrawerAdminSectionState extends ConsumerState<_DrawerAdminSection> {
+  Future<void> _handleAdminTap() async {
+    ref.haptics.tabChange();
+
+    // Show PIN verification dialog
+    final verified = await AdminPinDialog.show(context);
+    if (!mounted) return;
+
+    if (verified) {
+      widget.onNavigate(const AdminScreen());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isAdminAsync = ref.watch(isShopAdminProvider);
 
     return isAdminAsync.when(
@@ -1849,6 +1863,9 @@ class _DrawerAdminSection extends ConsumerWidget {
         if (!isAdmin) return const SizedBox.shrink();
 
         final theme = Theme.of(context);
+
+        // Combined badge count for admin notifications
+        final badgeCount = ref.watch(adminNotificationCountProvider);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1883,90 +1900,14 @@ class _DrawerAdminSection extends ConsumerWidget {
                     ),
                   ),
 
-                  // Shop Admin Dashboard
+                  // Single Admin entry with PIN protection
                   _DrawerMenuTile(
-                    icon: Icons.dashboard_customize,
-                    label: 'Shop Admin',
+                    icon: Icons.shield_outlined,
+                    label: 'Admin Dashboard',
                     isSelected: false,
-                    iconColor: Colors.purple.shade400,
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      onNavigate(const ShopAdminDashboard());
-                    },
-                  ),
-
-                  // Device Shop
-                  _DrawerMenuTile(
-                    icon: Icons.store,
-                    label: 'Device Shop',
-                    isSelected: false,
-                    iconColor: Colors.teal.shade400,
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      onNavigate(const DeviceShopScreen());
-                    },
-                  ),
-
-                  // Review Moderation
-                  _DrawerMenuTile(
-                    icon: Icons.rate_review_outlined,
-                    label: 'Review Moderation',
-                    isSelected: false,
-                    iconColor: Colors.blue.shade400,
-                    badgeCount: ref
-                        .watch(pendingReviewCountProvider)
-                        .when(
-                          data: (count) => count,
-                          loading: () => null,
-                          error: (e, stack) => null,
-                        ),
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      onNavigate(const ReviewModerationScreen());
-                    },
-                  ),
-
-                  // Reported Content
-                  _DrawerMenuTile(
-                    icon: Icons.flag_outlined,
-                    label: 'Reported Content',
-                    isSelected: false,
-                    iconColor: Colors.red.shade400,
-                    badgeCount: ref
-                        .watch(pendingReportCountProvider)
-                        .when(
-                          data: (count) => count,
-                          loading: () => null,
-                          error: (e, stack) => null,
-                        ),
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      onNavigate(const ReportedContentScreen());
-                    },
-                  ),
-
-                  // Social Seeding (Follow Requests Admin)
-                  _DrawerMenuTile(
-                    icon: Icons.group_add_rounded,
-                    label: 'Social Seeding',
-                    isSelected: false,
-                    iconColor: Colors.teal.shade400,
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      onNavigate(const AdminFollowRequestsScreen());
-                    },
-                  ),
-
-                  // User Purchases Admin
-                  _DrawerMenuTile(
-                    icon: Icons.receipt_long,
-                    label: 'User Purchases',
-                    isSelected: false,
-                    iconColor: Colors.amber.shade400,
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      onNavigate(const UserPurchasesAdminScreen());
-                    },
+                    iconColor: Colors.orange.shade400,
+                    badgeCount: badgeCount > 0 ? badgeCount : null,
+                    onTap: _handleAdminTap,
                   ),
                 ],
               ),

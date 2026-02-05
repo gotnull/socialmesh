@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+
 import '../../core/logging.dart';
 import '../../models/mesh_models.dart';
 import '../../models/canned_response.dart';
