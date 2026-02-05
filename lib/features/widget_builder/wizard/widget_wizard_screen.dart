@@ -4988,12 +4988,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 ),
               ),
             ],
-            // Radial gauge
+            // Radial gauge - use displayMax for better visual range
             ElementSchema(
               type: ElementType.gauge,
               gaugeType: GaugeType.radial,
               gaugeMin: binding.minValue ?? 0,
-              gaugeMax: binding.maxValue ?? 100,
+              gaugeMax: binding.displayMax ?? binding.maxValue ?? 100,
               gaugeColor: _colorToHex(_accentColor),
               binding: BindingSchema(path: bindingPath),
               style: StyleSchema(width: gaugeSize, height: gaugeSize),
@@ -5969,12 +5969,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 ),
               ),
               // Small gauge for numeric values
+              // Use displayMax if available for better visual range
               if (isNumeric)
                 ElementSchema(
                   type: ElementType.gauge,
                   gaugeType: GaugeType.linear,
                   gaugeMin: binding.minValue ?? 0,
-                  gaugeMax: binding.maxValue ?? 100,
+                  gaugeMax: binding.displayMax ?? binding.maxValue ?? 100,
                   gaugeColor: _colorToHex(_accentColor),
                   binding: BindingSchema(path: bindingPath),
                   style: const StyleSchema(height: 4),
@@ -6027,13 +6028,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   fontWeight: 'w700',
                 ),
               ),
-              // Gauge for numeric values
+              // Gauge for numeric values - use displayMax for better visual range
               if (isNumeric)
                 ElementSchema(
                   type: ElementType.gauge,
                   gaugeType: GaugeType.linear,
                   gaugeMin: binding.minValue ?? 0,
-                  gaugeMax: binding.maxValue ?? 100,
+                  gaugeMax: binding.displayMax ?? binding.maxValue ?? 100,
                   gaugeColor: _colorToHex(_accentColor),
                   binding: BindingSchema(path: bindingPath),
                   style: const StyleSchema(height: 6),
@@ -6081,14 +6082,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ),
         );
 
-        // Add progress bar for numeric values
+        // Add progress bar for numeric values - use displayMax for better visual range
         if (isNumeric) {
           children.add(
             ElementSchema(
               type: ElementType.gauge,
               gaugeType: GaugeType.linear,
               gaugeMin: binding.minValue ?? 0,
-              gaugeMax: binding.maxValue ?? 100,
+              gaugeMax: binding.displayMax ?? binding.maxValue ?? 100,
               gaugeColor: _colorToHex(_accentColor),
               binding: BindingSchema(path: bindingPath),
               style: const StyleSchema(height: 6),

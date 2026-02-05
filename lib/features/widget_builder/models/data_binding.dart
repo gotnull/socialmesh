@@ -25,6 +25,12 @@ class BindingDefinition {
   final String? unit;
   final double? minValue;
   final double? maxValue;
+
+  /// The expected/typical max value for visual display.
+  /// Use this for metrics where the actual value is typically much lower
+  /// than maxValue (e.g., channel utilization is 0-100% but typically <20%).
+  /// Gauges use this for better visual representation.
+  final double? displayMax;
   final String? defaultFormat;
 
   const BindingDefinition({
@@ -36,6 +42,7 @@ class BindingDefinition {
     this.unit,
     this.minValue,
     this.maxValue,
+    this.displayMax,
     this.defaultFormat,
   });
 }
@@ -188,6 +195,7 @@ class BindingRegistry {
       unit: '%',
       minValue: 0,
       maxValue: 100,
+      displayMax: 25, // Typical range 0-25% for healthy networks
       defaultFormat: '{value}%',
     ),
     // Aliases for node.channelUtilization
@@ -200,6 +208,7 @@ class BindingRegistry {
       unit: '%',
       minValue: 0,
       maxValue: 100,
+      displayMax: 25, // Typical range 0-25% for healthy networks
       defaultFormat: '{value}%',
     ),
     BindingDefinition(
@@ -211,6 +220,7 @@ class BindingRegistry {
       unit: '%',
       minValue: 0,
       maxValue: 100,
+      displayMax: 25, // Typical range 0-25% for healthy networks
       defaultFormat: '{value}%',
     ),
     BindingDefinition(
@@ -222,6 +232,7 @@ class BindingRegistry {
       unit: '%',
       minValue: 0,
       maxValue: 100,
+      displayMax: 25, // Typical range 0-25% for healthy networks
       defaultFormat: '{value}%',
     ),
     BindingDefinition(
