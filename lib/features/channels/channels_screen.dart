@@ -599,12 +599,7 @@ class _ChannelTile extends ConsumerWidget {
       title: channelName,
       subtitle: 'Scan to join this channel',
       qrData: channelUrl,
-      primaryButtonLabel: 'Copy Channel URL',
-      onShare: () {
-        Clipboard.setData(ClipboardData(text: channelUrl));
-        Navigator.pop(context);
-        showSuccessSnackBar(context, 'Channel URL copied to clipboard');
-      },
+      infoText: 'Share this QR code to let others join your channel',
     );
   }
 

@@ -691,13 +691,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell> {
       title: info.nodeName.isNotEmpty ? info.nodeName : 'Unnamed Node',
       subtitle: 'Scan to add as contact',
       qrData: shareCode,
-      infoText: '${pubKeyHex.substring(0, 16)}...',
-      primaryButtonLabel: 'Copy Code',
-      onShare: () {
-        Clipboard.setData(ClipboardData(text: shareCode));
-        Navigator.pop(context);
-        showSuccessSnackBar(context, 'Contact code copied');
-      },
+      infoText: 'Share your contact code so others can message you',
     );
   }
 }
@@ -1375,13 +1369,7 @@ class _MeshCoreDeviceSheetContentState
       title: info.nodeName.isNotEmpty ? info.nodeName : 'Unnamed Node',
       subtitle: 'Scan to add as contact',
       qrData: shareCode,
-      infoText: '${pubKeyHex.substring(0, 16)}...',
-      primaryButtonLabel: 'Copy Code',
-      onShare: () {
-        Clipboard.setData(ClipboardData(text: shareCode));
-        Navigator.pop(context);
-        showSuccessSnackBar(context, 'Contact code copied');
-      },
+      infoText: 'Share your contact code so others can message you',
     );
   }
 

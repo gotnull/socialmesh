@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
-import '../../../core/widgets/branded_qr_code.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/qr_share_sheet.dart';
 import '../../../models/meshcore_channel.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
@@ -690,106 +690,12 @@ class _MeshCoreChannelsScreenState
   void _showChannelDetails(MeshCoreChannel channel) {
     final channelCode = generateChannelCode(channel);
 
-    AppBottomSheet.show(
+    QrShareSheet.show(
       context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            channel.displayName,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: BrandedQrCode(
-              data: channelCode,
-              size: 180,
-              foregroundColor: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildChannelDetailRow('Index', '${channel.index}'),
-          _buildChannelDetailRow(
-            'Type',
-            channel.isPublic ? 'Public' : 'Private',
-          ),
-          _buildChannelDetailRow(
-            'PSK',
-            '${channel.pskHex.substring(0, 16)}...',
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: channelCode));
-                    showSuccessSnackBar(context, 'Channel code copied');
-                  },
-                  icon: const Icon(Icons.copy_rounded),
-                  label: const Text('Copy Code'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white.withValues(alpha: 0.8),
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.3),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            MeshCoreChatScreen.channel(channel: channel),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.chat_rounded),
-                  label: const Text('Open'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AccentColors.purple.withValues(alpha: 0.3),
-                    foregroundColor: AccentColors.purple,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChannelDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontFamily: 'monospace',
-            ),
-          ),
-        ],
-      ),
+      title: channel.displayName,
+      subtitle: channel.isPublic ? 'Public Channel' : 'Private Channel',
+      qrData: channelCode,
+      infoText: 'Scan this QR code to join the channel',
     );
   }
 

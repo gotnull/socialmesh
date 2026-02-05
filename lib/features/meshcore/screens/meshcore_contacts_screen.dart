@@ -466,12 +466,7 @@ class _MeshCoreContactsScreenState
       title: selfInfo.nodeName,
       subtitle: 'Scan this code to add me as a contact',
       qrData: contactCode,
-      primaryButtonLabel: 'Copy Code',
-      onShare: () {
-        Clipboard.setData(ClipboardData(text: contactCode));
-        Navigator.pop(context);
-        showSuccessSnackBar(context, 'Contact code copied to clipboard');
-      },
+      infoText: 'Share your contact code so others can message you',
     );
   }
 

@@ -30,7 +30,6 @@ import '../../core/widgets/section_header.dart';
 import '../../core/widgets/skeleton_config.dart';
 // import '../../core/widgets/verified_badge.dart';
 import '../../core/widgets/glass_scaffold.dart';
-import '../../services/share_link_service.dart';
 import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
 import '../navigation/main_shell.dart';
@@ -1675,6 +1674,9 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
   }
 
   void _showNodeQrCode(BuildContext context, MeshNode node) {
+    // Close the details sheet first
+    Navigator.pop(context);
+
     // Create a shareable node info JSON
     final nodeInfo = {
       'nodeNum': node.nodeNum,
@@ -1693,50 +1695,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
       subtitle: 'Scan to add this node',
       qrData: nodeUrl,
       infoText: 'Node ID: ${node.nodeNum.toRadixString(16).toUpperCase()}',
-      primaryButtonLabel: 'Share via Link',
-      secondaryButtonLabel: 'Copy Node ID',
-      onShare: () async {
-        Navigator.pop(context);
-        await _shareNodeViaLink(context, node);
-      },
-      onCopy: () {
-        Clipboard.setData(
-          ClipboardData(text: '!${node.nodeNum.toRadixString(16)}'),
-        );
-        Navigator.pop(context);
-        showSuccessSnackBar(context, 'Node ID copied');
-      },
     );
-  }
-
-  /// Share a node via a web link (works for both Android and iOS recipients)
-  Future<void> _shareNodeViaLink(BuildContext context, MeshNode node) async {
-    try {
-      final shareLinkService = ref.read(shareLinkServiceProvider);
-      await shareLinkService.shareNode(
-        node: node,
-        description:
-            '${node.role ?? 'Mesh Node'} • ${node.hardwareModel ?? 'Unknown Hardware'}',
-      );
-    } on StateError catch (e) {
-      if (context.mounted) {
-        if (e.message.contains('signed in')) {
-          showActionSnackBar(
-            context,
-            'Sign in to share nodes',
-            actionLabel: 'Sign In',
-            onAction: () => Navigator.pushNamed(context, '/account'),
-            type: SnackBarType.info,
-          );
-        } else {
-          showErrorSnackBar(context, 'Failed to share node: ${e.message}');
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        showErrorSnackBar(context, 'Failed to share node: $e');
-      }
-    }
   }
 
   void _sendDirectMessage(BuildContext context, MeshNode node) {
@@ -2315,16 +2274,23 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    AutoScrollText(
+                      node.displayName,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 4),
                     Row(
                       children: [
-                        Flexible(
-                          child: AutoScrollText(
-                            node.displayName,
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                              color: context.textPrimary,
-                            ),
+                        Text(
+                          '!${node.nodeNum.toRadixString(16)}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: context.textSecondary,
+                            fontFamily: AppTheme.fontFamily,
                           ),
                         ),
                         if (isMyNode) ...[
@@ -2349,15 +2315,6 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                           ),
                         ],
                       ],
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      '!${node.nodeNum.toRadixString(16)}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: context.textSecondary,
-                        fontFamily: AppTheme.fontFamily,
-                      ),
                     ),
                   ],
                 ),
@@ -2658,24 +2615,25 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
               ],
             )
           else
-            Column(
+            // Device power controls
+            Row(
               children: [
-                // Primary action
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _showNodeQrCode(context, node),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.accentColor,
-                      foregroundColor: Colors.white,
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showRebootConfirmation(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.warningYellow,
+                      side: BorderSide(
+                        color: AppTheme.warningYellow.withValues(alpha: 0.5),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    icon: const Icon(Icons.share, size: 20),
+                    icon: const Icon(Icons.restart_alt, size: 20),
                     label: const Text(
-                      'Share My Node',
+                      'Reboot',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -2683,60 +2641,29 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                // Device power controls
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _showRebootConfirmation(context),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.warningYellow,
-                          side: BorderSide(
-                            color: AppTheme.warningYellow.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: const Icon(Icons.restart_alt, size: 20),
-                        label: const Text(
-                          'Reboot',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showShutdownConfirmation(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.errorRed,
+                      side: BorderSide(
+                        color: AppTheme.errorRed.withValues(alpha: 0.5),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _showShutdownConfirmation(context),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.errorRed,
-                          side: BorderSide(
-                            color: AppTheme.errorRed.withValues(alpha: 0.5),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: const Icon(Icons.power_settings_new, size: 20),
-                        label: const Text(
-                          'Shutdown',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                    icon: const Icon(Icons.power_settings_new, size: 20),
+                    label: const Text(
+                      'Shutdown',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
