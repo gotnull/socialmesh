@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../providers/auth_providers.dart';
@@ -12,8 +13,9 @@ import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import 'models/automation.dart';
 
-/// Show a bottom sheet with QR code and share options for an automation
-/// Requires user to be signed in for cloud sharing features
+/// Show a bottom sheet with QR code and share options for an automation.
+/// Uploads automation to Firestore and generates a short shareable link.
+/// Requires user to be signed in for cloud sharing features.
 Future<void> showAutomationShareSheet(
   BuildContext context,
   Automation automation, {
@@ -32,6 +34,16 @@ Future<void> showAutomationShareSheet(
     return;
   }
 
+  await showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => _ShareSheet(automation: automation, userId: user.uid),
+  );
+}
+
+/// Create export data for sharing (removes user-specific fields).
+Map<String, dynamic> _createExportData(Automation automation) {
   // Sanitize trigger config - remove user-specific data
   final sanitizedTriggerConfig = Map<String, dynamic>.from(
     automation.trigger.config,
@@ -66,8 +78,7 @@ Future<void> showAutomationShareSheet(
     return {'type': condition.type.name, 'config': sanitizedConfig};
   }).toList();
 
-  // Generate base64 data with sanitized export
-  final exportData = {
+  return {
     'name': automation.name,
     'description': automation.description,
     'trigger': {
@@ -77,36 +88,144 @@ Future<void> showAutomationShareSheet(
     'actions': sanitizedActions,
     if (sanitizedConditions != null) 'conditions': sanitizedConditions,
   };
-
-  final jsonString = jsonEncode(exportData);
-  final base64Data = base64Encode(
-    utf8.encode(jsonString),
-  ).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
-
-  final deepLink = 'socialmesh://automation/$base64Data';
-
-  await showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => _ShareSheet(
-      automation: automation,
-      deepLink: deepLink,
-      base64Data: base64Data,
-    ),
-  );
 }
 
-class _ShareSheet extends StatelessWidget {
-  const _ShareSheet({
-    required this.automation,
-    required this.deepLink,
-    required this.base64Data,
-  });
+/// Create a fingerprint from export data to detect duplicates.
+/// This excludes variable metadata to focus on the automation structure.
+String _createFingerprintFromStoredData(Map<String, dynamic> exportData) {
+  // Create a copy to avoid modifying original
+  final data = Map<String, dynamic>.from(exportData);
+
+  // Remove fields that shouldn't affect fingerprint
+  data.remove('createdBy');
+  data.remove('createdAt');
+
+  // Sort keys for consistent ordering and convert to string
+  final sortedKeys = data.keys.toList()..sort();
+  final buffer = StringBuffer();
+  for (final key in sortedKeys) {
+    buffer.write('$key:${data[key]}|');
+  }
+
+  return buffer.toString().hashCode.toRadixString(16);
+}
+
+/// Check if an identical automation already exists in the user's shared_automations.
+/// Returns the existing document ID if found, null otherwise.
+Future<String?> _findExistingAutomation(
+  String userId,
+  Map<String, dynamic> exportData,
+) async {
+  final fingerprint = _createFingerprintFromStoredData(exportData);
+  final name = exportData['name'] as String?;
+
+  // Query for automations by this user with the same name (more efficient query)
+  final query = FirebaseFirestore.instance
+      .collection('shared_automations')
+      .where('createdBy', isEqualTo: userId)
+      .where('name', isEqualTo: name)
+      .limit(10); // Limit results since we're comparing fingerprints
+
+  try {
+    final snapshot = await query.get();
+
+    for (final doc in snapshot.docs) {
+      // Re-create fingerprint from stored data to compare
+      final storedData = doc.data();
+      final storedFingerprint = _createFingerprintFromStoredData(storedData);
+
+      if (storedFingerprint == fingerprint) {
+        AppLogging.automations(
+          '[AutomationShare] Found existing automation "$name" with ID ${doc.id}',
+        );
+        return doc.id;
+      }
+    }
+  } catch (e) {
+    AppLogging.automations(
+      '[AutomationShare] Error checking for duplicates: $e',
+    );
+    // Fall through to create new automation
+  }
+
+  return null;
+}
+
+class _ShareSheet extends StatefulWidget {
+  const _ShareSheet({required this.automation, required this.userId});
 
   final Automation automation;
-  final String deepLink;
-  final String base64Data;
+  final String userId;
+
+  @override
+  State<_ShareSheet> createState() => _ShareSheetState();
+}
+
+class _ShareSheetState extends State<_ShareSheet> {
+  bool _isUploading = true;
+  String? _shareUrl;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _uploadAndGenerateLink();
+  }
+
+  Future<void> _uploadAndGenerateLink() async {
+    try {
+      // Create export data
+      final exportData = _createExportData(widget.automation);
+
+      // Check if an identical automation already exists
+      final existingId = await _findExistingAutomation(
+        widget.userId,
+        exportData,
+      );
+      String docId;
+
+      if (existingId != null) {
+        // Reuse existing automation
+        docId = existingId;
+        AppLogging.automations(
+          '[AutomationShare] Reusing existing automation '
+          '"${widget.automation.name}" with ID $docId',
+        );
+      } else {
+        // Upload new automation to Firestore shared_automations collection
+        final docRef = await FirebaseFirestore.instance
+            .collection('shared_automations')
+            .add({
+              ...exportData,
+              'createdBy': widget.userId,
+              'createdAt': FieldValue.serverTimestamp(),
+            });
+        docId = docRef.id;
+        AppLogging.automations(
+          '[AutomationShare] Uploaded automation "${widget.automation.name}" '
+          'with ID $docId',
+        );
+      }
+
+      // Generate short share URL using the document ID
+      final shareUrl = AppUrls.shareAutomationUrl(docId);
+
+      if (mounted) {
+        setState(() {
+          _shareUrl = shareUrl;
+          _isUploading = false;
+        });
+      }
+    } catch (e) {
+      AppLogging.automations('[AutomationShare] Upload failed: $e');
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to upload automation: $e';
+          _isUploading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -144,7 +263,7 @@ class _ShareSheet extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     Text(
-                      automation.name,
+                      widget.automation.name,
                       style: Theme.of(
                         context,
                       ).textTheme.bodyMedium?.copyWith(color: Colors.grey[400]),
@@ -156,74 +275,145 @@ class _ShareSheet extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // QR Code
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+          // Content based on state
+          if (_isUploading) ...[
+            const SizedBox(height: 40),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              'Preparing share link...',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[400]),
             ),
-            child: QrImageView(
-              data: deepLink,
-              version: QrVersions.auto,
-              size: 250,
-              backgroundColor: Colors.white,
-              errorCorrectionLevel: QrErrorCorrectLevel.M,
+            const SizedBox(height: 40),
+          ] else if (_error != null) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _error!,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: () {
+                setState(() {
+                  _isUploading = true;
+                  _error = null;
+                });
+                _uploadAndGenerateLink();
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
+          ] else ...[
+            // QR Code
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: QrImageView(
+                data: _shareUrl!,
+                version: QrVersions.auto,
+                size: 250,
+                backgroundColor: Colors.white,
+                errorCorrectionLevel: QrErrorCorrectLevel.M,
+              ),
+            ),
+            const SizedBox(height: 24),
 
-          // Instructions
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: context.accentColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+            // Share URL display
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: context.background,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: context.border),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.link, size: 16, color: context.textSecondary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _shareUrl!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.textSecondary,
+                        fontFamily: 'monospace',
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: Row(
+            const SizedBox(height: 16),
+
+            // Instructions
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: context.accentColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: context.accentColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Scan QR code or share link to import this automation',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Share actions
+            Row(
               children: [
-                Icon(Icons.info_outline, color: context.accentColor, size: 20),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _shareAsLink(context),
+                    icon: const Icon(Icons.share),
+                    label: const Text('Share Link'),
+                  ),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    'Scan this QR code in Socialmesh to import this automation',
-                    style: Theme.of(context).textTheme.bodySmall,
+                  child: FilledButton.icon(
+                    onPressed: () => _copyLink(context),
+                    icon: const Icon(Icons.copy),
+                    label: const Text('Copy Link'),
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 16),
-
-          // Share actions
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _shareAsLink(context),
-                  icon: const Icon(Icons.share),
-                  label: const Text('Share Link'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () => _copyLink(context),
-                  icon: const Icon(Icons.copy),
-                  label: const Text('Copy Link'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Data size info
-          Text(
-            'Link size: ${base64Data.length} characters',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-          ),
+          ],
 
           SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
@@ -232,26 +422,24 @@ class _ShareSheet extends StatelessWidget {
   }
 
   Future<void> _shareAsLink(BuildContext context) async {
+    if (_shareUrl == null) return;
+
     AppLogging.automations(
-      'Share automation: Starting share for "${automation.name}"',
-    );
-    AppLogging.automations(
-      'Share automation: Deep link length: ${deepLink.length}',
+      '[AutomationShare] Starting share for "${widget.automation.name}"',
     );
 
     // Capture share position before async gap (required for iPad)
     final sharePosition = getSafeSharePosition(context);
 
     try {
-      AppLogging.automations('Share automation: Calling Share.share()');
       await Share.share(
-        deepLink,
-        subject: 'Socialmesh Automation: ${automation.name}',
+        'Check out my Socialmesh automation: ${widget.automation.name}\n$_shareUrl',
+        subject: 'Socialmesh Automation: ${widget.automation.name}',
         sharePositionOrigin: sharePosition,
       );
-      AppLogging.automations('Share automation: Share.share() completed');
+      AppLogging.automations('[AutomationShare] Share completed');
     } catch (e) {
-      AppLogging.automations('Share automation: ERROR - $e');
+      AppLogging.automations('[AutomationShare] ERROR - $e');
       if (context.mounted) {
         showErrorSnackBar(context, 'Failed to share: $e');
       }
@@ -259,8 +447,10 @@ class _ShareSheet extends StatelessWidget {
   }
 
   Future<void> _copyLink(BuildContext context) async {
+    if (_shareUrl == null) return;
+
     try {
-      await _copyToClipboard(deepLink);
+      await Clipboard.setData(ClipboardData(text: _shareUrl!));
       if (context.mounted) {
         showSuccessSnackBar(context, 'Link copied to clipboard');
         Navigator.of(context).pop();
@@ -270,10 +460,5 @@ class _ShareSheet extends StatelessWidget {
         showErrorSnackBar(context, 'Failed to copy: $e');
       }
     }
-  }
-
-  Future<void> _copyToClipboard(String text) async {
-    // Use Flutter's clipboard API
-    await Clipboard.setData(ClipboardData(text: text));
   }
 }

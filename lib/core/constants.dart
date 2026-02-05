@@ -44,6 +44,8 @@ class AppUrls {
   static String shareProfileUrl(String id) => '$baseUrl/share/profile/$id';
   static String shareWidgetUrl(String id) => '$baseUrl/share/widget/$id';
   static String sharePostUrl(String id) => '$baseUrl/share/post/$id';
+  static String shareAutomationUrl(String id) =>
+      '$baseUrl/share/automation/$id';
   static String shareLocationUrl(double lat, double lng, {String? label}) {
     final params =
         'lat=$lat&lng=$lng${label != null ? '&label=${Uri.encodeComponent(label)}' : ''}';
