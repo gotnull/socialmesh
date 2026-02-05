@@ -12,6 +12,7 @@ import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
 import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
+import '../dashboard/widgets/schema_widget_content.dart';
 import 'models/widget_schema.dart';
 import 'storage/widget_storage_service.dart';
 import 'editor/widget_editor_screen.dart';
@@ -130,6 +131,9 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
     try {
       await _storageService.init();
       await _storageService.saveWidget(_widget!);
+
+      // Invalidate widget providers to trigger refresh on any watching screens
+      ref.invalidate(customWidgetsProvider);
 
       if (mounted) {
         final navigator = Navigator.of(context);

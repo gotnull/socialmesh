@@ -25,6 +25,7 @@ import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import '../dashboard/models/dashboard_widget_config.dart';
 import '../dashboard/providers/dashboard_providers.dart';
+import '../dashboard/widgets/schema_widget_content.dart';
 
 /// Main widget builder screen - list and manage custom widgets
 class WidgetBuilderScreen extends ConsumerStatefulWidget {
@@ -45,6 +46,18 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   void initState() {
     super.initState();
     _loadWidgets();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Listen to customWidgetsProvider changes (e.g., from import screen)
+    // This triggers refresh when a widget is imported via deep link
+    ref.listen(customWidgetsProvider, (previous, next) {
+      if (previous != next) {
+        _loadWidgets();
+      }
+    });
   }
 
   Future<void> _loadWidgets() async {
