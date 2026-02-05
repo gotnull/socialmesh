@@ -522,7 +522,11 @@ class DeepLinkParser {
     );
   }
 
-  /// Parse an automation deep link from base64 data.
+  /// Parse an automation deep link.
+  ///
+  /// Handles both formats:
+  /// - Base64-encoded JSON (legacy QR codes): contains full automation data
+  /// - Firestore document ID (web shares): short alphanumeric ID
   ParsedDeepLink _parseAutomationLink(String? data, String original) {
     if (data == null || data.isEmpty) {
       return ParsedDeepLink(
@@ -532,11 +536,42 @@ class DeepLinkParser {
       );
     }
 
-    return ParsedDeepLink(
-      type: DeepLinkType.automation,
-      originalUri: original,
-      automationBase64Data: data,
-    );
+    // Try to decode as base64 JSON (legacy QR code format)
+    try {
+      // Restore URL-safe base64 to standard base64
+      final standardBase64 = data.replaceAll('-', '+').replaceAll('_', '/');
+      // Add padding if needed
+      final padded = standardBase64.padRight(
+        (standardBase64.length + 3) & ~3,
+        '=',
+      );
+      final decoded = utf8.decode(base64Decode(padded));
+      // Verify it's valid JSON (automation data is always a JSON object)
+      final json = jsonDecode(decoded);
+      if (json is Map<String, dynamic>) {
+        AppLogging.qr(
+          '🔗 Parser: Decoded automation base64 JSON: ${json['name'] ?? 'unnamed'}',
+        );
+        return ParsedDeepLink(
+          type: DeepLinkType.automation,
+          originalUri: original,
+          automationBase64Data: data,
+        );
+      }
+      // If not a JSON object, treat as Firestore ID
+      throw FormatException('Not a valid automation JSON object');
+    } catch (e) {
+      // Not valid base64 JSON - treat as Firestore document ID
+      AppLogging.qr(
+        '🔗 Parser: Automation data is not base64 (error: $e), '
+        'treating as Firestore ID: $data',
+      );
+      return ParsedDeepLink(
+        type: DeepLinkType.automation,
+        originalUri: original,
+        automationFirestoreId: data,
+      );
+    }
   }
 }
 
