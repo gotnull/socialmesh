@@ -143,7 +143,7 @@ class WidgetPreviewCard extends ConsumerWidget {
                     ),
                     if (trailing != null) const SizedBox(width: 8),
                   ],
-                  if (trailing != null) trailing!,
+                  ?trailing,
                 ],
               ),
             ),

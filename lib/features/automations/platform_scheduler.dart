@@ -449,7 +449,7 @@ class IOSBGTaskScheduler implements PlatformScheduler {
     if (_notifications != null) {
       // Use taskId hash as notification ID
       final notificationId = taskId.hashCode.abs() % 0x7FFFFFFF;
-      await _notifications.cancel(notificationId);
+      await _notifications.cancel(id: notificationId);
     }
 
     AppLogging.automations('IOSBGTaskScheduler: Cancelled task \$taskId');
@@ -528,11 +528,11 @@ class IOSBGTaskScheduler implements PlatformScheduler {
     const details = NotificationDetails(iOS: iosDetails);
 
     await _notifications.zonedSchedule(
-      notificationId,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledFor, tz.local),
-      details,
+      id: notificationId,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(scheduledFor, tz.local),
+      notificationDetails: details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: taskId,
     );

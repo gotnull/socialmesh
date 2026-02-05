@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -964,6 +965,16 @@ class _AccountSubscriptionsScreenState
       // Sync RevenueCat with Firebase to link purchases to this account
       AppLogging.subscriptions('║ 🔗 Syncing RevenueCat with Firebase...');
       await syncRevenueCatWithFirebase(ref);
+    } on FirebaseAuthException catch (e) {
+      // User cancelled - don't show error
+      if (e.code == 'sign-in-cancelled') {
+        AppLogging.subscriptions('║ ⚠️ Google sign-in cancelled by user');
+        return;
+      }
+      AppLogging.subscriptions('║ ❌ Google sign-in FAILED: ${e.message}');
+      if (mounted) {
+        showErrorSnackBar(context, 'Sign in failed: ${e.message}');
+      }
     } catch (e) {
       AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
@@ -974,7 +985,7 @@ class _AccountSubscriptionsScreenState
       );
       AppLogging.app('Google sign-in error: $e');
       if (mounted) {
-        showErrorSnackBar(context, 'Sign in failed: $e');
+        showErrorSnackBar(context, 'Sign in failed. Please try again.');
       }
     } finally {
       if (mounted) setState(() => _isSigningIn = false);
@@ -1010,6 +1021,16 @@ class _AccountSubscriptionsScreenState
       // Sync RevenueCat with Firebase to link purchases to this account
       AppLogging.subscriptions('║ 🔗 Syncing RevenueCat with Firebase...');
       await syncRevenueCatWithFirebase(ref);
+    } on SignInWithAppleAuthorizationException catch (e) {
+      // User cancelled - don't show error
+      if (e.code == AuthorizationErrorCode.canceled) {
+        AppLogging.subscriptions('║ ⚠️ Apple sign-in cancelled by user');
+        return;
+      }
+      AppLogging.subscriptions('║ ❌ Apple sign-in FAILED: ${e.message}');
+      if (mounted) {
+        showErrorSnackBar(context, 'Sign in failed: ${e.message}');
+      }
     } catch (e) {
       AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
@@ -1020,7 +1041,7 @@ class _AccountSubscriptionsScreenState
       );
       AppLogging.app('Apple sign-in error: $e');
       if (mounted) {
-        showErrorSnackBar(context, 'Sign in failed: $e');
+        showErrorSnackBar(context, 'Sign in failed. Please try again.');
       }
     } finally {
       if (mounted) setState(() => _isSigningIn = false);

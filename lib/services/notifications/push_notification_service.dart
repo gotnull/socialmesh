@@ -240,10 +240,13 @@ class PushNotificationService {
 
     // Show local notification for foreground messages
     await _localNotifications.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
-      NotificationDetails(android: androidDetails, iOS: iosDetails),
+      id: notification.hashCode,
+      title: notification.title,
+      body: notification.body,
+      notificationDetails: NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      ),
       payload: message.data['type'],
     );
   }

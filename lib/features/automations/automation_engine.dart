@@ -784,10 +784,10 @@ class AutomationEngine {
 
           // Show notification with custom or default sound
           await _notifications.show(
-            automation.id.hashCode,
-            title,
-            body,
-            NotificationDetails(
+            id: automation.id.hashCode,
+            title: title,
+            body: body,
+            notificationDetails: NotificationDetails(
               iOS: DarwinNotificationDetails(
                 presentAlert: true,
                 presentBadge: true,

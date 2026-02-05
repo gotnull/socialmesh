@@ -174,9 +174,9 @@ Future<void> _initializeFirebaseInBackground() async {
   // Listen for connectivity changes and attempt to resolve pending images
   try {
     final connectivity = Connectivity();
-    connectivity.onConnectivityChanged.listen((result) {
-      AppLogging.signals('CONNECTIVITY_CHANGE: $result');
-      if (result != ConnectivityResult.none) {
+    connectivity.onConnectivityChanged.listen((results) {
+      AppLogging.signals('CONNECTIVITY_CHANGE: $results');
+      if (!results.contains(ConnectivityResult.none) && results.isNotEmpty) {
         // Try resolving any pending images now that connectivity may be restored
         WidgetsBinding.instance.addPostFrameCallback((_) {
           try {

@@ -29,6 +29,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
+    // Suppress deprecation/unchecked warnings from third-party plugins
+    allprojects {
+        tasks.withType<JavaCompile> {
+            options.compilerArgs.addAll(listOf("-Xlint:-deprecation", "-Xlint:-unchecked"))
+        }
+    }
+
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8.toString()
     }

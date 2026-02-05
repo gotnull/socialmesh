@@ -165,27 +165,59 @@ class AuthService {
     }
   }
 
-  /// Sign in with Google
+  /// Sign in with Google using google_sign_in v7 API
+  ///
+  /// v7 separates authentication (identity) from authorization (access tokens).
+  /// For Firebase Auth, we only need the idToken (identity proof).
+  /// The accessToken is optional and only needed for Google API access.
+  ///
+  /// This implementation uses idToken-only authentication to avoid
+  /// showing two separate sign-in prompts to the user.
   Future<UserCredential> signInWithGoogle() async {
     AppLogging.auth('signInWithGoogle - START');
-    final googleUser = await GoogleSignIn().signIn();
-    if (googleUser == null) {
-      AppLogging.auth('signInWithGoogle - ❌ CANCELLED by user');
-      throw FirebaseAuthException(
-        code: 'sign-in-cancelled',
-        message: 'Google sign in was cancelled',
-      );
+
+    // Step 1: Get the singleton and initialize
+    // initialize() is idempotent - safe to call multiple times
+    final googleSignIn = GoogleSignIn.instance;
+    await googleSignIn.initialize();
+    AppLogging.auth('signInWithGoogle - GoogleSignIn initialized');
+
+    // Step 2: Authenticate - this proves user identity and returns idToken
+    // authenticate() shows the Google sign-in UI if needed
+    final GoogleSignInAccount googleUser;
+    try {
+      googleUser = await googleSignIn.authenticate();
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        AppLogging.auth('signInWithGoogle - ❌ CANCELLED by user');
+        throw FirebaseAuthException(
+          code: 'sign-in-cancelled',
+          message: 'Google sign in was cancelled',
+        );
+      }
+      AppLogging.auth('signInWithGoogle - ❌ GoogleSignInException: ${e.code}');
+      rethrow;
     }
     AppLogging.auth(
       'signInWithGoogle - Google user obtained: ${googleUser.email}',
     );
 
-    final googleAuth = await googleUser.authentication;
-    AppLogging.auth('signInWithGoogle - Google auth tokens obtained');
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
+    // Step 3: Get idToken from authentication
+    // In v7, authentication provides idToken (identity proof)
+    // This is sufficient for Firebase Auth - no accessToken needed
+    final idToken = googleUser.authentication.idToken;
+    if (idToken == null) {
+      AppLogging.auth('signInWithGoogle - ❌ No idToken received');
+      throw FirebaseAuthException(
+        code: 'missing-id-token',
+        message: 'Google sign in did not return an ID token',
+      );
+    }
+    AppLogging.auth('signInWithGoogle - idToken obtained');
+
+    // Step 4: Create Firebase credential with idToken only
+    // accessToken is null - Firebase Auth works fine without it
+    final credential = GoogleAuthProvider.credential(idToken: idToken);
 
     try {
       final userCredential = await _auth.signInWithCredential(credential);
@@ -415,7 +447,17 @@ class AuthService {
     }
   }
 
-  /// Re-authenticate the current user with Google
+  /// Re-authenticate the current user with Google using v7 API
+  ///
+  /// Re-authentication is required for sensitive operations like:
+  /// - Deleting account
+  /// - Changing email/password
+  /// - Linking new auth providers
+  ///
+  /// Uses the same v7 flow as signInWithGoogle but calls
+  /// reauthenticateWithCredential instead of signInWithCredential.
+  ///
+  /// Uses idToken-only authentication to avoid double sign-in prompts.
   Future<void> reauthenticateWithGoogle() async {
     AppLogging.auth('reauthenticateWithGoogle - START');
     final user = _auth.currentUser;
@@ -424,21 +466,39 @@ class AuthService {
       return;
     }
 
-    final googleUser = await GoogleSignIn().signIn();
-    if (googleUser == null) {
-      AppLogging.auth('reauthenticateWithGoogle - ❌ CANCELLED by user');
-      throw FirebaseAuthException(
-        code: 'reauthentication-cancelled',
-        message: 'Google re-authentication was cancelled',
-      );
+    // Step 1: Initialize singleton
+    final googleSignIn = GoogleSignIn.instance;
+    await googleSignIn.initialize();
+
+    // Step 2: Authenticate to get user identity
+    final GoogleSignInAccount googleUser;
+    try {
+      googleUser = await googleSignIn.authenticate();
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        AppLogging.auth('reauthenticateWithGoogle - ❌ CANCELLED by user');
+        throw FirebaseAuthException(
+          code: 'reauthentication-cancelled',
+          message: 'Google re-authentication was cancelled',
+        );
+      }
+      rethrow;
     }
     AppLogging.auth('reauthenticateWithGoogle - Google user obtained');
 
-    final googleAuth = await googleUser.authentication;
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
+    // Step 3: Get idToken from authentication
+    // idToken is sufficient for Firebase - no accessToken needed
+    final idToken = googleUser.authentication.idToken;
+    if (idToken == null) {
+      AppLogging.auth('reauthenticateWithGoogle - ❌ No idToken received');
+      throw FirebaseAuthException(
+        code: 'missing-id-token',
+        message: 'Google sign in did not return an ID token',
+      );
+    }
+
+    // Step 4: Create credential with idToken only and re-authenticate
+    final credential = GoogleAuthProvider.credential(idToken: idToken);
 
     try {
       await user.reauthenticateWithCredential(credential);

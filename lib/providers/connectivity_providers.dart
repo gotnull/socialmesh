@@ -53,7 +53,7 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
   final Duration _periodicCheckInterval = const Duration(seconds: 10);
 
   late final Connectivity _connectivity;
-  StreamSubscription<ConnectivityResult>? _sub;
+  StreamSubscription<List<ConnectivityResult>>? _sub;
   Timer? _periodicTimer;
 
   DateTime? _lastReachabilityCheck;
@@ -73,8 +73,10 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
 
   Future<void> checkNow() async {
     try {
-      final platformResult = await _connectivity.checkConnectivity();
-      final platformConnected = platformResult != ConnectivityResult.none;
+      final platformResults = await _connectivity.checkConnectivity();
+      final platformConnected =
+          !platformResults.contains(ConnectivityResult.none) &&
+          platformResults.isNotEmpty;
       final now = DateTime.now();
 
       bool reachable = false;
@@ -136,7 +138,7 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
     }
   }
 
-  Future<void> _onPlatformChanged(ConnectivityResult result) async {
+  Future<void> _onPlatformChanged(List<ConnectivityResult> results) async {
     // Trigger immediate check on platform changes
     await checkNow();
   }

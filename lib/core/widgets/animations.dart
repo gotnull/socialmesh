@@ -925,7 +925,7 @@ class AnimatedProgressRing extends StatelessWidget {
                   backgroundColor: backgroundColor,
                 ),
               ),
-              if (child != null) child!,
+              ?child,
             ],
           ),
         );

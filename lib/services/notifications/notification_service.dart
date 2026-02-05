@@ -129,7 +129,7 @@ class NotificationService {
     );
 
     await _notifications.initialize(
-      initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: _onNotificationResponse,
     );
 
@@ -281,10 +281,10 @@ class NotificationService {
     final notificationId = (node.nodeNum % 1000000).toInt();
 
     await _notifications.show(
-      notificationId,
-      'New Node Discovered',
-      '$nodeName ($shortCode) joined the mesh',
-      notificationDetails,
+      id: notificationId,
+      title: 'New Node Discovered',
+      body: '$nodeName ($shortCode) joined the mesh',
+      notificationDetails: notificationDetails,
       payload: 'node:${node.nodeNum}',
     );
 
@@ -347,10 +347,10 @@ class NotificationService {
     final notificationId = DateTime.now().millisecondsSinceEpoch % 100000000;
 
     await _notifications.show(
-      notificationId,
-      title,
-      message,
-      notificationDetails,
+      id: notificationId,
+      title: title,
+      body: message,
+      notificationDetails: notificationDetails,
       payload: 'firmware:$level',
     );
 
@@ -409,10 +409,10 @@ class NotificationService {
         (nodeNum + DateTime.now().millisecondsSinceEpoch) % 100000000;
 
     await _notifications.show(
-      notificationId,
-      '$sensorName: $state',
-      'From $displayName',
-      notificationDetails,
+      id: notificationId,
+      title: '$sensorName: $state',
+      body: 'From $displayName',
+      notificationDetails: notificationDetails,
       payload: 'detection:$nodeNum:$detected',
     );
 
@@ -499,10 +499,10 @@ class NotificationService {
               .toUpperCase();
 
       await _notifications.show(
-        notificationId,
-        'Message from $senderName ($shortCode)',
-        truncatedMessage,
-        notificationDetails,
+        id: notificationId,
+        title: 'Message from $senderName ($shortCode)',
+        body: truncatedMessage,
+        notificationDetails: notificationDetails,
         payload: 'dm:$fromNodeNum',
       );
       AppLogging.notifications(
@@ -578,10 +578,10 @@ class NotificationService {
             .toUpperCase();
 
     await _notifications.show(
-      channelIndex + 2000000, // Channel indices are small, this is safe
-      '$senderName ($shortCode) in $channelName',
-      truncatedMessage,
-      notificationDetails,
+      id: channelIndex + 2000000, // Channel indices are small, this is safe
+      title: '$senderName ($shortCode) in $channelName',
+      body: truncatedMessage,
+      notificationDetails: notificationDetails,
       payload: 'channel:$channelIndex:$fromNodeNum',
     );
 
@@ -597,7 +597,7 @@ class NotificationService {
 
   /// Cancel notification by ID
   Future<void> cancel(int id) async {
-    await _notifications.cancel(id);
+    await _notifications.cancel(id: id);
   }
 
   // ============================================================
@@ -678,10 +678,10 @@ class NotificationService {
     );
 
     await _notifications.show(
-      3000001, // Fixed ID for batched DM notifications
-      title,
-      body,
-      NotificationDetails(
+      id: 3000001, // Fixed ID for batched DM notifications
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
         android: androidDetails,
         iOS: iosDetails,
         macOS: iosDetails,
@@ -754,10 +754,10 @@ class NotificationService {
     );
 
     await _notifications.show(
-      3000002, // Fixed ID for batched channel notifications
-      title,
-      body,
-      NotificationDetails(
+      id: 3000002, // Fixed ID for batched channel notifications
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
         android: androidDetails,
         iOS: iosDetails,
         macOS: iosDetails,
@@ -817,10 +817,10 @@ class NotificationService {
     );
 
     await _notifications.show(
-      3000003, // Fixed ID for batched node notifications
-      title,
-      body,
-      NotificationDetails(
+      id: 3000003, // Fixed ID for batched node notifications
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
         android: androidDetails,
         iOS: iosDetails,
         macOS: iosDetails,
