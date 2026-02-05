@@ -12,7 +12,6 @@ import '../../../models/social.dart';
 import '../../../models/social_activity.dart';
 import '../../../providers/activity_providers.dart';
 import '../../../providers/signal_providers.dart';
-import '../../../providers/social_providers.dart';
 import '../../signals/screens/signal_detail_screen.dart';
 
 /// Activity timeline screen showing signal interactions.
@@ -99,9 +98,6 @@ class _ActivityTimelineScreenState
   @override
   Widget build(BuildContext context) {
     final feedState = ref.watch(activityFeedProvider);
-    final isAdmin = ref
-        .watch(isAdminProvider)
-        .maybeWhen(data: (value) => value, orElse: () => false);
 
     // Re-validate when activities change (new activities may have arrived)
     ref.listen(activityFeedProvider, (previous, next) {
@@ -117,76 +113,51 @@ class _ActivityTimelineScreenState
         .where((a) => !_invalidActivityIds.contains(a.id))
         .toList();
 
+    // Determine if menu should be shown (when there are activities to act on)
+    final hasActivities = signalActivities.isNotEmpty;
+    final hasUnread = signalActivities.any((a) => !a.isRead);
+    final showMenu = hasActivities || hasUnread;
+
     return GlassScaffold(
       title: 'Activity',
       actions: [
-        AppBarOverflowMenu<String>(
-          onSelected: (value) {
-            switch (value) {
-              case 'clear':
-                _showClearConfirmation();
-              case 'markAllRead':
-                ref.read(activityFeedProvider.notifier).markAllAsRead();
-              case 'injectTest':
-                ref.read(activityFeedProvider.notifier).injectTestActivities();
-              case 'clearTest':
-                ref.read(activityFeedProvider.notifier).clearTestActivities();
-            }
-          },
-          itemBuilder: (context) {
-            final hasActivities = signalActivities.isNotEmpty;
-            final hasUnread = signalActivities.any((a) => !a.isRead);
-
-            return [
-              if (hasUnread)
-                const PopupMenuItem(
-                  value: 'markAllRead',
-                  child: Row(
-                    children: [
-                      Icon(Icons.done_all, size: 20),
-                      SizedBox(width: 12),
-                      Text('Mark all as read'),
-                    ],
+        if (showMenu)
+          AppBarOverflowMenu<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'clear':
+                  _showClearConfirmation();
+                case 'markAllRead':
+                  ref.read(activityFeedProvider.notifier).markAllAsRead();
+              }
+            },
+            itemBuilder: (context) {
+              return [
+                if (hasUnread)
+                  const PopupMenuItem(
+                    value: 'markAllRead',
+                    child: Row(
+                      children: [
+                        Icon(Icons.done_all, size: 20),
+                        SizedBox(width: 12),
+                        Text('Mark all as read'),
+                      ],
+                    ),
                   ),
-                ),
-              if (hasActivities)
-                const PopupMenuItem(
-                  value: 'clear',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete_outline, size: 20),
-                      SizedBox(width: 12),
-                      Text('Clear all'),
-                    ],
+                if (hasActivities)
+                  const PopupMenuItem(
+                    value: 'clear',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_outline, size: 20),
+                        SizedBox(width: 12),
+                        Text('Clear all'),
+                      ],
+                    ),
                   ),
-                ),
-              // Admin-only options (visible to admins in release builds)
-              if (isAdmin) ...[
-                if (hasActivities || hasUnread) const PopupMenuDivider(),
-                const PopupMenuItem(
-                  value: 'injectTest',
-                  child: Row(
-                    children: [
-                      Icon(Icons.science_outlined, size: 20),
-                      SizedBox(width: 12),
-                      Text('Add test activities'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'clearTest',
-                  child: Row(
-                    children: [
-                      Icon(Icons.clear_all, size: 20),
-                      SizedBox(width: 12),
-                      Text('Clear test data'),
-                    ],
-                  ),
-                ),
-              ],
-            ];
-          },
-        ),
+              ];
+            },
+          ),
       ],
       slivers: [
         if (feedState.isLoading)

@@ -2960,6 +2960,13 @@ class SignalService {
         AppLogging.signals(
           '📬 ACTIVITY_PARENT_FOUND: authorId=${parentComment.authorId}',
         );
+        // Skip if parent author is a mesh node (no real user to notify)
+        if (parentComment.authorId.startsWith('mesh_')) {
+          AppLogging.signals(
+            '📬 ACTIVITY_SKIP: Parent author is mesh node, no real user to notify',
+          );
+          return;
+        }
         if (parentComment.authorId == _currentUserId) {
           AppLogging.signals(
             '📬 ACTIVITY_SKIP: Not notifying self (replying to own comment)',
@@ -3352,6 +3359,14 @@ class SignalService {
         '  authorId: ${comment.authorId}\n'
         '  authorName: ${comment.authorName}',
       );
+
+      // Skip if comment author is a mesh node (no real user to notify)
+      if (comment.authorId.startsWith('mesh_')) {
+        AppLogging.signals(
+          '📬 VOTE_ACTIVITY_SKIP: Comment author is mesh node, no real user to notify',
+        );
+        return;
+      }
 
       // Don't notify self-votes
       if (comment.authorId == _currentUserId) {
