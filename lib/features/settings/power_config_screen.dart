@@ -12,6 +12,7 @@ import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/status_banner.dart';
 
 class PowerConfigScreen extends ConsumerStatefulWidget {
   const PowerConfigScreen({super.key});
@@ -421,40 +422,15 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                     const SizedBox(height: 16),
 
                     // Info card
-                    Container(
-                      margin: const EdgeInsets.symmetric(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 2,
                       ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.warningYellow.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppTheme.warningYellow.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.warning_amber,
-                            color: AppTheme.warningYellow.withValues(
-                              alpha: 0.8,
-                            ),
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Power settings affect battery life and device responsiveness. Aggressive sleep settings may cause delays in receiving messages.',
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
+                      child: StatusBanner.warning(
+                        title:
+                            'Power settings affect battery life and device responsiveness. Aggressive sleep settings may cause delays in receiving messages.',
+                        margin: EdgeInsets.zero,
                       ),
                     ),
                     const SizedBox(height: 32),

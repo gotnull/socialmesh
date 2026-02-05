@@ -15,6 +15,7 @@ import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/status_banner.dart';
 
 /// Screen for configuring LoRa radio settings
 class RadioConfigScreen extends ConsumerStatefulWidget {
@@ -1003,31 +1004,11 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
   Widget _buildInfoCard() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      decoration: BoxDecoration(
-        color: AppTheme.warningYellow.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppTheme.warningYellow.withValues(alpha: 0.3),
-        ),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.warning_amber,
-            color: AppTheme.warningYellow.withValues(alpha: 0.8),
-            size: 20,
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Changing radio settings will cause the device to reboot. '
-              'All devices in your mesh network must use the same region and modem preset.',
-              style: TextStyle(color: context.textSecondary, fontSize: 13),
-            ),
-          ),
-        ],
+      child: StatusBanner.warning(
+        title:
+            'Changing radio settings will cause the device to reboot. '
+            'All devices in your mesh network must use the same region and modem preset.',
+        margin: EdgeInsets.zero,
       ),
     );
   }

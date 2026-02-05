@@ -12,6 +12,7 @@ import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/legal_document_sheet.dart';
+import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../models/subscription_models.dart';
 import '../../models/user_profile.dart';
@@ -551,33 +552,16 @@ class _AccountSubscriptionsScreenState
               // Cancelled info banner
               if (isCancelled) ...[
                 const Divider(height: 1),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.symmetric(
+                Padding(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
                   ),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Colors.orange.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline, color: Colors.orange, size: 20),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Your subscription won\'t renew. You can resubscribe anytime.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: context.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: StatusBanner.custom(
+                    color: Colors.orange,
+                    title:
+                        'Your subscription won\'t renew. You can resubscribe anytime.',
+                    borderRadius: 8,
                   ),
                 ),
               ],

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/status_banner.dart';
 import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
 import '../renderer/widget_renderer.dart';
@@ -1919,55 +1920,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   Widget _buildValidationWarningBanner(String message) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.warningYellow.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppTheme.warningYellow.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.warning_amber_rounded,
-            color: AppTheme.warningYellow,
-            size: 24,
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Cannot Save Widget',
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  message,
-                  style: TextStyle(color: context.textSecondary, fontSize: 13),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Go back to Step 1 to change your template, or Step 3 to update your selections.',
-                  style: TextStyle(
-                    color: context.textSecondary,
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return StatusBanner.warning(
+      title: 'Cannot Save Widget',
+      subtitle:
+          '$message\n\nGo back to Step 1 to change your template, or Step 3 to update your selections.',
     );
   }
 

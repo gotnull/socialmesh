@@ -17,6 +17,7 @@ import '../../services/audio/rtttl_player.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/number_format.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/status_banner.dart';
 
 /// Preset ringtones with name and RTTTL string
 class RingtonePreset {
@@ -2004,53 +2005,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       SizedBox(height: 24),
 
                       // Info card
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.warningYellow.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppTheme.warningYellow.withValues(
-                              alpha: 0.3,
-                            ),
-                          ),
-                        ),
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.lightbulb_outline,
-                              color: AppTheme.warningYellow.withValues(
-                                alpha: 0.8,
-                              ),
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Tip: Find your device',
-                                    style: TextStyle(
-                                      color: context.textPrimary,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Send a message with the bell emoji (🔔) to trigger the ringtone on your device. Great for finding lost nodes!',
-                                    style: TextStyle(
-                                      color: context.textSecondary,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                      StatusBanner.warning(
+                        title: 'Tip: Find your device',
+                        subtitle:
+                            'Send a message with the bell emoji (🔔) to trigger the ringtone on your device. Great for finding lost nodes!',
+                        icon: Icons.lightbulb_outline,
+                        margin: EdgeInsets.zero,
                       ),
                       const SizedBox(height: 32),
                     ]),

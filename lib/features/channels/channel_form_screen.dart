@@ -9,6 +9,7 @@ import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/channel_key_field.dart';
+import '../../core/widgets/status_banner.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/encoding.dart';
@@ -978,53 +979,10 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
   }
 
   Widget _buildPrimaryChannelNote() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.warningYellow.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppTheme.warningYellow.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppTheme.warningYellow.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.info_outline,
-              color: AppTheme.warningYellow,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Primary Channel',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.warningYellow,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'This is the main channel for device communication. Changes may affect connectivity.',
-                  style: TextStyle(fontSize: 12, color: context.textSecondary),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return StatusBanner.warning(
+      title: 'Primary Channel',
+      subtitle:
+          'This is the main channel for device communication. Changes may affect connectivity.',
     );
   }
 

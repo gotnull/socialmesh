@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/status_banner.dart';
 import '../../../utils/snackbar.dart';
 
 /// Product prices in AUD for revenue calculation
@@ -383,33 +384,12 @@ class _UserPurchasesAdminScreenState
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 18,
-                    color: Colors.blue.shade700,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Shows purchases synced via app login or RevenueCat webhooks. '
-                      'Users must open the app while signed in for their purchases to appear here.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blue.shade700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            child: StatusBanner.info(
+              title:
+                  'Shows purchases synced via app login or RevenueCat webhooks.',
+              subtitle:
+                  'Users must open the app while signed in for their purchases to appear here.',
+              borderRadius: 8,
             ),
           ),
         ),

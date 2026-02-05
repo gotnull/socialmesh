@@ -9,6 +9,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/status_banner.dart';
 
 /// Screen for configuring External Notification module (buzzers, LEDs, vibration)
 class ExternalNotificationConfigScreen extends ConsumerStatefulWidget {
@@ -174,26 +175,12 @@ class _ExternalNotificationConfigScreenState
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 if (!isConnected)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.warningYellow.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppTheme.warningYellow.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.warning, color: AppTheme.warningYellow),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Connect to a device to configure external notification settings',
-                          ),
-                        ),
-                      ],
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: StatusBanner.warning(
+                      title:
+                          'Connect to a device to configure external notification settings',
+                      margin: EdgeInsets.zero,
                     ),
                   ),
 

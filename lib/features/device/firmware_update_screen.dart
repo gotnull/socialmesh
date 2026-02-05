@@ -9,6 +9,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/app_providers.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/status_banner.dart';
 
 /// Provider for firmware update check
 final firmwareCheckProvider = FutureProvider.autoDispose<FirmwareInfo?>((
@@ -425,48 +426,10 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                error: (error, _) => Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.errorRed.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppTheme.errorRed.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: AppTheme.errorRed,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Failed to check for updates',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.errorRed,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              error.toString(),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: context.textTertiary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                error: (error, _) => StatusBanner.error(
+                  title: 'Failed to check for updates',
+                  subtitle: error.toString(),
+                  margin: EdgeInsets.zero,
                 ),
               ),
 
@@ -526,54 +489,12 @@ class FirmwareUpdateScreen extends ConsumerWidget {
               const SizedBox(height: 32),
 
               // Warning
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.warningYellow.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppTheme.warningYellow.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.warning_amber_rounded,
-                      color: AppTheme.warningYellow,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Backup Your Settings',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.warningYellow.withValues(
-                                alpha: 0.9,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Firmware updates may reset your device configuration. '
-                            'Consider exporting your settings before updating.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppTheme.warningYellow.withValues(
-                                alpha: 0.7,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              StatusBanner.warning(
+                title: 'Backup Your Settings',
+                subtitle:
+                    'Firmware updates may reset your device configuration. '
+                    'Consider exporting your settings before updating.',
+                margin: EdgeInsets.zero,
               ),
 
               const SizedBox(height: 32),

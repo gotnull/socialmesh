@@ -11,6 +11,7 @@ import '../../providers/connection_providers.dart' as conn;
 import '../../generated/meshtastic/config.pbenum.dart';
 import '../../utils/permissions.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/status_banner.dart';
 
 /// Typedef for shorter reference to the enum
 typedef RegionCode = Config_LoRaConfig_RegionCode;
@@ -390,48 +391,10 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: context.accentColor.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: context.accentColor,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Important: Select Your Region',
-                              style: TextStyle(
-                                color: context.textPrimary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Choose the correct frequency for your location to comply with local regulations.',
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                child: StatusBanner.accent(
+                  title: 'Important: Select Your Region',
+                  subtitle:
+                      'Choose the correct frequency for your location to comply with local regulations.',
                 ),
               ),
             ),
@@ -490,39 +453,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                   if (statusText != null) ...[
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.errorRed.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppTheme.errorRed.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: AppTheme.errorRed,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                statusText,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: context.textPrimary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      child: StatusBanner.error(title: statusText),
                     ),
                   ],
 

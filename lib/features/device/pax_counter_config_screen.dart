@@ -8,6 +8,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/status_banner.dart';
 
 /// PAX Counter module configuration screen
 class PaxCounterConfigScreen extends ConsumerStatefulWidget {
@@ -345,47 +346,12 @@ class _PaxCounterConfigScreenState
               SizedBox(height: 24),
 
               // Info card
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: context.accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: context.accentColor.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: context.accentColor,
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'About PAX Counter',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: context.accentColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'PAX Counter passively listens for WiFi and Bluetooth probe requests from nearby devices. '
-                      'It does not store MAC addresses or any personal data.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
+              StatusBanner.accent(
+                title: 'About PAX Counter',
+                subtitle:
+                    'PAX Counter passively listens for WiFi and Bluetooth probe requests from nearby devices. '
+                    'It does not store MAC addresses or any personal data.',
+                margin: EdgeInsets.zero,
               ),
             ]),
           ),

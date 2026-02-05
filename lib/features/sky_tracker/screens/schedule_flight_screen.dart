@@ -8,6 +8,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
+import '../../../core/widgets/status_banner.dart';
 import '../providers/sky_tracker_providers.dart';
 
 /// Screen to schedule a new sky node flight
@@ -249,30 +250,11 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Info card
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: context.accentColor.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.flight, color: context.accentColor),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Share your flight so others can try to receive your Meshtastic signal!',
-                            style: TextStyle(
-                              color: context.accentColor,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  StatusBanner.accent(
+                    title:
+                        'Share your flight so others can try to receive your Meshtastic signal!',
+                    icon: Icons.flight,
+                    margin: EdgeInsets.zero,
                   ),
                   SizedBox(height: 24),
 

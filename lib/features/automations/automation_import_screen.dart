@@ -11,6 +11,7 @@ import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
 import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/status_banner.dart';
 import 'models/automation.dart';
 import 'automation_providers.dart';
 import 'automation_editor_screen.dart';
@@ -362,25 +363,10 @@ class _AutomationImportScreenState
           const SizedBox(height: 24),
 
           // Warning
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.warningYellow.withOpacity(0.1),
-              border: Border.all(color: AppTheme.warningYellow),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline, color: AppTheme.warningYellow),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'This automation will be imported as disabled. Review and enable it when ready.',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ),
-              ],
-            ),
+          StatusBanner.warning(
+            title:
+                'This automation will be imported as disabled. Review and enable it when ready.',
+            margin: EdgeInsets.zero,
           ),
 
           const Spacer(),

@@ -26,6 +26,7 @@ import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/qr_share_sheet.dart';
 import '../../core/widgets/section_header.dart';
+import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
@@ -1086,35 +1087,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             subtitle: 'Direct message to $targetName failed',
           ),
           SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.warningYellow.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.warningYellow.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.info_outline,
-                  color: AppTheme.warningYellow,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    message.routingError?.fixSuggestion ??
-                        'The encryption keys may be out of sync. This can happen when a node has been reset or rolled out of the mesh database.',
-                    style: TextStyle(
-                      color: context.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          StatusBanner.warning(
+            title:
+                message.routingError?.fixSuggestion ??
+                'The encryption keys may be out of sync. This can happen when a node has been reset or rolled out of the mesh database.',
           ),
           const SizedBox(height: 20),
           // Request User Info button
@@ -2071,50 +2047,6 @@ class _MessageBubble extends StatelessWidget {
                         ],
                       ],
                     ),
-                    // Show fix suggestion for PKI-related errors
-                    if (message.routingError?.isPkiRelated == true &&
-                        onPkiFix != null) ...[
-                      const SizedBox(height: 4),
-                      GestureDetector(
-                        onTap: onPkiFix,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.warningYellow.withValues(
-                              alpha: 0.2,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: AppTheme.warningYellow.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(
-                                Icons.lightbulb_outline,
-                                size: 12,
-                                color: AppTheme.warningYellow,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'Fix: Refresh Keys',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppTheme.warningYellow,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),

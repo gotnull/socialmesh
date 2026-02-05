@@ -11,6 +11,7 @@ import '../../core/widgets/info_table.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/status_banner.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
@@ -863,34 +864,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               const SizedBox(height: 24),
 
               // Warning
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.warningYellow.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppTheme.warningYellow.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline_rounded,
-                      color: AppTheme.warningYellow,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Changes to device configuration will cause the device to reboot.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              StatusBanner.warning(
+                title:
+                    'Changes to device configuration will cause the device to reboot.',
+                margin: EdgeInsets.zero,
               ),
 
               const SizedBox(height: 32),
@@ -1722,36 +1699,14 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             Divider(height: 1, color: context.border.withValues(alpha: 0.5)),
             Container(
               margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: context.accentColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: context.accentColor.withValues(alpha: 0.3),
-                ),
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: context.accentColor,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Ham mode uses your long name as call sign (max 8 chars), '
-                          'overrides frequency/power, and disables encryption.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: context.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
+                  StatusBanner.accent(
+                    title:
+                        'Ham mode uses your long name as call sign (max 8 chars), '
+                        'overrides frequency/power, and disables encryption.',
+                    margin: EdgeInsets.zero,
                   ),
                   const SizedBox(height: 16),
                   // Frequency override

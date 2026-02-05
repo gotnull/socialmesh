@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../models/reachability_models.dart';
 import '../../providers/app_providers.dart';
@@ -300,31 +301,12 @@ class _InfoSection extends StatelessWidget {
 class _DisclaimerBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppTheme.warningYellow.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppTheme.warningYellow.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.info_outline, size: 20, color: AppTheme.warningYellow),
-          SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Likelihood estimates only. Delivery is never guaranteed in a mesh network.',
-              style: TextStyle(
-                fontSize: 12,
-                color: context.textSecondary,
-                height: 1.3,
-              ),
-            ),
-          ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: StatusBanner.warning(
+        title:
+            'Likelihood estimates only. Delivery is never guaranteed in a mesh network.',
+        margin: EdgeInsets.zero,
       ),
     );
   }

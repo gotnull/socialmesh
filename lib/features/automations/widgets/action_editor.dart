@@ -17,6 +17,7 @@ import '../../../utils/snackbar.dart';
 import '../models/automation.dart';
 import 'variable_text_field.dart';
 import '../../../core/widgets/loading_indicator.dart';
+import '../../../core/widgets/status_banner.dart';
 
 /// Widget for editing an action
 class ActionEditor extends ConsumerStatefulWidget {
@@ -972,25 +973,10 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
             ),
           ),
           const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline, size: 16, color: Colors.blue[300]),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Event data (node name, battery, location, etc.) will be passed as JSON input to your shortcut.',
-                    style: TextStyle(fontSize: 12, color: Colors.blue[200]),
-                  ),
-                ),
-              ],
-            ),
+          StatusBanner.info(
+            title:
+                'Event data (node name, battery, location, etc.) will be passed as JSON input to your shortcut.',
+            margin: EdgeInsets.zero,
           ),
         ],
       ),
@@ -1046,32 +1032,10 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
               _buildKeyItem('message', 'Message text (if applicable)'),
               _buildKeyItem('timestamp', 'Event timestamp'),
               const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.warning_amber,
-                      size: 16,
-                      color: Colors.orange[300],
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Note: Shortcuts app will briefly open when triggered. This is an iOS limitation.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.orange[200],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              StatusBanner.warning(
+                title:
+                    'Note: Shortcuts app will briefly open when triggered. This is an iOS limitation.',
+                margin: EdgeInsets.zero,
               ),
             ],
           ),

@@ -17,6 +17,7 @@ import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import 'package:cryptography/cryptography.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/status_banner.dart';
 
 class SecurityConfigScreen extends ConsumerStatefulWidget {
   const SecurityConfigScreen({super.key});
@@ -319,38 +320,15 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                 SizedBox(height: 16),
 
                 // Warning card
-                Container(
-                  margin: const EdgeInsets.symmetric(
+                Padding(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 2,
                   ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.errorRed.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppTheme.errorRed.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.shield,
-                        color: AppTheme.errorRed.withValues(alpha: 0.8),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Disabling serial console or enabling managed mode may make it difficult to recover the device. Make sure you understand the implications before making changes.',
-                          style: TextStyle(
-                            color: context.textSecondary,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: StatusBanner.error(
+                    title:
+                        'Disabling serial console or enabling managed mode may make it difficult to recover the device. Make sure you understand the implications before making changes.',
+                    margin: EdgeInsets.zero,
                   ),
                 ),
                 const SizedBox(height: 32),

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/connection_required_wrapper.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/status_banner.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../providers/app_providers.dart';
@@ -484,30 +485,12 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
 
         // Info banner
         SliverToBoxAdapter(
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AccentColors.blue.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: AccentColors.blue.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline, color: AccentColors.blue, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Streaming firmware debug logs from your connected device via BLE',
-                    style: TextStyle(
-                      color: context.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: StatusBanner.info(
+              title:
+                  'Streaming firmware debug logs from your connected device via BLE',
+              borderRadius: 8,
             ),
           ),
         ),

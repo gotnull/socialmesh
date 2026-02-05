@@ -10,6 +10,7 @@ import '../../utils/presence_utils.dart';
 import 'animations.dart';
 import 'app_bottom_sheet.dart';
 import 'node_avatar.dart';
+import 'status_banner.dart';
 
 /// Result from remote admin selector
 class RemoteAdminSelection {
@@ -256,28 +257,13 @@ class _RemoteAdminSelectorSheetState
           ),
 
           // Info banner
-          Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.orange.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline, color: Colors.orange, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Remote admin requires the target node to have your public key in its Admin Keys.',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.orange.shade200,
-                    ),
-                  ),
-                ),
-              ],
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: StatusBanner.custom(
+              color: Colors.orange,
+              title:
+                  'Remote admin requires the target node to have your public key in its Admin Keys.',
+              borderRadius: 8,
             ),
           ),
 

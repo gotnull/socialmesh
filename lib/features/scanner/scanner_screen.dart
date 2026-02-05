@@ -17,6 +17,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/connecting_content.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../core/widgets/status_banner.dart';
 import '../../models/mesh_device.dart';
 import '../../services/meshcore/meshcore_detector.dart';
 import '../../providers/meshcore_providers.dart';
@@ -26,7 +27,6 @@ import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import 'widgets/connecting_animation.dart';
-import '../../core/widgets/loading_indicator.dart';
 import '../device/region_selection_screen.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
@@ -1254,61 +1254,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
               delegate: SliverChildListDelegate([
                 // Info banner when saved device wasn't found
                 if (_savedDeviceNotFoundName != null)
-                  Container(
-                    padding: const EdgeInsets.all(24),
+                  StatusBanner.custom(
+                    color: Colors.orange,
+                    title: '$_savedDeviceNotFoundName not found',
+                    subtitle:
+                        'If another app is connected to this device, disconnect from it first. Only one app can use Bluetooth at a time.',
                     margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.orange.withValues(alpha: 0.4),
-                      ),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: Colors.orange.shade700,
-                          size: 22,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '$_savedDeviceNotFoundName not found',
-                                style: TextStyle(
-                                  color: Colors.orange.shade800,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'If another app is connected to this device, disconnect from it first. Only one app can use Bluetooth at a time.',
-                                style: TextStyle(
-                                  color: Colors.orange.shade700,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.close,
-                            color: Colors.orange.shade700,
-                            size: 20,
-                          ),
-                          onPressed: () =>
-                              setState(() => _savedDeviceNotFoundName = null),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                      ],
-                    ),
+                    onDismiss: () =>
+                        setState(() => _savedDeviceNotFoundName = null),
                   ),
 
                 // Info banner when auto-reconnect is disabled
@@ -1409,39 +1362,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                   ),
 
                 if (_errorMessage != null)
-                  Container(
-                    padding: const EdgeInsets.all(16),
+                  StatusBanner.error(
+                    title: _errorMessage!,
                     margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.errorRed.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppTheme.errorRed.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: AppTheme.errorRed,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _errorMessage!,
-                            style: const TextStyle(color: AppTheme.errorRed),
-                          ),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.close, color: AppTheme.errorRed),
-                          onPressed: () => setState(() {
-                            _errorMessage = null;
-                            _showPairingInvalidationHint = false;
-                          }),
-                          iconSize: 20,
-                        ),
-                      ],
-                    ),
+                    onDismiss: () => setState(() {
+                      _errorMessage = null;
+                      _showPairingInvalidationHint = false;
+                    }),
                   ),
 
                 if (_showPairingInvalidationHint)
@@ -1525,50 +1452,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                   ),
 
                 if (_scanning)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+                  StatusBanner.accent(
+                    title: 'Scanning for nearby devices',
+                    subtitle: _devices.isEmpty
+                        ? 'Looking for Meshtastic devices...'
+                        : '${_devices.length} ${_devices.length == 1 ? 'device' : 'devices'} found so far',
+                    isLoading: true,
                     margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: context.accentColor.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        LoadingIndicator(size: 20),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Scanning for nearby devices',
-                                style: TextStyle(
-                                  color: context.textPrimary,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                _devices.isEmpty
-                                    ? 'Looking for Meshtastic devices...'
-                                    : '${_devices.length} ${_devices.length == 1 ? 'device' : 'devices'} found so far',
-                                style: TextStyle(
-                                  color: context.textSecondary,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
 
                 // Dev mode toggle: Show all BLE devices
@@ -1578,65 +1468,29 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                       final showAllDevices = ref.watch(
                         showAllBleDevicesProvider,
                       );
-                      return Container(
-                        padding: const EdgeInsets.all(12),
+                      return StatusBanner.custom(
+                        color: Colors.purple,
+                        title: 'Show all BLE devices',
+                        subtitle: showAllDevices
+                            ? 'Scanning all devices (dev mode)'
+                            : 'Filtering by Meshtastic UUID',
+                        icon: Icons.developer_mode,
                         margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.purple.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.developer_mode,
-                              color: Colors.purple,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Show all BLE devices',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: context.textPrimary,
-                                    ),
-                                  ),
-                                  Text(
-                                    showAllDevices
-                                        ? 'Scanning all devices (dev mode)'
-                                        : 'Filtering by Meshtastic UUID',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: context.textTertiary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Switch.adaptive(
-                              value: showAllDevices,
-                              onChanged: _scanning
-                                  ? null
-                                  : (value) async {
-                                      final storage = await ref.read(
-                                        settingsServiceProvider.future,
-                                      );
-                                      await storage.setShowAllBleDevices(value);
-                                      ref.invalidate(settingsServiceProvider);
-                                      if (mounted) {
-                                        _startScan();
-                                      }
-                                    },
-                              activeColor: Colors.purple,
-                            ),
-                          ],
+                        trailing: Switch.adaptive(
+                          value: showAllDevices,
+                          onChanged: _scanning
+                              ? null
+                              : (value) async {
+                                  final storage = await ref.read(
+                                    settingsServiceProvider.future,
+                                  );
+                                  await storage.setShowAllBleDevices(value);
+                                  ref.invalidate(settingsServiceProvider);
+                                  if (mounted) {
+                                    _startScan();
+                                  }
+                                },
+                          activeColor: Colors.purple,
                         ),
                       );
                     },

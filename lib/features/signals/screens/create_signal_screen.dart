@@ -18,6 +18,7 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/local_image_gallery.dart';
+import '../../../core/widgets/status_banner.dart';
 import '../../../models/presence_confidence.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
@@ -1878,35 +1879,12 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                       ),
 
                     // Info banner
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: context.card,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: context.border.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            size: 18,
-                            color: context.textTertiary,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Signals are temporary. They fade automatically and exist only while active.',
-                              style: TextStyle(
-                                color: context.textTertiary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    StatusBanner(
+                      type: StatusBannerType.custom,
+                      color: context.textTertiary,
+                      title:
+                          'Signals are temporary. They fade automatically and exist only while active.',
+                      borderRadius: 8,
                     ),
                   ],
                 ),

@@ -12,6 +12,7 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
+import '../../../core/widgets/status_banner.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../providers/help_providers.dart';
@@ -871,30 +872,21 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
             ),
           // TTL info banner
           SliverToBoxAdapter(
-            child: Container(
-              margin: EdgeInsets.fromLTRB(16, signals.isEmpty ? 16 : 8, 16, 16),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: context.card,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: context.border.withValues(alpha: 0.5),
-                ),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                signals.isEmpty ? 16 : 8,
+                16,
+                16,
               ),
-              child: Row(
-                children: [
-                  Icon(Icons.schedule, size: 18, color: context.textSecondary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Signals fade automatically. Only what\'s still active can be seen.',
-                      style: TextStyle(
-                        color: context.textSecondary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
+              child: StatusBanner(
+                type: StatusBannerType.custom,
+                color: context.textSecondary,
+                icon: Icons.schedule,
+                title:
+                    'Signals fade automatically. Only what\'s still active can be seen.',
+                backgroundOpacity: 0.0,
+                borderOpacity: 0.5,
               ),
             ),
           ),

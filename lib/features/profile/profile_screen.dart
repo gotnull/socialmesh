@@ -27,6 +27,7 @@ import '../../services/content_moderation/profanity_checker.dart';
 import '../../services/profile/profile_cloud_sync_service.dart';
 import '../../core/logging.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/status_banner.dart';
 import '../../utils/validation.dart';
 import '../navigation/main_shell.dart';
 import '../settings/widgets/cloud_sync_paywall.dart';
@@ -704,33 +705,13 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
 
           // Sync error with retry option (only shown when there's an error)
           if (syncStatus == SyncStatus.error) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.errorRed.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AppTheme.errorRed.withValues(alpha: 0.3),
-                ),
+            StatusBanner.error(
+              title: syncError ?? 'Sync failed',
+              trailing: TextButton(
+                onPressed: () => _retrySyncNow(context),
+                child: const Text('Retry'),
               ),
-              child: Row(
-                children: [
-                  Icon(Icons.error_outline, size: 18, color: AppTheme.errorRed),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      syncError ?? 'Sync failed',
-                      style: TextStyle(fontSize: 12, color: AppTheme.errorRed),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => _retrySyncNow(context),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+              margin: EdgeInsets.zero,
             ),
             const SizedBox(height: 12),
           ],

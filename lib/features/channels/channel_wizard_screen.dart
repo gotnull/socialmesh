@@ -17,6 +17,7 @@ import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/status_banner.dart';
 import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
 
@@ -535,31 +536,9 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryBlue.withAlpha(26),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppTheme.primaryBlue.withAlpha(77)),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.info_outline,
-                  color: AppTheme.primaryBlue,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Channel names are limited to 12 alphanumeric characters.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.primaryBlue,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          StatusBanner.info(
+            title: 'Channel names are limited to 12 alphanumeric characters.',
+            margin: EdgeInsets.zero,
           ),
         ],
       ),
@@ -847,31 +826,10 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
           ),
           if (_uplinkEnabled || _downlinkEnabled) ...[
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.warningYellow.withAlpha(26),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.warningYellow.withAlpha(77)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.info_outline,
-                    color: AppTheme.warningYellow,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'MQTT must be configured on your device for uplink/downlink to work.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.warningYellow,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            StatusBanner.warning(
+              title:
+                  'MQTT must be configured on your device for uplink/downlink to work.',
+              margin: EdgeInsets.zero,
             ),
           ],
         ],

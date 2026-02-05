@@ -8,6 +8,7 @@ import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import 'app_bottom_sheet.dart';
 import 'branded_qr_code.dart';
+import 'status_banner.dart';
 
 /// A standardized bottom sheet for sharing QR codes across the app.
 ///
@@ -245,26 +246,7 @@ class _AsyncQrShareSheetState extends State<_AsyncQrShareSheet> {
       children: [
         _QrShareHeader(title: widget.title, subtitle: widget.subtitle),
         const SizedBox(height: 24),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppTheme.errorRed.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.errorRed.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.error_outline, color: AppTheme.errorRed),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  _error!,
-                  style: const TextStyle(color: AppTheme.errorRed),
-                ),
-              ),
-            ],
-          ),
-        ),
+        StatusBanner.error(title: _error!),
         const SizedBox(height: 16),
         FilledButton.icon(
           onPressed: () {
@@ -285,7 +267,7 @@ class _AsyncQrShareSheetState extends State<_AsyncQrShareSheet> {
 }
 
 /// The actual QR share content - used by both sync and async versions.
-class _QrShareContent extends StatelessWidget {
+class _QrShareContent extends StatefulWidget {
   const _QrShareContent({
     required this.title,
     required this.subtitle,
@@ -309,12 +291,19 @@ class _QrShareContent extends StatelessWidget {
   final VoidCallback? onCopyComplete;
 
   @override
+  State<_QrShareContent> createState() => _QrShareContentState();
+}
+
+class _QrShareContentState extends State<_QrShareContent> {
+  bool _isSharing = false;
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         // Header
-        _QrShareHeader(title: title, subtitle: subtitle),
+        _QrShareHeader(title: widget.title, subtitle: widget.subtitle),
         const SizedBox(height: 24),
 
         // QR Code
@@ -324,34 +313,13 @@ class _QrShareContent extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
           ),
-          child: BrandedQrCode(data: qrData, size: 220),
+          child: BrandedQrCode(data: widget.qrData, size: 220),
         ),
 
         // Info text
-        if (infoText != null) ...[
+        if (widget.infoText != null) ...[
           const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: context.accentColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline, color: context.accentColor, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    infoText!,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: context.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          StatusBanner.accent(title: widget.infoText!, margin: EdgeInsets.zero),
         ],
 
         // Action buttons
@@ -370,9 +338,18 @@ class _QrShareContent extends StatelessWidget {
         // Share Link button (outlined, left)
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () => _handleShare(context),
-            icon: const Icon(Icons.share, size: 18),
-            label: const Text('Share Link'),
+            onPressed: _isSharing ? null : () => _handleShare(context),
+            icon: _isSharing
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: context.accentColor,
+                    ),
+                  )
+                : const Icon(Icons.share, size: 18),
+            label: Text(_isSharing ? 'Sharing...' : 'Share Link'),
             style: OutlinedButton.styleFrom(
               foregroundColor: context.accentColor,
               side: BorderSide(color: context.accentColor),
@@ -387,7 +364,7 @@ class _QrShareContent extends StatelessWidget {
         // Copy Link button (filled, right)
         Expanded(
           child: FilledButton.icon(
-            onPressed: () => _handleCopy(context),
+            onPressed: _isSharing ? null : () => _handleCopy(context),
             icon: const Icon(Icons.copy, size: 18),
             label: const Text('Copy Link'),
             style: FilledButton.styleFrom(
@@ -405,32 +382,37 @@ class _QrShareContent extends StatelessWidget {
   }
 
   Future<void> _handleShare(BuildContext context) async {
+    setState(() => _isSharing = true);
     HapticFeedback.lightImpact();
     final sharePosition = getSafeSharePosition(context);
 
     try {
-      final message = shareMessage != null
-          ? '$shareMessage\n$shareUrl'
-          : shareUrl;
+      final message = widget.shareMessage != null
+          ? '${widget.shareMessage}\n${widget.shareUrl}'
+          : widget.shareUrl;
       await Share.share(
         message,
-        subject: shareSubject,
+        subject: widget.shareSubject,
         sharePositionOrigin: sharePosition,
       );
-      onShareComplete?.call();
+      widget.onShareComplete?.call();
     } catch (e) {
       if (context.mounted) {
         showErrorSnackBar(context, 'Failed to share: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSharing = false);
       }
     }
   }
 
   void _handleCopy(BuildContext context) {
     HapticFeedback.mediumImpact();
-    Clipboard.setData(ClipboardData(text: shareUrl));
+    Clipboard.setData(ClipboardData(text: widget.shareUrl));
     Navigator.pop(context);
     showSuccessSnackBar(context, 'Link copied to clipboard');
-    onCopyComplete?.call();
+    widget.onCopyComplete?.call();
   }
 }
 
