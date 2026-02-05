@@ -14,6 +14,7 @@ import '../../utils/snackbar.dart';
 import 'models/automation.dart';
 import 'automation_providers.dart';
 import 'automation_editor_screen.dart';
+import 'automations_screen.dart';
 
 /// Screen for importing automations from deep links or QR codes
 /// Handles: socialmesh://automation/{base64} or Firestore ID lookup
@@ -138,15 +139,19 @@ class _AutomationImportScreenState
   Future<void> _importAutomation() async {
     if (_automation == null) return;
 
+    // Refresh purchase state to ensure we have latest (important for deep links)
+    await ref.read(purchaseStateProvider.notifier).refresh();
+    if (!mounted) return;
+
     // Check entitlement before allowing import
     final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.automations));
     if (!hasPremium) {
-      await showPremiumInfoSheet(
+      final purchased = await showPremiumInfoSheet(
         context: context,
         ref: ref,
         feature: PremiumFeature.automations,
       );
-      return;
+      if (!purchased || !mounted) return;
     }
 
     try {
@@ -155,8 +160,19 @@ class _AutomationImportScreenState
       await notifier.addAutomation(_automation!);
 
       if (mounted) {
-        showSuccessSnackBar(context, 'Automation imported successfully');
-        Navigator.of(context).pop();
+        final navigator = Navigator.of(context);
+        showActionSnackBar(
+          context,
+          'Automation imported successfully',
+          actionLabel: 'View',
+          onAction: () {
+            navigator.push(
+              MaterialPageRoute(builder: (_) => const AutomationsScreen()),
+            );
+          },
+          type: SnackBarType.success,
+        );
+        navigator.pop();
       }
     } catch (e) {
       if (mounted) {
@@ -168,15 +184,19 @@ class _AutomationImportScreenState
   Future<void> _editBeforeImport() async {
     if (_automation == null) return;
 
+    // Refresh purchase state to ensure we have latest (important for deep links)
+    await ref.read(purchaseStateProvider.notifier).refresh();
+    if (!mounted) return;
+
     // Check entitlement before allowing edit/import
     final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.automations));
     if (!hasPremium) {
-      await showPremiumInfoSheet(
+      final purchased = await showPremiumInfoSheet(
         context: context,
         ref: ref,
         feature: PremiumFeature.automations,
       );
-      return;
+      if (!purchased || !mounted) return;
     }
 
     final result = await Navigator.of(context).push<Automation>(
@@ -385,6 +405,8 @@ class _AutomationImportScreenState
               ),
             ],
           ),
+          // Bottom safe area padding
+          SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
       ),
     );

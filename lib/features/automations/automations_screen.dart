@@ -847,12 +847,15 @@ class AutomationsScreen extends ConsumerWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(context);
-              ref
+              showLoadingSnackBar(context, 'Deleting "${automation.name}"...');
+              await ref
                   .read(automationsProvider.notifier)
                   .deleteAutomation(automation.id);
-              showSuccessSnackBar(context, 'Deleted "${automation.name}"');
+              messenger.hideCurrentSnackBar();
+              showGlobalSuccessSnackBar('Deleted "${automation.name}"');
             },
             style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
             child: const Text('Delete'),

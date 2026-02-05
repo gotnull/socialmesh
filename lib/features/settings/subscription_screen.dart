@@ -14,6 +14,11 @@ import '../../services/audio/rtttl_library_service.dart';
 import '../../services/haptic_service.dart';
 import '../../services/subscription/subscription_service.dart';
 import '../../utils/snackbar.dart';
+import '../automations/automations_screen.dart';
+import '../widget_builder/widget_builder_screen.dart';
+import 'ifttt_config_screen.dart';
+import 'ringtone_screen.dart';
+import 'theme_settings_screen.dart';
 import 'widgets/restore_purchases_button.dart';
 
 class SubscriptionScreen extends ConsumerStatefulWidget {
@@ -784,7 +789,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             // All features unlocked! Show celebration
             _showAllUnlockedCelebration();
           } else {
-            showSuccessSnackBar(context, '${purchase.name} unlocked!');
+            _showUnlockedSnackBar(purchase);
           }
         case PurchaseResult.canceled:
           // User canceled - no message needed
@@ -794,6 +799,27 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           showErrorSnackBar(context, 'Purchase failed. Please try again.');
       }
     }
+  }
+
+  void _showUnlockedSnackBar(OneTimePurchase purchase) {
+    final navigator = Navigator.of(context);
+    final Widget targetScreen = switch (purchase.unlocksFeature) {
+      PremiumFeature.homeWidgets => const WidgetBuilderScreen(),
+      PremiumFeature.automations => const AutomationsScreen(),
+      PremiumFeature.premiumThemes => const ThemeSettingsScreen(),
+      PremiumFeature.customRingtones => const RingtoneScreen(),
+      PremiumFeature.iftttIntegration => const IftttConfigScreen(),
+    };
+
+    showActionSnackBar(
+      context,
+      '${purchase.name} unlocked!',
+      actionLabel: 'View',
+      onAction: () {
+        navigator.push(MaterialPageRoute(builder: (_) => targetScreen));
+      },
+      type: SnackBarType.success,
+    );
   }
 
   void _showAllUnlockedCelebration() {

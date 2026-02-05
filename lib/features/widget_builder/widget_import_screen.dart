@@ -15,6 +15,7 @@ import '../../utils/snackbar.dart';
 import 'models/widget_schema.dart';
 import 'storage/widget_storage_service.dart';
 import 'editor/widget_editor_screen.dart';
+import 'widget_builder_screen.dart';
 
 /// Screen for importing widgets from deep links or QR codes
 /// Handles: socialmesh://widget/{base64} (direct import)
@@ -111,15 +112,19 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
   Future<void> _importWidget() async {
     if (_widget == null) return;
 
+    // Refresh purchase state to ensure we have latest (important for deep links)
+    await ref.read(purchaseStateProvider.notifier).refresh();
+    if (!mounted) return;
+
     // Check entitlement before allowing import
     final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.homeWidgets));
     if (!hasPremium) {
-      await showPremiumInfoSheet(
+      final purchased = await showPremiumInfoSheet(
         context: context,
         ref: ref,
         feature: PremiumFeature.homeWidgets,
       );
-      return;
+      if (!purchased || !mounted) return;
     }
 
     try {
@@ -127,8 +132,19 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
       await _storageService.saveWidget(_widget!);
 
       if (mounted) {
-        showSuccessSnackBar(context, 'Widget imported successfully');
-        Navigator.of(context).pop();
+        final navigator = Navigator.of(context);
+        showActionSnackBar(
+          context,
+          'Widget imported successfully',
+          actionLabel: 'View',
+          onAction: () {
+            navigator.push(
+              MaterialPageRoute(builder: (_) => const WidgetBuilderScreen()),
+            );
+          },
+          type: SnackBarType.success,
+        );
+        navigator.pop();
       }
     } catch (e) {
       if (mounted) {
@@ -140,15 +156,19 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
   Future<void> _editBeforeImport() async {
     if (_widget == null) return;
 
+    // Refresh purchase state to ensure we have latest (important for deep links)
+    await ref.read(purchaseStateProvider.notifier).refresh();
+    if (!mounted) return;
+
     // Check entitlement before allowing edit/import
     final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.homeWidgets));
     if (!hasPremium) {
-      await showPremiumInfoSheet(
+      final purchased = await showPremiumInfoSheet(
         context: context,
         ref: ref,
         feature: PremiumFeature.homeWidgets,
       );
-      return;
+      if (!purchased || !mounted) return;
     }
 
     final result = await Navigator.of(context).push<WidgetSchema>(
@@ -159,8 +179,19 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
 
     if (result != null && mounted) {
       // Widget was saved in editor, just pop back
-      showSuccessSnackBar(context, 'Widget imported successfully');
-      Navigator.of(context).pop();
+      final navigator = Navigator.of(context);
+      showActionSnackBar(
+        context,
+        'Widget imported successfully',
+        actionLabel: 'View',
+        onAction: () {
+          navigator.push(
+            MaterialPageRoute(builder: (_) => const WidgetBuilderScreen()),
+          );
+        },
+        type: SnackBarType.success,
+      );
+      navigator.pop();
     }
   }
 
@@ -361,6 +392,8 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
               ),
             ],
           ),
+          // Bottom safe area padding
+          SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
       ),
     );

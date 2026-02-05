@@ -721,6 +721,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
+              showLoadingSnackBar(context, 'Deleting "${schema.name}"...');
               // Remove from dashboard first if needed
               if (isOnDashboard) {
                 final widgetToRemove = dashboardWidgets.firstWhere(
@@ -750,6 +751,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                 _myWidgets.removeWhere((w) => w.id == schema.id);
                 _marketplaceIds.remove(marketplaceId ?? schema.id);
               });
+              showGlobalSuccessSnackBar('Deleted "${schema.name}"');
             },
             child: Text('Delete', style: TextStyle(color: AppTheme.errorRed)),
           ),
