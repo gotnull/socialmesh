@@ -41,23 +41,12 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   List<WidgetSchema> _myWidgets = [];
   Set<String> _marketplaceIds = {};
   bool _isLoading = true;
+  int _lastRefreshTrigger = 0;
 
   @override
   void initState() {
     super.initState();
     _loadWidgets();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Listen to customWidgetsProvider changes (e.g., from import screen)
-    // This triggers refresh when a widget is imported via deep link
-    ref.listen(customWidgetsProvider, (previous, next) {
-      if (previous != next) {
-        _loadWidgets();
-      }
-    });
   }
 
   Future<void> _loadWidgets() async {
@@ -177,6 +166,16 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch the refresh trigger to reload when widgets are imported
+    final refreshTrigger = ref.watch(widgetRefreshTriggerProvider);
+    if (refreshTrigger != _lastRefreshTrigger) {
+      _lastRefreshTrigger = refreshTrigger;
+      // Schedule reload after build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadWidgets();
+      });
+    }
+
     return HelpTourController(
       topicId: 'widget_builder_overview',
       stepKeys: const {},

@@ -125,8 +125,23 @@ class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent> {
   }
 }
 
+/// Notifier to trigger widget list refresh across screens
+/// Increment the counter to force customWidgetsProvider to refetch
+class WidgetRefreshNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void refresh() => state++;
+}
+
+final widgetRefreshTriggerProvider =
+    NotifierProvider<WidgetRefreshNotifier, int>(WidgetRefreshNotifier.new);
+
 /// Provider for custom widgets stored in widget builder
 final customWidgetsProvider = FutureProvider<List<WidgetSchema>>((ref) async {
+  // Watch the refresh trigger to refetch when it changes
+  ref.watch(widgetRefreshTriggerProvider);
+
   final storageService = WidgetStorageService();
   await storageService.init();
   return storageService.getWidgets();

@@ -132,8 +132,8 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
       await _storageService.init();
       await _storageService.saveWidget(_widget!);
 
-      // Invalidate widget providers to trigger refresh on any watching screens
-      ref.invalidate(customWidgetsProvider);
+      // Trigger refresh on any watching screens
+      ref.read(widgetRefreshTriggerProvider.notifier).refresh();
 
       if (mounted) {
         final navigator = Navigator.of(context);
@@ -257,79 +257,82 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Preview Card using the actual widget preview
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.widgets_outlined,
-                        color: context.accentColor,
-                        size: 32,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: context.card,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.widgets_outlined,
+                      color: context.accentColor,
+                      size: 32,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widgetSchema.name,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          if (widgetSchema.description != null &&
+                              widgetSchema.description!.isNotEmpty)
                             Text(
-                              widgetSchema.name,
-                              style: Theme.of(context).textTheme.titleLarge,
+                              widgetSchema.description!,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.grey[400]),
                             ),
-                            if (widgetSchema.description != null &&
-                                widgetSchema.description!.isNotEmpty)
-                              Text(
-                                widgetSchema.description!,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: Colors.grey[400]),
-                              ),
-                          ],
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 8),
+                Text(
+                  'Size',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(color: context.accentColor),
+                ),
+                const SizedBox(height: 4),
+                Text(_getSizeDisplayName(widgetSchema.size)),
+                if (widgetSchema.tags.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  const Divider(),
-                  const SizedBox(height: 8),
                   Text(
-                    'Size',
+                    'Tags',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       color: context.accentColor,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(_getSizeDisplayName(widgetSchema.size)),
-                  if (widgetSchema.tags.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      'Tags',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: context.accentColor,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: widgetSchema.tags
-                          .map(
-                            (tag) => Chip(
-                              label: Text(
-                                tag,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              visualDensity: VisualDensity.compact,
-                              padding: EdgeInsets.zero,
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: widgetSchema.tags
+                        .map(
+                          (tag) => Chip(
+                            label: Text(
+                              tag,
+                              style: const TextStyle(fontSize: 12),
                             ),
-                          )
-                          .toList(),
-                    ),
-                  ],
+                            visualDensity: VisualDensity.compact,
+                            padding: EdgeInsets.zero,
+                          ),
+                        )
+                        .toList(),
+                  ),
                 ],
-              ),
+              ],
             ),
           ),
 
