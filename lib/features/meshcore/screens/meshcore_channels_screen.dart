@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/branded_qr_code.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/gradient_border_container.dart';
@@ -709,19 +709,10 @@ class _MeshCoreChannelsScreenState
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: QrImageView(
+            child: BrandedQrCode(
               data: channelCode,
-              version: QrVersions.auto,
               size: 180,
-              backgroundColor: Colors.white,
-              eyeStyle: const QrEyeStyle(
-                eyeShape: QrEyeShape.square,
-                color: Colors.black,
-              ),
-              dataModuleStyle: const QrDataModuleStyle(
-                dataModuleShape: QrDataModuleShape.square,
-                color: Colors.black,
-              ),
+              foregroundColor: Colors.black,
             ),
           ),
           const SizedBox(height: 16),

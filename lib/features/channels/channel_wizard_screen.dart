@@ -5,11 +5,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/branded_qr_code.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/channel_key_field.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -967,12 +967,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: QrImageView(
-                data: channelUrl,
-                version: QrVersions.auto,
-                size: 200,
-                backgroundColor: Colors.white,
-              ),
+              child: BrandedQrCode(data: channelUrl, size: 200),
             ),
             const SizedBox(height: 24),
             Container(

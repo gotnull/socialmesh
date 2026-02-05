@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:socialmesh/core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
@@ -11,6 +10,7 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/node_avatar.dart';
+import '../../core/widgets/qr_share_sheet.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/meshcore_providers.dart';
 import '../../providers/connection_providers.dart' as conn;
@@ -686,80 +686,18 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell> {
         .join();
     final shareCode = '${info.nodeName}:$pubKeyHex';
 
-    AppBottomSheet.show(
+    QrShareSheet.show(
       context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'My Contact Code',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: QrImageView(
-              data: shareCode,
-              version: QrVersions.auto,
-              size: 180,
-              backgroundColor: Colors.white,
-              eyeStyle: const QrEyeStyle(
-                eyeShape: QrEyeShape.square,
-                color: Colors.black,
-              ),
-              dataModuleStyle: const QrDataModuleStyle(
-                dataModuleShape: QrDataModuleShape.square,
-                color: Colors.black,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            info.nodeName.isNotEmpty ? info.nodeName : 'Unnamed Node',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${pubKeyHex.substring(0, 16)}...',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
-              fontFamily: 'monospace',
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: shareCode));
-                    showSuccessSnackBar(context, 'Contact code copied');
-                  },
-                  icon: const Icon(Icons.copy_rounded),
-                  label: const Text('Copy Code'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white.withValues(alpha: 0.8),
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.3),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+      title: info.nodeName.isNotEmpty ? info.nodeName : 'Unnamed Node',
+      subtitle: 'Scan to add as contact',
+      qrData: shareCode,
+      infoText: '${pubKeyHex.substring(0, 16)}...',
+      primaryButtonLabel: 'Copy Code',
+      onShare: () {
+        Clipboard.setData(ClipboardData(text: shareCode));
+        Navigator.pop(context);
+        showSuccessSnackBar(context, 'Contact code copied');
+      },
     );
   }
 }
@@ -1432,80 +1370,18 @@ class _MeshCoreDeviceSheetContentState
         .join();
     final shareCode = '${info.nodeName}:$pubKeyHex';
 
-    AppBottomSheet.show(
+    QrShareSheet.show(
       context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'My Contact Code',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: QrImageView(
-              data: shareCode,
-              version: QrVersions.auto,
-              size: 180,
-              backgroundColor: Colors.white,
-              eyeStyle: const QrEyeStyle(
-                eyeShape: QrEyeShape.square,
-                color: Colors.black,
-              ),
-              dataModuleStyle: const QrDataModuleStyle(
-                dataModuleShape: QrDataModuleShape.square,
-                color: Colors.black,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            info.nodeName.isNotEmpty ? info.nodeName : 'Unnamed Node',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${pubKeyHex.substring(0, 16)}...',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
-              fontFamily: 'monospace',
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: shareCode));
-                    showSuccessSnackBar(context, 'Contact code copied');
-                  },
-                  icon: const Icon(Icons.copy_rounded),
-                  label: const Text('Copy Code'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white.withValues(alpha: 0.8),
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.3),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+      title: info.nodeName.isNotEmpty ? info.nodeName : 'Unnamed Node',
+      subtitle: 'Scan to add as contact',
+      qrData: shareCode,
+      infoText: '${pubKeyHex.substring(0, 16)}...',
+      primaryButtonLabel: 'Copy Code',
+      onShare: () {
+        Clipboard.setData(ClipboardData(text: shareCode));
+        Navigator.pop(context);
+        showSuccessSnackBar(context, 'Contact code copied');
+      },
     );
   }
 

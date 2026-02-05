@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:socialmesh/core/logging.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/premium_gating.dart';
@@ -21,7 +20,6 @@ import '../../core/widgets/widget_preview_card.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
-import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import '../dashboard/models/dashboard_widget_config.dart';
 import '../dashboard/providers/dashboard_providers.dart';
@@ -384,19 +382,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                     ],
                   ),
                 ),
-                PopupMenuItem(
-                  value: 'export',
-                  child: Row(
-                    children: [
-                      Icon(Icons.share, size: 18, color: context.textPrimary),
-                      SizedBox(width: 8),
-                      Text(
-                        'Export',
-                        style: TextStyle(color: context.textPrimary),
-                      ),
-                    ],
-                  ),
-                ),
                 if (!isFromMarketplace)
                   PopupMenuItem(
                     value: 'submit_marketplace',
@@ -641,17 +626,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         await _storageService.duplicateWidget(schema.id);
         await _loadWidgets();
         AppLogging.widgets('[WidgetBuilder] Widget duplicated');
-        break;
-      case 'export':
-        AppLogging.widgets('[WidgetBuilder] Exporting widget: ${schema.id}');
-        // Capture share position before async gap
-        final sharePosition = getSafeSharePosition(context);
-        final json = await _storageService.exportWidget(schema.id);
-        await Share.share(
-          json,
-          subject: '${schema.name} Widget',
-          sharePositionOrigin: sharePosition,
-        );
         break;
       case 'submit_marketplace':
         _submitToMarketplace(schema);

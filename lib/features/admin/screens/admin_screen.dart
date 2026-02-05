@@ -13,6 +13,7 @@ import '../../device_shop/providers/admin_shop_providers.dart';
 import '../../social/screens/reported_content_screen.dart';
 import '../../settings/admin_follow_requests_screen.dart';
 import '../../widget_builder/marketplace/widget_approval_screen.dart';
+import 'qr_style_preview_screen.dart';
 import 'user_purchases_admin_screen.dart';
 
 /// Admin hub screen with all admin-only features.
@@ -102,6 +103,15 @@ class AdminScreen extends ConsumerWidget {
                 iconColor: Colors.amber.shade400,
                 onTap: () =>
                     _navigateTo(context, const UserPurchasesAdminScreen()),
+              ),
+              const SizedBox(height: 16),
+              const _SectionHeader(title: 'APP CONFIGURATION'),
+              _AdminTile(
+                icon: Icons.qr_code_2,
+                label: 'QR Code Styles',
+                subtitle: 'Preview branded QR code designs',
+                iconColor: Colors.cyan.shade400,
+                onTap: () => _navigateTo(context, const QrStylePreviewScreen()),
               ),
               // Bottom padding
               SizedBox(height: MediaQuery.of(context).padding.bottom + 16),

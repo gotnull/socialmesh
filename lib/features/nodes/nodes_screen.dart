@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'dart:convert';
 import '../../providers/app_providers.dart';
@@ -17,6 +16,7 @@ import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/presence_utils.dart';
+import '../../core/widgets/qr_share_sheet.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animations.dart';
@@ -1687,121 +1687,25 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
     final nodeJson = jsonEncode(nodeInfo);
     final nodeUrl = 'socialmesh://node/${base64Encode(utf8.encode(nodeJson))}';
 
-    AppBottomSheet.show(
+    QrShareSheet.show(
       context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          BottomSheetHeader(
-            icon: Icons.qr_code,
-            title: node.displayName,
-            subtitle: 'Scan to add this node',
-          ),
-          SizedBox(height: 24),
-
-          // QR Code
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: QrImageView(
-              data: nodeUrl,
-              version: QrVersions.auto,
-              size: 200,
-              backgroundColor: Colors.white,
-              eyeStyle: const QrEyeStyle(
-                eyeShape: QrEyeShape.square,
-                color: Color(0xFF1F2633),
-              ),
-              dataModuleStyle: const QrDataModuleStyle(
-                dataModuleShape: QrDataModuleShape.square,
-                color: Color(0xFF1F2633),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Node ID info
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: context.background,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.tag, size: 16, color: context.textTertiary),
-                SizedBox(width: 8),
-                Text(
-                  'Node ID: ${node.nodeNum.toRadixString(16).toUpperCase()}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: context.textSecondary,
-                    fontFamily: AppTheme.fontFamily,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Copy button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Clipboard.setData(
-                  ClipboardData(text: '!${node.nodeNum.toRadixString(16)}'),
-                );
-                Navigator.pop(context);
-                showSuccessSnackBar(context, 'Node info copied');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.accentColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.copy, size: 20),
-              label: const Text(
-                'Copy Node ID',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Share via link button (web-compatible)
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () async {
-                Navigator.pop(context);
-                await _shareNodeViaLink(context, node);
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: context.accentColor,
-                side: BorderSide(
-                  color: context.accentColor.withValues(alpha: 0.5),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.share, size: 20),
-              label: const Text(
-                'Share via Link',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
-        ],
-      ),
+      title: node.displayName,
+      subtitle: 'Scan to add this node',
+      qrData: nodeUrl,
+      infoText: 'Node ID: ${node.nodeNum.toRadixString(16).toUpperCase()}',
+      primaryButtonLabel: 'Share via Link',
+      secondaryButtonLabel: 'Copy Node ID',
+      onShare: () async {
+        Navigator.pop(context);
+        await _shareNodeViaLink(context, node);
+      },
+      onCopy: () {
+        Clipboard.setData(
+          ClipboardData(text: '!${node.nodeNum.toRadixString(16)}'),
+        );
+        Navigator.pop(context);
+        showSuccessSnackBar(context, 'Node ID copied');
+      },
     );
   }
 

@@ -3,12 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/qr_share_sheet.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
@@ -461,68 +461,17 @@ class _MeshCoreContactsScreenState
         .join();
     final contactCode = '$pubKeyHex:${selfInfo.nodeName}';
 
-    AppBottomSheet.show(
+    QrShareSheet.show(
       context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'My Contact Code',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: QrImageView(
-              data: contactCode,
-              version: QrVersions.auto,
-              size: 200,
-              backgroundColor: Colors.white,
-              eyeStyle: const QrEyeStyle(
-                eyeShape: QrEyeShape.square,
-                color: Colors.black,
-              ),
-              dataModuleStyle: const QrDataModuleStyle(
-                dataModuleShape: QrDataModuleShape.square,
-                color: Colors.black,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            selfInfo.nodeName,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Scan this code to add me as a contact',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
-          ),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: contactCode));
-              showSuccessSnackBar(context, 'Contact code copied to clipboard');
-            },
-            icon: const Icon(Icons.copy_rounded),
-            label: const Text('Copy Code'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white.withValues(alpha: 0.8),
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-            ),
-          ),
-        ],
-      ),
+      title: selfInfo.nodeName,
+      subtitle: 'Scan this code to add me as a contact',
+      qrData: contactCode,
+      primaryButtonLabel: 'Copy Code',
+      onShare: () {
+        Clipboard.setData(ClipboardData(text: contactCode));
+        Navigator.pop(context);
+        showSuccessSnackBar(context, 'Contact code copied to clipboard');
+      },
     );
   }
 

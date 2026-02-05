@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:async';
 import 'dart:convert';
 import '../../providers/app_providers.dart';
@@ -25,6 +24,7 @@ import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../core/widgets/qr_share_sheet.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
@@ -1349,61 +1349,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final base64Data = base64Encode(pbChannel.writeToBuffer());
     final channelUrl = 'socialmesh://channel/$base64Data';
 
-    AppBottomSheet.show(
+    QrShareSheet.show(
       context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          BottomSheetHeader(
-            icon: Icons.qr_code,
-            title: widget.title,
-            subtitle: 'Scan to join this channel',
-          ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: QrImageView(
-              data: channelUrl,
-              version: QrVersions.auto,
-              size: 200,
-              backgroundColor: Colors.white,
-              eyeStyle: const QrEyeStyle(
-                eyeShape: QrEyeShape.square,
-                color: Color(0xFF1F2633),
-              ),
-              dataModuleStyle: const QrDataModuleStyle(
-                dataModuleShape: QrDataModuleShape.square,
-                color: Color(0xFF1F2633),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: channelUrl));
-                Navigator.pop(context);
-                showSuccessSnackBar(context, 'Channel URL copied to clipboard');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.accentColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.share, size: 20),
-              label: const Text('Copy Channel URL'),
-            ),
-          ),
-        ],
-      ),
+      title: widget.title,
+      subtitle: 'Scan to join this channel',
+      qrData: channelUrl,
+      primaryButtonLabel: 'Copy Channel URL',
+      onShare: () {
+        Clipboard.setData(ClipboardData(text: channelUrl));
+        Navigator.pop(context);
+        showSuccessSnackBar(context, 'Channel URL copied to clipboard');
+      },
     );
   }
 

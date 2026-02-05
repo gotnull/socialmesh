@@ -36,7 +36,6 @@ dependencies:
   photo_manager: ^3.6.3
 
   # QR Code
-  qr_flutter: ^4.1.0
   mobile_scanner: ^7.0.0
 
   # UI/UX
@@ -110,6 +109,7 @@ dependencies:
 
   # In-app review
   in_app_review: ^2.0.10
+  pretty_qr_code: ^3.6.0
 
 dev_dependencies:
   flutter_test:
@@ -139,6 +139,7 @@ flutter:
   # Assets
   assets:
     - .env
+    - assets/app_icons/
     - assets/app_icons/source/
     - assets/rtttl_library.json
     - assets/banned_words.json

@@ -3,11 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/branded_qr_code.dart';
 import '../../providers/auth_providers.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
@@ -34,11 +35,9 @@ Future<void> showAutomationShareSheet(
     return;
   }
 
-  await showModalBottomSheet(
+  await AppBottomSheet.show(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => _ShareSheet(automation: automation, userId: user.uid),
+    child: _ShareSheet(automation: automation, userId: user.uid),
   );
 }
 
@@ -229,195 +228,132 @@ class _ShareSheetState extends State<_ShareSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Header
+        BottomSheetHeader(
+          icon: Icons.qr_code_2,
+          title: 'Share Automation',
+          subtitle: widget.automation.name,
+        ),
+        const SizedBox(height: 24),
+
+        // Content based on state
+        if (_isUploading) ...[
+          const SizedBox(height: 40),
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(
+            'Preparing share link...',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[400]),
+          ),
+          const SizedBox(height: 40),
+        ] else if (_error != null) ...[
           Container(
-            width: 40,
-            height: 4,
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.grey[600],
-              borderRadius: BorderRadius.circular(2),
+              color: Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.red.withOpacity(0.3)),
             ),
-          ),
-          const SizedBox(height: 24),
-
-          // Title
-          Row(
-            children: [
-              Icon(Icons.qr_code_2, color: context.accentColor, size: 32),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Share Automation',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    Text(
-                      widget.automation.name,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: Colors.grey[400]),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Content based on state
-          if (_isUploading) ...[
-            const SizedBox(height: 40),
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(
-              'Preparing share link...',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[400]),
-            ),
-            const SizedBox(height: 40),
-          ] else if (_error != null) ...[
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.red.withOpacity(0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.red),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _error!,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: Colors.red),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: () {
-                setState(() {
-                  _isUploading = true;
-                  _error = null;
-                });
-                _uploadAndGenerateLink();
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ] else ...[
-            // QR Code
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: QrImageView(
-                data: _shareUrl!,
-                version: QrVersions.auto,
-                size: 250,
-                backgroundColor: Colors.white,
-                errorCorrectionLevel: QrErrorCorrectLevel.M,
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Share URL display
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: context.background,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: context.border),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.link, size: 16, color: context.textSecondary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _shareUrl!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: context.textSecondary,
-                        fontFamily: 'monospace',
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Instructions
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: context.accentColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: context.accentColor,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Scan QR code or share link to import this automation',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Share actions
-            Row(
+            child: Row(
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _shareAsLink(context),
-                    icon: const Icon(Icons.share),
-                    label: const Text('Share Link'),
-                  ),
-                ),
+                const Icon(Icons.error_outline, color: Colors.red),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () => _copyLink(context),
-                    icon: const Icon(Icons.copy),
-                    label: const Text('Copy Link'),
+                  child: Text(
+                    _error!,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.red),
                   ),
                 ),
               ],
             ),
-          ],
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () {
+              setState(() {
+                _isUploading = true;
+                _error = null;
+              });
+              _uploadAndGenerateLink();
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('Retry'),
+          ),
+        ] else ...[
+          // QR Code - use deep link for in-app scanning
+          Builder(
+            builder: (context) {
+              final docId = _shareUrl!.split('/').last;
+              final deepLink = 'socialmesh://automation/id:$docId';
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: BrandedQrCode(data: deepLink, size: 220),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
 
-          SizedBox(height: MediaQuery.of(context).padding.bottom),
+          // Instructions
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: context.accentColor, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Scan QR code or share link to import this automation',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Share actions
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _copyLink(context),
+                  icon: const Icon(Icons.copy),
+                  label: const Text('Copy Link'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => _shareAsLink(context),
+                  icon: const Icon(Icons.share),
+                  label: const Text('Share Link'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: context.accentColor,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
-      ),
+
+        SizedBox(height: MediaQuery.of(context).padding.bottom),
+      ],
     );
   }
 
