@@ -781,9 +781,11 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                   ),
                 ),
                 icon: const Icon(Icons.copy, size: 20),
-                label: const Text(
+                label: Text(
                   'Copy',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
             ),

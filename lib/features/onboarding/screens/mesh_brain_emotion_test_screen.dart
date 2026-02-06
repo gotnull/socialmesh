@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/splash_mesh_provider.dart';
 import '../widgets/mesh_node_brain.dart';
@@ -132,7 +133,7 @@ class _MeshBrainEmotionTestScreenState
                 children: [
                   Text(
                     _selectedMood.emoji,
-                    style: const TextStyle(fontSize: 24),
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -274,7 +275,7 @@ class _MeshBrainEmotionTestScreenState
             const SizedBox(height: 4),
 
             // Emoji
-            Text(mood.emoji, style: const TextStyle(fontSize: 18)),
+            Text(mood.emoji, style: context.titleStyle),
 
             const SizedBox(height: 2),
 

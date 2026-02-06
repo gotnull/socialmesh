@@ -321,10 +321,7 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
                     children: widgetSchema.tags
                         .map(
                           (tag) => Chip(
-                            label: Text(
-                              tag,
-                              style: const TextStyle(fontSize: 12),
-                            ),
+                            label: Text(tag, style: context.bodySmallStyle),
                             visualDensity: VisualDensity.compact,
                             padding: EdgeInsets.zero,
                           ),

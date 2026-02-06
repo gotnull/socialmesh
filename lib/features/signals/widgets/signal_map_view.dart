@@ -154,6 +154,7 @@ class _SignalMapViewState extends ConsumerState<SignalMapView> {
               urlTemplate: _mapStyle.url,
               subdomains: _mapStyle.subdomains,
               userAgentPackageName: MapConfig.userAgentPackageName,
+              evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
             ),
             MarkerLayer(
               markers: _signalsWithLocation.map((signal) {
@@ -697,7 +698,7 @@ class _StatChip extends StatelessWidget {
       children: [
         Icon(icon, size: 14, color: color),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 12, color: color)),
+        Text(label, style: context.bodySmallStyle?.copyWith(color: color)),
       ],
     );
   }

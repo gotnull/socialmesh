@@ -430,7 +430,9 @@ class _ColorSlider extends StatelessWidget {
             width: 50,
             child: Text(
               label,
-              style: TextStyle(fontSize: 14, color: context.textSecondary),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
             ),
           ),
           Expanded(

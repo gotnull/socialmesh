@@ -507,7 +507,7 @@ class AutomationsScreen extends ConsumerWidget {
                             const SizedBox(width: 6),
                             Text(
                               type.displayName,
-                              style: const TextStyle(fontSize: 13),
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
                         ),
@@ -1332,7 +1332,7 @@ class _AddAutomationSheet extends ConsumerWidget {
                             const SizedBox(width: 6),
                             Text(
                               type.displayName,
-                              style: const TextStyle(fontSize: 13),
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
                         ),

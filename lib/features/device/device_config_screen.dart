@@ -672,7 +672,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
                   'Your device name is broadcast to the mesh and visible to other nodes.',
-                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
                 ),
               ),
 
@@ -1056,11 +1058,15 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             children: [
               Text(
                 'Off',
-                style: TextStyle(fontSize: 11, color: context.textTertiary),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
               ),
               Text(
                 '60 min',
-                style: TextStyle(fontSize: 11, color: context.textTertiary),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
               ),
             ],
           ),
@@ -1264,9 +1270,12 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          TextField(
-            controller: TextEditingController(text: _tzdef),
-            style: TextStyle(fontSize: 14, color: context.textPrimary),
+          TextFormField(
+            key: ValueKey('tzdef_${_tzdef.hashCode}'),
+            initialValue: _tzdef,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: context.textPrimary),
             decoration: InputDecoration(
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(
@@ -1313,7 +1322,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         children: [
           Text(
             'Only change these if you know your hardware requires custom GPIO pins.',
-            style: TextStyle(fontSize: 12, color: context.textTertiary),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
           ),
           const SizedBox(height: 16),
           Row(
@@ -1363,13 +1374,14 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           ),
         ),
         const SizedBox(height: 6),
-        TextField(
-          controller: TextEditingController(
-            text: value == 0 ? '' : value.toString(),
-          ),
+        TextFormField(
+          key: ValueKey('numField_$value'),
+          initialValue: value == 0 ? '' : value.toString(),
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          style: TextStyle(fontSize: 14, color: context.textPrimary),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: context.textPrimary),
           decoration: InputDecoration(
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(
@@ -1429,7 +1441,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),

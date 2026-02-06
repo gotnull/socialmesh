@@ -92,7 +92,9 @@ class _AnimatedTaglineState extends State<AnimatedTagline>
   Widget build(BuildContext context) {
     final style =
         widget.textStyle ??
-        TextStyle(fontSize: 16, color: context.textSecondary);
+        Theme.of(
+          context,
+        ).textTheme.bodyLarge?.copyWith(color: context.textSecondary);
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(

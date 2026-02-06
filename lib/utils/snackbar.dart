@@ -205,10 +205,9 @@ void _showStyledSnackBar(
                   Expanded(
                     child: Text(
                       message,
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
-                        fontSize: 14,
                         height: 1.3,
                       ),
                     ),
@@ -302,10 +301,9 @@ void showActionSnackBar(
                   Expanded(
                     child: Text(
                       message,
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
-                        fontSize: 14,
                         height: 1.3,
                       ),
                     ),
@@ -318,7 +316,9 @@ void showActionSnackBar(
                     },
                     child: Text(
                       actionLabel,
-                      style: const TextStyle(color: Colors.white),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelLarge?.copyWith(color: Colors.white),
                     ),
                   ),
                 ],
@@ -392,10 +392,9 @@ void _showLoadingSnackBar(
                   Expanded(
                     child: Text(
                       message,
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
-                        fontSize: 14,
                         height: 1.3,
                       ),
                     ),

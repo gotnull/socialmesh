@@ -453,7 +453,9 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                 children: [
                   Text(
                     '${channels.length} channels',
-                    style: TextStyle(fontSize: 11, color: context.textTertiary),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: context.textTertiary,
+                    ),
                   ),
                 ],
               ),
@@ -1074,7 +1076,9 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
             ),
           ),
           const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
+          Expanded(
+            child: Text(text, style: Theme.of(context).textTheme.bodySmall),
+          ),
         ],
       ),
     );
@@ -1105,7 +1109,9 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
           Expanded(
             child: Text(
               description,
-              style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: Colors.grey[400]),
             ),
           ),
         ],
@@ -1349,7 +1355,9 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                 const SizedBox(width: 12),
                 Text(
                   'Select Sound',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -1392,7 +1400,9 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                 SizedBox(width: 8),
                 Text(
                   '${displayItems.length} sounds',
-                  style: TextStyle(fontSize: 11, color: context.textTertiary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),

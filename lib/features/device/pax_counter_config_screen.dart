@@ -397,7 +397,9 @@ class _SettingsTile extends StatelessWidget {
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),

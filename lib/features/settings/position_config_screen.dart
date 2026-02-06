@@ -1025,7 +1025,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 12, color: context.textTertiary),
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textTertiary,
+                    ),
                   ),
                 ],
               ),
@@ -1357,7 +1359,9 @@ class _SettingsTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 13, color: context.textTertiary),
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textTertiary,
+                    ),
                   ),
                 ],
               ),

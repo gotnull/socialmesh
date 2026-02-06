@@ -77,12 +77,16 @@ class TraceRouteLogScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             message,
-            style: TextStyle(fontSize: 16, color: context.textSecondary),
+            style: context.titleSmallStyle?.copyWith(
+              color: context.textSecondary,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Use TraceRoute to see network path',
-            style: TextStyle(fontSize: 14, color: context.textTertiary),
+            style: context.bodySecondaryStyle?.copyWith(
+              color: context.textTertiary,
+            ),
           ),
         ],
       ),
@@ -117,7 +121,9 @@ class _TraceRouteCard extends StatelessWidget {
             children: [
               Text(
                 timeFormat.format(log.timestamp),
-                style: TextStyle(fontSize: 12, color: context.textTertiary),
+                style: context.bodySmallStyle?.copyWith(
+                  color: context.textTertiary,
+                ),
               ),
               _ResponseBadge(gotResponse: log.response),
             ],
@@ -137,9 +143,9 @@ class _TraceRouteCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'To',
-                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                      style: context.captionStyle?.copyWith(color: Colors.grey),
                     ),
                     Text(
                       destName,
@@ -357,7 +363,9 @@ class _HopItem extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: TextStyle(fontSize: 13, color: context.textPrimary),
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textPrimary,
+                    ),
                   ),
                   if (snr != null)
                     Text(

@@ -412,7 +412,9 @@ class _TelemetrySection extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'Update Interval',
-              style: TextStyle(fontSize: 13, color: context.textSecondary),
+              style: context.bodySmallStyle?.copyWith(
+                color: context.textSecondary,
+              ),
             ),
             const SizedBox(height: 8),
             Row(
@@ -427,7 +429,9 @@ class _TelemetrySection extends StatelessWidget {
                 ),
                 Text(
                   ' minutes',
-                  style: TextStyle(fontSize: 14, color: context.textTertiary),
+                  style: context.bodySecondaryStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
                 ),
               ],
             ),
@@ -481,11 +485,15 @@ class _ToggleTile extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: TextStyle(fontSize: 14, color: context.textPrimary),
+                style: context.bodySecondaryStyle?.copyWith(
+                  color: context.textPrimary,
+                ),
               ),
               Text(
                 subtitle,
-                style: TextStyle(fontSize: 12, color: context.textSecondary),
+                style: context.bodySmallStyle?.copyWith(
+                  color: context.textSecondary,
+                ),
               ),
             ],
           ),

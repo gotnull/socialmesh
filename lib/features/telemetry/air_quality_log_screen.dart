@@ -79,7 +79,9 @@ class AirQualityLogScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             message,
-            style: TextStyle(fontSize: 16, color: context.textSecondary),
+            style: context.titleSmallStyle?.copyWith(
+              color: context.textSecondary,
+            ),
           ),
         ],
       ),
@@ -111,7 +113,9 @@ class _AirQualityCard extends StatelessWidget {
             children: [
               Text(
                 timeFormat.format(log.timestamp),
-                style: TextStyle(fontSize: 12, color: context.textTertiary),
+                style: context.bodySmallStyle?.copyWith(
+                  color: context.textTertiary,
+                ),
               ),
               if (log.pm25Standard != null)
                 _AqiIndicator(pm25: log.pm25Standard!),

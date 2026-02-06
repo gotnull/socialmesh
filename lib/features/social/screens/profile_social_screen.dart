@@ -1727,7 +1727,9 @@ class _ActivityBadge extends ConsumerWidget {
     return Badge(
       label: Text(
         unreadCount > 99 ? '99+' : '$unreadCount',
-        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
       ),
       backgroundColor: Colors.red,
       child: child,

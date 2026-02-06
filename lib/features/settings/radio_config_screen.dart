@@ -568,7 +568,9 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
               ),
               SizedBox(
                 width: 80,
-                child: TextField(
+                child: TextFormField(
+                  key: ValueKey('channelNum_$_channelNum'),
+                  initialValue: '$_channelNum',
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: context.textPrimary),
@@ -589,7 +591,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                       borderSide: BorderSide(color: context.border),
                     ),
                   ),
-                  controller: TextEditingController(text: '$_channelNum'),
                   onChanged: (value) {
                     final parsed = int.tryParse(value);
                     if (parsed != null) setState(() => _channelNum = parsed);
@@ -667,7 +668,13 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
               ),
               SizedBox(
                 width: 100,
-                child: TextField(
+                child: TextFormField(
+                  key: ValueKey(
+                    'freq_${_overrideFrequency.toStringAsFixed(3)}',
+                  ),
+                  initialValue: _overrideFrequency > 0
+                      ? _overrideFrequency.toStringAsFixed(3)
+                      : '',
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -691,11 +698,6 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(color: context.border),
                     ),
-                  ),
-                  controller: TextEditingController(
-                    text: _overrideFrequency > 0
-                        ? _overrideFrequency.toStringAsFixed(3)
-                        : '',
                   ),
                   onChanged: (value) {
                     final parsed = double.tryParse(value);
@@ -1080,7 +1082,9 @@ class _SettingsTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 13, color: context.textTertiary),
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textTertiary,
+                    ),
                   ),
                 ],
               ),

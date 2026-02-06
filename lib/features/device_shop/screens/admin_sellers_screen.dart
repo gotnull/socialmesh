@@ -345,7 +345,7 @@ class _SellerListItem extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           value,
-          style: TextStyle(fontSize: 12, color: context.textTertiary),
+          style: context.bodySmallStyle?.copyWith(color: context.textTertiary),
         ),
       ],
     );

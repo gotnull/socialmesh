@@ -49,6 +49,7 @@ import 'ringtone_screen.dart';
 import 'subscription_screen.dart';
 import 'ifttt_config_screen.dart';
 import 'theme_settings_screen.dart';
+import 'appearance_accessibility_screen.dart';
 import '../automations/automations_screen.dart';
 import '../automations/automation_providers.dart';
 import 'canned_responses_screen.dart';
@@ -334,6 +335,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           subtitle: 'Light, medium, or heavy feedback',
           keywords: ['vibration', 'strength', 'intensity'],
           section: 'HAPTIC FEEDBACK',
+        ),
+
+        // Appearance & Accessibility
+        _SearchableSettingItem(
+          icon: Icons.accessibility_new_rounded,
+          title: 'Appearance & Accessibility',
+          subtitle: 'Font, text size, density, contrast, motion',
+          keywords: [
+            'accessibility',
+            'font',
+            'text',
+            'size',
+            'scale',
+            'density',
+            'contrast',
+            'motion',
+            'reduce',
+            'appearance',
+            'readable',
+          ],
+          section: 'APPEARANCE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const AppearanceAccessibilityScreen(),
+            ),
+          ),
         ),
 
         // Animations
@@ -989,7 +1017,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 SizedBox(height: 8),
                 Text(
                   'Try a different search term',
-                  style: TextStyle(fontSize: 14, color: context.textTertiary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),
@@ -1373,13 +1403,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   remoteState.isRemote
                       ? 'Configuring Remote Node'
                       : 'Configure Device',
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     color: remoteState.isRemote
                         ? accentColor
                         : context.textPrimary,
                     fontWeight: remoteState.isRemote
                         ? FontWeight.w600
-                        : FontWeight.normal,
+                        : FontWeight.w500,
                   ),
                 ),
                 subtitle: Row(
@@ -1390,7 +1420,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ? remoteState.targetNodeName ??
                                   '0x${remoteState.targetNodeNum!.toRadixString(16)}'
                             : connectedDevice?.name ?? 'Connected Device',
-                        style: TextStyle(
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: remoteState.isRemote
                               ? accentColor.withValues(alpha: 0.8)
                               : context.textSecondary,
@@ -1399,7 +1429,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                     if (remoteState.isRemote) ...[
-                      SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       Icon(
                         Icons.lock,
                         size: 12,
@@ -1413,12 +1443,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   children: [
                     Text(
                       '${adminableNodes.length} nodes',
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: context.textTertiary,
                       ),
                     ),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     Icon(
                       Icons.chevron_right,
                       color: remoteState.isRemote
@@ -1451,10 +1480,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Expanded(
                           child: Text(
                             'Remote admin requires the target node to have your public key in its Admin Keys list.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.orange.shade200,
-                            ),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(color: Colors.orange.shade200),
                           ),
                         ),
                       ],
@@ -1726,6 +1753,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 settingsService,
                               ),
                             ),
+
+                          const SizedBox(height: 16),
+
+                          // Appearance & Accessibility Section
+                          const _SectionHeader(title: 'APPEARANCE'),
+                          _SettingsTile(
+                            icon: Icons.accessibility_new_rounded,
+                            title: 'Appearance & Accessibility',
+                            subtitle:
+                                'Font, text size, density, contrast, motion',
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const AppearanceAccessibilityScreen(),
+                              ),
+                            ),
+                          ),
 
                           const SizedBox(height: 16),
 
@@ -3080,15 +3125,14 @@ class _SettingsTile extends StatelessWidget {
             child: Row(
               children: [
                 Icon(icon, color: iconColor ?? context.textSecondary),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         title,
-                        style: TextStyle(
-                          fontSize: 15,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w500,
                           color: titleColor ?? context.textPrimary,
                         ),
@@ -3097,10 +3141,10 @@ class _SettingsTile extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           subtitle!,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: subtitleColor ?? context.textTertiary,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: subtitleColor ?? context.textTertiary,
+                              ),
                         ),
                       ],
                     ],
@@ -3152,9 +3196,6 @@ class _PremiumFeatureTile extends ConsumerWidget {
       decoration: BoxDecoration(
         color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: hasFeature
-            ? Border.all(color: accentColor.withValues(alpha: 0.3), width: 1)
-            : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -3177,8 +3218,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyle(
-                      fontSize: 15,
+                    style: context.bodySecondaryStyle!.copyWith(
                       fontWeight: FontWeight.w500,
                       color: isExplorable
                           ? context.textPrimary
@@ -3211,8 +3251,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
                           purchase != null
                               ? '\$${purchase.price.toStringAsFixed(2)}'
                               : 'LOCKED',
-                          style: TextStyle(
-                            fontSize: 11,
+                          style: context.captionStyle!.copyWith(
                             fontWeight: FontWeight.bold,
                             color: context.textTertiary,
                           ),
@@ -3223,8 +3262,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
                         SizedBox(width: 4),
                         Text(
                           'TRY IT',
-                          style: TextStyle(
-                            fontSize: 11,
+                          style: context.captionStyle!.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Colors.amber,
                           ),
@@ -3233,8 +3271,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
                         // Show OWNED badge when user has the feature
                         Text(
                           'OWNED',
-                          style: TextStyle(
-                            fontSize: 11,
+                          style: context.captionStyle!.copyWith(
                             fontWeight: FontWeight.bold,
                             color: accentColor,
                           ),
@@ -3604,7 +3641,7 @@ class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen> {
         backgroundColor: context.background,
         title: Text(
           _title,
-          style: TextStyle(fontSize: 18),
+          style: Theme.of(context).textTheme.titleMedium,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

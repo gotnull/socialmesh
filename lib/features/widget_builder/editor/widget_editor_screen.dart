@@ -1245,7 +1245,9 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                 SizedBox(width: 8),
                 Text(
                   item.label,
-                  style: TextStyle(fontSize: 13, color: context.textSecondary),
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -1877,7 +1879,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: context.textSecondary),
+          style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
         SizedBox(height: 8),
         Wrap(
@@ -1971,7 +1973,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: context.textSecondary),
+          style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
         SizedBox(height: 4),
         TextFormField(
@@ -2021,7 +2023,9 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           children: [
             Text(
               label,
-              style: TextStyle(fontSize: 12, color: context.textSecondary),
+              style: context.bodySmallStyle?.copyWith(
+                color: context.textSecondary,
+              ),
             ),
             const Spacer(),
             Container(
@@ -2104,7 +2108,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: context.textSecondary),
+          style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
         const SizedBox(height: 8),
         Row(
@@ -2160,7 +2164,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: context.textSecondary),
+          style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
         const SizedBox(height: 8),
         Row(
@@ -2239,7 +2243,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: context.textSecondary),
+          style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
         SizedBox(height: 4),
         Container(
@@ -2291,7 +2295,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: context.textSecondary),
+          style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
         const SizedBox(height: 4),
         InkWell(
@@ -2352,7 +2356,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: context.textSecondary),
+          style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
         const SizedBox(height: 4),
         InkWell(

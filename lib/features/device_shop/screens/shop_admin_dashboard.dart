@@ -356,12 +356,16 @@ class _StatCard extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: TextStyle(fontSize: 12, color: context.textSecondary),
+                style: context.bodySmallStyle?.copyWith(
+                  color: context.textSecondary,
+                ),
               ),
               if (subtitle != null)
                 Text(
                   subtitle!,
-                  style: TextStyle(fontSize: 10, color: context.textTertiary),
+                  style: context.captionStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
                 ),
             ],
           ),

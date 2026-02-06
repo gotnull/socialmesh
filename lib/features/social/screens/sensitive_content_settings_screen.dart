@@ -403,7 +403,9 @@ class _StrikeWarningDialogState extends ConsumerState<StrikeWarningDialog> {
           children: [
             Text(
               strike.reason,
-              style: TextStyle(fontSize: 14, color: context.textSecondary),
+              style: context.bodySecondaryStyle?.copyWith(
+                color: context.textSecondary,
+              ),
             ),
             const SizedBox(height: 16),
             if (strike.expiresAt != null) ...[
@@ -426,14 +428,18 @@ class _StrikeWarningDialogState extends ConsumerState<StrikeWarningDialog> {
                           'comment, or create stories during this time.'
                     : 'Repeated violations may result in account suspension or '
                           'permanent ban. Please review our Community Guidelines.',
-                style: TextStyle(fontSize: 12, color: context.textSecondary),
+                style: context.bodySmallStyle?.copyWith(
+                  color: context.textSecondary,
+                ),
               ),
             ),
             if (widget.strikes.length > 1) ...[
               const SizedBox(height: 12),
               Text(
                 '${_currentIndex + 1} of ${widget.strikes.length} notices',
-                style: TextStyle(fontSize: 12, color: context.textSecondary),
+                style: context.bodySmallStyle?.copyWith(
+                  color: context.textSecondary,
+                ),
               ),
             ],
           ],
@@ -490,7 +496,9 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: TextStyle(fontSize: 13, color: context.textPrimary),
+              style: context.bodySmallStyle?.copyWith(
+                color: context.textPrimary,
+              ),
             ),
           ),
         ],
@@ -556,7 +564,9 @@ class ContentBlockedSheet extends StatelessWidget {
           Text(
             reason,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: context.textSecondary),
+            style: context.bodySecondaryStyle?.copyWith(
+              color: context.textSecondary,
+            ),
           ),
           const SizedBox(height: 24),
           if (appealable && onAppeal != null) ...[
@@ -776,7 +786,9 @@ class _StatusRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: 14, color: context.textSecondary),
+            style: context.bodySecondaryStyle?.copyWith(
+              color: context.textSecondary,
+            ),
           ),
           Text(
             value,

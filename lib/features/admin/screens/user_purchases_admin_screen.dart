@@ -508,7 +508,9 @@ class _StatCard extends StatelessWidget {
               Flexible(
                 child: Text(
                   label,
-                  style: TextStyle(fontSize: 11, color: context.textSecondary),
+                  style: context.captionStyle?.copyWith(
+                    color: context.textSecondary,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -975,11 +977,15 @@ class _InfoTile extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: TextStyle(fontSize: 11, color: context.textTertiary),
+                  style: context.captionStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
                 ),
                 Text(
                   value,
-                  style: TextStyle(color: context.textPrimary, fontSize: 13),
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textPrimary,
+                  ),
                 ),
               ],
             ),
@@ -1084,7 +1090,9 @@ class _PurchaseTile extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   dateFormat.format(purchase.purchasedAt!),
-                  style: TextStyle(fontSize: 11, color: context.textSecondary),
+                  style: context.captionStyle?.copyWith(
+                    color: context.textSecondary,
+                  ),
                 ),
                 const SizedBox(width: 12),
               ],
@@ -1093,7 +1101,9 @@ class _PurchaseTile extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   'A\$${_productPricesAud[purchase.productId]!.toStringAsFixed(2)}',
-                  style: TextStyle(fontSize: 11, color: context.textSecondary),
+                  style: context.captionStyle?.copyWith(
+                    color: context.textSecondary,
+                  ),
                 ),
                 const SizedBox(width: 12),
               ],
@@ -1101,7 +1111,9 @@ class _PurchaseTile extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 purchase.source,
-                style: TextStyle(fontSize: 11, color: context.textSecondary),
+                style: context.captionStyle?.copyWith(
+                  color: context.textSecondary,
+                ),
               ),
             ],
           ),

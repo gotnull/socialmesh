@@ -358,7 +358,9 @@ class WidgetEmptyState extends StatelessWidget {
             SizedBox(height: 12),
             Text(
               message,
-              style: TextStyle(fontSize: 13, color: context.textTertiary),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
               textAlign: TextAlign.center,
             ),
             if (actionLabel != null && onAction != null) ...[
@@ -400,7 +402,9 @@ class WidgetLoadingState extends StatelessWidget {
             SizedBox(height: 12),
             Text(
               message!,
-              style: TextStyle(fontSize: 13, color: context.textTertiary),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
             ),
           ],
         ],

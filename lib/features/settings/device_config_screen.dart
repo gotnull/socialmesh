@@ -864,7 +864,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             ],
           ),
           SizedBox(height: 12),
-          TextField(
+          TextFormField(
+            key: ValueKey('tzdef_$_tzdef'),
+            initialValue: _tzdef,
             style: TextStyle(color: context.textPrimary),
             decoration: InputDecoration(
               isDense: true,
@@ -885,7 +887,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 borderSide: BorderSide(color: context.border),
               ),
             ),
-            controller: TextEditingController(text: _tzdef),
             onChanged: (value) {
               // Limit to 63 bytes as per iOS
               if (value.length <= 63) {
@@ -1217,7 +1218,9 @@ class _SettingsTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 13, color: context.textTertiary),
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textTertiary,
+                    ),
                   ),
                 ],
               ),

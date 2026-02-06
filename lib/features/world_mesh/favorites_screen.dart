@@ -323,7 +323,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
             Text(
               'Tap the star icon on any node to add it to your favorites for quick access.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: context.textSecondary),
+              style: context.bodySecondaryStyle?.copyWith(
+                color: context.textSecondary,
+              ),
             ),
           ],
         ),
@@ -519,7 +521,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                         const SizedBox(width: 6),
                         Text(
                           statusText,
-                          style: TextStyle(fontSize: 12, color: statusColor),
+                          style: context.bodySmallStyle?.copyWith(
+                            color: statusColor,
+                          ),
                         ),
                       ],
                     ),

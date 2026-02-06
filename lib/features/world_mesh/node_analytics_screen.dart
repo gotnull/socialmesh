@@ -395,7 +395,9 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
             SizedBox(height: 8),
             Text(
               '${_history.length} records',
-              style: TextStyle(fontSize: 13, color: context.textTertiary),
+              style: context.bodySmallStyle?.copyWith(
+                color: context.textTertiary,
+              ),
             ),
             const SizedBox(height: 24),
             Row(
@@ -711,7 +713,9 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                   SizedBox(height: 2),
                   Text(
                     _formatRole(node.role),
-                    style: TextStyle(fontSize: 12, color: context.textTertiary),
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textTertiary,
+                    ),
                   ),
                 ],
               ],
@@ -1098,12 +1102,16 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                 SizedBox(height: 12),
                 Text(
                   'No historical data yet',
-                  style: TextStyle(fontSize: 14, color: context.textSecondary),
+                  style: context.bodySecondaryStyle?.copyWith(
+                    color: context.textSecondary,
+                  ),
                 ),
                 SizedBox(height: 4),
                 Text(
                   'Visit this node again to build history',
-                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
                 ),
               ],
             )
@@ -1205,7 +1213,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
         ),
         Text(
           label,
-          style: TextStyle(fontSize: 11, color: context.textTertiary),
+          style: context.captionStyle?.copyWith(color: context.textTertiary),
         ),
       ],
     );

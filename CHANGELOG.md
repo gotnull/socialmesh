@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Appearance & Accessibility settings screen with live preview
+- Font mode selection: Branded (JetBrainsMono), System, or Accessibility (Inter)
+- Text size presets: System Default, Default, Large (15%), Extra Large (30%)
+- Display density modes: Compact, Comfortable, Large Touch
+- High contrast mode for enhanced visibility
+- Reduce motion option for minimal animations
+- Safe text scaling with layout-safe caps (max 1.5x)
+- Accessibility-aware animated widgets (AccessibleAnimatedContainer, AccessibleAnimatedOpacity)
+- AccessibleTapTarget widget for minimum tap target enforcement
+- Comprehensive unit and widget tests for accessibility layer
+
+### Changed
+
+- MaterialApp now applies accessibility theme preferences via AccessibilityThemeAdapter
+- Theme integration includes font family, visual density, and high contrast adjustments
+- Animation durations respect reduce motion preference throughout the app
+
 ## [1.2.0] - 2026-02-01
 
 ### Added

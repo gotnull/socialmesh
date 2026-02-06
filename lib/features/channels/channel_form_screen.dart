@@ -814,7 +814,9 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),

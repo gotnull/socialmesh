@@ -1025,7 +1025,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                 SizedBox(height: 8),
                 Text(
                   'Minimum time between geofence alerts for the same node',
-                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
                 ),
                 SizedBox(height: 16),
                 // Pick on Map button
@@ -1152,7 +1154,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           Expanded(
             child: Text(
               text,
-              style: TextStyle(fontSize: 13, color: context.textSecondary),
+              style: context.bodySmallStyle?.copyWith(
+                color: context.textSecondary,
+              ),
             ),
           ),
         ],
@@ -1187,7 +1191,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           ),
           subtitle: Text(
             'Use these names in your IFTTT applets',
-            style: TextStyle(fontSize: 13, color: context.textTertiary),
+            style: context.bodySmallStyle?.copyWith(
+              color: context.textTertiary,
+            ),
           ),
           iconColor: context.textSecondary,
           collapsedIconColor: context.textSecondary,
@@ -1254,7 +1260,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             flex: 2,
             child: Text(
               params,
-              style: TextStyle(fontSize: 11, color: context.textTertiary),
+              style: context.captionStyle?.copyWith(
+                color: context.textTertiary,
+              ),
             ),
           ),
         ],
@@ -1329,7 +1337,9 @@ class _SettingsTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 13, color: context.textTertiary),
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textTertiary,
+                    ),
                   ),
                 ],
               ),

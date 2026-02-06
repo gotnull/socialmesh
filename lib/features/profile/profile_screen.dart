@@ -514,7 +514,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       children: [
         Text(
           'Linked accounts',
-          style: TextStyle(fontSize: 12, color: context.textSecondary),
+          style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
         const SizedBox(width: 12),
         ...providers.map(
@@ -1136,7 +1136,10 @@ class _AccountOptionTile extends StatelessWidget {
           children: [
             Icon(icon, size: 18, color: color),
             SizedBox(width: 12),
-            Text(label, style: TextStyle(fontSize: 14, color: color)),
+            Text(
+              label,
+              style: context.bodySecondaryStyle?.copyWith(color: color),
+            ),
             const Spacer(),
             Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
           ],
@@ -1242,7 +1245,9 @@ class _SyncErrorBanner extends ConsumerWidget {
           Expanded(
             child: Text(
               message,
-              style: TextStyle(fontSize: 13, color: AccentColors.orange),
+              style: context.bodySmallStyle?.copyWith(
+                color: AccentColors.orange,
+              ),
             ),
           ),
           TextButton(
@@ -1584,12 +1589,16 @@ class _ProfileInfoCard extends StatelessWidget {
               children: [
                 Text(
                   item.label,
-                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   item.value,
-                  style: TextStyle(fontSize: 14, color: context.textPrimary),
+                  style: context.bodySecondaryStyle?.copyWith(
+                    color: context.textPrimary,
+                  ),
                 ),
               ],
             ),
@@ -2668,7 +2677,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
             SizedBox(width: 8),
             Text(
               'Bio',
-              style: TextStyle(fontSize: 12, color: context.textTertiary),
+              style: context.bodySmallStyle?.copyWith(
+                color: context.textTertiary,
+              ),
             ),
           ],
         ),

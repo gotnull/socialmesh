@@ -156,7 +156,9 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
                 ),
                 Text(
                   'Add widgets to your home screen for quick access',
-                  style: TextStyle(fontSize: 14, color: context.textSecondary),
+                  style: context.bodySecondaryStyle?.copyWith(
+                    color: context.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -223,7 +225,9 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: TextStyle(fontSize: 13, color: context.textTertiary),
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
                 ),
                 SizedBox(height: 8),
                 Wrap(
@@ -442,7 +446,9 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
         Expanded(
           child: Text(
             text,
-            style: TextStyle(fontSize: 13, color: context.textSecondary),
+            style: context.bodySmallStyle?.copyWith(
+              color: context.textSecondary,
+            ),
           ),
         ),
       ],

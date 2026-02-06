@@ -428,7 +428,9 @@ class _EmptyState extends StatelessWidget {
           Text(
             'Nodes will appear as they\'re observed\non the mesh network.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: context.textTertiary),
+            style: context.bodySmallStyle?.copyWith(
+              color: context.textTertiary,
+            ),
           ),
         ],
       ),
@@ -610,7 +612,7 @@ class _MetricItem extends StatelessWidget {
         SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: context.textSecondary),
+          style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
       ],
     );

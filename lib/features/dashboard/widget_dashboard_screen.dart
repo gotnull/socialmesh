@@ -469,7 +469,9 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
             const SizedBox(height: 8),
             Text(
               'Customize your dashboard with widgets that matter to you',
-              style: TextStyle(fontSize: 14, color: context.textSecondary),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 24),
@@ -757,7 +759,9 @@ class _AddWidgetSheet extends ConsumerWidget {
               Expanded(
                 child: Text(
                   'Tap to add or remove widgets from your dashboard',
-                  style: TextStyle(fontSize: 13, color: context.textSecondary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
                 ),
               ),
               Text(

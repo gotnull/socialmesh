@@ -462,7 +462,9 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
             _isRunning
                 ? '${_results.length} packets received'
                 : 'Target: $targetName',
-            style: TextStyle(fontSize: 13, color: context.textSecondary),
+            style: context.bodySmallStyle?.copyWith(
+              color: context.textSecondary,
+            ),
           ),
 
           SizedBox(height: 16),

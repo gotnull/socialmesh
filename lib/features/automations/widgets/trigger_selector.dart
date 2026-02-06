@@ -359,8 +359,8 @@ class _TriggerSelectorState extends State<TriggerSelector> {
             style: TextStyle(color: Colors.grey[600], fontSize: 12),
           ),
           const SizedBox(height: 8),
-          TextField(
-            controller: TextEditingController(text: sensorNameFilter),
+          TextFormField(
+            initialValue: sensorNameFilter,
             onChanged: (value) {
               final newConfig = Map<String, dynamic>.from(
                 widget.trigger.config,
@@ -793,7 +793,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                   children: [
                     Text(
                       TimeOfDay(hour: hour, minute: minute).format(context),
-                      style: const TextStyle(fontSize: 16),
+                      style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     const Icon(Icons.access_time, color: Colors.grey),
                   ],

@@ -1297,7 +1297,7 @@ class _PurchaseWebViewScreenState extends State<_PurchaseWebViewScreen> {
         backgroundColor: context.background,
         title: Text(
           widget.title,
-          style: const TextStyle(fontSize: 18),
+          style: context.titleStyle,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

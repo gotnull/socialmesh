@@ -182,7 +182,9 @@ class _MetricCard extends StatelessWidget {
           SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(fontSize: 10, color: context.textTertiary),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
           ),
         ],
       ),

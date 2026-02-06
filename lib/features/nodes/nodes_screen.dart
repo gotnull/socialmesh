@@ -1543,7 +1543,9 @@ class _NodeCard extends StatelessWidget {
                   SizedBox(width: 4),
                   Text(
                     'Logs:',
-                    style: TextStyle(fontSize: 12, color: context.textTertiary),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: context.textTertiary,
+                    ),
                   ),
                   SizedBox(width: 8),
                   Icon(Icons.message, size: 14, color: context.textTertiary),

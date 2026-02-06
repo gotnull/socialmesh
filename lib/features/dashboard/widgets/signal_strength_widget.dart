@@ -381,7 +381,9 @@ class _LegendItem extends StatelessWidget {
         SizedBox(width: 6),
         Text(
           label,
-          style: TextStyle(fontSize: 10, color: context.textTertiary),
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
         ),
       ],
     );

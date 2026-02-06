@@ -2244,7 +2244,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
         const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(fontSize: 10, color: context.textSecondary),
+          style: context.captionStyle?.copyWith(color: context.textSecondary),
         ),
       ],
     );
@@ -2326,11 +2326,15 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: 12, color: context.textSecondary),
+            style: context.bodySmallStyle?.copyWith(
+              color: context.textSecondary,
+            ),
           ),
           Text(
             value,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            style: context.bodySmallStyle?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -2364,14 +2368,18 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
                   ),
                 ),
               ),
-              const Text(
+              Text(
                 'Connection Quality Filter',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: context.headingStyle?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Show only connections above a minimum signal quality',
-                style: TextStyle(fontSize: 14, color: context.textSecondary),
+                style: context.bodySecondaryStyle?.copyWith(
+                  color: context.textSecondary,
+                ),
               ),
               const SizedBox(height: 24),
 
@@ -2514,9 +2522,11 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
                   ),
                 ),
               ),
-              const Text(
+              Text(
                 'Select View Mode',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: context.headingStyle?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               Expanded(

@@ -50,13 +50,12 @@ class _TapbackBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(type.emoji, style: const TextStyle(fontSize: 12)),
+          Text(type.emoji, style: context.bodySmallStyle),
           if (count > 1) ...[
             const SizedBox(width: 2),
             Text(
               '$count',
-              style: TextStyle(
-                fontSize: 10,
+              style: context.captionStyle?.copyWith(
                 color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
@@ -163,7 +162,10 @@ class _TapbackButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
           child: Center(
-            child: Text(type.emoji, style: const TextStyle(fontSize: 28)),
+            child: Text(
+              type.emoji,
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
           ),
         ),
       ),

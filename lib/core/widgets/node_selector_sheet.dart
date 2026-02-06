@@ -213,7 +213,9 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
                   const Spacer(),
                   Text(
                     '${nodes.length} nodes',
-                    style: TextStyle(fontSize: 11, color: context.textTertiary),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: context.textTertiary,
+                    ),
                   ),
                 ],
               ),

@@ -1416,7 +1416,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                       avatar: const Icon(Icons.location_on, size: 16),
                       label: Text(
                         _location!.name ?? 'Location',
-                        style: const TextStyle(fontSize: 12),
+                        style: context.bodySmallStyle,
                       ),
                       onDeleted: _isUploading
                           ? null
@@ -1431,10 +1431,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                   if (_nodeId != null)
                     Chip(
                       avatar: const Icon(Icons.router, size: 16),
-                      label: Text(
-                        _nodeId!,
-                        style: const TextStyle(fontSize: 12),
-                      ),
+                      label: Text(_nodeId!, style: context.bodySmallStyle),
                       onDeleted: _isUploading
                           ? null
                           : () => setState(() => _nodeId = null),

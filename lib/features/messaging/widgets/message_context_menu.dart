@@ -56,7 +56,9 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Text(
                 'Channel: ${widget.channelIndex}',
-                style: TextStyle(fontSize: 13, color: context.textTertiary),
+                style: context.bodySmallStyle?.copyWith(
+                  color: context.textTertiary,
+                ),
               ),
             ),
 
@@ -138,7 +140,10 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
             Icon(icon, size: 20, color: color),
             SizedBox(width: 12),
             Expanded(
-              child: Text(label, style: TextStyle(fontSize: 16, color: color)),
+              child: Text(
+                label,
+                style: context.titleSmallStyle?.copyWith(color: color),
+              ),
             ),
             if (hasSubmenu)
               Icon(
@@ -216,11 +221,16 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Text(config.emoji, style: const TextStyle(fontSize: 24)),
+            Text(
+              config.emoji,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
             const SizedBox(width: 12),
             Text(
               config.label,
-              style: TextStyle(fontSize: 16, color: context.textPrimary),
+              style: context.titleSmallStyle?.copyWith(
+                color: context.textPrimary,
+              ),
             ),
           ],
         ),
@@ -288,7 +298,9 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
               children: [
                 Text(
                   'Message Details',
-                  style: TextStyle(fontSize: 16, color: context.textPrimary),
+                  style: context.titleSmallStyle?.copyWith(
+                    color: context.textPrimary,
+                  ),
                 ),
                 const Spacer(),
                 Icon(

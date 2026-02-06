@@ -639,7 +639,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
           children: [
             Text(
               'Bluetooth pairing was removed. Forget "Meshtastic_XXXX" in Settings > Bluetooth and reconnect to continue.',
-              style: TextStyle(fontSize: 13, color: context.textSecondary),
+              style: context.bodySmallStyle?.copyWith(
+                color: context.textSecondary,
+              ),
             ),
             const SizedBox(height: 8),
             Row(

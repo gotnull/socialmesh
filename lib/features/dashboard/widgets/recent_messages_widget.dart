@@ -132,7 +132,9 @@ class _MessageTile extends StatelessWidget {
                 SizedBox(height: 2),
                 Text(
                   message,
-                  style: TextStyle(fontSize: 13, color: context.textSecondary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

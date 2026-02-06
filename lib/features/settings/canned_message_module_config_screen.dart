@@ -353,7 +353,9 @@ class _CannedMessageModuleConfigScreenState
           Text(
             'Separate messages with | (pipe). These messages will be stored '
             'on the device for use with the canned message input controls.',
-            style: TextStyle(fontSize: 12, color: context.textTertiary),
+            style: context.bodySmallStyle?.copyWith(
+              color: context.textTertiary,
+            ),
           ),
         ],
       ),

@@ -471,7 +471,9 @@ class _ComparisonTable extends StatelessWidget {
             child: Text(
               row.label,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 11, color: context.textTertiary),
+              style: context.captionStyle?.copyWith(
+                color: context.textTertiary,
+              ),
             ),
           ),
 

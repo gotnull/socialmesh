@@ -92,10 +92,7 @@ class _FeaturedProductsScreenState
                         color: context.textTertiary,
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'No featured products',
-                        style: TextStyle(fontSize: 18),
-                      ),
+                      Text('No featured products', style: context.titleStyle),
                       const SizedBox(height: 8),
                       Text(
                         'Mark products as featured to manage their order here',

@@ -217,7 +217,9 @@ class NodeMapContent extends ConsumerWidget {
           SizedBox(height: 4),
           Text(
             'Nodes will appear when\nthey report position',
-            style: TextStyle(fontSize: 11, color: context.textTertiary),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
             textAlign: TextAlign.center,
           ),
         ],

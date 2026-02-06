@@ -207,14 +207,13 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
                   children: [
                     SizedBox(
                       width: 60,
-                      child: TextField(
+                      child: TextFormField(
+                        key: ValueKey('minAlt_$_minAltitude'),
+                        initialValue: _minAltitude?.toString() ?? '',
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           hintText: 'Min',
                           isDense: true,
-                        ),
-                        controller: TextEditingController(
-                          text: _minAltitude?.toString() ?? '',
                         ),
                         onChanged: (v) {
                           setState(() => _minAltitude = int.tryParse(v));
@@ -225,14 +224,13 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
                     const SizedBox(width: 8),
                     SizedBox(
                       width: 60,
-                      child: TextField(
+                      child: TextFormField(
+                        key: ValueKey('maxAlt_$_maxAltitude'),
+                        initialValue: _maxAltitude?.toString() ?? '',
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           hintText: 'Max',
                           isDense: true,
-                        ),
-                        controller: TextEditingController(
-                          text: _maxAltitude?.toString() ?? '',
                         ),
                         onChanged: (v) {
                           setState(() => _maxAltitude = int.tryParse(v));

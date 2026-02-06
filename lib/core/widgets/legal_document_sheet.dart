@@ -83,7 +83,7 @@ class _LegalWebViewScreenState extends State<_LegalWebViewScreen> {
         backgroundColor: context.background,
         title: Text(
           _title,
-          style: const TextStyle(fontSize: 18),
+          style: Theme.of(context).textTheme.titleMedium,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

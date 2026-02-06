@@ -845,8 +845,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
+    // Capture all provider references BEFORE any async operations
     final myNodeNum = ref.read(myNodeNumProvider);
     final nodes = ref.read(nodesProvider);
+    final messagesNotifier = ref.read(messagesProvider.notifier);
+    final connectionState = ref.read(connectionStateProvider);
+    final offlineQueue = ref.read(offlineQueueProvider);
+    final protocol = ref.read(protocolServiceProvider);
+    final haptics = ref.read(hapticServiceProvider);
+
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
     final messageId = DateTime.now().millisecondsSinceEpoch.toString();
     final to = widget.type == ConversationType.channel
@@ -873,20 +880,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
 
     // Add to messages immediately for optimistic UI
-    ref.read(messagesProvider.notifier).addMessage(pendingMessage);
+    messagesNotifier.addMessage(pendingMessage);
     _messageController.clear();
 
     // Haptic feedback for message send
-    ref.haptics.messageSent();
+    haptics.trigger(HapticType.light);
 
     // Check if device is connected
-    final connectionState = ref.read(connectionStateProvider);
     final isConnected =
         connectionState.value == DeviceConnectionState.connected;
 
     if (!isConnected) {
       // Queue message for later sending
-      final offlineQueue = ref.read(offlineQueueProvider);
       offlineQueue.enqueue(
         QueuedMessage(
           id: messageId,
@@ -905,7 +910,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
 
     try {
-      final protocol = ref.read(protocolServiceProvider);
       int packetId;
 
       if (widget.type == ConversationType.channel) {
@@ -928,36 +932,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           wantAck: true,
           messageId: messageId,
           onPacketIdGenerated: (id) {
-            ref.read(messagesProvider.notifier).trackPacket(id, messageId);
+            // Use captured notifier - safe even if widget disposed
+            messagesNotifier.trackPacket(id, messageId);
           },
           source: MessageSource.manual,
         );
       }
 
+      // Check mounted after await before updating state
+      if (!mounted) return;
+
       // Update status to sent with packet ID
-      ref
-          .read(messagesProvider.notifier)
-          .updateMessage(
-            messageId,
-            pendingMessage.copyWith(
-              status: MessageStatus.sent,
-              packetId: packetId,
-            ),
-          );
+      messagesNotifier.updateMessage(
+        messageId,
+        pendingMessage.copyWith(status: MessageStatus.sent, packetId: packetId),
+      );
 
       // Track message sent for review prompt
       _trackMessageSentForReview();
     } catch (e) {
+      // Check mounted after await before updating state
+      if (!mounted) return;
+
       // Update status to failed with error
-      ref
-          .read(messagesProvider.notifier)
-          .updateMessage(
-            messageId,
-            pendingMessage.copyWith(
-              status: MessageStatus.failed,
-              errorMessage: e.toString(),
-            ),
-          );
+      messagesNotifier.updateMessage(
+        messageId,
+        pendingMessage.copyWith(
+          status: MessageStatus.failed,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
@@ -981,26 +985,28 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _retryMessage(Message message) async {
+    // Capture all provider references BEFORE any async operations
+    final messagesNotifier = ref.read(messagesProvider.notifier);
+    final connectionState = ref.read(connectionStateProvider);
+    final offlineQueue = ref.read(offlineQueueProvider);
+    final protocol = ref.read(protocolServiceProvider);
+
     // Update to pending, clear error
-    ref
-        .read(messagesProvider.notifier)
-        .updateMessage(
-          message.id,
-          message.copyWith(
-            status: MessageStatus.pending,
-            errorMessage: null,
-            routingError: null,
-          ),
-        );
+    messagesNotifier.updateMessage(
+      message.id,
+      message.copyWith(
+        status: MessageStatus.pending,
+        errorMessage: null,
+        routingError: null,
+      ),
+    );
 
     // Check if device is connected
-    final connectionState = ref.read(connectionStateProvider);
     final isConnected =
         connectionState.value == DeviceConnectionState.connected;
 
     if (!isConnected) {
       // Queue message for later sending
-      final offlineQueue = ref.read(offlineQueueProvider);
       offlineQueue.enqueue(
         QueuedMessage(
           id: message.id,
@@ -1019,7 +1025,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
 
     try {
-      final protocol = ref.read(protocolServiceProvider);
       int packetId;
 
       if (message.isBroadcast) {
@@ -1041,33 +1046,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           wantAck: true,
           messageId: message.id,
           onPacketIdGenerated: (id) {
-            ref.read(messagesProvider.notifier).trackPacket(id, message.id);
+            // Use captured notifier - safe even if widget disposed
+            messagesNotifier.trackPacket(id, message.id);
           },
           source: message.source, // Preserve original source
         );
       }
 
-      ref
-          .read(messagesProvider.notifier)
-          .updateMessage(
-            message.id,
-            message.copyWith(
-              status: MessageStatus.sent,
-              errorMessage: null,
-              routingError: null,
-              packetId: packetId,
-            ),
-          );
+      // Check mounted after await before updating state
+      if (!mounted) return;
+
+      messagesNotifier.updateMessage(
+        message.id,
+        message.copyWith(
+          status: MessageStatus.sent,
+          errorMessage: null,
+          routingError: null,
+          packetId: packetId,
+        ),
+      );
     } catch (e) {
-      ref
-          .read(messagesProvider.notifier)
-          .updateMessage(
-            message.id,
-            message.copyWith(
-              status: MessageStatus.failed,
-              errorMessage: e.toString(),
-            ),
-          );
+      // Check mounted after await before updating state
+      if (!mounted) return;
+
+      messagesNotifier.updateMessage(
+        message.id,
+        message.copyWith(
+          status: MessageStatus.failed,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
@@ -1123,9 +1131,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
               ),
               icon: const Icon(Icons.refresh, size: 20),
-              label: const Text(
+              label: Text(
                 'Request User Info',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -1147,9 +1157,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
               ),
               icon: const Icon(Icons.send, size: 20),
-              label: const Text(
+              label: Text(
                 'Retry Message',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -1932,7 +1944,8 @@ class _MessageBubble extends StatelessWidget {
                         children: [
                           Text(
                             message.text,
-                            style: TextStyle(fontSize: 15, color: Colors.white),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.white),
                           ),
                           const SizedBox(height: 2),
                           Row(

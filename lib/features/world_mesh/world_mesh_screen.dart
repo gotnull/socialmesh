@@ -474,7 +474,9 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   SizedBox(width: 8),
                   Text(
                     '${NumberFormatUtils.formatWithThousandsSeparators(results.length)} node${results.length == 1 ? '' : 's'} found',
-                    style: TextStyle(fontSize: 12, color: context.textTertiary),
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textTertiary,
+                    ),
                   ),
                 ],
               ),
@@ -622,6 +624,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 subdomains: _mapStyle.subdomains,
                 userAgentPackageName: MapConfig.userAgentPackageName,
                 retinaMode: _mapStyle != MapTileStyle.satellite,
+                evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
               ),
               // Marker clustering for better visualization of dense areas
               MarkerClusterLayerWidget(
@@ -1143,7 +1146,9 @@ class _LazySearchResultsListState extends State<_LazySearchResultsList> {
             child: Center(
               child: Text(
                 'Scroll for more...',
-                style: TextStyle(fontSize: 12, color: context.textTertiary),
+                style: context.bodySmallStyle?.copyWith(
+                  color: context.textTertiary,
+                ),
               ),
             ),
           );
@@ -1180,7 +1185,7 @@ class _StatusLegendItem extends StatelessWidget {
         SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(fontSize: 10, color: context.textTertiary),
+          style: context.captionStyle?.copyWith(color: context.textTertiary),
         ),
       ],
     );

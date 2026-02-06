@@ -1275,3 +1275,72 @@ class SemanticColors {
   static Color glow([double opacity = 0.5]) =>
       Colors.white.withValues(alpha: opacity);
 }
+
+/// Semantic text style extension for consistent text styling throughout the app.
+///
+/// Use these instead of hardcoded TextStyle(fontSize: X) to ensure:
+/// - Consistent sizing across the app
+/// - Proper font family inheritance from theme
+/// - Accessibility settings are respected
+///
+/// Usage:
+/// ```dart
+/// Text('Title', style: context.titleStyle)
+/// Text('Body', style: context.bodyStyle)
+/// Text('Caption', style: context.captionStyle)
+/// ```
+extension SemanticTextStyles on BuildContext {
+  /// Get the current text theme
+  TextTheme get _textTheme => Theme.of(this).textTheme;
+
+  // === Title styles (for headings and prominent text) ===
+
+  /// Large title - 18pt, semi-bold (use for screen section headers)
+  TextStyle? get titleStyle => _textTheme.titleMedium;
+
+  /// Medium title - 16pt, medium weight (use for card headers, list item titles)
+  TextStyle? get titleSmallStyle => _textTheme.titleSmall;
+
+  /// Large heading - 20pt, semi-bold (use for major section headers)
+  TextStyle? get headingStyle => _textTheme.headlineMedium;
+
+  // === Body styles (for content text) ===
+
+  /// Primary body text - 16pt (use for main content)
+  TextStyle? get bodyStyle => _textTheme.bodyLarge;
+
+  /// Secondary body text - 14pt (use for descriptions, secondary content)
+  TextStyle? get bodySecondaryStyle => _textTheme.bodyMedium;
+
+  /// Small body text - 12pt (use for less prominent content)
+  TextStyle? get bodySmallStyle => _textTheme.bodySmall;
+
+  // === Label styles (for UI elements) ===
+
+  /// Large label - 14pt, medium weight (use for buttons, tabs)
+  TextStyle? get labelStyle => _textTheme.labelLarge;
+
+  /// Medium label - 12pt (use for chips, badges)
+  TextStyle? get labelMediumStyle => _textTheme.labelMedium;
+
+  /// Small label - 10pt (use for captions, timestamps, counters)
+  TextStyle? get captionStyle => _textTheme.labelSmall;
+
+  // === Convenience methods with color overrides ===
+
+  /// Title style with secondary color
+  TextStyle? get titleSecondaryStyle =>
+      _textTheme.titleSmall?.copyWith(color: textSecondary);
+
+  /// Body style with secondary color
+  TextStyle? get bodyMutedStyle =>
+      _textTheme.bodyMedium?.copyWith(color: textSecondary);
+
+  /// Caption style with tertiary color (most muted)
+  TextStyle? get captionMutedStyle =>
+      _textTheme.labelSmall?.copyWith(color: textTertiary);
+
+  /// Body small with tertiary color
+  TextStyle? get hintStyle =>
+      _textTheme.bodySmall?.copyWith(color: textTertiary);
+}

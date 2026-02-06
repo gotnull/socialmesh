@@ -138,7 +138,9 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
           const SizedBox(height: 8),
           Text(
             'Record your first route or import a GPX file',
-            style: TextStyle(fontSize: 14, color: context.textTertiary),
+            style: context.bodySecondaryStyle?.copyWith(
+              color: context.textTertiary,
+            ),
           ),
         ],
       ),
@@ -357,7 +359,9 @@ class _ActiveRouteBannerState extends ConsumerState<_ActiveRouteBanner> {
               const SizedBox(height: 4),
               Text(
                 '${_formatDistance(route.totalDistance)} • ${_formatDuration(DateTime.now().difference(route.createdAt))}',
-                style: TextStyle(fontSize: 14, color: context.textSecondary),
+                style: context.bodySecondaryStyle?.copyWith(
+                  color: context.textSecondary,
+                ),
               ),
               const SizedBox(height: 16),
               Row(
@@ -609,7 +613,7 @@ class _StatChip extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           value,
-          style: TextStyle(fontSize: 12, color: context.textSecondary),
+          style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
       ],
     );

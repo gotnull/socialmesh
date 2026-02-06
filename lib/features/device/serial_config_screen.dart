@@ -589,7 +589,9 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
                 ),
               ],
             ),

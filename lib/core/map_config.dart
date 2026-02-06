@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter_map/flutter_map.dart';
 
+import 'logging.dart';
+
 /// Centralized map configuration
 class MapConfig {
   MapConfig._();
@@ -20,12 +22,24 @@ class MapConfig {
   static const double minZoom = 3.0;
   static const double maxZoom = 18.0;
 
+  /// Error tile callback for logging tile load failures
+  static void _onTileError(
+    TileImage tile,
+    Object error,
+    StackTrace? stackTrace,
+  ) {
+    // Log at debug level to avoid spamming logs during network issues
+    AppLogging.map('Tile load failed: ${tile.coordinates} - $error');
+  }
+
   /// Create a TileLayer with the default dark style
   static TileLayer darkTileLayer() {
     return TileLayer(
       urlTemplate: MapTileStyle.dark.url,
       subdomains: MapTileStyle.dark.subdomains,
       userAgentPackageName: userAgentPackageName,
+      evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
+      errorTileCallback: _onTileError,
     );
   }
 
@@ -35,6 +49,8 @@ class MapConfig {
       urlTemplate: style.url,
       subdomains: style.subdomains,
       userAgentPackageName: userAgentPackageName,
+      evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
+      errorTileCallback: _onTileError,
     );
   }
 }

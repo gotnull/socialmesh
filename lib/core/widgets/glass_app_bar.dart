@@ -324,5 +324,9 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
 extension GlassAppBarTextExtension on BuildContext {
   /// Standard glass app bar title style
   TextStyle get glassAppBarTitleStyle =>
+      Theme.of(this).textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w600,
+        color: textPrimary,
+      ) ??
       TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: textPrimary);
 }

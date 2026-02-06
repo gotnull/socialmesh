@@ -107,7 +107,9 @@ class DrawerScreenAppBar extends StatelessWidget
         if (hasSubtitle)
           Text(
             subtitle!,
-            style: TextStyle(fontSize: 12, color: context.textTertiary),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
           ),
       ],
     );

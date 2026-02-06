@@ -215,7 +215,9 @@ class _RemoteAdminSelectorSheetState
                 const Spacer(),
                 Text(
                   '${nodes.length} available',
-                  style: TextStyle(fontSize: 11, color: context.textTertiary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),

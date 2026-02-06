@@ -1620,12 +1620,16 @@ class _BanUserSheetState extends State<_BanUserSheet> {
               const SizedBox(width: 8),
               Text(
                 'User ID: ',
-                style: TextStyle(fontSize: 12, color: context.textSecondary),
+                style: context.bodySmallStyle?.copyWith(
+                  color: context.textSecondary,
+                ),
               ),
               Expanded(
                 child: Text(
                   widget.authorId,
-                  style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                  style: context.bodySmallStyle?.copyWith(
+                    fontFamily: 'monospace',
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -1699,13 +1703,15 @@ class _BanUserSheetState extends State<_BanUserSheet> {
           child: CheckboxListTile(
             value: _sendEmail,
             onChanged: (v) => setState(() => _sendEmail = v ?? true),
-            title: const Text(
+            title: Text(
               'Send notification email to user',
-              style: TextStyle(fontSize: 14),
+              style: context.bodySecondaryStyle,
             ),
             subtitle: Text(
               'Inform them why their account was banned',
-              style: TextStyle(fontSize: 12, color: context.textSecondary),
+              style: context.bodySmallStyle?.copyWith(
+                color: context.textSecondary,
+              ),
             ),
             dense: true,
           ),
@@ -1946,7 +1952,9 @@ class _SignalPreviewContent extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   'Author: ',
-                  style: TextStyle(fontSize: 12, color: context.textSecondary),
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textSecondary,
+                  ),
                 ),
                 Expanded(
                   child: Text(
@@ -2075,7 +2083,9 @@ class _StoryPreviewContent extends StatelessWidget {
               children: [
                 Text(
                   'Media (${mediaType ?? 'unknown'})',
-                  style: TextStyle(fontSize: 12, color: context.textSecondary),
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 if (mediaType == 'image')
@@ -2182,7 +2192,9 @@ class _StoryPreviewContent extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   'Author: ',
-                  style: TextStyle(fontSize: 12, color: context.textSecondary),
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textSecondary,
+                  ),
                 ),
                 Expanded(
                   child: Text(

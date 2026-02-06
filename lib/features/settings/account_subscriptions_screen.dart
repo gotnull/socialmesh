@@ -355,7 +355,9 @@ class _AccountSubscriptionsScreenState
           const SizedBox(height: 4),
           Text(
             'Your local data is always available',
-            style: TextStyle(fontSize: 13, color: context.textSecondary),
+            style: context.bodySmallStyle?.copyWith(
+              color: context.textSecondary,
+            ),
           ),
           const SizedBox(height: 20),
 
@@ -515,7 +517,7 @@ class _AccountSubscriptionsScreenState
                 ),
                 subtitle: Text(
                   subtitle,
-                  style: TextStyle(fontSize: 12, color: subtitleColor),
+                  style: context.bodySmallStyle?.copyWith(color: subtitleColor),
                 ),
                 trailing: badgeText.isNotEmpty
                     ? Container(
@@ -712,7 +714,9 @@ class _AccountSubscriptionsScreenState
               allUnlocked
                   ? 'All features unlocked!'
                   : 'One-time purchases • $ownedCount of $totalCount',
-              style: TextStyle(fontSize: 12, color: context.textSecondary),
+              style: context.bodySmallStyle?.copyWith(
+                color: context.textSecondary,
+              ),
             ),
             trailing: allUnlocked
                 ? Container(
@@ -1582,7 +1586,10 @@ class _FeatureRow extends StatelessWidget {
           Icon(icon, size: 18, color: color),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(text, style: TextStyle(fontSize: 13, color: color)),
+            child: Text(
+              text,
+              style: context.bodySmallStyle?.copyWith(color: color),
+            ),
           ),
           if (isUnlocked)
             Icon(Icons.check_circle, size: 16, color: AccentColors.green),
@@ -2088,7 +2095,7 @@ class _CloudSyncPaywallSheetState
           Text(
             'Subscriptions auto-renew unless cancelled at least 24 hours before the end of the current period.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11, color: context.textTertiary),
+            style: context.captionStyle?.copyWith(color: context.textTertiary),
           ),
 
           const SizedBox(height: 16),

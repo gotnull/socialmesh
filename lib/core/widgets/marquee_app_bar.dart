@@ -98,7 +98,10 @@ class MarqueeAppBar extends StatelessWidget implements PreferredSizeWidget {
         );
 
     final effectiveSubtitleStyle =
-        subtitleStyle ?? TextStyle(fontSize: 12, color: context.textTertiary);
+        subtitleStyle ??
+        Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(color: context.textTertiary);
 
     // Determine if we should show back button
     final shouldShowBack = showBackButton ?? (leading == null);
@@ -234,7 +237,10 @@ class MarqueeAppBarWithAvatar extends StatelessWidget
         );
 
     final effectiveSubtitleStyle =
-        subtitleStyle ?? TextStyle(fontSize: 12, color: context.textTertiary);
+        subtitleStyle ??
+        Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(color: context.textTertiary);
 
     return AppBar(
       backgroundColor: bgColor,

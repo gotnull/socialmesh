@@ -1161,7 +1161,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           const SizedBox(height: 2),
           AutoScrollText(
             description,
-            style: TextStyle(fontSize: 11, color: Colors.grey),
+            style: context.captionStyle?.copyWith(color: Colors.grey),
             maxLines: 1,
             velocity: 25,
             delayBefore: const Duration(seconds: 3),
@@ -1316,7 +1316,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           ),
           Text(
             label,
-            style: TextStyle(fontSize: 9, color: context.textSecondary),
+            style: context.captionStyle?.copyWith(color: context.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],

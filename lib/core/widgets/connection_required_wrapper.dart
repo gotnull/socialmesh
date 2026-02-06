@@ -227,7 +227,9 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
                           : (autoReconnectState == AutoReconnectState.failed
                                 ? 'Could not find saved device'
                                 : 'Connect to a Meshtastic device to get started')),
-                  style: TextStyle(fontSize: 14, color: context.textSecondary),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: context.textSecondary,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),

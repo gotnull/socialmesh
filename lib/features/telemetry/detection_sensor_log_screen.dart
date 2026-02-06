@@ -80,12 +80,16 @@ class DetectionSensorLogScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             message,
-            style: TextStyle(fontSize: 16, color: context.textSecondary),
+            style: context.titleSmallStyle?.copyWith(
+              color: context.textSecondary,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Detection sensors report motion and presence',
-            style: TextStyle(fontSize: 14, color: context.textTertiary),
+            style: context.bodySecondaryStyle?.copyWith(
+              color: context.textTertiary,
+            ),
           ),
         ],
       ),
@@ -157,7 +161,9 @@ class _DetectionSensorCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   timeFormat.format(log.timestamp),
-                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
                 ),
               ],
             ),

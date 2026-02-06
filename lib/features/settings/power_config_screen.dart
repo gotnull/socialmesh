@@ -278,7 +278,10 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                                 ),
                                 SizedBox(
                                   width: 80,
-                                  child: TextField(
+                                  child: TextFormField(
+                                    key: ValueKey(
+                                      'adc_${_adcMultiplier.toStringAsFixed(2)}',
+                                    ),
                                     keyboardType:
                                         const TextInputType.numberWithOptions(
                                           decimal: true,
@@ -309,9 +312,8 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                                         ),
                                       ),
                                     ),
-                                    controller: TextEditingController(
-                                      text: _adcMultiplier.toStringAsFixed(2),
-                                    ),
+                                    initialValue: _adcMultiplier
+                                        .toStringAsFixed(2),
                                     onChanged: (value) {
                                       final parsed = double.tryParse(value);
                                       if (parsed != null &&
@@ -573,7 +575,9 @@ class _SettingsTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 13, color: context.textTertiary),
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textTertiary,
+                    ),
                   ),
                 ],
               ),

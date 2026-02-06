@@ -941,6 +941,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         subdomains: _mapStyle.subdomains,
                         userAgentPackageName: MapConfig.userAgentPackageName,
                         retinaMode: _mapStyle != MapTileStyle.satellite,
+                        evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
                         tileBuilder: (context, tileWidget, tile) {
                           return AnimatedOpacity(
                             opacity: 1.0,
@@ -1518,7 +1519,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
       ],
       header: Text(
         '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}',
-        style: TextStyle(fontSize: 14, color: context.textSecondary),
+        style: context.bodySecondaryStyle?.copyWith(
+          color: context.textSecondary,
+        ),
       ),
     );
   }
@@ -1559,7 +1562,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
           const SizedBox(height: 8),
           Text(
             '${waypoint.position.latitude.toStringAsFixed(6)}, ${waypoint.position.longitude.toStringAsFixed(6)}',
-            style: TextStyle(fontSize: 14, color: context.textSecondary),
+            style: context.bodySecondaryStyle?.copyWith(
+              color: context.textSecondary,
+            ),
           ),
         ],
       ),
@@ -1686,7 +1691,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
               totalNodes > 0
                   ? '$totalNodes nodes discovered but none have\nreported GPS position yet.'
                   : 'Nodes will appear on the map once they\nreport their GPS position.',
-              style: TextStyle(fontSize: 14, color: context.textSecondary),
+              style: context.bodySecondaryStyle?.copyWith(
+                color: context.textSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 24),
@@ -1713,7 +1720,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
             SizedBox(height: 12),
             Text(
               'Position broadcasts can take up to 15 minutes.\nTap to request immediately.',
-              style: TextStyle(fontSize: 12, color: context.textTertiary),
+              style: context.bodySmallStyle?.copyWith(
+                color: context.textTertiary,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -2405,7 +2414,9 @@ class _NodeListItem extends StatelessWidget {
                           message: kPresenceInferenceTooltip,
                           child: Text(
                             statusText,
-                            style: TextStyle(fontSize: 11, color: statusColor),
+                            style: context.captionStyle?.copyWith(
+                              color: statusColor,
+                            ),
                           ),
                         ),
                         if (nodeWithPos.isStale) ...[
@@ -2511,7 +2522,9 @@ class _FilterBar extends StatelessWidget {
               const Spacer(),
               Text(
                 '${NumberFormat.decimalPattern().format(filteredCount)} / ${NumberFormat.decimalPattern().format(totalCount)}',
-                style: TextStyle(fontSize: 12, color: context.textTertiary),
+                style: context.bodySmallStyle?.copyWith(
+                  color: context.textTertiary,
+                ),
               ),
             ],
           ),
@@ -2642,11 +2655,15 @@ class _MeasurementCard extends StatelessWidget {
                 ),
                 Text(
                   'A: ${start.latitude.toStringAsFixed(4)}, ${start.longitude.toStringAsFixed(4)}',
-                  style: TextStyle(fontSize: 10, color: context.textTertiary),
+                  style: context.captionStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
                 ),
                 Text(
                   'B: ${end.latitude.toStringAsFixed(4)}, ${end.longitude.toStringAsFixed(4)}',
-                  style: TextStyle(fontSize: 10, color: context.textTertiary),
+                  style: context.captionStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
                 ),
               ],
             ),

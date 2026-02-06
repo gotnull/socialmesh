@@ -201,7 +201,9 @@ class StatCardWidget extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   label,
-                  style: TextStyle(fontSize: 14, color: context.textSecondary),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: context.textSecondary,
+                  ),
                 ),
               ],
             ),

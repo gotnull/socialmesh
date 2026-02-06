@@ -420,7 +420,9 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
             ],
           ),
           SizedBox(height: 8),
-          TextField(
+          TextFormField(
+            key: ValueKey('privateKey_${_privateKey.hashCode}'),
+            initialValue: _privateKey,
             obscureText: !_privateKeyVisible,
             style: TextStyle(
               color: context.textPrimary,
@@ -447,7 +449,6 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                 ),
               ),
             ),
-            controller: TextEditingController(text: _privateKey),
             onChanged: (value) {
               setState(() => _privateKey = value);
               _recalculatePublicKey();
@@ -760,7 +761,9 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
           ],
         ),
         const SizedBox(height: 6),
-        TextField(
+        TextFormField(
+          key: ValueKey('adminKey_${value.hashCode}'),
+          initialValue: value,
           style: TextStyle(
             color: context.textPrimary,
             fontFamily: AppTheme.fontFamily,
@@ -786,7 +789,6 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
               ),
             ),
           ),
-          controller: TextEditingController(text: value),
           onChanged: onChanged,
         ),
       ],
@@ -860,7 +862,9 @@ class _SettingsTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 13, color: context.textTertiary),
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textTertiary,
+                    ),
                   ),
                 ],
               ),

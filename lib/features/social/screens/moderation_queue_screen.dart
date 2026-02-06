@@ -162,7 +162,9 @@ class _QueueItemCard extends ConsumerWidget {
                 const Spacer(),
                 Text(
                   _formatDate(item.createdAt),
-                  style: TextStyle(fontSize: 12, color: context.textSecondary),
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -209,7 +211,9 @@ class _QueueItemCard extends ConsumerWidget {
                 ),
                 child: Text(
                   item.textContent!,
-                  style: TextStyle(fontSize: 14, color: context.textPrimary),
+                  style: context.bodySecondaryStyle?.copyWith(
+                    color: context.textPrimary,
+                  ),
                   maxLines: 5,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -220,7 +224,9 @@ class _QueueItemCard extends ConsumerWidget {
             // User ID
             Text(
               'User: ${item.userId}',
-              style: TextStyle(fontSize: 12, color: context.textSecondary),
+              style: context.bodySmallStyle?.copyWith(
+                color: context.textSecondary,
+              ),
             ),
 
             // Actions

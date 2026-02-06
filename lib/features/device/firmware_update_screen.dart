@@ -533,7 +533,9 @@ class FirmwareUpdateScreen extends ConsumerWidget {
           SizedBox(width: 12),
           Text(
             label,
-            style: TextStyle(fontSize: 14, color: context.textSecondary),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
           ),
           const Spacer(),
           Text(
@@ -585,7 +587,9 @@ class FirmwareUpdateScreen extends ConsumerWidget {
           Text(
             'Visit the Meshtastic website for the latest firmware.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: context.textSecondary),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
           ),
         ],
       ),
@@ -617,7 +621,9 @@ class FirmwareUpdateScreen extends ConsumerWidget {
         Expanded(
           child: Text(
             text,
-            style: TextStyle(fontSize: 14, color: context.textSecondary),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
           ),
         ),
       ],

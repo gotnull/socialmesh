@@ -328,7 +328,7 @@ class _FrameItem extends StatelessWidget {
           // Index
           Text(
             '#$index',
-            style: TextStyle(fontSize: 10, color: context.textTertiary),
+            style: context.captionStyle?.copyWith(color: context.textTertiary),
           ),
         ],
       ),

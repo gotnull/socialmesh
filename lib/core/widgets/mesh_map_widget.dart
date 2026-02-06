@@ -160,6 +160,7 @@ class MeshMapWidget extends StatelessWidget {
             subdomains: mapStyle.subdomains,
             userAgentPackageName: MapConfig.userAgentPackageName,
             retinaMode: mapStyle != MapTileStyle.satellite,
+            evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
             // Disable tile animation for better performance
             tileBuilder: animateTiles
                 ? (context, tileWidget, tile) {

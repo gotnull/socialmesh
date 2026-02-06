@@ -136,7 +136,9 @@ class AppBottomSheet extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 15, color: context.textSecondary),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
           ),
           const SizedBox(height: 24),
           Row(
@@ -385,7 +387,9 @@ class BottomSheetHeader extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               subtitle!,
-              style: TextStyle(fontSize: 14, color: context.textSecondary),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
             ),
           ],
         ],
@@ -412,8 +416,7 @@ class BottomSheetHeader extends StatelessWidget {
               if (enableMarquee)
                 AutoScrollText(
                   title,
-                  style: TextStyle(
-                    fontSize: 18,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: context.textPrimary,
                   ),
@@ -421,8 +424,7 @@ class BottomSheetHeader extends StatelessWidget {
               else
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 18,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: context.textPrimary,
                   ),
@@ -431,7 +433,9 @@ class BottomSheetHeader extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle!,
-                  style: TextStyle(fontSize: 13, color: context.textTertiary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
                 ),
               ],
             ],

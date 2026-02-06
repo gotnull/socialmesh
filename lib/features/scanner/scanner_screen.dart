@@ -1673,7 +1673,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
             Icon(Icons.warning_amber, color: Colors.orange),
             const SizedBox(width: 12),
             Expanded(
-              child: Text('Unknown Protocol', style: TextStyle(fontSize: 18)),
+              child: Text(
+                'Unknown Protocol',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
           ],
         ),
@@ -1694,11 +1697,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                 children: [
                   Text(
                     'Detection: ${detection.reason}',
-                    style: TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(fontFamily: 'monospace'),
                   ),
                   Text(
                     'Confidence: ${(detection.confidence * 100).toStringAsFixed(0)}%',
-                    style: TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(fontFamily: 'monospace'),
                   ),
                 ],
               ),
@@ -1707,7 +1714,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
             Text(
               'This device cannot be connected automatically. '
               'Only Meshtastic and MeshCore devices are supported.',
-              style: TextStyle(fontSize: 14),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
         ),

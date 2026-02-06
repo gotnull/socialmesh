@@ -446,7 +446,9 @@ class _QrShareHeader extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: TextStyle(fontSize: 14, color: context.textSecondary),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),

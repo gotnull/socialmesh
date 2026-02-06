@@ -196,6 +196,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                       urlTemplate: MapTileStyle.dark.url,
                       subdomains: MapTileStyle.dark.subdomains,
                       userAgentPackageName: MapConfig.userAgentPackageName,
+                      evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
                     ),
                     MarkerLayer(
                       markers: [
@@ -421,7 +422,9 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
           const SizedBox(width: 8),
           Text(
             label,
-            style: TextStyle(fontSize: 12, color: context.textSecondary),
+            style: context.bodySmallStyle?.copyWith(
+              color: context.textSecondary,
+            ),
           ),
         ],
       ),
@@ -666,7 +669,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontSize: 15, color: context.textPrimary),
+              style: context.bodyStyle?.copyWith(color: context.textPrimary),
             ),
           ),
           Switch(

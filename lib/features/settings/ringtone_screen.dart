@@ -2261,7 +2261,9 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                   _totalCount > 0
                       ? 'Search ${_totalCount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')} available tones'
                       : 'Search thousands of available tones',
-                  style: TextStyle(fontSize: 14, color: context.textSecondary),
+                  style: context.bodySecondaryStyle?.copyWith(
+                    color: context.textSecondary,
+                  ),
                 ),
               ],
             ),

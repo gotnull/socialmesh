@@ -61,7 +61,9 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                   'Preview different QR code styles with the Socialmesh '
                   'logo. All styles use Level H error correction for '
                   'reliable scanning.',
-                  style: TextStyle(fontSize: 13, color: context.textSecondary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
                 ),
               ],
             ),
@@ -118,7 +120,9 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
           const SizedBox(height: 6),
           Text(
             'Premium color treatments using ${_selectedStyle.name} pattern',
-            style: TextStyle(fontSize: 12, color: context.textSecondary),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: context.textSecondary),
           ),
           const SizedBox(height: 16),
 
@@ -423,7 +427,9 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Scan to verify',
-                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),

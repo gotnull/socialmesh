@@ -451,7 +451,9 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
               children: [
                 Text(
                   '${logs.length} entries',
-                  style: TextStyle(fontSize: 13, color: context.textTertiary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
                 ),
                 const Spacer(),
                 if (filters.length < LogLevel.values.length)
@@ -496,7 +498,9 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
                   SizedBox(height: 16),
                   Text(
                     'No log entries',
-                    style: TextStyle(fontSize: 16, color: context.textTertiary),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: context.textTertiary,
+                    ),
                   ),
                 ],
               ),

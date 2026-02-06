@@ -877,9 +877,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Awesome!',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: context.titleSmallStyle?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

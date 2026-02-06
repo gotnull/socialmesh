@@ -695,7 +695,7 @@ class _StatItem extends StatelessWidget {
         ),
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: context.textSecondary),
+          style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
       ],
     );

@@ -17,6 +17,7 @@ import 'package:socialmesh/features/scanner/widgets/connecting_animation.dart';
 import 'firebase_options.dart';
 import 'core/theme.dart';
 import 'core/transport.dart';
+import 'core/accessibility_theme_adapter.dart';
 import 'core/logging.dart';
 import 'core/safety/error_handler.dart';
 import 'core/widgets/connecting_content.dart';
@@ -39,6 +40,7 @@ import 'providers/signal_providers.dart';
 import 'providers/connectivity_providers.dart';
 import 'providers/presence_providers.dart';
 import 'providers/glyph_provider.dart';
+import 'providers/accessibility_providers.dart';
 import 'providers/meshcore_providers.dart';
 import 'services/meshcore/connection_coordinator.dart' show ConnectionResult;
 import 'features/automations/automation_providers.dart';
@@ -78,6 +80,7 @@ import 'features/widget_builder/marketplace/widget_marketplace_screen.dart';
 import 'features/widget_builder/marketplace/widget_marketplace_service.dart';
 import 'features/widget_builder/marketplace/marketplace_providers.dart';
 import 'services/user_presence_service.dart';
+import 'services/accessibility_preferences_service.dart';
 // import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
 import 'core/navigation.dart';
@@ -102,6 +105,10 @@ Future<void> main() async {
 
   // Initialize profanity checker (load banned words from assets)
   await ProfanityChecker.instance.load();
+
+  // Initialize accessibility preferences before UI renders
+  // This ensures text scaling and density are applied from first frame
+  await AccessibilityPreferencesService().initialize();
 
   // Initialize Firebase in background - don't block app startup
   // This ensures the app works fully offline
@@ -1198,6 +1205,19 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     // Watch theme mode for dark/light switching
     final themeMode = ref.watch(themeModeProvider);
 
+    // Watch accessibility preferences for theme adjustments
+    final accessibilityPrefs = ref.watch(accessibilityPreferencesProvider);
+
+    // Apply accessibility preferences to themes
+    final lightTheme = AccessibilityThemeAdapter.applyPreferences(
+      baseTheme: AppTheme.lightTheme(accentColor),
+      preferences: accessibilityPrefs,
+    );
+    final darkTheme = AccessibilityThemeAdapter.applyPreferences(
+      baseTheme: AppTheme.darkTheme(accentColor),
+      preferences: accessibilityPrefs,
+    );
+
     // Note: We intentionally don't watch analyticsObserverProvider here
     // because changing the navigatorObservers list causes the navigator
     // to be recreated, which destroys all current routes (including the
@@ -1210,9 +1230,10 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         title: 'Socialmesh',
         debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,
-        theme: AppTheme.lightTheme(accentColor),
-        darkTheme: AppTheme.darkTheme(accentColor),
+        theme: lightTheme,
+        darkTheme: darkTheme,
         themeMode: themeMode,
+
         navigatorObservers: [
           _KeyboardDismissObserver(),
           _DelegatingAnalyticsObserver(ref),
@@ -2994,7 +3015,9 @@ class _ErrorScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 'Failed to initialize the app. Please try again.',
-                style: TextStyle(fontSize: 16, color: context.textSecondary),
+                style: context.titleSmallStyle?.copyWith(
+                  color: context.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 32),

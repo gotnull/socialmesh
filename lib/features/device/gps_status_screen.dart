@@ -390,7 +390,9 @@ class GpsStatusScreen extends ConsumerWidget {
                   hasGpsFix
                       ? '${satsInView ?? 0} satellites in view'
                       : 'Searching for satellites...',
-                  style: TextStyle(fontSize: 14, color: context.textTertiary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),
@@ -444,7 +446,9 @@ class GpsStatusScreen extends ConsumerWidget {
           SizedBox(width: 12),
           Text(
             label,
-            style: TextStyle(fontSize: 14, color: context.textSecondary),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
           ),
           const Spacer(),
           Text(
@@ -507,7 +511,9 @@ class GpsStatusScreen extends ConsumerWidget {
         SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(fontSize: 10, color: context.textTertiary),
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
         ),
       ],
     );
