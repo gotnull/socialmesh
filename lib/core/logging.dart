@@ -52,6 +52,7 @@ class AppLogging {
   static bool? _qrLoggingEnabled;
   static bool? _bugReportLoggingEnabled;
   static bool? _shopLoggingEnabled;
+  static bool? _nodeDexLoggingEnabled;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
   static Logger? _noOpLogger;
@@ -230,6 +231,12 @@ class AppLogging {
     return _shopLoggingEnabled!;
   }
 
+  static bool get nodeDexLoggingEnabled {
+    _nodeDexLoggingEnabled ??=
+        _safeGetEnv('NODEDEX_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _nodeDexLoggingEnabled!;
+  }
+
   static Logger get bleLogger {
     if (bleLoggingEnabled) {
       _bleLogger ??= Logger(
@@ -370,6 +377,10 @@ class AppLogging {
     if (shopLoggingEnabled) debugPrint('Shop: $message');
   }
 
+  static void nodeDex(String message) {
+    if (nodeDexLoggingEnabled) debugPrint('NodeDex: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -399,6 +410,7 @@ class AppLogging {
     _qrLoggingEnabled = null;
     _bugReportLoggingEnabled = null;
     _shopLoggingEnabled = null;
+    _nodeDexLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

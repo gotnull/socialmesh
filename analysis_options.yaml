@@ -23,6 +23,7 @@ analyzer:
     - MeshCore-Firmware/**
     - meshtastic-ios/**
     - mesh-observer/**
+    - sigil-api/**
   errors:
     # Suppress deprecation warnings from generated protobuf files
     # These are maintained upstream by the Meshtastic protobufs project

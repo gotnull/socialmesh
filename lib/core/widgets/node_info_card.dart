@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/mesh_models.dart';
@@ -259,7 +261,11 @@ class NodeInfoCard extends ConsumerWidget {
                 ),
                 child: Center(
                   child: Text(
-                    node.shortName?.substring(0, 2).toUpperCase() ?? '??',
+                    (node.shortName != null && node.shortName!.isNotEmpty)
+                        ? node.shortName!
+                              .substring(0, math.min(2, node.shortName!.length))
+                              .toUpperCase()
+                        : '??',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

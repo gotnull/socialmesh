@@ -90,6 +90,23 @@ void main() {
       test('worldMeshApiUrl defaults to api subdomain', () {
         expect(AppUrls.worldMeshApiUrl, 'https://api.socialmesh.app');
       });
+
+      test('sigilApiUrl defaults to sigil subdomain', () {
+        expect(AppUrls.sigilApiUrl, 'https://sigil.socialmesh.app');
+      });
+    });
+
+    group('Sigil URLs', () {
+      test('shareSigilUrl generates correct URL', () {
+        final url = AppUrls.shareSigilUrl('aBcDeFgHiJ');
+        expect(url, 'https://socialmesh.app/sigil/aBcDeFgHiJ');
+      });
+
+      test('shareSigilUrl with different ID', () {
+        final url = AppUrls.shareSigilUrl('xyz_123-456');
+        expect(url, contains('/sigil/xyz_123-456'));
+        expect(url, startsWith('https://'));
+      });
     });
 
     group('App identifiers', () {

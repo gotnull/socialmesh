@@ -127,16 +127,22 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
           ),
           if (selfInfo != null) ...[
             _buildInfoRow('Node Name', selfInfo.nodeName),
-            _buildInfoRow(
-              'Public Key',
-              '${_bytesToHex(selfInfo.pubKey).substring(0, 16)}...',
-              onTap: () {
-                Clipboard.setData(
-                  ClipboardData(text: _bytesToHex(selfInfo.pubKey)),
-                );
-                showSuccessSnackBar(context, 'Public key copied');
-              },
-            ),
+            () {
+              final hex = _bytesToHex(selfInfo.pubKey);
+              final display = hex.length >= 16
+                  ? '${hex.substring(0, 16)}...'
+                  : hex;
+              return _buildInfoRow(
+                'Public Key',
+                display,
+                onTap: () {
+                  Clipboard.setData(
+                    ClipboardData(text: _bytesToHex(selfInfo.pubKey)),
+                  );
+                  showSuccessSnackBar(context, 'Public key copied');
+                },
+              );
+            }(),
           ],
           _buildBatteryRow(batteryState),
           _buildInfoRow('Contacts', '$contactCount'),

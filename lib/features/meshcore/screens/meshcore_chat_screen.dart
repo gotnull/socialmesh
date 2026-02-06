@@ -815,7 +815,9 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
           _buildInfoRow('Index', '${channel.index}'),
           _buildInfoRow(
             'PSK',
-            '${channel.pskHex.substring(0, 8)}...${channel.pskHex.substring(channel.pskHex.length - 8)}',
+            channel.pskHex.length >= 16
+                ? '${channel.pskHex.substring(0, 8)}...${channel.pskHex.substring(channel.pskHex.length - 8)}'
+                : channel.pskHex,
           ),
           const SizedBox(height: 16),
           SizedBox(

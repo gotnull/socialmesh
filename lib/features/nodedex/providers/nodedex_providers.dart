@@ -24,6 +24,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/logging.dart';
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
+import '../models/import_preview.dart';
 import '../models/nodedex_entry.dart';
 import '../services/nodedex_store.dart';
 import '../services/sigil_generator.dart';
@@ -112,15 +113,14 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     if (_store == null) return;
 
     try {
+      AppLogging.nodeDex('Initializing — loading entries from storage');
       final entries = await _store!.loadAllAsMap();
       if (!ref.mounted) return;
 
       state = entries;
       _lastKnownState = entries;
 
-      AppLogging.debug(
-        'NodeDex: Loaded ${entries.length} entries from storage',
-      );
+      AppLogging.nodeDex('Loaded ${entries.length} entries from storage');
 
       // Sync with current nodes to pick up any that were discovered
       // while NodeDex was not loaded.
@@ -136,8 +136,14 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           _flushCoSeenRelationships();
         }
       });
-    } catch (e) {
-      AppLogging.storage('NodeDex: Error initializing: $e');
+
+      AppLogging.nodeDex(
+        'Init complete — ${entries.length} entries, '
+        'co-seen flush interval: ${_coSeenFlushInterval.inSeconds}s',
+      );
+    } catch (e, stack) {
+      AppLogging.nodeDex('Error initializing: $e');
+      AppLogging.storage('NodeDex: Error initializing: $e\n$stack');
     }
   }
 
@@ -188,6 +194,14 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         _lastEncounterTime[nodeNum] = now;
         _sessionSeenNodes.add(nodeNum);
         changed = true;
+
+        final hexId =
+            '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+        AppLogging.nodeDex(
+          'New discovery: $hexId (${node.displayName}), '
+          'SNR: ${node.snr ?? "n/a"}, '
+          'distance: ${node.distance != null ? "${node.distance!.round()}m" : "n/a"}',
+        );
       } else {
         // Existing node: check if we should record a new encounter.
         final lastEncounter = _lastEncounterTime[nodeNum];
@@ -219,6 +233,14 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           _lastEncounterTime[nodeNum] = now;
           _sessionSeenNodes.add(nodeNum);
           changed = true;
+
+          final hexId =
+              '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+          AppLogging.nodeDex(
+            'Encounter recorded: $hexId, '
+            'total encounters: ${updatedEntry.encounterCount}, '
+            'SNR: ${node.snr ?? "n/a"}, RSSI: ${node.rssi ?? "n/a"}',
+          );
         }
       }
     }
@@ -236,6 +258,11 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       }
       if (changedEntries.isNotEmpty) {
         _store!.saveEntries(changedEntries);
+        AppLogging.nodeDex(
+          'Nodes update persisted: ${changedEntries.length} entries saved, '
+          'total in state: ${updated.length}, '
+          'session seen: ${_sessionSeenNodes.length}',
+        );
       }
     }
   }
@@ -291,6 +318,11 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   void _flushCoSeenRelationships({bool persistOnly = false}) {
     if (_sessionSeenNodes.length < 2) return;
 
+    AppLogging.nodeDex(
+      'Flushing co-seen relationships for ${_sessionSeenNodes.length} nodes '
+      '(persistOnly: $persistOnly)',
+    );
+
     // During dispose (persistOnly), reading `state` is forbidden by Riverpod.
     // Use the store's last-known cache instead so we can still persist
     // relationships that were accumulated during this session.
@@ -330,6 +362,11 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     }
 
     if (changed) {
+      final pairCount = (nodeList.length * (nodeList.length - 1)) ~/ 2;
+      AppLogging.nodeDex(
+        'Co-seen flush complete: $pairCount pairs processed '
+        'across ${nodeList.length} nodes',
+      );
       if (!persistOnly) {
         state = updated;
         _lastKnownState = updated;
@@ -348,7 +385,15 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   /// Set the social tag for a node.
   void setSocialTag(int nodeNum, NodeSocialTag? tag) {
     final entry = state[nodeNum];
-    if (entry == null) return;
+    if (entry == null) {
+      AppLogging.nodeDex(
+        'setSocialTag failed — node $nodeNum not found in state',
+      );
+      return;
+    }
+
+    final previousTag = entry.socialTag?.name ?? 'none';
+    final newTag = tag?.name ?? 'cleared';
 
     final updated = tag != null
         ? entry.copyWith(socialTag: tag)
@@ -358,12 +403,20 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     state = newState;
     _lastKnownState = newState;
     _store?.saveEntry(updated);
+
+    final hexId = '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+    AppLogging.nodeDex('Social tag updated for $hexId: $previousTag → $newTag');
   }
 
   /// Set the user note for a node.
   void setUserNote(int nodeNum, String? note) {
     final entry = state[nodeNum];
-    if (entry == null) return;
+    if (entry == null) {
+      AppLogging.nodeDex(
+        'setUserNote failed — node $nodeNum not found in state',
+      );
+      return;
+    }
 
     final trimmed = note?.trim();
     final updated = (trimmed == null || trimmed.isEmpty)
@@ -378,6 +431,12 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     state = newState;
     _lastKnownState = newState;
     _store?.saveEntry(updated);
+
+    final hexId = '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+    AppLogging.nodeDex(
+      'User note updated for $hexId: '
+      '${(trimmed == null || trimmed.isEmpty) ? "(cleared)" : "${trimmed.length} chars"}',
+    );
   }
 
   /// Increment the message count for a node and its co-seen edges.
@@ -391,6 +450,11 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   void recordMessage(int nodeNum, {int count = 1}) {
     final entry = state[nodeNum];
     if (entry == null) return;
+
+    AppLogging.nodeDex(
+      'Recording $count message(s) for node $nodeNum, '
+      'previous total: ${entry.messageCount}',
+    );
 
     var updated = entry.incrementMessages(by: count);
 
@@ -411,42 +475,123 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     state = newState;
     _lastKnownState = newState;
     _store?.saveEntry(updated);
+
+    final hexId = '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+    AppLogging.nodeDex(
+      'Message count updated for $hexId: ${updated.messageCount} total',
+    );
   }
 
   /// Force a refresh from storage.
   Future<void> refresh() async {
     if (_store == null) return;
 
+    AppLogging.nodeDex('Refreshing entries from storage');
+
     try {
       final entries = await _store!.loadAllAsMap();
       if (!ref.mounted) return;
       state = entries;
       _lastKnownState = entries;
+
+      AppLogging.nodeDex('Refresh complete — ${entries.length} entries loaded');
     } catch (e) {
+      AppLogging.nodeDex('Error refreshing: $e');
       AppLogging.storage('NodeDex: Error refreshing: $e');
     }
   }
 
   /// Clear all NodeDex data.
   Future<void> clearAll() async {
+    AppLogging.nodeDex('Clearing all NodeDex data (${state.length} entries)');
     state = {};
     _lastKnownState = {};
     _sessionSeenNodes.clear();
     _lastEncounterTime.clear();
     await _store?.clearAll();
+    AppLogging.nodeDex('All NodeDex data cleared');
   }
 
   /// Export all entries as JSON.
   Future<String?> exportJson() async {
-    return _store?.exportJson();
+    AppLogging.nodeDex('Exporting ${state.length} entries as JSON');
+    final json = await _store?.exportJson();
+    AppLogging.nodeDex(
+      'Export complete: ${json != null ? "${json.length} chars" : "failed"}',
+    );
+    return json;
   }
 
   /// Import entries from JSON.
   Future<int> importJson(String jsonString) async {
+    AppLogging.nodeDex(
+      'Importing entries from JSON (${jsonString.length} chars)',
+    );
     final count = await _store?.importJson(jsonString) ?? 0;
     if (count > 0) {
       await refresh();
     }
+    AppLogging.nodeDex('Import complete — $count entries imported');
+    return count;
+  }
+
+  /// Parse a JSON import string without modifying state.
+  ///
+  /// Returns an empty list on invalid input.
+  List<NodeDexEntry> parseImportJson(String jsonString) {
+    return _store?.parseImportJson(jsonString) ?? [];
+  }
+
+  /// Build an [ImportPreview] by analyzing the given entries against
+  /// the current local state.
+  ///
+  /// Uses live [nodesProvider] data to resolve display names.
+  /// Does not modify any state.
+  Future<ImportPreview> previewImport(List<NodeDexEntry> entries) async {
+    if (_store == null) {
+      return const ImportPreview(entries: [], totalImported: 0);
+    }
+
+    final nodes = ref.read(nodesProvider);
+    String nameResolver(int nodeNum) {
+      final node = nodes[nodeNum];
+      if (node != null) return node.displayName;
+      return 'Node ${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+    }
+
+    return _store!.previewImport(entries, displayNameResolver: nameResolver);
+  }
+
+  /// Apply an import using a specific [MergeStrategy] and optional
+  /// per-entry [ConflictResolution] overrides.
+  ///
+  /// Returns the number of entries that were added or updated.
+  Future<int> importWithStrategy({
+    required ImportPreview preview,
+    required MergeStrategy strategy,
+    Map<int, ConflictResolution> resolutions = const {},
+  }) async {
+    if (_store == null) return 0;
+
+    AppLogging.nodeDex(
+      'Importing with strategy: ${strategy.name}, '
+      '${preview.entries.length} entries to process, '
+      '${resolutions.length} custom resolutions',
+    );
+
+    final count = await _store!.importWithMerge(
+      preview: preview,
+      strategy: strategy,
+      resolutions: resolutions,
+    );
+
+    if (count > 0) {
+      await refresh();
+    }
+
+    AppLogging.nodeDex(
+      'Strategy import complete — $count entries added/updated',
+    );
     return count;
   }
 }

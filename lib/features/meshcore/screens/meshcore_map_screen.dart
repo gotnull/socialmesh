@@ -673,10 +673,13 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
               style: context.bodyStyle?.copyWith(color: context.textPrimary),
             ),
           ),
-          Switch(
+          Switch.adaptive(
             value: value,
             onChanged: onChanged,
             activeColor: context.accentColor,
+            activeTrackColor: context.accentColor.withValues(alpha: 0.5),
+            inactiveThumbColor: Colors.grey.shade400,
+            inactiveTrackColor: Colors.grey.shade700,
           ),
         ],
       ),

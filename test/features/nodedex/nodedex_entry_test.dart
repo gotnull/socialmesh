@@ -1121,23 +1121,82 @@ void main() {
     });
 
     group('equality', () {
-      test('entries with same nodeNum are equal', () {
+      test('entries with identical fields are equal', () {
+        final now = DateTime(2024, 1, 1);
         final a = NodeDexEntry(
           nodeNum: 42,
-          firstSeen: DateTime(2024, 1, 1),
-          lastSeen: DateTime(2024, 1, 1),
-          encounterCount: 1,
+          firstSeen: now,
+          lastSeen: now,
+          encounterCount: 5,
         );
         final b = NodeDexEntry(
           nodeNum: 42,
-          firstSeen: DateTime(2024, 6, 1),
-          lastSeen: DateTime(2024, 6, 1),
-          encounterCount: 100,
+          firstSeen: now,
+          lastSeen: now,
+          encounterCount: 5,
         );
 
         expect(a, equals(b));
         expect(a.hashCode, equals(b.hashCode));
       });
+
+      test(
+        'entries with same nodeNum but different encounterCount are not equal',
+        () {
+          final now = DateTime(2024, 1, 1);
+          final a = NodeDexEntry(
+            nodeNum: 42,
+            firstSeen: now,
+            lastSeen: now,
+            encounterCount: 1,
+          );
+          final b = NodeDexEntry(
+            nodeNum: 42,
+            firstSeen: now,
+            lastSeen: now,
+            encounterCount: 100,
+          );
+
+          expect(a, isNot(equals(b)));
+        },
+      );
+
+      test(
+        'entries with same nodeNum but different socialTag are not equal',
+        () {
+          final now = DateTime(2024, 1, 1);
+          final a = NodeDexEntry(nodeNum: 42, firstSeen: now, lastSeen: now);
+          final b = NodeDexEntry(
+            nodeNum: 42,
+            firstSeen: now,
+            lastSeen: now,
+            socialTag: NodeSocialTag.frequentPeer,
+          );
+
+          expect(a, isNot(equals(b)));
+        },
+      );
+
+      test(
+        'entries with same nodeNum but different userNote are not equal',
+        () {
+          final now = DateTime(2024, 1, 1);
+          final a = NodeDexEntry(
+            nodeNum: 42,
+            firstSeen: now,
+            lastSeen: now,
+            userNote: 'hello',
+          );
+          final b = NodeDexEntry(
+            nodeNum: 42,
+            firstSeen: now,
+            lastSeen: now,
+            userNote: 'world',
+          );
+
+          expect(a, isNot(equals(b)));
+        },
+      );
 
       test('entries with different nodeNum are not equal', () {
         final now = DateTime.now();

@@ -5,6 +5,7 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/features/nodedex/models/import_preview.dart';
 import 'package:socialmesh/features/nodedex/models/nodedex_entry.dart';
 import 'package:socialmesh/features/nodedex/services/nodedex_store.dart';
 
@@ -1117,6 +1118,1396 @@ void main() {
       expect(result!.encounterCount, equals(5));
       expect(result.coSeenNodes[100]!.count, equals(3));
       expect(result.coSeenNodes[100]!.messageCount, equals(2));
+    });
+  });
+
+  // ===========================================================================
+  // parseImportJson
+  // ===========================================================================
+
+  group('parseImportJson', () {
+    test('parses valid JSON into entries', () {
+      final entries = [
+        makeEntry(nodeNum: 1, encounterCount: 5),
+        makeEntry(nodeNum: 2, encounterCount: 3),
+      ];
+      final json = encodeEntries(entries);
+
+      final parsed = store.parseImportJson(json);
+
+      expect(parsed.length, equals(2));
+      expect(parsed[0].nodeNum, equals(1));
+      expect(parsed[0].encounterCount, equals(5));
+      expect(parsed[1].nodeNum, equals(2));
+      expect(parsed[1].encounterCount, equals(3));
+    });
+
+    test('returns empty list for invalid JSON', () {
+      final parsed = store.parseImportJson('not valid json');
+
+      expect(parsed, isEmpty);
+    });
+
+    test('returns empty list for empty JSON array', () {
+      final parsed = store.parseImportJson('[]');
+
+      expect(parsed, isEmpty);
+    });
+
+    test('returns empty list for empty string', () {
+      final parsed = store.parseImportJson('');
+
+      expect(parsed, isEmpty);
+    });
+
+    test('does not modify store state', () async {
+      final entries = [makeEntry(nodeNum: 42, encounterCount: 10)];
+      final json = encodeEntries(entries);
+
+      store.parseImportJson(json);
+
+      // Store should still be empty
+      expect(await store.entryCount, equals(0));
+      expect(await store.hasEntry(42), isFalse);
+    });
+
+    test('parses entries with full data including co-seen relationships', () {
+      final now = DateTime(2024, 6, 1);
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'test note',
+          coSeenNodes: {
+            100: CoSeenRelationship(
+              count: 5,
+              firstSeen: now,
+              lastSeen: now,
+              messageCount: 3,
+            ),
+          },
+        ),
+      ];
+      final json = encodeEntries(entries);
+
+      final parsed = store.parseImportJson(json);
+
+      expect(parsed.length, equals(1));
+      expect(parsed.first.socialTag, equals(NodeSocialTag.contact));
+      expect(parsed.first.userNote, equals('test note'));
+      expect(parsed.first.coSeenNodes[100]!.count, equals(5));
+      expect(parsed.first.coSeenNodes[100]!.messageCount, equals(3));
+    });
+  });
+
+  // ===========================================================================
+  // previewImport
+  // ===========================================================================
+
+  group('previewImport', () {
+    test('produces preview for new entries against empty store', () async {
+      final entries = [
+        makeEntry(nodeNum: 1, encounterCount: 5),
+        makeEntry(nodeNum: 2, encounterCount: 3),
+      ];
+
+      final preview = await store.previewImport(entries);
+
+      expect(preview.totalImported, equals(2));
+      expect(preview.newEntryCount, equals(2));
+      expect(preview.mergeEntryCount, equals(0));
+      expect(preview.conflictCount, equals(0));
+      expect(preview.hasConflicts, isFalse);
+    });
+
+    test(
+      'produces preview with merge candidates for existing entries',
+      () async {
+        await store.saveEntryImmediate(
+          makeEntry(nodeNum: 42, encounterCount: 5),
+        );
+
+        final entries = [makeEntry(nodeNum: 42, encounterCount: 10)];
+
+        final preview = await store.previewImport(entries);
+
+        expect(preview.totalImported, equals(1));
+        expect(preview.newEntryCount, equals(0));
+        expect(preview.mergeEntryCount, equals(1));
+        expect(preview.entries.first.isNew, isFalse);
+        expect(preview.entries.first.importHasMoreEncounters, isTrue);
+      },
+    );
+
+    test('detects socialTag conflict in preview', () async {
+      await store.saveEntryImmediate(
+        makeEntry(nodeNum: 42, socialTag: NodeSocialTag.contact),
+      );
+
+      final entries = [
+        makeEntry(nodeNum: 42, socialTag: NodeSocialTag.trustedNode),
+      ];
+
+      final preview = await store.previewImport(entries);
+
+      expect(preview.hasConflicts, isTrue);
+      expect(preview.conflictCount, equals(1));
+      expect(preview.entries.first.socialTagConflict, isNotNull);
+      expect(
+        preview.entries.first.socialTagConflict!.localValue,
+        equals(NodeSocialTag.contact),
+      );
+      expect(
+        preview.entries.first.socialTagConflict!.importedValue,
+        equals(NodeSocialTag.trustedNode),
+      );
+    });
+
+    test('detects userNote conflict in preview', () async {
+      await store.saveEntryImmediate(
+        makeEntry(nodeNum: 42, userNote: 'local note'),
+      );
+
+      final entries = [makeEntry(nodeNum: 42, userNote: 'imported note')];
+
+      final preview = await store.previewImport(entries);
+
+      expect(preview.hasConflicts, isTrue);
+      expect(preview.entries.first.userNoteConflict, isNotNull);
+      expect(
+        preview.entries.first.userNoteConflict!.localValue,
+        equals('local note'),
+      );
+      expect(
+        preview.entries.first.userNoteConflict!.importedValue,
+        equals('imported note'),
+      );
+    });
+
+    test('does not modify store state', () async {
+      await store.saveEntryImmediate(makeEntry(nodeNum: 42, encounterCount: 5));
+
+      final entries = [makeEntry(nodeNum: 42, encounterCount: 50)];
+      await store.previewImport(entries);
+
+      // Store should be unchanged
+      final stored = await store.getEntry(42);
+      expect(stored!.encounterCount, equals(5));
+    });
+
+    test('uses displayNameResolver when provided', () async {
+      final entries = [makeEntry(nodeNum: 0xABCD)];
+
+      final preview = await store.previewImport(
+        entries,
+        displayNameResolver: (nodeNum) => 'TestNode-$nodeNum',
+      );
+
+      expect(preview.entries.first.displayName, equals('TestNode-43981'));
+    });
+
+    test('falls back to hex display name without resolver', () async {
+      final entries = [makeEntry(nodeNum: 0x00FF)];
+
+      final preview = await store.previewImport(entries);
+
+      expect(preview.entries.first.displayName, equals('Node 00FF'));
+    });
+
+    test('counts new co-seen edges correctly', () async {
+      final now = DateTime(2024, 6, 1);
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          coSeenNodes: {
+            100: CoSeenRelationship(count: 3, firstSeen: now, lastSeen: now),
+          },
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          coSeenNodes: {
+            100: CoSeenRelationship(count: 5, firstSeen: now, lastSeen: now),
+            200: CoSeenRelationship(count: 1, firstSeen: now, lastSeen: now),
+            300: CoSeenRelationship(count: 2, firstSeen: now, lastSeen: now),
+          },
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+
+      expect(preview.entries.first.newCoSeenEdges, equals(2));
+    });
+
+    test('counts new encounter records correctly', () async {
+      final t1 = DateTime.fromMillisecondsSinceEpoch(1700000000000);
+      final t2 = DateTime.fromMillisecondsSinceEpoch(1700010000000);
+      final t3 = DateTime.fromMillisecondsSinceEpoch(1700020000000);
+
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          encounters: [
+            EncounterRecord(timestamp: t1, snr: 5),
+            EncounterRecord(timestamp: t2, snr: 8),
+          ],
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          encounters: [
+            EncounterRecord(timestamp: t2, snr: 8),
+            EncounterRecord(timestamp: t3, snr: 12),
+          ],
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+
+      expect(preview.entries.first.newEncounterRecords, equals(1));
+    });
+
+    test('counts new regions correctly', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          seenRegions: [
+            SeenRegion(
+              regionId: 'r1',
+              label: 'Region 1',
+              firstSeen: DateTime(2024, 1, 1),
+              lastSeen: DateTime(2024, 6, 1),
+              encounterCount: 5,
+            ),
+          ],
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          seenRegions: [
+            SeenRegion(
+              regionId: 'r1',
+              label: 'Region 1',
+              firstSeen: DateTime(2024, 2, 1),
+              lastSeen: DateTime(2024, 5, 1),
+              encounterCount: 3,
+            ),
+            SeenRegion(
+              regionId: 'r2',
+              label: 'Region 2',
+              firstSeen: DateTime(2024, 3, 1),
+              lastSeen: DateTime(2024, 3, 1),
+              encounterCount: 1,
+            ),
+          ],
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+
+      expect(preview.entries.first.newRegions, equals(1));
+    });
+
+    test('mixed new and existing entries in preview', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 10,
+          socialTag: NodeSocialTag.contact,
+          encounterCount: 5,
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 10,
+          socialTag: NodeSocialTag.trustedNode,
+          encounterCount: 10,
+        ),
+        makeEntry(nodeNum: 20, encounterCount: 3),
+        makeEntry(nodeNum: 30, encounterCount: 7),
+      ];
+
+      final preview = await store.previewImport(entries);
+
+      expect(preview.totalImported, equals(3));
+      expect(preview.newEntryCount, equals(2));
+      expect(preview.mergeEntryCount, equals(1));
+      expect(preview.conflictCount, equals(1));
+    });
+
+    test('empty import list produces empty preview', () async {
+      final preview = await store.previewImport([]);
+
+      expect(preview.isEmpty, isTrue);
+      expect(preview.totalImported, equals(0));
+    });
+  });
+
+  // ===========================================================================
+  // importWithMerge — keepLocal strategy
+  // ===========================================================================
+
+  group('importWithMerge — keepLocal strategy', () {
+    test('adds new entries directly', () async {
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          encounterCount: 10,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'test note',
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      final count = await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      expect(count, equals(1));
+      final stored = await store.getEntry(42);
+      expect(stored, isNotNull);
+      expect(stored!.encounterCount, equals(10));
+      expect(stored.socialTag, equals(NodeSocialTag.contact));
+      expect(stored.userNote, equals('test note'));
+    });
+
+    test('keeps local socialTag on conflict', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.contact,
+          encounterCount: 3,
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.trustedNode,
+          encounterCount: 10,
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.socialTag, equals(NodeSocialTag.contact));
+      expect(stored.encounterCount, equals(10));
+    });
+
+    test('keeps local userNote on conflict', () async {
+      await store.saveEntryImmediate(
+        makeEntry(nodeNum: 42, userNote: 'local note'),
+      );
+
+      final entries = [makeEntry(nodeNum: 42, userNote: 'imported note')];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.userNote, equals('local note'));
+    });
+
+    test('fills socialTag from import when local has none', () async {
+      await store.saveEntryImmediate(makeEntry(nodeNum: 42));
+
+      final entries = [
+        makeEntry(nodeNum: 42, socialTag: NodeSocialTag.knownRelay),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.socialTag, equals(NodeSocialTag.knownRelay));
+    });
+
+    test('fills userNote from import when local has none', () async {
+      await store.saveEntryImmediate(makeEntry(nodeNum: 42));
+
+      final entries = [makeEntry(nodeNum: 42, userNote: 'import only note')];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.userNote, equals('import only note'));
+    });
+
+    test('merges scalar metrics correctly', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          firstSeen: DateTime(2024, 3, 1),
+          lastSeen: DateTime(2024, 6, 1),
+          encounterCount: 5,
+          maxDistanceSeen: 1500.0,
+          bestSnr: 10,
+          bestRssi: -85,
+          messageCount: 3,
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          firstSeen: DateTime(2024, 1, 1),
+          lastSeen: DateTime(2024, 8, 1),
+          encounterCount: 10,
+          maxDistanceSeen: 5000.0,
+          bestSnr: 15,
+          bestRssi: -70,
+          messageCount: 8,
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.firstSeen, equals(DateTime(2024, 1, 1)));
+      expect(stored.lastSeen, equals(DateTime(2024, 8, 1)));
+      expect(stored.encounterCount, equals(10));
+      expect(stored.maxDistanceSeen, equals(5000.0));
+      expect(stored.bestSnr, equals(15));
+      expect(stored.bestRssi, equals(-70));
+      expect(stored.messageCount, equals(8));
+    });
+
+    test('merges co-seen relationships', () async {
+      final now = DateTime(2024, 6, 1);
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          coSeenNodes: {
+            100: CoSeenRelationship(
+              count: 3,
+              firstSeen: DateTime(2024, 3, 1),
+              lastSeen: DateTime(2024, 5, 1),
+              messageCount: 2,
+            ),
+            200: CoSeenRelationship(count: 1, firstSeen: now, lastSeen: now),
+          },
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          coSeenNodes: {
+            100: CoSeenRelationship(
+              count: 8,
+              firstSeen: DateTime(2024, 1, 1),
+              lastSeen: DateTime(2024, 6, 1),
+              messageCount: 5,
+            ),
+            300: CoSeenRelationship(count: 4, firstSeen: now, lastSeen: now),
+          },
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.coSeenNodes.length, equals(3));
+      expect(stored.coSeenNodes[100]!.count, equals(8));
+      expect(stored.coSeenNodes[100]!.firstSeen, equals(DateTime(2024, 1, 1)));
+      expect(stored.coSeenNodes[100]!.messageCount, equals(5));
+      expect(stored.coSeenNodes[200]!.count, equals(1));
+      expect(stored.coSeenNodes[300]!.count, equals(4));
+    });
+
+    test('does not lose existing entries not in import', () async {
+      await store.saveEntryImmediate(makeEntry(nodeNum: 1, encounterCount: 5));
+      await store.saveEntryImmediate(makeEntry(nodeNum: 2, encounterCount: 3));
+
+      final entries = [makeEntry(nodeNum: 1, encounterCount: 10)];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      expect(await store.hasEntry(2), isTrue);
+      expect((await store.getEntry(2))!.encounterCount, equals(3));
+      expect((await store.getEntry(1))!.encounterCount, equals(10));
+    });
+
+    test('persists across store instances', () async {
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          encounterCount: 10,
+          socialTag: NodeSocialTag.contact,
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      // Dispose and re-create
+      await store.dispose();
+      store = NodeDexStore();
+      await store.init();
+
+      final stored = await store.getEntry(42);
+      expect(stored, isNotNull);
+      expect(stored!.encounterCount, equals(10));
+      expect(stored.socialTag, equals(NodeSocialTag.contact));
+    });
+  });
+
+  // ===========================================================================
+  // importWithMerge — preferImport strategy
+  // ===========================================================================
+
+  group('importWithMerge — preferImport strategy', () {
+    test('uses imported socialTag on conflict', () async {
+      await store.saveEntryImmediate(
+        makeEntry(nodeNum: 42, socialTag: NodeSocialTag.contact),
+      );
+
+      final entries = [
+        makeEntry(nodeNum: 42, socialTag: NodeSocialTag.trustedNode),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.preferImport,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.socialTag, equals(NodeSocialTag.trustedNode));
+    });
+
+    test('uses imported userNote on conflict', () async {
+      await store.saveEntryImmediate(
+        makeEntry(nodeNum: 42, userNote: 'local note'),
+      );
+
+      final entries = [makeEntry(nodeNum: 42, userNote: 'imported note')];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.preferImport,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.userNote, equals('imported note'));
+    });
+
+    test('uses both imported fields on dual conflict', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'local note',
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.trustedNode,
+          userNote: 'imported note',
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.preferImport,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.socialTag, equals(NodeSocialTag.trustedNode));
+      expect(stored.userNote, equals('imported note'));
+    });
+
+    test('preserves local socialTag when import has none', () async {
+      await store.saveEntryImmediate(
+        makeEntry(nodeNum: 42, socialTag: NodeSocialTag.contact),
+      );
+
+      final entries = [makeEntry(nodeNum: 42)];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.preferImport,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.socialTag, equals(NodeSocialTag.contact));
+    });
+
+    test('still merges scalar metrics with preferImport', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          encounterCount: 5,
+          bestSnr: 10,
+          maxDistanceSeen: 1500.0,
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          encounterCount: 10,
+          bestSnr: 20,
+          maxDistanceSeen: 5000.0,
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.preferImport,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.encounterCount, equals(10));
+      expect(stored.bestSnr, equals(20));
+      expect(stored.maxDistanceSeen, equals(5000.0));
+    });
+  });
+
+  // ===========================================================================
+  // importWithMerge — reviewConflicts strategy
+  // ===========================================================================
+
+  group('importWithMerge — reviewConflicts strategy', () {
+    test('uses per-entry resolution to pick imported socialTag', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'local note',
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.trustedNode,
+          userNote: 'imported note',
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.reviewConflicts,
+        resolutions: {
+          42: const ConflictResolution(
+            nodeNum: 42,
+            useSocialTagFromImport: true,
+            useUserNoteFromImport: false,
+          ),
+        },
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.socialTag, equals(NodeSocialTag.trustedNode));
+      expect(stored.userNote, equals('local note'));
+    });
+
+    test('uses per-entry resolution to pick imported userNote', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'local note',
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.trustedNode,
+          userNote: 'imported note',
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.reviewConflicts,
+        resolutions: {
+          42: const ConflictResolution(
+            nodeNum: 42,
+            useSocialTagFromImport: false,
+            useUserNoteFromImport: true,
+          ),
+        },
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.socialTag, equals(NodeSocialTag.contact));
+      expect(stored.userNote, equals('imported note'));
+    });
+
+    test('uses both imported values when resolution says so', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'local note',
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.trustedNode,
+          userNote: 'imported note',
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.reviewConflicts,
+        resolutions: {
+          42: const ConflictResolution(
+            nodeNum: 42,
+            useSocialTagFromImport: true,
+            useUserNoteFromImport: true,
+          ),
+        },
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.socialTag, equals(NodeSocialTag.trustedNode));
+      expect(stored.userNote, equals('imported note'));
+    });
+
+    test('falls back to keepLocal when no resolution provided', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'local note',
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.trustedNode,
+          userNote: 'imported note',
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.reviewConflicts,
+        resolutions: {},
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.socialTag, equals(NodeSocialTag.contact));
+      expect(stored.userNote, equals('local note'));
+    });
+
+    test('different resolutions for different entries', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 10,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'local 10',
+        ),
+      );
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 20,
+          socialTag: NodeSocialTag.trustedNode,
+          userNote: 'local 20',
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 10,
+          socialTag: NodeSocialTag.trustedNode,
+          userNote: 'imported 10',
+        ),
+        makeEntry(
+          nodeNum: 20,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'imported 20',
+        ),
+        makeEntry(nodeNum: 30, encounterCount: 5), // new entry
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.reviewConflicts,
+        resolutions: {
+          // Entry 10: prefer import for both
+          10: const ConflictResolution(
+            nodeNum: 10,
+            useSocialTagFromImport: true,
+            useUserNoteFromImport: true,
+          ),
+          // Entry 20: keep local for tag, import for note
+          20: const ConflictResolution(
+            nodeNum: 20,
+            useSocialTagFromImport: false,
+            useUserNoteFromImport: true,
+          ),
+        },
+      );
+
+      final stored10 = await store.getEntry(10);
+      expect(stored10!.socialTag, equals(NodeSocialTag.trustedNode));
+      expect(stored10.userNote, equals('imported 10'));
+
+      final stored20 = await store.getEntry(20);
+      expect(stored20!.socialTag, equals(NodeSocialTag.trustedNode));
+      expect(stored20.userNote, equals('imported 20'));
+
+      // New entry should be added directly
+      final stored30 = await store.getEntry(30);
+      expect(stored30, isNotNull);
+      expect(stored30!.encounterCount, equals(5));
+    });
+
+    test('null resolution fields fall back to keepLocal', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'local note',
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.trustedNode,
+          userNote: 'imported note',
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.reviewConflicts,
+        resolutions: {42: const ConflictResolution(nodeNum: 42)},
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.socialTag, equals(NodeSocialTag.contact));
+      expect(stored.userNote, equals('local note'));
+    });
+
+    test('persists resolved values across store instances', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'local note',
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.trustedNode,
+          userNote: 'imported note',
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.reviewConflicts,
+        resolutions: {
+          42: const ConflictResolution(
+            nodeNum: 42,
+            useSocialTagFromImport: true,
+            useUserNoteFromImport: true,
+          ),
+        },
+      );
+
+      // Dispose and re-create
+      await store.dispose();
+      store = NodeDexStore();
+      await store.init();
+
+      final stored = await store.getEntry(42);
+      expect(stored!.socialTag, equals(NodeSocialTag.trustedNode));
+      expect(stored.userNote, equals('imported note'));
+    });
+  });
+
+  // ===========================================================================
+  // importWithMerge — empty and edge cases
+  // ===========================================================================
+
+  group('importWithMerge — edge cases', () {
+    test('returns 0 for empty preview', () async {
+      const emptyPreview = ImportPreview(entries: [], totalImported: 0);
+
+      final count = await store.importWithMerge(
+        preview: emptyPreview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      expect(count, equals(0));
+      expect(await store.entryCount, equals(0));
+    });
+
+    test('strategies produce different results for same conflict', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'local note',
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.trustedNode,
+          userNote: 'imported note',
+        ),
+      ];
+
+      // keepLocal
+      var preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+      var stored = await store.getEntry(42);
+      expect(stored!.socialTag, equals(NodeSocialTag.contact));
+      expect(stored.userNote, equals('local note'));
+
+      // Reset to original state
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'local note',
+        ),
+      );
+
+      // preferImport
+      preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.preferImport,
+      );
+      stored = await store.getEntry(42);
+      expect(stored!.socialTag, equals(NodeSocialTag.trustedNode));
+      expect(stored.userNote, equals('imported note'));
+    });
+
+    test('large import with mixed strategies', () async {
+      // Pre-populate with 10 entries
+      for (int i = 0; i < 10; i++) {
+        await store.saveEntryImmediate(
+          makeEntry(
+            nodeNum: i,
+            encounterCount: i + 1,
+            socialTag: NodeSocialTag.contact,
+          ),
+        );
+      }
+
+      // Import 20 entries: 10 overlapping, 10 new
+      final entries = List.generate(
+        20,
+        (i) => makeEntry(
+          nodeNum: i,
+          encounterCount: (i + 1) * 2,
+          socialTag: NodeSocialTag.trustedNode,
+        ),
+      );
+
+      final preview = await store.previewImport(entries);
+      expect(preview.newEntryCount, equals(10));
+      expect(preview.mergeEntryCount, equals(10));
+      expect(preview.conflictCount, equals(10));
+
+      final count = await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.preferImport,
+      );
+
+      expect(count, equals(20));
+      expect(await store.entryCount, equals(20));
+
+      // Verify overlapping entries got imported socialTag
+      for (int i = 0; i < 10; i++) {
+        final entry = await store.getEntry(i);
+        expect(
+          entry!.socialTag,
+          equals(NodeSocialTag.trustedNode),
+          reason: 'Node $i should have imported socialTag',
+        );
+        expect(
+          entry.encounterCount,
+          equals((i + 1) * 2),
+          reason: 'Node $i should have higher encounter count',
+        );
+      }
+    });
+
+    test('importWithMerge merges encounters and deduplicates', () async {
+      final t1 = DateTime.fromMillisecondsSinceEpoch(1700000000000);
+      final t2 = DateTime.fromMillisecondsSinceEpoch(1700010000000);
+      final t3 = DateTime.fromMillisecondsSinceEpoch(1700020000000);
+
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          encounters: [
+            EncounterRecord(timestamp: t1, snr: 5),
+            EncounterRecord(timestamp: t2, snr: 8),
+          ],
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          encounters: [
+            EncounterRecord(timestamp: t2, snr: 8),
+            EncounterRecord(timestamp: t3, snr: 12),
+          ],
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.encounters.length, equals(3));
+      expect(stored.encounters[0].timestamp, equals(t1));
+      expect(stored.encounters[1].timestamp, equals(t2));
+      expect(stored.encounters[2].timestamp, equals(t3));
+    });
+
+    test('importWithMerge merges regions by regionId', () async {
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          seenRegions: [
+            SeenRegion(
+              regionId: 'r1',
+              label: 'Region 1',
+              firstSeen: DateTime(2024, 3, 1),
+              lastSeen: DateTime(2024, 5, 1),
+              encounterCount: 5,
+            ),
+          ],
+        ),
+      );
+
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          seenRegions: [
+            SeenRegion(
+              regionId: 'r1',
+              label: 'Region 1',
+              firstSeen: DateTime(2024, 1, 1),
+              lastSeen: DateTime(2024, 4, 1),
+              encounterCount: 8,
+            ),
+            SeenRegion(
+              regionId: 'r2',
+              label: 'Region 2',
+              firstSeen: DateTime(2024, 6, 1),
+              lastSeen: DateTime(2024, 6, 1),
+              encounterCount: 1,
+            ),
+          ],
+        ),
+      ];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.seenRegions.length, equals(2));
+
+      final r1 = stored.seenRegions.firstWhere((r) => r.regionId == 'r1');
+      expect(r1.firstSeen, equals(DateTime(2024, 1, 1)));
+      expect(r1.lastSeen, equals(DateTime(2024, 5, 1)));
+      expect(r1.encounterCount, equals(8));
+
+      final r2 = stored.seenRegions.firstWhere((r) => r.regionId == 'r2');
+      expect(r2.encounterCount, equals(1));
+    });
+
+    test('importWithMerge preserves sigil from local', () async {
+      const sigil = SigilData(
+        vertices: 5,
+        rotation: 1.0,
+        innerRings: 2,
+        drawRadials: true,
+        centerDot: false,
+        symmetryFold: 3,
+        primaryColor: Color(0xFF0EA5E9),
+        secondaryColor: Color(0xFF8B5CF6),
+        tertiaryColor: Color(0xFFF97316),
+      );
+      await store.saveEntryImmediate(makeEntry(nodeNum: 42, sigil: sigil));
+
+      final entries = [makeEntry(nodeNum: 42, encounterCount: 10)];
+
+      final preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.sigil, isNotNull);
+      expect(stored.sigil!.vertices, equals(5));
+    });
+
+    test(
+      'importWithMerge fills sigil from import when local has none',
+      () async {
+        await store.saveEntryImmediate(makeEntry(nodeNum: 42));
+
+        const sigil = SigilData(
+          vertices: 7,
+          rotation: 2.0,
+          innerRings: 1,
+          drawRadials: false,
+          centerDot: true,
+          symmetryFold: 5,
+          primaryColor: Color(0xFFEF4444),
+          secondaryColor: Color(0xFFFBBF24),
+          tertiaryColor: Color(0xFF10B981),
+        );
+        final entries = [makeEntry(nodeNum: 42, sigil: sigil)];
+
+        final preview = await store.previewImport(entries);
+        await store.importWithMerge(
+          preview: preview,
+          strategy: MergeStrategy.keepLocal,
+        );
+
+        final stored = await store.getEntry(42);
+        expect(stored!.sigil, isNotNull);
+        expect(stored.sigil!.vertices, equals(7));
+      },
+    );
+
+    test('double importWithMerge is idempotent', () async {
+      final now = DateTime(2024, 6, 1);
+      final entries = [
+        makeEntry(
+          nodeNum: 42,
+          encounterCount: 5,
+          firstSeen: DateTime.fromMillisecondsSinceEpoch(1700000000000),
+          lastSeen: DateTime.fromMillisecondsSinceEpoch(1700100000000),
+          coSeenNodes: {
+            100: CoSeenRelationship(
+              count: 3,
+              firstSeen: now,
+              lastSeen: now,
+              messageCount: 2,
+            ),
+          },
+        ),
+      ];
+
+      // First import
+      var preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      // Second import of same data
+      preview = await store.previewImport(entries);
+      await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+
+      final stored = await store.getEntry(42);
+      expect(stored!.encounterCount, equals(5));
+      expect(stored.coSeenNodes[100]!.count, equals(3));
+      expect(stored.coSeenNodes[100]!.messageCount, equals(2));
+    });
+  });
+
+  // ===========================================================================
+  // Full pipeline: parseImportJson -> previewImport -> importWithMerge
+  // ===========================================================================
+
+  group('full import pipeline', () {
+    test('parse -> preview -> import round trip', () async {
+      // Pre-populate store
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          encounterCount: 5,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'my note',
+        ),
+      );
+
+      // Create JSON from entries
+      final importEntries = [
+        makeEntry(
+          nodeNum: 42,
+          encounterCount: 10,
+          socialTag: NodeSocialTag.trustedNode,
+          userNote: 'their note',
+        ),
+        makeEntry(nodeNum: 100, encounterCount: 3),
+      ];
+      final jsonString = encodeEntries(importEntries);
+
+      // Step 1: parse
+      final parsed = store.parseImportJson(jsonString);
+      expect(parsed.length, equals(2));
+
+      // Step 2: preview
+      final preview = await store.previewImport(parsed);
+      expect(preview.totalImported, equals(2));
+      expect(preview.newEntryCount, equals(1));
+      expect(preview.mergeEntryCount, equals(1));
+      expect(preview.conflictCount, equals(1));
+
+      // Step 3: import with keepLocal
+      final count = await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+      expect(count, equals(2));
+
+      // Verify results
+      final stored42 = await store.getEntry(42);
+      expect(stored42!.encounterCount, equals(10));
+      expect(stored42.socialTag, equals(NodeSocialTag.contact));
+      expect(stored42.userNote, equals('my note'));
+
+      final stored100 = await store.getEntry(100);
+      expect(stored100, isNotNull);
+      expect(stored100!.encounterCount, equals(3));
+    });
+
+    test('export -> parse -> preview -> importWithMerge round trip', () async {
+      // Populate store with rich data
+      final now = DateTime(2024, 6, 1);
+      await store.saveEntryImmediate(
+        makeEntry(
+          nodeNum: 42,
+          encounterCount: 5,
+          socialTag: NodeSocialTag.contact,
+          userNote: 'original note',
+          coSeenNodes: {
+            100: CoSeenRelationship(
+              count: 3,
+              firstSeen: now,
+              lastSeen: now,
+              messageCount: 2,
+            ),
+          },
+          seenRegions: [
+            SeenRegion(
+              regionId: 'r1',
+              label: 'Region 1',
+              firstSeen: DateTime(2024, 1, 1),
+              lastSeen: DateTime(2024, 6, 1),
+              encounterCount: 5,
+            ),
+          ],
+        ),
+      );
+
+      // Export
+      final exported = await store.exportJson();
+      expect(exported, isNotNull);
+
+      // Create a fresh store and import
+      await store.dispose();
+      SharedPreferences.setMockInitialValues({});
+      store = NodeDexStore();
+      await store.init();
+
+      // Parse
+      final parsed = store.parseImportJson(exported!);
+      expect(parsed.length, equals(1));
+
+      // Preview
+      final preview = await store.previewImport(parsed);
+      expect(preview.newEntryCount, equals(1));
+      expect(preview.conflictCount, equals(0));
+
+      // Import
+      final count = await store.importWithMerge(
+        preview: preview,
+        strategy: MergeStrategy.keepLocal,
+      );
+      expect(count, equals(1));
+
+      // Verify full data round-trip
+      final stored = await store.getEntry(42);
+      expect(stored, isNotNull);
+      expect(stored!.encounterCount, equals(5));
+      expect(stored.socialTag, equals(NodeSocialTag.contact));
+      expect(stored.userNote, equals('original note'));
+      expect(stored.coSeenNodes[100]!.count, equals(3));
+      expect(stored.coSeenNodes[100]!.messageCount, equals(2));
+      expect(stored.seenRegions.length, equals(1));
+      expect(stored.seenRegions.first.regionId, equals('r1'));
     });
   });
 }

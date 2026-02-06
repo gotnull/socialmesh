@@ -10,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../models/social.dart';
+import '../../nodedex/screens/nodedex_detail_screen.dart';
+import '../../nodedex/widgets/sigil_painter.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/signal_bookmark_provider.dart';
 import '../../../core/logging.dart';
@@ -693,12 +695,26 @@ class _BottomInfoOverlay extends ConsumerWidget {
               // Author row
               Row(
                 children: [
-                  // Avatar
-                  UserAvatar(
-                    initials: _getInitials(author?.displayName ?? 'Unknown'),
-                    imageUrl: author?.avatarUrl,
-                    size: 40,
-                  ),
+                  // Avatar — use Sigil for mesh nodes, UserAvatar for cloud authors
+                  if (signal.meshNodeId != null)
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => NodeDexDetailScreen(
+                              nodeNum: signal.meshNodeId!,
+                            ),
+                          ),
+                        );
+                      },
+                      child: SigilAvatar(nodeNum: signal.meshNodeId!, size: 40),
+                    )
+                  else
+                    UserAvatar(
+                      initials: _getInitials(author?.displayName ?? 'Unknown'),
+                      imageUrl: author?.avatarUrl,
+                      size: 40,
+                    ),
                   const SizedBox(width: 12),
 
                   // Author info

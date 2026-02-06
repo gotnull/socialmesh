@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 # Unified docker-compose for all Socialmesh backend services
 # Run with: docker-compose up -d
@@ -22,7 +22,15 @@ services:
       - marketplace-data:/app/data
       - ./marketplace-api/firebase-service-account.json:/app/firebase-service-account.json:ro
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -45,7 +53,43 @@ services:
     volumes:
       - mesh-data:/app/data
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3001/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Sigil API - Stores and serves shared sigil card snapshots
+  sigil-api:
+    build: ./sigil-api
+    container_name: socialmesh-sigil-api
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - DB_PATH=/app/data/sigils.db
+    volumes:
+      - sigil-data:/app/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3002/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -54,3 +98,4 @@ services:
 volumes:
   marketplace-data:
   mesh-data:
+  sigil-data:

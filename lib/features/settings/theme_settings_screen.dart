@@ -536,7 +536,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                     )
                   else
-                    Switch(
+                    Switch.adaptive(
                       value: usesAccentColor,
                       onChanged: (value) async {
                         HapticFeedback.selectionClick();
@@ -625,7 +625,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
           const SizedBox(height: 12),
           Row(
             children: [
-              Switch(
+              Switch.adaptive(
                 value: true,
                 onChanged: (_) {},
                 activeTrackColor: accentColor,

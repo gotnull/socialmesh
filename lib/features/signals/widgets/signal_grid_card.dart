@@ -8,6 +8,8 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../core/logging.dart';
+import '../../nodedex/screens/nodedex_detail_screen.dart';
+import '../../nodedex/widgets/sigil_painter.dart';
 import '../../../models/social.dart';
 import '../../social/widgets/subscribe_button.dart';
 import '../../../providers/app_providers.dart';
@@ -207,14 +209,29 @@ class SignalGridCard extends ConsumerWidget {
                       // Author row
                       Row(
                         children: [
-                          UserAvatar(
-                            imageUrl: avatarUrl,
-                            size: 22,
-                            foregroundColor: avatarColor,
-                            fallbackIcon: isMeshSignal
-                                ? Icons.router
-                                : Icons.person,
-                          ),
+                          if (isMeshSignal && signal.meshNodeId != null)
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => NodeDexDetailScreen(
+                                      nodeNum: signal.meshNodeId!,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: SigilAvatar(
+                                nodeNum: signal.meshNodeId!,
+                                size: 22,
+                              ),
+                            )
+                          else
+                            UserAvatar(
+                              imageUrl: avatarUrl,
+                              size: 22,
+                              foregroundColor: avatarColor,
+                              fallbackIcon: Icons.person,
+                            ),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Column(

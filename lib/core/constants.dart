@@ -22,6 +22,12 @@ class AppUrls {
   static String get worldMeshApiUrl =>
       dotenv.env['WORLD_MESH_API_URL'] ?? 'https://api.socialmesh.app';
 
+  /// Sigil API URL (Railway-hosted)
+  /// Uses Railway-generated domain until sigil.socialmesh.app DNS propagates.
+  static String get sigilApiUrl =>
+      dotenv.env['SIGIL_API_URL'] ??
+      'https://sigil-api-production.up.railway.app';
+
   // Legal & Documentation URLs
   static String get termsUrl => '$baseUrl/terms';
   static String get privacyUrl => '$baseUrl/privacy';
@@ -40,6 +46,7 @@ class AppUrls {
       '$baseUrl/delete-account?inapp=true';
 
   // Share link URLs
+  static String shareSigilUrl(String id) => '$baseUrl/sigil/$id';
   static String shareNodeUrl(String id) => '$baseUrl/share/node/$id';
   static String shareProfileUrl(String id) => '$baseUrl/share/profile/$id';
   static String shareWidgetUrl(String id) => '$baseUrl/share/widget/$id';
@@ -192,6 +199,17 @@ class NodeDexConfig {
       if (parsed != null && parsed > 0) return parsed;
     }
     return 20;
+  }
+
+  /// Number of recent encounters to display per page in the detail screen.
+  /// Override via .env with NODEDEX_ENCOUNTER_PAGE_SIZE.
+  static int get encounterPageSize {
+    final env = dotenv.env['NODEDEX_ENCOUNTER_PAGE_SIZE'];
+    if (env != null) {
+      final parsed = int.tryParse(env);
+      if (parsed != null && parsed > 0) return parsed;
+    }
+    return 10;
   }
 }
 

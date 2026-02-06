@@ -23,6 +23,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/logging.dart';
+import '../models/import_preview.dart';
 import '../models/nodedex_entry.dart';
 
 /// Persistent storage for NodeDex entries.
@@ -404,5 +405,72 @@ class NodeDexStore {
       AppLogging.storage('NodeDexStore: Error importing entries: $e');
       return 0;
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Import with preview and conflict resolution
+  // ---------------------------------------------------------------------------
+
+  /// Parse a JSON string into a list of [NodeDexEntry] without modifying
+  /// any state. Returns an empty list on invalid input.
+  List<NodeDexEntry> parseImportJson(String jsonString) {
+    try {
+      final entries = NodeDexEntry.decodeList(jsonString);
+      return entries;
+    } catch (e) {
+      AppLogging.storage('NodeDexStore: Error parsing import JSON: $e');
+      return [];
+    }
+  }
+
+  /// Build an [ImportPreview] by analyzing the given imported entries
+  /// against the current local cache.
+  ///
+  /// This does not modify any state. Call [importWithMerge] to apply.
+  ///
+  /// [displayNameResolver] is an optional function that provides a
+  /// human-readable name for a node number (e.g. from live MeshNode data).
+  Future<ImportPreview> previewImport(
+    List<NodeDexEntry> importedEntries, {
+    String Function(int nodeNum)? displayNameResolver,
+  }) async {
+    final local = await loadAllAsMap();
+    return ImportPreview.build(
+      importedEntries: importedEntries,
+      localEntries: local,
+      displayNameResolver: displayNameResolver,
+    );
+  }
+
+  /// Apply an import using a specific [MergeStrategy] and optional
+  /// per-entry [ConflictResolution] overrides.
+  ///
+  /// Returns the number of entries that were added or updated.
+  Future<int> importWithMerge({
+    required ImportPreview preview,
+    required MergeStrategy strategy,
+    Map<int, ConflictResolution> resolutions = const {},
+  }) async {
+    if (preview.isEmpty) return 0;
+
+    _cache ??= {};
+
+    final merged = ImportPreview.applyMerge(
+      preview: preview,
+      localEntries: Map<int, NodeDexEntry>.from(_cache!),
+      strategy: strategy,
+      resolutions: resolutions,
+    );
+
+    for (final entry in merged) {
+      _cache![entry.nodeNum] = entry;
+    }
+
+    await _writeAllToStorage();
+    AppLogging.storage(
+      'NodeDexStore: Imported ${merged.length} entries '
+      'with strategy ${strategy.name}',
+    );
+    return merged.length;
   }
 }

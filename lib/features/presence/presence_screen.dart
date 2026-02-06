@@ -6,11 +6,13 @@ import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../dev/demo/demo_config.dart';
-import '../../models/mesh_models.dart';
+
 import '../../models/node_encounter.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/presence_providers.dart';
 import '../../utils/presence_utils.dart';
+import '../nodedex/screens/nodedex_detail_screen.dart';
+import '../nodedex/widgets/sigil_painter.dart';
 
 class PresenceScreen extends ConsumerStatefulWidget {
   const PresenceScreen({super.key});
@@ -239,18 +241,16 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => NodeDexDetailScreen(nodeNum: node.nodeNum),
+            ),
+          );
+        },
         leading: Stack(
           children: [
-            CircleAvatar(
-              backgroundColor: _getAvatarColor(node),
-              child: Text(
-                _getInitials(node),
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+            SigilAvatar(nodeNum: node.nodeNum, size: 40),
             Positioned(
               right: 0,
               bottom: 0,
@@ -334,29 +334,6 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
         trailing: null,
       ),
     );
-  }
-
-  Color _getAvatarColor(MeshNode node) {
-    if (node.avatarColor != null) {
-      return Color(node.avatarColor!);
-    }
-    // Generate consistent color from node number
-    final colors = [
-      context.accentColor,
-      AppTheme.primaryPurple,
-      AppTheme.primaryBlue,
-      AppTheme.accentOrange,
-      AppTheme.successGreen,
-    ];
-    return colors[node.nodeNum % colors.length];
-  }
-
-  String _getInitials(MeshNode node) {
-    final name = node.shortName ?? node.longName;
-    if (name == null || name.isEmpty) {
-      return '?';
-    }
-    return name.substring(0, name.length.clamp(0, 2)).toUpperCase();
   }
 
   Color _statusColor(PresenceConfidence confidence) {

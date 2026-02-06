@@ -14,6 +14,8 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../models/presence_confidence.dart';
+import '../../nodedex/screens/nodedex_detail_screen.dart';
+import '../../nodedex/widgets/sigil_painter.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
@@ -178,13 +180,26 @@ class _SignalHeader extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar
-          UserAvatar(
-            imageUrl: avatarUrl,
-            size: 40,
-            foregroundColor: avatarColor,
-            fallbackIcon: isMeshSignal ? Icons.router : Icons.person,
-          ),
+          // Avatar — use Sigil for mesh nodes, UserAvatar for cloud authors
+          if (isMeshSignal && signal.meshNodeId != null)
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        NodeDexDetailScreen(nodeNum: signal.meshNodeId!),
+                  ),
+                );
+              },
+              child: SigilAvatar(nodeNum: signal.meshNodeId!, size: 40),
+            )
+          else
+            UserAvatar(
+              imageUrl: avatarUrl,
+              size: 40,
+              foregroundColor: avatarColor,
+              fallbackIcon: Icons.person,
+            ),
           const SizedBox(width: 12),
 
           // Author info

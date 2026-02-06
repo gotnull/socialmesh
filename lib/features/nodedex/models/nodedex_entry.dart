@@ -1092,10 +1092,22 @@ class NodeDexEntry {
       identical(this, other) ||
       other is NodeDexEntry &&
           runtimeType == other.runtimeType &&
-          nodeNum == other.nodeNum;
+          nodeNum == other.nodeNum &&
+          socialTag == other.socialTag &&
+          userNote == other.userNote &&
+          encounterCount == other.encounterCount &&
+          messageCount == other.messageCount &&
+          bestSnr == other.bestSnr &&
+          bestRssi == other.bestRssi &&
+          maxDistanceSeen == other.maxDistanceSeen &&
+          lastSeen == other.lastSeen &&
+          encounters.length == other.encounters.length &&
+          seenRegions.length == other.seenRegions.length &&
+          coSeenNodes.length == other.coSeenNodes.length;
 
   @override
-  int get hashCode => nodeNum.hashCode;
+  int get hashCode =>
+      Object.hash(nodeNum, socialTag, userNote, encounterCount, messageCount);
 
   @override
   String toString() =>

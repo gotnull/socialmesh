@@ -76,7 +76,7 @@ class AuthService {
         ? '${email.substring(0, email.indexOf('@').clamp(0, 3))}***@${email.split('@').last}'
         : 'none';
     AppLogging.auth(
-      '$context - User: uid=${user.uid.substring(0, 8)}..., '
+      '$context - User: uid=${user.uid.length >= 8 ? user.uid.substring(0, 8) : user.uid}..., '
       'email=$maskedEmail, isAnonymous=${user.isAnonymous}, '
       'providers=${user.providerData.map((p) => p.providerId).join(", ")}',
     );
@@ -90,7 +90,7 @@ class AuthService {
       return null;
     }
     AppLogging.auth(
-      'getIdToken - Fetching token (forceRefresh=$forceRefresh) for uid=${user.uid.substring(0, 8)}...',
+      'getIdToken - Fetching token (forceRefresh=$forceRefresh) for uid=${user.uid.length >= 8 ? user.uid.substring(0, 8) : user.uid}...',
     );
     try {
       final token = await user.getIdToken(forceRefresh);

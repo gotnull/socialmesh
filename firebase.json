@@ -53,10 +53,7 @@
   ],
   "hosting": {
     "public": "web",
-    "ignore": [
-      "firebase.json",
-      "**/node_modules/**"
-    ],
+    "ignore": ["firebase.json", "**/node_modules/**"],
     "headers": [
       {
         "source": "/.well-known/assetlinks.json",
@@ -109,6 +106,14 @@
       {
         "source": "/delete-account",
         "destination": "/delete-account.html"
+      },
+      {
+        "source": "/sigil",
+        "destination": "/sigil.html"
+      },
+      {
+        "source": "/sigil/**",
+        "destination": "/sigil.html"
       },
       {
         "source": "/share/**",

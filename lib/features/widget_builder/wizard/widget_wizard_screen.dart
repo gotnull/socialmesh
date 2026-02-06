@@ -2074,7 +2074,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
               ],
             ),
           ),
-          Switch(
+          Switch.adaptive(
             value: value,
             onChanged: onChanged,
             activeTrackColor: context.accentColor,
@@ -2415,7 +2415,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
                 ],
               ),
             ),
-            Switch(
+            Switch.adaptive(
               value: _mergeCharts,
               onChanged: (value) => _setMergeCharts(value),
               activeTrackColor: context.accentColor,
@@ -3140,7 +3140,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
                           ),
                         ),
                       ),
-                      Switch(
+                      Switch.adaptive(
                         value: config.enabled,
                         onChanged: (value) {
                           setState(() {

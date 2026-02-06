@@ -529,13 +529,14 @@ class _MeshBrainEmotionTestScreenState
             color: isDark ? Colors.white70 : Colors.black87,
           ),
         ),
-        Switch(
+        Switch.adaptive(
           value: value,
           onChanged: onChanged,
           activeTrackColor: (isDark ? Colors.cyan : Colors.blue).withValues(
             alpha: 0.5,
           ),
-          activeThumbColor: isDark ? Colors.cyan : Colors.blue,
+          activeColor: isDark ? Colors.cyan : Colors.blue,
+          thumbColor: WidgetStateProperty.all(Colors.white),
         ),
       ],
     );

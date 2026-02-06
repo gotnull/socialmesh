@@ -329,7 +329,8 @@ class _ProfileBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final displayName =
-        profile?.displayName ?? 'User ${userId.substring(0, 6)}...';
+        profile?.displayName ??
+        'User ${userId.length > 6 ? userId.substring(0, 6) : userId}...';
     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
 
     return Expanded(

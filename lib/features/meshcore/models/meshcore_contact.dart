@@ -41,7 +41,9 @@ class MeshCoreContact {
   });
 
   /// Returns a display-friendly name.
-  String get name => displayName ?? publicKey.substring(0, 8);
+  String get name =>
+      displayName ??
+      (publicKey.length >= 8 ? publicKey.substring(0, 8) : publicKey);
 
   /// Whether this contact has been seen recently (within 30 minutes).
   bool get isRecentlySeen {

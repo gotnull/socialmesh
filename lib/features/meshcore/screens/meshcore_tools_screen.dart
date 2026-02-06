@@ -676,7 +676,9 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
                     style: const TextStyle(color: Colors.white),
                   ),
                   subtitle: Text(
-                    contact.publicKeyHex.substring(0, 16),
+                    contact.publicKeyHex.length >= 16
+                        ? contact.publicKeyHex.substring(0, 16)
+                        : contact.publicKeyHex,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.5),
                       fontFamily: 'monospace',

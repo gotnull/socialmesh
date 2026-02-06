@@ -302,7 +302,9 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
                     ),
                     child: Center(
                       child: Text(
-                        node.shortName?.substring(0, 1).toUpperCase() ?? '?',
+                        (node.shortName?.isNotEmpty == true)
+                            ? node.shortName!.substring(0, 1).toUpperCase()
+                            : '?',
                         style: TextStyle(
                           color: presence.isActive
                               ? context.accentColor

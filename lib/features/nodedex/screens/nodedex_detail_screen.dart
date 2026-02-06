@@ -15,22 +15,31 @@
 // This screen is read-only for derived data (sigil, trait, stats)
 // and editable for user-owned data (social tag, note).
 
+import 'dart:math' as math;
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/help/help_content.dart';
+import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/ico_help_system.dart';
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
-import '../../../utils/snackbar.dart';
+
 import '../models/nodedex_entry.dart';
 import '../providers/nodedex_providers.dart';
 import '../services/trait_engine.dart';
+import '../widgets/edge_detail_sheet.dart';
+import '../widgets/animated_sigil_container.dart';
+import '../widgets/sigil_card_sheet.dart';
 import '../widgets/sigil_painter.dart';
 import '../widgets/trait_badge.dart';
 
@@ -59,10 +68,15 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
   void initState() {
     super.initState();
     _noteController = TextEditingController();
+    AppLogging.nodeDex(
+      'Detail screen opened for node ${widget.nodeNum} '
+      '(!${widget.nodeNum.toRadixString(16).toUpperCase()})',
+    );
   }
 
   @override
   void dispose() {
+    AppLogging.nodeDex('Detail screen disposed for node ${widget.nodeNum}');
     _noteController.dispose();
     super.dispose();
   }
@@ -110,102 +124,140 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     final hexId =
         '!${entry.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 
-    return GlassScaffold(
-      title: displayName,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.copy_outlined, size: 20),
-          tooltip: 'Copy Node ID',
-          onPressed: () {
-            Clipboard.setData(ClipboardData(text: hexId));
-            showSuccessSnackBar(context, 'Node ID copied');
-          },
-        ),
-      ],
-      slivers: [
-        // Sigil hero section
-        SliverToBoxAdapter(
-          child: _SigilHeroSection(
-            entry: entry,
-            node: node,
-            displayName: displayName,
-            hexId: hexId,
-            traitResult: traitResult,
-          ),
-        ),
-
-        // Trait card
-        SliverToBoxAdapter(child: _TraitCard(traitResult: traitResult)),
-
-        // Discovery stats
-        SliverToBoxAdapter(
-          child: _DiscoveryStatsCard(entry: entry, node: node),
-        ),
-
-        // Signal records
-        SliverToBoxAdapter(child: _SignalRecordsCard(entry: entry)),
-
-        // Social tag
-        SliverToBoxAdapter(
-          child: _SocialTagCard(
-            entry: entry,
-            onEditTag: () => _showTagSelector(context, entry),
-          ),
-        ),
-
-        // User note
-        SliverToBoxAdapter(
-          child: _UserNoteCard(
-            entry: entry,
-            editing: _editingNote,
-            controller: _noteController,
-            onStartEditing: () {
-              setState(() {
-                _editingNote = true;
-                _noteController.text = entry.userNote ?? '';
-              });
-            },
-            onSave: () => _saveNote(entry),
-            onCancel: () {
-              setState(() {
-                _editingNote = false;
-              });
+    return HelpTourController(
+      topicId: 'nodedex_detail',
+      stepKeys: const {},
+      child: GlassScaffold(
+        title: displayName,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.style_outlined, size: 20),
+            tooltip: 'Share Sigil Card',
+            onPressed: () {
+              AppLogging.nodeDex(
+                'Sigil card sheet opened for node ${widget.nodeNum}',
+              );
+              showSigilCardSheet(
+                context: context,
+                entry: entry,
+                traitResult: traitResult,
+                node: node,
+              );
             },
           ),
-        ),
+          IcoHelpAppBarButton(topicId: 'nodedex_detail'),
+        ],
+        slivers: [
+          // Sigil hero section
+          SliverToBoxAdapter(
+            child: _SigilHeroSection(
+              entry: entry,
+              node: node,
+              displayName: displayName,
+              hexId: hexId,
+              traitResult: traitResult,
+            ),
+          ),
 
-        // Region history
-        if (entry.seenRegions.isNotEmpty)
-          SliverToBoxAdapter(child: _RegionHistoryCard(entry: entry)),
+          // Trait card
+          SliverToBoxAdapter(child: _TraitCard(traitResult: traitResult)),
 
-        // Encounter timeline
-        if (entry.encounters.isNotEmpty)
-          SliverToBoxAdapter(child: _EncounterTimelineCard(entry: entry)),
+          // Discovery stats
+          SliverToBoxAdapter(
+            child: _DiscoveryStatsCard(entry: entry, node: node),
+          ),
 
-        // Co-seen nodes
-        if (entry.coSeenNodes.isNotEmpty)
-          SliverToBoxAdapter(child: _CoSeenNodesCard(entry: entry)),
+          // Signal records
+          SliverToBoxAdapter(child: _SignalRecordsCard(entry: entry)),
 
-        // Device info (from live MeshNode data)
-        if (node != null)
-          SliverToBoxAdapter(child: _DeviceInfoCard(node: node)),
+          // Device info (from live MeshNode data) — placed near signal records
+          if (node != null)
+            SliverToBoxAdapter(child: _DeviceInfoCard(node: node)),
 
-        // Bottom padding
-        SliverToBoxAdapter(
-          child: SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
-        ),
-      ],
+          // Social tag
+          SliverToBoxAdapter(
+            child: _SocialTagCard(
+              entry: entry,
+              onEditTag: () => _showTagSelector(context, entry),
+            ),
+          ),
+
+          // User note
+          SliverToBoxAdapter(
+            child: _UserNoteCard(
+              entry: entry,
+              editing: _editingNote,
+              controller: _noteController,
+              onStartEditing: () {
+                AppLogging.nodeDex(
+                  'Note editing started for node ${widget.nodeNum}',
+                );
+                setState(() {
+                  _editingNote = true;
+                  _noteController.text = entry.userNote ?? '';
+                });
+              },
+              onSave: () => _saveNote(entry),
+              onCancel: () {
+                setState(() {
+                  _editingNote = false;
+                });
+              },
+            ),
+          ),
+
+          // Region history
+          if (entry.seenRegions.isNotEmpty)
+            SliverToBoxAdapter(child: _RegionHistoryCard(entry: entry)),
+
+          // Encounter activity visualization
+          if (entry.encounters.isNotEmpty)
+            SliverToBoxAdapter(child: _EncounterActivityCard(entry: entry)),
+
+          // Co-seen nodes — pinned header + body
+          if (entry.coSeenNodes.isNotEmpty) ...[
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _NodeDexStickyHeaderDelegate(
+                title: 'Constellation Links',
+                icon: Icons.auto_awesome,
+                helpKey: 'constellation',
+                trailing: '${entry.coSeenNodes.length} total',
+              ),
+            ),
+            SliverToBoxAdapter(child: _CoSeenNodesBody(entry: entry)),
+          ],
+
+          // Bottom padding
+          SliverToBoxAdapter(
+            child: SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
+          ),
+        ],
+      ),
     );
   }
 
   void _showTagSelector(BuildContext context, NodeDexEntry entry) {
+    AppLogging.nodeDex(
+      'Tag selector opened for node ${widget.nodeNum}, '
+      'current tag: ${entry.socialTag?.name ?? 'none'}',
+    );
+    final notifier = ref.read(nodeDexProvider.notifier);
+    final nodeNum = widget.nodeNum;
+    final navigator = Navigator.of(context);
+
     AppBottomSheet.show<void>(
       context: context,
       child: SocialTagSelector(
         currentTag: entry.socialTag,
         onTagSelected: (tag) {
-          ref.read(nodeDexProvider.notifier).setSocialTag(widget.nodeNum, tag);
-          Navigator.pop(context);
+          AppLogging.nodeDex(
+            'Tag selected for node $nodeNum: ${tag?.name ?? 'cleared'}',
+          );
+          // Update state BEFORE pop so the detail screen rebuilds immediately
+          // while the sheet animates away.
+          notifier.setSocialTag(nodeNum, tag);
+          navigator.pop();
         },
       ),
     );
@@ -213,6 +265,10 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
 
   void _saveNote(NodeDexEntry entry) {
     final text = _noteController.text.trim();
+    AppLogging.nodeDex(
+      'Note saved for node ${widget.nodeNum}: '
+      '${text.isEmpty ? '(cleared)' : '${text.length} chars'}',
+    );
     ref
         .read(nodeDexProvider.notifier)
         .setUserNote(widget.nodeNum, text.isEmpty ? null : text);
@@ -271,11 +327,15 @@ class _SigilHeroSection extends StatelessWidget {
           Stack(
             alignment: Alignment.center,
             children: [
-              SigilDisplay(
+              AnimatedSigilContainer(
                 sigil: entry.sigil,
                 nodeNum: entry.nodeNum,
                 size: 120,
+                mode: isOnline
+                    ? SigilAnimationMode.full
+                    : SigilAnimationMode.ambientOnly,
                 showGlow: isOnline,
+                showTracer: isOnline,
                 trait: traitResult.primary,
               ),
               if (isOnline)
@@ -466,6 +526,7 @@ class _DiscoveryStatsCard extends StatelessWidget {
     return _CardContainer(
       title: 'Discovery',
       icon: Icons.explore_outlined,
+      helpKey: 'discovery',
       child: Column(
         children: [
           _InfoRow(
@@ -539,6 +600,7 @@ class _SignalRecordsCard extends StatelessWidget {
     return _CardContainer(
       title: 'Signal Records',
       icon: Icons.signal_cellular_alt,
+      helpKey: 'signal',
       child: Column(
         children: [
           if (entry.bestSnr != null)
@@ -590,6 +652,7 @@ class _SocialTagCard extends StatelessWidget {
     return _CardContainer(
       title: 'Classification',
       icon: Icons.label_outline,
+      helpKey: 'social_tag',
       trailing: GestureDetector(
         onTap: onEditTag,
         child: Container(
@@ -651,145 +714,164 @@ class _UserNoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _CardContainer(
-      title: 'Note',
-      icon: Icons.edit_note,
-      trailing: editing
-          ? Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: onCancel,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: context.textTertiary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'Cancel',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: context.textSecondary,
+    return GestureDetector(
+      onTap: () {
+        // Dismiss keyboard when tapping outside the text field
+        FocusScope.of(context).unfocus();
+      },
+      behavior: HitTestBehavior.translucent,
+      child: _CardContainer(
+        title: 'Note',
+        icon: Icons.edit_note,
+        helpKey: 'note',
+        trailing: editing
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                      onCancel();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.textTertiary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: context.textSecondary,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: onSave,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'Save',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: context.accentColor,
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                      onSave();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Save',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: context.accentColor,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            )
-          : GestureDetector(
-              onTap: onStartEditing,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: context.accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  entry.userNote != null ? 'Edit' : 'Add Note',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: context.accentColor,
+                ],
+              )
+            : GestureDetector(
+                onTap: onStartEditing,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.accentColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    entry.userNote != null ? 'Edit' : 'Add Note',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: context.accentColor,
+                    ),
                   ),
                 ),
               ),
-            ),
-      child: editing
-          ? Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: TextField(
-                controller: controller,
-                maxLines: 4,
-                maxLength: 280,
-                autofocus: true,
-                style: TextStyle(fontSize: 14, color: context.textPrimary),
-                decoration: InputDecoration(
-                  hintText: 'Write a note about this node...',
-                  hintStyle: TextStyle(
-                    fontSize: 14,
-                    color: context.textTertiary,
-                  ),
-                  filled: true,
-                  fillColor: context.background,
-                  contentPadding: const EdgeInsets.all(12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: context.border.withValues(alpha: 0.3),
-                      width: 0.5,
+        child: editing
+            ? Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: TextField(
+                  controller: controller,
+                  maxLines: 4,
+                  maxLength: 280,
+                  autofocus: true,
+                  // Allow scroll to ensure field is visible above keyboard
+                  scrollPadding: const EdgeInsets.all(80),
+                  onTapOutside: (_) {
+                    FocusScope.of(context).unfocus();
+                  },
+                  style: TextStyle(fontSize: 14, color: context.textPrimary),
+                  decoration: InputDecoration(
+                    hintText: 'Write a note about this node...',
+                    hintStyle: TextStyle(
+                      fontSize: 14,
+                      color: context.textTertiary,
                     ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: context.border.withValues(alpha: 0.3),
-                      width: 0.5,
+                    filled: true,
+                    fillColor: context.background,
+                    contentPadding: const EdgeInsets.all(12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: context.border.withValues(alpha: 0.3),
+                        width: 0.5,
+                      ),
                     ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: context.accentColor.withValues(alpha: 0.5),
-                      width: 1.0,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: context.border.withValues(alpha: 0.3),
+                        width: 0.5,
+                      ),
                     ),
-                  ),
-                  counterStyle: TextStyle(
-                    fontSize: 10,
-                    color: context.textTertiary,
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: context.accentColor.withValues(alpha: 0.5),
+                        width: 1.0,
+                      ),
+                    ),
+                    counterStyle: TextStyle(
+                      fontSize: 10,
+                      color: context.textTertiary,
+                    ),
                   ),
                 ),
+              )
+            : Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: entry.userNote != null
+                    ? Text(
+                        entry.userNote!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: context.textPrimary,
+                          height: 1.5,
+                        ),
+                      )
+                    : Text(
+                        'No note yet. Tap "Add Note" to write one.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.textTertiary,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
               ),
-            )
-          : Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: entry.userNote != null
-                  ? Text(
-                      entry.userNote!,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: context.textPrimary,
-                        height: 1.5,
-                      ),
-                    )
-                  : Text(
-                      'No note yet. Tap "Add Note" to write one.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.textTertiary,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-            ),
+      ),
     );
   }
 }
@@ -811,6 +893,7 @@ class _RegionHistoryCard extends StatelessWidget {
     return _CardContainer(
       title: 'Regions',
       icon: Icons.public_outlined,
+      helpKey: 'regions',
       child: Column(
         children: regions.map((region) {
           final dateFormat = DateFormat('MMM d');
@@ -866,216 +949,973 @@ class _RegionHistoryCard extends StatelessWidget {
 }
 
 // =============================================================================
-// Encounter Timeline Card
+// Encounter Activity Card — visual encounter chart + compact recent list
 // =============================================================================
 
-class _EncounterTimelineCard extends StatelessWidget {
+/// Encounter activity visualization card.
+///
+/// Shows a bar chart of encounter frequency bucketed by day, with bars
+/// colored by average signal quality. Below the chart, a paginated list
+/// of recent encounters with signal metrics and optional calendar filter.
+class _EncounterActivityCard extends StatefulWidget {
   final NodeDexEntry entry;
 
-  const _EncounterTimelineCard({required this.entry});
+  const _EncounterActivityCard({required this.entry});
+
+  @override
+  State<_EncounterActivityCard> createState() => _EncounterActivityCardState();
+}
+
+class _EncounterActivityCardState extends State<_EncounterActivityCard> {
+  int _currentPage = 0;
+  DateTime? _selectedDate;
+
+  @override
+  void didUpdateWidget(covariant _EncounterActivityCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reset page if data changed and current page is out of range.
+    final filtered = _filteredEncounters;
+    final pageSize = NodeDexConfig.encounterPageSize;
+    final totalPages = (filtered.length / pageSize).ceil();
+    if (_currentPage >= totalPages && totalPages > 0) {
+      _currentPage = totalPages - 1;
+    }
+  }
+
+  List<EncounterRecord> get _filteredEncounters {
+    final all = widget.entry.encounters.reversed.toList();
+    if (_selectedDate == null) return all;
+    return all.where((e) {
+      return e.timestamp.year == _selectedDate!.year &&
+          e.timestamp.month == _selectedDate!.month &&
+          e.timestamp.day == _selectedDate!.day;
+    }).toList();
+  }
+
+  Set<DateTime> get _encounterDates {
+    final dates = <DateTime>{};
+    for (final enc in widget.entry.encounters) {
+      dates.add(
+        DateTime(enc.timestamp.year, enc.timestamp.month, enc.timestamp.day),
+      );
+    }
+    return dates;
+  }
+
+  Future<void> _showCalendarPicker() async {
+    final encounters = widget.entry.encounters;
+    if (encounters.isEmpty) return;
+
+    final earliest = encounters
+        .map((e) => e.timestamp)
+        .reduce((a, b) => a.isBefore(b) ? a : b);
+    final latest = encounters
+        .map((e) => e.timestamp)
+        .reduce((a, b) => a.isAfter(b) ? a : b);
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? latest,
+      firstDate: DateTime(earliest.year, earliest.month, earliest.day),
+      lastDate: DateTime(latest.year, latest.month, latest.day),
+      helpText: 'Filter encounters by date',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(
+              context,
+            ).colorScheme.copyWith(surface: context.background),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (!mounted) return;
+
+    if (picked != null) {
+      // Check if any encounters exist on this date.
+      final hasEncounters = _encounterDates.contains(picked);
+      setState(() {
+        _selectedDate = picked;
+        _currentPage = 0;
+        if (!hasEncounters) {
+          // Keep the filter set — user will see "No encounters on this date"
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Show most recent encounters (up to 10).
-    final encounters = entry.encounters.reversed.take(10).toList();
+    final allEncounters = widget.entry.encounters.reversed.toList();
+    final encounters = _filteredEncounters;
     final dateFormat = DateFormat('MMM d, HH:mm');
+    final pageSize = NodeDexConfig.encounterPageSize;
+    final totalPages = (encounters.length / pageSize).ceil();
+
+    // Clamp current page to valid range.
+    var page = _currentPage;
+    if (page >= totalPages && totalPages > 0) {
+      page = totalPages - 1;
+    }
+
+    final startIndex = page * pageSize;
+    final endIndex = encounters.isEmpty
+        ? 0
+        : (startIndex + pageSize).clamp(0, encounters.length);
+    final pageItems = encounters.isEmpty
+        ? <EncounterRecord>[]
+        : encounters.sublist(startIndex, endIndex);
 
     return _CardContainer(
-      title: 'Recent Encounters',
-      icon: Icons.timeline,
+      title: 'Encounter Activity',
+      icon: Icons.insights,
+      helpKey: 'encounters',
+      trailing: Text(
+        '${allEncounters.length} total',
+        style: TextStyle(
+          fontSize: 11,
+          color: context.textTertiary,
+          fontFamily: AppTheme.fontFamily,
+        ),
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (int i = 0; i < encounters.length; i++)
-            _EncounterTimelineRow(
-              encounter: encounters[i],
-              dateFormat: dateFormat,
-              isFirst: i == 0,
-              isLast: i == encounters.length - 1,
-            ),
-          if (entry.encounters.length > 10)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                '${entry.encounters.length - 10} more encounters not shown',
+          // Activity bar chart (always shows all encounters, not filtered)
+          _EncounterBarChart(
+            encounters: allEncounters,
+            selectedDate: _selectedDate,
+            onDayTapped: (day) {
+              setState(() {
+                if (_selectedDate == day) {
+                  _selectedDate = null; // Toggle off
+                } else {
+                  _selectedDate = day;
+                }
+                _currentPage = 0;
+              });
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          // Signal sparkline (if any encounters have SNR data)
+          if (allEncounters.any((e) => e.snr != null)) ...[
+            _SignalSparkline(encounters: allEncounters),
+            const SizedBox(height: 16),
+          ],
+
+          // Recent encounters header with calendar action
+          Row(
+            children: [
+              Icon(Icons.history, size: 12, color: context.textTertiary),
+              const SizedBox(width: 4),
+              Text(
+                _selectedDate != null
+                    ? DateFormat(
+                        'MMM d, yyyy',
+                      ).format(_selectedDate!).toUpperCase()
+                    : 'RECENT',
                 style: TextStyle(
-                  fontSize: 11,
-                  color: context.textTertiary,
-                  fontStyle: FontStyle.italic,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: _selectedDate != null
+                      ? context.accentColor
+                      : context.textTertiary,
+                  letterSpacing: 0.8,
                 ),
               ),
+              if (_selectedDate != null) ...[
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = null;
+                      _currentPage = 0;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.close, size: 10, color: context.accentColor),
+                        const SizedBox(width: 2),
+                        Text(
+                          'Clear',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                            color: context.accentColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              const Spacer(),
+              if (encounters.isNotEmpty)
+                Text(
+                  '${encounters.length} encounter${encounters.length == 1 ? '' : 's'}',
+                  style: TextStyle(fontSize: 9, color: context.textTertiary),
+                ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _showCalendarPicker,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: _selectedDate != null
+                        ? context.accentColor.withValues(alpha: 0.1)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(
+                    Icons.calendar_month,
+                    size: 14,
+                    color: _selectedDate != null
+                        ? context.accentColor
+                        : context.textTertiary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // Paginated encounter list
+          if (pageItems.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Center(
+                child: Text(
+                  _selectedDate != null
+                      ? 'No encounters on this date'
+                      : 'No encounters recorded',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: context.textTertiary,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            )
+          else
+            ...pageItems.map(
+              (enc) =>
+                  _CompactEncounterRow(encounter: enc, dateFormat: dateFormat),
             ),
+
+          // Pagination footer
+          if (totalPages > 1) ...[
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _PaginationButton(
+                  icon: Icons.chevron_left,
+                  enabled: page > 0,
+                  onTap: () => setState(() => _currentPage = page - 1),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  '${page + 1} / $totalPages',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: context.textSecondary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _PaginationButton(
+                  icon: Icons.chevron_right,
+                  enabled: page < totalPages - 1,
+                  onTap: () => setState(() => _currentPage = page + 1),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _EncounterTimelineRow extends StatelessWidget {
-  final EncounterRecord encounter;
-  final DateFormat dateFormat;
-  final bool isFirst;
-  final bool isLast;
+/// Bar chart showing encounter frequency bucketed by day.
+///
+/// Each bar represents one day. Bar height = number of encounters that day.
+/// Bar color encodes average signal quality (SNR) for that day's encounters:
+///   green = strong signal, amber = moderate, red = weak, accent = no data.
+class _EncounterBarChart extends StatelessWidget {
+  final List<EncounterRecord> encounters;
+  final DateTime? selectedDate;
+  final ValueChanged<DateTime>? onDayTapped;
 
-  const _EncounterTimelineRow({
-    required this.encounter,
-    required this.dateFormat,
-    required this.isFirst,
-    required this.isLast,
+  const _EncounterBarChart({
+    required this.encounters,
+    this.selectedDate,
+    this.onDayTapped,
   });
 
   @override
   Widget build(BuildContext context) {
-    final hasPosition =
-        encounter.latitude != null && encounter.longitude != null;
+    if (encounters.isEmpty) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Timeline line and dot
-            SizedBox(
-              width: 24,
-              child: Column(
-                children: [
-                  if (!isFirst)
-                    Expanded(
-                      child: Container(
-                        width: 1.5,
-                        color: context.accentColor.withValues(alpha: 0.2),
+    // Bucket encounters by day.
+    final buckets = <DateTime, List<EncounterRecord>>{};
+    for (final enc in encounters) {
+      final day = DateTime(
+        enc.timestamp.year,
+        enc.timestamp.month,
+        enc.timestamp.day,
+      );
+      buckets.putIfAbsent(day, () => []).add(enc);
+    }
+
+    // Sort days chronologically.
+    final sortedDays = buckets.keys.toList()..sort();
+
+    // Single-day: show a summary bubble instead of a lonely bar.
+    if (sortedDays.length == 1) {
+      return _SingleDaySummary(
+        day: sortedDays.first,
+        encounters: buckets[sortedDays.first]!,
+      );
+    }
+
+    // Fill gaps — include days with zero encounters so the chart shows
+    // the full timeline without misleading compressed gaps.
+    final allDays = <DateTime>[];
+    var current = sortedDays.first;
+    final last = sortedDays.last;
+    while (!current.isAfter(last)) {
+      allDays.add(current);
+      current = current.add(const Duration(days: 1));
+    }
+
+    // Cap to last 60 days for readability.
+    final displayDays = allDays.length > 60
+        ? allDays.sublist(allDays.length - 60)
+        : allDays;
+
+    // Find max count for normalization.
+    int maxCount = 1;
+    for (final day in displayDays) {
+      final count = buckets[day]?.length ?? 0;
+      if (count > maxCount) maxCount = count;
+    }
+
+    final barChartHeight = 80.0;
+    final dayFormat = DateFormat('MMM d');
+
+    // Label positions — show first, last, and middle.
+    final labelIndices = <int>{};
+    labelIndices.addAll([0, displayDays.length - 1]);
+    if (displayDays.length > 4) {
+      labelIndices.add(displayDays.length ~/ 2);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Chart
+        SizedBox(
+          height: barChartHeight,
+          child: displayDays.length <= 7
+              // Few days: center fixed-width bars so they don't stretch
+              // into a solid wall of color.
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    for (int i = 0; i < displayDays.length; i++) ...[
+                      GestureDetector(
+                        onTap:
+                            onDayTapped != null &&
+                                (buckets[displayDays[i]]?.isNotEmpty ?? false)
+                            ? () => onDayTapped!(displayDays[i])
+                            : null,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: 32,
+                            minWidth: 16,
+                          ),
+                          child: _ActivityBar(
+                            count: buckets[displayDays[i]]?.length ?? 0,
+                            maxCount: maxCount,
+                            maxHeight: barChartHeight,
+                            color: _barColor(context, buckets[displayDays[i]]),
+                            highlighted: selectedDate == displayDays[i],
+                          ),
+                        ),
                       ),
-                    ),
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: isFirst
-                          ? context.accentColor
-                          : context.accentColor.withValues(alpha: 0.4),
-                      shape: BoxShape.circle,
+                      if (i < displayDays.length - 1) const SizedBox(width: 6),
+                    ],
+                  ],
+                )
+              // Many days: expand to fill width as before.
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    for (int i = 0; i < displayDays.length; i++) ...[
+                      Expanded(
+                        child: GestureDetector(
+                          onTap:
+                              onDayTapped != null &&
+                                  (buckets[displayDays[i]]?.isNotEmpty ?? false)
+                              ? () => onDayTapped!(displayDays[i])
+                              : null,
+                          child: _ActivityBar(
+                            count: buckets[displayDays[i]]?.length ?? 0,
+                            maxCount: maxCount,
+                            maxHeight: barChartHeight,
+                            color: _barColor(context, buckets[displayDays[i]]),
+                            highlighted: selectedDate == displayDays[i],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+        ),
+
+        const SizedBox(height: 4),
+
+        // Date labels
+        SizedBox(
+          height: 14,
+          child: Stack(
+            children: [
+              for (final idx in labelIndices)
+                Positioned(
+                  left:
+                      (idx / (displayDays.length - 1)) *
+                      (MediaQuery.of(context).size.width - 100) *
+                      0.85,
+                  child: Text(
+                    dayFormat.format(displayDays[idx]),
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: context.textTertiary,
+                      fontFamily: AppTheme.fontFamily,
                     ),
                   ),
-                  if (!isLast)
+                ),
+            ],
+          ),
+        ),
+
+        // Legend
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            _LegendDot(color: _signalColor(context, 'good'), label: 'Strong'),
+            const SizedBox(width: 10),
+            _LegendDot(color: _signalColor(context, 'mid'), label: 'Fair'),
+            const SizedBox(width: 10),
+            _LegendDot(color: _signalColor(context, 'weak'), label: 'Weak'),
+            const SizedBox(width: 10),
+            _LegendDot(
+              color: context.accentColor.withValues(alpha: 0.5),
+              label: 'No data',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Color _barColor(BuildContext context, List<EncounterRecord>? dayEncounters) {
+    if (dayEncounters == null || dayEncounters.isEmpty) {
+      return context.accentColor.withValues(alpha: 0.15);
+    }
+
+    // Average SNR for the day.
+    final snrValues = dayEncounters
+        .where((e) => e.snr != null)
+        .map((e) => e.snr!)
+        .toList();
+
+    if (snrValues.isEmpty) {
+      return context.accentColor.withValues(alpha: 0.5);
+    }
+
+    final avgSnr = snrValues.reduce((a, b) => a + b) / snrValues.length;
+
+    if (avgSnr >= 5) return _signalColor(context, 'good');
+    if (avgSnr >= -5) return _signalColor(context, 'mid');
+    return _signalColor(context, 'weak');
+  }
+
+  static Color _signalColor(BuildContext context, String level) {
+    switch (level) {
+      case 'good':
+        return const Color(0xFF4ADE80); // green
+      case 'mid':
+        return const Color(0xFFFBBF24); // amber
+      case 'weak':
+        return const Color(0xFFF87171); // red
+      default:
+        return context.accentColor;
+    }
+  }
+}
+
+/// Summary bubble shown when all encounters fall on a single day.
+///
+/// Replaces the lonely single-bar chart with a centered, informative
+/// display showing the count, date, and signal quality breakdown.
+class _SingleDaySummary extends StatelessWidget {
+  final DateTime day;
+  final List<EncounterRecord> encounters;
+
+  const _SingleDaySummary({required this.day, required this.encounters});
+
+  @override
+  Widget build(BuildContext context) {
+    final dayFormat = DateFormat('EEEE, MMM d');
+    final count = encounters.length;
+
+    // Signal quality breakdown.
+    int strong = 0;
+    int fair = 0;
+    int weak = 0;
+    int noData = 0;
+    for (final enc in encounters) {
+      if (enc.snr == null) {
+        noData++;
+      } else if (enc.snr! >= 5) {
+        strong++;
+      } else if (enc.snr! >= -5) {
+        fair++;
+      } else {
+        weak++;
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      decoration: BoxDecoration(
+        color: context.accentColor.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.accentColor.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        children: [
+          // Large count
+          Text(
+            '$count',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              color: context.accentColor,
+              fontFamily: AppTheme.fontFamily,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'encounter${count == 1 ? '' : 's'}',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: context.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            dayFormat.format(day),
+            style: TextStyle(
+              fontSize: 11,
+              color: context.textTertiary,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Signal quality breakdown bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: SizedBox(
+              height: 6,
+              child: Row(
+                children: [
+                  if (strong > 0)
                     Expanded(
+                      flex: strong,
+                      child: Container(color: const Color(0xFF4ADE80)),
+                    ),
+                  if (fair > 0)
+                    Expanded(
+                      flex: fair,
+                      child: Container(color: const Color(0xFFFBBF24)),
+                    ),
+                  if (weak > 0)
+                    Expanded(
+                      flex: weak,
+                      child: Container(color: const Color(0xFFF87171)),
+                    ),
+                  if (noData > 0)
+                    Expanded(
+                      flex: noData,
                       child: Container(
-                        width: 1.5,
-                        color: context.accentColor.withValues(alpha: 0.2),
+                        color: context.accentColor.withValues(alpha: 0.3),
                       ),
                     ),
                 ],
               ),
             ),
-            const SizedBox(width: 10),
+          ),
+          const SizedBox(height: 8),
+          // Legend row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (strong > 0) ...[
+                _LegendDot(color: const Color(0xFF4ADE80), label: '$strong'),
+                const SizedBox(width: 10),
+              ],
+              if (fair > 0) ...[
+                _LegendDot(color: const Color(0xFFFBBF24), label: '$fair'),
+                const SizedBox(width: 10),
+              ],
+              if (weak > 0) ...[
+                _LegendDot(color: const Color(0xFFF87171), label: '$weak'),
+                const SizedBox(width: 10),
+              ],
+              if (noData > 0)
+                _LegendDot(
+                  color: context.accentColor.withValues(alpha: 0.3),
+                  label: '$noData',
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-            // Encounter details
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                margin: const EdgeInsets.only(bottom: 4),
-                decoration: BoxDecoration(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: context.border.withValues(alpha: 0.2),
-                    width: 0.5,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            dateFormat.format(encounter.timestamp),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: context.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              if (encounter.snr != null)
-                                _MiniMetric(
-                                  label: 'SNR',
-                                  value: '${encounter.snr}',
-                                ),
-                              if (encounter.snr != null &&
-                                  encounter.rssi != null)
-                                const SizedBox(width: 8),
-                              if (encounter.rssi != null)
-                                _MiniMetric(
-                                  label: 'RSSI',
-                                  value: '${encounter.rssi}',
-                                ),
-                              if (encounter.distanceMeters != null) ...[
-                                const SizedBox(width: 8),
-                                _MiniMetric(
-                                  label: 'Range',
-                                  value: _shortDist(encounter.distanceMeters!),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (hasPosition)
-                      Icon(
-                        Icons.pin_drop_outlined,
-                        size: 14,
-                        color: context.textTertiary.withValues(alpha: 0.5),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+/// Single bar in the activity chart.
+class _ActivityBar extends StatelessWidget {
+  final int count;
+  final int maxCount;
+  final double maxHeight;
+  final Color color;
+  final bool highlighted;
+
+  const _ActivityBar({
+    required this.count,
+    required this.maxCount,
+    required this.maxHeight,
+    required this.color,
+    this.highlighted = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final fraction = count / maxCount;
+    // Minimum visible height for non-zero days.
+    final barHeight = count > 0
+        ? math.max(3.0, fraction * (maxHeight - 4))
+        : 0.0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 0.5),
+      child: Tooltip(
+        message: '$count encounter${count == 1 ? '' : 's'}',
+        child: Container(
+          height: barHeight,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+            border: highlighted
+                ? Border.all(color: context.accentColor, width: 1.5)
+                : null,
+          ),
         ),
       ),
     );
   }
-
-  String _shortDist(double meters) {
-    if (meters >= 1000) {
-      return '${(meters / 1000).toStringAsFixed(1)}km';
-    }
-    return '${meters.round()}m';
-  }
 }
 
-class _MiniMetric extends StatelessWidget {
+/// Legend dot + label for the bar chart.
+class _LegendDot extends StatelessWidget {
+  final Color color;
   final String label;
-  final String value;
 
-  const _MiniMetric({required this.label, required this.value});
+  const _LegendDot({required this.color, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          '$label: ',
-          style: TextStyle(fontSize: 10, color: context.textTertiary),
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: context.textSecondary,
-            fontFamily: AppTheme.fontFamily,
+        const SizedBox(width: 3),
+        Text(label, style: TextStyle(fontSize: 9, color: context.textTertiary)),
+      ],
+    );
+  }
+}
+
+/// Mini sparkline showing SNR trend over the most recent encounters.
+class _SignalSparkline extends StatelessWidget {
+  final List<EncounterRecord> encounters;
+
+  const _SignalSparkline({required this.encounters});
+
+  @override
+  Widget build(BuildContext context) {
+    // Take last 30 encounters with SNR, chronological order.
+    final withSnr = encounters
+        .where((e) => e.snr != null)
+        .toList()
+        .reversed
+        .take(30)
+        .toList();
+
+    if (withSnr.length < 2) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.signal_cellular_alt,
+              size: 12,
+              color: context.textTertiary,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'SNR TREND',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: context.textTertiary,
+                letterSpacing: 0.8,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              'Last ${withSnr.length} readings',
+              style: TextStyle(fontSize: 9, color: context.textTertiary),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          height: 40,
+          child: CustomPaint(
+            size: const Size(double.infinity, 40),
+            painter: _SparklinePainter(
+              values: withSnr.map((e) => e.snr!.toDouble()).toList(),
+              lineColor: context.accentColor,
+              fillColor: context.accentColor.withValues(alpha: 0.1),
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+/// CustomPainter for the SNR sparkline.
+class _SparklinePainter extends CustomPainter {
+  final List<double> values;
+  final Color lineColor;
+  final Color fillColor;
+
+  _SparklinePainter({
+    required this.values,
+    required this.lineColor,
+    required this.fillColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (values.length < 2) return;
+
+    final minVal = values.reduce(math.min);
+    final maxVal = values.reduce(math.max);
+    final range = maxVal - minVal;
+    final effectiveRange = range < 1 ? 1.0 : range;
+
+    final linePaint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final fillPaint = Paint()
+      ..color = fillColor
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    final fillPath = Path();
+
+    for (int i = 0; i < values.length; i++) {
+      final x = (i / (values.length - 1)) * size.width;
+      final normalized = (values[i] - minVal) / effectiveRange;
+      final y = size.height - (normalized * (size.height - 4)) - 2;
+
+      if (i == 0) {
+        path.moveTo(x, y);
+        fillPath.moveTo(x, size.height);
+        fillPath.lineTo(x, y);
+      } else {
+        path.lineTo(x, y);
+        fillPath.lineTo(x, y);
+      }
+    }
+
+    // Close fill path along the bottom.
+    fillPath.lineTo(size.width, size.height);
+    fillPath.close();
+
+    canvas.drawPath(fillPath, fillPaint);
+    canvas.drawPath(path, linePaint);
+
+    // Draw dot on the most recent value (last point).
+    final lastX = size.width;
+    final lastNorm = (values.last - minVal) / effectiveRange;
+    final lastY = size.height - (lastNorm * (size.height - 4)) - 2;
+    canvas.drawCircle(Offset(lastX, lastY), 3, Paint()..color = lineColor);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SparklinePainter oldDelegate) {
+    return values != oldDelegate.values || lineColor != oldDelegate.lineColor;
+  }
+}
+
+/// Compact row for a recent encounter — one line with date and metrics.
+class _CompactEncounterRow extends StatelessWidget {
+  final EncounterRecord encounter;
+  final DateFormat dateFormat;
+
+  const _CompactEncounterRow({
+    required this.encounter,
+    required this.dateFormat,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        children: [
+          // Colored signal dot
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: _dotColor(context),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Date
+          Text(
+            dateFormat.format(encounter.timestamp),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: context.textPrimary,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+          const Spacer(),
+          // Metrics
+          if (encounter.snr != null)
+            _CompactMetric(
+              label: 'SNR',
+              value: '${encounter.snr}',
+              context: context,
+            ),
+          if (encounter.rssi != null) ...[
+            const SizedBox(width: 8),
+            _CompactMetric(
+              label: 'RSSI',
+              value: '${encounter.rssi}',
+              context: context,
+            ),
+          ],
+          if (encounter.distanceMeters != null) ...[
+            const SizedBox(width: 8),
+            _CompactMetric(
+              label: 'RNG',
+              value: _shortDist(encounter.distanceMeters!),
+              context: context,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Color _dotColor(BuildContext context) {
+    if (encounter.snr == null) {
+      return context.textTertiary.withValues(alpha: 0.4);
+    }
+    if (encounter.snr! >= 5) return const Color(0xFF4ADE80);
+    if (encounter.snr! >= -5) return const Color(0xFFFBBF24);
+    return const Color(0xFFF87171);
+  }
+
+  String _shortDist(double meters) {
+    if (meters >= 1000) return '${(meters / 1000).toStringAsFixed(1)}km';
+    return '${meters.round()}m';
+  }
+}
+
+/// Tiny inline metric for compact encounter rows.
+class _CompactMetric extends StatelessWidget {
+  final String label;
+  final String value;
+  final BuildContext context;
+
+  const _CompactMetric({
+    required this.label,
+    required this.value,
+    required this.context,
+  });
+
+  @override
+  Widget build(BuildContext _) {
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: '$label ',
+            style: TextStyle(fontSize: 9, color: context.textTertiary),
+          ),
+          TextSpan(
+            text: value,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              color: context.textSecondary,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1084,23 +1924,29 @@ class _MiniMetric extends StatelessWidget {
 // Co-seen Nodes Card
 // =============================================================================
 
-class _CoSeenNodesCard extends ConsumerStatefulWidget {
+/// Body content for constellation links, used below the pinned header.
+///
+/// Pagination is self-contained — controls render at the bottom of the list.
+class _CoSeenNodesBody extends ConsumerStatefulWidget {
   final NodeDexEntry entry;
 
-  const _CoSeenNodesCard({required this.entry});
+  const _CoSeenNodesBody({required this.entry});
 
   @override
-  ConsumerState<_CoSeenNodesCard> createState() => _CoSeenNodesCardState();
+  ConsumerState<_CoSeenNodesBody> createState() => _CoSeenNodesBodyState();
 }
 
-class _CoSeenNodesCardState extends ConsumerState<_CoSeenNodesCard> {
+class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
   int _currentPage = 0;
 
   @override
-  void didUpdateWidget(covariant _CoSeenNodesCard oldWidget) {
+  void didUpdateWidget(covariant _CoSeenNodesBody oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.entry.nodeNum != widget.entry.nodeNum) {
-      _currentPage = 0;
+    // Reset page if data changed and current page is out of range.
+    final pageSize = NodeDexConfig.coSeenPageSize;
+    final totalPages = (widget.entry.coSeenNodes.length / pageSize).ceil();
+    if (_currentPage >= totalPages && totalPages > 0) {
+      _currentPage = totalPages - 1;
     }
   }
 
@@ -1118,27 +1964,16 @@ class _CoSeenNodesCardState extends ConsumerState<_CoSeenNodesCard> {
     final totalPages = (totalCount / pageSize).ceil();
 
     // Clamp current page to valid range.
-    if (_currentPage >= totalPages && totalPages > 0) {
-      _currentPage = totalPages - 1;
+    var page = _currentPage;
+    if (page >= totalPages && totalPages > 0) {
+      page = totalPages - 1;
     }
 
-    final startIndex = _currentPage * pageSize;
+    final startIndex = page * pageSize;
     final endIndex = (startIndex + pageSize).clamp(0, totalCount);
     final pageItems = coSeenSorted.sublist(startIndex, endIndex);
 
-    return _CardContainer(
-      title: 'Constellation Links',
-      icon: Icons.auto_awesome,
-      trailing: totalCount > 0
-          ? Text(
-              '$totalCount total',
-              style: TextStyle(
-                fontSize: 11,
-                color: context.textTertiary,
-                fontFamily: AppTheme.fontFamily,
-              ),
-            )
-          : null,
+    return _StickyCardBody(
       child: Column(
         children: [
           Text(
@@ -1156,136 +1991,181 @@ class _CoSeenNodesCardState extends ConsumerState<_CoSeenNodesCard> {
 
             return Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: Row(
-                children: [
-                  SigilAvatar(
-                    sigil: coSeenEntry?.sigil,
-                    nodeNum: coSeen.key,
-                    size: 32,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: context.textPrimary,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    AppLogging.nodeDex(
+                      'Constellation link tapped: '
+                      '${widget.entry.nodeNum} → ${coSeen.key} '
+                      '(co-seen ${relationship.count} times)',
+                    );
+                    HapticFeedback.selectionClick();
+                    EdgeDetailSheet.show(
+                      context: context,
+                      fromNodeNum: widget.entry.nodeNum,
+                      toNodeNum: coSeen.key,
+                      onOpenNodeDetail: (nodeNum) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                NodeDexDetailScreen(nodeNum: nodeNum),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        );
+                      },
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Row(
+                      children: [
+                        SigilAvatar(
+                          sigil: coSeenEntry?.sigil,
+                          nodeNum: coSeen.key,
+                          size: 32,
                         ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.schedule,
-                              size: 10,
-                              color: context.textTertiary,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              dateFormat.format(relationship.lastSeen),
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: context.textTertiary,
-                              ),
-                            ),
-                            if (relationship.messageCount > 0) ...[
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.chat_bubble_outline,
-                                size: 10,
-                                color: context.textTertiary,
-                              ),
-                              const SizedBox(width: 3),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Text(
-                                '${relationship.messageCount}',
+                                name,
                                 style: TextStyle(
-                                  fontSize: 10,
-                                  color: context.textTertiary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: context.textPrimary,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.schedule,
+                                    size: 10,
+                                    color: context.textTertiary,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    dateFormat.format(relationship.lastSeen),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: context.textTertiary,
+                                    ),
+                                  ),
+                                  if (relationship.messageCount > 0) ...[
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.chat_bubble_outline,
+                                      size: 10,
+                                      color: context.textTertiary,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      '${relationship.messageCount}',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: context.textTertiary,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ],
-                          ],
+                          ),
+                        ),
+                        Tooltip(
+                          message: 'Seen together ${relationship.count} times',
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: context.accentColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.visibility_outlined,
+                                  size: 10,
+                                  color: context.accentColor,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '${relationship.count}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: context.accentColor,
+                                    fontFamily: AppTheme.fontFamily,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 16,
+                          color: context.textTertiary.withValues(alpha: 0.4),
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '${relationship.count}x',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: context.accentColor,
-                        fontFamily: AppTheme.fontFamily,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             );
           }),
 
           // Pagination footer
-          if (totalPages > 1)
-            Padding(
-              padding: const EdgeInsets.only(top: 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Previous button
-                  _PaginationButton(
-                    icon: Icons.chevron_left,
-                    enabled: _currentPage > 0,
-                    onTap: () => setState(() => _currentPage--),
-                  ),
-                  const SizedBox(width: 12),
-                  // Page indicator
-                  Text(
-                    '${_currentPage + 1} / $totalPages',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: context.textSecondary,
-                      fontFamily: AppTheme.fontFamily,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Next button
-                  _PaginationButton(
-                    icon: Icons.chevron_right,
-                    enabled: _currentPage < totalPages - 1,
-                    onTap: () => setState(() => _currentPage++),
-                  ),
-                ],
-              ),
-            )
-          // Single-page "show more" hint when exactly one page but more exist
-          else if (totalCount > pageSize)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                '${totalCount - pageSize} more connections',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: context.textTertiary,
-                  fontStyle: FontStyle.italic,
+          if (totalPages > 1) ...[
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _PaginationButton(
+                  icon: Icons.chevron_left,
+                  enabled: page > 0,
+                  onTap: () {
+                    AppLogging.nodeDex(
+                      'Constellation page changed to $page/$totalPages '
+                      'for node ${widget.entry.nodeNum}',
+                    );
+                    setState(() => _currentPage = page - 1);
+                  },
                 ),
-              ),
+                const SizedBox(width: 12),
+                Text(
+                  '${page + 1} / $totalPages',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: context.textSecondary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _PaginationButton(
+                  icon: Icons.chevron_right,
+                  enabled: page < totalPages - 1,
+                  onTap: () {
+                    AppLogging.nodeDex(
+                      'Constellation page changed to ${page + 2}/$totalPages '
+                      'for node ${widget.entry.nodeNum}',
+                    );
+                    setState(() => _currentPage = page + 1);
+                  },
+                ),
+              ],
             ),
+          ],
         ],
       ),
     );
@@ -1352,6 +2232,7 @@ class _DeviceInfoCard extends StatelessWidget {
     return _CardContainer(
       title: 'Device',
       icon: Icons.developer_board_outlined,
+      helpKey: 'device',
       child: Column(
         children: [
           if (node.hardwareModel != null)
@@ -1430,12 +2311,14 @@ class _CardContainer extends StatelessWidget {
   final String title;
   final IconData icon;
   final Widget? trailing;
+  final String? helpKey;
   final Widget child;
 
   const _CardContainer({
     required this.title,
     required this.icon,
     this.trailing,
+    this.helpKey,
     required this.child,
   });
 
@@ -1469,6 +2352,10 @@ class _CardContainer extends StatelessWidget {
                   letterSpacing: 0.8,
                 ),
               ),
+              if (helpKey != null) ...[
+                const SizedBox(width: 4),
+                _SectionInfoButton(helpKey: helpKey!),
+              ],
               const Spacer(),
               if (trailing != null) trailing!,
             ],
@@ -1477,6 +2364,265 @@ class _CardContainer extends StatelessWidget {
           child,
         ],
       ),
+    );
+  }
+}
+
+// =============================================================================
+// Section Info Button — inline contextual help
+// =============================================================================
+
+/// Small info icon that shows contextual help for a NodeDex detail section.
+///
+/// Tapping opens a bottom sheet with the section-specific help text
+/// from [HelpContent.nodeDexSectionHelp]. This provides quick access
+/// to section explanations without starting a full guided tour.
+class _SectionInfoButton extends StatelessWidget {
+  final String helpKey;
+
+  const _SectionInfoButton({required this.helpKey});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showHelp(context),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Icon(
+          Icons.info_outline,
+          size: 14,
+          color: context.textTertiary.withValues(alpha: 0.5),
+        ),
+      ),
+    );
+  }
+
+  void _showHelp(BuildContext context) {
+    final helpText = HelpContent.nodeDexSectionHelp[helpKey];
+    if (helpText == null) return;
+
+    HapticFeedback.selectionClick();
+    AppBottomSheet.show<void>(
+      context: context,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.lightbulb_outline,
+                  size: 18,
+                  color: context.accentColor,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _titleForKey(helpKey),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: context.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              helpText,
+              style: TextStyle(
+                fontSize: 14,
+                color: context.textSecondary,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _titleForKey(String key) {
+    switch (key) {
+      case 'sigil':
+        return 'Sigil';
+      case 'trait':
+        return 'Personality Trait';
+      case 'discovery':
+        return 'Discovery Stats';
+      case 'signal':
+        return 'Signal Records';
+      case 'social_tag':
+        return 'Classification';
+      case 'note':
+        return 'Note';
+      case 'regions':
+        return 'Region History';
+      case 'encounters':
+        return 'Recent Encounters';
+      case 'constellation':
+        return 'Constellation Links';
+      case 'device':
+        return 'Device Info';
+      default:
+        return 'Info';
+    }
+  }
+}
+
+// =============================================================================
+// Sticky Card Header Delegate — pinned header for long scrollable sections
+// =============================================================================
+
+/// Persistent header delegate for NodeDex detail sections that can be long
+/// (encounters, constellation links). Renders with the card styling and
+/// pins at the top of the scroll view so the section context is never lost.
+class _NodeDexStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final String title;
+  final IconData icon;
+  final String helpKey;
+  final String? trailing;
+
+  _NodeDexStickyHeaderDelegate({
+    required this.title,
+    required this.icon,
+    required this.helpKey,
+    this.trailing,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final isPinned = shrinkOffset > 0 || overlapsContent;
+
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          height: maxExtent,
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: isPinned
+                ? context.card.withValues(alpha: 0.95)
+                : context.card,
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(isPinned ? 0 : 16),
+            ),
+            border: Border(
+              top: BorderSide(
+                color: context.border.withValues(alpha: 0.15),
+                width: 0.5,
+              ),
+              left: BorderSide(
+                color: context.border.withValues(alpha: 0.15),
+                width: 0.5,
+              ),
+              right: BorderSide(
+                color: context.border.withValues(alpha: 0.15),
+                width: 0.5,
+              ),
+            ),
+            boxShadow: isPinned
+                ? [
+                    BoxShadow(
+                      color: context.background.withValues(alpha: 0.4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 16, color: context.textTertiary),
+              const SizedBox(width: 8),
+              Text(
+                title.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: context.textTertiary,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(width: 4),
+              _SectionInfoButton(helpKey: helpKey),
+              const Spacer(),
+              if (trailing != null)
+                Text(
+                  trailing!,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: context.textTertiary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => 44;
+
+  @override
+  double get minExtent => 44;
+
+  @override
+  bool shouldRebuild(covariant _NodeDexStickyHeaderDelegate oldDelegate) {
+    return title != oldDelegate.title ||
+        icon != oldDelegate.icon ||
+        helpKey != oldDelegate.helpKey ||
+        trailing != oldDelegate.trailing;
+  }
+}
+
+// =============================================================================
+// Sticky Card Body — content below a pinned header
+// =============================================================================
+
+/// Container for card body content that pairs with [_NodeDexStickyHeaderDelegate].
+///
+/// Provides the bottom half of the card styling (bottom rounded corners,
+/// side and bottom borders, padding) to visually complete the card
+/// started by the pinned header.
+class _StickyCardBody extends StatelessWidget {
+  final Widget child;
+
+  const _StickyCardBody({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 4),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+        border: Border(
+          bottom: BorderSide(
+            color: context.border.withValues(alpha: 0.15),
+            width: 0.5,
+          ),
+          left: BorderSide(
+            color: context.border.withValues(alpha: 0.15),
+            width: 0.5,
+          ),
+          right: BorderSide(
+            color: context.border.withValues(alpha: 0.15),
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: child,
     );
   }
 }

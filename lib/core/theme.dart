@@ -808,6 +808,18 @@ class AppTheme {
           return Colors.grey.shade600;
         }),
         trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.pressed)) {
+            return accentColor.withValues(alpha: 0.12);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return accentColor.withValues(alpha: 0.08);
+          }
+          if (states.contains(WidgetState.focused)) {
+            return accentColor.withValues(alpha: 0.12);
+          }
+          return Colors.transparent;
+        }),
       ),
 
       // Bottom navigation bar
@@ -1147,6 +1159,18 @@ class AppTheme {
           return Colors.grey.shade300;
         }),
         trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.pressed)) {
+            return accentColor.withValues(alpha: 0.12);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return accentColor.withValues(alpha: 0.08);
+          }
+          if (states.contains(WidgetState.focused)) {
+            return accentColor.withValues(alpha: 0.12);
+          }
+          return Colors.transparent;
+        }),
       ),
 
       // Bottom navigation bar

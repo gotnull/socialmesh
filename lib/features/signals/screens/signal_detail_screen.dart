@@ -8,6 +8,8 @@ import 'package:socialmesh/features/settings/account_subscriptions_screen.dart';
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../nodedex/screens/nodedex_detail_screen.dart';
+import '../../nodedex/widgets/sigil_painter.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -1151,20 +1153,52 @@ class _ResponseTile extends StatelessWidget {
                 ),
               ),
 
-            // Avatar
-            Container(
-              width: _avatarSize,
-              height: _avatarSize,
-              margin: const EdgeInsets.only(top: 2, right: 8),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: context.accentColor.withValues(alpha: 0.15),
-              ),
-              child: Icon(
-                Icons.person_rounded,
-                size: _avatarSize * 0.6,
-                color: context.accentColor.withValues(alpha: 0.7),
-              ),
+            // Avatar — use Sigil for mesh-origin responses
+            Builder(
+              builder: (context) {
+                final isMeshResponse = response.authorId.startsWith('mesh_');
+                final meshNodeNum = isMeshResponse
+                    ? int.tryParse(
+                        response.authorId.replaceFirst('mesh_', ''),
+                        radix: 16,
+                      )
+                    : null;
+
+                if (meshNodeNum != null) {
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) =>
+                              NodeDexDetailScreen(nodeNum: meshNodeNum),
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 2, right: 8),
+                      child: SigilAvatar(
+                        nodeNum: meshNodeNum,
+                        size: _avatarSize,
+                      ),
+                    ),
+                  );
+                }
+
+                return Container(
+                  width: _avatarSize,
+                  height: _avatarSize,
+                  margin: const EdgeInsets.only(top: 2, right: 8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: context.accentColor.withValues(alpha: 0.15),
+                  ),
+                  child: Icon(
+                    Icons.person_rounded,
+                    size: _avatarSize * 0.6,
+                    color: context.accentColor.withValues(alpha: 0.7),
+                  ),
+                );
+              },
             ),
 
             // Content - Reddit style: flat, no card

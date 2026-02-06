@@ -22,6 +22,7 @@ android/.kotlin/sessions/
 # Backend services (proprietary, not part of public repo)
 mesh-observer/
 functions/
+sigil-api/
 
 # Environment files (keep .env.example and .env.ci for CI)
 .env

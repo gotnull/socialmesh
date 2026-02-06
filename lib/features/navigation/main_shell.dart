@@ -337,6 +337,13 @@ class _MainShellState extends ConsumerState<MainShell> {
       badgeProviderKey: 'activity',
     ),
     _DrawerMenuItem(
+      icon: Icons.auto_stories_outlined,
+      label: 'NodeDex',
+      screen: const NodeDexScreen(),
+      iconColor: Colors.amber.shade400,
+      requiresConnection: false,
+    ),
+    _DrawerMenuItem(
       icon: Icons.timeline,
       label: 'Timeline',
       screen: const TimelineScreen(),
@@ -350,13 +357,6 @@ class _MainShellState extends ConsumerState<MainShell> {
       screen: const PresenceScreen(),
       iconColor: Colors.green.shade400,
       requiresConnection: true,
-    ),
-    _DrawerMenuItem(
-      icon: Icons.auto_stories_outlined,
-      label: 'NodeDex',
-      screen: const NodeDexScreen(),
-      iconColor: Colors.amber.shade400,
-      requiresConnection: false,
     ),
     _DrawerMenuItem(
       icon: Icons.public,

@@ -28,6 +28,8 @@ import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/main_shell.dart';
+import '../../nodedex/screens/nodedex_detail_screen.dart';
+import '../../nodedex/widgets/sigil_painter.dart';
 import '../../settings/settings_screen.dart';
 import '../widgets/double_tap_heart.dart';
 import '../widgets/signal_card.dart';
@@ -2342,6 +2344,38 @@ class _AuthorAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMeshNode = author.authorId.startsWith('mesh_');
 
+    // Use Sigil for mesh nodes
+    if (isMeshNode && author.meshNodeId != null) {
+      return GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => NodeDexDetailScreen(nodeNum: author.meshNodeId!),
+            ),
+          );
+        },
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: borderColor, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withValues(alpha: 0.3),
+                blurRadius: 4,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: SigilAvatar(nodeNum: author.meshNodeId!, size: size),
+          ),
+        ),
+      );
+    }
+
+    // Cloud author fallback
     return Container(
       width: size,
       height: size,
@@ -2361,15 +2395,14 @@ class _AuthorAvatar extends StatelessWidget {
             ? Image.network(
                 author.avatarUrl!,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) =>
-                    _buildPlaceholder(context, isMeshNode),
+                errorBuilder: (_, _, _) => _buildPlaceholder(context),
               )
-            : _buildPlaceholder(context, isMeshNode),
+            : _buildPlaceholder(context),
       ),
     );
   }
 
-  Widget _buildPlaceholder(BuildContext context, bool isMeshNode) {
+  Widget _buildPlaceholder(BuildContext context) {
     // Generate color from author ID
     final hash = author.authorId.hashCode;
     final hue = (hash % 360).toDouble();
@@ -2378,22 +2411,16 @@ class _AuthorAvatar extends StatelessWidget {
     return Container(
       color: color,
       child: Center(
-        child: isMeshNode
-            ? Icon(
-                Icons.router,
-                color: Colors.white.withValues(alpha: 0.9),
-                size: size * 0.5,
-              )
-            : Text(
-                author.displayName.isNotEmpty
-                    ? author.displayName[0].toUpperCase()
-                    : '?',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: size * 0.4,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+        child: Text(
+          author.displayName.isNotEmpty
+              ? author.displayName[0].toUpperCase()
+              : '?',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: size * 0.4,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }

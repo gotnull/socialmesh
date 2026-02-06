@@ -14,19 +14,23 @@
 // This screen is purely additive — it reads from nodeDexProvider
 // and nodesProvider without modifying any existing functionality.
 
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../models/mesh_models.dart';
 import '../models/nodedex_entry.dart';
 import '../providers/nodedex_providers.dart';
+import '../widgets/import_sheet.dart';
 import '../widgets/sigil_painter.dart';
 import '../widgets/trait_badge.dart';
 import 'nodedex_detail_screen.dart';
@@ -65,78 +69,158 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     final currentSort = ref.watch(nodeDexSortProvider);
     final currentFilter = ref.watch(nodeDexFilterProvider);
 
-    return GestureDetector(
-      onTap: _dismissKeyboard,
-      child: GlassScaffold(
-        title: 'NodeDex',
-        actions: [
-          // Constellation view button
-          IconButton(
-            icon: const Icon(Icons.auto_awesome, size: 22),
-            tooltip: 'Mesh Constellation',
-            onPressed: _openConstellation,
-          ),
-        ],
-        slivers: [
-          // Top padding below glass app bar
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+    AppLogging.nodeDex(
+      'Screen build — ${entries.length} entries, '
+      'filter: ${currentFilter.name}, sort: ${currentSort.name}',
+    );
 
-          // Pinned stats header
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _NodeDexStatsHeaderDelegate(stats: stats),
-          ),
-
-          // Pinned search + filter controls
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _NodeDexControlsHeaderDelegate(
-              searchController: _searchController,
-              searchQuery: _searchQuery,
-              onSearchChanged: (value) {
-                setState(() => _searchQuery = value);
-                ref.read(nodeDexSearchProvider.notifier).setQuery(value);
-              },
-              currentFilter: currentFilter,
-              onFilterChanged: (filter) {
-                ref.read(nodeDexFilterProvider.notifier).setFilter(filter);
-              },
-              currentSort: currentSort,
-              onSortChanged: (order) {
-                ref.read(nodeDexSortProvider.notifier).setOrder(order);
-              },
-              stats: stats,
+    return HelpTourController(
+      topicId: 'nodedex_overview',
+      stepKeys: const {},
+      child: GestureDetector(
+        onTap: _dismissKeyboard,
+        child: GlassScaffold(
+          title: 'NodeDex',
+          actions: [
+            IcoHelpAppBarButton(topicId: 'nodedex_overview'),
+            // Constellation view button
+            IconButton(
+              icon: const Icon(Icons.auto_awesome, size: 22),
+              tooltip: 'Mesh Constellation',
+              onPressed: _openConstellation,
             ),
-          ),
+            // Export / Import menu
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, size: 22),
+              tooltip: 'More actions',
+              color: context.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              onSelected: (value) {
+                switch (value) {
+                  case 'export':
+                    showNodeDexExportSheet(context: context, ref: ref);
+                  case 'import':
+                    startNodeDexImport(context: context, ref: ref);
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'export',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.file_upload_outlined,
+                        size: 18,
+                        color: context.textSecondary,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Export NodeDex',
+                        style: TextStyle(color: context.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'import',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.file_download_outlined,
+                        size: 18,
+                        color: context.textSecondary,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Import NodeDex',
+                        style: TextStyle(color: context.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+          slivers: [
+            // Top padding below glass app bar
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-          // Node list or empty state
-          if (entries.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: _EmptyState(filter: currentFilter),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final (entry, node) = entries[index];
-                return _NodeDexListTile(
-                  entry: entry,
-                  node: node,
-                  onTap: () => _openDetail(entry, node),
-                );
-              }, childCount: entries.length),
+            // Stats summary — not pinned, sizes itself naturally
+            SliverToBoxAdapter(child: _NodeDexStatsCard(stats: stats)),
+
+            // Pinned search + filter controls
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _NodeDexControlsHeaderDelegate(
+                textScaler: MediaQuery.textScalerOf(context),
+                searchController: _searchController,
+                searchQuery: _searchQuery,
+                onSearchChanged: (value) {
+                  setState(() => _searchQuery = value);
+                  ref.read(nodeDexSearchProvider.notifier).setQuery(value);
+                  if (value.isNotEmpty) {
+                    AppLogging.nodeDex('Search query changed: "$value"');
+                  }
+                },
+                currentFilter: currentFilter,
+                onFilterChanged: (filter) {
+                  AppLogging.nodeDex(
+                    'Filter changed: ${currentFilter.name} → ${filter.name}',
+                  );
+                  ref.read(nodeDexFilterProvider.notifier).setFilter(filter);
+                },
+                currentSort: currentSort,
+                onSortChanged: (order) {
+                  AppLogging.nodeDex(
+                    'Sort order changed: ${currentSort.name} → ${order.name}',
+                  );
+                  ref.read(nodeDexSortProvider.notifier).setOrder(order);
+                },
+                stats: stats,
+              ),
             ),
 
-          // Bottom padding for safe area
-          SliverToBoxAdapter(
-            child: SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-          ),
-        ],
+            // Node list or empty state
+            if (entries.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _EmptyState(filter: currentFilter),
+              )
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final (entry, node) = entries[index];
+                  return _NodeDexListTile(
+                    entry: entry,
+                    node: node,
+                    onTap: () => _openDetail(entry, node),
+                  );
+                }, childCount: entries.length),
+              ),
+
+            // Bottom padding for safe area
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: MediaQuery.of(context).padding.bottom + 16,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void _openDetail(NodeDexEntry entry, MeshNode? node) {
+    final hexId =
+        '!${entry.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+    AppLogging.nodeDex(
+      'Opening detail for node ${entry.nodeNum} ($hexId), '
+      'name: ${node?.displayName ?? 'unknown'}, '
+      'encounters: ${entry.encounterCount}, '
+      'trait: ${entry.socialTag?.name ?? 'untagged'}',
+    );
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => NodeDexDetailScreen(nodeNum: entry.nodeNum),
@@ -145,6 +229,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
   }
 
   void _openConstellation() {
+    AppLogging.nodeDex('Opening constellation view');
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => const NodeDexConstellationScreen(),
@@ -157,100 +242,86 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
 // Pinned Stats Header Delegate
 // =============================================================================
 
-class _NodeDexStatsHeaderDelegate extends SliverPersistentHeaderDelegate {
+class _NodeDexStatsCard extends StatelessWidget {
   final NodeDexStats stats;
 
-  _NodeDexStatsHeaderDelegate({required this.stats});
+  const _NodeDexStatsCard({required this.stats});
 
   @override
-  double get minExtent => 82;
-
-  @override
-  double get maxExtent => 82;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
+  Widget build(BuildContext context) {
     final title = stats.explorerTitle;
 
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          color: context.background.withValues(alpha: 0.8),
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  context.accentColor.withValues(alpha: 0.08),
-                  context.accentColor.withValues(alpha: 0.03),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              context.accentColor.withValues(alpha: 0.08),
+              context.accentColor.withValues(alpha: 0.03),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: context.accentColor.withValues(alpha: 0.15),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Explorer title
+            Expanded(
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.auto_awesome,
+                    size: 14,
+                    color: context.accentColor,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      title.displayLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: context.accentColor,
+                        letterSpacing: 0.3,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: context.accentColor.withValues(alpha: 0.15),
-                width: 0.5,
-              ),
             ),
-            child: Row(
-              children: [
-                // Explorer title
-                Expanded(
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.auto_awesome,
-                        size: 14,
-                        color: context.accentColor,
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          title.displayLabel,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: context.accentColor,
-                            letterSpacing: 0.3,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
 
-                // Compact stats
-                _CompactStat(
-                  icon: Icons.hexagon_outlined,
-                  value: stats.totalNodes.toString(),
-                ),
-                const SizedBox(width: 12),
-                _CompactStat(
-                  icon: Icons.public_outlined,
-                  value: stats.totalRegions.toString(),
-                ),
-                const SizedBox(width: 12),
-                _CompactStat(
-                  icon: Icons.repeat,
-                  value: _compactNumber(stats.totalEncounters),
-                ),
-                const SizedBox(width: 12),
-                _CompactStat(
-                  icon: Icons.straighten,
-                  value: _formatDistance(stats.longestDistance),
-                ),
-              ],
+            // Compact stats
+            _CompactStat(
+              icon: Icons.hexagon_outlined,
+              value: stats.totalNodes.toString(),
             ),
-          ),
+            const SizedBox(width: 12),
+            _CompactStat(
+              icon: Icons.public_outlined,
+              value: stats.totalRegions.toString(),
+            ),
+            const SizedBox(width: 12),
+            _CompactStat(
+              icon: Icons.repeat,
+              value: _compactNumber(stats.totalEncounters),
+            ),
+            if (stats.longestDistance != null) ...[
+              const SizedBox(width: 12),
+              _CompactStat(
+                icon: Icons.straighten,
+                value: _formatDistance(stats.longestDistance),
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -268,15 +339,6 @@ class _NodeDexStatsHeaderDelegate extends SliverPersistentHeaderDelegate {
       return '${(meters / 1000).toStringAsFixed(1)}km';
     }
     return '${meters.round()}m';
-  }
-
-  @override
-  bool shouldRebuild(covariant _NodeDexStatsHeaderDelegate oldDelegate) {
-    return stats.totalNodes != oldDelegate.stats.totalNodes ||
-        stats.totalRegions != oldDelegate.stats.totalRegions ||
-        stats.totalEncounters != oldDelegate.stats.totalEncounters ||
-        stats.longestDistance != oldDelegate.stats.longestDistance ||
-        stats.explorerTitle != oldDelegate.stats.explorerTitle;
   }
 }
 
@@ -320,6 +382,7 @@ class _NodeDexControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
   final NodeDexSortOrder currentSort;
   final ValueChanged<NodeDexSortOrder> onSortChanged;
   final NodeDexStats stats;
+  final TextScaler textScaler;
 
   _NodeDexControlsHeaderDelegate({
     required this.searchController,
@@ -330,14 +393,22 @@ class _NodeDexControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.currentSort,
     required this.onSortChanged,
     required this.stats,
+    required this.textScaler,
   });
 
-  // Search bar (56) + padding (16) + filter chips (44) + divider (1) + spacing (8)
-  @override
-  double get minExtent => 125;
+  // The search field height is constrained explicitly via
+  // InputDecoration.constraints in build(), so the extent is deterministic.
+  // Layout: outerPad (6+6) + searchField + chipsRow (44) + divider (1).
+  double get _searchFieldHeight =>
+      math.max(kMinInteractiveDimension, textScaler.scale(48));
+
+  double get _computedExtent => 12 + _searchFieldHeight + 44 + 8 + 1;
 
   @override
-  double get maxExtent => 125;
+  double get minExtent => _computedExtent;
+
+  @override
+  double get maxExtent => _computedExtent;
 
   @override
   Widget build(
@@ -352,41 +423,48 @@ class _NodeDexControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
           color: context.background.withValues(alpha: 0.8),
           child: Column(
             children: [
-              // Search bar — matches Nodes screen pattern
+              // Search bar — height constrained to match _computedExtent
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    controller: searchController,
-                    onChanged: onSearchChanged,
-                    style: TextStyle(color: context.textPrimary),
-                    decoration: InputDecoration(
-                      hintText: 'Find a node',
-                      hintStyle: TextStyle(color: context.textTertiary),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: context.textTertiary,
-                      ),
-                      suffixIcon: searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                color: context.textTertiary,
-                              ),
-                              onPressed: () {
-                                searchController.clear();
-                                onSearchChanged('');
-                              },
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+                child: SizedBox(
+                  height: _searchFieldHeight,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextField(
+                      controller: searchController,
+                      onChanged: onSearchChanged,
+                      style: TextStyle(color: context.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'Find a node',
+                        hintStyle: TextStyle(color: context.textTertiary),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: context.textTertiary,
+                        ),
+                        suffixIcon: searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: context.textTertiary,
+                                ),
+                                onPressed: () {
+                                  searchController.clear();
+                                  onSearchChanged('');
+                                },
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        isDense: true,
+                        constraints: BoxConstraints.tightFor(
+                          height: _searchFieldHeight,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -412,7 +490,7 @@ class _NodeDexControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
                               isSelected: currentFilter == NodeDexFilter.all,
                               onTap: () => onFilterChanged(NodeDexFilter.all),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
                             SectionFilterChip(
                               label: 'Tagged',
                               count: _taggedCount(),
@@ -422,7 +500,7 @@ class _NodeDexControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
                               onTap: () =>
                                   onFilterChanged(NodeDexFilter.tagged),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
                             SectionFilterChip(
                               label: 'Recent',
                               count: 0,
@@ -432,7 +510,7 @@ class _NodeDexControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
                               onTap: () =>
                                   onFilterChanged(NodeDexFilter.recent),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
                             _TraitFilterChip(
                               filter: NodeDexFilter.wanderers,
                               trait: NodeTrait.wanderer,
@@ -444,7 +522,7 @@ class _NodeDexControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
                               onTap: () =>
                                   onFilterChanged(NodeDexFilter.wanderers),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
                             _TraitFilterChip(
                               filter: NodeDexFilter.beacons,
                               trait: NodeTrait.beacon,
@@ -456,7 +534,7 @@ class _NodeDexControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
                               onTap: () =>
                                   onFilterChanged(NodeDexFilter.beacons),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
                             _TraitFilterChip(
                               filter: NodeDexFilter.ghosts,
                               trait: NodeTrait.ghost,
@@ -466,7 +544,7 @@ class _NodeDexControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
                               onTap: () =>
                                   onFilterChanged(NodeDexFilter.ghosts),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
                             _TraitFilterChip(
                               filter: NodeDexFilter.sentinels,
                               trait: NodeTrait.sentinel,
@@ -478,7 +556,7 @@ class _NodeDexControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
                               onTap: () =>
                                   onFilterChanged(NodeDexFilter.sentinels),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
                             _TraitFilterChip(
                               filter: NodeDexFilter.relays,
                               trait: NodeTrait.relay,
@@ -488,12 +566,12 @@ class _NodeDexControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
                               onTap: () =>
                                   onFilterChanged(NodeDexFilter.relays),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
                             _NodeDexSortButton(
                               sortOrder: currentSort,
                               onChanged: onSortChanged,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 16),
                           ],
                         ),
                       ),

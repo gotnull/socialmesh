@@ -25,12 +25,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/app_providers.dart';
 import '../models/nodedex_entry.dart';
 import '../providers/nodedex_providers.dart';
 import '../services/sigil_generator.dart';
+import '../widgets/edge_detail_sheet.dart';
 import '../widgets/sigil_painter.dart';
 import 'nodedex_detail_screen.dart';
 
@@ -67,6 +69,7 @@ class _NodeDexConstellationScreenState
   @override
   void initState() {
     super.initState();
+    AppLogging.nodeDex('Constellation screen opened');
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -78,6 +81,7 @@ class _NodeDexConstellationScreenState
 
   @override
   void dispose() {
+    AppLogging.nodeDex('Constellation screen disposed');
     _pulseController.dispose();
     _transformController.dispose();
     super.dispose();
@@ -87,6 +91,11 @@ class _NodeDexConstellationScreenState
   Widget build(BuildContext context) {
     final constellation = ref.watch(nodeDexConstellationProvider);
     final isDark = context.isDarkMode;
+
+    AppLogging.nodeDex(
+      'Constellation build — ${constellation.nodeCount} nodes, '
+      '${constellation.edgeCount} edges',
+    );
 
     return GlassScaffold.body(
       title: 'Constellation',
@@ -197,6 +206,18 @@ class _NodeDexConstellationScreenState
                           _selectedNodeNum = nodeNum;
                         });
                       },
+                      onViewDetails: () {
+                        final edge = _selectedEdge!;
+                        setState(() => _selectedEdge = null);
+                        EdgeDetailSheet.show(
+                          context: context,
+                          fromNodeNum: edge.from,
+                          toNodeNum: edge.to,
+                          onOpenNodeDetail: (nodeNum) {
+                            _openDetail(nodeNum);
+                          },
+                        );
+                      },
                     ),
                   ),
               ],
@@ -238,6 +259,12 @@ class _NodeDexConstellationScreenState
     }
 
     if (nearestNode != null) {
+      final hexId =
+          '!${nearestNode.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+      AppLogging.nodeDex(
+        'Constellation node tapped: $hexId '
+        '(distance: ${nearestNodeDist.toStringAsFixed(1)}px)',
+      );
       HapticFeedback.selectionClick();
       setState(() {
         _selectedNodeNum = nearestNode;
@@ -273,6 +300,19 @@ class _NodeDexConstellationScreenState
     }
 
     HapticFeedback.selectionClick();
+    if (nearestEdge != null) {
+      final fromHex =
+          '!${nearestEdge.from.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+      final toHex =
+          '!${nearestEdge.to.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+      AppLogging.nodeDex(
+        'Constellation edge tapped: $fromHex ↔ $toHex '
+        '(weight: ${nearestEdge.weight}, '
+        'distance: ${nearestEdgeDist.toStringAsFixed(1)}px)',
+      );
+    } else {
+      AppLogging.nodeDex('Constellation background tapped — deselecting');
+    }
     setState(() {
       if (nearestEdge != null) {
         _selectedEdge = nearestEdge;
@@ -318,11 +358,14 @@ class _NodeDexConstellationScreenState
   }
 
   void _resetView() {
+    AppLogging.nodeDex('Constellation view reset to identity');
     HapticFeedback.lightImpact();
     _transformController.value = Matrix4.identity();
   }
 
   void _openDetail(int nodeNum) {
+    final hexId = '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+    AppLogging.nodeDex('Constellation → opening detail for $hexId');
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => NodeDexDetailScreen(nodeNum: nodeNum),
@@ -885,11 +928,13 @@ class _EdgeInfoCard extends ConsumerWidget {
   final ConstellationEdge edge;
   final VoidCallback onClose;
   final ValueChanged<int> onOpenNodeDetail;
+  final VoidCallback? onViewDetails;
 
   const _EdgeInfoCard({
     required this.edge,
     required this.onClose,
     required this.onOpenNodeDetail,
+    this.onViewDetails,
   });
 
   @override
@@ -1088,6 +1133,40 @@ class _EdgeInfoCard extends ConsumerWidget {
                     fontSize: 11,
                     color: context.textTertiary,
                     fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+
+            // View Details button
+            if (onViewDetails != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: onViewDetails,
+                    icon: Icon(
+                      Icons.open_in_new_outlined,
+                      size: 14,
+                      color: blendedColor,
+                    ),
+                    label: Text(
+                      'View Details',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: blendedColor,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                        color: blendedColor.withValues(alpha: 0.3),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
                   ),
                 ),
               ),

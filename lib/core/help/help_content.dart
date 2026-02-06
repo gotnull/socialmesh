@@ -1285,6 +1285,184 @@ class HelpContent {
   );
 
   // ============================================================================
+  // NODEDEX OVERVIEW
+  // ============================================================================
+
+  static final HelpTopic nodeDexOverview = HelpTopic(
+    id: 'nodedex_overview',
+    title: 'NodeDex Field Journal',
+    description: 'Your personal record of every node discovered on the mesh',
+    icon: Icons.hexagon_outlined,
+    category: catNodes,
+    priority: 3,
+    steps: [
+      HelpStep(
+        id: 'nodedex_intro',
+        bubbleText:
+            "Welcome to the **NodeDex** — your personal mesh field journal! Every node you discover is recorded here with a unique **Sigil** and personality **Trait**.",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'nodedex_sigils',
+        bubbleText:
+            "Each node gets a **procedural Sigil** — a geometric glyph generated from its identity. No two nodes share the same sigil. Think of it as a visual fingerprint for the mesh!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'nodedex_traits',
+        bubbleText:
+            "Nodes earn **Traits** based on real behavior — **Wanderer** moves between regions, **Beacon** is always online, **Ghost** is rarely seen, **Sentinel** holds a fixed position, **Relay** forwards traffic.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'nodedex_filters',
+        bubbleText:
+            "Use the **filter chips** to show only specific traits, recently discovered nodes, or nodes you have tagged. The **search bar** finds nodes by name or hex ID.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'nodedex_constellation',
+        bubbleText:
+            "Tap the **constellation icon** in the top bar to see your entire mesh as a visual graph — nodes that appear together are linked. It is like a star chart of your network!",
+        icoMood: MeshBrainMood.playful,
+      ),
+      HelpStep(
+        id: 'nodedex_export',
+        bubbleText:
+            "Use the **menu** to **export** your NodeDex as a JSON file for backup, or **import** one from another device. Your field journal travels with you!",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // NODEDEX DETAIL
+  // ============================================================================
+
+  static final HelpTopic nodeDexDetail = HelpTopic(
+    id: 'nodedex_detail',
+    title: 'Node Profile',
+    description: 'Understanding a node\'s full identity and history',
+    icon: Icons.hexagon_outlined,
+    category: catNodes,
+    priority: 4,
+    steps: [
+      HelpStep(
+        id: 'nodedex_sigil',
+        bubbleText:
+            "This is the node's **Sigil** — a unique procedural glyph generated from its identity. No two nodes share the same sigil. It's like a visual fingerprint!",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'nodedex_trait',
+        bubbleText:
+            "The **Trait** is an inferred personality based on how this node behaves — movement patterns, signal consistency, encounter frequency. Confidence grows with more data.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'nodedex_discovery',
+        bubbleText:
+            "**Discovery Stats** show when you first and last saw this node, how many encounters you've had, and the closest range recorded. These update automatically.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'nodedex_signal',
+        bubbleText:
+            "**Signal Records** track the best and most recent SNR and RSSI values. These help you understand link quality — higher SNR and less negative RSSI mean stronger signals.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'nodedex_social_tag',
+        bubbleText:
+            "The **Social Tag** is a label you assign to categorize this node — friend, relay, base station, or anything else. It's your personal metadata, never shared over the mesh.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'nodedex_note',
+        bubbleText:
+            "**Your Note** is a free-text field for anything you want to remember about this node. Location hints, operator name, antenna type — whatever helps you.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'nodedex_regions',
+        bubbleText:
+            "**Region History** records every regulatory region where this node has been observed. Useful for tracking mobile nodes across different areas.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'nodedex_encounters',
+        bubbleText:
+            "**Recent Encounters** is a timeline of when this node appeared on your mesh. Each entry shows the timestamp, signal quality, and range if GPS was available.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'nodedex_constellation',
+        bubbleText:
+            "**Constellation Links** show nodes frequently seen in the same session as this one. Tap any link to see the full relationship — shared encounters, message counts, and connection strength.",
+        icoMood: MeshBrainMood.playful,
+      ),
+      HelpStep(
+        id: 'nodedex_device',
+        bubbleText:
+            "**Device Info** shows live telemetry — battery level, hardware model, firmware version, and uptime. This data comes from the node directly and updates in real time.",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  /// Inline help text for individual NodeDex detail sections.
+  ///
+  /// Used by the section info buttons to show contextual help
+  /// without starting a full guided tour.
+  static const Map<String, String> nodeDexSectionHelp = {
+    'sigil':
+        'A unique procedural glyph generated from this node\'s identity. '
+        'The shape, symmetry, and color palette are deterministic — the same '
+        'node always produces the same sigil. Think of it as a visual fingerprint.',
+    'trait':
+        'An inferred personality archetype derived from behavioral signals: '
+        'movement patterns, encounter frequency, signal consistency, and session '
+        'duration. Confidence increases as more data is collected over time.',
+    'discovery':
+        'Tracks when this node was first and last seen on your mesh, the total '
+        'number of encounters, and the closest recorded range. All values update '
+        'automatically as new packets arrive.',
+    'signal':
+        'Best and most recent SNR (Signal-to-Noise Ratio) and RSSI '
+        '(Received Signal Strength Indicator) values. Higher SNR and less '
+        'negative RSSI indicate a stronger, more reliable link.',
+    'social_tag':
+        'A personal label you assign to categorize this node. Social tags are '
+        'stored locally and included in NodeDex exports, but never transmitted '
+        'over the mesh. Use them to mark friends, relays, base stations, or '
+        'any category that helps you organize your network.',
+    'note':
+        'A free-text note for anything you want to remember about this node. '
+        'Notes are private, stored locally, and included in NodeDex exports.',
+    'regions':
+        'Every regulatory region where this node has been observed. Region '
+        'data is recorded from the node\'s configuration packets and helps '
+        'track mobile nodes across different geographic areas.',
+    'encounters':
+        'A chronological timeline of when this node appeared on your mesh. '
+        'Each encounter records the timestamp, signal quality (SNR/RSSI), '
+        'and distance if GPS coordinates were available on both sides. '
+        'The most recent 10 encounters are shown.',
+    'constellation':
+        'Nodes that are frequently seen in the same session as this node. '
+        'A higher count means these nodes tend to appear together — they may '
+        'be co-located, part of the same deployment, or carried by the same '
+        'person. Tap any link to see the full edge detail including shared '
+        'encounter history and message activity.',
+    'device':
+        'Live telemetry from the node: battery percentage, hardware model, '
+        'firmware version, channel utilization, and uptime. This data is only '
+        'available when the node is actively heard on the mesh.',
+  };
+
+  // ============================================================================
   // ALL TOPICS
   // ============================================================================
 
@@ -1318,6 +1496,8 @@ class HelpContent {
     deviceShopOverview,
     offlineMapsOverview,
     radioConfigOverview,
+    nodeDexOverview,
+    nodeDexDetail,
   ];
 
   /// Get a topic by ID
