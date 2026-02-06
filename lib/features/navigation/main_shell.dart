@@ -53,6 +53,7 @@ import '../mesh_health/widgets/mesh_health_dashboard.dart';
 import '../signals/signals.dart';
 import '../profile/profile_screen.dart';
 import '../debug/device_logs_screen.dart';
+import '../nodedex/screens/nodedex_screen.dart';
 import '../social/screens/activity_timeline_screen.dart';
 import '../../providers/activity_providers.dart';
 import '../admin/screens/admin_screen.dart';
@@ -349,6 +350,13 @@ class _MainShellState extends ConsumerState<MainShell> {
       screen: const PresenceScreen(),
       iconColor: Colors.green.shade400,
       requiresConnection: true,
+    ),
+    _DrawerMenuItem(
+      icon: Icons.auto_stories_outlined,
+      label: 'NodeDex',
+      screen: const NodeDexScreen(),
+      iconColor: Colors.amber.shade400,
+      requiresConnection: false,
     ),
     _DrawerMenuItem(
       icon: Icons.public,

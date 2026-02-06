@@ -179,6 +179,22 @@ enum NetworkMode {
   const NetworkMode(this.displayName, this.description);
 }
 
+/// NodeDex feature configuration
+class NodeDexConfig {
+  NodeDexConfig._();
+
+  /// Number of co-seen nodes to display per page in the detail screen.
+  /// Override via .env with NODEDEX_COSEEN_PAGE_SIZE.
+  static int get coSeenPageSize {
+    final env = dotenv.env['NODEDEX_COSEEN_PAGE_SIZE'];
+    if (env != null) {
+      final parsed = int.tryParse(env);
+      if (parsed != null && parsed > 0) return parsed;
+    }
+    return 20;
+  }
+}
+
 /// Privacy level for content visibility
 enum PrivacyLevel {
   public('Public', 'Visible to all nodes in radius'),
