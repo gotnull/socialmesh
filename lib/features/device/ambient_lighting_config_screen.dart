@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -19,7 +20,8 @@ class AmbientLightingConfigScreen extends ConsumerStatefulWidget {
 }
 
 class _AmbientLightingConfigScreenState
-    extends ConsumerState<AmbientLightingConfigScreen> {
+    extends ConsumerState<AmbientLightingConfigScreen>
+    with LifecycleSafeMixin {
   bool _ledState = false;
   int _currentColor = 0xFFFFFFFF;
   int _red = 255;
@@ -52,15 +54,13 @@ class _AmbientLightingConfigScreenState
 
     // Check if we're connected before trying to load config
     if (!protocol.isConnected) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      safeSetState(() => _isLoading = false);
       return;
     }
 
     final config = await protocol.getAmbientLightingModuleConfig();
     if (config != null && mounted) {
-      setState(() {
+      safeSetState(() {
         _ledState = config.ledState;
         _red = config.red;
         _green = config.green;
@@ -69,8 +69,8 @@ class _AmbientLightingConfigScreenState
         _currentColor = (0xFF << 24) | (_red << 16) | (_green << 8) | _blue;
         _isLoading = false;
       });
-    } else if (mounted) {
-      setState(() => _isLoading = false);
+    } else {
+      safeSetState(() => _isLoading = false);
     }
   }
 
@@ -82,7 +82,7 @@ class _AmbientLightingConfigScreenState
   }
 
   Future<void> _save() async {
-    setState(() => _isSaving = true);
+    safeSetState(() => _isSaving = true);
 
     try {
       final protocol = ref.read(protocolServiceProvider);
@@ -94,7 +94,7 @@ class _AmbientLightingConfigScreenState
         current: _current,
       );
 
-      setState(() => _hasChanges = false);
+      safeSetState(() => _hasChanges = false);
       if (mounted) {
         showSuccessSnackBar(context, 'Ambient lighting saved');
       }
@@ -103,7 +103,7 @@ class _AmbientLightingConfigScreenState
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      setState(() => _isSaving = false);
+      safeSetState(() => _isSaving = false);
     }
   }
 

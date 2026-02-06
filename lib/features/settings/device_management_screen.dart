@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -17,8 +18,8 @@ class DeviceManagementScreen extends ConsumerStatefulWidget {
       _DeviceManagementScreenState();
 }
 
-class _DeviceManagementScreenState
-    extends ConsumerState<DeviceManagementScreen> {
+class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
+    with LifecycleSafeMixin {
   bool _isProcessing = false;
 
   Future<void> _executeAction(
@@ -105,7 +106,7 @@ class _DeviceManagementScreenState
 
     if (!mounted) return;
 
-    setState(() => _isProcessing = true);
+    safeSetState(() => _isProcessing = true);
 
     try {
       AppLogging.protocol('DeviceManagement: Executing $actionName...');
@@ -123,9 +124,7 @@ class _DeviceManagementScreenState
             'DeviceManagement: $actionName causes disconnect, popping screen',
           );
           Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
-              Navigator.pop(context);
-            }
+            safeNavigatorPop();
           });
         }
       }
@@ -135,9 +134,7 @@ class _DeviceManagementScreenState
         showErrorSnackBar(context, 'Failed: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
+      safeSetState(() => _isProcessing = false);
     }
   }
 
@@ -242,9 +239,10 @@ class _DeviceManagementScreenState
                   onTap: () => _executeAction(
                     'Reset Node Database',
                     () async {
+                      final nodesNotifier = ref.read(nodesProvider.notifier);
                       await protocol.nodeDbReset();
                       // Clear local nodes from the app's state and storage
-                      ref.read(nodesProvider.notifier).clearNodes();
+                      nodesNotifier.clearNodes();
                     },
                     warningMessage:
                         'This will clear all discovered nodes from the device and app. Nodes will be rediscovered over time.',
@@ -260,9 +258,12 @@ class _DeviceManagementScreenState
                   onTap: () => _executeAction(
                     'Factory Reset Config',
                     () async {
+                      final settingsAsync = ref.read(settingsServiceProvider);
+                      final channelsNotifier = ref.read(
+                        channelsProvider.notifier,
+                      );
                       await protocol.factoryResetConfig();
                       // Clear local state that will be invalidated by config reset
-                      final settingsAsync = ref.read(settingsServiceProvider);
                       if (settingsAsync.hasValue) {
                         // Region will be UNSET after config reset, so clear the configured flag
                         await settingsAsync.requireValue.setRegionConfigured(
@@ -270,7 +271,7 @@ class _DeviceManagementScreenState
                         );
                       }
                       // Clear channels from local cache
-                      ref.read(channelsProvider.notifier).clearChannels();
+                      channelsNotifier.clearChannels();
                     },
                     warningMessage:
                         'This will wipe channels, region, and all settings but preserves the node database.\n\n'
@@ -291,9 +292,16 @@ class _DeviceManagementScreenState
                       // Capture navigator before async operations
                       final navigator = Navigator.of(context);
 
+                      final settingsAsync = ref.read(settingsServiceProvider);
+                      final nodesNotifier = ref.read(nodesProvider.notifier);
+                      final channelsNotifier = ref.read(
+                        channelsProvider.notifier,
+                      );
+                      final appInitNotifier = ref.read(
+                        appInitProvider.notifier,
+                      );
                       await protocol.factoryResetDevice();
                       // Clear ALL local state - device is being wiped completely
-                      final settingsAsync = ref.read(settingsServiceProvider);
                       if (settingsAsync.hasValue) {
                         // Region will be UNSET, clear configured flag
                         await settingsAsync.requireValue.setRegionConfigured(
@@ -303,12 +311,12 @@ class _DeviceManagementScreenState
                         await settingsAsync.requireValue.clearLastDevice();
                       }
                       // Clear nodes and channels from local cache
-                      ref.read(nodesProvider.notifier).clearNodes();
-                      ref.read(channelsProvider.notifier).clearChannels();
+                      nodesNotifier.clearNodes();
+                      channelsNotifier.clearChannels();
 
                       // CRITICAL: Set app state to needsScanner BEFORE navigating
                       // This ensures the router shows ScannerScreen instead of MainShell
-                      ref.read(appInitProvider.notifier).setNeedsScanner();
+                      appInitNotifier.setNeedsScanner();
 
                       // Navigate directly to scanner after factory reset
                       // The device is wiped and will need to be paired again

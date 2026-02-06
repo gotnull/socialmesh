@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/animations.dart';
@@ -37,7 +38,7 @@ class WorldMeshScreen extends ConsumerStatefulWidget {
 }
 
 class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, LifecycleSafeMixin<WorldMeshScreen> {
   final MapController _mapController = MapController();
   double _currentZoom = 3.0;
   MapTileStyle _mapStyle = MapTileStyle.dark;
@@ -104,16 +105,19 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   }
 
   Future<void> _loadMapStyle() async {
-    final settings = await ref.read(settingsServiceProvider.future);
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final settings = await settingsFuture;
     final index = settings.mapTileStyleIndex;
     if (!mounted) return;
     if (index >= 0 && index < MapTileStyle.values.length) {
-      setState(() => _mapStyle = MapTileStyle.values[index]);
+      safeSetState(() => _mapStyle = MapTileStyle.values[index]);
     }
   }
 
   Future<void> _saveMapStyle(MapTileStyle style) async {
-    final settings = await ref.read(settingsServiceProvider.future);
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final settings = await settingsFuture;
+    if (!mounted) return;
     await settings.setMapTileStyleIndex(style.index);
   }
 
@@ -126,7 +130,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         builder: (ctx) => FavoritesScreen(
           allNodes: nodes,
           onShowOnMap: (node) {
-            setState(() {
+            safeSetState(() {
               _selectedNode = node;
             });
             _animatedMove(
@@ -172,7 +176,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                       _showSearchResults = false;
                     });
                     // Auto-focus when opening search
-                    Future.delayed(const Duration(milliseconds: 100), () {
+                    safeTimer(const Duration(milliseconds: 100), () {
                       _searchFocusNode.requestFocus();
                     });
                   },

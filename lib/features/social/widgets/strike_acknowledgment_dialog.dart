@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:socialmesh/utils/snackbar.dart';
+import 'package:socialmesh/core/safety/lifecycle_mixin.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
@@ -42,7 +42,8 @@ class StrikeAcknowledgmentDialog extends ConsumerStatefulWidget {
 }
 
 class _StrikeAcknowledgmentDialogState
-    extends ConsumerState<StrikeAcknowledgmentDialog> {
+    extends ConsumerState<StrikeAcknowledgmentDialog>
+    with LifecycleSafeMixin {
   bool _isAcknowledging = false;
   int _currentIndex = 0;
 
@@ -52,28 +53,23 @@ class _StrikeAcknowledgmentDialogState
       _currentIndex >= widget.unacknowledgedStrikes.length - 1;
 
   Future<void> _acknowledge() async {
-    setState(() => _isAcknowledging = true);
+    safeSetState(() => _isAcknowledging = true);
 
     try {
-      await ref
-          .read(moderationStatusProvider.notifier)
-          .acknowledgeStrike(_currentStrike.id);
+      final notifier = ref.read(moderationStatusProvider.notifier);
+      await notifier.acknowledgeStrike(_currentStrike.id);
 
       if (_isLastStrike) {
-        if (mounted) {
-          Navigator.of(context).pop(true);
-        }
+        safeNavigatorPop(true);
       } else {
-        setState(() {
+        safeSetState(() {
           _currentIndex++;
           _isAcknowledging = false;
         });
       }
     } catch (e) {
-      setState(() => _isAcknowledging = false);
-      if (mounted) {
-        showErrorSnackBar(context, 'Error: $e');
-      }
+      safeSetState(() => _isAcknowledging = false);
+      safeShowSnackBar('Error: $e');
     }
   }
 

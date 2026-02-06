@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../config/revenuecat_config.dart';
 import '../../core/transport.dart' show DeviceConnectionState;
 import '../../models/user_profile.dart';
@@ -89,7 +90,8 @@ class SettingsScreen extends ConsumerStatefulWidget {
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen>
+    with LifecycleSafeMixin<SettingsScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -165,7 +167,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onChanged: (value) async {
               HapticFeedback.selectionClick();
               await ref.read(bugReportServiceProvider).setEnabled(value);
-              if (mounted) setState(() {});
+              safeSetState(() {});
             },
           ),
         ),
@@ -1080,7 +1082,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         item.onTap ??
                         () {
                           // Clear search when tapping an item without onTap
-                          setState(() {
+                          safeSetState(() {
                             _searchQuery = '';
                             _searchController.clear();
                           });
@@ -1533,7 +1535,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: TextField(
                     controller: _searchController,
                     focusNode: _searchFocusNode,
-                    onChanged: (value) => setState(() => _searchQuery = value),
+                    onChanged: (value) =>
+                        safeSetState(() => _searchQuery = value),
                     style: TextStyle(color: context.textPrimary),
                     decoration: InputDecoration(
                       hintText: 'Find a setting',
@@ -1550,7 +1553,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               ),
                               onPressed: () {
                                 _searchController.clear();
-                                setState(() => _searchQuery = '');
+                                safeSetState(() => _searchQuery = '');
                               },
                             )
                           : null,
@@ -1707,7 +1710,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               onChanged: (value) async {
                                 HapticFeedback.selectionClick();
                                 await settingsService.setAutoReconnect(value);
-                                setState(() {});
+                                safeSetState(() {});
                               },
                             ),
                           ),
@@ -1736,7 +1739,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         hapticFeedbackEnabled: value,
                                       ),
                                     );
-                                setState(() {});
+                                safeSetState(() {});
                               },
                             ),
                           ),
@@ -1795,7 +1798,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 ref
                                     .read(settingsRefreshProvider.notifier)
                                     .refresh();
-                                setState(() {});
+                                safeSetState(() {});
                               },
                             ),
                           ),
@@ -1821,7 +1824,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 ref
                                     .read(settingsRefreshProvider.notifier)
                                     .refresh();
-                                setState(() {});
+                                safeSetState(() {});
                               },
                             ),
                           ),
@@ -1848,7 +1851,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         notificationsEnabled: value,
                                       ),
                                     );
-                                setState(() {});
+                                safeSetState(() {});
                               },
                             ),
                           ),
@@ -1871,7 +1874,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                           newNodeNotificationsEnabled: value,
                                         ),
                                       );
-                                  setState(() {});
+                                  safeSetState(() {});
                                 },
                               ),
                             ),
@@ -1896,7 +1899,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                               value,
                                         ),
                                       );
-                                  setState(() {});
+                                  safeSetState(() {});
                                 },
                               ),
                             ),
@@ -1921,7 +1924,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                               value,
                                         ),
                                       );
-                                  setState(() {});
+                                  safeSetState(() {});
                                 },
                               ),
                             ),
@@ -1942,7 +1945,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                           notificationSoundEnabled: value,
                                         ),
                                       );
-                                  setState(() {});
+                                  safeSetState(() {});
                                 },
                               ),
                             ),
@@ -1964,7 +1967,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                           notificationVibrationEnabled: value,
                                         ),
                                       );
-                                  setState(() {});
+                                  safeSetState(() {});
                                 },
                               ),
                             ),
@@ -2510,7 +2513,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 await ref
                                     .read(bugReportServiceProvider)
                                     .setEnabled(value);
-                                setState(() {});
+                                safeSetState(() {});
                               },
                             ),
                           ),
@@ -2646,7 +2649,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         UserPreferences(hapticIntensity: intensity.value),
                       );
                   ref.haptics.toggle();
-                  setState(() {});
+                  safeSetState(() {});
                   if (context.mounted) Navigator.pop(context);
                 },
               );
@@ -2706,6 +2709,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     BuildContext context,
     WidgetRef ref,
   ) async {
+    // Capture provider ref before await
+    final messagesNotifier = ref.read(messagesProvider.notifier);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -2733,7 +2738,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
 
     if (confirmed == true && context.mounted) {
-      ref.read(messagesProvider.notifier).clearMessages();
+      messagesNotifier.clearMessages();
       showSuccessSnackBar(context, 'Messages cleared');
     }
   }
@@ -2742,6 +2747,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     BuildContext context,
     WidgetRef ref,
   ) async {
+    // Capture provider refs before await
+    final messagesNotifier = ref.read(messagesProvider.notifier);
+    final nodesNotifier = ref.read(nodesProvider.notifier);
+    final channelsNotifier = ref.read(channelsProvider.notifier);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -2772,13 +2781,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     if (confirmed == true && context.mounted) {
       // Clear messages
-      ref.read(messagesProvider.notifier).clearMessages();
+      messagesNotifier.clearMessages();
 
       // Clear nodes
-      ref.read(nodesProvider.notifier).clearNodes();
+      nodesNotifier.clearNodes();
 
       // Clear channels (will be re-synced from device)
-      ref.read(channelsProvider.notifier).clearChannels();
+      channelsNotifier.clearChannels();
 
       // Clear message storage
       final messageStorage = await ref.read(messageStorageProvider.future);
@@ -2798,8 +2807,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _forceSync(BuildContext context, WidgetRef ref) async {
+    // Capture provider refs before awaits
     final protocol = ref.read(protocolServiceProvider);
     final transport = ref.read(transportProvider);
+    final messagesNotifier = ref.read(messagesProvider.notifier);
+    final nodesNotifier = ref.read(nodesProvider.notifier);
+    final channelsNotifier = ref.read(channelsProvider.notifier);
+    final connectedDevice = ref.read(connectedDeviceProvider);
 
     if (transport.state != DeviceConnectionState.connected) {
       showErrorSnackBar(context, 'Not connected to a device');
@@ -2880,12 +2894,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     try {
       // Clear local state first
-      ref.read(messagesProvider.notifier).clearMessages();
-      ref.read(nodesProvider.notifier).clearNodes();
-      ref.read(channelsProvider.notifier).clearChannels();
+      messagesNotifier.clearMessages();
+      nodesNotifier.clearNodes();
+      channelsNotifier.clearChannels();
 
       // Get device info for hardware model inference
-      final connectedDevice = ref.read(connectedDeviceProvider);
       if (connectedDevice != null) {
         protocol.setDeviceName(connectedDevice.name);
         protocol.setBleModelNumber(transport.bleModelNumber);
@@ -2908,6 +2921,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _confirmClearData(BuildContext context, WidgetRef ref) async {
+    // Capture provider refs before await
+    final secureStorage = ref.read(secureStorageProvider);
+    final settingsServiceAsync = ref.read(settingsServiceProvider);
+    final messagesNotifier = ref.read(messagesProvider.notifier);
+    final nodesNotifier = ref.read(nodesProvider.notifier);
+    final channelsNotifier = ref.read(channelsProvider.notifier);
+    final hiddenSignalsNotifier = ref.read(hiddenSignalsProvider.notifier);
+    final automationsNotifier = ref.read(automationsProvider.notifier);
+    final automations = ref.read(automationsProvider).value ?? [];
+    final signalService = ref.read(signalServiceProvider);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -2937,31 +2960,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (confirmed == true && context.mounted) {
       try {
         // Secure storage (channel keys, device info)
-        final secureStorage = ref.read(secureStorageProvider);
         await secureStorage.clearAll();
 
         // Settings service
-        final settingsServiceAsync = ref.read(settingsServiceProvider);
         settingsServiceAsync.whenData((settingsService) {
           settingsService.clearAll();
         });
 
         // Messages, nodes, channels
-        final messagesNotifier = ref.read(messagesProvider.notifier);
-        final nodesNotifier = ref.read(nodesProvider.notifier);
-        final channelsNotifier = ref.read(channelsProvider.notifier);
         messagesNotifier.clearMessages();
         nodesNotifier.clearNodes();
         channelsNotifier.clearChannels();
 
         // Hidden signals (local only)
-        final hiddenSignalsNotifier = ref.read(hiddenSignalsProvider.notifier);
         await hiddenSignalsNotifier.clearAll();
 
         // Automations - delete all one by one
         try {
-          final automationsNotifier = ref.read(automationsProvider.notifier);
-          final automations = ref.read(automationsProvider).value ?? [];
           for (final automation in automations) {
             await automationsNotifier.deleteAutomation(automation.id);
           }
@@ -2975,7 +2990,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
         // Signal database - close and delete
         try {
-          final signalService = ref.read(signalServiceProvider);
           await signalService.close();
           // Database will be recreated on next use
         } catch (e) {
@@ -3625,7 +3639,8 @@ class MeshtasticWebViewScreen extends StatefulWidget {
       _MeshtasticWebViewScreenState();
 }
 
-class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen> {
+class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen>
+    with StatefulLifecycleSafeMixin<MeshtasticWebViewScreen> {
   double _progress = 0;
   String _title = 'Meshtastic';
   InAppWebViewController? _webViewController;
@@ -3691,20 +3706,20 @@ class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen> {
                 _webViewController = controller;
               },
               onLoadStart: (controller, url) {
-                if (mounted) setState(() => _progress = 0);
+                safeSetState(() => _progress = 0);
               },
               onProgressChanged: (controller, progress) {
-                if (mounted) setState(() => _progress = progress / 100);
+                safeSetState(() => _progress = progress / 100);
               },
               onLoadStop: (controller, url) async {
                 if (!mounted) return;
-                setState(() => _progress = 1.0);
+                safeSetState(() => _progress = 1.0);
                 final canGoBack = await controller.canGoBack();
-                if (mounted) setState(() => _canGoBack = canGoBack);
+                safeSetState(() => _canGoBack = canGoBack);
               },
               onTitleChanged: (controller, title) {
-                if (mounted && title != null && title.isNotEmpty) {
-                  setState(() => _title = title);
+                if (title != null && title.isNotEmpty) {
+                  safeSetState(() => _title = title);
                 }
               },
               onReceivedError: (controller, request, error) {
@@ -3769,7 +3784,8 @@ class _SocialNotificationsSection extends ConsumerStatefulWidget {
 }
 
 class _SocialNotificationsSectionState
-    extends ConsumerState<_SocialNotificationsSection> {
+    extends ConsumerState<_SocialNotificationsSection>
+    with LifecycleSafeMixin<_SocialNotificationsSection> {
   bool _isLoading = true;
   bool _followsEnabled = true;
   bool _likesEnabled = true;
@@ -3785,25 +3801,22 @@ class _SocialNotificationsSectionState
     try {
       final settings = await PushNotificationService()
           .getNotificationSettings();
-      if (mounted) {
-        setState(() {
-          _followsEnabled = settings['follows'] ?? true;
-          _likesEnabled = settings['likes'] ?? true;
-          _commentsEnabled = settings['comments'] ?? true;
-          _isLoading = false;
-        });
-      }
+      if (!mounted) return;
+      safeSetState(() {
+        _followsEnabled = settings['follows'] ?? true;
+        _likesEnabled = settings['likes'] ?? true;
+        _commentsEnabled = settings['comments'] ?? true;
+        _isLoading = false;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      safeSetState(() => _isLoading = false);
     }
   }
 
   Future<void> _updateSetting(String type, bool value) async {
     HapticFeedback.selectionClick();
 
-    setState(() {
+    safeSetState(() {
       switch (type) {
         case 'follows':
           _followsEnabled = value;

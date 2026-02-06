@@ -176,6 +176,9 @@ class GlassScaffold extends StatelessWidget {
   /// Whether the body should resize when the keyboard appears.
   final bool resizeToAvoidBottomInset;
 
+  /// Whether the physics disables scrolling entirely.
+  bool get _isNonScrollable => physics is NeverScrollableScrollPhysics;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -194,6 +197,13 @@ class GlassScaffold extends StatelessWidget {
           color: context.textPrimary,
         ),
       );
+    }
+
+    // When NeverScrollableScrollPhysics is used (e.g. map/3D screens),
+    // bypass CustomScrollView entirely to avoid a Flutter framework crash
+    // where RenderViewportBase._paintContents hits a null center during paint.
+    if (_isNonScrollable && body != null) {
+      return _buildNonScrollableBody(context, effectiveTitle, isDark);
     }
 
     // Determine slivers to use
@@ -241,6 +251,74 @@ class GlassScaffold extends StatelessWidget {
           ...effectiveSlivers,
         ],
       ),
+    );
+  }
+
+  /// Builds a non-scrolling layout for screens that use
+  /// NeverScrollableScrollPhysics with a body widget (maps, 3D views, etc).
+  ///
+  /// Uses a regular AppBar + body instead of CustomScrollView to avoid
+  /// the viewport null-center crash in RenderViewportBase._paintContents.
+  Widget _buildNonScrollableBody(
+    BuildContext context,
+    Widget? effectiveTitle,
+    bool isDark,
+  ) {
+    final sigma = sigmaOverride ?? GlassConstants.blurSigma;
+    final fillColor = isDark
+        ? Colors.black.withValues(alpha: GlassConstants.fillOpacity)
+        : Colors.white.withValues(alpha: GlassConstants.fillOpacity);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: GlassConstants.borderOpacity)
+        : Colors.black.withValues(alpha: GlassConstants.borderOpacity * 0.5);
+
+    return Scaffold(
+      key: scaffoldKey,
+      extendBodyBehindAppBar: false,
+      backgroundColor: context.background,
+      drawer: drawer,
+      endDrawer: endDrawer,
+      floatingActionButton: floatingActionButton,
+      floatingActionButtonLocation: floatingActionButtonLocation,
+      bottomNavigationBar: bottomNavigationBar,
+      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(
+          kToolbarHeight + (bottom?.preferredSize.height ?? 0),
+        ),
+        child: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+            child: Container(
+              decoration: BoxDecoration(
+                color: fillColor,
+                border: Border(
+                  bottom: BorderSide(
+                    color: borderColor,
+                    width: GlassConstants.borderWidth,
+                  ),
+                ),
+              ),
+              child: AppBar(
+                title: effectiveTitle,
+                leading: leading,
+                actions: actions,
+                centerTitle: centerTitle ?? true,
+                automaticallyImplyLeading: automaticallyImplyLeading,
+                bottom: bottom,
+                backgroundColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
+                scrolledUnderElevation: 0,
+                elevation: 0,
+                systemOverlayStyle: isDark
+                    ? SystemUiOverlayStyle.light
+                    : SystemUiOverlayStyle.dark,
+              ),
+            ),
+          ),
+        ),
+      ),
+      body: body,
     );
   }
 }

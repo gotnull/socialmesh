@@ -77,19 +77,31 @@ class DeepLinkRouter {
   }
 
   /// Route a channel deep link.
+  /// Handles both Firestore-based (cloud-stored) and base64-encoded (legacy) channel links.
   DeepLinkRouteResult _routeChannel(ParsedDeepLink link) {
-    if (link.channelBase64Data == null) {
-      return const DeepLinkRouteResult(
-        routeName: '/channels',
-        fallbackMessage: 'Invalid channel data',
+    // Cloud-stored channel via Firestore ID (from QR code sharing)
+    if (link.hasChannelFirestoreId) {
+      return DeepLinkRouteResult(
+        routeName: '/channel-import',
+        arguments: {'firestoreId': link.channelFirestoreId},
+        requiresDevice: true,
+        fallbackMessage: 'Connect a device to import this channel',
       );
     }
 
-    return DeepLinkRouteResult(
-      routeName: '/qr-scanner',
-      arguments: {'base64Data': link.channelBase64Data},
-      requiresDevice: true,
-      fallbackMessage: 'Connect a device to import this channel',
+    // Direct import via base64-encoded protobuf data (legacy)
+    if (link.hasChannelBase64Data) {
+      return DeepLinkRouteResult(
+        routeName: '/qr-scanner',
+        arguments: {'base64Data': link.channelBase64Data},
+        requiresDevice: true,
+        fallbackMessage: 'Connect a device to import this channel',
+      );
+    }
+
+    return const DeepLinkRouteResult(
+      routeName: '/channels',
+      fallbackMessage: 'Invalid channel data',
     );
   }
 

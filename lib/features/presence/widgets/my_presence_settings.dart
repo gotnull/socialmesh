@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../models/presence_confidence.dart';
@@ -18,7 +19,8 @@ class MyPresenceSettings extends ConsumerStatefulWidget {
   ConsumerState<MyPresenceSettings> createState() => _MyPresenceSettingsState();
 }
 
-class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings> {
+class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings>
+    with LifecycleSafeMixin {
   PresenceIntent _intent = PresenceIntent.unknown;
   String? _shortStatus;
   bool _isLoading = true;
@@ -37,19 +39,19 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings> {
   }
 
   Future<void> _loadSettings() async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
     try {
       final service = ref.read(extendedPresenceServiceProvider);
       await service.init();
       final info = await service.getMyPresenceInfo();
       if (!mounted) return;
-      setState(() {
+      safeSetState(() {
         _intent = info.intent;
         _shortStatus = info.shortStatus;
         _statusController.text = info.shortStatus ?? '';
       });
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
     }
   }
 
@@ -58,7 +60,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings> {
     final service = ref.read(extendedPresenceServiceProvider);
     final changed = await service.setMyIntent(intent);
     if (!mounted) return;
-    setState(() => _intent = intent);
+    safeSetState(() => _intent = intent);
     if (changed) {
       showSuccessSnackBar(context, 'Presence intent updated');
     }
@@ -68,7 +70,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings> {
     final service = ref.read(extendedPresenceServiceProvider);
     final changed = await service.setMyStatus(status);
     if (!mounted) return;
-    setState(() => _shortStatus = status);
+    safeSetState(() => _shortStatus = status);
     if (changed) {
       showSuccessSnackBar(context, 'Status updated');
     }

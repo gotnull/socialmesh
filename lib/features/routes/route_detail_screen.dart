@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/map_config.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/mesh_map_widget.dart';
@@ -33,7 +34,7 @@ class RouteDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, LifecycleSafeMixin {
   final MapController _mapController = MapController();
   bool _isExporting = false;
   final bool _showNodes = true;
@@ -56,11 +57,12 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
   }
 
   Future<void> _loadMapStyle() async {
-    final settings = await ref.read(settingsServiceProvider.future);
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final settings = await settingsFuture;
     final index = settings.mapTileStyleIndex;
     if (!mounted) return;
     if (index >= 0 && index < MapTileStyle.values.length) {
-      setState(() => _mapStyle = MapTileStyle.values[index]);
+      safeSetState(() => _mapStyle = MapTileStyle.values[index]);
     }
   }
 
@@ -499,7 +501,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
   }
 
   Future<void> _exportRoute() async {
-    setState(() => _isExporting = true);
+    safeSetState(() => _isExporting = true);
 
     // Get the render box for sharePositionOrigin (required on iPad) before async
     final box = context.findRenderObject() as RenderBox?;
@@ -507,8 +509,10 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
         ? box.localToGlobal(Offset.zero) & box.size
         : const Rect.fromLTWH(0, 0, 100, 100);
 
+    // Capture provider before async gap
+    final storageAsync = ref.read(routeStorageProvider);
+
     try {
-      final storageAsync = ref.read(routeStorageProvider);
       final storage = storageAsync.value;
       if (storage == null) {
         if (mounted) {
@@ -523,8 +527,10 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
 
       // Get temp directory and save file
       final tempDir = await getTemporaryDirectory();
+      if (!mounted) return;
       final file = File('${tempDir.path}/$fileName');
       await file.writeAsString(gpx);
+      if (!mounted) return;
 
       // Share file using shareXFiles for proper file sharing
       await Share.shareXFiles(
@@ -538,9 +544,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
         showErrorSnackBar(context, 'Export failed: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isExporting = false);
-      }
+      safeSetState(() => _isExporting = false);
     }
   }
 

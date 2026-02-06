@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/branded_qr_code.dart';
@@ -25,7 +26,8 @@ class ThemeSettingsScreen extends ConsumerStatefulWidget {
       _ThemeSettingsScreenState();
 }
 
-class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
+class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
+    with LifecycleSafeMixin {
   @override
   Widget build(BuildContext context) {
     final accentColorAsync = ref.watch(accentColorProvider);
@@ -224,11 +226,11 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                 if (!purchased) return;
               }
               HapticFeedback.selectionClick();
-              await ref.read(accentColorProvider.notifier).setColor(color);
+              final accentNotifier = ref.read(accentColorProvider.notifier);
+              final profileNotifier = ref.read(userProfileProvider.notifier);
+              await accentNotifier.setColor(color);
               // Also sync to cloud profile for cross-device persistence
-              ref
-                  .read(userProfileProvider.notifier)
-                  .updateProfile(accentColorIndex: index);
+              profileNotifier.updateProfile(accentColorIndex: index);
             },
             scaleFactor: 0.9,
             child: Tooltip(
@@ -384,7 +386,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                       }
                       HapticFeedback.selectionClick();
                       await settingsService.setQrStyleIndex(index);
-                      setState(() {});
+                      safeSetState(() {});
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -459,7 +461,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
               }
               HapticFeedback.selectionClick();
               await settingsService.setQrUsesAccentColor(!usesAccentColor);
-              setState(() {});
+              safeSetState(() {});
             },
             child: Container(
               padding: const EdgeInsets.all(12),
@@ -539,7 +541,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                       onChanged: (value) async {
                         HapticFeedback.selectionClick();
                         await settingsService.setQrUsesAccentColor(value);
-                        setState(() {});
+                        safeSetState(() {});
                       },
                       activeTrackColor: accentColor,
                       thumbColor: WidgetStateProperty.all(Colors.white),

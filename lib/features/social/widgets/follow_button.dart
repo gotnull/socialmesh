@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
@@ -34,7 +35,8 @@ class FollowButton extends ConsumerStatefulWidget {
   ConsumerState<FollowButton> createState() => _FollowButtonState();
 }
 
-class _FollowButtonState extends ConsumerState<FollowButton> {
+class _FollowButtonState extends ConsumerState<FollowButton>
+    with LifecycleSafeMixin {
   bool _isLoading = false;
 
   @override
@@ -87,7 +89,7 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
   }
 
   Future<void> _handleToggle(BuildContext context, FollowState state) async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
     try {
       await toggleFollow(ref, widget.targetUserId);
 
@@ -109,9 +111,7 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
         showErrorSnackBar(context, 'Failed to update follow: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      safeSetState(() => _isLoading = false);
     }
   }
 
@@ -256,7 +256,8 @@ class FollowTextButton extends ConsumerStatefulWidget {
   ConsumerState<FollowTextButton> createState() => _FollowTextButtonState();
 }
 
-class _FollowTextButtonState extends ConsumerState<FollowTextButton> {
+class _FollowTextButtonState extends ConsumerState<FollowTextButton>
+    with LifecycleSafeMixin {
   bool _isLoading = false;
 
   @override
@@ -309,7 +310,7 @@ class _FollowTextButtonState extends ConsumerState<FollowTextButton> {
   }
 
   Future<void> _handleToggle(FollowState state) async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
     try {
       await toggleFollow(ref, widget.targetUserId);
 
@@ -326,9 +327,7 @@ class _FollowTextButtonState extends ConsumerState<FollowTextButton> {
         showErrorSnackBar(context, 'Failed: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      safeSetState(() => _isLoading = false);
     }
   }
 

@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/meshcore_constants.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
@@ -46,7 +47,8 @@ class MeshCoreChatScreen extends ConsumerStatefulWidget {
   ConsumerState<MeshCoreChatScreen> createState() => _MeshCoreChatScreenState();
 }
 
-class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen> {
+class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
+    with LifecycleSafeMixin<MeshCoreChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
@@ -339,6 +341,9 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen> {
     final text = _messageController.text.trim();
     if (text.isEmpty || _isSending) return;
 
+    // Capture providers before any await
+    final coordinator = ref.read(connectionCoordinatorProvider);
+
     setState(() {
       _isSending = true;
     });
@@ -362,10 +367,11 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen> {
       await _persistMessage(message);
 
       // Scroll to bottom
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _scrollToBottom();
+      });
 
-      // Send via MeshCore protocol
-      final coordinator = ref.read(connectionCoordinatorProvider);
+      // Send via MeshCore protocol (coordinator captured before await)
       final adapter = coordinator.meshCoreAdapter;
 
       if (adapter == null) {

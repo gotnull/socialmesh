@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../providers/glyph_provider.dart';
 import '../../../core/widgets/animations.dart';
@@ -1244,7 +1245,8 @@ class _SoundPickerSheet extends StatefulWidget {
   State<_SoundPickerSheet> createState() => _SoundPickerSheetState();
 }
 
-class _SoundPickerSheetState extends State<_SoundPickerSheet> {
+class _SoundPickerSheetState extends State<_SoundPickerSheet>
+    with StatefulLifecycleSafeMixin<_SoundPickerSheet> {
   final _searchController = TextEditingController();
   final _rtttlLibraryService = RtttlLibraryService();
   RtttlPlayer? _player;
@@ -1261,7 +1263,8 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
 
   Future<void> _loadSuggestions() async {
     final suggestions = await _rtttlLibraryService.getSuggestions();
-    setState(() {
+    if (!mounted) return;
+    safeSetState(() {
       _suggestions = suggestions;
       _isLoading = false;
     });
@@ -1269,12 +1272,13 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
 
   Future<void> _search(String query) async {
     if (query.isEmpty) {
-      setState(() {
+      safeSetState(() {
         _searchResults = [];
       });
     } else {
       final results = await _rtttlLibraryService.search(query);
-      setState(() {
+      if (!mounted) return;
+      safeSetState(() {
         _searchResults = results;
       });
     }
@@ -1284,7 +1288,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
     // Stop any currently playing sound
     await _player?.dispose();
 
-    setState(() {
+    safeSetState(() {
       _playingRtttl = item.rtttl;
     });
 
@@ -1296,11 +1300,9 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
         showErrorSnackBar(context, 'Failed to play: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _playingRtttl = null;
-        });
-      }
+      safeSetState(() {
+        _playingRtttl = null;
+      });
       await _player?.dispose();
       _player = null;
     }

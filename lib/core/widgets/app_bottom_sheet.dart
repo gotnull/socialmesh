@@ -99,11 +99,14 @@ class AppBottomSheet extends StatelessWidget {
             color: context.card,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          child: Column(
-            children: [
-              const _DragPill(),
-              Expanded(child: builder(scrollController)),
-            ],
+          child: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                const _DragPill(),
+                Expanded(child: builder(scrollController)),
+              ],
+            ),
           ),
         ),
       ),

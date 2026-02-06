@@ -2,6 +2,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
 
@@ -68,19 +70,75 @@ class StoryGroupsNotifier extends Notifier<StoryGroupsState> {
 
   @override
   StoryGroupsState build() {
-    ref.onDispose(() => _subscription?.cancel());
+    ref.onDispose(() {
+      AppLogging.social('📖 [StoryGroups] dispose — cancelling subscription');
+      _subscription?.cancel();
+    });
+
+    if (Firebase.apps.isEmpty) {
+      AppLogging.social(
+        '📖 [StoryGroups] build() — Firebase not initialized, '
+        'returning isLoading=false',
+      );
+      return const StoryGroupsState(isLoading: false);
+    }
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      AppLogging.social(
+        '📖 [StoryGroups] build() — not signed in, '
+        'returning isLoading=false with empty groups',
+      );
+      return const StoryGroupsState(isLoading: false);
+    }
+
+    AppLogging.social(
+      '📖 [StoryGroups] build() — signed in as uid=${currentUser.uid}, '
+      'starting stream, returning isLoading=true',
+    );
     _startWatching();
     return const StoryGroupsState(isLoading: true);
   }
 
   void _startWatching() {
+    if (Firebase.apps.isEmpty) {
+      AppLogging.social(
+        '📖 [StoryGroups] _startWatching() — Firebase not initialized, '
+        'setting isLoading=false',
+      );
+      state = const StoryGroupsState(isLoading: false);
+      return;
+    }
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      AppLogging.social(
+        '📖 [StoryGroups] _startWatching() — not signed in, '
+        'cancelling subscription, setting isLoading=false',
+      );
+      _subscription?.cancel();
+      _subscription = null;
+      state = const StoryGroupsState(isLoading: false);
+      return;
+    }
+
+    AppLogging.social(
+      '📖 [StoryGroups] _startWatching() — subscribing to '
+      'watchStoryGroups()',
+    );
+
     final service = ref.read(storyServiceProvider);
     _subscription?.cancel();
     _subscription = service.watchStoryGroups().listen(
       (groups) {
+        AppLogging.social(
+          '📖 [StoryGroups] stream emitted — '
+          '${groups.length} groups, setting isLoading=false',
+        );
         state = StoryGroupsState(groups: groups);
       },
       onError: (e) {
+        AppLogging.social('📖 [StoryGroups] stream error — $e');
         state = StoryGroupsState(error: e.toString());
       },
     );

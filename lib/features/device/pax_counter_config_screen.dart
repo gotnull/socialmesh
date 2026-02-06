@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -19,8 +20,8 @@ class PaxCounterConfigScreen extends ConsumerStatefulWidget {
       _PaxCounterConfigScreenState();
 }
 
-class _PaxCounterConfigScreenState
-    extends ConsumerState<PaxCounterConfigScreen> {
+class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
+    with LifecycleSafeMixin {
   bool _paxCounterEnabled = false;
   int _paxCounterUpdateInterval = 1800; // 30 minutes default
   bool _wifiEnabled = true;
@@ -40,28 +41,26 @@ class _PaxCounterConfigScreenState
 
     // Check if we're connected before trying to load config
     if (!protocol.isConnected) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      safeSetState(() => _isLoading = false);
       return;
     }
 
     final config = await protocol.getPaxCounterModuleConfig();
     if (config != null && mounted) {
-      setState(() {
+      safeSetState(() {
         _paxCounterEnabled = config.enabled;
         _paxCounterUpdateInterval = config.paxcounterUpdateInterval > 0
             ? config.paxcounterUpdateInterval
             : 1800;
         _isLoading = false;
       });
-    } else if (mounted) {
-      setState(() => _isLoading = false);
+    } else {
+      safeSetState(() => _isLoading = false);
     }
   }
 
   Future<void> _save() async {
-    setState(() => _isSaving = true);
+    safeSetState(() => _isSaving = true);
 
     try {
       final protocol = ref.read(protocolServiceProvider);
@@ -72,7 +71,7 @@ class _PaxCounterConfigScreenState
         bleEnabled: _bleEnabled,
       );
 
-      setState(() => _hasChanges = false);
+      safeSetState(() => _hasChanges = false);
       if (mounted) {
         showSuccessSnackBar(context, 'PAX counter config saved');
       }
@@ -81,7 +80,7 @@ class _PaxCounterConfigScreenState
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      setState(() => _isSaving = false);
+      safeSetState(() => _isSaving = false);
     }
   }
 

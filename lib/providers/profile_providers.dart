@@ -148,17 +148,123 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
   }
 
   Future<UserProfile?> _loadProfile() async {
-    AppLogging.auth('UserProfile: _loadProfile() entered');
+    AppLogging.auth('');
+    AppLogging.auth(
+      '┌──────────────────────────────────────────────────────────────',
+    );
+    AppLogging.auth('│ 🔄 _loadProfile() entered');
+    AppLogging.auth(
+      '├──────────────────────────────────────────────────────────────',
+    );
+
     await profileService.initialize();
     final profile = await profileService.getOrCreateProfile();
-    AppLogging.auth('UserProfile: Loaded profile: ${profile.displayName}');
+
+    AppLogging.auth('│ 💾 Loaded LOCAL profile:');
+    AppLogging.auth('│    - displayName: ${profile.displayName}');
+    AppLogging.auth('│    - id: ${profile.id}');
+    AppLogging.auth('│    - isSynced: ${profile.isSynced}');
+    AppLogging.auth(
+      '│ ⚠️  NOTE: _loadProfile() only reads from LOCAL storage.',
+    );
+    AppLogging.auth(
+      '│ ⚠️  It does NOT attempt cloud sync or clear sync errors.',
+    );
+    AppLogging.auth(
+      '└──────────────────────────────────────────────────────────────',
+    );
+    AppLogging.auth('');
     return profile;
   }
 
   /// Refresh profile from storage
   Future<void> refresh() async {
+    AppLogging.auth('');
+    AppLogging.auth(
+      '╔══════════════════════════════════════════════════════════════',
+    );
+    AppLogging.auth('║ 🔁 refresh() CALLED (e.g. from Retry button)');
+    AppLogging.auth(
+      '╠══════════════════════════════════════════════════════════════',
+    );
+
+    // Log current state before doing anything
+    final currentSyncStatus = ref.read(syncStatusProvider);
+    final currentSyncError = ref.read(syncErrorProvider);
+    final firebaseAuth = ref.read(firebaseAuthProvider);
+    final currentUser = firebaseAuth.currentUser;
+
+    AppLogging.auth('║ 📊 CURRENT STATE BEFORE REFRESH:');
+    AppLogging.auth('║    syncStatus:  $currentSyncStatus');
+    AppLogging.auth('║    syncError:   ${currentSyncError ?? "null"}');
+    AppLogging.auth(
+      '║    Firebase UID: ${currentUser?.uid ?? "NULL (not signed in)"}',
+    );
+    AppLogging.auth(
+      '║    provider state: ${state.isLoading
+          ? "loading"
+          : state.hasError
+          ? "error"
+          : state.hasValue
+          ? "data"
+          : "unknown"}',
+    );
+
+    AppLogging.auth('║');
+    AppLogging.auth(
+      '║ ⚠️  refresh() calls _loadProfile() which ONLY reads local storage.',
+    );
+    AppLogging.auth(
+      '║ ⚠️  It does NOT: clear syncError, clear syncStatus, or retry cloud sync.',
+    );
+    AppLogging.auth(
+      '║ ⚠️  The _SyncErrorBanner watches syncErrorProvider, which will remain',
+    );
+    AppLogging.auth(
+      '║ ⚠️  set to "$currentSyncError" after this call completes.',
+    );
+    AppLogging.auth(
+      '║ ⚠️  To actually retry cloud sync, build() must be re-triggered',
+    );
+    AppLogging.auth(
+      '║ ⚠️  (e.g. via ref.invalidateSelf()) or refresh() must do sync itself.',
+    );
+    AppLogging.auth('║');
+    AppLogging.auth('║ 🔄 Setting state = loading, calling _loadProfile()...');
+    AppLogging.auth(
+      '╚══════════════════════════════════════════════════════════════',
+    );
+
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(_loadProfile);
+
+    // Log state AFTER refresh completes
+    final postSyncStatus = ref.read(syncStatusProvider);
+    final postSyncError = ref.read(syncErrorProvider);
+    AppLogging.auth('');
+    AppLogging.auth(
+      '┌──────────────────────────────────────────────────────────────',
+    );
+    AppLogging.auth('│ 🔁 refresh() COMPLETED');
+    AppLogging.auth('│ 📊 STATE AFTER REFRESH:');
+    AppLogging.auth('│    syncStatus:  $postSyncStatus');
+    AppLogging.auth('│    syncError:   ${postSyncError ?? "null"}');
+    AppLogging.auth(
+      '│    provider state: ${state.isLoading
+          ? "loading"
+          : state.hasError
+          ? "error(${state.error})"
+          : state.hasValue
+          ? "data(${state.value?.displayName})"
+          : "unknown"}',
+    );
+    AppLogging.auth(
+      '│    banner visible? ${postSyncError != null ? "YES — error not cleared" : "NO"}',
+    );
+    AppLogging.auth(
+      '└──────────────────────────────────────────────────────────────',
+    );
+    AppLogging.auth('');
   }
 
   /// Update profile fields

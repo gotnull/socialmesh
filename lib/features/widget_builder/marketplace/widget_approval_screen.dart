@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'widget_marketplace_service.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/auth_providers.dart';
@@ -17,11 +18,13 @@ class WidgetApprovalScreen extends ConsumerStatefulWidget {
       _WidgetApprovalScreenState();
 }
 
-class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
+class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen>
+    with LifecycleSafeMixin<WidgetApprovalScreen> {
   final _marketplaceService = WidgetMarketplaceService();
   List<MarketplaceWidget> _pendingWidgets = [];
   bool _isLoading = true;
   String? _error;
+  String? _processingWidgetId;
 
   @override
   void initState() {
@@ -30,7 +33,7 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
   }
 
   Future<void> _loadPendingWidgets() async {
-    setState(() {
+    safeSetState(() {
       _isLoading = true;
       _error = null;
     });
@@ -38,9 +41,10 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
     try {
       final authService = ref.read(authServiceProvider);
       final token = await authService.getIdToken();
+      if (!mounted) return;
 
       if (token == null) {
-        setState(() {
+        safeSetState(() {
           _error = 'Not authenticated';
           _isLoading = false;
         });
@@ -48,17 +52,18 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
       }
 
       final widgets = await _marketplaceService.getPendingWidgets(token);
-      setState(() {
+      if (!mounted) return;
+      safeSetState(() {
         _pendingWidgets = widgets;
         _isLoading = false;
       });
     } on MarketplaceException catch (e) {
-      setState(() {
+      safeSetState(() {
         _error = e.message;
         _isLoading = false;
       });
     } catch (e) {
-      setState(() {
+      safeSetState(() {
         _error = 'Failed to load pending widgets: $e';
         _isLoading = false;
       });
@@ -66,27 +71,28 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
   }
 
   Future<void> _approveWidget(MarketplaceWidget widget) async {
+    if (_processingWidgetId != null) return;
+    safeSetState(() => _processingWidgetId = widget.id);
     try {
       final authService = ref.read(authServiceProvider);
       final token = await authService.getIdToken();
+      if (!mounted) return;
 
       if (token == null) {
-        if (mounted) {
-          showErrorSnackBar(context, 'Not authenticated');
-        }
+        showErrorSnackBar(context, 'Not authenticated');
         return;
       }
 
       await _marketplaceService.approveWidget(widget.id, token);
+      if (!mounted) return;
 
-      if (mounted) {
-        showSuccessSnackBar(context, '${widget.name} approved');
-        _loadPendingWidgets();
-      }
+      showSuccessSnackBar(context, '${widget.name} approved');
+      _loadPendingWidgets();
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to approve: $e');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to approve: $e');
+    } finally {
+      safeSetState(() => _processingWidgetId = null);
     }
   }
 
@@ -156,27 +162,29 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
 
     if (reason == null || !mounted) return;
 
+    if (_processingWidgetId != null) return;
+    safeSetState(() => _processingWidgetId = widget.id);
+
     try {
       final authService = ref.read(authServiceProvider);
       final token = await authService.getIdToken();
+      if (!mounted) return;
 
       if (token == null) {
-        if (mounted) {
-          showErrorSnackBar(context, 'Not authenticated');
-        }
+        showErrorSnackBar(context, 'Not authenticated');
         return;
       }
 
       await _marketplaceService.rejectWidget(widget.id, reason, token);
+      if (!mounted) return;
 
-      if (mounted) {
-        showSuccessSnackBar(context, '${widget.name} rejected');
-        _loadPendingWidgets();
-      }
+      showSuccessSnackBar(context, '${widget.name} rejected');
+      _loadPendingWidgets();
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to reject: $e');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to reject: $e');
+    } finally {
+      safeSetState(() => _processingWidgetId = null);
     }
   }
 
@@ -255,10 +263,12 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
         sliver: SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
             final widget = _pendingWidgets[index];
+            final isProcessing = _processingWidgetId == widget.id;
             return _PendingWidgetCard(
               widget: widget,
               onApprove: () => _approveWidget(widget),
               onReject: () => _rejectWidget(widget),
+              isProcessing: isProcessing,
             );
           }, childCount: _pendingWidgets.length),
         ),
@@ -271,11 +281,13 @@ class _PendingWidgetCard extends StatelessWidget {
   final MarketplaceWidget widget;
   final VoidCallback onApprove;
   final VoidCallback onReject;
+  final bool isProcessing;
 
   const _PendingWidgetCard({
     required this.widget,
     required this.onApprove,
     required this.onReject,
+    this.isProcessing = false,
   });
 
   @override
@@ -400,7 +412,7 @@ class _PendingWidgetCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 OutlinedButton.icon(
-                  onPressed: onReject,
+                  onPressed: isProcessing ? null : onReject,
                   icon: const Icon(Icons.close, size: 18),
                   label: const Text('Reject'),
                   style: OutlinedButton.styleFrom(
@@ -414,9 +426,18 @@ class _PendingWidgetCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 FilledButton.icon(
-                  onPressed: onApprove,
-                  icon: const Icon(Icons.check, size: 18),
-                  label: const Text('Approve'),
+                  onPressed: isProcessing ? null : onApprove,
+                  icon: isProcessing
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.check, size: 18),
+                  label: Text(isProcessing ? 'Processing...' : 'Approve'),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.successGreen,
                     padding: const EdgeInsets.symmetric(

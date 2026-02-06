@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -18,7 +19,8 @@ class TelemetryConfigScreen extends ConsumerStatefulWidget {
       _TelemetryConfigScreenState();
 }
 
-class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
+class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
+    with LifecycleSafeMixin {
   // Device Metrics
   int _deviceMetricsUpdateInterval = 1800; // Default 30 minutes
   bool _deviceMetricsEnabled = false;
@@ -53,15 +55,13 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
 
     // Check if we're connected before trying to load config
     if (!protocol.isConnected) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      safeSetState(() => _isLoading = false);
       return;
     }
 
     final config = await protocol.getTelemetryModuleConfig();
     if (config != null && mounted) {
-      setState(() {
+      safeSetState(() {
         // Device Metrics - use deviceTelemetryEnabled flag
         _deviceMetricsEnabled = config.deviceTelemetryEnabled;
         _deviceMetricsUpdateInterval = config.deviceUpdateInterval > 0
@@ -91,13 +91,13 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
 
         _isLoading = false;
       });
-    } else if (mounted) {
-      setState(() => _isLoading = false);
+    } else {
+      safeSetState(() => _isLoading = false);
     }
   }
 
   Future<void> _save() async {
-    setState(() => _isSaving = true);
+    safeSetState(() => _isSaving = true);
 
     try {
       final protocol = ref.read(protocolServiceProvider);
@@ -125,7 +125,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
         powerScreenEnabled: _powerScreenEnabled,
       );
 
-      setState(() => _hasChanges = false);
+      safeSetState(() => _hasChanges = false);
       if (mounted) {
         showSuccessSnackBar(context, 'Telemetry config saved');
       }
@@ -134,7 +134,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      setState(() => _isSaving = false);
+      safeSetState(() => _isSaving = false);
     }
   }
 

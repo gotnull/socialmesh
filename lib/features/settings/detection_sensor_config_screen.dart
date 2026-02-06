@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -23,7 +24,8 @@ class DetectionSensorConfigScreen extends ConsumerStatefulWidget {
 }
 
 class _DetectionSensorConfigScreenState
-    extends ConsumerState<DetectionSensorConfigScreen> {
+    extends ConsumerState<DetectionSensorConfigScreen>
+    with LifecycleSafeMixin {
   bool _enabled = false;
   String _name = '';
   int _monitorPin = 0;
@@ -61,14 +63,12 @@ class _DetectionSensorConfigScreenState
     // Load app-side notification preference
     final prefs = await SharedPreferences.getInstance();
     final notifEnabled = prefs.getBool('enableDetectionNotifications') ?? false;
-    if (mounted) {
-      setState(() => _notificationsEnabled = notifEnabled);
-    }
+    safeSetState(() => _notificationsEnabled = notifEnabled);
 
     // Only request from device if connected
     if (!protocol.isConnected) {
       AppLogging.settings('[DetectionSensor] Not connected, skipping load');
-      if (mounted) setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
       return;
     }
 
@@ -79,7 +79,7 @@ class _DetectionSensorConfigScreenState
       );
       AppLogging.settings('[DetectionSensor] Config received: $config');
       if (config != null && mounted) {
-        setState(() {
+        safeSetState(() {
           _enabled = config.enabled;
           _name = config.name;
           _monitorPin = config.monitorPin;
@@ -97,21 +97,19 @@ class _DetectionSensorConfigScreenState
           _isLoading = false;
         });
         AppLogging.settings('[DetectionSensor] Config loaded successfully');
-      } else if (mounted) {
+      } else {
         AppLogging.settings('[DetectionSensor] Config was null');
-        setState(() => _isLoading = false);
+        safeSetState(() => _isLoading = false);
       }
     } catch (e) {
       AppLogging.settings('[DetectionSensor] Error loading config: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-        showErrorSnackBar(context, 'Failed to load config');
-      }
+      safeSetState(() => _isLoading = false);
+      safeShowSnackBar('Failed to load config');
     }
   }
 
   Future<void> _saveConfig() async {
-    setState(() => _isSaving = true);
+    safeSetState(() => _isSaving = true);
 
     try {
       final protocol = ref.read(protocolServiceProvider);
@@ -138,7 +136,7 @@ class _DetectionSensorConfigScreenState
         showErrorSnackBar(context, 'Failed to save config: $e');
       }
     } finally {
-      if (mounted) setState(() => _isSaving = false);
+      safeSetState(() => _isSaving = false);
     }
   }
 
@@ -530,7 +528,7 @@ class _DetectionSensorConfigScreenState
             trailing: ThemedSwitch(
               value: _notificationsEnabled,
               onChanged: (value) async {
-                setState(() => _notificationsEnabled = value);
+                safeSetState(() => _notificationsEnabled = value);
                 // Save preference immediately
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.setBool('enableDetectionNotifications', value);

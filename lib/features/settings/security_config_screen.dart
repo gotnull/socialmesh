@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import 'package:flutter/services.dart';
@@ -27,13 +28,15 @@ class SecurityConfigScreen extends ConsumerStatefulWidget {
       _SecurityConfigScreenState();
 }
 
-class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
+class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
+    with LifecycleSafeMixin<SecurityConfigScreen> {
   bool _isManaged = false;
   bool _serialEnabled = true;
   bool _debugLogEnabled = false;
   bool _adminChannelEnabled = false;
   bool _saving = false;
   bool _loading = false;
+  bool _isKeyOperating = false;
 
   // PKI Keys
   String _publicKey = '';
@@ -58,7 +61,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
   }
 
   void _applyConfig(config_pb.Config_SecurityConfig config) {
-    setState(() {
+    safeSetState(() {
       _isManaged = config.isManaged;
       _serialEnabled = config.serialEnabled;
       _debugLogEnabled = config.debugLogApiEnabled;
@@ -86,7 +89,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
   }
 
   Future<void> _loadCurrentConfig() async {
-    setState(() => _loading = true);
+    safeSetState(() => _loading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
 
@@ -109,31 +112,33 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      safeSetState(() => _loading = false);
     }
   }
 
   /// Generate a new Curve25519 private key
   Future<void> _regeneratePrivateKey() async {
+    if (_isKeyOperating) return;
+    safeSetState(() => _isKeyOperating = true);
     try {
       final algorithm = X25519();
       final keyPair = await algorithm.newKeyPair();
       final privateKeyBytes = await keyPair.extractPrivateKeyBytes();
       final publicKey = await keyPair.extractPublicKey();
+      if (!mounted) return;
 
-      setState(() {
+      safeSetState(() {
         _privateKey = base64Encode(Uint8List.fromList(privateKeyBytes));
         _publicKey = base64Encode(Uint8List.fromList(publicKey.bytes));
         _privateKeyVisible = true;
       });
 
-      if (mounted) {
-        showSuccessSnackBar(context, 'New key pair generated');
-      }
+      showSuccessSnackBar(context, 'New key pair generated');
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to generate key: $e');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to generate key: $e');
+    } finally {
+      safeSetState(() => _isKeyOperating = false);
     }
   }
 
@@ -148,8 +153,9 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
       final algorithm = X25519();
       final keyPair = await algorithm.newKeyPairFromSeed(privateKeyBytes);
       final publicKey = await keyPair.extractPublicKey();
+      if (!mounted) return;
 
-      setState(() {
+      safeSetState(() {
         _publicKey = base64Encode(Uint8List.fromList(publicKey.bytes));
       });
     } catch (e) {
@@ -180,9 +186,10 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
       return;
     }
 
+    // Capture provider ref before awaits
     final protocol = ref.read(protocolServiceProvider);
 
-    setState(() => _saving = true);
+    safeSetState(() => _saving = true);
 
     try {
       // Convert base64 keys to bytes
@@ -203,18 +210,14 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
         adminKeys: adminKeys,
       );
 
-      if (mounted) {
-        showSuccessSnackBar(context, 'Security configuration saved');
-        Navigator.pop(context);
-      }
+      if (!mounted) return;
+      showSuccessSnackBar(context, 'Security configuration saved');
+      Navigator.pop(context);
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to save: $e');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to save: $e');
     } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
+      safeSetState(() => _saving = false);
     }
   }
 
@@ -476,9 +479,15 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
               ),
               const Spacer(),
               TextButton.icon(
-                onPressed: _regeneratePrivateKey,
-                icon: Icon(Icons.autorenew, size: 18),
-                label: const Text('Generate'),
+                onPressed: _isKeyOperating ? null : _regeneratePrivateKey,
+                icon: _isKeyOperating
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(Icons.autorenew, size: 18),
+                label: Text(_isKeyOperating ? 'Generating...' : 'Generate'),
                 style: TextButton.styleFrom(
                   foregroundColor: context.accentColor,
                 ),
@@ -516,7 +525,9 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: _privateKey.isEmpty ? null : _backupPrivateKey,
+                  onPressed: _privateKey.isEmpty || _isKeyOperating
+                      ? null
+                      : _backupPrivateKey,
                   icon: Icon(Icons.backup, size: 18),
                   label: Text('Backup'),
                   style: OutlinedButton.styleFrom(
@@ -530,7 +541,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
               SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: _restorePrivateKey,
+                  onPressed: _isKeyOperating ? null : _restorePrivateKey,
                   icon: Icon(Icons.restore, size: 18),
                   label: Text('Restore'),
                   style: OutlinedButton.styleFrom(
@@ -541,7 +552,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
               ),
               SizedBox(width: 8),
               IconButton(
-                onPressed: _deleteBackup,
+                onPressed: _isKeyOperating ? null : _deleteBackup,
                 icon: Icon(Icons.delete_outline, size: 20),
                 color: AppTheme.errorRed,
                 tooltip: 'Delete backup',
@@ -555,12 +566,15 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
 
   /// Backup private key to secure storage
   Future<void> _backupPrivateKey() async {
-    if (_privateKey.isEmpty) return;
+    if (_privateKey.isEmpty || _isKeyOperating) return;
 
+    // Capture provider ref before awaits
+    final nodeNum = ref.read(protocolServiceProvider).myNodeNum;
+
+    safeSetState(() => _isKeyOperating = true);
     try {
-      final nodeNum = ref.read(protocolServiceProvider).myNodeNum;
       if (nodeNum == null) {
-        if (mounted) showErrorSnackBar(context, 'No connected device');
+        showErrorSnackBar(context, 'No connected device');
         return;
       }
 
@@ -575,23 +589,27 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
       await storage.write(key: 'PrivateKeyNode$nodeNum', value: _privateKey);
 
       AppLogging.settings('Backed up private key for node $nodeNum');
-      if (mounted) {
-        showSuccessSnackBar(context, 'Private key backed up to secure storage');
-      }
+      if (!mounted) return;
+      showSuccessSnackBar(context, 'Private key backed up to secure storage');
     } catch (e) {
       AppLogging.settings('Failed to backup private key: $e');
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to backup key: $e');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to backup key: $e');
+    } finally {
+      safeSetState(() => _isKeyOperating = false);
     }
   }
 
   /// Restore private key from secure storage
   Future<void> _restorePrivateKey() async {
+    if (_isKeyOperating) return;
+    // Capture provider ref before awaits
+    final nodeNum = ref.read(protocolServiceProvider).myNodeNum;
+
+    safeSetState(() => _isKeyOperating = true);
     try {
-      final nodeNum = ref.read(protocolServiceProvider).myNodeNum;
       if (nodeNum == null) {
-        if (mounted) showErrorSnackBar(context, 'No connected device');
+        showErrorSnackBar(context, 'No connected device');
         return;
       }
 
@@ -604,33 +622,36 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
       );
 
       final storedKey = await storage.read(key: 'PrivateKeyNode$nodeNum');
+      if (!mounted) return;
       if (storedKey == null) {
-        if (mounted) {
-          showErrorSnackBar(context, 'No backup found for this device');
-        }
+        showErrorSnackBar(context, 'No backup found for this device');
         return;
       }
 
-      setState(() {
+      safeSetState(() {
         _privateKey = storedKey;
         _privateKeyVisible = true;
       });
       await _recalculatePublicKey();
 
       AppLogging.settings('Restored private key for node $nodeNum');
-      if (mounted) {
-        showSuccessSnackBar(context, 'Private key restored from backup');
-      }
+      if (!mounted) return;
+      showSuccessSnackBar(context, 'Private key restored from backup');
     } catch (e) {
       AppLogging.settings('Failed to restore private key: $e');
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to restore key: $e');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to restore key: $e');
+    } finally {
+      safeSetState(() => _isKeyOperating = false);
     }
   }
 
   /// Delete backed up private key
   Future<void> _deleteBackup() async {
+    if (_isKeyOperating) return;
+    // Capture provider ref before awaits
+    final nodeNum = ref.read(protocolServiceProvider).myNodeNum;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -657,12 +678,12 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
       ),
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
+    safeSetState(() => _isKeyOperating = true);
     try {
-      final nodeNum = ref.read(protocolServiceProvider).myNodeNum;
       if (nodeNum == null) {
-        if (mounted) showErrorSnackBar(context, 'No connected device');
+        showErrorSnackBar(context, 'No connected device');
         return;
       }
 
@@ -677,14 +698,14 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
       await storage.delete(key: 'PrivateKeyNode$nodeNum');
 
       AppLogging.settings('Deleted private key backup for node $nodeNum');
-      if (mounted) {
-        showSuccessSnackBar(context, 'Backup deleted');
-      }
+      if (!mounted) return;
+      showSuccessSnackBar(context, 'Backup deleted');
     } catch (e) {
       AppLogging.settings('Failed to delete backup: $e');
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to delete backup: $e');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to delete backup: $e');
+    } finally {
+      safeSetState(() => _isKeyOperating = false);
     }
   }
 

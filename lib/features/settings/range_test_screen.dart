@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -25,7 +26,8 @@ class RangeTestScreen extends ConsumerStatefulWidget {
   ConsumerState<RangeTestScreen> createState() => _RangeTestScreenState();
 }
 
-class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
+class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
+    with LifecycleSafeMixin {
   bool _enabled = false;
   int _senderInterval = 60; // seconds between messages
   bool _saveResults = false;
@@ -59,25 +61,25 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
 
     // Only request from device if connected
     if (!protocol.isConnected) {
-      if (mounted) setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
       return;
     }
 
     final config = await protocol.getRangeTestModuleConfig();
     if (config != null && mounted) {
-      setState(() {
+      safeSetState(() {
         _enabled = config.enabled;
         _senderInterval = config.sender > 0 ? config.sender : 60;
         _saveResults = config.save;
         _isLoading = false;
       });
-    } else if (mounted) {
-      setState(() => _isLoading = false);
+    } else {
+      safeSetState(() => _isLoading = false);
     }
   }
 
   Future<void> _saveConfig() async {
-    setState(() => _isSaving = true);
+    safeSetState(() => _isSaving = true);
 
     try {
       final protocol = ref.read(protocolServiceProvider);
@@ -95,7 +97,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
         showErrorSnackBar(context, 'Failed to save config: $e');
       }
     } finally {
-      if (mounted) setState(() => _isSaving = false);
+      safeSetState(() => _isSaving = false);
     }
   }
 
@@ -127,6 +129,8 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
 
   void _startRangeTestListener() {
     final protocol = ref.read(protocolServiceProvider);
+    final nodesMap = ref.read(nodesProvider);
+    final myNum = ref.read(myNodeNumProvider);
 
     // Listen for node updates from the target node
     _nodeSubscription = protocol.nodeStream.listen((node) {
@@ -140,8 +144,8 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
 
         // Calculate distance if we have position data
         double? distance;
-        final nodes = ref.read(nodesProvider);
-        final myNodeNum = ref.read(myNodeNumProvider);
+        final nodes = nodesMap;
+        final myNodeNum = myNum;
         final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
 
         if (myNode?.latitude != null &&
@@ -157,7 +161,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
         }
 
         if (mounted) {
-          setState(() {
+          safeSetState(() {
             _results.add(
               RangeTestResult(
                 timestamp: DateTime.now(),
@@ -188,7 +192,9 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
     if (!_isRunning || _selectedTargetNode == null) return;
 
     try {
-      final protocol = ref.read(protocolServiceProvider);
+      final protocol = ref.read(
+        protocolServiceProvider,
+      ); // captured before await
       // Send a range test message to the target node
       await protocol.sendMessage(
         text: 'RT ${DateTime.now().millisecondsSinceEpoch}',

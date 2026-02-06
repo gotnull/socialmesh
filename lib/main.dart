@@ -20,6 +20,7 @@ import 'core/transport.dart';
 import 'core/accessibility_theme_adapter.dart';
 import 'core/logging.dart';
 import 'core/safety/error_handler.dart';
+import 'core/safety/lifecycle_mixin.dart';
 import 'core/widgets/connecting_content.dart';
 import 'core/widgets/gradient_border_container.dart';
 import 'core/routing/route_guard.dart';
@@ -219,7 +220,7 @@ class SocialmeshApp extends ConsumerStatefulWidget {
 }
 
 class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, LifecycleSafeMixin {
   StreamSubscription<NotificationNavigation>? _pushNotificationSubscription;
 
   /// Guard to prevent concurrent reconnect attempts.

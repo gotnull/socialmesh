@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -24,7 +25,8 @@ class AdminFollowRequestsScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminFollowRequestsScreenState
-    extends ConsumerState<AdminFollowRequestsScreen> {
+    extends ConsumerState<AdminFollowRequestsScreen>
+    with LifecycleSafeMixin<AdminFollowRequestsScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
@@ -165,14 +167,12 @@ class _AdminFollowRequestsScreenState
       );
 
       await batch.commit();
+      if (!mounted) return;
 
-      if (mounted) {
-        showSuccessSnackBar(context, 'Request approved');
-      }
+      showSuccessSnackBar(context, 'Request approved');
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to approve: $e');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to approve: $e');
     }
   }
 
@@ -182,14 +182,12 @@ class _AdminFollowRequestsScreenState
           .collection('follow_requests')
           .doc(request.documentId)
           .delete();
+      if (!mounted) return;
 
-      if (mounted) {
-        showSuccessSnackBar(context, 'Request declined');
-      }
+      showSuccessSnackBar(context, 'Request declined');
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to decline: $e');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to decline: $e');
     }
   }
 }
@@ -398,7 +396,8 @@ class _SeedDataTab extends StatefulWidget {
   State<_SeedDataTab> createState() => _SeedDataTabState();
 }
 
-class _SeedDataTabState extends State<_SeedDataTab> {
+class _SeedDataTabState extends State<_SeedDataTab>
+    with StatefulLifecycleSafeMixin<_SeedDataTab> {
   bool _isSeeding = false;
   String _status = '';
   final List<String> _log = [];
@@ -653,7 +652,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
   }
 
   void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    safePostFrame(() {
       if (_logScrollController.hasClients) {
         _logScrollController.animateTo(
           _logScrollController.position.maxScrollExtent,
@@ -914,7 +913,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
   }
 
   Future<void> _resetAndSeed() async {
-    setState(() {
+    safeSetState(() {
       _isSeeding = true;
       _log.clear();
     });
@@ -923,7 +922,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       // Step 1: Delete all dummy user data
       _log.add('🗑️ Cleaning up existing dummy data...');
       _scrollToBottom();
-      setState(() => _status = 'Deleting dummy data...');
+      safeSetState(() => _status = 'Deleting dummy data...');
 
       // Get all dummy user IDs
       final dummyUserIds = _dummyUsers.map((u) => u['id'] as String).toList();
@@ -1056,12 +1055,14 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       _log.add('✓ Cleanup complete!');
       _log.add('');
 
+      if (!mounted) return;
+
       // Step 2: Now seed fresh data
       await _doSeed();
     } catch (e) {
       _log.add('');
       _log.add('✗ Error: $e');
-      setState(() {
+      safeSetState(() {
         _isSeeding = false;
         _status = 'Error: $e';
       });
@@ -1069,7 +1070,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
   }
 
   Future<void> _seedUsers() async {
-    setState(() {
+    safeSetState(() {
       _isSeeding = true;
       _log.clear();
     });
@@ -1090,7 +1091,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
         final bannerUrl = user['bannerUrl'] as String?;
         // Generate email from user ID (e.g., dummy_user_alice -> dummy_user_alice@socialmesh.app)
         final email = '$userId@socialmesh.app';
-        setState(() => _status = 'Creating $displayName...');
+        safeSetState(() => _status = 'Creating $displayName...');
         _log.add('+ $displayName ($email)');
 
         // Create profile document
@@ -1125,13 +1126,15 @@ class _SeedDataTabState extends State<_SeedDataTab> {
         await Future.delayed(const Duration(milliseconds: 50));
       }
 
-      setState(() => _status = 'Committing users...');
+      if (!mounted) return;
+      safeSetState(() => _status = 'Committing users...');
       await userBatch.commit();
       _log.add('');
       _log.add('✓ ${_dummyUsers.length} users created (profiles + users)');
 
       // Step 2: Create posts
-      setState(() => _status = 'Creating posts...');
+      if (!mounted) return;
+      safeSetState(() => _status = 'Creating posts...');
       _log.add('');
       _log.add('Creating posts...');
       final postIds = <String>[];
@@ -1175,7 +1178,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
           _log.add('✗ Post ${i + 1} failed: $e');
         }
 
-        setState(
+        safeSetState(
           () => _status = 'Creating post ${i + 1}/${_samplePosts.length}...',
         );
         await Future.delayed(const Duration(milliseconds: 50));
@@ -1183,8 +1186,9 @@ class _SeedDataTabState extends State<_SeedDataTab> {
 
       _log.add('✓ ${_samplePosts.length} posts created');
 
+      if (!mounted) return;
       // Step 3: Create stories for some users
-      setState(() => _status = 'Creating stories...');
+      safeSetState(() => _status = 'Creating stories...');
       _log.add('');
       _log.add('Creating stories...');
       var storyCount = 0;
@@ -1238,7 +1242,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
           _log.add('✗ Story failed: $e');
         }
 
-        setState(
+        safeSetState(
           () => _status = 'Creating story ${i + 1}/${_sampleStories.length}...',
         );
         await Future.delayed(const Duration(milliseconds: 50));
@@ -1259,7 +1263,10 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       // Step 4: Create follows from current user to public users with stories
       // This ensures the story bar shows stories from followed users
       if (_currentUserId != null) {
-        setState(() => _status = 'Creating follows for story visibility...');
+        if (!mounted) return;
+        safeSetState(
+          () => _status = 'Creating follows for story visibility...',
+        );
         _log.add('');
         _log.add('Following public users with stories...');
         _log.add('  Your user ID: $_currentUserId');
@@ -1327,7 +1334,8 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       }
 
       // Step 5: Create comments on posts
-      setState(() => _status = 'Creating comments...');
+      if (!mounted) return;
+      safeSetState(() => _status = 'Creating comments...');
       _log.add('');
       _log.add('Creating comments...');
       var commentCount = 0;
@@ -1386,8 +1394,9 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       _log.add('✓ $commentCount comments created');
       _log.add('');
 
+      if (!mounted) return;
       // Step 6: Recalculate all counts from actual data
-      setState(() => _status = 'Recalculating counts...');
+      safeSetState(() => _status = 'Recalculating counts...');
       _log.add('Recalculating counts from actual data...');
       try {
         final user = FirebaseAuth.instance.currentUser;
@@ -1424,7 +1433,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       _log.add('✓ All data seeded successfully!');
       _scrollToBottom();
 
-      setState(() {
+      safeSetState(() {
         _isSeeding = false;
         _status = 'Done!';
       });
@@ -1439,7 +1448,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       _log.add('');
       _log.add('✗ Error: $e');
       _scrollToBottom();
-      setState(() {
+      safeSetState(() {
         _isSeeding = false;
         _status = 'Error: $e';
       });

@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/logging.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -159,7 +160,8 @@ class _ModerationQueueList extends ConsumerStatefulWidget {
       _ModerationQueueListState();
 }
 
-class _ModerationQueueListState extends ConsumerState<_ModerationQueueList> {
+class _ModerationQueueListState extends ConsumerState<_ModerationQueueList>
+    with LifecycleSafeMixin {
   bool _isProcessing = false;
 
   @override
@@ -328,8 +330,11 @@ class _ModerationQueueListState extends ConsumerState<_ModerationQueueList> {
     WidgetRef ref,
     String itemId,
   ) async {
+    // Capture provider before async gap
+    final socialService = ref.read(socialServiceProvider);
+
     try {
-      await ref.read(socialServiceProvider).approveModerationItem(itemId);
+      await socialService.approveModerationItem(itemId);
       if (context.mounted) {
         showSuccessSnackBar(context, 'Content approved');
       }
@@ -346,6 +351,9 @@ class _ModerationQueueListState extends ConsumerState<_ModerationQueueList> {
     Map<String, dynamic> item,
   ) async {
     if (_isProcessing) return; // Prevent double-tap
+
+    // Capture provider before async gap
+    final socialService = ref.read(socialServiceProvider);
 
     final contentType = item['contentType'] as String? ?? 'content';
     final confirmed = await showDialog<bool>(
@@ -372,9 +380,9 @@ class _ModerationQueueListState extends ConsumerState<_ModerationQueueList> {
     );
 
     if (confirmed == true && context.mounted) {
-      setState(() => _isProcessing = true);
+      safeSetState(() => _isProcessing = true);
       try {
-        await ref.read(socialServiceProvider).rejectModerationItem(item['id']);
+        await socialService.rejectModerationItem(item['id']);
         if (context.mounted) {
           showSuccessSnackBar(context, 'Content rejected and user warned');
         }
@@ -383,9 +391,7 @@ class _ModerationQueueListState extends ConsumerState<_ModerationQueueList> {
           showErrorSnackBar(context, 'Error: $e');
         }
       } finally {
-        if (mounted) {
-          setState(() => _isProcessing = false);
-        }
+        safeSetState(() => _isProcessing = false);
       }
     }
   }
@@ -1018,8 +1024,11 @@ class _ReportsList extends ConsumerWidget {
     WidgetRef ref,
     String reportId,
   ) async {
+    // Capture provider before async gap
+    final socialService = ref.read(socialServiceProvider);
+
     try {
-      await ref.read(socialServiceProvider).dismissReport(reportId);
+      await socialService.dismissReport(reportId);
       if (context.mounted) {
         showSuccessSnackBar(context, 'Report dismissed');
       }
@@ -1036,6 +1045,10 @@ class _ReportsList extends ConsumerWidget {
     Map<String, dynamic> report,
   ) async {
     final type = report['type'] as String? ?? 'content';
+
+    // Capture provider before async gap
+    final socialService = ref.read(socialServiceProvider);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1061,9 +1074,7 @@ class _ReportsList extends ConsumerWidget {
 
     if (confirmed == true && context.mounted) {
       try {
-        await ref
-            .read(socialServiceProvider)
-            .deleteReportedContent(report['id']);
+        await socialService.deleteReportedContent(report['id']);
         if (context.mounted) {
           showSuccessSnackBar(context, '${type.capitalize()} deleted');
         }
@@ -1161,6 +1172,9 @@ class _ReportsList extends ConsumerWidget {
     final authorId = reportContext?['authorId'] as String?;
     final type = report['type'] as String? ?? 'content';
 
+    // Capture provider before async gap
+    final socialService = ref.read(socialServiceProvider);
+
     AppLogging.social('[BanUser] Extracted authorId: $authorId, type: $type');
 
     if (authorId == null) {
@@ -1238,7 +1252,7 @@ class _ReportsList extends ConsumerWidget {
 
       // Delete the content
       AppLogging.social('[BanUser] Deleting reported content...');
-      await ref.read(socialServiceProvider).deleteReportedContent(report['id']);
+      await socialService.deleteReportedContent(report['id']);
       AppLogging.social('[BanUser] Reported content deleted');
 
       if (context.mounted) {

@@ -166,6 +166,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
     return GlassScaffold.body(
       leading: const MeshCoreHamburgerMenuButton(),
       title: 'Map',
+      physics: const NeverScrollableScrollPhysics(),
       actions: [
         const MeshCoreDeviceStatusButton(),
         IconButton(

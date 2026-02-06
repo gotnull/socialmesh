@@ -3,23 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
-import '../../core/widgets/qr_share_sheet.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/ico_help_system.dart';
-import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
-import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
 import 'channel_form_screen.dart';
+import 'channel_share_utils.dart';
 import 'channel_wizard_screen.dart';
 
 class ChannelsScreen extends ConsumerStatefulWidget {
@@ -35,7 +34,8 @@ class ChannelsScreen extends ConsumerStatefulWidget {
 
 enum ChannelFilter { all, primary, encrypted, position, mqtt }
 
-class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
+class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
+    with LifecycleSafeMixin {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   ChannelFilter _activeFilter = ChannelFilter.all;
@@ -514,8 +514,8 @@ class _ChannelTile extends ConsumerWidget {
         enabled: channel.psk.isNotEmpty,
       ),
       BottomSheetAction(
-        icon: Icons.qr_code,
-        label: 'Show QR Code',
+        icon: Icons.share,
+        label: 'Share Channel',
         value: 'qr',
         enabled: channel.psk.isNotEmpty,
       ),
@@ -551,7 +551,7 @@ class _ChannelTile extends ConsumerWidget {
         _showEncryptionKey(context);
         break;
       case 'qr':
-        _showQrCode(context);
+        _shareChannel(context, ref);
         break;
       case 'delete':
         _deleteChannel(context, ref);
@@ -573,34 +573,8 @@ class _ChannelTile extends ConsumerWidget {
     );
   }
 
-  void _showQrCode(BuildContext context) {
-    // Build a proper protobuf Channel message for the QR code
-    final channelSettings = channel_pb.ChannelSettings()
-      ..name = channel.name
-      ..psk = channel.psk;
-
-    final pbChannel = channel_pb.Channel()
-      ..index = channel.index
-      ..settings = channelSettings
-      ..role = channel.index == 0
-          ? channel_pbenum.Channel_Role.PRIMARY
-          : channel_pbenum.Channel_Role.SECONDARY;
-
-    // Encode as base64 and URL-encode for the URL fragment
-    final base64Data = base64Encode(pbChannel.writeToBuffer());
-    final channelUrl = 'socialmesh://channel/$base64Data';
-
-    final channelName = channel.name.isEmpty
-        ? 'Channel ${channel.index}'
-        : channel.name;
-
-    QrShareSheet.show(
-      context: context,
-      title: channelName,
-      subtitle: 'Scan to join this channel',
-      qrData: channelUrl,
-      infoText: 'Share this QR code to let others join your channel',
-    );
+  void _shareChannel(BuildContext context, WidgetRef ref) {
+    showChannelShareSheet(context, channel, ref: ref);
   }
 
   void _deleteChannel(BuildContext context, WidgetRef ref) {
@@ -643,12 +617,11 @@ class _ChannelTile extends ConsumerWidget {
               // Send to device first
               try {
                 final protocol = ref.read(protocolServiceProvider);
+                final channelsNotifier = ref.read(channelsProvider.notifier);
                 await protocol.setChannel(disabledChannel);
 
                 // Update local state only after successful device sync
-                ref
-                    .read(channelsProvider.notifier)
-                    .removeChannel(channel.index);
+                channelsNotifier.removeChannel(channel.index);
 
                 // Don't show snackbar - the reconnecting overlay will handle UX
               } catch (e) {

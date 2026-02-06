@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,7 +25,8 @@ class PositionConfigScreen extends ConsumerStatefulWidget {
       _PositionConfigScreenState();
 }
 
-class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
+class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
+    with LifecycleSafeMixin {
   bool _isLoading = false;
   config_pbenum.Config_PositionConfig_GpsMode? _gpsMode;
   bool _smartBroadcastEnabled = true;
@@ -76,7 +78,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
   }
 
   Future<void> _useCurrentLocation() async {
-    setState(() => _isGettingLocation = true);
+    safeSetState(() => _isGettingLocation = true);
     try {
       // Check if location services are enabled
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -117,12 +119,12 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
         ),
       );
 
+      safeSetState(() {
+        _latController.text = position.latitude.toStringAsFixed(6);
+        _lonController.text = position.longitude.toStringAsFixed(6);
+        _altController.text = position.altitude.toInt().toString();
+      });
       if (mounted) {
-        setState(() {
-          _latController.text = position.latitude.toStringAsFixed(6);
-          _lonController.text = position.longitude.toStringAsFixed(6);
-          _altController.text = position.altitude.toInt().toString();
-        });
         showSuccessSnackBar(context, 'Location updated from phone GPS');
       }
     } catch (e) {
@@ -130,14 +132,12 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
         showErrorSnackBar(context, 'Failed to get location: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isGettingLocation = false);
-      }
+      safeSetState(() => _isGettingLocation = false);
     }
   }
 
   Future<void> _loadCurrentConfig() async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
 
@@ -166,7 +166,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
         await Future.delayed(const Duration(milliseconds: 500));
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
     }
   }
 
@@ -225,7 +225,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
   }
 
   Future<void> _saveConfig() async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
 
@@ -264,14 +264,14 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
 
       if (mounted) {
         showSuccessSnackBar(context, 'Position configuration saved');
-        Navigator.pop(context);
+        safeNavigatorPop();
       }
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
     }
   }
 

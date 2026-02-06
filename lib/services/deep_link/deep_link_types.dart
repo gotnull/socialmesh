@@ -9,7 +9,7 @@ enum DeepLinkType {
   /// Node sharing: socialmesh://node/{base64} or https://socialmesh.app/share/node/{id}
   node,
 
-  /// Channel import: socialmesh://channel/{base64}
+  /// Channel import: socialmesh://channel/{base64} or socialmesh://channel/id:{firestoreId} or https://socialmesh.app/share/channel/{id}
   channel,
 
   /// User profile: socialmesh://profile/{displayName} or https://socialmesh.app/share/profile/{displayName}
@@ -47,6 +47,7 @@ class ParsedDeepLink {
     this.nodeLongitude,
     this.nodeFirestoreId,
     this.channelBase64Data,
+    this.channelFirestoreId,
     this.profileDisplayName,
     this.widgetId,
     this.widgetBase64Data,
@@ -77,6 +78,9 @@ class ParsedDeepLink {
 
   // Channel-specific fields
   final String? channelBase64Data;
+
+  /// Firestore document ID for cloud-stored shared channels
+  final String? channelFirestoreId;
 
   // Profile-specific fields
   final String? profileDisplayName;
@@ -125,6 +129,14 @@ class ParsedDeepLink {
   bool get hasWidgetFirestoreId =>
       type == DeepLinkType.widget && widgetFirestoreId != null;
 
+  /// Whether this channel link has base64 data for direct import.
+  bool get hasChannelBase64Data =>
+      type == DeepLinkType.channel && channelBase64Data != null;
+
+  /// Whether this channel link needs to fetch data from Firestore.
+  bool get hasChannelFirestoreId =>
+      type == DeepLinkType.channel && channelFirestoreId != null;
+
   /// Create an invalid deep link with errors.
   factory ParsedDeepLink.invalid(String originalUri, List<String> errors) {
     return ParsedDeepLink(
@@ -154,6 +166,7 @@ class ParsedDeepLink {
       nodeLongitude: nodeLongitude ?? this.nodeLongitude,
       nodeFirestoreId: nodeFirestoreId,
       channelBase64Data: channelBase64Data,
+      channelFirestoreId: channelFirestoreId,
       profileDisplayName: profileDisplayName,
       widgetId: widgetId,
       widgetFirestoreId: widgetFirestoreId,

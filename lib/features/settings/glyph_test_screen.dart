@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/glyph_provider.dart';
 import '../../services/glyph_matrix_service.dart';
@@ -20,7 +21,7 @@ class GlyphTestScreen extends ConsumerStatefulWidget {
 }
 
 class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, LifecycleSafeMixin<GlyphTestScreen> {
   final GlyphMatrixService _matrixService = GlyphMatrixService();
 
   // Current pattern state - 25x25 grid of brightness values (0.0 to 1.0)
@@ -115,7 +116,7 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
 
     // Show initial pattern preview (without executing on launch)
     final pattern = _patterns[_selectedPatternIndex];
-    setState(() {
+    safeSetState(() {
       _matrixState = pattern.generate();
     });
   }
@@ -132,7 +133,7 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
 
   void _updatePreview(int index) {
     final pattern = _patterns[index];
-    setState(() {
+    safeSetState(() {
       _matrixState = pattern.generate();
       _selectedPatternIndex = index;
     });
@@ -143,7 +144,7 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
   Future<void> _executePattern() async {
     if (_isExecuting) return;
 
-    setState(() => _isExecuting = true);
+    safeSetState(() => _isExecuting = true);
     HapticFeedback.mediumImpact();
 
     _autoOffTimer?.cancel();
@@ -176,16 +177,12 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
       // Auto-off after 3 seconds
       _autoOffTimer = Timer(const Duration(seconds: 3), () async {
         await _matrixService.turnOff();
-        if (mounted) {
-          setState(() {
-            _matrixState = List.generate(25, (_) => List.filled(25, 0.0));
-          });
-        }
+        safeSetState(() {
+          _matrixState = List.generate(25, (_) => List.filled(25, 0.0));
+        });
       });
     } finally {
-      if (mounted) {
-        setState(() => _isExecuting = false);
-      }
+      safeSetState(() => _isExecuting = false);
     }
   }
 
@@ -204,8 +201,9 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
     _autoOffTimer?.cancel();
     _animationTimer?.cancel();
     await _matrixService.turnOff();
+    if (!mounted) return;
     HapticFeedback.lightImpact();
-    setState(() {
+    safeSetState(() {
       _matrixState = List.generate(25, (_) => List.filled(25, 0.0));
     });
   }

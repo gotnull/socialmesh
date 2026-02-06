@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import '../../config/revenuecat_config.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/animated_gold_button.dart';
@@ -28,7 +29,8 @@ class SubscriptionScreen extends ConsumerStatefulWidget {
   ConsumerState<SubscriptionScreen> createState() => _SubscriptionScreenState();
 }
 
-class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
+class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
+    with LifecycleSafeMixin<SubscriptionScreen> {
   int _ringtoneCount = 0;
   final _rtttlLibraryService = RtttlLibraryService();
 
@@ -40,9 +42,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   Future<void> _loadRingtoneCount() async {
     final count = await _rtttlLibraryService.getToneCount();
-    if (mounted) {
-      setState(() => _ringtoneCount = count);
-    }
+    if (!mounted) return;
+    safeSetState(() => _ringtoneCount = count);
   }
 
   String get _ringtoneCountFormatted {
@@ -569,23 +570,26 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }
 
   Future<void> _purchaseBundle() async {
-    ref.haptics.buttonTap();
+    // Capture haptics before any await
+    final haptics = ref.haptics;
+    haptics.buttonTap();
 
     // If already owned, short-circuit and celebrate
     final purchaseState = ref.read(purchaseStateProvider);
     final bundleId = RevenueCatConfig.completePackProductId;
     if (purchaseState.hasPurchased(bundleId)) {
-      ref.haptics.success();
+      haptics.success();
       _showAllUnlockedCelebration();
       return;
     }
 
     // Try restoring first to detect cross-account ownership without prompting the store
     final restored = await restorePurchases(ref);
+    if (!mounted) return;
     if (restored) {
       final refreshedState = ref.read(purchaseStateProvider);
       if (refreshedState.hasPurchased(bundleId)) {
-        ref.haptics.success();
+        haptics.success();
         _showAllUnlockedCelebration();
         return;
       }
@@ -595,17 +599,16 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       ref,
       RevenueCatConfig.completePackProductId,
     );
-    if (mounted) {
-      switch (result) {
-        case PurchaseResult.success:
-          ref.haptics.success();
-          _showAllUnlockedCelebration();
-        case PurchaseResult.canceled:
-          break;
-        case PurchaseResult.error:
-          ref.haptics.error();
-          showErrorSnackBar(context, 'Purchase failed. Please try again.');
-      }
+    if (!mounted) return;
+    switch (result) {
+      case PurchaseResult.success:
+        haptics.success();
+        _showAllUnlockedCelebration();
+      case PurchaseResult.canceled:
+        break;
+      case PurchaseResult.error:
+        haptics.error();
+        showErrorSnackBar(context, 'Purchase failed. Please try again.');
     }
   }
 
@@ -772,32 +775,33 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }
 
   Future<void> _purchaseItem(OneTimePurchase purchase) async {
-    ref.haptics.buttonTap();
+    // Capture haptics before any await
+    final haptics = ref.haptics;
+    haptics.buttonTap();
     final result = await purchaseProduct(ref, purchase.productId);
-    if (mounted) {
-      switch (result) {
-        case PurchaseResult.success:
-          ref.haptics.success();
-          // Check if all features are now unlocked
-          final purchaseState = ref.read(purchaseStateProvider);
-          final allPurchases = OneTimePurchases.allPurchases;
-          final ownedCount = allPurchases
-              .where((p) => purchaseState.hasPurchased(p.productId))
-              .length;
+    if (!mounted) return;
+    switch (result) {
+      case PurchaseResult.success:
+        haptics.success();
+        // Check if all features are now unlocked
+        final purchaseState = ref.read(purchaseStateProvider);
+        final allPurchases = OneTimePurchases.allPurchases;
+        final ownedCount = allPurchases
+            .where((p) => purchaseState.hasPurchased(p.productId))
+            .length;
 
-          if (ownedCount == allPurchases.length) {
-            // All features unlocked! Show celebration
-            _showAllUnlockedCelebration();
-          } else {
-            _showUnlockedSnackBar(purchase);
-          }
-        case PurchaseResult.canceled:
-          // User canceled - no message needed
-          break;
-        case PurchaseResult.error:
-          ref.haptics.error();
-          showErrorSnackBar(context, 'Purchase failed. Please try again.');
-      }
+        if (ownedCount == allPurchases.length) {
+          // All features unlocked! Show celebration
+          _showAllUnlockedCelebration();
+        } else {
+          _showUnlockedSnackBar(purchase);
+        }
+      case PurchaseResult.canceled:
+        // User canceled - no message needed
+        break;
+      case PurchaseResult.error:
+        haptics.error();
+        showErrorSnackBar(context, 'Purchase failed. Please try again.');
     }
   }
 

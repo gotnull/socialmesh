@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
@@ -24,7 +25,8 @@ class MeshCoreToolsScreen extends ConsumerStatefulWidget {
       _MeshCoreToolsScreenState();
 }
 
-class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen> {
+class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
+    with LifecycleSafeMixin {
   bool _isRefreshing = false;
 
   @override
@@ -440,7 +442,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen> {
   }
 
   Future<void> _refreshDeviceInfo() async {
-    setState(() => _isRefreshing = true);
+    safeSetState(() => _isRefreshing = true);
     try {
       // Trigger refresh on both providers
       ref.invalidate(meshCoreSelfInfoProvider);
@@ -448,9 +450,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen> {
       // Wait for refresh to complete
       await Future.delayed(const Duration(milliseconds: 500));
     } finally {
-      if (mounted) {
-        setState(() => _isRefreshing = false);
-      }
+      safeSetState(() => _isRefreshing = false);
     }
   }
 

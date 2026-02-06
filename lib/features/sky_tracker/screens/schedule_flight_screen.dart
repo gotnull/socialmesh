@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/auth_providers.dart';
@@ -20,7 +21,8 @@ class ScheduleFlightScreen extends ConsumerStatefulWidget {
       _ScheduleFlightScreenState();
 }
 
-class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
+class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
+    with LifecycleSafeMixin<ScheduleFlightScreen> {
   final _formKey = GlobalKey<FormState>();
   final _flightNumberController = TextEditingController();
   final _nodeIdController = TextEditingController();
@@ -64,8 +66,8 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
       ),
     );
 
-    if (date != null) {
-      setState(() => _departureDate = date);
+    if (date != null && mounted) {
+      safeSetState(() => _departureDate = date);
       if (_departureTime == null) {
         _selectDepartureTime();
       }
@@ -87,8 +89,8 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
       ),
     );
 
-    if (time != null) {
-      setState(() => _departureTime = time);
+    if (time != null && mounted) {
+      safeSetState(() => _departureTime = time);
     }
   }
 
@@ -110,8 +112,8 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
       ),
     );
 
-    if (date != null) {
-      setState(() => _arrivalDate = date);
+    if (date != null && mounted) {
+      safeSetState(() => _arrivalDate = date);
       if (_arrivalTime == null) {
         _selectArrivalTime();
       }
@@ -133,8 +135,8 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
       ),
     );
 
-    if (time != null) {
-      setState(() => _arrivalTime = time);
+    if (time != null && mounted) {
+      safeSetState(() => _arrivalTime = time);
     }
   }
 
@@ -175,7 +177,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
       return;
     }
 
-    setState(() => _isSaving = true);
+    safeSetState(() => _isSaving = true);
 
     try {
       final service = ref.read(skyTrackerServiceProvider);
@@ -206,9 +208,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
         showErrorSnackBar(context, 'Error: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+      safeSetState(() => _isSaving = false);
     }
   }
 

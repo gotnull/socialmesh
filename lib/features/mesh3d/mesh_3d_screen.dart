@@ -286,8 +286,9 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     return HelpTourController(
       topicId: 'mesh_3d_overview',
       stepKeys: const {},
-      child: GlassScaffold(
+      child: GlassScaffold.body(
         title: _currentMode.label,
+        physics: const NeverScrollableScrollPhysics(),
         actions: [
           // View selector - most important action
           IconButton(
@@ -369,132 +370,125 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
             ],
           ),
         ],
-        slivers: [
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: Column(
-              children: [
-                // View mode chips
-                _buildViewModeChips(theme),
+        body: Column(
+          children: [
+            // View mode chips
+            _buildViewModeChips(theme),
 
-                // 3D View
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return Stack(
-                        children: [
-                          // 3D Visualization with tap detection
-                          GestureDetector(
-                            onTapUp: (details) => _handleTap(
-                              details.localPosition,
-                              constraints.biggest,
-                              nodes,
+            // 3D View
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Stack(
+                    children: [
+                      // 3D Visualization with tap detection
+                      GestureDetector(
+                        onTapUp: (details) => _handleTap(
+                          details.localPosition,
+                          constraints.biggest,
+                          nodes,
+                        ),
+                        child: DiTreDiDraggable(
+                          controller: _controller,
+                          child: DiTreDi(
+                            figures: _buildFigures(nodes, myNodeNum),
+                            controller: _controller,
+                            config: const DiTreDiConfig(
+                              supportZIndex: true,
+                              defaultPointWidth: 8,
+                              defaultLineWidth: 2,
                             ),
-                            child: DiTreDiDraggable(
-                              controller: _controller,
-                              child: DiTreDi(
-                                figures: _buildFigures(nodes, myNodeNum),
-                                controller: _controller,
-                                config: const DiTreDiConfig(
-                                  supportZIndex: true,
-                                  defaultPointWidth: 8,
-                                  defaultLineWidth: 2,
+                          ),
+                        ),
+                      ),
+
+                      // Legend
+                      Positioned(
+                        left: 16,
+                        bottom: 16,
+                        child: _buildLegend(theme),
+                      ),
+
+                      // Node info card (when a node is selected)
+                      if (_selectedNodeNum != null)
+                        Positioned(
+                          right: 16,
+                          top: 16,
+                          child: _buildNodeInfoCard(
+                            theme,
+                            nodes[_selectedNodeNum],
+                          ),
+                        ),
+
+                      // Tap-to-dismiss overlay (when node list is open)
+                      if (_showNodeList)
+                        Positioned.fill(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _showNodeList = false),
+                            child: Container(color: Colors.transparent),
+                          ),
+                        ),
+
+                      // Node list panel (sliding from left)
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeInOut,
+                        left: _showNodeList ? 0 : -300,
+                        top: 0,
+                        bottom: 0,
+                        width: 280,
+                        child: _buildNodeListPanel(theme, nodes, myNodeNum),
+                      ),
+
+                      // Node list toggle button (bottom right, compact)
+                      if (!_showNodeList)
+                        Positioned(
+                          right: 16,
+                          bottom: 16,
+                          child: Material(
+                            color: theme.colorScheme.surface.withValues(
+                              alpha: 0.9,
+                            ),
+                            borderRadius: BorderRadius.circular(28),
+                            elevation: 4,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(28),
+                              onTap: () => setState(() => _showNodeList = true),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
                                 ),
-                              ),
-                            ),
-                          ),
-
-                          // Legend
-                          Positioned(
-                            left: 16,
-                            bottom: 16,
-                            child: _buildLegend(theme),
-                          ),
-
-                          // Node info card (when a node is selected)
-                          if (_selectedNodeNum != null)
-                            Positioned(
-                              right: 16,
-                              top: 16,
-                              child: _buildNodeInfoCard(
-                                theme,
-                                nodes[_selectedNodeNum],
-                              ),
-                            ),
-
-                          // Tap-to-dismiss overlay (when node list is open)
-                          if (_showNodeList)
-                            Positioned.fill(
-                              child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _showNodeList = false),
-                                child: Container(color: Colors.transparent),
-                              ),
-                            ),
-
-                          // Node list panel (sliding from left)
-                          AnimatedPositioned(
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeInOut,
-                            left: _showNodeList ? 0 : -300,
-                            top: 0,
-                            bottom: 0,
-                            width: 280,
-                            child: _buildNodeListPanel(theme, nodes, myNodeNum),
-                          ),
-
-                          // Node list toggle button (bottom right, compact)
-                          if (!_showNodeList)
-                            Positioned(
-                              right: 16,
-                              bottom: 16,
-                              child: Material(
-                                color: theme.colorScheme.surface.withValues(
-                                  alpha: 0.9,
-                                ),
-                                borderRadius: BorderRadius.circular(28),
-                                elevation: 4,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(28),
-                                  onTap: () =>
-                                      setState(() => _showNodeList = true),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 12,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.list,
+                                      size: 18,
+                                      color: theme.colorScheme.primary,
                                     ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.list,
-                                          size: 18,
-                                          color: theme.colorScheme.primary,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          '${nodes.length}',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: context.textPrimary,
-                                          ),
-                                        ),
-                                      ],
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${nodes.length}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: context.textPrimary,
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ),
                               ),
                             ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ],
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -2506,67 +2500,70 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
             color: Theme.of(context).colorScheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Drag handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Drag handle
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              Text(
-                'Select View Mode',
-                style: context.headingStyle?.copyWith(
-                  fontWeight: FontWeight.bold,
+                Text(
+                  'Select View Mode',
+                  style: context.headingStyle?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  children: Mesh3DViewMode.values
-                      .map(
-                        (mode) => ListTile(
-                          leading: Icon(
-                            mode.icon,
-                            color: mode == _currentMode
-                                ? Theme.of(context).colorScheme.primary
-                                : null,
-                          ),
-                          title: Text(mode.label),
-                          subtitle: Text(
-                            mode.description,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.textSecondary,
+                const SizedBox(height: 16),
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    children: Mesh3DViewMode.values
+                        .map(
+                          (mode) => ListTile(
+                            leading: Icon(
+                              mode.icon,
+                              color: mode == _currentMode
+                                  ? Theme.of(context).colorScheme.primary
+                                  : null,
                             ),
+                            title: Text(mode.label),
+                            subtitle: Text(
+                              mode.description,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: context.textSecondary,
+                              ),
+                            ),
+                            selected: mode == _currentMode,
+                            selectedTileColor: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.1),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() => _currentMode = mode);
+                              Navigator.pop(context);
+                            },
                           ),
-                          selected: mode == _currentMode,
-                          selectedTileColor: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            setState(() => _currentMode = mode);
-                            Navigator.pop(context);
-                          },
-                        ),
-                      )
-                      .toList(),
+                        )
+                        .toList(),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

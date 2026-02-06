@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
 import '../renderer/widget_renderer.dart';
@@ -23,7 +24,8 @@ class WidgetEditorScreen extends ConsumerStatefulWidget {
   ConsumerState<WidgetEditorScreen> createState() => _WidgetEditorScreenState();
 }
 
-class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
+class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
+    with LifecycleSafeMixin<WidgetEditorScreen> {
   late WidgetSchema _schema;
   String? _selectedElementId;
   final bool _showPreview = false;
@@ -46,9 +48,11 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     if (widget.initialSchema != null) {
       final storage = WidgetStorageService();
       await storage.init();
+      if (!mounted) return;
       final isMarketplace = await storage.isMarketplaceWidget(_schema.id);
-      if (mounted && isMarketplace) {
-        setState(() => _isMarketplaceWidget = true);
+      if (!mounted) return;
+      if (isMarketplace) {
+        safeSetState(() => _isMarketplaceWidget = true);
       }
     }
   }

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/transport.dart' as transport;
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -39,7 +40,8 @@ class _DeviceSheetContent extends ConsumerStatefulWidget {
       _DeviceSheetContentState();
 }
 
-class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
+class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
+    with LifecycleSafeMixin<_DeviceSheetContent> {
   bool _disconnecting = false;
 
   @override
@@ -287,31 +289,33 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
   }
 
   Widget _buildDisconnectButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: OutlinedButton.icon(
-        onPressed: _disconnecting ? null : () => _disconnect(context),
-        icon: _disconnecting
-            ? SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppTheme.errorRed,
-                ),
-              )
-            : const Icon(Icons.link_off, size: 20),
-        label: Text(_disconnecting ? 'Disconnecting...' : 'Disconnect'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppTheme.errorRed,
-          side: BorderSide(
-            color: _disconnecting
-                ? AppTheme.errorRed.withValues(alpha: 0.5)
-                : AppTheme.errorRed,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 52),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: _disconnecting ? null : () => _disconnect(context),
+          icon: _disconnecting
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppTheme.errorRed,
+                  ),
+                )
+              : const Icon(Icons.link_off, size: 20),
+          label: Text(_disconnecting ? 'Disconnecting...' : 'Disconnect'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppTheme.errorRed,
+            side: BorderSide(
+              color: _disconnecting
+                  ? AppTheme.errorRed.withValues(alpha: 0.5)
+                  : AppTheme.errorRed,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
       ),
@@ -319,21 +323,23 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
   }
 
   Widget _buildScanButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: ElevatedButton.icon(
-        onPressed: () {
-          Navigator.pop(context);
-          Navigator.of(context).pushNamed('/scanner');
-        },
-        icon: Icon(Icons.bluetooth_searching, size: 20),
-        label: Text('Scan for Devices'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: context.accentColor,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 52),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () {
+            Navigator.pop(context);
+            Navigator.of(context).pushNamed('/scanner');
+          },
+          icon: Icon(Icons.bluetooth_searching, size: 20),
+          label: Text('Scan for Devices'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: context.accentColor,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
       ),
@@ -385,7 +391,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
       AppLogging.connection('🔌 DISCONNECT: Starting disconnect sequence...');
 
       // Immediately disable UI and show disconnecting state
-      setState(() => _disconnecting = true);
+      safeSetState(() => _disconnecting = true);
 
       // CRITICAL: Set userDisconnected flag FIRST to prevent ALL auto-reconnect logic
       AppLogging.connection('🔌 DISCONNECT: Setting userDisconnected=true');
@@ -732,6 +738,8 @@ class _ActionTile extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                             color: context.textPrimary,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -740,6 +748,8 @@ class _ActionTile extends StatelessWidget {
                             fontSize: 13,
                             color: context.textSecondary,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -846,6 +856,8 @@ class _MeshCoreBatteryRefreshTile extends ConsumerWidget {
                             fontWeight: FontWeight.w600,
                             color: context.textPrimary,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -858,6 +870,8 @@ class _MeshCoreBatteryRefreshTile extends ConsumerWidget {
                                 ? AppTheme.primaryGreen
                                 : context.textSecondary,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/app_providers.dart';
@@ -24,7 +25,8 @@ class SkyNodeDetailScreen extends ConsumerStatefulWidget {
       _SkyNodeDetailScreenState();
 }
 
-class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
+class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen>
+    with LifecycleSafeMixin {
   final _dateFormat = DateFormat('EEEE, MMM d, yyyy');
   final _timeFormat = DateFormat('h:mm a');
 
@@ -697,7 +699,8 @@ class _ReportBottomSheet extends ConsumerStatefulWidget {
   ConsumerState<_ReportBottomSheet> createState() => _ReportBottomSheetState();
 }
 
-class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
+class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
+    with LifecycleSafeMixin {
   final _notesController = TextEditingController();
   final _rssiController = TextEditingController();
   final _snrController = TextEditingController();
@@ -722,7 +725,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
       return;
     }
 
-    setState(() => _isSaving = true);
+    safeSetState(() => _isSaving = true);
 
     try {
       final service = ref.read(skyTrackerServiceProvider);
@@ -781,17 +784,15 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
 
       if (mounted) {
         HapticFeedback.mediumImpact();
-        Navigator.pop(context);
-        showSuccessSnackBar(context, 'Reception reported! 📡');
       }
+      safeNavigatorPop();
+      safeShowSnackBar('Reception reported! 📡');
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Error: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+      safeSetState(() => _isSaving = false);
     }
   }
 

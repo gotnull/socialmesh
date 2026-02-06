@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -20,7 +21,8 @@ class StoreForwardConfigScreen extends ConsumerStatefulWidget {
 }
 
 class _StoreForwardConfigScreenState
-    extends ConsumerState<StoreForwardConfigScreen> {
+    extends ConsumerState<StoreForwardConfigScreen>
+    with LifecycleSafeMixin {
   bool _enabled = false;
   bool _isServer = false;
   bool _heartbeat = false;
@@ -43,7 +45,7 @@ class _StoreForwardConfigScreenState
     // Only request from device if connected
     if (!protocol.isConnected) {
       AppLogging.settings('[StoreForward] Not connected, skipping load');
-      if (mounted) setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
       return;
     }
 
@@ -54,7 +56,7 @@ class _StoreForwardConfigScreenState
       );
       AppLogging.settings('[StoreForward] Config received: $config');
       if (config != null && mounted) {
-        setState(() {
+        safeSetState(() {
           _enabled = config.enabled;
           _isServer = config.isServer;
           _heartbeat = config.heartbeat;
@@ -68,21 +70,19 @@ class _StoreForwardConfigScreenState
           _isLoading = false;
         });
         AppLogging.settings('[StoreForward] Config loaded successfully');
-      } else if (mounted) {
+      } else {
         AppLogging.settings('[StoreForward] Config was null');
-        setState(() => _isLoading = false);
+        safeSetState(() => _isLoading = false);
       }
     } catch (e) {
       AppLogging.settings('[StoreForward] Error loading config: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-        showErrorSnackBar(context, 'Failed to load config');
-      }
+      safeSetState(() => _isLoading = false);
+      safeShowSnackBar('Failed to load config');
     }
   }
 
   Future<void> _saveConfig() async {
-    setState(() => _isSaving = true);
+    safeSetState(() => _isSaving = true);
 
     try {
       final protocol = ref.read(protocolServiceProvider);
@@ -103,7 +103,7 @@ class _StoreForwardConfigScreenState
         showErrorSnackBar(context, 'Failed to save config: $e');
       }
     } finally {
-      if (mounted) setState(() => _isSaving = false);
+      safeSetState(() => _isSaving = false);
     }
   }
 

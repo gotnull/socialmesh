@@ -419,8 +419,8 @@ class NodeInfoCard extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: SizedBox(
-                      height: 40,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 40),
                       child: OutlinedButton.icon(
                         onPressed: (!isMyNode && onMessage != null)
                             ? () => _exchangePositions(context, ref)
@@ -446,8 +446,8 @@ class NodeInfoCard extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: SizedBox(
-                      height: 40,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 40),
                       child: ElevatedButton.icon(
                         onPressed: (!isMyNode && onMessage != null)
                             ? onMessage

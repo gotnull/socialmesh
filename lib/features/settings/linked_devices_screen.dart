@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/auto_scroll_text.dart';
@@ -29,7 +30,8 @@ class LinkedDevicesScreen extends ConsumerStatefulWidget {
       _LinkedDevicesScreenState();
 }
 
-class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
+class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
+    with LifecycleSafeMixin {
   bool _isLinking = false;
   bool _isUnlinking = false;
 
@@ -335,7 +337,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
       return;
     }
 
-    setState(() => _isLinking = true);
+    safeSetState(() => _isLinking = true);
 
     try {
       await linkNode(ref, nodeNum, setPrimary: true);
@@ -347,9 +349,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
         showErrorSnackBar(context, 'Failed to link device: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLinking = false);
-      }
+      safeSetState(() => _isLinking = false);
     }
   }
 
@@ -426,7 +426,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
     }
 
     if (mounted) {
-      setState(() => _isUnlinking = true);
+      safeSetState(() => _isUnlinking = true);
     }
     AppLogging.settings(
       '🔗 [UnlinkDevice] Starting unlink operation (mounted=$mounted)...',
@@ -497,7 +497,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isUnlinking = false);
+        safeSetState(() => _isUnlinking = false);
         AppLogging.settings('🔗 [UnlinkDevice] Unlink operation finished');
       }
     }

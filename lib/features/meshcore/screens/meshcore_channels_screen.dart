@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import '../../../core/safety/lifecycle_mixin.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,8 +29,8 @@ class MeshCoreChannelsScreen extends ConsumerStatefulWidget {
       _MeshCoreChannelsScreenState();
 }
 
-class _MeshCoreChannelsScreenState
-    extends ConsumerState<MeshCoreChannelsScreen> {
+class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
+    with LifecycleSafeMixin<MeshCoreChannelsScreen> {
   @override
   Widget build(BuildContext context) {
     final linkStatus = ref.watch(linkStatusProvider);
@@ -331,7 +332,8 @@ class _MeshCoreChannelsScreenState
   }
 
   Future<void> _refreshChannels() async {
-    await ref.read(meshCoreChannelsProvider.notifier).refresh();
+    final notifier = ref.read(meshCoreChannelsProvider.notifier);
+    await notifier.refresh();
   }
 
   void _showCreateChannelDialog() {

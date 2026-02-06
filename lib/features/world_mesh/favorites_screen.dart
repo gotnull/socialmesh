@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../models/world_mesh_node.dart';
@@ -46,7 +47,8 @@ class FavoritesScreen extends ConsumerStatefulWidget {
   ConsumerState<FavoritesScreen> createState() => _FavoritesScreenState();
 }
 
-class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
+class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
+    with LifecycleSafeMixin {
   bool _isCompareMode = false;
   _FavoriteItem? _selectedForCompare;
 
@@ -65,9 +67,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   }
 
   Future<void> _removeFavorite(_FavoriteItem item) async {
-    await ref
-        .read(nodeFavoritesProvider.notifier)
-        .removeFavorite(item.metadata.nodeId);
+    final notifier = ref.read(nodeFavoritesProvider.notifier);
+    await notifier.removeFavorite(item.metadata.nodeId);
     HapticFeedback.mediumImpact();
   }
 

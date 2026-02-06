@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../providers/cloud_sync_entitlement_providers.dart';
 import '../../../providers/subscription_providers.dart';
 import '../../../services/subscription/cloud_sync_entitlement_service.dart';
@@ -21,7 +22,8 @@ class CloudSyncPaywall extends ConsumerStatefulWidget {
   ConsumerState<CloudSyncPaywall> createState() => _CloudSyncPaywallState();
 }
 
-class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall> {
+class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
+    with LifecycleSafeMixin<CloudSyncPaywall> {
   bool _isLoading = false;
   List<StoreProduct> _products = [];
   String? _errorMessage;
@@ -33,7 +35,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall> {
   }
 
   Future<void> _loadProducts() async {
-    setState(() {
+    safeSetState(() {
       _isLoading = true;
       _errorMessage = null;
     });
@@ -43,13 +45,14 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall> {
         'cloud_monthly',
         'cloud_yearly',
       ], productCategory: ProductCategory.subscription);
-      setState(() {
+      if (!mounted) return;
+      safeSetState(() {
         _products = products;
         _isLoading = false;
       });
     } catch (e) {
       AppLogging.subscriptions('☁️ Error loading products: $e');
-      setState(() {
+      safeSetState(() {
         _errorMessage = 'Unable to load subscription options';
         _isLoading = false;
       });
@@ -57,25 +60,23 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall> {
   }
 
   Future<void> _purchase(StoreProduct product) async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
 
     try {
       await Purchases.purchase(PurchaseParams.storeProduct(product));
+      if (!mounted) return;
       widget.onSubscribed?.call();
     } catch (e) {
       AppLogging.subscriptions('☁️ Purchase error: $e');
-      if (mounted) {
-        showErrorSnackBar(context, 'Purchase failed. Please try again.');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Purchase failed. Please try again.');
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      safeSetState(() => _isLoading = false);
     }
   }
 
   Future<void> _restore() async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
 
     try {
       AppLogging.subscriptions('☁️ Cloud Sync: Starting restore purchases');
@@ -97,9 +98,8 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall> {
         );
         // Dismiss sheet first, then show snackbar
         widget.onSubscribed?.call();
-        if (mounted) {
-          showSuccessSnackBar(context, 'Subscription restored');
-        }
+        if (!mounted) return;
+        showSuccessSnackBar(context, 'Subscription restored');
       } else if (success) {
         // User has purchases but no cloud sync entitlement
         AppLogging.subscriptions(
@@ -109,27 +109,22 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall> {
         widget.onDismiss?.call();
         // Small delay to allow sheet to close before showing snackbar
         await Future<void>.delayed(const Duration(milliseconds: 100));
-        if (mounted) {
-          showInfoSnackBar(context, 'No Cloud Sync subscription found');
-        }
+        if (!mounted) return;
+        showInfoSnackBar(context, 'No Cloud Sync subscription found');
       } else {
         AppLogging.subscriptions('☁️ Cloud Sync: Restore found no purchases');
         // Dismiss sheet first so snackbar is visible
         widget.onDismiss?.call();
         await Future<void>.delayed(const Duration(milliseconds: 100));
-        if (mounted) {
-          showInfoSnackBar(context, 'No purchases found to restore');
-        }
+        if (!mounted) return;
+        showInfoSnackBar(context, 'No purchases found to restore');
       }
     } catch (e) {
       AppLogging.subscriptions('☁️ Cloud Sync: Restore error: $e');
-      if (mounted) {
-        showErrorSnackBar(context, 'Restore failed. Please try again.');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Restore failed. Please try again.');
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      safeSetState(() => _isLoading = false);
     }
   }
 

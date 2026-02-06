@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
@@ -21,7 +22,8 @@ class AdminSellersScreen extends ConsumerStatefulWidget {
   ConsumerState<AdminSellersScreen> createState() => _AdminSellersScreenState();
 }
 
-class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen> {
+class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen>
+    with LifecycleSafeMixin<AdminSellersScreen> {
   String _searchQuery = '';
   bool _showInactive = true;
 
@@ -144,6 +146,7 @@ class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen> {
       await service.updateSeller(seller.id, {
         'isActive': !seller.isActive,
       }, adminId: user?.uid);
+      if (!mounted) return;
       ref.invalidate(adminAllSellersProvider);
     } catch (e) {
       if (mounted) {
@@ -363,7 +366,8 @@ class AdminSellerEditScreen extends ConsumerStatefulWidget {
       _AdminSellerEditScreenState();
 }
 
-class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
+class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
+    with LifecycleSafeMixin<AdminSellerEditScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -567,25 +571,29 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
                   const SizedBox(height: 32),
 
                   // Save Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _save,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.accentColor,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 50),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _save,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: context.accentColor,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                _isEditing ? 'Save Changes' : 'Create Seller',
                               ),
-                            )
-                          : Text(_isEditing ? 'Save Changes' : 'Create Seller'),
+                      ),
                     ),
                   ),
 
@@ -781,8 +789,9 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
       firstDate: now,
       lastDate: now.add(const Duration(days: 365 * 2)),
     );
+    if (!mounted) return;
     if (picked != null) {
-      setState(() => _discountCodeExpiry = picked);
+      safeSetState(() => _discountCodeExpiry = picked);
     }
   }
 
@@ -858,12 +867,13 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
   Future<void> _pickAndUploadLogo() async {
     final service = ref.read(deviceShopServiceProvider);
 
-    setState(() => _isUploadingLogo = true);
+    safeSetState(() => _isUploadingLogo = true);
 
     try {
       final image = await service.pickImage();
+      if (!mounted) return;
       if (image == null) {
-        setState(() => _isUploadingLogo = false);
+        safeSetState(() => _isUploadingLogo = false);
         return;
       }
 
@@ -874,12 +884,13 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
         imageFile: File(image.path),
       );
 
-      setState(() {
+      if (!mounted) return;
+      safeSetState(() {
         _logoUrl = url;
         _isUploadingLogo = false;
       });
     } catch (e) {
-      setState(() => _isUploadingLogo = false);
+      safeSetState(() => _isUploadingLogo = false);
       if (mounted) {
         showErrorSnackBar(context, 'Failed to upload logo: $e');
       }
@@ -889,12 +900,14 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    // Capture providers before any await
+    final service = ref.read(deviceShopServiceProvider);
+    final user = ref.read(currentUserProvider);
+    final navigator = Navigator.of(context);
+
+    safeSetState(() => _isLoading = true);
 
     try {
-      final service = ref.read(deviceShopServiceProvider);
-      final user = ref.read(currentUserProvider);
-
       final countries = _countriesController.text
           .split(',')
           .map((c) => c.trim().toUpperCase())
@@ -940,18 +953,17 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
         await service.createSeller(seller, adminId: user?.uid);
       }
 
+      if (!mounted) return;
       ref.invalidate(adminAllSellersProvider);
       ref.invalidate(shopSellersProvider);
 
-      if (mounted) {
-        Navigator.pop(context);
-        showSuccessSnackBar(
-          context,
-          _isEditing ? 'Seller updated' : 'Seller created',
-        );
-      }
+      navigator.pop();
+      showSuccessSnackBar(
+        context,
+        _isEditing ? 'Seller updated' : 'Seller created',
+      );
     } catch (e) {
-      setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
       if (mounted) {
         showErrorSnackBar(context, 'Error: $e');
       }
@@ -960,6 +972,10 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
 
   Future<void> _confirmDelete() async {
     if (widget.seller == null) return;
+
+    // Capture providers before any await
+    final service = ref.read(deviceShopServiceProvider);
+    final navigator = Navigator.of(context);
 
     final productCount = widget.seller!.productCount;
     final confirmed = await showDialog<bool>(
@@ -1016,16 +1032,15 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
       ),
     );
 
+    if (!mounted) return;
     if (confirmed == true) {
       try {
-        final service = ref.read(deviceShopServiceProvider);
         await service.deleteSellerPermanently(widget.seller!.id);
+        if (!mounted) return;
         ref.invalidate(adminAllSellersProvider);
         ref.invalidate(shopSellersProvider);
-        if (mounted) {
-          Navigator.pop(context);
-          showSuccessSnackBar(context, 'Seller deleted');
-        }
+        navigator.pop();
+        showSuccessSnackBar(context, 'Seller deleted');
       } catch (e) {
         if (mounted) {
           showErrorSnackBar(context, 'Error: $e');

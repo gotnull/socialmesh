@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/app_providers.dart';
@@ -21,7 +22,8 @@ class ExternalNotificationConfigScreen extends ConsumerStatefulWidget {
 }
 
 class _ExternalNotificationConfigScreenState
-    extends ConsumerState<ExternalNotificationConfigScreen> {
+    extends ConsumerState<ExternalNotificationConfigScreen>
+    with LifecycleSafeMixin {
   // Core settings
   bool _enabled = false;
   bool _alertBell = false;
@@ -61,7 +63,7 @@ class _ExternalNotificationConfigScreenState
       AppLogging.settings(
         '[ExternalNotification] Not connected, skipping load',
       );
-      if (mounted) setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
       return;
     }
 
@@ -72,7 +74,7 @@ class _ExternalNotificationConfigScreenState
           .timeout(const Duration(seconds: 10));
       AppLogging.settings('[ExternalNotification] Config received: $config');
       if (config != null && mounted) {
-        setState(() {
+        safeSetState(() {
           _enabled = config.enabled;
           _alertBell = config.alertBell;
           _alertMessage = config.alertMessage;
@@ -93,21 +95,19 @@ class _ExternalNotificationConfigScreenState
         AppLogging.settings(
           '[ExternalNotification] Config loaded successfully',
         );
-      } else if (mounted) {
+      } else {
         AppLogging.settings('[ExternalNotification] Config was null');
-        setState(() => _isLoading = false);
+        safeSetState(() => _isLoading = false);
       }
     } catch (e) {
       AppLogging.settings('[ExternalNotification] Error loading config: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-        showErrorSnackBar(context, 'Failed to load config');
-      }
+      safeSetState(() => _isLoading = false);
+      safeShowSnackBar('Failed to load config');
     }
   }
 
   Future<void> _saveConfig() async {
-    setState(() => _isSaving = true);
+    safeSetState(() => _isSaving = true);
 
     try {
       final protocol = ref.read(protocolServiceProvider);
@@ -137,16 +137,14 @@ class _ExternalNotificationConfigScreenState
 
       if (mounted) {
         showSuccessSnackBar(context, 'External notification settings saved');
-        Navigator.of(context).pop();
+        safeNavigatorPop();
       }
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+      safeSetState(() => _isSaving = false);
     }
   }
 

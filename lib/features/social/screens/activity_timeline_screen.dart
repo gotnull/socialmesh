@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+import '../../../core/logging.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
@@ -11,6 +14,7 @@ import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
 import '../../../models/social_activity.dart';
 import '../../../providers/activity_providers.dart';
+import '../../../providers/auth_providers.dart';
 import '../../../providers/signal_providers.dart';
 import '../../signals/screens/signal_detail_screen.dart';
 
@@ -29,8 +33,8 @@ class ActivityTimelineScreen extends ConsumerStatefulWidget {
       _ActivityTimelineScreenState();
 }
 
-class _ActivityTimelineScreenState
-    extends ConsumerState<ActivityTimelineScreen> {
+class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
+    with LifecycleSafeMixin<ActivityTimelineScreen> {
   /// Signal-related activity types to display
   static const _signalActivityTypes = {
     SocialActivityType.signalLike,
@@ -48,25 +52,58 @@ class _ActivityTimelineScreenState
   @override
   void initState() {
     super.initState();
+    AppLogging.social(
+      '📬 [ActivityScreen] initState() — scheduling post-frame validation',
+    );
     // Validate activities after the first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    safePostFrame(() {
       _validateActivities();
     });
+  }
+
+  @override
+  void dispose() {
+    AppLogging.social('📬 [ActivityScreen] dispose()');
+    super.dispose();
   }
 
   /// Validates that all signal activities have existing signals.
   /// Removes activities where the signal no longer exists.
   Future<void> _validateActivities() async {
-    if (_validationStarted) return;
+    if (_validationStarted) {
+      AppLogging.social(
+        '📬 [ActivityScreen] _validateActivities() — already started, skip',
+      );
+      return;
+    }
     _validationStarted = true;
 
+    // Capture provider refs before any awaits
     final feedState = ref.read(activityFeedProvider);
     final signalService = ref.read(signalServiceProvider);
+    final feedNotifier = ref.read(activityFeedProvider.notifier);
 
     final signalActivities = feedState.activities
         .where((a) => _signalActivityTypes.contains(a.type))
         .where((a) => a.contentId != null)
         .toList();
+
+    AppLogging.social(
+      '📬 [ActivityScreen] _validateActivities() — '
+      'checking ${signalActivities.length} signal activities '
+      '(total activities: ${feedState.activities.length}, '
+      'isLoading: ${feedState.isLoading})',
+    );
+
+    if (signalActivities.isEmpty) {
+      AppLogging.social(
+        '📬 [ActivityScreen] _validateActivities() — '
+        'no signal activities to validate',
+      );
+      return;
+    }
+
+    int removedCount = 0;
 
     for (final activity in signalActivities) {
       // Skip if already marked invalid
@@ -76,38 +113,83 @@ class _ActivityTimelineScreenState
       final localSignal = await signalService.getSignalById(
         activity.contentId!,
       );
+      if (!mounted) {
+        AppLogging.social(
+          '📬 [ActivityScreen] _validateActivities() — '
+          'widget disposed during local check, aborting',
+        );
+        return;
+      }
       if (localSignal != null) continue;
 
       // Check if signal exists in cloud
       final cloudSignal = await signalService.getSignalFromCloudById(
         activity.contentId!,
       );
+      if (!mounted) {
+        AppLogging.social(
+          '📬 [ActivityScreen] _validateActivities() — '
+          'widget disposed during cloud check, aborting',
+        );
+        return;
+      }
       if (cloudSignal != null) continue;
 
       // Signal doesn't exist anywhere - mark as invalid and delete
       _invalidActivityIds.add(activity.id);
-      ref.read(activityFeedProvider.notifier).deleteActivity(activity.id);
+      feedNotifier.deleteActivity(activity.id);
+      removedCount++;
     }
 
+    AppLogging.social(
+      '📬 [ActivityScreen] _validateActivities() — '
+      'completed, removed $removedCount invalid activities',
+    );
+
     // Trigger rebuild if any were removed
-    if (_invalidActivityIds.isNotEmpty && mounted) {
-      setState(() {});
+    if (_invalidActivityIds.isNotEmpty) {
+      safeSetState(() {});
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final feedState = ref.watch(activityFeedProvider);
+    final isSignedIn = ref.watch(isSignedInProvider);
+    final firebaseReady = Firebase.apps.isNotEmpty;
+
+    AppLogging.social(
+      '📬 [ActivityScreen] build() — '
+      'firebaseReady=$firebaseReady, '
+      'isSignedIn=$isSignedIn, '
+      'isLoading=${feedState.isLoading}, '
+      'error=${feedState.error}, '
+      'activities=${feedState.activities.length}, '
+      'unreadCount=${feedState.unreadCount}',
+    );
 
     // Re-validate when activities change (new activities may have arrived)
     ref.listen(activityFeedProvider, (previous, next) {
+      AppLogging.social(
+        '📬 [ActivityScreen] activityFeedProvider changed — '
+        'prev activities=${previous?.activities.length ?? 'null'}, '
+        'next activities=${next.activities.length}, '
+        'prev isLoading=${previous?.isLoading}, '
+        'next isLoading=${next.isLoading}, '
+        'next error=${next.error}',
+      );
       if (previous?.activities.length != next.activities.length) {
+        AppLogging.social(
+          '📬 [ActivityScreen] activity count changed, '
+          'resetting validation',
+        );
         _validationStarted = false;
         _validateActivities();
       }
     });
 
-    // Only show signal-related activities (filter out ones being validated as invalid)
+    // Only show signal-related activities (filter out ones being validated
+    // as invalid)
     final signalActivities = feedState.activities
         .where((a) => _signalActivityTypes.contains(a.type))
         .where((a) => !_invalidActivityIds.contains(a.id))
@@ -117,6 +199,45 @@ class _ActivityTimelineScreenState
     final hasActivities = signalActivities.isNotEmpty;
     final hasUnread = signalActivities.any((a) => !a.isRead);
     final showMenu = hasActivities || hasUnread;
+
+    // Determine which content sliver to show
+    Widget contentSliver;
+    if (!firebaseReady) {
+      AppLogging.social(
+        '📬 [ActivityScreen] build() — showing not-signed-in state '
+        '(Firebase not ready)',
+      );
+      contentSliver = SliverFillRemaining(child: _buildNotSignedIn());
+    } else if (!isSignedIn) {
+      AppLogging.social(
+        '📬 [ActivityScreen] build() — showing not-signed-in state',
+      );
+      contentSliver = SliverFillRemaining(child: _buildNotSignedIn());
+    } else if (feedState.isLoading) {
+      AppLogging.social(
+        '📬 [ActivityScreen] build() — showing loading spinner',
+      );
+      contentSliver = const SliverFillRemaining(
+        child: Center(child: CircularProgressIndicator()),
+      );
+    } else if (feedState.error != null) {
+      AppLogging.social(
+        '📬 [ActivityScreen] build() — showing error: ${feedState.error}',
+      );
+      contentSliver = SliverFillRemaining(child: _buildError(feedState.error!));
+    } else if (signalActivities.isEmpty) {
+      AppLogging.social(
+        '📬 [ActivityScreen] build() — showing empty state '
+        '(${_invalidActivityIds.length} invalidated)',
+      );
+      contentSliver = SliverFillRemaining(child: _buildEmpty());
+    } else {
+      AppLogging.social(
+        '📬 [ActivityScreen] build() — showing '
+        '${signalActivities.length} activities',
+      );
+      contentSliver = const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
 
     return GlassScaffold(
       title: 'Activity',
@@ -160,17 +281,56 @@ class _ActivityTimelineScreenState
           ),
       ],
       slivers: [
-        if (feedState.isLoading)
-          const SliverFillRemaining(
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else if (feedState.error != null)
-          SliverFillRemaining(child: _buildError(feedState.error!))
-        else if (signalActivities.isEmpty)
-          SliverFillRemaining(child: _buildEmpty())
+        if (signalActivities.isNotEmpty &&
+            !feedState.isLoading &&
+            feedState.error == null &&
+            isSignedIn &&
+            firebaseReady)
+          ..._buildActivitySlivers(signalActivities)
         else
-          ..._buildActivitySlivers(signalActivities),
+          contentSliver,
       ],
+    );
+  }
+
+  Widget _buildNotSignedIn() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: context.surface,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.notifications_none_outlined,
+                size: 40,
+                color: context.textTertiary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Sign in to see activity',
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Sign in to see when people like\nor comment on your signals',
+              style: TextStyle(color: context.textTertiary, fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -252,8 +412,10 @@ class _ActivityTimelineScreenState
             ),
             const SizedBox(height: 16),
             OutlinedButton(
-              onPressed: () =>
-                  ref.read(activityFeedProvider.notifier).refresh(),
+              onPressed: () {
+                AppLogging.social('📬 [ActivityScreen] retry button pressed');
+                ref.read(activityFeedProvider.notifier).refresh();
+              },
               child: const Text('Retry'),
             ),
           ],
@@ -266,6 +428,11 @@ class _ActivityTimelineScreenState
     // Group activities by time period
     final grouped = _groupActivities(activities);
     final slivers = <Widget>[];
+
+    AppLogging.social(
+      '📬 [ActivityScreen] _buildActivitySlivers() — '
+      '${activities.length} activities in ${grouped.length} groups',
+    );
 
     for (int i = 0; i < grouped.length; i++) {
       final group = grouped[i];
@@ -376,26 +543,55 @@ class _ActivityTimelineScreenState
   /// Get a signal by ID, trying local DB first, then cloud fallback.
   /// If found in cloud, saves locally so it appears in Presence Feed.
   Future<Post?> _getSignalWithCloudFallback(String signalId) async {
+    AppLogging.social(
+      '📬 [ActivityScreen] _getSignalWithCloudFallback($signalId) — '
+      'checking local DB',
+    );
+
     final signalService = ref.read(signalServiceProvider);
 
     // Try local first
     final localSignal = await signalService.getSignalById(signalId);
     if (localSignal != null) {
+      AppLogging.social(
+        '📬 [ActivityScreen] _getSignalWithCloudFallback($signalId) — '
+        'found locally',
+      );
       return localSignal;
     }
+
+    AppLogging.social(
+      '📬 [ActivityScreen] _getSignalWithCloudFallback($signalId) — '
+      'not found locally, trying cloud',
+    );
 
     // Try cloud fallback
     final cloudSignal = await signalService.getSignalFromCloudById(signalId);
     if (cloudSignal != null) {
+      AppLogging.social(
+        '📬 [ActivityScreen] _getSignalWithCloudFallback($signalId) — '
+        'found in cloud, saving locally',
+      );
       // Save to local DB so it appears in Presence Feed
       await signalService.saveSignalLocally(cloudSignal);
       // Refresh the signal feed to show the newly cached signal
       ref.read(signalFeedProvider.notifier).refresh(silent: true);
+    } else {
+      AppLogging.social(
+        '📬 [ActivityScreen] _getSignalWithCloudFallback($signalId) — '
+        'not found anywhere',
+      );
     }
     return cloudSignal;
   }
 
   void _handleActivityTap(SocialActivity activity) {
+    AppLogging.social(
+      '📬 [ActivityScreen] _handleActivityTap() — '
+      'id=${activity.id}, type=${activity.type.name}, '
+      'contentId=${activity.contentId}, isRead=${activity.isRead}',
+    );
+
     // Mark as read when tapped
     if (!activity.isRead) {
       ref.read(activityFeedProvider.notifier).markAsRead(activity.id);
@@ -427,14 +623,25 @@ class _ActivityTimelineScreenState
           ),
         ),
       );
+    } else {
+      AppLogging.social(
+        '📬 [ActivityScreen] _handleActivityTap() — '
+        'no contentId, cannot navigate',
+      );
     }
   }
 
   void _handleActivityDismiss(SocialActivity activity) {
+    AppLogging.social(
+      '📬 [ActivityScreen] _handleActivityDismiss() — id=${activity.id}',
+    );
     ref.read(activityFeedProvider.notifier).deleteActivity(activity.id);
   }
 
   void _showClearConfirmation() {
+    AppLogging.social(
+      '📬 [ActivityScreen] _showClearConfirmation() — showing dialog',
+    );
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -459,6 +666,9 @@ class _ActivityTimelineScreenState
           TextButton(
             onPressed: () {
               Navigator.pop(context);
+              AppLogging.social(
+                '📬 [ActivityScreen] clear confirmed — calling clearAll()',
+              );
               ref.read(activityFeedProvider.notifier).clearAll();
             },
             child: const Text('Clear', style: TextStyle(color: Colors.red)),
@@ -547,7 +757,7 @@ class _TimelineActivityTile extends StatelessWidget {
                 child: Column(
                   children: [
                     const SizedBox(height: 8),
-                    // Activity type icon (centered) - always heart for signal likes
+                    // Activity type icon (centered)
                     _buildActivityIcon(context),
                     // Vertical line that extends to fill remaining space
                     if (showLine)

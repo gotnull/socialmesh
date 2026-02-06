@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -78,7 +79,7 @@ class SignalGalleryView extends ConsumerStatefulWidget {
 }
 
 class _SignalGalleryViewState extends ConsumerState<SignalGalleryView>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, LifecycleSafeMixin {
   late PageController _pageController;
   late int _currentIndex;
   int _currentImageIndex = 0; // Track current image within signal
@@ -219,7 +220,9 @@ class _SignalGalleryViewState extends ConsumerState<SignalGalleryView>
                         'Skipping like for mesh-origin signal ${signal.id}',
                       );
                     } else {
-                      final socialService = ref.read(socialServiceProvider);
+                      final socialService = ref.read(
+                        socialServiceProvider,
+                      ); // captured before await
                       await socialService.likePost(signal.id);
                       AppLogging.social(
                         '📬 Like recorded for signal ${signal.id}',

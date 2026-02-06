@@ -1251,7 +1251,46 @@ class _SyncErrorBanner extends ConsumerWidget {
             ),
           ),
           TextButton(
-            onPressed: () => ref.read(userProfileProvider.notifier).refresh(),
+            onPressed: () {
+              final syncStatus = ref.read(syncStatusProvider);
+              final syncError = ref.read(syncErrorProvider);
+              final user = ref.read(currentUserProvider);
+              AppLogging.auth('');
+              AppLogging.auth(
+                '╔══════════════════════════════════════════════════════════════',
+              );
+              AppLogging.auth('║ 👆 RETRY BUTTON TAPPED in _SyncErrorBanner');
+              AppLogging.auth(
+                '╠══════════════════════════════════════════════════════════════',
+              );
+              AppLogging.auth('║ 📊 Current syncStatus:  $syncStatus');
+              AppLogging.auth(
+                '║ 📊 Current syncError:   ${syncError ?? "null"}',
+              );
+              AppLogging.auth(
+                '║ 📊 Current user UID:    ${user?.uid ?? "NULL (not signed in)"}',
+              );
+              AppLogging.auth('║ 📊 Banner error text:   $error');
+              AppLogging.auth('║ 📊 Banner message shown: $message');
+              AppLogging.auth('║');
+              AppLogging.auth(
+                '║ ➡️  Calling ref.read(userProfileProvider.notifier).refresh()',
+              );
+              AppLogging.auth(
+                '║ ⚠️  refresh() only calls _loadProfile() (local storage).',
+              );
+              AppLogging.auth(
+                '║ ⚠️  It does NOT clear syncErrorProvider or retry cloud sync.',
+              );
+              AppLogging.auth(
+                '║ ⚠️  The banner will likely remain visible after this call.',
+              );
+              AppLogging.auth(
+                '╚══════════════════════════════════════════════════════════════',
+              );
+              AppLogging.auth('');
+              ref.read(userProfileProvider.notifier).refresh();
+            },
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               minimumSize: Size.zero,
@@ -2639,7 +2678,10 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
                               icon: Icons.send,
                               maxLength: 32,
                             ),
-                            const SizedBox(height: 32),
+                            SizedBox(
+                              height:
+                                  MediaQuery.of(context).padding.bottom + 32,
+                            ),
                           ],
                         ),
                       ),

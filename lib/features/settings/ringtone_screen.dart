@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -569,7 +570,8 @@ class RingtoneScreen extends ConsumerStatefulWidget {
   ConsumerState<RingtoneScreen> createState() => _RingtoneScreenState();
 }
 
-class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
+class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
+    with LifecycleSafeMixin<RingtoneScreen> {
   final _rtttlController = TextEditingController();
   final _rtttlPlayer = RtttlPlayer();
   final _libraryService = RtttlLibraryService();
@@ -698,55 +700,54 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   }
 
   Future<void> _loadSavedRingtone() async {
-    setState(() => _loading = true);
+    safeSetState(() => _loading = true);
     try {
-      // Load tone count
-      final count = await _libraryService.getToneCount();
+      // Load tone count (total, not filtered by length)
+      final count = await _libraryService.getTotalToneCount();
+      if (!mounted) return;
 
       final settings = await ref.read(settingsServiceProvider.future);
+      if (!mounted) return;
       final rtttl = settings.selectedRingtoneRtttl;
       final name = settings.selectedRingtoneName;
 
-      if (mounted) {
-        setState(() {
-          _libraryToneCount = count;
-          if (rtttl != null && name != null) {
-            _rtttlController.text = rtttl;
-            _selectedName = name;
-            _selectedDescription = settings.selectedRingtoneDescription;
-            _selectedSource = settings.selectedRingtoneSource;
-          }
-        });
-      }
+      safeSetState(() {
+        _libraryToneCount = count;
+        if (rtttl != null && name != null) {
+          _rtttlController.text = rtttl;
+          _selectedName = name;
+          _selectedDescription = settings.selectedRingtoneDescription;
+          _selectedSource = settings.selectedRingtoneSource;
+        }
+      });
     } catch (e) {
       // Continue with defaults
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      safeSetState(() => _loading = false);
     }
   }
 
   Future<void> _saveSelectedRingtone() async {
     if (_selectedName == null) return;
 
+    final profileNotifier = ref.read(userProfileProvider.notifier);
     try {
       final settings = await ref.read(settingsServiceProvider.future);
+      if (!mounted) return;
       await settings.setSelectedRingtone(
         rtttl: _rtttlController.text.trim(),
         name: _selectedName!,
         description: _selectedDescription,
         source: _selectedSource,
       );
+      if (!mounted) return;
       // Sync to cloud profile
-      ref
-          .read(userProfileProvider.notifier)
-          .updatePreferences(
-            UserPreferences(
-              ringtoneRtttl: _rtttlController.text.trim(),
-              ringtoneName: _selectedName,
-            ),
-          );
+      profileNotifier.updatePreferences(
+        UserPreferences(
+          ringtoneRtttl: _rtttlController.text.trim(),
+          ringtoneName: _selectedName,
+        ),
+      );
     } catch (e) {
       // Ignore save errors
     }
@@ -756,7 +757,8 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     // Stop any preset playback
     if (_playingPresetIndex >= 0) {
       await _rtttlPlayer.stop();
-      setState(() {
+      if (!mounted) return;
+      safeSetState(() {
         _playingPresetIndex = -1;
         _playingCustomPreset = false;
       });
@@ -771,11 +773,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
 
     if (_playing) {
       await _rtttlPlayer.stop();
-      setState(() => _playing = false);
+      if (!mounted) return;
+      safeSetState(() => _playing = false);
       return;
     }
 
-    setState(() => _playing = true);
+    safeSetState(() => _playing = true);
 
     try {
       await _rtttlPlayer.play(_rtttlController.text.trim());
@@ -786,13 +789,10 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
         if (!mounted) break;
       }
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to play: ${e.toString()}');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to play: ${e.toString()}');
     } finally {
-      if (mounted) {
-        setState(() => _playing = false);
-      }
+      safeSetState(() => _playing = false);
     }
   }
 
@@ -804,13 +804,15 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     // Stop main preview if playing
     if (_playing) {
       await _rtttlPlayer.stop();
-      setState(() => _playing = false);
+      if (!mounted) return;
+      safeSetState(() => _playing = false);
     }
 
     // If this preset is already playing, stop it
     if (_playingPresetIndex == index && _playingCustomPreset == isCustom) {
       await _rtttlPlayer.stop();
-      setState(() {
+      if (!mounted) return;
+      safeSetState(() {
         _playingPresetIndex = -1;
         _playingCustomPreset = false;
       });
@@ -820,9 +822,10 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     // Stop any other preset
     if (_playingPresetIndex >= 0) {
       await _rtttlPlayer.stop();
+      if (!mounted) return;
     }
 
-    setState(() {
+    safeSetState(() {
       _playingPresetIndex = index;
       _playingCustomPreset = isCustom;
     });
@@ -838,12 +841,10 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     } catch (e) {
       // Ignore errors during preset playback
     } finally {
-      if (mounted) {
-        setState(() {
-          _playingPresetIndex = -1;
-          _playingCustomPreset = false;
-        });
-      }
+      safeSetState(() {
+        _playingPresetIndex = -1;
+        _playingCustomPreset = false;
+      });
     }
   }
 
@@ -853,13 +854,15 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     // Stop main preview if playing
     if (_playing) {
       await _rtttlPlayer.stop();
-      setState(() => _playing = false);
+      if (!mounted) return;
+      safeSetState(() => _playing = false);
     }
 
     // Stop any preset if playing
     if (_playingPresetIndex >= 0) {
       await _rtttlPlayer.stop();
-      setState(() {
+      if (!mounted) return;
+      safeSetState(() {
         _playingPresetIndex = -1;
         _playingCustomPreset = false;
       });
@@ -868,11 +871,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     // If selected item is already playing, stop it
     if (_playingSelected) {
       await _rtttlPlayer.stop();
-      setState(() => _playingSelected = false);
+      if (!mounted) return;
+      safeSetState(() => _playingSelected = false);
       return;
     }
 
-    setState(() => _playingSelected = true);
+    safeSetState(() => _playingSelected = true);
 
     try {
       await _rtttlPlayer.play(_rtttlController.text.trim());
@@ -885,9 +889,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     } catch (e) {
       // Ignore errors during playback
     } finally {
-      if (mounted) {
-        setState(() => _playingSelected = false);
-      }
+      safeSetState(() => _playingSelected = false);
     }
   }
 
@@ -905,18 +907,14 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
 
     try {
       await protocol.setRingtone(_rtttlController.text.trim());
+      if (!mounted) return;
 
-      if (mounted) {
-        showSuccessSnackBar(context, 'Ringtone saved to device');
-      }
+      showSuccessSnackBar(context, 'Ringtone saved to device');
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to save ringtone: $e');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to save ringtone: $e');
     } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
+      safeSetState(() => _saving = false);
     }
   }
 
@@ -941,12 +939,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
           feature: PremiumFeature.customRingtones,
           featureDescription: 'Access premium ringtone presets',
         );
-        if (!hasPremium) return;
+        if (!hasPremium || !mounted) return;
       }
     }
 
     final source = isCustom ? 'custom' : 'builtin';
-    setState(() {
+    safeSetState(() {
       _rtttlController.text = preset.rtttl;
       _selectedPresetIndex = index;
       _showingCustom = isCustom;
@@ -2142,7 +2140,8 @@ class _LibraryBrowserContent extends StatefulWidget {
   State<_LibraryBrowserContent> createState() => _LibraryBrowserContentState();
 }
 
-class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
+class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
+    with StatefulLifecycleSafeMixin<_LibraryBrowserContent> {
   final _searchController = TextEditingController();
   final _searchFocus = FocusNode();
   List<RtttlLibraryItem> _results = [];
@@ -2169,14 +2168,14 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
 
   Future<void> _loadSuggestions() async {
     final suggestions = await widget.libraryService.getSuggestions();
+    if (!mounted) return;
     final total = await widget.libraryService.getTotalCount();
-    if (mounted) {
-      setState(() {
-        _suggestions = suggestions;
-        _totalCount = total;
-        _loadingSuggestions = false;
-      });
-    }
+    if (!mounted) return;
+    safeSetState(() {
+      _suggestions = suggestions;
+      _totalCount = total;
+      _loadingSuggestions = false;
+    });
   }
 
   void _onSearchChanged() {
@@ -2195,8 +2194,9 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
 
   Future<void> _performSearch(String query) async {
     final results = await widget.libraryService.search(query, limit: 50);
-    if (mounted && _searchController.text.trim() == query) {
-      setState(() {
+    if (!mounted) return;
+    if (_searchController.text.trim() == query) {
+      safeSetState(() {
         _results = results;
         _loading = false;
       });
@@ -2206,15 +2206,17 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
   Future<void> _playItem(RtttlLibraryItem item) async {
     if (_playingFilename == item.filename) {
       await widget.rtttlPlayer.stop();
-      setState(() => _playingFilename = null);
+      if (!mounted) return;
+      safeSetState(() => _playingFilename = null);
       return;
     }
 
     if (_playingFilename != null) {
       await widget.rtttlPlayer.stop();
+      if (!mounted) return;
     }
 
-    setState(() => _playingFilename = item.filename);
+    safeSetState(() => _playingFilename = item.filename);
 
     try {
       await widget.rtttlPlayer.play(item.rtttl);
@@ -2226,9 +2228,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
     } catch (e) {
       // Ignore playback errors
     } finally {
-      if (mounted) {
-        setState(() => _playingFilename = null);
-      }
+      safeSetState(() => _playingFilename = null);
     }
   }
 

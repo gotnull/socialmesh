@@ -5,6 +5,7 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/ico_help_system.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
@@ -25,7 +26,8 @@ class RadioConfigScreen extends ConsumerStatefulWidget {
   ConsumerState<RadioConfigScreen> createState() => _RadioConfigScreenState();
 }
 
-class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
+class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
+    with LifecycleSafeMixin<RadioConfigScreen> {
   bool _isLoading = false;
   config_pbenum.Config_LoRaConfig_RegionCode? _selectedRegion;
   config_pbenum.Config_LoRaConfig_ModemPreset? _selectedModemPreset;
@@ -57,7 +59,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
   }
 
   void _applyConfig(config_pb.Config_LoRaConfig config) {
-    setState(() {
+    safeSetState(() {
       _selectedRegion = config.region;
       _selectedModemPreset = config.modemPreset;
       _hopLimit = config.hopLimit > 0 ? config.hopLimit : 3;
@@ -77,7 +79,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
   }
 
   Future<void> _loadCurrentConfig() async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
 
@@ -100,14 +102,18 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) safeSetState(() => _isLoading = false);
     }
   }
 
   Future<void> _saveConfig() async {
-    setState(() => _isLoading = true);
+    // Capture providers and UI dependencies before any await
+    final protocol = ref.read(protocolServiceProvider);
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final navigator = Navigator.of(context);
+
+    safeSetState(() => _isLoading = true);
     try {
-      final protocol = ref.read(protocolServiceProvider);
       await protocol.setLoRaConfig(
         region:
             _selectedRegion ?? config_pbenum.Config_LoRaConfig_RegionCode.UNSET,
@@ -131,20 +137,19 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
       // Mark region as configured if a valid region was set
       if (_selectedRegion != null &&
           _selectedRegion != config_pbenum.Config_LoRaConfig_RegionCode.UNSET) {
-        final settings = await ref.read(settingsServiceProvider.future);
+        final settings = await settingsFuture;
         await settings.setRegionConfigured(true);
       }
 
-      if (mounted) {
-        showSuccessSnackBar(context, 'Radio configuration saved');
-        Navigator.pop(context);
-      }
+      if (!mounted) return;
+      showSuccessSnackBar(context, 'Radio configuration saved');
+      navigator.pop();
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
     }
   }
 

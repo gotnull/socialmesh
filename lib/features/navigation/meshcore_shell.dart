@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
@@ -187,14 +188,15 @@ class MeshCoreShell extends ConsumerStatefulWidget {
   ConsumerState<MeshCoreShell> createState() => _MeshCoreShellState();
 }
 
-class _MeshCoreShellState extends ConsumerState<MeshCoreShell> {
+class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
+    with LifecycleSafeMixin<MeshCoreShell> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
     // Register scaffold key after build so drawer can be opened from nested screens
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    safePostFrame(() {
       ref.read(meshCoreShellScaffoldKeyProvider.notifier).setKey(_scaffoldKey);
     });
   }
@@ -1022,7 +1024,8 @@ class _MeshCoreDeviceSheetContent extends ConsumerStatefulWidget {
 }
 
 class _MeshCoreDeviceSheetContentState
-    extends ConsumerState<_MeshCoreDeviceSheetContent> {
+    extends ConsumerState<_MeshCoreDeviceSheetContent>
+    with LifecycleSafeMixin<_MeshCoreDeviceSheetContent> {
   bool _disconnecting = false;
 
   @override
@@ -1285,31 +1288,33 @@ class _MeshCoreDeviceSheetContentState
   }
 
   Widget _buildDisconnectButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: OutlinedButton.icon(
-        onPressed: _disconnecting ? null : () => _disconnect(context),
-        icon: _disconnecting
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppTheme.errorRed,
-                ),
-              )
-            : const Icon(Icons.link_off, size: 20),
-        label: Text(_disconnecting ? 'Disconnecting...' : 'Disconnect'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppTheme.errorRed,
-          side: BorderSide(
-            color: _disconnecting
-                ? AppTheme.errorRed.withValues(alpha: 0.5)
-                : AppTheme.errorRed,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 52),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: _disconnecting ? null : () => _disconnect(context),
+          icon: _disconnecting
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppTheme.errorRed,
+                  ),
+                )
+              : const Icon(Icons.link_off, size: 20),
+          label: Text(_disconnecting ? 'Disconnecting...' : 'Disconnect'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppTheme.errorRed,
+            side: BorderSide(
+              color: _disconnecting
+                  ? AppTheme.errorRed.withValues(alpha: 0.5)
+                  : AppTheme.errorRed,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
         ),
       ),
@@ -1317,6 +1322,8 @@ class _MeshCoreDeviceSheetContentState
   }
 
   Future<void> _disconnect(BuildContext context) async {
+    final coordinator = ref.read(connectionCoordinatorProvider);
+    final nav = Navigator.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1339,14 +1346,14 @@ class _MeshCoreDeviceSheetContentState
       ),
     );
 
-    if (confirmed == true && context.mounted) {
-      setState(() => _disconnecting = true);
+    if (!mounted) return;
+    if (confirmed == true) {
+      safeSetState(() => _disconnecting = true);
 
       // Close sheet first
-      Navigator.pop(context);
+      nav.pop();
 
       // Perform disconnect
-      final coordinator = ref.read(connectionCoordinatorProvider);
       await coordinator.disconnect();
     }
   }
@@ -1437,6 +1444,8 @@ class _MeshCoreActionTile extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                           color: context.textPrimary,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -1445,6 +1454,8 @@ class _MeshCoreActionTile extends StatelessWidget {
                           fontSize: 13,
                           color: context.textTertiary,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),

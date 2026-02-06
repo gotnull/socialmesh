@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/auth_providers.dart';
@@ -19,8 +20,8 @@ class FeaturedProductsScreen extends ConsumerStatefulWidget {
       _FeaturedProductsScreenState();
 }
 
-class _FeaturedProductsScreenState
-    extends ConsumerState<FeaturedProductsScreen> {
+class _FeaturedProductsScreenState extends ConsumerState<FeaturedProductsScreen>
+    with LifecycleSafeMixin {
   List<ShopProduct> _products = [];
   bool _hasChanges = false;
   bool _isSaving = false;
@@ -174,12 +175,13 @@ class _FeaturedProductsScreenState
   Future<void> _saveOrder() async {
     if (!_hasChanges) return;
 
-    setState(() => _isSaving = true);
+    safeSetState(() => _isSaving = true);
+
+    // Capture providers before async gap
+    final service = ref.read(deviceShopServiceProvider);
+    final user = ref.read(currentUserProvider);
 
     try {
-      final service = ref.read(deviceShopServiceProvider);
-      final user = ref.read(currentUserProvider);
-
       // Build the order map
       final orders = <String, int>{};
       for (var i = 0; i < _products.length; i++) {
@@ -187,20 +189,19 @@ class _FeaturedProductsScreenState
       }
 
       await service.updateFeaturedOrders(orders, adminId: user?.uid);
+      if (!mounted) return;
 
       ref.invalidate(adminFeaturedProductsProvider);
       ref.invalidate(featuredProductsProvider);
 
-      setState(() {
+      safeSetState(() {
         _hasChanges = false;
         _isSaving = false;
       });
 
-      if (mounted) {
-        showSuccessSnackBar(context, 'Featured order updated');
-      }
+      showSuccessSnackBar(context, 'Featured order updated');
     } catch (e) {
-      setState(() => _isSaving = false);
+      safeSetState(() => _isSaving = false);
       if (mounted) {
         showErrorSnackBar(context, 'Error: $e');
       }
@@ -216,6 +217,10 @@ class _FeaturedProductsScreenState
   }
 
   Future<void> _removeFromFeatured(ShopProduct product) async {
+    // Capture providers before async gap
+    final service = ref.read(deviceShopServiceProvider);
+    final user = ref.read(currentUserProvider);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -234,16 +239,14 @@ class _FeaturedProductsScreenState
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       try {
-        final service = ref.read(deviceShopServiceProvider);
-        final user = ref.read(currentUserProvider);
-
         await service.updateProduct(product.id, {
           'isFeatured': false,
         }, adminId: user?.uid);
+        if (!mounted) return;
 
-        setState(() {
+        safeSetState(() {
           _products.removeWhere((p) => p.id == product.id);
         });
 
@@ -251,9 +254,7 @@ class _FeaturedProductsScreenState
         ref.invalidate(featuredProductsProvider);
         ref.invalidate(adminAllProductsProvider);
 
-        if (mounted) {
-          showSuccessSnackBar(context, 'Removed from featured');
-        }
+        showSuccessSnackBar(context, 'Removed from featured');
       } catch (e) {
         if (mounted) {
           showErrorSnackBar(context, 'Error: $e');

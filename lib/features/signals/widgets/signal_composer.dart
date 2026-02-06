@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../services/signal_service.dart';
@@ -19,7 +20,8 @@ class SignalComposer extends ConsumerStatefulWidget {
   ConsumerState<SignalComposer> createState() => _SignalComposerState();
 }
 
-class _SignalComposerState extends ConsumerState<SignalComposer> {
+class _SignalComposerState extends ConsumerState<SignalComposer>
+    with LifecycleSafeMixin {
   final TextEditingController _controller = TextEditingController();
   int _ttlMinutes = SignalTTL.defaultTTL;
   bool _isSubmitting = false;
@@ -38,22 +40,19 @@ class _SignalComposerState extends ConsumerState<SignalComposer> {
   Future<void> _submit() async {
     if (!_canSubmit) return;
 
-    setState(() => _isSubmitting = true);
+    safeSetState(() => _isSubmitting = true);
 
     try {
-      await ref
-          .read(signalFeedProvider.notifier)
-          .createSignal(
-            content: _controller.text.trim(),
-            ttlMinutes: _ttlMinutes,
-          );
+      final notifier = ref.read(signalFeedProvider.notifier);
+      await notifier.createSignal(
+        content: _controller.text.trim(),
+        ttlMinutes: _ttlMinutes,
+      );
 
       _controller.clear();
       widget.onSignalCreated?.call();
     } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
+      safeSetState(() => _isSubmitting = false);
     }
   }
 

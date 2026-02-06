@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/gradient_border_container.dart';
@@ -47,7 +48,8 @@ class WidgetDashboardScreen extends ConsumerStatefulWidget {
       _WidgetDashboardScreenState();
 }
 
-class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
+class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
+    with LifecycleSafeMixin {
   bool _editMode = false;
 
   @override
@@ -519,9 +521,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
     );
 
     // Refresh dashboard to pick up any changes
-    if (mounted) {
-      setState(() {});
-    }
+    safeSetState(() {});
   }
 
   void _showAddWidgetSheet(BuildContext context) {

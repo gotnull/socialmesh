@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/mesh_globe.dart';
@@ -24,7 +25,8 @@ class GlobeScreen extends ConsumerStatefulWidget {
   ConsumerState<GlobeScreen> createState() => _GlobeScreenState();
 }
 
-class _GlobeScreenState extends ConsumerState<GlobeScreen> {
+class _GlobeScreenState extends ConsumerState<GlobeScreen>
+    with LifecycleSafeMixin {
   final GlobalKey<MeshGlobeState> _globeKey = GlobalKey();
   MeshNode? _selectedNode;
   bool _showConnections = true;
@@ -45,7 +47,7 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
     final node = nodes[nodeNum];
     if (node != null && node.hasPosition) {
       _globeKey.currentState?.rotateToNode(node);
-      setState(() {
+      safeSetState(() {
         _selectedNode = node;
       });
     }
@@ -56,11 +58,9 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
     _globeKey.currentState?.rotateToNode(node);
     // Show the info card after a brief delay to let the rotation start
     Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) {
-        setState(() {
-          _selectedNode = node;
-        });
-      }
+      safeSetState(() {
+        _selectedNode = node;
+      });
     });
   }
 

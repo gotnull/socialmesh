@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -22,7 +23,8 @@ class SignalSettingsScreen extends ConsumerStatefulWidget {
       _SignalSettingsScreenState();
 }
 
-class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen> {
+class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen>
+    with LifecycleSafeMixin<SignalSettingsScreen> {
   bool _isLoading = false;
   bool _notificationsLoading = true;
   int _signalLocationRadiusMeters = kDefaultSignalLocationRadiusMeters;
@@ -37,20 +39,22 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen> {
   }
 
   Future<void> _loadPrivacySettings() async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
     try {
-      final settings = await ref.read(settingsServiceProvider.future);
+      final settingsFuture = ref.read(settingsServiceProvider.future);
+      final settings = await settingsFuture;
       if (!mounted) return;
-      setState(() {
+      safeSetState(() {
         _signalLocationRadiusMeters = settings.signalLocationRadiusMeters;
         _maxSignalImages = settings.maxSignalImages;
       });
     } catch (_) {
       // Ignore errors - defaults already set
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
     }
 
+    if (!mounted) return;
     await _loadNotificationSettings();
   }
 
@@ -58,24 +62,21 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen> {
     try {
       final settings = await PushNotificationService()
           .getNotificationSettings();
-      if (mounted) {
-        setState(() {
-          _signalsEnabled = settings['signals'] ?? true;
-          _votesEnabled = settings['votes'] ?? true;
-          _notificationsLoading = false;
-        });
-      }
+      if (!mounted) return;
+      safeSetState(() {
+        _signalsEnabled = settings['signals'] ?? true;
+        _votesEnabled = settings['votes'] ?? true;
+        _notificationsLoading = false;
+      });
     } catch (_) {
-      if (mounted) {
-        setState(() => _notificationsLoading = false);
-      }
+      safeSetState(() => _notificationsLoading = false);
     }
   }
 
   Future<void> _updateNotificationSetting(String type, bool value) async {
     HapticFeedback.selectionClick();
 
-    setState(() {
+    safeSetState(() {
       switch (type) {
         case 'signals':
           _signalsEnabled = value;
@@ -93,17 +94,15 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen> {
   }
 
   Future<void> _updateSignalLocationRadius(int meters) async {
-    setState(() => _signalLocationRadiusMeters = meters);
+    safeSetState(() => _signalLocationRadiusMeters = meters);
     try {
-      final settings = await ref.read(settingsServiceProvider.future);
+      final settingsFuture = ref.read(settingsServiceProvider.future);
+      final settings = await settingsFuture;
+      if (!mounted) return;
       await settings.setSignalLocationRadiusMeters(meters);
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(
-          context,
-          'Failed to update signal location radius: $e',
-        );
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to update signal location radius: $e');
     }
   }
 
@@ -281,12 +280,14 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen> {
                               divisions: 3,
                               onChanged: (value) async {
                                 final newValue = value.toInt();
-                                setState(() => _maxSignalImages = newValue);
+                                safeSetState(() => _maxSignalImages = newValue);
                                 HapticFeedback.selectionClick();
                                 try {
-                                  final settings = await ref.read(
+                                  final settingsFuture = ref.read(
                                     settingsServiceProvider.future,
                                   );
+                                  final settings = await settingsFuture;
+                                  if (!mounted) return;
                                   await settings.setMaxSignalImages(newValue);
                                 } catch (e) {
                                   // Error updating setting - ignore silently since UI already updated

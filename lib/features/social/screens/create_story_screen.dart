@@ -7,6 +7,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+
+import '../../../core/safety/lifecycle_mixin.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -64,7 +66,8 @@ class CreateStoryScreen extends ConsumerStatefulWidget {
   ConsumerState<CreateStoryScreen> createState() => _CreateStoryScreenState();
 }
 
-class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
+class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
+    with LifecycleSafeMixin<CreateStoryScreen> {
   // Media selection state
   List<AssetEntity> _recentAssets = [];
   AssetEntity? _selectedAsset;
@@ -132,20 +135,21 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   }
 
   void _toggleMultiSelect() {
-    setState(() => _isMultiSelectMode = !_isMultiSelectMode);
+    safeSetState(() => _isMultiSelectMode = !_isMultiSelectMode);
   }
 
   Future<void> _loadRecentAssets() async {
     final permission = await PhotoManager.requestPermissionExtend();
+    if (!mounted) return;
     if (!permission.isAuth) {
-      setState(() {
+      safeSetState(() {
         _isLoadingAssets = false;
         _hasPermission = false;
       });
       return;
     }
 
-    setState(() => _hasPermission = true);
+    safeSetState(() => _hasPermission = true);
 
     // Load all albums for the "All Albums" option - prefer images only on Android
     AppLogging.social('Loading photo albums (preferred: images)');
@@ -172,7 +176,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   }
 
   Future<void> _loadAssetsForFilter(AlbumFilterType filter) async {
-    setState(() => _isLoadingAssets = true);
+    safeSetState(() => _isLoadingAssets = true);
 
     List<AssetEntity> assets = [];
 
@@ -243,17 +247,16 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
         break;
     }
 
-    if (mounted) {
-      setState(() {
-        _recentAssets = assets;
-        _isLoadingAssets = false;
-      });
-    }
+    if (!mounted) return;
+    safeSetState(() {
+      _recentAssets = assets;
+      _isLoadingAssets = false;
+    });
   }
 
   void _changeAlbumFilter(AlbumFilterType filter) {
     if (filter == _selectedAlbumFilter) return;
-    setState(() {
+    safeSetState(() {
       _selectedAlbumFilter = filter;
       _selectedAlbum = null;
     });
@@ -261,7 +264,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   }
 
   void _selectAlbum(AssetPathEntity album) {
-    setState(() {
+    safeSetState(() {
       _selectedAlbum = album;
       _selectedAlbumFilter = AlbumFilterType.allAlbums;
     });
@@ -269,14 +272,15 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   }
 
   Future<void> _selectAsset(AssetEntity asset) async {
-    setState(() {
+    safeSetState(() {
       _selectedAsset = asset;
       _isLoadingMedia = true;
     });
 
     final file = await asset.file;
-    if (file != null && mounted) {
-      setState(() {
+    if (!mounted) return;
+    if (file != null) {
+      safeSetState(() {
         _selectedMedia = file;
         _mediaType = asset.type == AssetType.video
             ? StoryMediaType.video
@@ -284,7 +288,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
         _isLoadingMedia = false;
       });
     } else {
-      setState(() => _isLoadingMedia = false);
+      safeSetState(() => _isLoadingMedia = false);
     }
   }
 
@@ -296,8 +300,9 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
       imageQuality: 85,
     );
 
-    if (pickedFile != null && mounted) {
-      setState(() {
+    if (!mounted) return;
+    if (pickedFile != null) {
+      safeSetState(() {
         _selectedMedia = File(pickedFile.path);
         _mediaType = StoryMediaType.image;
         _selectedAsset = null;
@@ -307,7 +312,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
 
   Future<void> _toggleLocation() async {
     if (_location != null) {
-      setState(() => _location = null);
+      safeSetState(() => _location = null);
       return;
     }
 
@@ -346,7 +351,8 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
         }
       } catch (_) {}
 
-      setState(() {
+      if (!mounted) return;
+      safeSetState(() {
         _location = PostLocation(
           latitude: position.latitude,
           longitude: position.longitude,
@@ -367,15 +373,16 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
       allowBroadcast: false,
     );
 
+    if (!mounted) return;
     if (selection != null && selection.nodeNum != null) {
-      setState(() {
+      safeSetState(() {
         _nodeId = '!${selection.nodeNum!.toRadixString(16).padLeft(8, '0')}';
       });
     }
   }
 
   void _startTextEditing() {
-    setState(() {
+    safeSetState(() {
       _isEditingText = true;
       _isTextInputMode = true;
       if (_textOverlay != null) {
@@ -388,13 +395,13 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
     // Close keyboard but keep text on screen for positioning
     FocusScope.of(context).unfocus();
     if (_textController.text.isNotEmpty) {
-      setState(() {
+      safeSetState(() {
         _isTextInputMode = false;
         _isEditingText = true; // Keep in edit mode for repositioning
         _updateTextOverlay();
       });
     } else {
-      setState(() {
+      safeSetState(() {
         _isTextInputMode = false;
         _isEditingText = false;
         _textOverlay = null;
@@ -407,7 +414,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
     if (_textController.text.isNotEmpty) {
       _updateTextOverlay();
     }
-    setState(() {
+    safeSetState(() {
       _isEditingText = false;
       _isTextInputMode = false;
     });
@@ -424,7 +431,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   }
 
   void _removeText() {
-    setState(() {
+    safeSetState(() {
       _textOverlay = null;
       _textController.clear();
       _isEditingText = false;
@@ -474,7 +481,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   }
 
   void _cycleVisibility() {
-    setState(() {
+    safeSetState(() {
       _visibility = StoryVisibility
           .values[(_visibility.index + 1) % StoryVisibility.values.length];
     });
@@ -483,70 +490,72 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   Future<void> _createStory() async {
     if (_selectedMedia == null) return;
 
-    setState(() => _isUploading = true);
+    // Capture provider refs before any awaits
+    final moderationService = ref.read(contentModerationServiceProvider);
+    final storyNotifier = ref.read(createStoryProvider.notifier);
+
+    safeSetState(() => _isUploading = true);
 
     try {
       // Pre-submission content moderation check for text overlay
       if (_textOverlay != null && _textOverlay!.text.isNotEmpty) {
-        final moderationService = ref.read(contentModerationServiceProvider);
         final checkResult = await moderationService.checkText(
           _textOverlay!.text,
           useServerCheck: true,
         );
+        if (!mounted) return;
 
         if (!checkResult.passed || checkResult.action == 'reject') {
           // Content blocked - show warning and don't proceed
-          if (mounted) {
-            final action = await ContentModerationWarning.show(
-              context,
-              result: ContentModerationCheckResult(
-                passed: false,
-                action: 'reject',
-                categories: checkResult.categories.map((c) => c.name).toList(),
-                details: checkResult.details,
-              ),
-            );
-            if (action == ContentModerationAction.edit) {
-              // User wants to edit - focus on text field
-              setState(() {
-                _isTextInputMode = true;
-                _isEditingText = true;
-              });
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _textFocusNode.requestFocus();
-              });
-            }
+          final action = await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: checkResult.categories.map((c) => c.name).toList(),
+              details: checkResult.details,
+            ),
+          );
+          if (!mounted) return;
+          if (action == ContentModerationAction.edit) {
+            // User wants to edit - focus on text field
+            safeSetState(() {
+              _isTextInputMode = true;
+              _isEditingText = true;
+            });
+            safePostFrame(() {
+              _textFocusNode.requestFocus();
+            });
           }
-          setState(() => _isUploading = false);
+          safeSetState(() => _isUploading = false);
           return;
         } else if (checkResult.action == 'review' ||
             checkResult.action == 'flag') {
           // Content flagged - show warning but allow to proceed
-          if (mounted) {
-            final action = await ContentModerationWarning.show(
-              context,
-              result: ContentModerationCheckResult(
-                passed: true,
-                action: checkResult.action,
-                categories: checkResult.categories.map((c) => c.name).toList(),
-                details: checkResult.details,
-              ),
-            );
-            if (action == ContentModerationAction.edit) {
-              // User wants to edit - focus on text field
-              setState(() {
-                _isTextInputMode = true;
-                _isEditingText = true;
-              });
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _textFocusNode.requestFocus();
-              });
-              setState(() => _isUploading = false);
-              return;
-            } else if (action == ContentModerationAction.cancel) {
-              setState(() => _isUploading = false);
-              return;
-            }
+          final action = await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: true,
+              action: checkResult.action,
+              categories: checkResult.categories.map((c) => c.name).toList(),
+              details: checkResult.details,
+            ),
+          );
+          if (!mounted) return;
+          if (action == ContentModerationAction.edit) {
+            // User wants to edit - focus on text field
+            safeSetState(() {
+              _isTextInputMode = true;
+              _isEditingText = true;
+            });
+            safePostFrame(() {
+              _textFocusNode.requestFocus();
+            });
+            safeSetState(() => _isUploading = false);
+            return;
+          } else if (action == ContentModerationAction.cancel) {
+            safeSetState(() => _isUploading = false);
+            return;
           }
         }
       }
@@ -560,24 +569,23 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
         }
       }
 
-      final story = await ref
-          .read(createStoryProvider.notifier)
-          .createStory(
-            mediaFile: mediaToUpload,
-            mediaType: _mediaType,
-            location: _location,
-            nodeId: _nodeId,
-            textOverlay: null, // Text is now baked into the image
-            visibility: _visibility,
-          );
+      final story = await storyNotifier.createStory(
+        mediaFile: mediaToUpload,
+        mediaType: _mediaType,
+        location: _location,
+        nodeId: _nodeId,
+        textOverlay: null, // Text is now baked into the image
+        visibility: _visibility,
+      );
 
-      if (story != null && mounted) {
+      if (!mounted) return;
+      if (story != null) {
         showSuccessSnackBar(context, 'Story shared!');
         Navigator.pop(context);
-      } else if (mounted) {
+      } else {
         final error = ref.read(createStoryProvider).error;
         if (error != null && error.contains('Content policy violation')) {
-          setState(() => _isUploading = false);
+          safeSetState(() => _isUploading = false);
           await ContentModerationWarning.show(
             context,
             result: ContentModerationCheckResult(
@@ -588,25 +596,24 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
           );
         } else {
           showErrorSnackBar(context, error ?? 'Failed to create story');
-          setState(() => _isUploading = false);
+          safeSetState(() => _isUploading = false);
         }
       }
     } catch (e) {
-      if (mounted) {
-        if (e.toString().contains('Content policy violation')) {
-          setState(() => _isUploading = false);
-          await ContentModerationWarning.show(
-            context,
-            result: ContentModerationCheckResult(
-              passed: false,
-              action: 'reject',
-              categories: ['Inappropriate Content'],
-            ),
-          );
-        } else {
-          showErrorSnackBar(context, 'Failed to create story: $e');
-          setState(() => _isUploading = false);
-        }
+      if (!mounted) return;
+      if (e.toString().contains('Content policy violation')) {
+        safeSetState(() => _isUploading = false);
+        await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: false,
+            action: 'reject',
+            categories: ['Inappropriate Content'],
+          ),
+        );
+      } else {
+        showErrorSnackBar(context, 'Failed to create story: $e');
+        safeSetState(() => _isUploading = false);
       }
     }
   }
@@ -913,7 +920,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                           : _isEditingText
                           ? _confirmText
                           : () {
-                              setState(() {
+                              safeSetState(() {
                                 _selectedMedia = null;
                                 _selectedAsset = null;
                                 _textOverlay = null;
@@ -931,7 +938,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                       icon: const Icon(Icons.text_format, color: Colors.white),
                       onPressed: () {
                         // Cycle through font sizes
-                        setState(() {
+                        safeSetState(() {
                           if (_textSize <= 22) {
                             _textSize = 28;
                           } else if (_textSize <= 34) {
@@ -1118,7 +1125,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
               // Tap to enter edit mode or edit text
               onTap: _isEditingText
                   ? _startTextEditing
-                  : () => setState(() => _isEditingText = true),
+                  : () => safeSetState(() => _isEditingText = true),
               // Double tap to edit text content
               onDoubleTap: _startTextEditing,
               // Long press to delete
@@ -1188,7 +1195,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   Offset _basePosition = const Offset(0.5, 0.4);
 
   void _onTextScaleUpdate(ScaleUpdateDetails details, Size containerSize) {
-    setState(() {
+    safeSetState(() {
       // Update scale and rotation when pinching (scale != 1.0 means pinch gesture)
       if (details.scale != 1.0 || details.rotation != 0.0) {
         _textScale = (_baseScale * details.scale).clamp(0.5, 3.0);
@@ -1227,7 +1234,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       return GestureDetector(
-                        onTap: () => setState(
+                        onTap: () => safeSetState(
                           () => _hasTextBackground = !_hasTextBackground,
                         ),
                         child: Container(
@@ -1257,7 +1264,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                     final color = _availableColors[index - 1];
                     final isSelected = _textColor == color;
                     return GestureDetector(
-                      onTap: () => setState(() => _textColor = color),
+                      onTap: () => safeSetState(() => _textColor = color),
                       child: Container(
                         width: 36,
                         height: 36,
@@ -1289,7 +1296,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                     controller: _textController,
                     focusNode: _textFocusNode,
                     autofocus: true,
-                    onChanged: (_) => setState(() {}),
+                    onChanged: (_) => safeSetState(() {}),
                     onSubmitted: (_) => _finishTextInput(),
                   ),
                 ),
@@ -1420,7 +1427,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                       ),
                       onDeleted: _isUploading
                           ? null
-                          : () => setState(() => _location = null),
+                          : () => safeSetState(() => _location = null),
                       deleteIconColor: _isUploading
                           ? context.textTertiary
                           : context.textSecondary,
@@ -1434,7 +1441,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                       label: Text(_nodeId!, style: context.bodySmallStyle),
                       onDeleted: _isUploading
                           ? null
-                          : () => setState(() => _nodeId = null),
+                          : () => safeSetState(() => _nodeId = null),
                       deleteIconColor: _isUploading
                           ? context.textTertiary
                           : context.textSecondary,
@@ -1595,7 +1602,8 @@ class _MediaThumbnail extends StatefulWidget {
   State<_MediaThumbnail> createState() => _MediaThumbnailState();
 }
 
-class _MediaThumbnailState extends State<_MediaThumbnail> {
+class _MediaThumbnailState extends State<_MediaThumbnail>
+    with StatefulLifecycleSafeMixin<_MediaThumbnail> {
   Uint8List? _thumbnailData;
 
   @override
@@ -1609,8 +1617,9 @@ class _MediaThumbnailState extends State<_MediaThumbnail> {
       const ThumbnailSize(200, 200),
       quality: 80,
     );
-    if (mounted && data != null) {
-      setState(() => _thumbnailData = data);
+    if (!mounted) return;
+    if (data != null) {
+      safeSetState(() => _thumbnailData = data);
     }
   }
 
@@ -1692,7 +1701,8 @@ class _AlbumListTile extends StatefulWidget {
   State<_AlbumListTile> createState() => _AlbumListTileState();
 }
 
-class _AlbumListTileState extends State<_AlbumListTile> {
+class _AlbumListTileState extends State<_AlbumListTile>
+    with StatefulLifecycleSafeMixin<_AlbumListTile> {
   Uint8List? _thumbnailData;
   int _assetCount = 0;
 
@@ -1705,22 +1715,25 @@ class _AlbumListTileState extends State<_AlbumListTile> {
   Future<void> _loadAlbumInfo() async {
     // Get asset count
     _assetCount = await widget.album.assetCountAsync;
+    if (!mounted) return;
 
     // Get first asset for thumbnail
     if (_assetCount > 0) {
       final assets = await widget.album.getAssetListRange(start: 0, end: 1);
+      if (!mounted) return;
       if (assets.isNotEmpty) {
         final data = await assets.first.thumbnailDataWithSize(
           const ThumbnailSize(200, 200),
           quality: 80,
         );
-        if (mounted && data != null) {
-          setState(() => _thumbnailData = data);
+        if (!mounted) return;
+        if (data != null) {
+          safeSetState(() => _thumbnailData = data);
         }
       }
     }
 
-    if (mounted) setState(() {});
+    safeSetState(() {});
   }
 
   @override

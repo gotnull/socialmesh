@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/features/settings/account_subscriptions_screen.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
@@ -33,7 +34,9 @@ class SignalDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
-    with SingleTickerProviderStateMixin {
+    with
+        SingleTickerProviderStateMixin,
+        LifecycleSafeMixin<SignalDetailScreen> {
   final TextEditingController _replyController = TextEditingController();
   final FocusNode _replyFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
@@ -264,7 +267,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   }
 
   void _handleReplyTo(SignalResponse response) {
-    setState(() {
+    safeSetState(() {
       _replyingToId = response.id;
       _replyingToAuthor = response.authorName ?? 'Someone';
     });
@@ -272,7 +275,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   }
 
   void _cancelReply() {
-    setState(() {
+    safeSetState(() {
       _replyingToId = null;
       _replyingToAuthor = null;
     });
@@ -303,24 +306,24 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   Future<void> _setVote(SignalResponse response, int value) async {
     // Optimistic update
     final previousVote = _myVotes[response.id];
-    setState(() {
+    // Capture provider before any await
+    final service = ref.read(signalServiceProvider);
+    safeSetState(() {
       _myVotes[response.id] = value;
     });
 
     try {
-      await ref
-          .read(signalServiceProvider)
-          .setVote(
-            signalId: widget.signal.id,
-            commentId: response.id,
-            value: value,
-          );
+      await service.setVote(
+        signalId: widget.signal.id,
+        commentId: response.id,
+        value: value,
+      );
       // Vote counts will be updated via Firestore listener and _loadComments
     } catch (e) {
       // Revert on error
       AppLogging.signals('Vote error: $e');
       if (mounted) {
-        setState(() {
+        safeSetState(() {
           if (previousVote != null) {
             _myVotes[response.id] = previousVote;
           } else {
@@ -335,21 +338,24 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   Future<void> _removeVote(SignalResponse response) async {
     // Optimistic update
     final previousVote = _myVotes[response.id];
-    setState(() {
+    // Capture provider before any await
+    final service = ref.read(signalServiceProvider);
+    safeSetState(() {
       _myVotes.remove(response.id);
     });
 
     try {
-      await ref
-          .read(signalServiceProvider)
-          .clearVote(signalId: widget.signal.id, commentId: response.id);
+      await service.clearVote(
+        signalId: widget.signal.id,
+        commentId: response.id,
+      );
       // Vote counts will be updated via Firestore listener and _loadComments
     } catch (e) {
       // Revert on error
       AppLogging.signals('Clear vote error: $e');
       if (mounted) {
         if (previousVote != null) {
-          setState(() {
+          safeSetState(() {
             _myVotes[response.id] = previousVote;
           });
         }
@@ -362,8 +368,11 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
     final content = _replyController.text.trim();
     if (content.isEmpty) return;
 
-    // Auth gating check
+    // Capture all providers before any await
     final isAuthenticated = ref.read(isSignedInProvider);
+    final moderationService = ref.read(contentModerationServiceProvider);
+    final service = ref.read(signalServiceProvider);
+    final profile = ref.read(userProfileProvider).value;
     if (!isAuthenticated) {
       AppLogging.signals('🔒 Response blocked: user not authenticated');
       if (mounted) {
@@ -384,11 +393,10 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       return;
     }
 
-    setState(() => _isSubmittingReply = true);
+    safeSetState(() => _isSubmittingReply = true);
 
     // Content moderation check
     try {
-      final moderationService = ref.read(contentModerationServiceProvider);
       final checkResult = await moderationService.checkText(
         content,
         useServerCheck: true,
@@ -408,11 +416,11 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
           );
           if (action == ContentModerationAction.edit) {
             // User wants to edit - keep focus on reply field
-            setState(() => _isSubmittingReply = false);
+            safeSetState(() => _isSubmittingReply = false);
             return;
           }
           if (action == ContentModerationAction.cancel) {
-            setState(() => _isSubmittingReply = false);
+            safeSetState(() => _isSubmittingReply = false);
             return;
           }
         }
@@ -431,12 +439,12 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
             ),
           );
           if (action == ContentModerationAction.cancel) {
-            setState(() => _isSubmittingReply = false);
+            safeSetState(() => _isSubmittingReply = false);
             return;
           }
           if (action == ContentModerationAction.edit) {
             // User wants to edit - keep focus on reply field
-            setState(() => _isSubmittingReply = false);
+            safeSetState(() => _isSubmittingReply = false);
             return;
           }
           // If action is proceed, continue with submission
@@ -448,8 +456,6 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
     }
 
     try {
-      final service = ref.read(signalServiceProvider);
-      final profile = ref.read(userProfileProvider).value;
       AppLogging.signals(
         '📝 SignalDetailScreen: Submitting response to signal ${widget.signal.id}'
         '${_replyingToId != null ? ' (reply to $_replyingToId)' : ''}',
@@ -490,9 +496,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
         showErrorSnackBar(context, 'Failed to send response');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSubmittingReply = false);
-      }
+      safeSetState(() => _isSubmittingReply = false);
     }
   }
 
@@ -720,6 +724,10 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   }
 
   Future<void> _deleteSignal(Post signal) async {
+    // Capture provider before any await
+    final feedNotifier = ref.read(signalFeedProvider.notifier);
+    final navigator = Navigator.of(context);
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -749,15 +757,19 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       ),
     );
 
-    if (confirm == true && mounted) {
-      await ref.read(signalFeedProvider.notifier).deleteSignal(signal.id);
+    if (!mounted) return;
+    if (confirm == true) {
+      await feedNotifier.deleteSignal(signal.id);
       if (mounted) {
-        Navigator.of(context).pop();
+        navigator.pop();
       }
     }
   }
 
   Future<void> _reportSignal(Post signal) async {
+    // Capture provider before any await
+    final socialService = ref.read(socialServiceProvider);
+
     final reason = await AppBottomSheet.showActions<String>(
       context: context,
       header: Text(
@@ -802,9 +814,9 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       ],
     );
 
-    if (reason != null && mounted) {
+    if (!mounted) return;
+    if (reason != null) {
       try {
-        final socialService = ref.read(socialServiceProvider);
         await socialService.reportSignal(
           signalId: signal.id,
           reason: reason,

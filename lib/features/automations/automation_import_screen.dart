@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/premium_gating.dart';
@@ -30,8 +31,8 @@ class AutomationImportScreen extends ConsumerStatefulWidget {
       _AutomationImportScreenState();
 }
 
-class _AutomationImportScreenState
-    extends ConsumerState<AutomationImportScreen> {
+class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
+    with LifecycleSafeMixin<AutomationImportScreen> {
   Automation? _automation;
   bool _isLoading = true;
   String? _error;
@@ -43,7 +44,7 @@ class _AutomationImportScreenState
   }
 
   Future<void> _loadAutomation() async {
-    setState(() {
+    safeSetState(() {
       _isLoading = true;
       _error = null;
     });
@@ -57,7 +58,7 @@ class _AutomationImportScreenState
         final json = jsonDecode(jsonString) as Map<String, dynamic>;
 
         // Create automation from JSON (without id/timestamps for import)
-        setState(() {
+        safeSetState(() {
           _automation = Automation(
             name: json['name'] as String,
             description: json['description'] as String?,
@@ -87,8 +88,10 @@ class _AutomationImportScreenState
             .doc(widget.firestoreId)
             .get();
 
+        if (!mounted) return;
+
         if (!doc.exists) {
-          setState(() {
+          safeSetState(() {
             _error = 'Automation not found or has been deleted';
             _isLoading = false;
           });
@@ -96,7 +99,7 @@ class _AutomationImportScreenState
         }
 
         final data = doc.data()!;
-        setState(() {
+        safeSetState(() {
           _automation = Automation(
             name: data['name'] as String,
             description: data['description'] as String?,
@@ -123,14 +126,14 @@ class _AutomationImportScreenState
           'Fetched automation from Firestore: ${_automation!.name}',
         );
       } else {
-        setState(() {
+        safeSetState(() {
           _error = 'No automation data provided';
           _isLoading = false;
         });
       }
     } catch (e) {
       AppLogging.debug('Failed to import automation: $e');
-      setState(() {
+      safeSetState(() {
         _error = 'Failed to import automation: $e';
         _isLoading = false;
       });
@@ -207,7 +210,7 @@ class _AutomationImportScreenState
     );
 
     if (result != null && mounted) {
-      setState(() {
+      safeSetState(() {
         _automation = result;
       });
     }

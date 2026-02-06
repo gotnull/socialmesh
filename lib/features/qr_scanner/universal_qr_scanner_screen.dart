@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -31,7 +32,8 @@ class UniversalQrScannerScreen extends ConsumerStatefulWidget {
 }
 
 class _UniversalQrScannerScreenState
-    extends ConsumerState<UniversalQrScannerScreen> {
+    extends ConsumerState<UniversalQrScannerScreen>
+    with LifecycleSafeMixin<UniversalQrScannerScreen> {
   late final MobileScannerController _controller;
   bool _isProcessing = false;
   String? _lastProcessedCode;
@@ -63,7 +65,7 @@ class _UniversalQrScannerScreenState
     try {
       await _controller.start();
       AppLogging.qr('📷 Universal QR Scanner: Camera started');
-      if (mounted) setState(() {});
+      if (mounted) safeSetState(() {});
     } catch (error) {
       AppLogging.qr(
         'QR - 📷 Universal QR Scanner ERROR: Failed to start: $error',
@@ -96,7 +98,7 @@ class _UniversalQrScannerScreenState
       '📷 Universal QR Scanner: Detected ${code.length > 50 ? '${code.substring(0, 50)}...' : code}',
     );
 
-    setState(() => _isProcessing = true);
+    safeSetState(() => _isProcessing = true);
     _processQrCode(code);
   }
 
@@ -628,7 +630,13 @@ class _UniversalQrScannerScreenState
   }
 
   Future<void> _importChannel(ChannelConfig channel) async {
+    // Capture providers before any await
     final connectionState = ref.read(connectionStateProvider);
+    final protocol = ref.read(protocolServiceProvider);
+    final channelsNotifier = ref.read(channelsProvider.notifier);
+    final secureStorage = ref.read(secureStorageProvider);
+    final navigator = Navigator.of(context);
+
     final isConnected = connectionState.maybeWhen(
       data: (state) => state == DeviceConnectionState.connected,
       orElse: () => false,
@@ -636,31 +644,30 @@ class _UniversalQrScannerScreenState
 
     if (!isConnected) {
       showErrorSnackBar(context, 'Connect a device to import this channel');
-      setState(() => _isProcessing = false);
+      safeSetState(() => _isProcessing = false);
       return;
     }
 
     try {
-      final protocol = ref.read(protocolServiceProvider);
       await protocol.setChannel(channel);
       await Future.delayed(const Duration(milliseconds: 300));
       await protocol.getChannel(channel.index);
 
-      ref.read(channelsProvider.notifier).setChannel(channel);
+      if (!mounted) return;
+      channelsNotifier.setChannel(channel);
 
       if (channel.psk.isNotEmpty) {
-        final secureStorage = ref.read(secureStorageProvider);
         await secureStorage.storeChannelKey(channel.name, channel.psk);
       }
 
       if (mounted) {
         showSuccessSnackBar(context, 'Channel "${channel.name}" imported');
-        Navigator.pop(context);
+        navigator.pop();
       }
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Import failed: $e');
-        setState(() => _isProcessing = false);
+        safeSetState(() => _isProcessing = false);
       }
     }
   }

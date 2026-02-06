@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import 'package:social_media_buttons/social_media_icons.dart';
 import '../../../services/share_link_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -86,7 +87,7 @@ class ProfileSocialScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, LifecycleSafeMixin<ProfileSocialScreen> {
   final ScrollController _scrollController = ScrollController();
   late final TabController _tabController;
   PostFilter _selectedFilter = PostFilter.all;
@@ -1293,20 +1294,24 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
   }
 
   Future<void> _pickBanner() async {
+    // Capture provider before any await
+    final profileNotifier = ref.read(userProfileProvider.notifier);
+    final userId = widget.userId;
+
     final result = await FilePicker.platform.pickFiles(
       type: FileType.image,
       allowMultiple: false,
     );
 
+    if (!mounted) return;
     if (result != null && result.files.isNotEmpty) {
       try {
         final file = File(result.files.first.path!);
-        await ref.read(userProfileProvider.notifier).saveBannerFromFile(file);
+        await profileNotifier.saveBannerFromFile(file);
+        if (!mounted) return;
         ref.invalidate(userProfileProvider);
-        ref.invalidate(publicProfileStreamProvider(widget.userId));
-        if (mounted) {
-          showSuccessSnackBar(context, 'Banner updated');
-        }
+        ref.invalidate(publicProfileStreamProvider(userId));
+        showSuccessSnackBar(context, 'Banner updated');
       } catch (e) {
         if (mounted) {
           if (e.toString().contains('Content policy violation') ||
@@ -1328,13 +1333,16 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
   }
 
   Future<void> _removeBanner() async {
+    // Capture provider before any await
+    final profileNotifier = ref.read(userProfileProvider.notifier);
+    final userId = widget.userId;
+
     try {
-      await ref.read(userProfileProvider.notifier).deleteBanner();
+      await profileNotifier.deleteBanner();
+      if (!mounted) return;
       ref.invalidate(userProfileProvider);
-      ref.invalidate(publicProfileStreamProvider(widget.userId));
-      if (mounted) {
-        showSuccessSnackBar(context, 'Banner removed');
-      }
+      ref.invalidate(publicProfileStreamProvider(userId));
+      showSuccessSnackBar(context, 'Banner removed');
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to remove banner: $e');

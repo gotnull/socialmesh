@@ -19,6 +19,7 @@ import '../../models/presence_confidence.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/presence_providers.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/loading_indicator.dart';
 
 /// Result from the geofence picker
@@ -71,7 +72,8 @@ class _NodeWithPosition {
   });
 }
 
-class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
+class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
+    with LifecycleSafeMixin<GeofencePickerScreen> {
   late final MapController _mapController;
   LatLng? _center;
   double _radiusMeters = 1000.0;
@@ -109,11 +111,12 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
   }
 
   Future<void> _loadMapStyle() async {
-    final settings = await ref.read(settingsServiceProvider.future);
-    final index = settings.mapTileStyleIndex;
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final settings = await settingsFuture;
     if (!mounted) return;
+    final index = settings.mapTileStyleIndex;
     if (index >= 0 && index < MapTileStyle.values.length) {
-      setState(() => _mapStyle = MapTileStyle.values[index]);
+      safeSetState(() => _mapStyle = MapTileStyle.values[index]);
     }
   }
 
@@ -151,7 +154,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
   }) {
     HapticFeedback.selectionClick();
     final point = LatLng(nodeWithPos.latitude, nodeWithPos.longitude);
-    setState(() {
+    safeSetState(() {
       _selectedNodeNum = nodeWithPos.node.nodeNum;
       _center = point;
       _showNodeList = false;
@@ -164,18 +167,18 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
   }
 
   Future<void> _getCurrentLocation() async {
-    setState(() => _isLoadingLocation = true);
+    safeSetState(() => _isLoadingLocation = true);
 
     try {
       final permission = await Geolocator.checkPermission();
+      if (!mounted) return;
       if (permission == LocationPermission.denied) {
         final requested = await Geolocator.requestPermission();
+        if (!mounted) return;
         if (requested == LocationPermission.denied ||
             requested == LocationPermission.deniedForever) {
-          if (mounted) {
-            showErrorSnackBar(context, 'Location permission denied');
-          }
-          setState(() => _isLoadingLocation = false);
+          showErrorSnackBar(context, 'Location permission denied');
+          safeSetState(() => _isLoadingLocation = false);
           return;
         }
       }
@@ -185,9 +188,10 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
           accuracy: LocationAccuracy.high,
         ),
       );
+      if (!mounted) return;
 
       final newCenter = LatLng(position.latitude, position.longitude);
-      setState(() {
+      safeSetState(() {
         _center = newCenter;
         _isLoadingLocation = false;
       });
@@ -197,19 +201,19 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to get location: $e');
       }
-      setState(() => _isLoadingLocation = false);
+      safeSetState(() => _isLoadingLocation = false);
     }
   }
 
   void _onMapTap(TapPosition tapPosition, LatLng point) {
     // Close sidebar if open
     if (_showNodeList) {
-      setState(() => _showNodeList = false);
+      safeSetState(() => _showNodeList = false);
       return;
     }
 
     HapticFeedback.selectionClick();
-    setState(() {
+    safeSetState(() {
       _selectedNodeNum = null; // Clear node selection
       // Only move center if not locked to a monitored node
       if (_monitoredNodeNum == null) {
@@ -282,7 +286,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
   void _onPointerDown(PointerDownEvent event) {
     if (_center != null && _isNearGeofenceEdge(event.localPosition)) {
       HapticFeedback.mediumImpact();
-      setState(() => _isDraggingRadius = true);
+      safeSetState(() => _isDraggingRadius = true);
     }
   }
 
@@ -295,7 +299,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
 
       final newRadius = _calculateDistance(_center!, point);
       if (newRadius >= 50 && newRadius <= 50000) {
-        setState(() {
+        safeSetState(() {
           _radiusMeters = newRadius;
         });
       }
@@ -304,7 +308,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
 
   void _onPointerUp(PointerUpEvent event) {
     if (_isDraggingRadius) {
-      setState(() {
+      safeSetState(() {
         _isDraggingRadius = false;
       });
     }
@@ -348,6 +352,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
 
     return GlassScaffold.body(
       title: 'Set Geofence',
+      physics: const NeverScrollableScrollPhysics(),
       actions: [
         TextButton(
           onPressed: _center != null ? _confirmGeofence : null,

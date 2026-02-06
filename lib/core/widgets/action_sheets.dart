@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../safety/lifecycle_mixin.dart';
 import '../theme.dart';
 import '../../utils/snackbar.dart';
 import 'node_selector_sheet.dart';
@@ -34,7 +35,8 @@ class QuickMessageSheetContent extends StatefulWidget {
       _QuickMessageSheetContentState();
 }
 
-class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
+class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
+    with StatefulLifecycleSafeMixin<QuickMessageSheetContent> {
   final _controller = TextEditingController();
   int _selectedPreset = -1;
   bool _isSending = false;
@@ -58,7 +60,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
 
   void _onTextChanged() {
     // Rebuild to update button state based on text content
-    if (mounted) setState(() {});
+    safeSetState(() {});
   }
 
   List<MeshNode> get _availableNodes {
@@ -86,12 +88,15 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
   Future<void> _sendMessage() async {
     if (_controller.text.isEmpty) return;
 
-    setState(() => _isSending = true);
+    safeSetState(() => _isSending = true);
+
+    // Capture provider refs before awaits
+    final protocol = widget.ref.read(protocolServiceProvider);
+    final myNodeNum = widget.ref.read(myNodeNumProvider);
+    final nodes = widget.ref.read(nodesProvider);
+    final messagesNotifier = widget.ref.read(messagesProvider.notifier);
 
     try {
-      final protocol = widget.ref.read(protocolServiceProvider);
-      final myNodeNum = widget.ref.read(myNodeNumProvider);
-      final nodes = widget.ref.read(nodesProvider);
       final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
       final targetAddress = _selectedNodeNum ?? broadcastAddress;
       final messageId = 'quick_${DateTime.now().millisecondsSinceEpoch}';
@@ -110,7 +115,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
         senderShortName: myNode?.shortName,
         senderAvatarColor: myNode?.avatarColor,
       );
-      widget.ref.read(messagesProvider.notifier).addMessage(pendingMessage);
+      messagesNotifier.addMessage(pendingMessage);
 
       // Send via protocol
       await protocol.sendMessageWithPreTracking(
@@ -120,29 +125,30 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
         wantAck: true,
         messageId: messageId,
         onPacketIdGenerated: (id) {
-          widget.ref.read(messagesProvider.notifier).trackPacket(id, messageId);
+          messagesNotifier.trackPacket(id, messageId);
         },
       );
 
-      if (mounted) {
-        Navigator.pop(context);
-        final nodes = _availableNodes;
-        final targetName = _selectedNodeNum == null
-            ? 'all nodes'
-            : nodes
-                      .firstWhere(
-                        (n) => n.nodeNum == _selectedNodeNum,
-                        orElse: () => MeshNode(nodeNum: _selectedNodeNum!),
-                      )
-                      .longName ??
-                  'node';
-        showSuccessSnackBar(context, 'Sent to $targetName');
-      }
+      if (!mounted) return;
+      Navigator.pop(context);
+      // Use captured nodes and presenceMap for target name lookup
+      final availableNodes = nodes.values
+          .where((n) => n.nodeNum != myNodeNum)
+          .toList();
+      final targetName = _selectedNodeNum == null
+          ? 'all nodes'
+          : availableNodes
+                    .firstWhere(
+                      (n) => n.nodeNum == _selectedNodeNum,
+                      orElse: () => MeshNode(nodeNum: _selectedNodeNum!),
+                    )
+                    .longName ??
+                'node';
+      showSuccessSnackBar(context, 'Sent to $targetName');
     } catch (e) {
-      setState(() => _isSending = false);
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to send: $e');
-      }
+      if (!mounted) return;
+      safeSetState(() => _isSending = false);
+      showErrorSnackBar(context, 'Failed to send: $e');
     }
   }
 
@@ -157,7 +163,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
     );
 
     if (selection != null && mounted) {
-      setState(() {
+      safeSetState(() {
         _selectedNodeNum = selection.isBroadcast ? null : selection.nodeNum;
       });
     }
@@ -482,7 +488,8 @@ class SosSheetContent extends StatefulWidget {
   State<SosSheetContent> createState() => _SosSheetContentState();
 }
 
-class _SosSheetContentState extends State<SosSheetContent> {
+class _SosSheetContentState extends State<SosSheetContent>
+    with StatefulLifecycleSafeMixin<SosSheetContent> {
   bool _isSending = false;
   int _countdown = 5;
   bool _canSend = false;
@@ -496,26 +503,32 @@ class _SosSheetContentState extends State<SosSheetContent> {
   void _startCountdown() async {
     for (int i = 5; i > 0; i--) {
       if (!mounted) return;
-      setState(() => _countdown = i);
+      safeSetState(() => _countdown = i);
       await Future.delayed(const Duration(seconds: 1));
     }
-    if (mounted) {
-      setState(() {
-        _countdown = 0;
-        _canSend = true;
-      });
-    }
+    if (!mounted) return;
+    safeSetState(() {
+      _countdown = 0;
+      _canSend = true;
+    });
   }
 
   Future<void> _sendSos() async {
     if (!_canSend || _isSending) return;
 
-    setState(() => _isSending = true);
+    safeSetState(() => _isSending = true);
     HapticFeedback.heavyImpact();
+
+    // Capture provider refs before awaits
+    final locationService = widget.ref.read(locationServiceProvider);
+    final myNodeNum = widget.ref.read(myNodeNumProvider);
+    final nodes = widget.ref.read(nodesProvider);
+    final iftttService = widget.ref.read(iftttServiceProvider);
+    final protocol = widget.ref.read(protocolServiceProvider);
+    final messagesNotifier = widget.ref.read(messagesProvider.notifier);
 
     try {
       // Get current location if available
-      final locationService = widget.ref.read(locationServiceProvider);
       double? latitude;
       double? longitude;
 
@@ -529,17 +542,16 @@ class _SosSheetContentState extends State<SosSheetContent> {
         // Location not available, continue without it
       }
 
+      if (!mounted) return;
+
       // Get my node info
-      final myNodeNum = widget.ref.read(myNodeNumProvider);
       if (myNodeNum == null) {
         throw Exception('No connected node');
       }
-      final nodes = widget.ref.read(nodesProvider);
       final myNode = nodes[myNodeNum];
       final myName = myNode?.longName ?? myNode?.shortName ?? 'Unknown';
 
       // Trigger IFTTT SOS webhook
-      final iftttService = widget.ref.read(iftttServiceProvider);
       await iftttService.triggerSosEmergency(
         nodeNum: myNodeNum,
         nodeName: myName,
@@ -547,8 +559,9 @@ class _SosSheetContentState extends State<SosSheetContent> {
         longitude: longitude,
       );
 
+      if (!mounted) return;
+
       // Broadcast SOS message to all nodes
-      final protocol = widget.ref.read(protocolServiceProvider);
       final locationText = (latitude != null && longitude != null)
           ? '\nLocation: $latitude, $longitude'
           : '';
@@ -568,7 +581,7 @@ class _SosSheetContentState extends State<SosSheetContent> {
         senderShortName: myNode?.shortName,
         senderAvatarColor: myNode?.avatarColor,
       );
-      widget.ref.read(messagesProvider.notifier).addMessage(pendingMessage);
+      messagesNotifier.addMessage(pendingMessage);
 
       // Pre-track before sending to avoid race condition
       await protocol.sendMessageWithPreTracking(
@@ -578,19 +591,17 @@ class _SosSheetContentState extends State<SosSheetContent> {
         wantAck: true,
         messageId: messageId,
         onPacketIdGenerated: (id) {
-          widget.ref.read(messagesProvider.notifier).trackPacket(id, messageId);
+          messagesNotifier.trackPacket(id, messageId);
         },
       );
 
-      if (mounted) {
-        Navigator.pop(context);
-        showErrorSnackBar(context, 'Emergency SOS sent to all nodes');
-      }
+      if (!mounted) return;
+      Navigator.pop(context);
+      showErrorSnackBar(context, 'Emergency SOS sent to all nodes');
     } catch (e) {
-      setState(() => _isSending = false);
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to send SOS: $e');
-      }
+      if (!mounted) return;
+      safeSetState(() => _isSending = false);
+      showErrorSnackBar(context, 'Failed to send SOS: $e');
     }
   }
 
@@ -809,7 +820,8 @@ class TracerouteSheetContent extends StatefulWidget {
   State<TracerouteSheetContent> createState() => _TracerouteSheetContentState();
 }
 
-class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
+class _TracerouteSheetContentState extends State<TracerouteSheetContent>
+    with StatefulLifecycleSafeMixin<TracerouteSheetContent> {
   bool _isSending = false;
   late int? _selectedNodeNum;
   String? _selectedNodeName;
@@ -841,7 +853,7 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
     );
 
     if (selection != null && selection.nodeNum != null && mounted) {
-      setState(() {
+      safeSetState(() {
         _selectedNodeNum = selection.nodeNum;
         _updateSelectedNodeName();
       });
@@ -851,24 +863,24 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
   Future<void> _sendTraceroute() async {
     if (_selectedNodeNum == null || _isSending) return;
 
-    setState(() => _isSending = true);
+    safeSetState(() => _isSending = true);
+
+    // Capture provider ref before await
+    final protocol = widget.ref.read(protocolServiceProvider);
 
     try {
-      final protocol = widget.ref.read(protocolServiceProvider);
       await protocol.sendTraceroute(_selectedNodeNum!);
 
-      if (mounted) {
-        Navigator.pop(context);
-        showInfoSnackBar(
-          context,
-          'Traceroute sent to $_selectedNodeName - check messages for response',
-        );
-      }
+      if (!mounted) return;
+      Navigator.pop(context);
+      showInfoSnackBar(
+        context,
+        'Traceroute sent to $_selectedNodeName - check messages for response',
+      );
     } catch (e) {
-      setState(() => _isSending = false);
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to send traceroute: $e');
-      }
+      if (!mounted) return;
+      safeSetState(() => _isSending = false);
+      showErrorSnackBar(context, 'Failed to send traceroute: $e');
     }
   }
 

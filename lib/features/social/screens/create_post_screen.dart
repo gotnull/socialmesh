@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
@@ -30,7 +31,8 @@ class CreatePostScreen extends ConsumerStatefulWidget {
   ConsumerState<CreatePostScreen> createState() => _CreatePostScreenState();
 }
 
-class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
+class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
+    with LifecycleSafeMixin<CreatePostScreen> {
   final TextEditingController _contentController = TextEditingController();
   final FocusNode _contentFocusNode = FocusNode();
 
@@ -47,7 +49,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   void initState() {
     super.initState();
     // Focus content input when screen opens
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    safePostFrame(() {
       _contentFocusNode.requestFocus();
     });
   }
@@ -116,7 +118,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       if (shouldDiscard != true) return;
     }
 
-    if (mounted) Navigator.pop(context);
+    safeNavigatorPop();
   }
 
   @override
@@ -790,12 +792,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         allowMultiple: remainingSlots > 1,
       );
 
-      if (result == null || result.files.isEmpty) return;
+      if (result == null || result.files.isEmpty || !mounted) return;
 
       // Take only up to remaining slots (safety check)
       final filesToUpload = result.files.take(remainingSlots).toList();
 
-      setState(() => _isSubmitting = true);
+      safeSetState(() => _isSubmitting = true);
 
       for (final file in filesToUpload) {
         if (file.path == null) {
@@ -831,19 +833,18 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         try {
           final url = await ref.getDownloadURL();
           AppLogging.social('[CreatePost] Upload complete, URL: $url');
-          setState(() => _imageUrls.add(url));
+          safeSetState(() => _imageUrls.add(url));
         } on FirebaseException catch (e) {
           if (e.code == 'object-not-found') {
             // Image was deleted by content moderation
             AppLogging.social(
               '[CreatePost] Image blocked by content moderation',
             );
-            if (mounted) {
-              showErrorSnackBar(
-                context,
-                'Image violates content guidelines and was blocked.',
-              );
-            }
+            if (!mounted) return;
+            showErrorSnackBar(
+              context,
+              'Image violates content guidelines and was blocked.',
+            );
             return;
           }
           rethrow;
@@ -852,20 +853,19 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     } catch (e, stackTrace) {
       AppLogging.social('[CreatePost] Image upload error: $e');
       AppLogging.social('[CreatePost] Stack trace: $stackTrace');
-      if (mounted) {
-        // Check for object-not-found which indicates moderation
-        final errorStr = e.toString();
-        if (errorStr.contains('object-not-found')) {
-          showErrorSnackBar(
-            context,
-            'Image violates content guidelines and was blocked.',
-          );
-        } else {
-          showErrorSnackBar(context, 'Failed to upload image: $e');
-        }
+      if (!mounted) return;
+      // Check for object-not-found which indicates moderation
+      final errorStr = e.toString();
+      if (errorStr.contains('object-not-found')) {
+        showErrorSnackBar(
+          context,
+          'Image violates content guidelines and was blocked.',
+        );
+      } else {
+        showErrorSnackBar(context, 'Failed to upload image: $e');
       }
     } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      safeSetState(() => _isSubmitting = false);
     }
   }
 
@@ -1022,14 +1022,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         final requested = await Geolocator.requestPermission();
         if (requested == LocationPermission.denied ||
             requested == LocationPermission.deniedForever) {
-          if (mounted) {
-            showWarningSnackBar(context, 'Location permission denied');
-          }
+          if (!mounted) return;
+          showWarningSnackBar(context, 'Location permission denied');
           return;
         }
       }
 
       final position = await Geolocator.getCurrentPosition();
+      if (!mounted) return;
       String locationName = 'Current Location';
 
       try {
@@ -1047,7 +1047,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         }
       } catch (_) {}
 
-      setState(() {
+      safeSetState(() {
         _location = PostLocation(
           name: locationName,
           latitude: position.latitude,
@@ -1055,9 +1055,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         );
       });
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to get location: $e');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to get location: $e');
     }
   }
 
@@ -1138,8 +1137,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       allowBroadcast: false,
     );
 
-    if (selection != null && selection.nodeNum != null && mounted) {
-      setState(
+    if (!mounted) return;
+    if (selection != null && selection.nodeNum != null) {
+      safeSetState(
         () => _nodeId = selection.nodeNum!.toRadixString(16).toUpperCase(),
       );
     }
@@ -1167,52 +1167,52 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
       if (!checkResult.passed || checkResult.action == 'reject') {
         // Content blocked - show warning and don't proceed
-        if (mounted) {
-          final action = await ContentModerationWarning.show(
-            context,
-            result: ContentModerationCheckResult(
-              passed: false,
-              action: 'reject',
-              categories: checkResult.categories.map((c) => c.name).toList(),
-              details: checkResult.details,
-            ),
-          );
-          setState(() => _isSubmitting = false);
-          if (action == ContentModerationAction.edit) {
-            // User wants to edit - focus on content field
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _contentFocusNode.requestFocus();
-            });
-          }
+        if (!mounted) return;
+        final action = await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: false,
+            action: 'reject',
+            categories: checkResult.categories.map((c) => c.name).toList(),
+            details: checkResult.details,
+          ),
+        );
+        if (!mounted) return;
+        safeSetState(() => _isSubmitting = false);
+        if (action == ContentModerationAction.edit) {
+          // User wants to edit - focus on content field
+          safePostFrame(() {
+            _contentFocusNode.requestFocus();
+          });
         }
         return;
       } else if (checkResult.action == 'review' ||
           checkResult.action == 'flag') {
         // Content flagged - show warning but allow to proceed
-        if (mounted) {
-          final action = await ContentModerationWarning.show(
-            context,
-            result: ContentModerationCheckResult(
-              passed: true,
-              action: checkResult.action,
-              categories: checkResult.categories.map((c) => c.name).toList(),
-              details: checkResult.details,
-            ),
-          );
-          if (action == ContentModerationAction.cancel) {
-            setState(() => _isSubmitting = false);
-            return;
-          }
-          if (action == ContentModerationAction.edit) {
-            // User wants to edit - focus on content field
-            setState(() => _isSubmitting = false);
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _contentFocusNode.requestFocus();
-            });
-            return;
-          }
-          // If action is proceed, continue with submission
+        if (!mounted) return;
+        final action = await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: true,
+            action: checkResult.action,
+            categories: checkResult.categories.map((c) => c.name).toList(),
+            details: checkResult.details,
+          ),
+        );
+        if (!mounted) return;
+        if (action == ContentModerationAction.cancel) {
+          safeSetState(() => _isSubmitting = false);
+          return;
         }
+        if (action == ContentModerationAction.edit) {
+          // User wants to edit - focus on content field
+          safeSetState(() => _isSubmitting = false);
+          safePostFrame(() {
+            _contentFocusNode.requestFocus();
+          });
+          return;
+        }
+        // If action is proceed, continue with submission
       }
     }
 
@@ -1236,13 +1236,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             AppLogging.social(
               '[CreatePost] Image validation failed: ${validationResult['message']}',
             );
-            if (mounted) {
-              setState(() => _isSubmitting = false);
-              showErrorSnackBar(
-                context,
-                validationResult['message'] ?? 'Image validation failed',
-              );
-            }
+            if (!mounted) return;
+            safeSetState(() => _isSubmitting = false);
+            showErrorSnackBar(
+              context,
+              validationResult['message'] ?? 'Image validation failed',
+            );
             return;
           }
           AppLogging.social('[CreatePost] All images passed validation');
@@ -1265,18 +1264,18 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             AppLogging.social(
               '[CreatePost] ${_imageUrls.length - validUrls.length} images were removed',
             );
-            if (mounted) {
-              setState(() => _isSubmitting = false);
-              showErrorSnackBar(
-                context,
-                'One or more images violated content policy.',
-              );
-            }
+            if (!mounted) return;
+            safeSetState(() => _isSubmitting = false);
+            showErrorSnackBar(
+              context,
+              'One or more images violated content policy.',
+            );
             return;
           }
         }
       }
 
+      if (!mounted) return;
       // Use createPostProvider to get optimistic post count updates
       final post = await ref
           .read(createPostProvider.notifier)
@@ -1287,7 +1286,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             nodeId: _nodeId,
           );
 
-      if (post != null && mounted) {
+      if (!mounted) return;
+      if (post != null) {
         // Mark as submitted so images don't get deleted on dispose
         _postSubmitted = true;
 
@@ -1305,15 +1305,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
         Navigator.pop(context);
         showSuccessSnackBar(context, 'Post created!');
-      } else if (mounted) {
+      } else {
         final createState = ref.read(createPostProvider);
         throw Exception(createState.error ?? 'Failed to create post');
       }
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to create post: $e');
-        setState(() => _isSubmitting = false);
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to create post: $e');
+      safeSetState(() => _isSubmitting = false);
     }
   }
 }

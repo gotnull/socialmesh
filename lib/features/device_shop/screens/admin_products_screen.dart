@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
@@ -22,7 +23,8 @@ class AdminProductsScreen extends ConsumerStatefulWidget {
       _AdminProductsScreenState();
 }
 
-class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen> {
+class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen>
+    with LifecycleSafeMixin {
   String _searchQuery = '';
   DeviceCategory? _filterCategory;
   bool _showInactive = true;
@@ -178,6 +180,7 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen> {
   }
 
   Future<void> _toggleActive(ShopProduct product) async {
+    // Capture providers before async gap
     final service = ref.read(deviceShopServiceProvider);
     final user = ref.read(currentUserProvider);
 
@@ -187,6 +190,7 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen> {
       } else {
         await service.reactivateProduct(product.id, adminId: user?.uid);
       }
+      if (!mounted) return;
       ref.invalidate(adminAllProductsProvider);
     } catch (e) {
       if (mounted) {
@@ -196,6 +200,9 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen> {
   }
 
   Future<void> _confirmDelete(ShopProduct product) async {
+    // Capture providers before async gap
+    final service = ref.read(deviceShopServiceProvider);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -218,14 +225,12 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen> {
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       try {
-        final service = ref.read(deviceShopServiceProvider);
         await service.deleteProductPermanently(product.id);
+        if (!mounted) return;
         ref.invalidate(adminAllProductsProvider);
-        if (mounted) {
-          showSuccessSnackBar(context, 'Product deleted');
-        }
+        showSuccessSnackBar(context, 'Product deleted');
       } catch (e) {
         if (mounted) {
           showErrorSnackBar(context, 'Error: $e');
@@ -467,8 +472,8 @@ class AdminProductEditScreen extends ConsumerStatefulWidget {
       _AdminProductEditScreenState();
 }
 
-class _AdminProductEditScreenState
-    extends ConsumerState<AdminProductEditScreen> {
+class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
+    with LifecycleSafeMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -977,27 +982,29 @@ class _AdminProductEditScreenState
                   const SizedBox(height: 32),
 
                   // Save Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _save,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.accentColor,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 50),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _save,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: context.accentColor,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                _isEditing ? 'Save Changes' : 'Create Product',
                               ),
-                            )
-                          : Text(
-                              _isEditing ? 'Save Changes' : 'Create Product',
-                            ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -1184,12 +1191,13 @@ class _AdminProductEditScreenState
       return;
     }
 
-    setState(() => _isLoading = true);
+    // Capture providers before async gap
+    final service = ref.read(deviceShopServiceProvider);
+    final user = ref.read(currentUserProvider);
+
+    safeSetState(() => _isLoading = true);
 
     try {
-      final service = ref.read(deviceShopServiceProvider);
-      final user = ref.read(currentUserProvider);
-
       final tags = _tagsController.text
           .split(',')
           .map((t) => t.trim())
@@ -1264,17 +1272,13 @@ class _AdminProductEditScreenState
         await service.createProduct(product, adminId: user?.uid);
       }
 
+      if (!mounted) return;
       ref.invalidate(adminAllProductsProvider);
 
-      if (mounted) {
-        Navigator.pop(context);
-        showSuccessSnackBar(
-          context,
-          _isEditing ? 'Product updated' : 'Product created',
-        );
-      }
+      safeNavigatorPop();
+      safeShowSnackBar(_isEditing ? 'Product updated' : 'Product created');
     } catch (e) {
-      setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
       if (mounted) {
         showErrorSnackBar(context, 'Error: $e');
       }
@@ -1283,6 +1287,9 @@ class _AdminProductEditScreenState
 
   Future<void> _confirmDelete() async {
     if (widget.product == null) return;
+
+    // Capture providers before async gap
+    final service = ref.read(deviceShopServiceProvider);
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1305,15 +1312,13 @@ class _AdminProductEditScreenState
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       try {
-        final service = ref.read(deviceShopServiceProvider);
         await service.deleteProductPermanently(widget.product!.id);
+        if (!mounted) return;
         ref.invalidate(adminAllProductsProvider);
-        if (mounted) {
-          Navigator.pop(context);
-          showSuccessSnackBar(context, 'Product deleted');
-        }
+        safeNavigatorPop();
+        safeShowSnackBar('Product deleted');
       } catch (e) {
         if (mounted) {
           showErrorSnackBar(context, 'Error: $e');

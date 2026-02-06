@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../services/share_link_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -37,7 +38,8 @@ class PostDetailScreen extends ConsumerStatefulWidget {
   ConsumerState<PostDetailScreen> createState() => _PostDetailScreenState();
 }
 
-class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
+class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
+    with LifecycleSafeMixin<PostDetailScreen> {
   final TextEditingController _commentController = TextEditingController();
   final FocusNode _commentFocusNode = FocusNode();
   String? _replyingToId;
@@ -50,7 +52,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   void initState() {
     super.initState();
     if (widget.focusCommentInput) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      safePostFrame(() {
         _commentFocusNode.requestFocus();
       });
     }
@@ -244,16 +246,19 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       return; // Already deleting or deleted
     }
 
+    // Capture provider before any await
+    final socialService = ref.read(socialServiceProvider);
+
     // Immediately hide the comment (optimistic)
-    setState(() {
+    safeSetState(() {
       _deletingCommentIds.add(commentId);
       _deletedCommentIds.add(commentId); // Hide immediately
     });
 
     try {
-      await ref.read(socialServiceProvider).deleteComment(commentId);
+      await socialService.deleteComment(commentId);
       if (mounted) {
-        setState(() {
+        safeSetState(() {
           _deletingCommentIds.remove(commentId);
           // Keep in _deletedCommentIds to filter stream results
         });
@@ -261,7 +266,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     } catch (e) {
       if (mounted) {
         // Deletion failed - restore the comment
-        setState(() {
+        safeSetState(() {
           _deletingCommentIds.remove(commentId);
           _deletedCommentIds.remove(commentId);
         });
@@ -271,7 +276,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   void _handleReplyTo(CommentWithAuthor comment) {
-    setState(() {
+    safeSetState(() {
       _replyingToId = comment.comment.id;
       _replyingToAuthor = comment.author?.displayName ?? 'Unknown';
     });
@@ -279,7 +284,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   void _cancelReply() {
-    setState(() {
+    safeSetState(() {
       _replyingToId = null;
       _replyingToAuthor = null;
     });
@@ -289,7 +294,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final content = _commentController.text.trim();
     if (content.isEmpty) return;
 
-    // Pre-submission content moderation check
+    // Capture providers before any await
     final moderationService = ref.read(contentModerationServiceProvider);
     final checkResult = await moderationService.checkText(
       content,
@@ -335,7 +340,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
     FocusScope.of(context).unfocus();
 
-    setState(() => _isSubmitting = true);
+    safeSetState(() => _isSubmitting = true);
 
     try {
       await addComment(ref, postId, content, parentId: _replyingToId);
@@ -347,9 +352,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         showErrorSnackBar(context, 'Failed to post comment: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
+      safeSetState(() => _isSubmitting = false);
     }
   }
 
@@ -491,6 +494,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   Future<void> _confirmDeletePost(Post post) async {
+    // Capture providers before any await
+    final socialService = ref.read(socialServiceProvider);
+    final navigator = Navigator.of(context);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -512,11 +519,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       ),
     );
 
-    if (confirmed == true && mounted) {
+    if (!mounted) return;
+    if (confirmed == true) {
       try {
-        final socialService = ref.read(socialServiceProvider);
         await socialService.deletePost(post.id);
 
+        if (!mounted) return;
         // Apply optimistic post count decrement for instant UI feedback
         final currentProfile = ref
             .read(publicProfileStreamProvider(post.authorId))
@@ -526,10 +534,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             .read(profileCountAdjustmentsProvider.notifier)
             .decrement(post.authorId, ProfileCountType.posts, currentCount);
 
-        if (mounted) {
-          Navigator.pop(context);
-          showSuccessSnackBar(context, 'Post deleted');
-        }
+        navigator.pop();
+        showSuccessSnackBar(context, 'Post deleted');
       } catch (e) {
         if (mounted) {
           showErrorSnackBar(context, 'Failed to delete: $e');
@@ -539,6 +545,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   Future<void> _confirmBlockUser(String userId) async {
+    // Capture navigator before any await
+    final navigator = Navigator.of(context);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -562,11 +571,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       ),
     );
 
-    if (confirmed == true && mounted) {
+    if (!mounted) return;
+    if (confirmed == true) {
       try {
         await blockUser(ref, userId);
         if (mounted) {
-          Navigator.pop(context);
+          navigator.pop();
           showSuccessSnackBar(context, 'User blocked');
         }
       } catch (e) {
@@ -578,6 +588,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   Future<void> _reportPost(String postId, String authorId) async {
+    // Capture provider before any await
+    final socialService = ref.read(socialServiceProvider);
+
     final reasonController = TextEditingController();
     final reason = await showDialog<String>(
       context: context,
@@ -613,9 +626,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       ),
     );
 
-    if (reason != null && reason.isNotEmpty && mounted) {
+    if (!mounted) return;
+    if (reason != null && reason.isNotEmpty) {
       try {
-        final socialService = ref.read(socialServiceProvider);
         await socialService.reportPost(postId, reason);
         if (mounted) {
           showSuccessSnackBar(context, 'Report submitted. Thank you.');
@@ -674,7 +687,8 @@ class _CommentTile extends ConsumerStatefulWidget {
   ConsumerState<_CommentTile> createState() => _CommentTileState();
 }
 
-class _CommentTileState extends ConsumerState<_CommentTile> {
+class _CommentTileState extends ConsumerState<_CommentTile>
+    with LifecycleSafeMixin<_CommentTile> {
   bool _isLiked = false;
   int _likeCount = 0;
   bool _isLiking = false;
@@ -687,13 +701,13 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
   }
 
   Future<void> _checkLikeStatus() async {
+    // Capture provider before any await
     final socialService = ref.read(socialServiceProvider);
     final isLiked = await socialService.isCommentLiked(
       widget.comment.comment.id,
     );
-    if (mounted) {
-      setState(() => _isLiked = isLiked);
-    }
+    if (!mounted) return;
+    safeSetState(() => _isLiked = isLiked);
   }
 
   Future<void> _toggleLike() async {
@@ -702,7 +716,10 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
     final currentUser = ref.read(currentUserProvider);
     if (currentUser == null) return;
 
-    setState(() {
+    // Capture provider before any await
+    final socialService = ref.read(socialServiceProvider);
+
+    safeSetState(() {
       _isLiking = true;
       // Optimistic update
       if (_isLiked) {
@@ -715,7 +732,6 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
     });
 
     try {
-      final socialService = ref.read(socialServiceProvider);
       if (_isLiked) {
         await socialService.likeComment(widget.comment.comment.id);
       } else {
@@ -724,7 +740,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
     } catch (e) {
       // Revert on error
       if (mounted) {
-        setState(() {
+        safeSetState(() {
           _isLiked = !_isLiked;
           _likeCount = _isLiked
               ? _likeCount + 1
@@ -732,9 +748,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
         });
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLiking = false);
-      }
+      safeSetState(() => _isLiking = false);
     }
   }
 
@@ -964,26 +978,28 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
     );
   }
 
-  Future<void> _reportComment(BuildContext context) async {
-    final ctx = context;
+  Future<void> _reportComment(BuildContext sheetContext) async {
+    // Capture provider before any await
+    final socialService = ref.read(socialServiceProvider);
+
     final reason = await showDialog<String>(
-      context: context,
+      context: sheetContext,
       builder: (dialogCtx) => _ReportReasonDialog(),
     );
 
-    if (reason != null && reason.isNotEmpty && ctx.mounted) {
+    if (!mounted) return;
+    if (reason != null && reason.isNotEmpty) {
       try {
-        final socialService = ref.read(socialServiceProvider);
         await socialService.reportComment(
           commentId: widget.comment.comment.id,
           reason: reason,
         );
-        if (ctx.mounted) {
-          showSuccessSnackBar(ctx, 'Comment reported');
+        if (mounted) {
+          showSuccessSnackBar(context, 'Comment reported');
         }
       } catch (e) {
-        if (ctx.mounted) {
-          showErrorSnackBar(ctx, 'Failed to report: $e');
+        if (mounted) {
+          showErrorSnackBar(context, 'Failed to report: $e');
         }
       }
     }

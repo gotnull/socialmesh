@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/premium_gating.dart';
 import '../../models/subscription_models.dart';
@@ -34,7 +35,8 @@ class WidgetBuilderScreen extends ConsumerStatefulWidget {
       _WidgetBuilderScreenState();
 }
 
-class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
+class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
+    with LifecycleSafeMixin<WidgetBuilderScreen> {
   final _storageService = WidgetStorageService();
   List<WidgetSchema> _myWidgets = [];
   Set<String> _marketplaceIds = {};
@@ -48,7 +50,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   }
 
   Future<void> _loadWidgets() async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
 
     try {
       await _storageService.init();
@@ -95,7 +97,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
           AppLogging.widgets(
             '[WidgetBuilder] After restore: ${updatedWidgets.length} widgets',
           );
-          setState(() {
+          safeSetState(() {
             _myWidgets = updatedWidgets;
             _marketplaceIds = updatedInstalledIds.toSet();
             _isLoading = false;
@@ -104,14 +106,15 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         }
       }
 
-      setState(() {
+      if (!mounted) return;
+      safeSetState(() {
         _myWidgets = widgets;
         _marketplaceIds = installedIds.toSet();
         _isLoading = false;
       });
     } catch (e) {
       AppLogging.widgets('[WidgetBuilder] Error loading widgets: $e');
-      setState(() {
+      safeSetState(() {
         _isLoading = false;
       });
     }
@@ -733,7 +736,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                 '[WidgetBuilder] Removed $idToRemoveFromProfile from profile',
               );
               // Update state directly without reload (avoids restore logic)
-              setState(() {
+              safeSetState(() {
                 _myWidgets.removeWhere((w) => w.id == schema.id);
                 _marketplaceIds.remove(marketplaceId ?? schema.id);
               });

@@ -2,6 +2,8 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
@@ -969,18 +971,72 @@ class FeedNotifier extends Notifier<FeedState> {
 
   @override
   FeedState build() {
-    ref.onDispose(() => _subscription?.cancel());
+    ref.onDispose(() {
+      AppLogging.social('📰 [FeedNotifier] dispose — cancelling subscription');
+      _subscription?.cancel();
+    });
+
+    if (Firebase.apps.isEmpty) {
+      AppLogging.social(
+        '📰 [FeedNotifier] build() — Firebase not initialized, '
+        'returning isLoading=false',
+      );
+      return const FeedState(isLoading: false);
+    }
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      AppLogging.social(
+        '📰 [FeedNotifier] build() — not signed in, '
+        'returning isLoading=false with empty feed',
+      );
+      return const FeedState(isLoading: false);
+    }
+
+    AppLogging.social(
+      '📰 [FeedNotifier] build() — signed in as uid=${currentUser.uid}, '
+      'starting stream, returning isLoading=true',
+    );
     _startWatching();
     return const FeedState(isLoading: true);
   }
 
   void _startWatching() {
+    if (Firebase.apps.isEmpty) {
+      AppLogging.social(
+        '📰 [FeedNotifier] _startWatching() — Firebase not initialized, '
+        'setting isLoading=false',
+      );
+      state = const FeedState(isLoading: false);
+      return;
+    }
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      AppLogging.social(
+        '📰 [FeedNotifier] _startWatching() — not signed in, '
+        'cancelling subscription, setting isLoading=false',
+      );
+      _subscription?.cancel();
+      _subscription = null;
+      state = const FeedState(isLoading: false);
+      return;
+    }
+
+    AppLogging.social(
+      '📰 [FeedNotifier] _startWatching() — subscribing to watchFeed()',
+    );
+
     final service = ref.read(socialServiceProvider);
     _subscription?.cancel();
     _subscription = service
         .watchFeed(limit: 20)
         .listen(
           (items) {
+            AppLogging.social(
+              '📰 [FeedNotifier] stream emitted — '
+              '${items.length} items, setting isLoading=false',
+            );
             state = FeedState(
               items: items,
               hasMore: items.length >= 20,
@@ -988,6 +1044,7 @@ class FeedNotifier extends Notifier<FeedState> {
             );
           },
           onError: (e) {
+            AppLogging.social('📰 [FeedNotifier] stream error — $e');
             state = FeedState(error: e.toString());
           },
         );
@@ -1077,18 +1134,56 @@ class ExploreNotifier extends Notifier<ExploreState> {
 
   @override
   ExploreState build() {
-    ref.onDispose(() => _subscription?.cancel());
+    ref.onDispose(() {
+      AppLogging.social(
+        '🔍 [ExploreNotifier] dispose — cancelling subscription',
+      );
+      _subscription?.cancel();
+    });
+
+    if (Firebase.apps.isEmpty) {
+      AppLogging.social(
+        '🔍 [ExploreNotifier] build() — Firebase not initialized, '
+        'returning isLoading=false',
+      );
+      return const ExploreState(isLoading: false);
+    }
+
+    // Explore shows public posts — works without auth, but we still need
+    // Firebase to be initialized for Firestore access.
+    AppLogging.social(
+      '🔍 [ExploreNotifier] build() — Firebase ready, '
+      'starting stream, returning isLoading=true',
+    );
     _startWatching();
     return const ExploreState(isLoading: true);
   }
 
   void _startWatching() {
+    if (Firebase.apps.isEmpty) {
+      AppLogging.social(
+        '🔍 [ExploreNotifier] _startWatching() — Firebase not initialized, '
+        'setting isLoading=false',
+      );
+      state = const ExploreState(isLoading: false);
+      return;
+    }
+
+    AppLogging.social(
+      '🔍 [ExploreNotifier] _startWatching() — subscribing to '
+      'watchExplorePosts()',
+    );
+
     final service = ref.read(socialServiceProvider);
     _subscription?.cancel();
     _subscription = service
         .watchExplorePosts(limit: 20)
         .listen(
           (posts) {
+            AppLogging.social(
+              '🔍 [ExploreNotifier] stream emitted — '
+              '${posts.length} posts, setting isLoading=false',
+            );
             state = ExploreState(
               posts: posts,
               hasMore: posts.length >= 20,
@@ -1096,6 +1191,7 @@ class ExploreNotifier extends Notifier<ExploreState> {
             );
           },
           onError: (e) {
+            AppLogging.social('🔍 [ExploreNotifier] stream error — $e');
             state = ExploreState(error: e.toString());
           },
         );

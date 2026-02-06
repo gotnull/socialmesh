@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../models/mesh_models.dart';
 import '../../../models/tapback.dart';
 import '../../../core/theme.dart';
@@ -34,7 +35,8 @@ class MessageContextMenu extends ConsumerStatefulWidget {
   ConsumerState<MessageContextMenu> createState() => _MessageContextMenuState();
 }
 
-class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
+class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
+    with LifecycleSafeMixin {
   bool _tapbackExpanded = false;
   bool _detailsExpanded = false;
 
@@ -239,9 +241,12 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
   }
 
   Future<void> _sendTapback(TapbackType type, String emoji) async {
+    // Capture all provider references BEFORE any async operations
     final protocol = ref.read(protocolServiceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
     final storage = ref.read(tapbackStorageProvider).value;
+    final haptics = ref.read(hapticServiceProvider);
+    final navigator = Navigator.of(context);
 
     if (myNodeNum == null) return;
 
@@ -269,17 +274,17 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
         source: MessageSource.tapback,
       );
 
-      ref.haptics.itemSelect();
+      // Check mounted after await before any UI operations
+      if (!mounted) return;
 
-      if (mounted) {
-        Navigator.pop(context);
-        showSuccessSnackBar(context, 'Tapback sent');
-      }
+      haptics.trigger(HapticType.selection);
+      navigator.pop();
+      showSuccessSnackBar(context, 'Tapback sent');
     } catch (e) {
-      if (mounted) {
-        Navigator.pop(context);
-        showErrorSnackBar(context, 'Failed to send tapback');
-      }
+      if (!mounted) return;
+
+      navigator.pop();
+      showErrorSnackBar(context, 'Failed to send tapback');
     }
   }
 

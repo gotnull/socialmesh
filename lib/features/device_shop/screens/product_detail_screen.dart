@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
@@ -32,7 +33,8 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
       _ProductDetailScreenState();
 }
 
-class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
+class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
+    with LifecycleSafeMixin {
   int _currentImageIndex = 0;
   bool _showFullDescription = false;
   late ScrollController _scrollController;
@@ -1702,7 +1704,8 @@ class _WriteReviewSheet extends ConsumerStatefulWidget {
   ConsumerState<_WriteReviewSheet> createState() => _WriteReviewSheetState();
 }
 
-class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
+class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet>
+    with LifecycleSafeMixin {
   int _rating = 5;
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
@@ -1983,38 +1986,30 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
       }
     }
 
-    setState(() => _isSubmitting = true);
+    safeSetState(() => _isSubmitting = true);
 
     try {
-      await ref
-          .read(deviceShopServiceProvider)
-          .addReview(
-            productId: widget.productId,
-            oderId: widget.userId,
-            userName: widget.userName,
-            userPhotoUrl: widget.userPhotoUrl,
-            rating: _rating,
-            title: _titleController.text.trim().isEmpty
-                ? null
-                : _titleController.text.trim(),
-            body: reviewText,
-          );
+      final shopService = ref.read(deviceShopServiceProvider);
+      await shopService.addReview(
+        productId: widget.productId,
+        oderId: widget.userId,
+        userName: widget.userName,
+        userPhotoUrl: widget.userPhotoUrl,
+        rating: _rating,
+        title: _titleController.text.trim().isEmpty
+            ? null
+            : _titleController.text.trim(),
+        body: reviewText,
+      );
 
-      if (mounted) {
-        Navigator.pop(context);
-        showSuccessSnackBar(
-          context,
-          'Review submitted for moderation. Thank you!',
-        );
-      }
+      safeNavigatorPop();
+      safeShowSnackBar('Review submitted for moderation. Thank you!');
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to submit review: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
+      safeSetState(() => _isSubmitting = false);
     }
   }
 }

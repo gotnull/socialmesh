@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
@@ -25,7 +26,8 @@ class SellerProfileScreen extends ConsumerStatefulWidget {
       _SellerProfileScreenState();
 }
 
-class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen> {
+class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
+    with LifecycleSafeMixin {
   late ScrollController _scrollController;
   bool _showTitle = false;
   String _searchQuery = '';
@@ -606,14 +608,13 @@ class _ContactSection extends ConsumerWidget {
               label: 'Website',
               value: _formatUrl(seller.websiteUrl!),
               onTap: () async {
-                await ref
-                    .read(deviceShopEventLoggerProvider)
-                    .logPartnerContactTap(
-                      sellerId: seller.id,
-                      sellerName: seller.name,
-                      actionType: 'website',
-                      destinationUrl: seller.websiteUrl,
-                    );
+                final logger = ref.read(deviceShopEventLoggerProvider);
+                await logger.logPartnerContactTap(
+                  sellerId: seller.id,
+                  sellerName: seller.name,
+                  actionType: 'website',
+                  destinationUrl: seller.websiteUrl,
+                );
                 await _launchUrl(seller.websiteUrl!);
               },
             ),
@@ -624,14 +625,13 @@ class _ContactSection extends ConsumerWidget {
               label: 'Email',
               value: seller.contactEmail!,
               onTap: () async {
-                await ref
-                    .read(deviceShopEventLoggerProvider)
-                    .logPartnerContactTap(
-                      sellerId: seller.id,
-                      sellerName: seller.name,
-                      actionType: 'email',
-                      destinationUrl: 'mailto:${seller.contactEmail}',
-                    );
+                final logger = ref.read(deviceShopEventLoggerProvider);
+                await logger.logPartnerContactTap(
+                  sellerId: seller.id,
+                  sellerName: seller.name,
+                  actionType: 'email',
+                  destinationUrl: 'mailto:${seller.contactEmail}',
+                );
                 await _launchUrl('mailto:${seller.contactEmail}');
               },
             ),
@@ -728,7 +728,8 @@ class _DiscountCodeSection extends ConsumerStatefulWidget {
       _DiscountCodeSectionState();
 }
 
-class _DiscountCodeSectionState extends ConsumerState<_DiscountCodeSection> {
+class _DiscountCodeSectionState extends ConsumerState<_DiscountCodeSection>
+    with LifecycleSafeMixin {
   bool _isRevealed = false;
 
   @override
@@ -773,14 +774,13 @@ class _DiscountCodeSectionState extends ConsumerState<_DiscountCodeSection> {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () async {
-                    setState(() => _isRevealed = true);
-                    await ref
-                        .read(deviceShopEventLoggerProvider)
-                        .logDiscountReveal(
-                          sellerId: widget.seller.id,
-                          sellerName: widget.seller.name,
-                          code: widget.seller.discountCode!,
-                        );
+                    safeSetState(() => _isRevealed = true);
+                    final logger = ref.read(deviceShopEventLoggerProvider);
+                    await logger.logDiscountReveal(
+                      sellerId: widget.seller.id,
+                      sellerName: widget.seller.name,
+                      code: widget.seller.discountCode!,
+                    );
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: context.accentColor,
@@ -823,13 +823,12 @@ class _DiscountCodeSectionState extends ConsumerState<_DiscountCodeSection> {
                         await Clipboard.setData(
                           ClipboardData(text: widget.seller.discountCode!),
                         );
-                        await ref
-                            .read(deviceShopEventLoggerProvider)
-                            .logDiscountCopy(
-                              sellerId: widget.seller.id,
-                              sellerName: widget.seller.name,
-                              code: widget.seller.discountCode!,
-                            );
+                        final logger = ref.read(deviceShopEventLoggerProvider);
+                        await logger.logDiscountCopy(
+                          sellerId: widget.seller.id,
+                          sellerName: widget.seller.name,
+                          code: widget.seller.discountCode!,
+                        );
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(

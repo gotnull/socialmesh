@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:intl/intl.dart';
 import '../../core/map_config.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/mesh_map_widget.dart';
@@ -23,7 +24,8 @@ class PositionLogScreen extends ConsumerStatefulWidget {
   ConsumerState<PositionLogScreen> createState() => _PositionLogScreenState();
 }
 
-class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
+class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
+    with LifecycleSafeMixin<PositionLogScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
   int? _minAltitude;
@@ -43,7 +45,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
     final index = settings.mapTileStyleIndex;
     if (!mounted) return;
     if (index >= 0 && index < MapTileStyle.values.length) {
-      setState(() => _mapStyle = MapTileStyle.values[index]);
+      safeSetState(() => _mapStyle = MapTileStyle.values[index]);
     }
   }
 
@@ -86,7 +88,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
       _minSatellites != null;
 
   void _clearFilters() {
-    setState(() {
+    safeSetState(() {
       _startDate = null;
       _endDate = null;
       _minAltitude = null;
@@ -115,8 +117,9 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
       },
     );
 
+    if (!mounted) return;
     if (picked != null) {
-      setState(() {
+      safeSetState(() {
         _startDate = picked.start;
         _endDate = picked.end;
       });

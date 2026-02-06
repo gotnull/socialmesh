@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -20,7 +21,7 @@ class ModerationQueueScreen extends ConsumerStatefulWidget {
 }
 
 class _ModerationQueueScreenState extends ConsumerState<ModerationQueueScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, LifecycleSafeMixin {
   late final TabController _tabController;
 
   @override

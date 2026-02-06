@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import 'package:flutter/services.dart';
@@ -22,7 +23,8 @@ class DisplayConfigScreen extends ConsumerStatefulWidget {
       _DisplayConfigScreenState();
 }
 
-class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
+class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
+    with LifecycleSafeMixin {
   bool _isLoading = false;
   int _screenOnSecs = 60;
   int _autoCarouselSecs = 0;
@@ -68,7 +70,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
   }
 
   Future<void> _loadCurrentConfig() async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
 
@@ -91,12 +93,12 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
     }
   }
 
   Future<void> _saveConfig() async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.setDisplayConfig(
@@ -120,14 +122,14 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
 
       if (mounted) {
         showSuccessSnackBar(context, 'Display configuration saved');
-        Navigator.pop(context);
+        safeNavigatorPop();
       }
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
     }
   }
 

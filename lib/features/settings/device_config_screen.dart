@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -22,7 +23,8 @@ class DeviceConfigScreen extends ConsumerStatefulWidget {
   ConsumerState<DeviceConfigScreen> createState() => _DeviceConfigScreenState();
 }
 
-class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
+class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
+    with LifecycleSafeMixin<DeviceConfigScreen> {
   bool _isLoading = false;
   config_pbenum.Config_DeviceConfig_Role? _selectedRole;
   config_pbenum.Config_DeviceConfig_RebroadcastMode? _rebroadcastMode;
@@ -52,7 +54,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   }
 
   void _applyConfig(config_pb.Config_DeviceConfig config) {
-    setState(() {
+    safeSetState(() {
       _selectedRole = config.role;
       _rebroadcastMode = config.rebroadcastMode;
       _serialEnabled = config.serialEnabled;
@@ -71,10 +73,12 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   }
 
   Future<void> _loadCurrentConfig() async {
-    setState(() => _isLoading = true);
+    // Capture providers before any await
+    final protocol = ref.read(protocolServiceProvider);
+    final targetNodeNum = ref.read(remoteAdminTargetProvider);
+
+    safeSetState(() => _isLoading = true);
     try {
-      final protocol = ref.read(protocolServiceProvider);
-      final targetNodeNum = ref.read(remoteAdminTargetProvider);
       final isRemote = targetNodeNum != null;
 
       // For local config, apply cached config immediately if available
@@ -99,16 +103,18 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         );
       }
     } finally {
-      setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
     }
   }
 
   Future<void> _saveConfig() async {
-    setState(() => _isLoading = true);
-    try {
-      final protocol = ref.read(protocolServiceProvider);
-      final targetNodeNum = ref.read(remoteAdminTargetProvider);
+    // Capture providers and UI dependencies before any await
+    final protocol = ref.read(protocolServiceProvider);
+    final targetNodeNum = ref.read(remoteAdminTargetProvider);
+    final navigator = Navigator.of(context);
 
+    safeSetState(() => _isLoading = true);
+    try {
       await protocol.setDeviceConfig(
         role: _selectedRole ?? config_pbenum.Config_DeviceConfig_Role.CLIENT,
         rebroadcastMode:
@@ -128,22 +134,21 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         targetNodeNum: targetNodeNum,
       );
 
-      if (mounted) {
-        final isRemote = targetNodeNum != null;
-        showSuccessSnackBar(
-          context,
-          isRemote
-              ? 'Configuration sent to remote node'
-              : 'Device configuration saved',
-        );
-        Navigator.pop(context);
-      }
+      if (!mounted) return;
+      final isRemote = targetNodeNum != null;
+      showSuccessSnackBar(
+        context,
+        isRemote
+            ? 'Configuration sent to remote node'
+            : 'Device configuration saved',
+      );
+      navigator.pop();
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
     }
   }
 
@@ -464,6 +469,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   }
 
   Future<void> _showNodeDbResetDialog() async {
+    // Capture provider before any await
+    final protocol = ref.read(protocolServiceProvider);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -502,9 +510,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       ),
     );
 
+    if (!mounted) return;
     if (confirmed == true) {
       try {
-        final protocol = ref.read(protocolServiceProvider);
         await protocol.nodeDbReset();
         if (mounted) {
           showSuccessSnackBar(context, 'Node database reset initiated');
@@ -518,6 +526,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   }
 
   Future<void> _showFactoryResetDialog() async {
+    // Capture provider before any await
+    final protocol = ref.read(protocolServiceProvider);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -557,9 +568,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       ),
     );
 
+    if (!mounted) return;
     if (confirmed == true) {
       try {
-        final protocol = ref.read(protocolServiceProvider);
         await protocol.factoryResetDevice();
         if (mounted) {
           showSuccessSnackBar(

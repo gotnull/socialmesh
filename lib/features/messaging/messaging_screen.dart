@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import '../../core/logging.dart';
 import 'package:flutter/material.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -24,12 +25,11 @@ import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/ico_help_system.dart';
-import '../../core/widgets/qr_share_sheet.dart';
+
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/node_avatar.dart';
-import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
-import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
+import '../channels/channel_share_utils.dart';
 import '../../services/messaging/offline_queue_service.dart';
 import '../../services/haptic_service.dart';
 import '../channels/channel_form_screen.dart';
@@ -58,7 +58,8 @@ class MessagingScreen extends ConsumerStatefulWidget {
   ConsumerState<MessagingScreen> createState() => _MessagingScreenState();
 }
 
-class _MessagingScreenState extends ConsumerState<MessagingScreen> {
+class _MessagingScreenState extends ConsumerState<MessagingScreen>
+    with LifecycleSafeMixin {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   ContactFilter _currentFilter = ContactFilter.all;
@@ -765,7 +766,8 @@ class ChatScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen>
+    with LifecycleSafeMixin {
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _messageFocusNode = FocusNode();
@@ -777,11 +779,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _messageFocusNode.requestFocus();
+      if (mounted) {
+        _messageFocusNode.requestFocus();
+      }
     });
-    _searchController.addListener(() {
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() {
+    if (mounted) {
       setState(() => _searchQuery = _searchController.text.toLowerCase());
-    });
+    }
   }
 
   void _dismissKeyboard() {
@@ -814,6 +822,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _messageController.dispose();
     _searchController.dispose();
     _messageFocusNode.dispose();
@@ -827,15 +836,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final responses = settingsService.cannedResponses;
     if (!mounted) return;
 
+    // Capture navigator before showing sheet for safe dismissal
+    final navigator = Navigator.of(context);
+
     AppBottomSheet.show(
       context: context,
       padding: EdgeInsets.zero,
       child: _QuickResponsesSheet(
         responses: responses,
         onSelect: (text) {
-          Navigator.pop(context);
-          _messageController.text = text;
-          _sendMessage();
+          navigator.pop();
+          // Check mounted before accessing controller or calling methods
+          if (mounted) {
+            _messageController.text = text;
+            _sendMessage();
+          }
         },
       ),
     );
@@ -967,19 +982,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   /// Tracks message sent and triggers review prompt at milestones (10, 50, 100 messages)
   Future<void> _trackMessageSentForReview() async {
+    // Capture all provider references BEFORE any async operations
     final reviewServiceAsync = ref.read(appReviewServiceProvider);
     if (!reviewServiceAsync.hasValue) return;
     final reviewService = reviewServiceAsync.value!;
+
+    // Capture context and review prompt before any awaits
+    // This avoids ref/context access after await
+    final capturedContext = context;
+    void promptForReview(String surface) {
+      ref.maybePromptForReview(capturedContext, surface: surface);
+    }
 
     final count = await reviewService.recordMessageSent();
 
     // Prompt at message milestones
     const milestones = [10, 50, 100];
     if (milestones.contains(count) && mounted) {
+      final surface = 'message_milestone_$count';
+
       // Delay to let message UI settle
       await Future<void>.delayed(const Duration(milliseconds: 500));
       if (mounted) {
-        ref.maybePromptForReview(context, surface: 'message_milestone_$count');
+        promptForReview(surface);
       }
     }
   }
@@ -1084,6 +1109,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final targetNode = nodes[message.to];
     final targetName = targetNode?.displayName ?? 'Unknown Node';
 
+    // Capture protocol before showing sheet to avoid ref access in async callback
+    final protocol = ref.read(protocolServiceProvider);
+    // Capture parent context for snackbars (bottom sheet context becomes invalid after pop)
+    final parentContext = context;
+
     AppBottomSheet.show(
       context: context,
       child: Column(
@@ -1106,19 +1136,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () async {
-                Navigator.pop(context);
-                final protocol = ref.read(protocolServiceProvider);
+                Navigator.pop(parentContext);
                 try {
                   await protocol.requestNodeInfo(message.to);
                   if (mounted) {
-                    showInfoSnackBar(
-                      context,
+                    showGlobalInfoSnackBar(
                       'Requested fresh info from $targetName',
                     );
                   }
                 } catch (e) {
                   if (mounted) {
-                    showErrorSnackBar(context, 'Failed to request info: $e');
+                    showGlobalErrorSnackBar('Failed to request info: $e');
                   }
                 }
               },
@@ -1145,8 +1173,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () {
-                Navigator.pop(context);
-                _retryMessage(message);
+                Navigator.pop(parentContext);
+                if (mounted) {
+                  _retryMessage(message);
+                }
               },
               style: OutlinedButton.styleFrom(
                 foregroundColor: context.textSecondary,
@@ -1169,13 +1199,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           // Advanced options link
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const DeviceManagementScreen(),
-                ),
-              );
+              Navigator.pop(parentContext);
+              if (mounted) {
+                Navigator.push(
+                  parentContext,
+                  MaterialPageRoute(
+                    builder: (_) => const DeviceManagementScreen(),
+                  ),
+                );
+              }
             },
             child: Text(
               'Advanced: Reset Node Database',
@@ -1188,31 +1220,38 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _deleteMessage(Message message) {
+    // Capture notifier and parent context before showing dialog
+    // to avoid ref access in dialog callback after potential dispose
+    final messagesNotifier = ref.read(messagesProvider.notifier);
+    final parentContext = context;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: dialogContext.card,
         title: Text(
           'Delete Message',
-          style: TextStyle(color: context.textPrimary),
+          style: TextStyle(color: dialogContext.textPrimary),
         ),
         content: Text(
           'Are you sure you want to delete this message? This only removes it locally.',
-          style: TextStyle(color: context.textSecondary),
+          style: TextStyle(color: dialogContext.textSecondary),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'Cancel',
-              style: TextStyle(color: context.textSecondary),
+              style: TextStyle(color: dialogContext.textSecondary),
             ),
           ),
           TextButton(
             onPressed: () {
-              ref.read(messagesProvider.notifier).deleteMessage(message.id);
-              Navigator.pop(context);
-              showSuccessSnackBar(this.context, 'Message deleted');
+              messagesNotifier.deleteMessage(message.id);
+              Navigator.pop(dialogContext);
+              if (mounted) {
+                showSuccessSnackBar(parentContext, 'Message deleted');
+              }
             },
             child: const Text(
               'Delete',
@@ -1290,13 +1329,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           ListTile(
             leading: Icon(
-              Icons.qr_code,
+              Icons.share,
               color: channel.psk.isNotEmpty
                   ? context.textPrimary
                   : context.textTertiary,
             ),
             title: Text(
-              'Show QR Code',
+              'Share Channel',
               style: TextStyle(
                 color: channel.psk.isNotEmpty
                     ? context.textPrimary
@@ -1307,7 +1346,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onTap: channel.psk.isNotEmpty
                 ? () {
                     Navigator.pop(context);
-                    _showQrCode(context, channel);
+                    _shareChannel(context, channel);
                   }
                 : null,
           ),
@@ -1323,26 +1362,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  void _showQrCode(BuildContext context, ChannelConfig channel) {
-    // Create proper protobuf Channel object for QR code
-    final pbChannel = channel_pb.Channel()
-      ..index = channel.index
-      ..settings = (channel_pb.ChannelSettings()
-        ..name = channel.name
-        ..psk = channel.psk)
-      ..role = channel.index == 0
-          ? channel_pbenum.Channel_Role.PRIMARY
-          : channel_pbenum.Channel_Role.SECONDARY;
-
-    final base64Data = base64Encode(pbChannel.writeToBuffer());
-    final channelUrl = 'socialmesh://channel/$base64Data';
-
-    QrShareSheet.show(
-      context: context,
-      title: widget.title,
-      subtitle: 'Scan to join this channel',
-      qrData: channelUrl,
-      infoText: 'Share this QR code to let others join your channel',
+  void _shareChannel(BuildContext context, ChannelConfig channel) {
+    showChannelShareSheet(
+      context,
+      channel,
+      ref: ref,
+      displayTitle: widget.title,
     );
   }
 
@@ -2246,9 +2271,10 @@ class _QuickResponsesSheet extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: GestureDetector(
               onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
+                // Capture navigator before pop since context becomes invalid after
+                final navigator = Navigator.of(context);
+                navigator.pop();
+                navigator.push(
                   MaterialPageRoute(
                     builder: (context) => const CannedResponsesScreen(),
                   ),
@@ -2404,9 +2430,17 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
               child: ElevatedButton.icon(
                 onPressed: _showKey
                     ? () {
+                        // Capture messenger before pop since context becomes invalid after
+                        final messenger = ScaffoldMessenger.of(context);
                         Clipboard.setData(ClipboardData(text: base64Key));
                         Navigator.pop(context);
-                        showSuccessSnackBar(context, 'Key copied to clipboard');
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: const Text('Key copied to clipboard'),
+                            backgroundColor: AppTheme.successGreen,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
                       }
                     : null,
                 style: ElevatedButton.styleFrom(

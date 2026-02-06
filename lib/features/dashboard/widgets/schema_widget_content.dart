@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
 import '../../widget_builder/models/widget_schema.dart';
@@ -20,7 +21,8 @@ class SchemaWidgetContent extends ConsumerStatefulWidget {
       _SchemaWidgetContentState();
 }
 
-class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent> {
+class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent>
+    with LifecycleSafeMixin {
   final _storageService = WidgetStorageService();
   WidgetSchema? _schema;
   bool _isLoading = true;
@@ -36,20 +38,16 @@ class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent> {
     try {
       await _storageService.init();
       final schema = await _storageService.getWidget(widget.schemaId);
-      if (mounted) {
-        setState(() {
-          _schema = schema;
-          _isLoading = false;
-          _error = schema == null ? 'Widget not found' : null;
-        });
-      }
+      safeSetState(() {
+        _schema = schema;
+        _isLoading = false;
+        _error = schema == null ? 'Widget not found' : null;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _error = 'Failed to load widget';
-        });
-      }
+      safeSetState(() {
+        _isLoading = false;
+        _error = 'Failed to load widget';
+      });
     }
   }
 

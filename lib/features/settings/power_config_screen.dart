@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,7 +22,8 @@ class PowerConfigScreen extends ConsumerStatefulWidget {
   ConsumerState<PowerConfigScreen> createState() => _PowerConfigScreenState();
 }
 
-class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
+class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
+    with LifecycleSafeMixin {
   bool _isPowerSaving = false;
   int _waitBluetoothSecs = 60;
   int _sdsSecs = 3600; // 1 hour
@@ -68,7 +70,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
   }
 
   Future<void> _loadCurrentConfig() async {
-    setState(() => _loading = true);
+    safeSetState(() => _loading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
 
@@ -91,14 +93,14 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      safeSetState(() => _loading = false);
     }
   }
 
   Future<void> _saveConfig() async {
     final protocol = ref.read(protocolServiceProvider);
 
-    setState(() => _saving = true);
+    safeSetState(() => _saving = true);
 
     try {
       await protocol.setPowerConfig(
@@ -115,16 +117,14 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
 
       if (mounted) {
         showSuccessSnackBar(context, 'Power configuration saved');
-        Navigator.pop(context);
+        safeNavigatorPop();
       }
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
+      safeSetState(() => _saving = false);
     }
   }
 

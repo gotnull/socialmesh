@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/status_banner.dart';
@@ -33,7 +34,8 @@ class UserPurchasesAdminScreen extends ConsumerStatefulWidget {
 }
 
 class _UserPurchasesAdminScreenState
-    extends ConsumerState<UserPurchasesAdminScreen> {
+    extends ConsumerState<UserPurchasesAdminScreen>
+    with LifecycleSafeMixin<UserPurchasesAdminScreen> {
   final _searchController = TextEditingController();
   bool _isLoading = false;
   List<_UserWithPurchases> _users = [];
@@ -60,7 +62,7 @@ class _UserPurchasesAdminScreenState
     // Guard against multiple simultaneous loads
     if (_isLoading) return;
 
-    setState(() {
+    safeSetState(() {
       _isLoading = true;
       _error = null;
     });
@@ -277,7 +279,8 @@ class _UserPurchasesAdminScreenState
       // Sort by purchase count (most purchases first)
       users.sort((a, b) => b.purchases.length.compareTo(a.purchases.length));
 
-      setState(() {
+      if (!mounted) return;
+      safeSetState(() {
         _users = users;
         _totalUsers = users.length;
         _usersWithPurchases = usersWithPurchases;
@@ -285,7 +288,7 @@ class _UserPurchasesAdminScreenState
         _isLoading = false;
       });
     } catch (e) {
-      setState(() {
+      safeSetState(() {
         _error = e.toString();
         _isLoading = false;
       });
@@ -740,172 +743,179 @@ class _UserDetailSheet extends StatelessWidget {
             color: context.background,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          child: Column(
-            children: [
-              // Drag handle
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.textTertiary,
-                  borderRadius: BorderRadius.circular(2),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                // Drag handle
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.textTertiary,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
 
-              // Content
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    // User header
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 32,
-                          backgroundColor: context.surface,
-                          backgroundImage: user.avatarUrl != null
-                              ? NetworkImage(user.avatarUrl!)
-                              : null,
-                          child: user.avatarUrl == null
-                              ? Icon(
-                                  Icons.person,
-                                  size: 32,
-                                  color: context.textSecondary,
-                                )
-                              : null,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      user.displayName ?? 'Unknown User',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: context.textPrimary,
+                // Content
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      // User header
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 32,
+                            backgroundColor: context.surface,
+                            backgroundImage: user.avatarUrl != null
+                                ? NetworkImage(user.avatarUrl!)
+                                : null,
+                            child: user.avatarUrl == null
+                                ? Icon(
+                                    Icons.person,
+                                    size: 32,
+                                    color: context.textSecondary,
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        user.displayName ?? 'Unknown User',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: context.textPrimary,
+                                        ),
                                       ),
+                                    ),
+                                    if (user.isAnonymous) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'Anonymous',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.orange.shade700,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                if (user.email != null)
+                                  Text(
+                                    user.email!,
+                                    style: TextStyle(
+                                      color: context.textSecondary,
+                                      fontSize: 14,
                                     ),
                                   ),
-                                  if (user.isAnonymous) ...[
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.orange.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        'Anonymous',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.orange.shade700,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              if (user.email != null)
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // IDs section
+                      _SectionHeader(title: 'Identifiers'),
+                      _InfoTile(
+                        icon: Icons.fingerprint,
+                        label: 'Firebase UID',
+                        value: user.userId,
+                        onCopy: () => _copyToClipboard(context, user.userId),
+                      ),
+                      if (user.revenueCatId != null)
+                        _InfoTile(
+                          icon: Icons.receipt_long,
+                          label: 'RevenueCat ID',
+                          value: user.revenueCatId!,
+                          onCopy: () =>
+                              _copyToClipboard(context, user.revenueCatId!),
+                        ),
+                      if (user.createdAt != null)
+                        _InfoTile(
+                          icon: Icons.calendar_today,
+                          label: 'Member Since',
+                          value: dateFormat.format(user.createdAt!),
+                        ),
+
+                      const SizedBox(height: 24),
+
+                      // Purchases section
+                      _SectionHeader(
+                        title: 'Purchases',
+                        trailing: Text(
+                          '${user.purchases.length} items',
+                          style: TextStyle(
+                            color: context.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+
+                      if (user.purchases.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: context.surface,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.shopping_bag_outlined,
+                                  size: 48,
+                                  color: context.textTertiary,
+                                ),
+                                const SizedBox(height: 8),
                                 Text(
-                                  user.email!,
+                                  'No purchases',
                                   style: TextStyle(
                                     color: context.textSecondary,
-                                    fontSize: 14,
                                   ),
                                 ),
-                            ],
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        ...user.purchases.map(
+                          (purchase) => _PurchaseTile(
+                            purchase: purchase,
+                            dateFormat: dateFormat,
                           ),
                         ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // IDs section
-                    _SectionHeader(title: 'Identifiers'),
-                    _InfoTile(
-                      icon: Icons.fingerprint,
-                      label: 'Firebase UID',
-                      value: user.userId,
-                      onCopy: () => _copyToClipboard(context, user.userId),
-                    ),
-                    if (user.revenueCatId != null)
-                      _InfoTile(
-                        icon: Icons.receipt_long,
-                        label: 'RevenueCat ID',
-                        value: user.revenueCatId!,
-                        onCopy: () =>
-                            _copyToClipboard(context, user.revenueCatId!),
-                      ),
-                    if (user.createdAt != null)
-                      _InfoTile(
-                        icon: Icons.calendar_today,
-                        label: 'Member Since',
-                        value: dateFormat.format(user.createdAt!),
-                      ),
-
-                    const SizedBox(height: 24),
-
-                    // Purchases section
-                    _SectionHeader(
-                      title: 'Purchases',
-                      trailing: Text(
-                        '${user.purchases.length} items',
-                        style: TextStyle(
-                          color: context.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-
-                    if (user.purchases.isEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: context.surface,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Center(
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.shopping_bag_outlined,
-                                size: 48,
-                                color: context.textTertiary,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'No purchases',
-                                style: TextStyle(color: context.textSecondary),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    else
-                      ...user.purchases.map(
-                        (purchase) => _PurchaseTile(
-                          purchase: purchase,
-                          dateFormat: dateFormat,
-                        ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'dart:convert';
@@ -63,7 +64,8 @@ class NodesScreen extends ConsumerStatefulWidget {
   ConsumerState<NodesScreen> createState() => _NodesScreenState();
 }
 
-class _NodesScreenState extends ConsumerState<NodesScreen> {
+class _NodesScreenState extends ConsumerState<NodesScreen>
+    with LifecycleSafeMixin<NodesScreen> {
   String _searchQuery = '';
   NodeFilter _activeFilter = NodeFilter.all;
   NodeSortOrder _sortOrder = NodeSortOrder.lastHeard;
@@ -800,8 +802,10 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
 
   Future<void> _disconnectDevice() async {
     final transport = ref.read(transportProvider);
+    final connectedDevice = ref.read(connectedDeviceProvider.notifier);
     await transport.disconnect();
-    ref.read(connectedDeviceProvider.notifier).setState(null);
+    if (!mounted) return;
+    connectedDevice.setState(null);
   }
 }
 
@@ -1653,7 +1657,8 @@ class NodeDetailsSheet extends ConsumerStatefulWidget {
   ConsumerState<NodeDetailsSheet> createState() => _NodeDetailsSheetState();
 }
 
-class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
+class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
+    with LifecycleSafeMixin<NodeDetailsSheet> {
   bool _isTogglingFavorite = false;
   bool _isTogglingMute = false;
 
@@ -1718,7 +1723,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
   void _toggleFavorite(BuildContext context, MeshNode node) async {
     if (_isTogglingFavorite) return;
 
-    setState(() => _isTogglingFavorite = true);
+    safeSetState(() => _isTogglingFavorite = true);
 
     final protocol = ref.read(protocolServiceProvider);
     final nodesNotifier = ref.read(nodesProvider.notifier);
@@ -1755,9 +1760,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
         showErrorSnackBar(context, 'Failed to update favorite: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isTogglingFavorite = false);
-      }
+      safeSetState(() => _isTogglingFavorite = false);
     }
   }
 
@@ -1779,7 +1782,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
       return;
     }
 
-    setState(() => _isTogglingMute = true);
+    safeSetState(() => _isTogglingMute = true);
 
     final protocol = ref.read(protocolServiceProvider);
     final nodesNotifier = ref.read(nodesProvider.notifier);
@@ -1810,9 +1813,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
         showErrorSnackBar(context, 'Failed to update mute status: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isTogglingMute = false);
-      }
+      safeSetState(() => _isTogglingMute = false);
     }
   }
 
@@ -1864,10 +1865,9 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
           ),
           ElevatedButton(
             onPressed: () async {
+              final protocol = ref.read(protocolServiceProvider);
               Navigator.pop(dialogContext);
               Navigator.pop(context);
-
-              final protocol = ref.read(protocolServiceProvider);
 
               try {
                 await protocol.reboot();
@@ -1945,10 +1945,9 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
           ),
           ElevatedButton(
             onPressed: () async {
+              final protocol = ref.read(protocolServiceProvider);
               Navigator.pop(dialogContext);
               Navigator.pop(context);
-
-              final protocol = ref.read(protocolServiceProvider);
 
               try {
                 await protocol.shutdown();
@@ -2005,11 +2004,10 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(dialogContext);
-              Navigator.pop(context);
-
               final protocol = ref.read(protocolServiceProvider);
               final nodesNotifier = ref.read(nodesProvider.notifier);
+              Navigator.pop(dialogContext);
+              Navigator.pop(context);
 
               try {
                 // Send remove command to device
@@ -2045,9 +2043,8 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
       return;
     }
 
-    Navigator.pop(context);
-
     final protocol = ref.read(protocolServiceProvider);
+    Navigator.pop(context);
 
     try {
       // Sets the connected device's fixed position to this node's location
@@ -2070,9 +2067,8 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
   }
 
   void _requestUserInfo(BuildContext context, MeshNode node) async {
-    Navigator.pop(context);
-
     final protocol = ref.read(protocolServiceProvider);
+    Navigator.pop(context);
 
     try {
       // Request node info to refresh PKI keys and user data
@@ -2110,9 +2106,8 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
   }
 
   void _exchangePositions(BuildContext context, MeshNode node) async {
-    Navigator.pop(context);
-
     final protocol = ref.read(protocolServiceProvider);
+    Navigator.pop(context);
 
     try {
       // Request position from the target node

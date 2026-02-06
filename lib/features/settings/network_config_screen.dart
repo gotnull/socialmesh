@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,7 +22,8 @@ class NetworkConfigScreen extends ConsumerStatefulWidget {
       _NetworkConfigScreenState();
 }
 
-class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
+class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
+    with LifecycleSafeMixin {
   bool _wifiEnabled = false;
   bool _ethEnabled = false;
   bool _udpEnabled = false;
@@ -71,7 +73,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
   }
 
   Future<void> _loadCurrentConfig() async {
-    setState(() => _loading = true);
+    safeSetState(() => _loading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
 
@@ -94,14 +96,14 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      safeSetState(() => _loading = false);
     }
   }
 
   Future<void> _saveConfig() async {
     final protocol = ref.read(protocolServiceProvider);
 
-    setState(() => _saving = true);
+    safeSetState(() => _saving = true);
 
     try {
       final ntp = _ntpController.text.trim();
@@ -119,16 +121,14 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
 
       if (mounted) {
         showSuccessSnackBar(context, 'Network configuration saved');
-        Navigator.pop(context);
+        safeNavigatorPop();
       }
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
+      safeSetState(() => _saving = false);
     }
   }
 

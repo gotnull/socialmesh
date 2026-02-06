@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
@@ -223,15 +224,18 @@ class _CommentLikeButton extends ConsumerStatefulWidget {
   ConsumerState<_CommentLikeButton> createState() => _CommentLikeButtonState();
 }
 
-class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton> {
+class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton>
+    with LifecycleSafeMixin {
   bool _isLiking = false;
 
   Future<void> _handleLike() async {
     if (widget.currentUserId == null || _isLiking) return;
 
-    setState(() => _isLiking = true);
+    safeSetState(() => _isLiking = true);
     try {
-      final socialService = ref.read(socialServiceProvider);
+      final socialService = ref.read(
+        socialServiceProvider,
+      ); // captured before await
       // Check current like status and toggle
       final currentlyLiked = await socialService.isCommentLiked(
         widget.commentId,
@@ -246,9 +250,7 @@ class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton> {
         showErrorSnackBar(context, 'Failed: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLiking = false);
-      }
+      safeSetState(() => _isLiking = false);
     }
   }
 

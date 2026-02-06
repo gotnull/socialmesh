@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,7 +23,8 @@ class BluetoothConfigScreen extends ConsumerStatefulWidget {
       _BluetoothConfigScreenState();
 }
 
-class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
+class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
+    with LifecycleSafeMixin {
   bool _enabled = true;
   config_pbenum.Config_BluetoothConfig_PairingMode _mode =
       config_pbenum.Config_BluetoothConfig_PairingMode.FIXED_PIN;
@@ -56,7 +58,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
   }
 
   Future<void> _loadCurrentConfig() async {
-    setState(() => _loading = true);
+    safeSetState(() => _loading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
 
@@ -79,7 +81,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      safeSetState(() => _loading = false);
     }
   }
 
@@ -95,7 +97,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
 
     final protocol = ref.read(protocolServiceProvider);
 
-    setState(() => _saving = true);
+    safeSetState(() => _saving = true);
 
     try {
       await protocol.setBluetoothConfig(
@@ -106,16 +108,14 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
 
       if (mounted) {
         showSuccessSnackBar(context, 'Bluetooth configuration saved');
-        Navigator.pop(context);
+        safeNavigatorPop();
       }
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
+      safeSetState(() => _saving = false);
     }
   }
 

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../utils/snackbar.dart';
 import '../../../providers/subscription_providers.dart';
@@ -21,15 +22,15 @@ class RestorePurchasesButton extends ConsumerStatefulWidget {
       _RestorePurchasesButtonState();
 }
 
-class _RestorePurchasesButtonState
-    extends ConsumerState<RestorePurchasesButton> {
+class _RestorePurchasesButtonState extends ConsumerState<RestorePurchasesButton>
+    with LifecycleSafeMixin<RestorePurchasesButton> {
   bool _isLocalLoading = false;
 
   Future<void> _onPressed(BuildContext context) async {
-    setState(() => _isLocalLoading = true);
+    safeSetState(() => _isLocalLoading = true);
     bool success = false;
 
-    // Capture state before restore to detect new purchases
+    // Capture state and providers before any await
     final stateBefore = ref.read(purchaseStateProvider);
     final countBefore = stateBefore.purchasedProductIds.length;
 
@@ -47,9 +48,9 @@ class _RestorePurchasesButtonState
 
     if (!mounted) return;
 
-    setState(() => _isLocalLoading = false);
+    safeSetState(() => _isLocalLoading = false);
 
-    // Check if new purchases were restored
+    // Check if new purchases were restored (use captured notifier's state)
     final stateAfter = ref.read(purchaseStateProvider);
     final countAfter = stateAfter.purchasedProductIds.length;
     final restoredNew = countAfter > countBefore;
@@ -63,8 +64,7 @@ class _RestorePurchasesButtonState
     }
 
     // Post-frame callbacks avoid BuildContext use across async gaps
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+    safePostFrame(() {
       if (success && restoredNew) {
         // New purchases were restored
         showSuccessSnackBar(context, 'Purchases restored successfully!');

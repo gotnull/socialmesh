@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/auto_scroll_text.dart';
@@ -20,7 +21,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, LifecycleSafeMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   double _pageOffset = 0.0;
@@ -164,18 +165,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   }
 
   Future<void> _connectDevice() async {
-    final result = await Navigator.of(context).push<DeviceInfo>(
+    // Capture providers before async gap
+    final navigator = Navigator.of(context);
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+
+    final result = await navigator.push<DeviceInfo>(
       MaterialPageRoute(
         builder: (context) => const ScannerScreen(isOnboarding: true),
       ),
     );
 
     if (result != null && mounted) {
-      final settings = await ref.read(settingsServiceProvider.future);
+      final settings = await settingsFuture;
       await settings.setOnboardingComplete(true);
 
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/main');
+        navigator.pushReplacementNamed('/main');
       }
     }
   }
@@ -472,56 +477,58 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   Widget _buildActionButton(Color accentColor) {
     final isLastPage = _pages[_currentPage].isLastPage;
 
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [
-              accentColor,
-              Color.lerp(accentColor, AppTheme.primaryPurple, 0.5) ??
-                  accentColor,
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: accentColor.withValues(alpha: 0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ElevatedButton(
-          onPressed: _nextPage,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            shadowColor: Colors.transparent,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 0,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                isLastPage ? 'Connect Device' : 'Continue',
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              if (isLastPage) ...[
-                const SizedBox(width: 8),
-                const Icon(Icons.bluetooth, size: 20),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 56),
+      child: SizedBox(
+        width: double.infinity,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                accentColor,
+                Color.lerp(accentColor, AppTheme.primaryPurple, 0.5) ??
+                    accentColor,
               ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
             ],
+          ),
+          child: ElevatedButton(
+            onPressed: _nextPage,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 0,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  isLastPage ? 'Connect Device' : 'Continue',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (isLastPage) ...[
+                  const SizedBox(width: 8),
+                  const Icon(Icons.bluetooth, size: 20),
+                ],
+              ],
+            ),
           ),
         ),
       ),

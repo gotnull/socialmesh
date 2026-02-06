@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 
 import '../../core/theme.dart';
 import '../../core/transport.dart';
@@ -179,7 +180,8 @@ class ChannelWizardScreen extends ConsumerStatefulWidget {
       _ChannelWizardScreenState();
 }
 
-class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
+class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
+    with LifecycleSafeMixin {
   final _pageController = PageController();
   int _currentStep = 0;
   final int _totalSteps = 4;
@@ -328,13 +330,15 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
       return;
     }
 
-    setState(() {
+    // Capture providers before async gap
+    final protocol = ref.read(protocolServiceProvider);
+    final channelsNotifier = ref.read(channelsProvider.notifier);
+
+    safeSetState(() {
       _isSaving = true;
     });
 
     try {
-      final protocol = ref.read(protocolServiceProvider);
-
       final channel = ChannelConfig(
         index: widget.channelIndex,
         name: _nameController.text.trim(),
@@ -346,17 +350,18 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
       );
 
       await protocol.setChannel(channel);
+      if (!mounted) return;
 
       // Update local state
-      ref.read(channelsProvider.notifier).setChannel(channel);
+      channelsNotifier.setChannel(channel);
 
-      setState(() {
+      safeSetState(() {
         _saveComplete = true;
       });
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to create channel: $e');
-        setState(() {
+        safeSetState(() {
           _isSaving = false;
         });
       }

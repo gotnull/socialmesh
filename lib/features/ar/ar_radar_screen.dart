@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
@@ -30,7 +31,7 @@ class ARRadarScreen extends ConsumerStatefulWidget {
 }
 
 class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, LifecycleSafeMixin<ARRadarScreen> {
   // Camera
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
@@ -126,17 +127,18 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
       }
 
       if (mounted) {
-        setState(() => _isCameraInitialized = true);
+        safeSetState(() => _isCameraInitialized = true);
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _cameraError = 'Camera error: $e');
+        safeSetState(() => _cameraError = 'Camera error: $e');
       }
     }
   }
 
   Future<void> _startAR() async {
-    await ref.read(arStateProvider.notifier).start();
+    final notifier = ref.read(arStateProvider.notifier);
+    await notifier.start();
   }
 
   void _onTap(TapDownDetails details, Size size) {

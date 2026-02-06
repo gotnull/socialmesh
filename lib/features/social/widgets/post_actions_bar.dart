@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../models/social.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
@@ -95,7 +96,7 @@ class _LikeButton extends ConsumerStatefulWidget {
 }
 
 class _LikeButtonState extends ConsumerState<_LikeButton>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, LifecycleSafeMixin<_LikeButton> {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   bool _isLiking = false;
@@ -131,7 +132,10 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
 
     if (_isLiking) return;
 
-    setState(() {
+    // Capture provider before any await
+    final service = ref.read(socialServiceProvider);
+
+    safeSetState(() {
       _isLiking = true;
       // Optimistic update
       _optimisticIsLiked = !currentlyLiked;
@@ -147,7 +151,6 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
     _controller.reverse();
 
     try {
-      final service = ref.read(socialServiceProvider);
       if (_optimisticIsLiked!) {
         await service.likePost(widget.post.id);
       } else {
@@ -156,7 +159,7 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
     } catch (e) {
       // Revert optimistic update on error
       if (mounted) {
-        setState(() {
+        safeSetState(() {
           _optimisticIsLiked = currentlyLiked;
           _optimisticLikeCount = widget.post.likeCount;
         });

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
@@ -20,7 +21,7 @@ class LinkDeviceBanner extends ConsumerStatefulWidget {
 }
 
 class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, LifecycleSafeMixin {
   bool _isDismissed = false;
   bool _isLinking = false;
   late AnimationController _animController;
@@ -59,11 +60,9 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
 
     final prefs = await SharedPreferences.getInstance();
     final dismissed = prefs.getBool(_getDismissKey(nodeNum)) ?? false;
-    if (mounted) {
-      setState(() => _isDismissed = dismissed);
-      if (!dismissed) {
-        _animController.forward();
-      }
+    safeSetState(() => _isDismissed = dismissed);
+    if (!dismissed) {
+      _animController.forward();
     }
   }
 
@@ -71,15 +70,13 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
     await _animController.reverse();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_getDismissKey(nodeNum), true);
-    if (mounted) {
-      setState(() => _isDismissed = true);
-    }
+    safeSetState(() => _isDismissed = true);
   }
 
   Future<void> _linkDevice(int nodeNum) async {
     if (_isLinking) return;
 
-    setState(() => _isLinking = true);
+    safeSetState(() => _isLinking = true);
 
     try {
       await linkNode(ref, nodeNum, setPrimary: true);
@@ -90,7 +87,7 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to link: $e');
-        setState(() => _isLinking = false);
+        safeSetState(() => _isLinking = false);
       }
     }
   }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../models/telemetry_log.dart';
@@ -20,8 +21,8 @@ class DeviceMetricsLogScreen extends ConsumerStatefulWidget {
       _DeviceMetricsLogScreenState();
 }
 
-class _DeviceMetricsLogScreenState
-    extends ConsumerState<DeviceMetricsLogScreen> {
+class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
+    with LifecycleSafeMixin<DeviceMetricsLogScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
   bool _showGraph = false;
@@ -43,7 +44,7 @@ class _DeviceMetricsLogScreenState
   bool get _hasActiveFilters => _startDate != null || _endDate != null;
 
   void _clearFilters() {
-    setState(() {
+    safeSetState(() {
       _startDate = null;
       _endDate = null;
     });
@@ -69,8 +70,8 @@ class _DeviceMetricsLogScreenState
       },
     );
 
-    if (picked != null) {
-      setState(() {
+    if (picked != null && mounted) {
+      safeSetState(() {
         _startDate = picked.start;
         _endDate = picked.end;
       });

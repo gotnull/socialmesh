@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import 'package:flutter/services.dart';
@@ -30,7 +31,8 @@ class IftttConfigScreen extends ConsumerStatefulWidget {
   ConsumerState<IftttConfigScreen> createState() => _IftttConfigScreenState();
 }
 
-class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
+class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
+    with LifecycleSafeMixin<IftttConfigScreen> {
   final _webhookKeyController = TextEditingController();
   final _geofenceRadiusController = TextEditingController();
   final _geofenceLatController = TextEditingController();
@@ -45,6 +47,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   bool _temperatureAlert = false;
   bool _sosEmergency = true;
   bool _isTesting = false;
+  bool _isSaving = false;
   int? _geofenceNodeNum;
   String? _geofenceNodeName;
   int _geofenceThrottleMinutes = 30;
@@ -68,7 +71,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
     _geofenceLatController.text = config.geofenceLat?.toStringAsFixed(6) ?? '';
     _geofenceLonController.text = config.geofenceLon?.toStringAsFixed(6) ?? '';
 
-    setState(() {
+    safeSetState(() {
       _enabled = config.enabled;
       _messageReceived = config.messageReceived;
       _nodeOnline = config.nodeOnline;
@@ -86,19 +89,22 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   }
 
   Future<void> _loadMapStyle() async {
-    final settings = await ref.read(settingsServiceProvider.future);
-    final index = settings.mapTileStyleIndex;
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final settings = await settingsFuture;
     if (!mounted) return;
+    final index = settings.mapTileStyleIndex;
     if (index >= 0 && index < MapTileStyle.values.length) {
-      setState(() => _mapStyle = MapTileStyle.values[index]);
+      safeSetState(() => _mapStyle = MapTileStyle.values[index]);
     }
   }
 
   Future<void> _saveConfig() async {
-    // Check premium when enabling IFTTT
+    // Capture provider refs before awaits
     final hasPremium = ref.read(
       hasFeatureProvider(PremiumFeature.iftttIntegration),
     );
+    final iftttService = ref.read(iftttServiceProvider);
+    final user = ref.read(currentUserProvider);
     if (_enabled && !hasPremium) {
       showPremiumInfoSheet(
         context: context,
@@ -117,8 +123,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       );
       return;
     }
-
-    final iftttService = ref.read(iftttServiceProvider);
 
     final config = IftttConfig(
       enabled: _enabled,
@@ -140,21 +144,29 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       geofenceThrottleMinutes: _geofenceThrottleMinutes,
     );
 
-    await iftttService.saveConfig(config);
+    safeSetState(() => _isSaving = true);
 
-    // Sync to cloud if signed in
-    final user = ref.read(currentUserProvider);
-    if (user != null) {
-      ref
-          .read(userProfileProvider.notifier)
-          .updatePreferences(
-            UserPreferences(iftttConfigJson: iftttService.toJsonString()),
-          );
-    }
+    try {
+      await iftttService.saveConfig(config);
 
-    if (mounted) {
+      if (!mounted) return;
+
+      // Sync to cloud if signed in
+      if (user != null) {
+        ref
+            .read(userProfileProvider.notifier)
+            .updatePreferences(
+              UserPreferences(iftttConfigJson: iftttService.toJsonString()),
+            );
+      }
+
       showSuccessSnackBar(context, 'IFTTT settings saved');
       Navigator.pop(context);
+    } catch (e) {
+      safeSetState(() => _isSaving = false);
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to save IFTTT settings');
+      }
     }
   }
 
@@ -164,7 +176,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       return;
     }
 
-    setState(() => _isTesting = true);
+    safeSetState(() => _isTesting = true);
 
     final iftttService = ref.read(iftttServiceProvider);
     final tempConfig = IftttConfig(
@@ -189,21 +201,20 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
     await iftttService.saveConfig(tempConfig);
 
     final success = await iftttService.testWebhook();
+    if (!mounted) return;
 
-    setState(() => _isTesting = false);
+    safeSetState(() => _isTesting = false);
 
-    if (mounted) {
-      if (success) {
-        showSuccessSnackBar(
-          context,
-          'Test webhook sent! Check your IFTTT applet.',
-        );
-      } else {
-        showErrorSnackBar(
-          context,
-          'Failed to send test webhook. Check your key.',
-        );
-      }
+    if (success) {
+      showSuccessSnackBar(
+        context,
+        'Test webhook sent! Check your IFTTT applet.',
+      );
+    } else {
+      showErrorSnackBar(
+        context,
+        'Failed to send test webhook. Check your key.',
+      );
     }
   }
 
@@ -228,7 +239,16 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
         title: 'IFTTT Integration',
         actions: [
           if (hasPremium)
-            TextButton(onPressed: _saveConfig, child: const Text('Save'))
+            TextButton(
+              onPressed: _isSaving ? null : _saveConfig,
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Save'),
+            )
           else
             TextButton.icon(
               onPressed: () => showPremiumInfoSheet(
@@ -310,7 +330,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
               value: _enabled,
               onChanged: (value) {
                 HapticFeedback.selectionClick();
-                setState(() => _enabled = value);
+                safeSetState(() => _enabled = value);
               },
             )
           : GestureDetector(
@@ -410,7 +430,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             value: _messageReceived,
             onChanged: (value) {
               HapticFeedback.selectionClick();
-              setState(() => _messageReceived = value);
+              safeSetState(() => _messageReceived = value);
             },
           ),
         ),
@@ -422,7 +442,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             value: _sosEmergency,
             onChanged: (value) {
               HapticFeedback.selectionClick();
-              setState(() => _sosEmergency = value);
+              safeSetState(() => _sosEmergency = value);
             },
           ),
         ),
@@ -441,7 +461,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             value: _nodeOnline,
             onChanged: (value) {
               HapticFeedback.selectionClick();
-              setState(() => _nodeOnline = value);
+              safeSetState(() => _nodeOnline = value);
             },
           ),
         ),
@@ -453,7 +473,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             value: _nodeOffline,
             onChanged: (value) {
               HapticFeedback.selectionClick();
-              setState(() => _nodeOffline = value);
+              safeSetState(() => _nodeOffline = value);
             },
           ),
         ),
@@ -472,7 +492,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             value: _batteryLow,
             onChanged: (value) {
               HapticFeedback.selectionClick();
-              setState(() => _batteryLow = value);
+              safeSetState(() => _batteryLow = value);
             },
           ),
         ),
@@ -545,7 +565,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     divisions: 9,
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
-                      setState(() => _batteryThreshold = value.round());
+                      safeSetState(() => _batteryThreshold = value.round());
                     },
                   ),
                 ),
@@ -579,7 +599,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             value: _temperatureAlert,
             onChanged: (value) {
               HapticFeedback.selectionClick();
-              setState(() => _temperatureAlert = value);
+              safeSetState(() => _temperatureAlert = value);
             },
           ),
         ),
@@ -652,7 +672,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     divisions: 10,
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
-                      setState(() => _temperatureThreshold = value);
+                      safeSetState(() => _temperatureThreshold = value);
                     },
                   ),
                 ),
@@ -693,7 +713,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             value: _positionUpdate,
             onChanged: (value) {
               HapticFeedback.selectionClick();
-              setState(() => _positionUpdate = value);
+              safeSetState(() => _positionUpdate = value);
             },
           ),
         ),
@@ -922,7 +942,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                           icon: const Icon(Icons.close, size: 18),
                           color: context.textTertiary,
                           visualDensity: VisualDensity.compact,
-                          onPressed: () => setState(() {
+                          onPressed: () => safeSetState(() {
                             _geofenceNodeNum = null;
                             _geofenceNodeName = null;
                           }),
@@ -1015,7 +1035,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                         ],
                         onChanged: (value) {
                           if (value != null) {
-                            setState(() => _geofenceThrottleMinutes = value);
+                            safeSetState(
+                              () => _geofenceThrottleMinutes = value,
+                            );
                           }
                         },
                       ),
@@ -1067,7 +1089,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   }
 
   Future<void> _openGeofencePicker() async {
-    final result = await Navigator.of(context).push<GeofenceResult>(
+    final navigator = Navigator.of(context);
+    final result = await navigator.push<GeofenceResult>(
       MaterialPageRoute(
         builder: (context) => GeofencePickerScreen(
           initialLat: double.tryParse(_geofenceLatController.text),
@@ -1079,8 +1102,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       ),
     );
 
+    if (!mounted) return;
     if (result != null) {
-      setState(() {
+      safeSetState(() {
         _geofenceLatController.text = result.latitude.toStringAsFixed(6);
         _geofenceLonController.text = result.longitude.toStringAsFixed(6);
         _geofenceRadiusController.text = result.radiusMeters.toStringAsFixed(0);

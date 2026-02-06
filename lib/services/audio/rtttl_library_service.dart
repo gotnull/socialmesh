@@ -120,6 +120,12 @@ class RtttlLibraryService {
         .length;
   }
 
+  /// Get the total count of all tones in the library (including incompatible)
+  Future<int> getTotalToneCount() async {
+    await _ensureLoaded();
+    return (_cachedTones ?? []).length;
+  }
+
   /// Get only built-in tones
   Future<List<RtttlLibraryItem>> getBuiltinTones() async {
     await _ensureLoaded();

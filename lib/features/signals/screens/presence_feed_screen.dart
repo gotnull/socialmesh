@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
@@ -84,7 +85,8 @@ class PresenceFeedScreen extends ConsumerStatefulWidget {
   ConsumerState<PresenceFeedScreen> createState() => _PresenceFeedScreenState();
 }
 
-class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
+class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen>
+    with LifecycleSafeMixin<PresenceFeedScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
 
@@ -156,7 +158,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     HapticFeedback.mediumImpact();
 
     // Start refresh animation
-    setState(() => _isRefreshing = true);
+    safeSetState(() => _isRefreshing = true);
 
     // Small delay to let the slide-out animation start
     await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -164,9 +166,8 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     await ref.read(signalFeedProvider.notifier).refresh();
 
     // End refresh animation (triggers slide-back-in)
-    if (mounted) {
-      setState(() => _isRefreshing = false);
-    }
+    if (!mounted) return;
+    safeSetState(() => _isRefreshing = false);
   }
 
   void _openCreateSignal() {
@@ -360,6 +361,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
         stepKeys: const {},
         child: GlassScaffold(
           title: 'Presence${allCount > 0 ? ' ($allCount)' : ''}',
+
           leading: const HamburgerMenuButton(),
           actions: [
             // Go Active button
@@ -1198,7 +1200,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     ref.read(signalViewModeProvider.notifier).setMode(SignalViewMode.map);
 
     // Ensure the map widget is built, then call focus on it
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    safePostFrame(() {
       final mapState = _mapKey.currentState;
       if (mapState != null) {
         try {
@@ -1211,6 +1213,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   Future<void> _deleteSignal(Post signal) async {
+    // Capture provider before any await
+    final feedNotifier = ref.read(signalFeedProvider.notifier);
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1240,12 +1245,16 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
       ),
     );
 
+    if (!mounted) return;
     if (confirm == true) {
-      await ref.read(signalFeedProvider.notifier).deleteSignal(signal.id);
+      await feedNotifier.deleteSignal(signal.id);
     }
   }
 
   Future<void> _reportSignal(Post signal) async {
+    // Capture provider before any await
+    final socialService = ref.read(socialServiceProvider);
+
     final reason = await AppBottomSheet.showActions<String>(
       context: context,
       header: Text(
@@ -1290,9 +1299,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
       ],
     );
 
-    if (reason != null && mounted) {
+    if (!mounted) return;
+    if (reason != null) {
       try {
-        final socialService = ref.read(socialServiceProvider);
         await socialService.reportSignal(
           signalId: signal.id,
           reason: reason,

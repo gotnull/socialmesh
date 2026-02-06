@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/premium_gating.dart';
@@ -31,7 +32,8 @@ class WidgetImportScreen extends ConsumerStatefulWidget {
   ConsumerState<WidgetImportScreen> createState() => _WidgetImportScreenState();
 }
 
-class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
+class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
+    with LifecycleSafeMixin<WidgetImportScreen> {
   WidgetSchema? _widget;
   bool _isLoading = true;
   String? _error;
@@ -45,7 +47,7 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
   }
 
   Future<void> _loadWidget() async {
-    setState(() {
+    safeSetState(() {
       _isLoading = true;
       _error = null;
     });
@@ -57,9 +59,10 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
             .collection('shared_widgets')
             .doc(widget.firestoreId)
             .get();
+        if (!mounted) return;
 
         if (!doc.exists) {
-          setState(() {
+          safeSetState(() {
             _error = 'Widget not found or has been deleted';
             _isLoading = false;
           });
@@ -73,7 +76,7 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
 
         final importedWidget = WidgetSchema.fromJson(data);
 
-        setState(() {
+        safeSetState(() {
           _widget = importedWidget;
           _isLoading = false;
         });
@@ -89,21 +92,21 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
         // Create widget from JSON with new ID for import
         final importedWidget = WidgetSchema.fromJson(json);
 
-        setState(() {
+        safeSetState(() {
           _widget = importedWidget;
           _isLoading = false;
         });
 
         AppLogging.widgets('Imported widget schema: ${_widget!.name}');
       } else {
-        setState(() {
+        safeSetState(() {
           _error = 'No widget data provided';
           _isLoading = false;
         });
       }
     } catch (e) {
       AppLogging.widgets('Failed to import widget: $e');
-      setState(() {
+      safeSetState(() {
         _error = 'Failed to load widget: $e';
         _isLoading = false;
       });
@@ -113,8 +116,11 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
   Future<void> _importWidget() async {
     if (_widget == null) return;
 
+    // Capture provider refs before awaits
+    final purchaseNotifier = ref.read(purchaseStateProvider.notifier);
+
     // Refresh purchase state to ensure we have latest (important for deep links)
-    await ref.read(purchaseStateProvider.notifier).refresh();
+    await purchaseNotifier.refresh();
     if (!mounted) return;
 
     // Check entitlement before allowing import
@@ -131,37 +137,38 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
     try {
       await _storageService.init();
       await _storageService.saveWidget(_widget!);
+      if (!mounted) return;
 
       // Trigger refresh on any watching screens
       ref.read(widgetRefreshTriggerProvider.notifier).refresh();
 
-      if (mounted) {
-        final navigator = Navigator.of(context);
-        showActionSnackBar(
-          context,
-          'Widget imported successfully',
-          actionLabel: 'View',
-          onAction: () {
-            navigator.push(
-              MaterialPageRoute(builder: (_) => const WidgetBuilderScreen()),
-            );
-          },
-          type: SnackBarType.success,
-        );
-        navigator.pop();
-      }
+      final navigator = Navigator.of(context);
+      showActionSnackBar(
+        context,
+        'Widget imported successfully',
+        actionLabel: 'View',
+        onAction: () {
+          navigator.push(
+            MaterialPageRoute(builder: (_) => const WidgetBuilderScreen()),
+          );
+        },
+        type: SnackBarType.success,
+      );
+      navigator.pop();
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to import: $e');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to import: $e');
     }
   }
 
   Future<void> _editBeforeImport() async {
     if (_widget == null) return;
 
+    // Capture provider refs before awaits
+    final purchaseNotifier = ref.read(purchaseStateProvider.notifier);
+
     // Refresh purchase state to ensure we have latest (important for deep links)
-    await ref.read(purchaseStateProvider.notifier).refresh();
+    await purchaseNotifier.refresh();
     if (!mounted) return;
 
     // Check entitlement before allowing edit/import
@@ -175,7 +182,8 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
       if (!purchased || !mounted) return;
     }
 
-    final result = await Navigator.of(context).push<WidgetSchema>(
+    final navigator = Navigator.of(context);
+    final result = await navigator.push<WidgetSchema>(
       MaterialPageRoute(
         builder: (context) => WidgetEditorScreen(initialSchema: _widget),
       ),
@@ -183,7 +191,6 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen> {
 
     if (result != null && mounted) {
       // Widget was saved in editor, just pop back
-      final navigator = Navigator.of(context);
       showActionSnackBar(
         context,
         'Widget imported successfully',

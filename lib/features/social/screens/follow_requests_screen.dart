@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
@@ -172,7 +173,8 @@ class _RequestTile extends ConsumerStatefulWidget {
   ConsumerState<_RequestTile> createState() => _RequestTileState();
 }
 
-class _RequestTileState extends ConsumerState<_RequestTile> {
+class _RequestTileState extends ConsumerState<_RequestTile>
+    with LifecycleSafeMixin {
   bool _isAccepting = false;
   bool _isDeclining = false;
 
@@ -180,25 +182,21 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
 
   Future<void> _handleAccept() async {
     if (_isProcessing) return;
-    setState(() => _isAccepting = true);
+    safeSetState(() => _isAccepting = true);
     try {
       await widget.onAccept();
     } finally {
-      if (mounted) {
-        setState(() => _isAccepting = false);
-      }
+      safeSetState(() => _isAccepting = false);
     }
   }
 
   Future<void> _handleDecline() async {
     if (_isProcessing) return;
-    setState(() => _isDeclining = true);
+    safeSetState(() => _isDeclining = true);
     try {
       await widget.onDecline();
     } finally {
-      if (mounted) {
-        setState(() => _isDeclining = false);
-      }
+      safeSetState(() => _isDeclining = false);
     }
   }
 

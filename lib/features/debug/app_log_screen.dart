@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -140,7 +141,8 @@ class AppLogScreen extends ConsumerStatefulWidget {
   ConsumerState<AppLogScreen> createState() => _AppLogScreenState();
 }
 
-class _AppLogScreenState extends ConsumerState<AppLogScreen> {
+class _AppLogScreenState extends ConsumerState<AppLogScreen>
+    with LifecycleSafeMixin {
   final ScrollController _scrollController = ScrollController();
   bool _autoScroll = true;
   String _searchQuery = '';
@@ -249,7 +251,9 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
         duration: const Duration(seconds: 1),
       );
 
-      final exportService = ref.read(debugExportServiceProvider);
+      final exportService = ref.read(
+        debugExportServiceProvider,
+      ); // captured before await
       await exportService.exportAndShare(sharePositionOrigin);
     } catch (e) {
       if (mounted) {

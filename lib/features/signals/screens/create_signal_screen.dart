@@ -270,8 +270,13 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
   }
 
   Future<void> _submitSignal() async {
+    // Capture all providers before any await
     final connectivity = ref.read(signalConnectivityProvider);
     final meshOnlyDebug = ref.read(meshOnlyDebugModeProvider);
+    final moderationService = ref.read(contentModerationServiceProvider);
+    final feedNotifier = ref.read(signalFeedProvider.notifier);
+    final navigator = Navigator.of(context);
+
     // Connection gating check
     if (!connectivity.isBleConnected) {
       AppLogging.signals('🚫 Send blocked: device not connected');
@@ -283,7 +288,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     // remove all images and refuse to send with only images.
     if (_imageLocalPaths.isNotEmpty &&
         (!connectivity.canUseCloud || meshOnlyDebug)) {
-      setState(() => _imageLocalPaths.clear());
+      safeSetState(() => _imageLocalPaths.clear());
       showErrorSnackBar(context, 'Images require internet. Images removed.');
       return;
     }
@@ -291,7 +296,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     if (!_hasValidContent) return;
 
     _dismissKeyboard();
-    setState(() => _isSubmitting = true);
+    safeSetState(() => _isSubmitting = true);
     HapticFeedback.mediumImpact();
 
     final content = _contentController.text.trim();
@@ -299,7 +304,6 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     // Pre-submission content moderation check - only when cloud features available
     final canUseCloudNow = connectivity.canUseCloud && !meshOnlyDebug;
     if (content.isNotEmpty && canUseCloudNow) {
-      final moderationService = ref.read(contentModerationServiceProvider);
       final checkResult = await moderationService.checkText(
         content,
         useServerCheck: true,
@@ -317,10 +321,10 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
               details: checkResult.details,
             ),
           );
-          setState(() => _isSubmitting = false);
+          safeSetState(() => _isSubmitting = false);
           if (action == ContentModerationAction.edit) {
             // User wants to edit - focus on content field
-            WidgetsBinding.instance.addPostFrameCallback((_) {
+            safePostFrame(() {
               _contentFocusNode.requestFocus();
             });
           }
@@ -340,13 +344,13 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
             ),
           );
           if (action == ContentModerationAction.cancel) {
-            setState(() => _isSubmitting = false);
+            safeSetState(() => _isSubmitting = false);
             return;
           }
           if (action == ContentModerationAction.edit) {
             // User wants to edit - focus on content field
-            setState(() => _isSubmitting = false);
-            WidgetsBinding.instance.addPostFrameCallback((_) {
+            safeSetState(() => _isSubmitting = false);
+            safePostFrame(() {
               _contentFocusNode.requestFocus();
             });
             return;
@@ -359,9 +363,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     }
 
     try {
-      final canUseCloudNow =
-          ref.read(signalConnectivityProvider).canUseCloud &&
-          !ref.read(meshOnlyDebugModeProvider);
+      final canUseCloudNow2 = connectivity.canUseCloud && !meshOnlyDebug;
 
       // If location is being fetched, wait briefly (2s) for it to finish
       if (_isLoadingLocation) {
@@ -386,7 +388,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
       // Inform user that broadcast is in progress for mesh sends
       showGlobalInfoSnackBar(
-        !canUseCloudNow ? 'Broadcasting over mesh...' : 'Sending...',
+        !canUseCloudNow2 ? 'Broadcasting over mesh...' : 'Sending...',
         duration: const Duration(seconds: 2),
       );
 
@@ -400,18 +402,16 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
           ? presenceToEmbed.toJson()
           : null;
 
-      final signal = await ref
-          .read(signalFeedProvider.notifier)
-          .createSignal(
-            content: _contentController.text.trim(),
-            ttlMinutes: _ttlMinutes,
-            location: _location,
-            imageLocalPaths: _imageLocalPaths,
-            // decide cloud usage at time of send
-            // note: if offline this will be false
-            useCloud: canUseCloudNow,
-            presenceInfo: presenceJson,
-          );
+      final signal = await feedNotifier.createSignal(
+        content: _contentController.text.trim(),
+        ttlMinutes: _ttlMinutes,
+        location: _location,
+        imageLocalPaths: _imageLocalPaths,
+        // decide cloud usage at time of send
+        // note: if offline this will be false
+        useCloud: canUseCloudNow2,
+        presenceInfo: presenceJson,
+      );
 
       sw.stop();
       AppLogging.signals('SEND_PATH: completed in ${sw.elapsedMilliseconds}ms');
@@ -422,19 +422,17 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
         if (!mounted) return;
         showSuccessSnackBar(context, 'Signal sent');
-        Navigator.pop(context);
+        navigator.pop();
 
         // Maybe prompt for review after successful signal creation
         // Use a short delay to let the navigation complete
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
-            ref.maybePromptForReview(
-              context,
-              surface: 'signal_created',
-              minSessions: 3, // Signals users are engaged
-              minSinceInstall: const Duration(days: 3),
-            );
-          }
+        safeTimer(const Duration(milliseconds: 500), () {
+          ref.maybePromptForReview(
+            context,
+            surface: 'signal_created',
+            minSessions: 3, // Signals users are engaged
+            minSinceInstall: const Duration(days: 3),
+          );
         });
       }
     } catch (e) {
@@ -442,14 +440,13 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
         showErrorSnackBar(context, 'Failed to create signal');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
+      safeSetState(() => _isSubmitting = false);
     }
   }
 
   Future<void> _updatePresenceOnSend() async {
     try {
+      // Provider was already captured in calling scope or capture here before await
       final service = ref.read(extendedPresenceServiceProvider);
       final trimmedStatus = _statusController.text.trim();
 
@@ -546,9 +543,12 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
   Future<void> _pickImage() async {
     _dismissKeyboard();
 
-    // Image selection requires cloud features (auth + internet)
+    // Capture providers before any await
     final connectivity = ref.read(signalConnectivityProvider);
     final meshOnlyDebug = ref.read(meshOnlyDebugModeProvider);
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+
+    // Image selection requires cloud features (auth + internet)
     if (!connectivity.canUseCloud || meshOnlyDebug) {
       showErrorSnackBar(
         context,
@@ -561,7 +561,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     }
 
     // Check admin-configured limit
-    final settings = await ref.read(settingsServiceProvider.future);
+    final settings = await settingsFuture;
     final maxImages = settings.maxSignalImages;
     final remainingSlots = maxImages - _imageLocalPaths.length;
 
@@ -671,7 +671,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
         }
 
         if (passedCount > 0) {
-          setState(() {}); // Trigger rebuild to show new images
+          safeSetState(() {}); // Trigger rebuild to show new images
           _imageAnimationController.forward(from: 0);
         }
       }
@@ -693,7 +693,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       return List.filled(localPaths.length, true);
     }
 
-    setState(() => _isValidatingImage = true);
+    safeSetState(() => _isValidatingImage = true);
 
     try {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -832,27 +832,24 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       }
       return List.filled(localPaths.length, false);
     } finally {
-      if (mounted) {
-        setState(() => _isValidatingImage = false);
-      }
+      safeSetState(() => _isValidatingImage = false);
     }
   }
 
   void _removeImage(int index) async {
     // Mark image as removing to trigger animation
-    setState(() {
+    safeSetState(() {
       _removingImageIndices.add(index);
     });
 
     // Wait for animation to complete
     await Future.delayed(const Duration(milliseconds: 250));
 
-    if (mounted) {
-      setState(() {
-        _imageLocalPaths.removeAt(index);
-        _removingImageIndices.clear(); // Clear all removal states
-      });
-    }
+    if (!mounted) return;
+    safeSetState(() {
+      _imageLocalPaths.removeAt(index);
+      _removingImageIndices.clear(); // Clear all removal states
+    });
   }
 
   Future<void> _getLocation() async {
@@ -864,7 +861,8 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     _locationLoadingController.forward();
 
     try {
-      final settings = await ref.read(settingsServiceProvider.future);
+      final settingsFuture = ref.read(settingsServiceProvider.future);
+      final settings = await settingsFuture;
       if (!mounted) return;
 
       if (myNodeNum == null) {
@@ -914,7 +912,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
   }
 
   void _removeLocation() {
-    setState(() {
+    safeSetState(() {
       _location = null;
     });
   }

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 import '../../core/theme.dart';
 import '../../models/mesh_models.dart';
@@ -485,7 +486,7 @@ class _PremiumCard extends StatefulWidget {
 }
 
 class _PremiumCardState extends State<_PremiumCard>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, StatefulLifecycleSafeMixin {
   late AnimationController _entryController;
   late AnimationController _idleController;
   late AnimationController _disintegrationController;
@@ -607,7 +608,7 @@ class _PremiumCardState extends State<_PremiumCard>
 
       if (!mounted) return;
 
-      setState(() {
+      safeSetState(() {
         _cardImage = image;
         _isDisintegrating = true;
         _capturedImage = true;

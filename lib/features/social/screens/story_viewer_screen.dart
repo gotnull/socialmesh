@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/verified_badge.dart';
@@ -47,7 +48,7 @@ class StoryViewerScreen extends ConsumerStatefulWidget {
 }
 
 class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, LifecycleSafeMixin<StoryViewerScreen> {
   late PageController _groupPageController;
   late int _currentGroupIndex;
   late int _currentStoryIndex;
@@ -293,11 +294,13 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   }
 
   Future<void> _reportStory(Story story) async {
+    // Capture provider before any await
+    final socialService = ref.read(socialServiceProvider);
+
     final reason = await _showReportReasonPicker();
     if (reason == null || !mounted) return;
 
     try {
-      final socialService = ref.read(socialServiceProvider);
       await socialService.reportStory(
         storyId: story.id,
         authorId: story.authorId,

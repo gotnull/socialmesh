@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import '../../core/safety/lifecycle_mixin.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -155,7 +156,8 @@ class RegionSelectionScreen extends ConsumerStatefulWidget {
       _RegionSelectionScreenState();
 }
 
-class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
+class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
+    with LifecycleSafeMixin<RegionSelectionScreen> {
   RegionCode? _selectedRegion;
   RegionCode? _currentRegion;
   String? _errorMessage;
@@ -256,13 +258,13 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
     final connectionState = ref.read(conn.deviceConnectionProvider);
     if (!connectionState.isConnected) {
       if (!mounted) return;
-      setState(() {
+      safeSetState(() {
         _errorMessage = 'Device disconnected. Please reconnect and try again.';
       });
       return;
     }
 
-    setState(() {
+    safeSetState(() {
       _errorMessage = null;
       _showPairingInvalidationHint = false;
     });
@@ -460,27 +462,58 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                   // Save button
                   Padding(
                     padding: const EdgeInsets.all(16),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        key: regionSelectionApplyButtonKey,
-                        onPressed: _selectedRegion != null ? _saveRegion : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: context.accentColor,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: context.card,
-                          disabledForegroundColor: context.textTertiary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 56),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          key: regionSelectionApplyButtonKey,
+                          onPressed:
+                              _selectedRegion != null &&
+                                  regionState.applyStatus !=
+                                      RegionApplyStatus.applying
+                              ? _saveRegion
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: context.accentColor,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: context.card,
+                            disabledForegroundColor: context.textTertiary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          widget.isInitialSetup ? 'Continue' : 'Save',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          child:
+                              regionState.applyStatus ==
+                                  RegionApplyStatus.applying
+                              ? const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      'Applying...',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Text(
+                                  widget.isInitialSetup ? 'Continue' : 'Save',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                         ),
                       ),
                     ),

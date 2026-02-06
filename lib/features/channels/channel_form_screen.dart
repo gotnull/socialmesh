@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
@@ -57,7 +58,8 @@ class ChannelFormScreen extends ConsumerStatefulWidget {
   ConsumerState<ChannelFormScreen> createState() => _ChannelFormScreenState();
 }
 
-class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
+class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
+    with LifecycleSafeMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _keyController = TextEditingController();
@@ -235,15 +237,19 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
       }
     }
 
-    setState(() => _isSaving = true);
+    // Capture providers before async gap
+    final channels = ref.read(channelsProvider);
+    final protocol = ref.read(protocolServiceProvider);
+    final channelsNotifier = ref.read(channelsProvider.notifier);
+    final secureStorage = ref.read(secureStorageProvider);
+
+    safeSetState(() => _isSaving = true);
 
     try {
       List<int> psk = [];
       if (_selectedKeySize != KeySize.none && _keyController.text.isNotEmpty) {
         psk = base64Decode(_keyController.text.trim());
       }
-
-      final channels = ref.read(channelsProvider);
 
       // Calculate proper index for new channels
       int index;
@@ -296,46 +302,41 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         role: role,
       );
 
-      // Send to device first - this is the source of truth
-      final protocol = ref.read(protocolServiceProvider);
-
       // Verify we have node info (indicates device is ready)
       if (protocol.myNodeNum == null) {
         throw Exception('Device not ready - please wait for connection');
       }
 
       await protocol.setChannel(newChannel);
+      if (!mounted) return;
 
       // Small delay to allow device to process
       await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
 
       // Request updated channel info from device to confirm
       await protocol.getChannel(index);
+      if (!mounted) return;
 
       // Update local state only after successful device sync
-      ref.read(channelsProvider.notifier).setChannel(newChannel);
+      channelsNotifier.setChannel(newChannel);
 
       if (psk.isNotEmpty) {
-        final secureStorage = ref.read(secureStorageProvider);
         await secureStorage.storeChannelKey(
           newChannel.name.isEmpty ? 'Channel $index' : newChannel.name,
           psk,
         );
+        if (!mounted) return;
       }
 
-      if (mounted) {
-        Navigator.pop(context);
-        showSuccessSnackBar(
-          context,
-          isEditing ? 'Channel updated' : 'Channel created',
-        );
-      }
+      safeNavigatorPop();
+      safeShowSnackBar(isEditing ? 'Channel updated' : 'Channel created');
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Error: $e');
       }
     } finally {
-      if (mounted) setState(() => _isSaving = false);
+      safeSetState(() => _isSaving = false);
     }
   }
 

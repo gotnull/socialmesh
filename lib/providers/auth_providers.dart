@@ -358,6 +358,50 @@ class AuthService {
     }
   }
 
+  /// Sign in with Twitter/X
+  /// Uses Firebase's built-in TwitterAuthProvider with signInWithProvider.
+  /// Like GitHub, Twitter is an "untrusted" provider - if the same email
+  /// exists with a trusted provider, account linking may be required.
+  Future<UserCredential> signInWithTwitter() async {
+    AppLogging.auth('signInWithTwitter - START');
+    final twitterProvider = TwitterAuthProvider();
+
+    try {
+      UserCredential userCredential;
+      if (Platform.isIOS || Platform.isAndroid) {
+        AppLogging.auth(
+          'signInWithTwitter - Using signInWithProvider (mobile)',
+        );
+        userCredential = await _auth.signInWithProvider(twitterProvider);
+      } else {
+        AppLogging.auth('signInWithTwitter - Using signInWithPopup (web)');
+        userCredential = await _auth.signInWithPopup(twitterProvider);
+      }
+      _logUserInfo('signInWithTwitter - ✅ SUCCESS', userCredential.user);
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
+      AppLogging.auth('signInWithTwitter - ❌ AUTH ERROR: code=${e.code}');
+      if (e.code == 'account-exists-with-different-credential' &&
+          e.credential != null) {
+        final email = e.email;
+        if (email != null) {
+          AppLogging.auth(
+            'signInWithTwitter - Account linking required for email: $email',
+          );
+          throw AccountLinkingRequiredException(
+            email: email,
+            pendingCredential: e.credential!,
+            existingProviders: ['google.com', 'apple.com'],
+          );
+        }
+      }
+      rethrow;
+    } catch (e) {
+      AppLogging.auth('signInWithTwitter - ❌ ERROR: $e');
+      rethrow;
+    }
+  }
+
   /// Link a pending credential to the current user
   Future<UserCredential> linkPendingCredential(
     AuthCredential credential,
@@ -621,6 +665,208 @@ class AuthService {
       AppLogging.auth('deleteAccount - ❌ No current user to delete');
     }
   }
+
+  // ========================================================================
+  // Multi-Factor Authentication
+  // ========================================================================
+
+  /// Enroll user in SMS-based multi-factor authentication
+  /// Returns true if enrollment is successful
+  Future<bool> enrollMFA({
+    required String phoneNumber,
+    required void Function(String verificationId, int? resendToken) onCodeSent,
+    required void Function(String error) onError,
+  }) async {
+    final user = currentUser;
+    if (user == null) {
+      AppLogging.auth('enrollMFA - ❌ No user signed in');
+      onError('No user signed in');
+      return false;
+    }
+
+    AppLogging.auth('enrollMFA - START for phone=$phoneNumber');
+
+    try {
+      // Start phone verification session
+      final session = await user.multiFactor.getSession();
+
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        multiFactorSession: session,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          AppLogging.auth('enrollMFA - Auto-verification completed');
+          try {
+            // Auto-verification succeeded, enroll immediately
+            await _enrollWithCredential(credential);
+            AppLogging.auth('enrollMFA - ✅ Auto-enrollment SUCCESS');
+          } catch (e) {
+            AppLogging.auth('enrollMFA - ❌ Auto-enrollment ERROR: $e');
+            onError('unknown');
+          }
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          AppLogging.auth('enrollMFA - ❌ Verification FAILED: ${e.code}');
+          onError(e.code);
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          AppLogging.auth('enrollMFA - Code sent to $phoneNumber');
+          onCodeSent(verificationId, resendToken);
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          AppLogging.auth('enrollMFA - Auto-retrieval timeout');
+        },
+      );
+
+      return true;
+    } on FirebaseAuthException catch (e) {
+      AppLogging.auth('enrollMFA - ❌ AUTH ERROR: code=${e.code}');
+      onError(e.code);
+      return false;
+    } catch (e) {
+      AppLogging.auth('enrollMFA - ❌ ERROR: $e');
+      onError('unknown');
+      return false;
+    }
+  }
+
+  /// Complete MFA enrollment with SMS code
+  Future<void> completeMFAEnrollment({
+    required String verificationId,
+    required String smsCode,
+    String? displayName,
+  }) async {
+    AppLogging.auth('completeMFAEnrollment - START');
+
+    final credential = PhoneAuthProvider.credential(
+      verificationId: verificationId,
+      smsCode: smsCode,
+    );
+
+    await _enrollWithCredential(credential, displayName: displayName);
+    AppLogging.auth('completeMFAEnrollment - ✅ SUCCESS');
+  }
+
+  /// Internal: Enroll with phone credential
+  Future<void> _enrollWithCredential(
+    PhoneAuthCredential credential, {
+    String? displayName,
+  }) async {
+    final user = currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'no-current-user',
+        message: 'No user signed in',
+      );
+    }
+
+    final multiFactorAssertion = PhoneMultiFactorGenerator.getAssertion(
+      credential,
+    );
+
+    await user.multiFactor.enroll(
+      multiFactorAssertion,
+      displayName: displayName ?? 'Phone',
+    );
+  }
+
+  /// Unenroll from MFA (remove a second factor)
+  Future<void> unenrollMFA(String factorUid) async {
+    final user = currentUser;
+    if (user == null) {
+      AppLogging.auth('unenrollMFA - ❌ No user signed in');
+      throw FirebaseAuthException(
+        code: 'no-current-user',
+        message: 'No user signed in',
+      );
+    }
+
+    AppLogging.auth('unenrollMFA - Removing factor $factorUid');
+
+    try {
+      await user.multiFactor.unenroll(factorUid: factorUid);
+      AppLogging.auth('unenrollMFA - ✅ SUCCESS');
+    } on FirebaseAuthException catch (e) {
+      AppLogging.auth('unenrollMFA - ❌ AUTH ERROR: code=${e.code}');
+      rethrow;
+    } catch (e) {
+      AppLogging.auth('unenrollMFA - ❌ ERROR: $e');
+      rethrow;
+    }
+  }
+
+  /// Get list of enrolled MFA factors
+  Future<List<MultiFactorInfo>> getEnrolledMFAFactors() async {
+    final user = currentUser;
+    if (user == null) return [];
+    return user.multiFactor.getEnrolledFactors();
+  }
+
+  /// Check if user has MFA enabled
+  Future<bool> hasMFAEnabled() async {
+    final factors = await getEnrolledMFAFactors();
+    return factors.isNotEmpty;
+  }
+
+  /// Verify MFA during sign-in when challenged
+  /// Used when sign-in fails with multi-factor-auth-required error
+  Future<UserCredential> verifyMFASignIn({
+    required MultiFactorResolver resolver,
+    required String smsCode,
+  }) async {
+    AppLogging.auth('verifyMFASignIn - START');
+
+    try {
+      // Get the phone factor from available hints
+      final phoneHint = resolver.hints.whereType<PhoneMultiFactorInfo>().first;
+
+      // Send verification code to the phone using a completer pattern
+      String? resolvedVerificationId;
+
+      await _auth.verifyPhoneNumber(
+        multiFactorSession: resolver.session,
+        multiFactorInfo: phoneHint,
+        verificationCompleted: (_) {},
+        verificationFailed: (e) {
+          AppLogging.auth('verifyMFASignIn - ❌ Verification FAILED: ${e.code}');
+        },
+        codeSent: (String id, int? resendToken) {
+          AppLogging.auth('verifyMFASignIn - Code sent');
+          resolvedVerificationId = id;
+        },
+        codeAutoRetrievalTimeout: (_) {},
+      );
+
+      final verificationId = resolvedVerificationId;
+      if (verificationId == null) {
+        throw FirebaseAuthException(
+          code: 'verification-failed',
+          message: 'Failed to send verification code',
+        );
+      }
+
+      // Create credential with SMS code
+      final credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: smsCode,
+      );
+
+      final multiFactorAssertion = PhoneMultiFactorGenerator.getAssertion(
+        credential,
+      );
+
+      // Complete sign-in with MFA
+      final userCredential = await resolver.resolveSignIn(multiFactorAssertion);
+      AppLogging.auth('verifyMFASignIn - ✅ SUCCESS');
+
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
+      AppLogging.auth('verifyMFASignIn - ❌ AUTH ERROR: code=${e.code}');
+      rethrow;
+    } catch (e) {
+      AppLogging.auth('verifyMFASignIn - ❌ ERROR: $e');
+      rethrow;
+    }
+  }
 }
 
 /// Provider for the AuthService
@@ -634,4 +880,12 @@ final userDisplayNameProvider = Provider<String>((ref) {
   final user = ref.watch(currentUserProvider);
   if (user == null) return 'Anonymous';
   return user.displayName ?? user.email?.split('@').first ?? 'Anonymous';
+});
+
+/// FutureProvider for enrolled MFA factors
+final enrolledMFAFactorsProvider = FutureProvider<List<MultiFactorInfo>>((
+  ref,
+) async {
+  final authService = ref.watch(authServiceProvider);
+  return authService.getEnrolledMFAFactors();
 });

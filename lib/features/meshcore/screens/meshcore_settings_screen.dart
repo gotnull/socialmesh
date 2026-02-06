@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import '../../../core/safety/lifecycle_mixin.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,10 +29,12 @@ class MeshCoreSettingsScreen extends ConsumerStatefulWidget {
       _MeshCoreSettingsScreenState();
 }
 
-class _MeshCoreSettingsScreenState
-    extends ConsumerState<MeshCoreSettingsScreen> {
+class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
+    with LifecycleSafeMixin<MeshCoreSettingsScreen> {
   String _appVersion = '';
   bool _showBatteryVoltage = false;
+  bool _isSendingAdvert = false;
+  bool _isSyncingTime = false;
 
   @override
   void initState() {
@@ -273,16 +276,18 @@ class _MeshCoreSettingsScreenState
           _buildSettingsTile(
             icon: Icons.cell_tower_rounded,
             title: 'Send Advertisement',
-            subtitle: 'Broadcast your presence',
-            enabled: isConnected,
+            subtitle: _isSendingAdvert
+                ? 'Sending...'
+                : 'Broadcast your presence',
+            enabled: isConnected && !_isSendingAdvert,
             onTap: _sendAdvert,
           ),
           _buildDivider(),
           _buildSettingsTile(
             icon: Icons.sync_rounded,
             title: 'Sync Time',
-            subtitle: 'Update device clock',
-            enabled: isConnected,
+            subtitle: _isSyncingTime ? 'Syncing...' : 'Update device clock',
+            enabled: isConnected && !_isSyncingTime,
             onTap: _syncTime,
           ),
           _buildDivider(),
@@ -532,7 +537,10 @@ class _MeshCoreSettingsScreenState
   Future<void> _setNodeName(String name) async {
     if (name.isEmpty) return;
 
+    // Capture providers before any await
     final session = ref.read(meshCoreSessionProvider);
+    final selfInfoNotifier = ref.read(meshCoreSelfInfoProvider.notifier);
+
     if (session == null || !session.isActive) {
       if (mounted) {
         showErrorSnackBar(context, 'Not connected');
@@ -549,11 +557,10 @@ class _MeshCoreSettingsScreenState
           payload: payload,
         ),
       );
+      if (!mounted) return;
       // Refresh self info
-      ref.read(meshCoreSelfInfoProvider.notifier).refresh();
-      if (mounted) {
-        showSuccessSnackBar(context, 'Node name updated');
-      }
+      selfInfoNotifier.refresh();
+      showSuccessSnackBar(context, 'Node name updated');
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to set name');
@@ -694,12 +701,14 @@ class _MeshCoreSettingsScreenState
   }
 
   Future<void> _sendAdvert() async {
+    if (_isSendingAdvert) return;
     final session = ref.read(meshCoreSessionProvider);
     if (session == null || !session.isActive) {
       if (mounted) showErrorSnackBar(context, 'Not connected');
       return;
     }
 
+    safeSetState(() => _isSendingAdvert = true);
     try {
       await session.sendCommand(MeshCoreCommands.sendSelfAdvert);
       if (mounted) {
@@ -709,16 +718,20 @@ class _MeshCoreSettingsScreenState
       if (mounted) {
         showErrorSnackBar(context, 'Failed to send advertisement');
       }
+    } finally {
+      safeSetState(() => _isSendingAdvert = false);
     }
   }
 
   Future<void> _syncTime() async {
+    if (_isSyncingTime) return;
     final session = ref.read(meshCoreSessionProvider);
     if (session == null || !session.isActive) {
       if (mounted) showErrorSnackBar(context, 'Not connected');
       return;
     }
 
+    safeSetState(() => _isSyncingTime = true);
     try {
       final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       final payload = Uint8List(4);
@@ -740,6 +753,8 @@ class _MeshCoreSettingsScreenState
       if (mounted) {
         showErrorSnackBar(context, 'Failed to sync time');
       }
+    } finally {
+      safeSetState(() => _isSyncingTime = false);
     }
   }
 

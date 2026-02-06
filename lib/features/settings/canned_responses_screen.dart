@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -23,7 +24,8 @@ class CannedResponsesScreen extends ConsumerStatefulWidget {
       _CannedResponsesScreenState();
 }
 
-class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
+class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen>
+    with LifecycleSafeMixin<CannedResponsesScreen> {
   List<CannedResponse> _responses = [];
   SettingsService? _settingsService;
   bool _isReordering = false;
@@ -37,10 +39,9 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
 
   Future<void> _initSettings() async {
     _settingsService = await ref.read(settingsServiceProvider.future);
+    if (!mounted) return;
     _loadResponses();
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
+    safeSetState(() => _isLoading = false);
   }
 
   void _loadResponses() {
@@ -49,52 +50,61 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
     }
   }
 
-  /// Sync canned responses to cloud profile
-  void _syncToCloud() {
+  /// Sync canned responses to cloud profile.
+  /// [notifier] must be captured before any await in the calling method.
+  void _syncToCloud(UserProfileNotifier notifier) {
     final jsonList = _responses.map((r) => r.toJson()).toList();
     final jsonStr = jsonEncode(jsonList);
-    ref
-        .read(userProfileProvider.notifier)
-        .updatePreferences(UserPreferences(cannedResponsesJson: jsonStr));
+    notifier.updatePreferences(UserPreferences(cannedResponsesJson: jsonStr));
   }
 
   Future<void> _addResponse() async {
     if (_settingsService == null) return;
+    final profileNotifier = ref.read(userProfileProvider.notifier);
     final result = await _showEditSheet(null);
+    if (!mounted) return;
     if (result != null) {
       await _settingsService!.addCannedResponse(result);
-      setState(_loadResponses);
-      _syncToCloud();
+      if (!mounted) return;
+      safeSetState(_loadResponses);
+      _syncToCloud(profileNotifier);
     }
   }
 
   Future<void> _editResponse(CannedResponse response) async {
     if (_settingsService == null) return;
+    final profileNotifier = ref.read(userProfileProvider.notifier);
     final result = await _showEditSheet(response);
+    if (!mounted) return;
     if (result != null) {
       await _settingsService!.updateCannedResponse(result);
-      setState(_loadResponses);
-      _syncToCloud();
+      if (!mounted) return;
+      safeSetState(_loadResponses);
+      _syncToCloud(profileNotifier);
     }
   }
 
   Future<void> _deleteResponse(CannedResponse response) async {
     if (_settingsService == null) return;
+    final profileNotifier = ref.read(userProfileProvider.notifier);
     final confirmed = await _showConfirmSheet(
       title: 'Delete Response',
       message: 'Delete "${response.text}"?',
       confirmLabel: 'Delete',
       isDestructive: true,
     );
+    if (!mounted) return;
     if (confirmed == true) {
       await _settingsService!.deleteCannedResponse(response.id);
-      setState(_loadResponses);
-      _syncToCloud();
+      if (!mounted) return;
+      safeSetState(_loadResponses);
+      _syncToCloud(profileNotifier);
     }
   }
 
   Future<void> _resetToDefaults() async {
     if (_settingsService == null) return;
+    final profileNotifier = ref.read(userProfileProvider.notifier);
     final confirmed = await _showConfirmSheet(
       title: 'Reset to Defaults',
       message:
@@ -102,10 +112,12 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
       confirmLabel: 'Reset',
       isDestructive: true,
     );
+    if (!mounted) return;
     if (confirmed == true) {
       await _settingsService!.resetCannedResponsesToDefaults();
-      setState(_loadResponses);
-      _syncToCloud();
+      if (!mounted) return;
+      safeSetState(_loadResponses);
+      _syncToCloud(profileNotifier);
     }
   }
 
@@ -144,7 +156,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
           tooltip: _isReordering ? 'Done' : 'Reorder',
           onPressed: () {
             HapticFeedback.selectionClick();
-            setState(() => _isReordering = !_isReordering);
+            safeSetState(() => _isReordering = !_isReordering);
           },
         ),
         AppBarOverflowMenu<String>(
@@ -193,13 +205,15 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
               itemCount: _responses.length,
               onReorder: (oldIndex, newIndex) async {
                 if (_settingsService == null) return;
+                final profileNotifier = ref.read(userProfileProvider.notifier);
                 HapticFeedback.mediumImpact();
                 await _settingsService!.reorderCannedResponses(
                   oldIndex,
                   newIndex,
                 );
-                setState(_loadResponses);
-                _syncToCloud();
+                if (!mounted) return;
+                safeSetState(_loadResponses);
+                _syncToCloud(profileNotifier);
               },
               itemBuilder: (context, index) => _ResponseTile(
                 key: ValueKey(_responses[index].id),
@@ -234,7 +248,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
                   },
                   onDismissed: (_) {
                     _settingsService?.deleteCannedResponse(response.id);
-                    setState(_loadResponses);
+                    safeSetState(_loadResponses);
                   },
                   child: _ResponseTile(
                     response: response,

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../models/widget_schema.dart';
@@ -68,7 +69,8 @@ class WidgetWizardScreen extends ConsumerStatefulWidget {
   ConsumerState<WidgetWizardScreen> createState() => _WidgetWizardScreenState();
 }
 
-class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
+class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
+    with LifecycleSafeMixin<WidgetWizardScreen> {
   int _currentStep = 0;
   late final PageController _pageController;
 
@@ -818,10 +820,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         ),
       );
 
-      if (shouldSwitch != true) return;
+      if (shouldSwitch != true || !mounted) return;
 
       // User confirmed - clear the old data type
-      setState(() {
+      safeSetState(() {
         if (template.id == 'actions') {
           _selectedBindings.clear();
         } else {
@@ -831,7 +833,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       });
     } else {
       // No data loss, just switch
-      setState(() => _selectedTemplate = template);
+      safeSetState(() => _selectedTemplate = template);
     }
   }
 

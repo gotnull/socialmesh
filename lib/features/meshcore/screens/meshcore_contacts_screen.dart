@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import '../../../core/safety/lifecycle_mixin.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,8 +30,8 @@ class MeshCoreContactsScreen extends ConsumerStatefulWidget {
       _MeshCoreContactsScreenState();
 }
 
-class _MeshCoreContactsScreenState
-    extends ConsumerState<MeshCoreContactsScreen> {
+class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
+    with LifecycleSafeMixin<MeshCoreContactsScreen> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
 
@@ -379,7 +380,8 @@ class _MeshCoreContactsScreenState
   }
 
   Future<void> _refreshContacts() async {
-    await ref.read(meshCoreContactsProvider.notifier).refresh();
+    final notifier = ref.read(meshCoreContactsProvider.notifier);
+    await notifier.refresh();
   }
 
   void _showAddContactOptions() {

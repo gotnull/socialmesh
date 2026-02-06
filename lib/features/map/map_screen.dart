@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
@@ -65,7 +66,7 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, LifecycleSafeMixin<MapScreen> {
   final MapController _mapController = MapController();
   MeshNode? _selectedNode;
   bool _showHeatmap = false;
@@ -131,16 +132,19 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   Future<void> _loadMapStyle() async {
-    final settings = await ref.read(settingsServiceProvider.future);
-    final index = settings.mapTileStyleIndex;
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final settings = await settingsFuture;
     if (!mounted) return;
+    final index = settings.mapTileStyleIndex;
     if (index >= 0 && index < MapTileStyle.values.length) {
-      setState(() => _mapStyle = MapTileStyle.values[index]);
+      safeSetState(() => _mapStyle = MapTileStyle.values[index]);
     }
   }
 
   Future<void> _saveMapStyle(MapTileStyle style) async {
-    final settings = await ref.read(settingsServiceProvider.future);
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final settings = await settingsFuture;
+    if (!mounted) return;
     await settings.setMapTileStyleIndex(style.index);
   }
 

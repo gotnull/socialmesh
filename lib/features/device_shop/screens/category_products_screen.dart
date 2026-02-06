@@ -447,6 +447,11 @@ class _CategoryProductsScreenState
                         ),
                       ),
                     ),
+
+                    // Bottom safe area
+                    SizedBox(
+                      height: MediaQuery.of(context).padding.bottom + 16,
+                    ),
                   ],
                 ),
               );

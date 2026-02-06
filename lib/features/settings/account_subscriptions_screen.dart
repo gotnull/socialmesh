@@ -9,6 +9,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/legal_document_sheet.dart';
@@ -22,6 +23,8 @@ import '../../providers/profile_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/subscription/cloud_sync_entitlement_service.dart';
 import '../../utils/snackbar.dart';
+import '../auth/mfa_management_screen.dart';
+import '../auth/mfa_verification_dialog.dart';
 import '../settings/widgets/restore_purchases_button.dart';
 import '../profile/profile_screen.dart';
 import 'subscription_screen.dart';
@@ -38,7 +41,8 @@ class AccountSubscriptionsScreen extends ConsumerStatefulWidget {
 }
 
 class _AccountSubscriptionsScreenState
-    extends ConsumerState<AccountSubscriptionsScreen> {
+    extends ConsumerState<AccountSubscriptionsScreen>
+    with LifecycleSafeMixin<AccountSubscriptionsScreen> {
   bool _isSigningIn = false;
   bool _isPurchasing = false;
 
@@ -311,6 +315,21 @@ class _AccountSubscriptionsScreenState
                     ),
                   ),
                 ],
+                if (!isAnonymous) ...[
+                  const SizedBox(height: 8),
+                  _MFAStatusButton(
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MFAManagementScreen(),
+                        ),
+                      );
+                      // Refresh MFA status when returning
+                      ref.invalidate(enrolledMFAFactorsProvider);
+                    },
+                  ),
+                ],
                 const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
@@ -396,6 +415,16 @@ class _AccountSubscriptionsScreenState
               icon: _GitHubLogo(),
               label: 'Continue with GitHub',
               backgroundColor: const Color(0xFF24292F),
+              textColor: Colors.white,
+            ),
+            const SizedBox(height: 10),
+
+            // Twitter/X
+            _SocialSignInButton(
+              onPressed: () => _signInWithTwitter(context),
+              icon: _XLogo(),
+              label: 'Continue with X',
+              backgroundColor: Colors.black,
               textColor: Colors.white,
             ),
           ],
@@ -926,7 +955,7 @@ class _AccountSubscriptionsScreenState
 
   Future<void> _signInWithGoogle(BuildContext _) async {
     if (_isSigningIn) return;
-    setState(() => _isSigningIn = true);
+    safeSetState(() => _isSigningIn = true);
     AppLogging.subscriptions('');
     AppLogging.subscriptions(
       '╔══════════════════════════════════════════════════════════════',
@@ -936,8 +965,10 @@ class _AccountSubscriptionsScreenState
       '╚══════════════════════════════════════════════════════════════',
     );
 
+    // Capture provider ref before awaits
+    final authService = ref.read(authServiceProvider);
+
     try {
-      final authService = ref.read(authServiceProvider);
       await authService.signInWithGoogle();
       AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
@@ -953,6 +984,18 @@ class _AccountSubscriptionsScreenState
       // Sync RevenueCat with Firebase to link purchases to this account
       AppLogging.subscriptions('║ 🔗 Syncing RevenueCat with Firebase...');
       await syncRevenueCatWithFirebase(ref);
+    } on FirebaseAuthMultiFactorException catch (e) {
+      AppLogging.subscriptions('║ 🔐 Google sign-in requires MFA');
+      if (mounted) {
+        final credential = await MFAVerificationDialog.show(
+          context,
+          e.resolver,
+        );
+        if (credential != null && mounted) {
+          ref.invalidate(userProfileProvider);
+          await syncRevenueCatWithFirebase(ref);
+        }
+      }
     } on FirebaseAuthException catch (e) {
       // User cancelled - don't show error
       if (e.code == 'sign-in-cancelled') {
@@ -976,13 +1019,13 @@ class _AccountSubscriptionsScreenState
         showErrorSnackBar(context, 'Sign in failed. Please try again.');
       }
     } finally {
-      if (mounted) setState(() => _isSigningIn = false);
+      safeSetState(() => _isSigningIn = false);
     }
   }
 
   Future<void> _signInWithApple(BuildContext _) async {
     if (_isSigningIn) return;
-    setState(() => _isSigningIn = true);
+    safeSetState(() => _isSigningIn = true);
     AppLogging.subscriptions('');
     AppLogging.subscriptions(
       '╔══════════════════════════════════════════════════════════════',
@@ -992,8 +1035,10 @@ class _AccountSubscriptionsScreenState
       '╚══════════════════════════════════════════════════════════════',
     );
 
+    // Capture provider ref before awaits
+    final authService = ref.read(authServiceProvider);
+
     try {
-      final authService = ref.read(authServiceProvider);
       await authService.signInWithApple();
       AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
@@ -1009,6 +1054,18 @@ class _AccountSubscriptionsScreenState
       // Sync RevenueCat with Firebase to link purchases to this account
       AppLogging.subscriptions('║ 🔗 Syncing RevenueCat with Firebase...');
       await syncRevenueCatWithFirebase(ref);
+    } on FirebaseAuthMultiFactorException catch (e) {
+      AppLogging.subscriptions('║ 🔐 Apple sign-in requires MFA');
+      if (mounted) {
+        final credential = await MFAVerificationDialog.show(
+          context,
+          e.resolver,
+        );
+        if (credential != null && mounted) {
+          ref.invalidate(userProfileProvider);
+          await syncRevenueCatWithFirebase(ref);
+        }
+      }
     } on SignInWithAppleAuthorizationException catch (e) {
       // User cancelled - don't show error
       if (e.code == AuthorizationErrorCode.canceled) {
@@ -1032,13 +1089,13 @@ class _AccountSubscriptionsScreenState
         showErrorSnackBar(context, 'Sign in failed. Please try again.');
       }
     } finally {
-      if (mounted) setState(() => _isSigningIn = false);
+      safeSetState(() => _isSigningIn = false);
     }
   }
 
   Future<void> _signInWithGitHub(BuildContext _) async {
     if (_isSigningIn) return;
-    setState(() => _isSigningIn = true);
+    safeSetState(() => _isSigningIn = true);
     AppLogging.subscriptions('');
     AppLogging.subscriptions(
       '╔══════════════════════════════════════════════════════════════',
@@ -1065,6 +1122,18 @@ class _AccountSubscriptionsScreenState
       // Sync RevenueCat with Firebase to link purchases to this account
       AppLogging.subscriptions('║ 🔗 Syncing RevenueCat with Firebase...');
       await syncRevenueCatWithFirebase(ref);
+    } on FirebaseAuthMultiFactorException catch (e) {
+      AppLogging.subscriptions('║ 🔐 GitHub sign-in requires MFA');
+      if (mounted) {
+        final credential = await MFAVerificationDialog.show(
+          context,
+          e.resolver,
+        );
+        if (credential != null && mounted) {
+          ref.invalidate(userProfileProvider);
+          await syncRevenueCatWithFirebase(ref);
+        }
+      }
     } on AccountLinkingRequiredException catch (e) {
       AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
@@ -1102,7 +1171,88 @@ class _AccountSubscriptionsScreenState
       AppLogging.app('GitHub sign-in error: $e');
       // User cancelled - don't show error
     } finally {
-      if (mounted) setState(() => _isSigningIn = false);
+      safeSetState(() => _isSigningIn = false);
+    }
+  }
+
+  Future<void> _signInWithTwitter(BuildContext _) async {
+    if (_isSigningIn) return;
+    safeSetState(() => _isSigningIn = true);
+    AppLogging.subscriptions('');
+    AppLogging.subscriptions(
+      '╔══════════════════════════════════════════════════════════════',
+    );
+    AppLogging.subscriptions('║ 🔐 SIGN IN WITH TWITTER/X STARTED');
+    AppLogging.subscriptions(
+      '╚══════════════════════════════════════════════════════════════',
+    );
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.signInWithTwitter();
+      AppLogging.subscriptions(
+        '╔══════════════════════════════════════════════════════════════',
+      );
+      AppLogging.subscriptions('║ ✅ Twitter/X sign-in SUCCESS');
+      AppLogging.subscriptions('║ 🔄 Invalidating userProfileProvider...');
+      AppLogging.subscriptions(
+        '╚══════════════════════════════════════════════════════════════',
+      );
+      ref.invalidate(userProfileProvider);
+
+      AppLogging.subscriptions('║ 🔗 Syncing RevenueCat with Firebase...');
+      await syncRevenueCatWithFirebase(ref);
+    } on FirebaseAuthMultiFactorException catch (e) {
+      AppLogging.subscriptions('║ 🔐 Twitter/X sign-in requires MFA');
+      if (mounted) {
+        final credential = await MFAVerificationDialog.show(
+          context,
+          e.resolver,
+        );
+        if (credential != null && mounted) {
+          ref.invalidate(userProfileProvider);
+          await syncRevenueCatWithFirebase(ref);
+        }
+      }
+    } on AccountLinkingRequiredException catch (e) {
+      AppLogging.subscriptions(
+        '╔══════════════════════════════════════════════════════════════',
+      );
+      AppLogging.subscriptions(
+        '║ ⚠️ Twitter/X sign-in requires account linking',
+      );
+      AppLogging.subscriptions('║    Email: ${e.email}');
+      AppLogging.subscriptions(
+        '║    Existing providers: ${e.existingProviders}',
+      );
+      AppLogging.subscriptions(
+        '╚══════════════════════════════════════════════════════════════',
+      );
+      if (mounted) {
+        await _showAccountLinkingDialog(context, e);
+      }
+    } on FirebaseAuthException catch (e) {
+      AppLogging.subscriptions(
+        '╔══════════════════════════════════════════════════════════════',
+      );
+      AppLogging.subscriptions('║ ❌ Twitter/X sign-in FAILED: ${e.code}');
+      AppLogging.subscriptions(
+        '╚══════════════════════════════════════════════════════════════',
+      );
+      if (mounted && e.code != 'web-context-cancelled') {
+        showErrorSnackBar(context, 'Sign in failed: ${e.message}');
+      }
+    } catch (e) {
+      AppLogging.subscriptions(
+        '╔══════════════════════════════════════════════════════════════',
+      );
+      AppLogging.subscriptions('║ ❌ Twitter/X sign-in FAILED: $e');
+      AppLogging.subscriptions(
+        '╚══════════════════════════════════════════════════════════════',
+      );
+      AppLogging.app('Twitter/X sign-in error: $e');
+    } finally {
+      safeSetState(() => _isSigningIn = false);
     }
   }
 
@@ -1119,6 +1269,7 @@ class _AccountSubscriptionsScreenState
     // Capture before async gap
     final cardColor = context.card;
     final messenger = ScaffoldMessenger.of(context);
+    final authService = ref.read(authServiceProvider);
 
     final shouldLink = await showDialog<bool>(
       context: context,
@@ -1144,8 +1295,6 @@ class _AccountSubscriptionsScreenState
 
     if (shouldLink == true && mounted) {
       try {
-        final authService = ref.read(authServiceProvider);
-
         // Sign in with the existing provider
         if (e.existingProviders.contains('google.com')) {
           await authService.signInWithGoogle();
@@ -1181,6 +1330,9 @@ class _AccountSubscriptionsScreenState
   }
 
   Future<void> _signOut(BuildContext _) async {
+    // Capture provider ref before await
+    final authService = ref.read(authServiceProvider);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -1209,7 +1361,6 @@ class _AccountSubscriptionsScreenState
         AppLogging.subscriptions(
           '╚══════════════════════════════════════════════════════════════',
         );
-        final authService = ref.read(authServiceProvider);
         await authService.signOut();
         AppLogging.subscriptions(
           '╔══════════════════════════════════════════════════════════════',
@@ -1288,6 +1439,17 @@ class _AccountSubscriptionsScreenState
                 textColor: Colors.white,
               ),
             ],
+            const SizedBox(height: 10),
+            _SocialSignInButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _signInWithTwitter(context);
+              },
+              icon: _XLogo(),
+              label: 'Link with X',
+              backgroundColor: Colors.black,
+              textColor: Colors.white,
+            ),
             const SizedBox(height: 24),
           ],
         ),
@@ -1532,6 +1694,70 @@ class _LoadingCard extends StatelessWidget {
   }
 }
 
+/// Button showing 2FA status inline — active (green shield) or not enabled.
+class _MFAStatusButton extends ConsumerWidget {
+  final VoidCallback onTap;
+
+  const _MFAStatusButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mfaAsync = ref.watch(enrolledMFAFactorsProvider);
+    final hasMFA = mfaAsync.when(
+      data: (factors) => factors.isNotEmpty,
+      loading: () => false,
+      error: (_, _) => false,
+    );
+
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(
+            color: hasMFA
+                ? AccentColors.green.withValues(alpha: 0.5)
+                : context.border,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              hasMFA ? Icons.verified_user : Icons.security,
+              size: 18,
+              color: hasMFA ? AccentColors.green : null,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Two-Factor Authentication',
+              style: TextStyle(color: hasMFA ? AccentColors.green : null),
+            ),
+            if (hasMFA) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AccentColors.green.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'ON',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AccentColors.green,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SyncStatusBadge extends StatelessWidget {
   final SyncStatus status;
 
@@ -1630,6 +1856,11 @@ class _ProviderIcon extends StatelessWidget {
         width: 14,
         height: 14,
         child: CustomPaint(painter: _GitHubLogoSmallPainter()),
+      ),
+      'twitter.com' => SizedBox(
+        width: 14,
+        height: 14,
+        child: CustomPaint(painter: _XLogoSmallPainter()),
       ),
       'password' => const Icon(Icons.email, size: 14, color: Colors.blue),
       _ => Icon(Icons.link, size: 14, color: context.textSecondary),
@@ -1942,6 +2173,97 @@ class _GitHubLogoPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+/// Custom X (Twitter) logo widget
+class _XLogo extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 20,
+      height: 20,
+      child: CustomPaint(painter: _XLogoPainter()),
+    );
+  }
+}
+
+class _XLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.width / 24;
+    canvas.scale(scale, scale);
+
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    // X logo path (the new Twitter/X brand mark)
+    final path = Path()
+      ..moveTo(18.244, 2.25)
+      ..lineTo(21.552, 2.25)
+      ..lineTo(14.325, 10.51)
+      ..lineTo(22.827, 21.75)
+      ..lineTo(16.17, 21.75)
+      ..lineTo(10.956, 14.933)
+      ..lineTo(4.99, 21.75)
+      ..lineTo(1.68, 21.75)
+      ..lineTo(9.41, 12.915)
+      ..lineTo(1.254, 2.25)
+      ..lineTo(8.08, 2.25)
+      ..lineTo(12.793, 8.481)
+      ..lineTo(18.244, 2.25)
+      ..close()
+      ..moveTo(17.083, 19.77)
+      ..lineTo(18.916, 19.77)
+      ..lineTo(7.084, 4.126)
+      ..lineTo(5.117, 4.126)
+      ..lineTo(17.083, 19.77)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _XLogoSmallPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.width / 24;
+    canvas.scale(scale, scale);
+
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(18.244, 2.25)
+      ..lineTo(21.552, 2.25)
+      ..lineTo(14.325, 10.51)
+      ..lineTo(22.827, 21.75)
+      ..lineTo(16.17, 21.75)
+      ..lineTo(10.956, 14.933)
+      ..lineTo(4.99, 21.75)
+      ..lineTo(1.68, 21.75)
+      ..lineTo(9.41, 12.915)
+      ..lineTo(1.254, 2.25)
+      ..lineTo(8.08, 2.25)
+      ..lineTo(12.793, 8.481)
+      ..lineTo(18.244, 2.25)
+      ..close()
+      ..moveTo(17.083, 19.77)
+      ..lineTo(18.916, 19.77)
+      ..lineTo(7.084, 4.126)
+      ..lineTo(5.117, 4.126)
+      ..lineTo(17.083, 19.77)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // CLOUD SYNC PAYWALL SHEET
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1960,8 +2282,8 @@ class _CloudSyncPaywallSheet extends ConsumerStatefulWidget {
       _CloudSyncPaywallSheetState();
 }
 
-class _CloudSyncPaywallSheetState
-    extends ConsumerState<_CloudSyncPaywallSheet> {
+class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
+    with LifecycleSafeMixin<_CloudSyncPaywallSheet> {
   bool _isLoading = true;
   List<StoreProduct> _products = [];
   String? _error;
@@ -1978,19 +2300,16 @@ class _CloudSyncPaywallSheetState
         'cloud_monthly',
         'cloud_yearly',
       ], productCategory: ProductCategory.subscription);
-      if (mounted) {
-        setState(() {
-          _products = products;
-          _isLoading = false;
-        });
-      }
+      if (!mounted) return;
+      safeSetState(() {
+        _products = products;
+        _isLoading = false;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = 'Could not load prices';
-          _isLoading = false;
-        });
-      }
+      safeSetState(() {
+        _error = 'Could not load prices';
+        _isLoading = false;
+      });
     }
   }
 
@@ -1999,15 +2318,13 @@ class _CloudSyncPaywallSheetState
     widget.onPurchaseStart();
     try {
       await Purchases.purchase(PurchaseParams.storeProduct(product));
-      if (mounted) {
-        Navigator.of(context).pop();
-        showSuccessSnackBar(context, 'Subscription activated!');
-      }
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      showSuccessSnackBar(context, 'Subscription activated!');
     } catch (e) {
       AppLogging.subscriptions('Purchase error: $e');
-      if (mounted) {
-        showErrorSnackBar(context, 'Purchase failed');
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Purchase failed');
     } finally {
       if (mounted) {
         widget.onPurchaseEnd();

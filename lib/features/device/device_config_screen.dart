@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -171,7 +172,8 @@ class DeviceConfigScreen extends ConsumerStatefulWidget {
   ConsumerState<DeviceConfigScreen> createState() => _DeviceConfigScreenState();
 }
 
-class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
+class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
+    with LifecycleSafeMixin {
   config_pbenum.Config_DeviceConfig_Role? _selectedRole;
   config_pbenum.Config_DeviceConfig_Role? _originalRole;
   bool _isSaving = false;
@@ -229,7 +231,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
 
     // Listen for device changes and force rebuild
     _deviceSub = ref.listenManual(connectedDeviceProvider, (previous, next) {
-      if (mounted) setState(() {});
+      safeSetState(() {});
     });
   }
 
@@ -294,7 +296,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   }
 
   Future<void> _loadCurrentConfig() async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
 
     final myNodeNum = ref.read(myNodeNumProvider);
     final nodes = ref.read(nodesProvider);
@@ -392,9 +394,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       _buzzerMode = config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED;
       _originalBuzzerMode = _buzzerMode;
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      safeSetState(() => _isLoading = false);
     }
   }
 
@@ -484,7 +484,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
 
   Future<void> _saveConfig() async {
     AppLogging.protocol('DeviceConfigScreen: _saveConfig started');
-    setState(() => _isSaving = true);
+    safeSetState(() => _isSaving = true);
 
     try {
       final protocol = ref.read(protocolServiceProvider);
@@ -574,25 +574,21 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         'DeviceConfigScreen: Config saved, device will reboot',
       );
 
+      safeSetState(() => _hasChanges = false);
       if (mounted) {
-        setState(() => _hasChanges = false);
         showSuccessSnackBar(context, 'Configuration saved - device rebooting');
-        // Pop the screen after a brief delay to let the snackbar appear
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
-            Navigator.pop(context);
-          }
-        });
       }
+      // Pop the screen after a brief delay to let the snackbar appear
+      Future.delayed(const Duration(milliseconds: 500), () {
+        safeNavigatorPop();
+      });
     } catch (e) {
       AppLogging.protocol('DeviceConfigScreen: Error saving config: $e');
       if (mounted) {
         showErrorSnackBar(context, 'Error saving config: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+      safeSetState(() => _isSaving = false);
     }
   }
 

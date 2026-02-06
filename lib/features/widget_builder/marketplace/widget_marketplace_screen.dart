@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../services/share_link_service.dart';
 import '../../../utils/share_utils.dart';
@@ -33,7 +34,7 @@ class WidgetMarketplaceScreen extends ConsumerStatefulWidget {
 
 class _WidgetMarketplaceScreenState
     extends ConsumerState<WidgetMarketplaceScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, LifecycleSafeMixin {
   late TabController _tabController;
   final _searchController = TextEditingController();
 
@@ -540,7 +541,8 @@ class WidgetDetailsScreen extends ConsumerStatefulWidget {
       _WidgetDetailsScreenState();
 }
 
-class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen> {
+class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
+    with LifecycleSafeMixin {
   bool _isInstalling = false;
 
   @override
@@ -817,10 +819,11 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen> {
       return;
     }
 
-    setState(() => _isInstalling = true);
+    safeSetState(() => _isInstalling = true);
 
     try {
       final service = ref.read(marketplaceServiceProvider);
+      final profileNotifier = ref.read(userProfileProvider.notifier);
       final marketplaceId = widget.marketplaceWidget.id;
 
       // Download widget schema
@@ -835,9 +838,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen> {
       );
 
       // Add to user profile for cloud sync (survives reinstall)
-      await ref
-          .read(userProfileProvider.notifier)
-          .addInstalledWidget(marketplaceId);
+      await profileNotifier.addInstalledWidget(marketplaceId);
 
       if (mounted) {
         showSuccessSnackBar(
@@ -859,9 +860,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen> {
         showErrorSnackBar(context, 'Failed to install: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isInstalling = false);
-      }
+      safeSetState(() => _isInstalling = false);
     }
   }
 
@@ -887,7 +886,8 @@ class _CategoryScreen extends ConsumerStatefulWidget {
   ConsumerState<_CategoryScreen> createState() => _CategoryScreenState();
 }
 
-class _CategoryScreenState extends ConsumerState<_CategoryScreen> {
+class _CategoryScreenState extends ConsumerState<_CategoryScreen>
+    with LifecycleSafeMixin {
   @override
   void initState() {
     super.initState();

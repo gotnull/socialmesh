@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../safety/lifecycle_mixin.dart';
 import '../../providers/review_providers.dart';
 
 /// A dialog that asks the user if they're enjoying the app and offers
@@ -35,14 +36,19 @@ class ReviewNudgeDialog extends ConsumerStatefulWidget {
   ConsumerState<ReviewNudgeDialog> createState() => _ReviewNudgeDialogState();
 }
 
-class _ReviewNudgeDialogState extends ConsumerState<ReviewNudgeDialog> {
+class _ReviewNudgeDialogState extends ConsumerState<ReviewNudgeDialog>
+    with LifecycleSafeMixin<ReviewNudgeDialog> {
   bool _isLoading = false;
 
   Future<void> _handleRateIt() async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
+
+    // Capture provider ref before await
+    final reviewServiceFuture = ref.read(appReviewServiceProvider.future);
 
     try {
-      final reviewService = await ref.read(appReviewServiceProvider.future);
+      final reviewService = await reviewServiceFuture;
+      if (!mounted) return;
 
       // Record that we showed the prompt
       await reviewService.recordPromptShown(widget.surface);
@@ -50,13 +56,11 @@ class _ReviewNudgeDialogState extends ConsumerState<ReviewNudgeDialog> {
       // Request the native review
       await reviewService.requestNativeReview();
 
-      if (mounted) {
-        Navigator.of(context).pop(true);
-      }
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
     } catch (e) {
-      if (mounted) {
-        Navigator.of(context).pop(false);
-      }
+      if (!mounted) return;
+      Navigator.of(context).pop(false);
     }
   }
 

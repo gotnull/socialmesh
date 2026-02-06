@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/auth_providers.dart';
@@ -162,18 +163,20 @@ class _ReviewModerationCard extends ConsumerStatefulWidget {
       _ReviewModerationCardState();
 }
 
-class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard> {
+class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
+    with LifecycleSafeMixin {
   bool _isProcessing = false;
 
   Future<void> _approve() async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
 
-    setState(() => _isProcessing = true);
+    // Capture provider before async gap
+    final shopService = ref.read(deviceShopServiceProvider);
+
+    safeSetState(() => _isProcessing = true);
     try {
-      await ref
-          .read(deviceShopServiceProvider)
-          .approveReview(widget.review.id, user.uid);
+      await shopService.approveReview(widget.review.id, user.uid);
 
       if (mounted) {
         showSuccessSnackBar(context, 'Review approved');
@@ -183,7 +186,7 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard> {
         showErrorSnackBar(context, 'Error: $e');
       }
     } finally {
-      if (mounted) setState(() => _isProcessing = false);
+      safeSetState(() => _isProcessing = false);
     }
   }
 
@@ -191,18 +194,20 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard> {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
 
+    // Capture provider before async gap
+    final shopService = ref.read(deviceShopServiceProvider);
+
     final reason = await showDialog<String>(
       context: context,
       builder: (context) => const _RejectReasonDialog(),
     );
 
     if (reason == null || reason.isEmpty) return;
+    if (!mounted) return;
 
-    setState(() => _isProcessing = true);
+    safeSetState(() => _isProcessing = true);
     try {
-      await ref
-          .read(deviceShopServiceProvider)
-          .rejectReview(widget.review.id, user.uid, reason);
+      await shopService.rejectReview(widget.review.id, user.uid, reason);
 
       if (mounted) {
         showSuccessSnackBar(context, 'Review rejected');
@@ -212,11 +217,14 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard> {
         showErrorSnackBar(context, 'Error: $e');
       }
     } finally {
-      if (mounted) setState(() => _isProcessing = false);
+      safeSetState(() => _isProcessing = false);
     }
   }
 
   Future<void> _delete() async {
+    // Capture provider before async gap
+    final shopService = ref.read(deviceShopServiceProvider);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -239,10 +247,11 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard> {
     );
 
     if (confirmed != true) return;
+    if (!mounted) return;
 
-    setState(() => _isProcessing = true);
+    safeSetState(() => _isProcessing = true);
     try {
-      await ref.read(deviceShopServiceProvider).deleteReview(widget.review.id);
+      await shopService.deleteReview(widget.review.id);
 
       if (mounted) {
         showSuccessSnackBar(context, 'Review deleted');
@@ -252,7 +261,7 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard> {
         showErrorSnackBar(context, 'Error: $e');
       }
     } finally {
-      if (mounted) setState(() => _isProcessing = false);
+      safeSetState(() => _isProcessing = false);
     }
   }
 

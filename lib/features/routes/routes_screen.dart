@@ -11,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/gradient_border_container.dart';
@@ -29,7 +30,8 @@ class RoutesScreen extends ConsumerStatefulWidget {
   ConsumerState<RoutesScreen> createState() => _RoutesScreenState();
 }
 
-class _RoutesScreenState extends ConsumerState<RoutesScreen> {
+class _RoutesScreenState extends ConsumerState<RoutesScreen>
+    with LifecycleSafeMixin {
   @override
   Widget build(BuildContext context) {
     final routes = ref.watch(routesProvider);
@@ -217,6 +219,10 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
   }
 
   Future<void> _importRoute() async {
+    // Capture providers before async gap
+    final storageAsync = ref.read(routeStorageProvider);
+    final routesNotifier = ref.read(routesProvider.notifier);
+
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -235,13 +241,12 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
       }
 
       final gpxContent = String.fromCharCodes(file.bytes!);
-      final storageAsync = ref.read(routeStorageProvider);
       final storage = storageAsync.value;
       if (storage == null) return;
 
       final importedRoute = storage.importRouteFromGpx(gpxContent);
       if (importedRoute != null) {
-        await ref.read(routesProvider.notifier).saveRoute(importedRoute);
+        await routesNotifier.saveRoute(importedRoute);
         if (mounted) {
           showSuccessSnackBar(context, 'Imported: ${importedRoute.name}');
         }

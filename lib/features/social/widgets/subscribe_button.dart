@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
@@ -21,7 +22,8 @@ class SubscribeButton extends ConsumerStatefulWidget {
   ConsumerState<SubscribeButton> createState() => _SubscribeButtonState();
 }
 
-class _SubscribeButtonState extends ConsumerState<SubscribeButton> {
+class _SubscribeButtonState extends ConsumerState<SubscribeButton>
+    with LifecycleSafeMixin {
   bool _isLoading = false;
 
   @override
@@ -121,7 +123,7 @@ class _SubscribeButtonState extends ConsumerState<SubscribeButton> {
   }
 
   Future<void> _handleToggle() async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
     final service = ref.read(socialServiceProvider);
     try {
       final isSubscribed = await service.isSubscribedToAuthorSignals(
@@ -144,7 +146,7 @@ class _SubscribeButtonState extends ConsumerState<SubscribeButton> {
         showErrorSnackBar(context, 'Failed to update subscription: $e');
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
     }
   }
 }

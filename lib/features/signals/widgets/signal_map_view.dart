@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/map_config.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../models/social.dart';
@@ -35,7 +36,8 @@ class SignalMapView extends ConsumerStatefulWidget {
   ConsumerState<SignalMapView> createState() => _SignalMapViewState();
 }
 
-class _SignalMapViewState extends ConsumerState<SignalMapView> {
+class _SignalMapViewState extends ConsumerState<SignalMapView>
+    with LifecycleSafeMixin<SignalMapView> {
   final MapController _mapController = MapController();
   Post? _selectedSignal;
   bool _showSignalList = false;
@@ -46,7 +48,7 @@ class _SignalMapViewState extends ConsumerState<SignalMapView> {
   void focusOnSignal(Post signal, {double zoom = 15.0}) {
     if (signal.location == null) return;
 
-    setState(() {
+    safeSetState(() {
       _selectedSignal = signal;
       _showSignalList = false;
     });
@@ -96,11 +98,12 @@ class _SignalMapViewState extends ConsumerState<SignalMapView> {
   }
 
   Future<void> _loadMapStyle() async {
-    final settings = await ref.read(settingsServiceProvider.future);
-    final index = settings.mapTileStyleIndex;
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final settings = await settingsFuture;
     if (!mounted) return;
+    final index = settings.mapTileStyleIndex;
     if (index >= 0 && index < MapTileStyle.values.length) {
-      setState(() => _mapStyle = MapTileStyle.values[index]);
+      safeSetState(() => _mapStyle = MapTileStyle.values[index]);
     }
   }
 

@@ -510,16 +510,20 @@ class _ActivityTimeline extends StatelessWidget {
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: _getBucketColor(context, index),
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                Container(
-                  height: height,
-                  decoration: BoxDecoration(
-                    color: _getBucketColor(
-                      context,
-                      index,
-                    ).withAlpha(count > 0 ? 200 : 51),
-                    borderRadius: BorderRadius.circular(4),
+                Flexible(
+                  child: Container(
+                    constraints: BoxConstraints(maxHeight: height),
+                    decoration: BoxDecoration(
+                      color: _getBucketColor(
+                        context,
+                        index,
+                      ).withAlpha(count > 0 ? 200 : 51),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
                 ),
               ],

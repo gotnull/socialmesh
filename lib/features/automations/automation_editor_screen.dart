@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import '../../core/safety/lifecycle_mixin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -34,13 +35,14 @@ class AutomationEditorScreen extends ConsumerStatefulWidget {
       _AutomationEditorScreenState();
 }
 
-class _AutomationEditorScreenState
-    extends ConsumerState<AutomationEditorScreen> {
+class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
+    with LifecycleSafeMixin<AutomationEditorScreen> {
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
   late AutomationTrigger _trigger;
   late List<AutomationAction> _actions;
   late bool _enabled;
+  bool _isSaving = false;
 
   bool get _isEditing => widget.automation != null && !widget.isNew;
 
@@ -416,16 +418,21 @@ class _AutomationEditorScreenState
   /// Build the save button
   Widget _buildSaveButton() {
     final theme = Theme.of(context);
-    final gradientColors = [
-      theme.colorScheme.primary,
-      theme.colorScheme.primary.withValues(alpha: 0.8),
-    ];
+    final gradientColors = _isSaving
+        ? [
+            theme.colorScheme.primary.withValues(alpha: 0.5),
+            theme.colorScheme.primary.withValues(alpha: 0.4),
+          ]
+        : [
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withValues(alpha: 0.8),
+          ];
 
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: BouncyTap(
-          onTap: _save,
+          onTap: _isSaving ? null : _save,
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -433,15 +440,38 @@ class _AutomationEditorScreenState
               gradient: LinearGradient(colors: gradientColors),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(
-              _isEditing ? 'Save Changes' : 'Create Automation',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
-            ),
+            child: _isSaving
+                ? const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        'Saving...',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  )
+                : Text(
+                    _isEditing ? 'Save Changes' : 'Create Automation',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
           ),
         ),
       ),
@@ -643,6 +673,8 @@ class _AutomationEditorScreenState
       }
     }
 
+    safeSetState(() => _isSaving = true);
+
     final description = _descriptionController.text.trim();
 
     final automation = Automation(
@@ -657,18 +689,28 @@ class _AutomationEditorScreenState
       triggerCount: widget.automation?.triggerCount ?? 0,
     );
 
-    if (_isEditing) {
-      await ref.read(automationsProvider.notifier).updateAutomation(automation);
-    } else {
-      await ref.read(automationsProvider.notifier).addAutomation(automation);
-    }
+    // Capture provider and navigator before any await
+    final automationsNotifier = ref.read(automationsProvider.notifier);
+    final navigator = Navigator.of(context);
 
-    if (mounted) {
-      Navigator.pop(context);
+    try {
+      if (_isEditing) {
+        await automationsNotifier.updateAutomation(automation);
+      } else {
+        await automationsNotifier.addAutomation(automation);
+      }
+
+      if (!mounted) return;
+      navigator.pop();
       showSuccessSnackBar(
         context,
         _isEditing ? 'Automation updated' : 'Automation created',
       );
+    } catch (e) {
+      safeSetState(() => _isSaving = false);
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to save automation');
+      }
     }
   }
 }

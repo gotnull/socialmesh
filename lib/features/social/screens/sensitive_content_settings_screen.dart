@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:socialmesh/core/safety/lifecycle_mixin.dart';
 import 'package:socialmesh/utils/snackbar.dart';
 
 import '../../../core/theme.dart';
@@ -20,7 +21,8 @@ class SensitiveContentSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SensitiveContentSettingsScreenState
-    extends ConsumerState<SensitiveContentSettingsScreen> {
+    extends ConsumerState<SensitiveContentSettingsScreen>
+    with LifecycleSafeMixin {
   SensitiveContentSettings? _settings;
   bool _isSaving = false;
 
@@ -33,20 +35,16 @@ class _SensitiveContentSettingsScreenState
   Future<void> _loadSettings() async {
     final service = ref.read(contentModerationServiceProvider);
     final settings = await service.getSensitiveContentSettings();
-    if (mounted) {
-      setState(() => _settings = settings);
-    }
+    safeSetState(() => _settings = settings);
   }
 
   Future<void> _saveSettings(SensitiveContentSettings settings) async {
-    setState(() => _isSaving = true);
+    safeSetState(() => _isSaving = true);
     try {
       await updateSensitiveContentSettings(ref, settings);
-      setState(() => _settings = settings);
+      safeSetState(() => _settings = settings);
     } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+      safeSetState(() => _isSaving = false);
     }
   }
 
@@ -326,7 +324,8 @@ class StrikeWarningDialog extends ConsumerStatefulWidget {
   final List<UserStrike> strikes;
 
   static Future<void> showIfNeeded(BuildContext context, WidgetRef ref) async {
-    final strikes = await ref.read(unacknowledgedStrikesProvider.future);
+    final strikesFuture = ref.read(unacknowledgedStrikesProvider.future);
+    final strikes = await strikesFuture;
     if (strikes.isEmpty || !context.mounted) return;
 
     await showDialog<void>(
@@ -341,28 +340,30 @@ class StrikeWarningDialog extends ConsumerStatefulWidget {
       _StrikeWarningDialogState();
 }
 
-class _StrikeWarningDialogState extends ConsumerState<StrikeWarningDialog> {
+class _StrikeWarningDialogState extends ConsumerState<StrikeWarningDialog>
+    with LifecycleSafeMixin {
   bool _isAcknowledging = false;
   int _currentIndex = 0;
 
   UserStrike get _currentStrike => widget.strikes[_currentIndex];
 
   Future<void> _acknowledgeAndNext() async {
-    setState(() => _isAcknowledging = true);
+    safeSetState(() => _isAcknowledging = true);
     try {
       await acknowledgeStrike(ref, _currentStrike.id);
+      if (!mounted) return;
 
       if (_currentIndex < widget.strikes.length - 1) {
-        setState(() {
+        safeSetState(() {
           _currentIndex++;
           _isAcknowledging = false;
         });
       } else {
-        if (mounted) Navigator.of(context).pop();
+        safeNavigatorPop();
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isAcknowledging = false);
+        safeSetState(() => _isAcknowledging = false);
         showErrorSnackBar(context, 'Error: $e');
       }
     }

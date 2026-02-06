@@ -38,6 +38,29 @@ void main() {
         expect(result.type, DeepLinkType.channel);
         expect(result.isValid, true);
         expect(result.channelBase64Data, base64);
+        expect(result.channelFirestoreId, isNull);
+        expect(result.hasChannelBase64Data, true);
+        expect(result.hasChannelFirestoreId, false);
+      });
+
+      test('parses channel link with Firestore ID prefix', () {
+        final result = deepLinkParser.parse(
+          'socialmesh://channel/id:abc123xyz789',
+        );
+
+        expect(result.type, DeepLinkType.channel);
+        expect(result.isValid, true);
+        expect(result.channelFirestoreId, 'abc123xyz789');
+        expect(result.channelBase64Data, isNull);
+        expect(result.hasChannelFirestoreId, true);
+        expect(result.hasChannelBase64Data, false);
+      });
+
+      test('parses channel link with empty Firestore ID as invalid', () {
+        final result = deepLinkParser.parse('socialmesh://channel/id:');
+
+        expect(result.type, DeepLinkType.invalid);
+        expect(result.isValid, false);
       });
 
       test('parses profile link', () {
@@ -152,6 +175,27 @@ void main() {
         expect(result.type, DeepLinkType.profile);
         expect(result.isValid, true);
         expect(result.profileDisplayName, 'userId456');
+      });
+
+      test('parses channel share link', () {
+        final result = deepLinkParser.parse(
+          'https://socialmesh.app/share/channel/channelDoc456',
+        );
+
+        expect(result.type, DeepLinkType.channel);
+        expect(result.isValid, true);
+        expect(result.channelFirestoreId, 'channelDoc456');
+        expect(result.channelBase64Data, isNull);
+        expect(result.hasChannelFirestoreId, true);
+      });
+
+      test('parses channel share link with missing ID as invalid', () {
+        final result = deepLinkParser.parse(
+          'https://socialmesh.app/share/channel/',
+        );
+
+        expect(result.type, DeepLinkType.invalid);
+        expect(result.isValid, false);
       });
 
       test('parses widget share link', () {
@@ -338,7 +382,7 @@ void main() {
       expect(result.arguments?['scrollToNode'], true);
     });
 
-    test('routes channel link to /qr-scanner', () {
+    test('routes channel link with base64 data to /qr-scanner', () {
       final link = ParsedDeepLink(
         type: DeepLinkType.channel,
         originalUri: 'socialmesh://channel/data',
@@ -350,6 +394,32 @@ void main() {
       expect(result.routeName, '/qr-scanner');
       expect(result.arguments?['base64Data'], 'channelData123');
       expect(result.requiresDevice, true);
+    });
+
+    test('routes channel link with Firestore ID to /channel-import', () {
+      final link = ParsedDeepLink(
+        type: DeepLinkType.channel,
+        originalUri: 'socialmesh://channel/id:abc123',
+        channelFirestoreId: 'abc123',
+      );
+
+      final result = deepLinkRouter.route(link);
+
+      expect(result.routeName, '/channel-import');
+      expect(result.arguments?['firestoreId'], 'abc123');
+      expect(result.requiresDevice, true);
+    });
+
+    test('routes channel link without data to /channels fallback', () {
+      final link = ParsedDeepLink(
+        type: DeepLinkType.channel,
+        originalUri: 'socialmesh://channel/empty',
+      );
+
+      final result = deepLinkRouter.route(link);
+
+      expect(result.routeName, '/channels');
+      expect(result.fallbackMessage, 'Invalid channel data');
     });
 
     test('routes profile link to /profile', () {
@@ -462,11 +532,23 @@ void main() {
       expect(result.fallbackMessage, contains('Invalid link'));
     });
 
-    test('channel link requiresDevice is true', () {
+    test('channel link with base64 requiresDevice is true', () {
       final link = ParsedDeepLink(
         type: DeepLinkType.channel,
         originalUri: 'socialmesh://channel/test',
         channelBase64Data: 'test',
+      );
+
+      final result = deepLinkRouter.route(link);
+
+      expect(result.requiresDevice, true);
+    });
+
+    test('channel link with Firestore ID requiresDevice is true', () {
+      final link = ParsedDeepLink(
+        type: DeepLinkType.channel,
+        originalUri: 'https://socialmesh.app/share/channel/doc123',
+        channelFirestoreId: 'doc123',
       );
 
       final result = deepLinkRouter.route(link);

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -15,7 +16,8 @@ class AdminPostsScreen extends StatefulWidget {
   State<AdminPostsScreen> createState() => _AdminPostsScreenState();
 }
 
-class _AdminPostsScreenState extends State<AdminPostsScreen> {
+class _AdminPostsScreenState extends State<AdminPostsScreen>
+    with StatefulLifecycleSafeMixin<AdminPostsScreen> {
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd HH:mm');
   bool _showSignalsOnly = false;
   bool _showExpiredOnly = false;
@@ -25,6 +27,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen> {
   int _lastTotalCount = 0;
   int _lastFilteredCount = 0;
   List<DocumentReference> _filteredDocRefs = [];
+  bool _isDeleting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -37,14 +40,20 @@ class _AdminPostsScreenState extends State<AdminPostsScreen> {
       title: 'Signals',
       actions: [
         IconButton(
-          icon: const Icon(Icons.delete_sweep_outlined),
+          icon: _isDeleting
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.delete_sweep_outlined),
           tooltip: 'Delete all signals',
-          onPressed: () => _confirmBulkDelete(context),
+          onPressed: _isDeleting ? null : () => _confirmBulkDelete(context),
         ),
         IconButton(
           icon: const Icon(Icons.refresh_outlined),
           tooltip: 'Refresh snapshot',
-          onPressed: () => setState(() {}),
+          onPressed: () => safeSetState(() {}),
         ),
       ],
       slivers: [
@@ -58,11 +67,12 @@ class _AdminPostsScreenState extends State<AdminPostsScreen> {
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
-                        onPressed: () => setState(() => _searchQuery = ''),
+                        onPressed: () => safeSetState(() => _searchQuery = ''),
                       )
                     : null,
               ),
-              onChanged: (value) => setState(() => _searchQuery = value.trim()),
+              onChanged: (value) =>
+                  safeSetState(() => _searchQuery = value.trim()),
             ),
           ),
         ),
@@ -168,7 +178,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen> {
                                       !_showExpiredOnly &&
                                       !_showWithLocation &&
                                       !_showWithMedia,
-                                  onTap: () => setState(() {
+                                  onTap: () => safeSetState(() {
                                     _showSignalsOnly = false;
                                     _showExpiredOnly = false;
                                     _showWithLocation = false;
@@ -181,7 +191,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen> {
                                   count: signalCount,
                                   isSelected: _showSignalsOnly,
                                   color: AccentColors.cyan,
-                                  onTap: () => setState(() {
+                                  onTap: () => safeSetState(() {
                                     _showSignalsOnly = true;
                                     _showExpiredOnly = false;
                                   }),
@@ -192,7 +202,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen> {
                                   count: expiredCount,
                                   isSelected: _showExpiredOnly,
                                   color: AppTheme.warningYellow,
-                                  onTap: () => setState(() {
+                                  onTap: () => safeSetState(() {
                                     _showSignalsOnly = false;
                                     _showExpiredOnly = true;
                                   }),
@@ -203,7 +213,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen> {
                                   count: locationCount,
                                   isSelected: _showWithLocation,
                                   color: AccentColors.green,
-                                  onTap: () => setState(() {
+                                  onTap: () => safeSetState(() {
                                     _showWithLocation = !_showWithLocation;
                                   }),
                                 ),
@@ -213,7 +223,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen> {
                                   count: mediaCount,
                                   isSelected: _showWithMedia,
                                   color: AccentColors.orange,
-                                  onTap: () => setState(() {
+                                  onTap: () => safeSetState(() {
                                     _showWithMedia = !_showWithMedia;
                                   }),
                                 ),
@@ -280,12 +290,17 @@ class _AdminPostsScreenState extends State<AdminPostsScreen> {
         ) ??
         false;
 
-    if (!confirmed) return;
+    if (!confirmed || !mounted) return;
 
-    await docRef.delete();
+    safeSetState(() => _isDeleting = true);
+    try {
+      await docRef.delete();
+    } finally {
+      safeSetState(() => _isDeleting = false);
+    }
   }
 
-  Future<void> _confirmBulkDelete(BuildContext context) async {
+  Future<void> _confirmBulkDelete(BuildContext dialogContext) async {
     final hasFilters = _hasActiveFilters;
     final filteredCount = _lastFilteredCount;
     final totalCount = _lastTotalCount;
@@ -343,15 +358,20 @@ class _AdminPostsScreenState extends State<AdminPostsScreen> {
       },
     );
 
-    if (result == null) return;
+    if (result == null || !mounted) return;
 
-    if (result == _DeleteScope.filtered) {
-      if (filteredRefs.isEmpty) return;
-      await _deleteDocs(filteredRefs);
-      return;
+    safeSetState(() => _isDeleting = true);
+    try {
+      if (result == _DeleteScope.filtered) {
+        if (filteredRefs.isEmpty) return;
+        await _deleteDocs(filteredRefs);
+        return;
+      }
+
+      await _deleteAllDocs();
+    } finally {
+      safeSetState(() => _isDeleting = false);
     }
-
-    await _deleteAllDocs();
   }
 
   bool get _hasActiveFilters =>

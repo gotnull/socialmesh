@@ -880,78 +880,81 @@ class AutomationsScreen extends ConsumerWidget {
         minChildSize: 0.5,
         maxChildSize: 0.95,
         expand: false,
-        builder: (context, scrollController) => Column(
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[600],
-                borderRadius: BorderRadius.circular(2),
+        builder: (context, scrollController) => SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[600],
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Execution Log',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (log.isNotEmpty)
-                    TextButton(
-                      onPressed: () {
-                        ref.read(automationRepositoryProvider).clearLog();
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Clear'),
-                    ),
-                ],
-              ),
-            ),
-            const Divider(),
-            Expanded(
-              child: log.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'No executions yet',
-                        style: TextStyle(color: Colors.grey),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Execution Log',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                    )
-                  : ListView.builder(
-                      controller: scrollController,
-                      itemCount: log.length,
-                      itemBuilder: (context, index) {
-                        final entry = log[index];
-                        return ListTile(
-                          leading: Icon(
-                            entry.success ? Icons.check_circle : Icons.error,
-                            color: entry.success
-                                ? AppTheme.successGreen
-                                : AppTheme.errorRed,
-                          ),
-                          title: Text(entry.automationName),
-                          subtitle: Text(
-                            entry.triggerDetails ?? '',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          trailing: Text(
-                            _formatTime(entry.timestamp),
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
-                        );
-                      },
                     ),
-            ),
-          ],
+                    if (log.isNotEmpty)
+                      TextButton(
+                        onPressed: () {
+                          ref.read(automationRepositoryProvider).clearLog();
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Clear'),
+                      ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              Expanded(
+                child: log.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No executions yet',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: scrollController,
+                        itemCount: log.length,
+                        itemBuilder: (context, index) {
+                          final entry = log[index];
+                          return ListTile(
+                            leading: Icon(
+                              entry.success ? Icons.check_circle : Icons.error,
+                              color: entry.success
+                                  ? AppTheme.successGreen
+                                  : AppTheme.errorRed,
+                            ),
+                            title: Text(entry.automationName),
+                            subtitle: Text(
+                              entry.triggerDetails ?? '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            trailing: Text(
+                              _formatTime(entry.timestamp),
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );

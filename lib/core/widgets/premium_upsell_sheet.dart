@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../safety/lifecycle_mixin.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/haptic_service.dart';
@@ -33,7 +34,8 @@ class PremiumUpsellSheet extends ConsumerStatefulWidget {
   ConsumerState<PremiumUpsellSheet> createState() => _PremiumUpsellSheetState();
 }
 
-class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet> {
+class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
+    with LifecycleSafeMixin<PremiumUpsellSheet> {
   bool _isLoading = false;
 
   /// Get the purchase info for this feature
@@ -171,10 +173,13 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet> {
     final purchase = _purchase;
     if (purchase == null) return;
 
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
+
+    // Capture haptic service before await
+    final haptics = ref.haptics;
 
     try {
-      ref.haptics.buttonTap();
+      haptics.buttonTap();
 
       final result = await purchaseProduct(ref, purchase.productId);
 
@@ -182,30 +187,29 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet> {
 
       switch (result) {
         case PurchaseResult.success:
-          ref.haptics.success();
+          haptics.success();
           showSuccessSnackBar(context, '${purchase.name} unlocked!');
           // Close sheet and return success
           Navigator.of(context).pop(true);
 
         case PurchaseResult.canceled:
           // User canceled, do nothing
-          setState(() => _isLoading = false);
+          safeSetState(() => _isLoading = false);
 
         case PurchaseResult.error:
-          ref.haptics.error();
+          haptics.error();
           showErrorSnackBar(context, 'Purchase failed. Please try again.');
-          setState(() => _isLoading = false);
+          safeSetState(() => _isLoading = false);
       }
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Something went wrong. Please try again.');
-        setState(() => _isLoading = false);
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Something went wrong. Please try again.');
+      safeSetState(() => _isLoading = false);
     }
   }
 
   Future<void> _handleRestore() async {
-    setState(() => _isLoading = true);
+    safeSetState(() => _isLoading = true);
 
     try {
       final restored = await restorePurchases(ref);
@@ -223,12 +227,11 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet> {
       }
 
       showInfoSnackBar(context, 'No purchases found to restore');
-      setState(() => _isLoading = false);
+      safeSetState(() => _isLoading = false);
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to restore purchases');
-        setState(() => _isLoading = false);
-      }
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to restore purchases');
+      safeSetState(() => _isLoading = false);
     }
   }
 

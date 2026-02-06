@@ -11,7 +11,8 @@ import 'deep_link_types.dart';
 ///
 /// **Custom Scheme (socialmesh://):**
 /// - `socialmesh://node/{base64}` - Node from QR code
-/// - `socialmesh://channel/{base64}` - Channel import
+/// - `socialmesh://channel/{base64}` - Channel import (legacy)
+/// - `socialmesh://channel/id:{firestoreId}` - Channel from cloud sharing
 /// - `socialmesh://profile/{userId}` - User profile
 /// - `socialmesh://widget/{widgetId}` - Widget detail
 /// - `socialmesh://post/{postId}` - Post detail
@@ -20,6 +21,7 @@ import 'deep_link_types.dart';
 ///
 /// **Universal Links (https://socialmesh.app/share/...):**
 /// - `https://socialmesh.app/share/node/{firestoreId}` - Node from web
+/// - `https://socialmesh.app/share/channel/{firestoreId}` - Channel from web
 /// - `https://socialmesh.app/share/profile/{userId}` - Profile from web
 /// - `https://socialmesh.app/share/widget/{widgetId}` - Widget from web
 /// - `https://socialmesh.app/share/post/{postId}` - Post from web
@@ -236,6 +238,19 @@ class DeepLinkParser {
         AppLogging.qr('🔗 Parser: Processing location from query params');
         return _parseLocationLink(uri.queryParameters, original);
 
+      case 'channel':
+        // Web share links use Firestore doc ID
+        if (id == null || id.isEmpty) {
+          AppLogging.qr('🔗 Parser: ERROR - Missing channel ID');
+          return ParsedDeepLink.invalid(original, ['Missing channel ID']);
+        }
+        AppLogging.qr('🔗 Parser: Returning channel link with firestoreId=$id');
+        return ParsedDeepLink(
+          type: DeepLinkType.channel,
+          originalUri: original,
+          channelFirestoreId: id,
+        );
+
       case 'automation':
         // Web share links use Firestore doc ID
         if (id == null || id.isEmpty) {
@@ -348,12 +363,33 @@ class DeepLinkParser {
   }
 
   /// Parse a channel deep link.
+  ///
+  /// Handles:
+  /// - id:{firestoreId} - Cloud-stored channel from QR code sharing
+  /// - Base64-encoded protobuf channel data (legacy/direct QR sharing)
   ParsedDeepLink _parseChannelLink(String? data, String original) {
     if (data == null || data.isEmpty) {
       return ParsedDeepLink(
         type: DeepLinkType.channel,
         originalUri: original,
         validationErrors: ['Missing channel data'],
+      );
+    }
+
+    // Check for Firestore ID prefix (from cloud-stored channels)
+    // Format: id:{firestoreId}
+    if (data.startsWith('id:')) {
+      final firestoreId = data.substring(3);
+      if (firestoreId.isEmpty) {
+        return ParsedDeepLink.invalid(original, [
+          'Missing channel Firestore ID',
+        ]);
+      }
+      AppLogging.qr('🔗 Parser: Detected Firestore channel ID: $firestoreId');
+      return ParsedDeepLink(
+        type: DeepLinkType.channel,
+        originalUri: original,
+        channelFirestoreId: firestoreId,
       );
     }
 

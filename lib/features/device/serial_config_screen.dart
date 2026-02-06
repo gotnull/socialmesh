@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/app_providers.dart';
@@ -14,7 +15,8 @@ class SerialConfigScreen extends ConsumerStatefulWidget {
   ConsumerState<SerialConfigScreen> createState() => _SerialConfigScreenState();
 }
 
-class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
+class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
+    with LifecycleSafeMixin {
   bool _serialEnabled = false;
   bool _rxdGpioEnabled = false;
   bool _txdGpioEnabled = false;
@@ -66,15 +68,13 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
 
     // Check if we're connected before trying to load config
     if (!protocol.isConnected) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      safeSetState(() => _isLoading = false);
       return;
     }
 
     final config = await protocol.getSerialModuleConfig();
     if (config != null && mounted) {
-      setState(() {
+      safeSetState(() {
         _serialEnabled = config.enabled;
         _rxdGpioEnabled = config.rxd > 0;
         _txdGpioEnabled = config.txd > 0;
@@ -87,8 +87,8 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
         _mode = _modeNames[config.mode.value] ?? 'SIMPLE';
         _isLoading = false;
       });
-    } else if (mounted) {
-      setState(() => _isLoading = false);
+    } else {
+      safeSetState(() => _isLoading = false);
     }
   }
 
@@ -116,7 +116,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
   }
 
   Future<void> _saveConfig() async {
-    setState(() => _isSaving = true);
+    safeSetState(() => _isSaving = true);
 
     try {
       final protocol = ref.read(protocolServiceProvider);
@@ -131,8 +131,8 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
         overrideConsoleSerialPort: _overrideConsoleSerialPort,
       );
 
+      safeSetState(() => _hasChanges = false);
       if (mounted) {
-        setState(() => _hasChanges = false);
         showSuccessSnackBar(context, 'Serial configuration saved');
       }
     } catch (e) {
@@ -140,9 +140,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
         showErrorSnackBar(context, 'Error saving config: $e');
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+      safeSetState(() => _isSaving = false);
     }
   }
 

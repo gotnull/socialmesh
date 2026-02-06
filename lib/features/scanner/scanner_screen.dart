@@ -6,6 +6,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../providers/connection_providers.dart' as conn;
 
 import 'package:flutter/material.dart';
@@ -43,7 +44,8 @@ class ScannerScreen extends ConsumerStatefulWidget {
   ConsumerState<ScannerScreen> createState() => _ScannerScreenState();
 }
 
-class _ScannerScreenState extends ConsumerState<ScannerScreen> {
+class _ScannerScreenState extends ConsumerState<ScannerScreen>
+    with LifecycleSafeMixin {
   final List<DeviceInfo> _devices = [];
   bool _scanning = false;
   bool _connecting = false;
@@ -126,10 +128,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   }
 
   Future<void> _tryAutoReconnect() async {
-    // Check if auto-reconnect already failed (e.g., user cancelled PIN during app init)
-    // In that case, don't retry - just show the scanner
+    // Capture providers BEFORE any await
     final autoReconnectState = ref.read(autoReconnectStateProvider);
     final deviceState = ref.read(conn.deviceConnectionProvider);
+    final userDisconnected = ref.read(userDisconnectedProvider);
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final transport = ref.read(transportProvider);
 
     AppLogging.connection(
       '📡 SCANNER: _tryAutoReconnect - autoReconnectState=$autoReconnectState, '
@@ -145,7 +149,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     }
 
     // CRITICAL: Check the global userDisconnected flag
-    final userDisconnected = ref.read(userDisconnectedProvider);
     if (userDisconnected) {
       AppLogging.connection(
         '📡 SCANNER: User manually disconnected (global flag), skipping auto-reconnect',
@@ -166,7 +169,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     // Wait for settings service to initialize
     final SettingsService settingsService;
     try {
-      settingsService = await ref.read(settingsServiceProvider.future);
+      settingsService = await settingsFuture;
     } catch (e) {
       AppLogging.connection('📡 SCANNER: Failed to load settings service: $e');
       _startScan();
@@ -198,7 +201,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
     if (!mounted) return;
 
-    setState(() {
+    safeSetState(() {
       _autoReconnecting = true;
     });
 
@@ -211,7 +214,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       // explicitly taps on a device to connect in _connect()
 
       // Start scanning to find the last device
-      final transport = ref.read(transportProvider);
       final scanStream = transport.scan(timeout: const Duration(seconds: 5));
       DeviceInfo? lastDevice;
 
@@ -249,7 +251,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
           '📡 SCANNER: Auto-reconnect device not found, starting regular scan',
         );
         // Device not found, start regular scan and show info message
-        setState(() {
+        safeSetState(() {
           _autoReconnecting = false;
           _savedDeviceNotFoundName = lastDeviceName ?? 'your saved device';
         });
@@ -257,12 +259,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       }
     } catch (e) {
       AppLogging.connection('📡 SCANNER: Auto-reconnect failed: $e');
-      if (mounted) {
-        setState(() {
-          _autoReconnecting = false;
-        });
-        _startScan();
-      }
+      safeSetState(() {
+        _autoReconnecting = false;
+      });
+      if (mounted) _startScan();
     }
   }
 
@@ -274,16 +274,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       return;
     }
 
-    // Check if user just manually disconnected - need extra time for device
-    // to start advertising again after we released the BLE connection
+    // Capture providers BEFORE any await
     final userJustDisconnected = ref.read(userDisconnectedProvider);
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final transport = ref.read(transportProvider);
+    final showAllDevices = ref.read(showAllBleDevicesProvider);
     AppLogging.connection(
       '📡 SCANNER: Starting 10s scan... (userJustDisconnected=$userJustDisconnected)',
     );
 
     // Get saved device info before scan to check if it was found afterward
     try {
-      final settingsService = await ref.read(settingsServiceProvider.future);
+      final settingsService = await settingsFuture;
       _updateSavedDeviceMeta(
         savedDeviceId: settingsService.lastDeviceId,
         savedDeviceName: settingsService.lastDeviceName,
@@ -295,7 +297,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       AppLogging.connection('📡 SCANNER: Failed to load saved device info: $e');
     }
 
-    setState(() {
+    safeSetState(() {
       _scanning = true;
       _devices.clear();
       _errorMessage = null;
@@ -471,8 +473,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         return;
       }
 
-      final transport = ref.read(transportProvider);
-      final showAllDevices = ref.read(showAllBleDevicesProvider);
       AppLogging.connection(
         '📡 SCANNER: Starting transport.scan(scanAll: $showAllDevices)...',
       );
@@ -489,7 +489,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         AppLogging.connection(
           '📡 SCANNER: Found device ${device.id} (${device.name})',
         );
-        setState(() {
+        safeSetState(() {
           // Avoid duplicates
           final index = _devices.indexWhere((d) => d.id == device.id);
           if (index >= 0) {
@@ -512,7 +512,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
           AppLogging.connection(
             '📡 SCANNER: Saved device $_savedDeviceId not found, may be connected elsewhere',
           );
-          setState(() {
+          safeSetState(() {
             _savedDeviceNotFoundName = _savedDeviceName ?? 'Your saved device';
           });
         }
@@ -521,18 +521,16 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       AppLogging.connection('📡 SCANNER: Scan error: $e');
       if (mounted) {
         final message = e.toString().replaceFirst('Exception: ', '');
-        setState(() {
+        safeSetState(() {
           _errorMessage = message;
           _showPairingInvalidationHint = false;
         });
       }
     } finally {
       AppLogging.connection('📡 SCANNER: Scan finally block, mounted=$mounted');
-      if (mounted) {
-        setState(() {
-          _scanning = false;
-        });
-      }
+      safeSetState(() {
+        _scanning = false;
+      });
     }
   }
 
@@ -608,6 +606,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       '📡 SCANNER: User tapped to connect to ${device.id} (${device.name})',
     );
 
+    // Capture providers BEFORE any await
+    final userDisconnectedNotifier = ref.read(
+      userDisconnectedProvider.notifier,
+    );
+    final deviceConnectionNotifier = ref.read(
+      conn.deviceConnectionProvider.notifier,
+    );
+    final autoReconnectNotifier = ref.read(autoReconnectStateProvider.notifier);
+
     // Detect protocol from device info
     final detection = device.detectProtocol();
     AppLogging.connection(
@@ -637,13 +644,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
     // Clear userDisconnected flag since user is explicitly connecting
     // This allows auto-reconnect to work for this new device
-    ref.read(userDisconnectedProvider.notifier).setUserDisconnected(false);
-    ref.read(conn.deviceConnectionProvider.notifier).clearUserDisconnected();
+    userDisconnectedNotifier.setUserDisconnected(false);
+    deviceConnectionNotifier.clearUserDisconnected();
     // Set state to manualConnecting to prevent auto-reconnect to the OLD saved device
     // if this manual connection fails (e.g., device is already connected to another phone)
-    ref
-        .read(autoReconnectStateProvider.notifier)
-        .setState(AutoReconnectState.manualConnecting);
+    autoReconnectNotifier.setState(AutoReconnectState.manualConnecting);
     await _connectToDevice(device, isAutoReconnect: false);
   }
 
@@ -668,7 +673,20 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       return;
     }
 
-    setState(() {
+    // Capture providers BEFORE any await
+    final protocol = ref.read(protocolServiceProvider);
+    final coordinator = ref.read(connectionCoordinatorProvider);
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final connectedDeviceNotifier = ref.read(connectedDeviceProvider.notifier);
+    final userDisconnectedNotifier = ref.read(
+      userDisconnectedProvider.notifier,
+    );
+    final deviceConnectionNotifier = ref.read(
+      conn.deviceConnectionProvider.notifier,
+    );
+    final autoReconnectNotifier = ref.read(autoReconnectStateProvider.notifier);
+
+    safeSetState(() {
       _connecting = true;
       _errorMessage = null;
     });
@@ -679,21 +697,19 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       // can be active at a time. Stopping ProtocolService ensures:
       // - No "Requesting position" errors from Meshtastic polling
       // - No stale Meshtastic state interfering with MeshCore UI
-      final protocol = ref.read(protocolServiceProvider);
       protocol.stop();
       AppLogging.connection(
         '📡 SCANNER: Stopped Meshtastic ProtocolService for MeshCore connect',
       );
 
       // Use ConnectionCoordinator to handle MeshCore connection
-      final coordinator = ref.read(connectionCoordinatorProvider);
       final result = await coordinator.connect(device: device);
 
       if (!mounted) return;
 
       if (!result.success) {
         // Connection failed
-        setState(() {
+        safeSetState(() {
           _connecting = false;
           _errorMessage = result.errorMessage ?? 'MeshCore connection failed';
         });
@@ -705,7 +721,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       }
 
       // Connection succeeded - save device for auto-reconnect (with protocol)
-      final settingsService = await ref.read(settingsServiceProvider.future);
+      final settingsService = await settingsFuture;
       await settingsService.setLastDevice(
         device.id,
         'ble',
@@ -714,25 +730,25 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       );
 
       // Update connected device provider
-      ref.read(connectedDeviceProvider.notifier).setState(device);
+      connectedDeviceNotifier.setState(device);
 
       // Mark as paired in device connection provider
       // For MeshCore, we use the nodeId from MeshDeviceInfo
       // Pass isMeshCore=true so it sets up the correct state listener
       final nodeIdHex = result.deviceInfo?.nodeId ?? '0';
       final nodeNumParsed = int.tryParse(nodeIdHex, radix: 16);
-      ref
-          .read(conn.deviceConnectionProvider.notifier)
-          .markAsPaired(device, nodeNumParsed, isMeshCore: true);
+      deviceConnectionNotifier.markAsPaired(
+        device,
+        nodeNumParsed,
+        isMeshCore: true,
+      );
 
       // Clear userDisconnected flag
-      ref.read(userDisconnectedProvider.notifier).setUserDisconnected(false);
-      ref.read(conn.deviceConnectionProvider.notifier).clearUserDisconnected();
+      userDisconnectedNotifier.setUserDisconnected(false);
+      deviceConnectionNotifier.clearUserDisconnected();
 
       // Reset auto-reconnect state
-      ref
-          .read(autoReconnectStateProvider.notifier)
-          .setState(AutoReconnectState.idle);
+      autoReconnectNotifier.setState(AutoReconnectState.idle);
 
       // CRITICAL: Invalidate linkStatusProvider to force UI rebuild.
       // This ensures activeProtocolProvider sees MeshCore as connected
@@ -743,7 +759,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         '📡 SCANNER: MeshCore connected successfully: ${result.deviceInfo?.displayName}',
       );
 
-      setState(() {
+      safeSetState(() {
         _connecting = false;
       });
 
@@ -772,7 +788,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       if (!mounted) return;
 
-      setState(() {
+      safeSetState(() {
         _connecting = false;
         _errorMessage = 'Connection failed: $e';
       });
@@ -795,15 +811,27 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       '📡 SCANNER: _connectToDevice ${device.id} (${device.name}), isAutoReconnect=$isAutoReconnect',
     );
 
-    setState(() {
+    // Capture providers BEFORE any await
+    final transport = ref.read(transportProvider);
+    final connectedDeviceNotifier = ref.read(connectedDeviceProvider.notifier);
+    final settingsAsync = ref.read(settingsServiceProvider);
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final protocol = ref.read(protocolServiceProvider);
+    final locationService = ref.read(locationServiceProvider);
+    final deviceConnectionNotifier = ref.read(
+      conn.deviceConnectionProvider.notifier,
+    );
+    final autoReconnectNotifier = ref.read(autoReconnectStateProvider.notifier);
+    final appInitNotifier = ref.read(appInitProvider.notifier);
+    final offlineQueue = ref.read(offlineQueueProvider);
+
+    safeSetState(() {
       _connecting = true;
       _autoReconnecting = isAutoReconnect;
       _showPairingInvalidationHint = false;
     });
 
     try {
-      final transport = ref.read(transportProvider);
-
       AppLogging.connection('📡 SCANNER: Calling transport.connect()...');
       await transport.connect(device);
       AppLogging.connection(
@@ -812,11 +840,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       if (!mounted) return;
 
-      ref.read(connectedDeviceProvider.notifier).setState(device);
+      connectedDeviceNotifier.setState(device);
 
       // Save device for auto-reconnect (with protocol for future reconnect routing)
-      final settingsServiceAsync = ref.read(settingsServiceProvider);
-      final settingsService = settingsServiceAsync.value;
+      final settingsService = settingsAsync.value;
       if (settingsService != null) {
         final deviceType = device.type == TransportType.ble ? 'ble' : 'usb';
         await settingsService.setLastDevice(
@@ -832,7 +859,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       await clearDeviceDataBeforeConnect(ref);
 
       // Start protocol service and wait for configuration
-      final protocol = ref.read(protocolServiceProvider);
       AppLogging.debug(
         '🟡 Scanner screen - protocol instance: ${protocol.hashCode}',
       );
@@ -858,13 +884,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       // Mark connection as fully established in the device connection provider
       // This is required for route guards to allow access to device config screens
-      ref
-          .read(conn.deviceConnectionProvider.notifier)
-          .markAsPaired(device, protocol.myNodeNum);
+      deviceConnectionNotifier.markAsPaired(device, protocol.myNodeNum);
 
       // Start phone GPS location updates
       // This sends phone GPS to mesh for devices without GPS hardware
-      final locationService = ref.read(locationServiceProvider);
       await locationService.startLocationUpdates();
 
       if (!mounted) return;
@@ -877,7 +900,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       // ALWAYS check the actual device region - firmware updates can reset it!
       // Don't assume "connected before = region configured" - that's wrong.
-      final settings = await ref.read(settingsServiceProvider.future);
+      final settings = await settingsFuture;
 
       AppLogging.debug(
         '🔍 Checking device region (always check - firmware may have reset it)...',
@@ -941,6 +964,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       if (!mounted) return;
 
       // Check current app state - if we're shown from needsScanner, update provider
+      // These reads are after mounted check and need fresh state, safe with LifecycleSafeMixin
       final appState = ref.read(appInitProvider);
       final isFromNeedsScanner = appState == AppInitState.needsScanner;
 
@@ -975,14 +999,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         );
         // Keep user on main flow; require explicit reconnect to retry
         if (isFromNeedsScanner) {
-          ref.read(appInitProvider.notifier).setInitialized();
+          appInitNotifier.setInitialized();
         } else if (!widget.isInline) {
           Navigator.of(context).pushReplacementNamed('/main');
         }
       } else if (isFromNeedsScanner) {
         // We're at the root level from needsScanner - update app state to initialized
         // This will cause _AppRouter to show MainShell
-        ref.read(appInitProvider.notifier).setInitialized();
+        appInitNotifier.setInitialized();
       } else if (!widget.isInline) {
         // Navigate to main app (only if not inline - inline will auto-rebuild)
         Navigator.of(context).pushReplacementNamed('/main');
@@ -992,13 +1016,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       // Reset auto-reconnect state to idle on successful manual connection
       // This clears any previous failed state from auto-reconnect attempts
-      ref
-          .read(autoReconnectStateProvider.notifier)
-          .setState(AutoReconnectState.idle);
+      autoReconnectNotifier.setState(AutoReconnectState.idle);
 
       // Ensure offline queue is initialized and process any pending messages
-      final queue = ref.read(offlineQueueProvider);
-      queue.processQueueIfNeeded();
+      offlineQueue.processQueueIfNeeded();
 
       // Success - don't reset _connecting, let navigation handle the transition
       return;
@@ -1030,7 +1051,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       // Force cleanup on error to ensure clean state for retry
       try {
-        final transport = ref.read(transportProvider);
         await transport.disconnect();
       } catch (_) {
         // Continue on cleanup errors
@@ -1089,12 +1109,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       // Reset auto-reconnect state to idle since manual connection failed
       // This prevents the auto-reconnect manager from trying to reconnect
       // to the OLD saved device after the user's manual attempt failed
-      ref
-          .read(autoReconnectStateProvider.notifier)
-          .setState(AutoReconnectState.idle);
+      autoReconnectNotifier.setState(AutoReconnectState.idle);
 
       // Only reset connecting state on error
-      setState(() {
+      safeSetState(() {
         _connecting = false;
         _autoReconnecting = false;
         _errorMessage = userMessage;
