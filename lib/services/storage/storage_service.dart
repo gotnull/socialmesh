@@ -185,6 +185,23 @@ class SettingsService {
   int get accentColor =>
       _preferences.getInt('accent_color') ?? 0xFFE91E8C; // Default magenta
 
+  // QR Code Style (0 = dots, 1 = smooth, 2 = squares)
+  Future<void> setQrStyleIndex(int styleIndex) async {
+    await _preferences.setInt('qr_style_index', styleIndex);
+  }
+
+  int get qrStyleIndex =>
+      _preferences.getInt('qr_style_index') ?? 0; // Default dots
+
+  // QR Code Uses Accent Color (premium feature)
+  Future<void> setQrUsesAccentColor(bool enabled) async {
+    await _preferences.setBool('qr_uses_accent_color', enabled);
+  }
+
+  bool get qrUsesAccentColor =>
+      _preferences.getBool('qr_uses_accent_color') ??
+      false; // Default black/white
+
   // Notifications - Master toggle
   Future<void> setNotificationsEnabled(bool enabled) async {
     await _preferences.setBool('notifications_enabled', enabled);

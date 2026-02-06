@@ -2585,30 +2585,20 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                       ),
                     ),
                     SizedBox(width: 8),
-                    // QR Code button
-                    IconButton(
-                      onPressed: () => _showNodeQrCode(context, node),
-                      icon: Icon(
-                        Icons.qr_code,
-                        color: context.textSecondary,
-                        size: 22,
-                      ),
-                      tooltip: 'QR Code',
-                      padding: const EdgeInsets.all(12),
-                      constraints: const BoxConstraints(),
-                    ),
-                    SizedBox(width: 8),
                     // Message button
-                    IconButton(
-                      onPressed: () => _sendDirectMessage(context, node),
-                      icon: Icon(
-                        Icons.message,
-                        color: context.textSecondary,
-                        size: 22,
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () => _sendDirectMessage(context, node),
+                        icon: Icon(Icons.message, size: 20),
+                        label: const Text('Message'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: context.accentColor,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
-                      tooltip: 'QR Code',
-                      padding: const EdgeInsets.all(12),
-                      constraints: const BoxConstraints(),
                     ),
                   ],
                 ),

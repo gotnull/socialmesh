@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../providers/app_providers.dart';
 import '../theme.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
@@ -306,15 +308,8 @@ class _QrShareContentState extends State<_QrShareContent> {
         _QrShareHeader(title: widget.title, subtitle: widget.subtitle),
         const SizedBox(height: 24),
 
-        // QR Code
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: BrandedQrCode(data: widget.qrData, size: 220),
-        ),
+        // QR Code with accent gradient style
+        _AccentGradientQrContainer(qrData: widget.qrData),
 
         // Info text
         if (widget.infoText != null) ...[
@@ -459,6 +454,127 @@ class _QrShareHeader extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Accent gradient QR container - sunset-style with theme accent colors.
+/// Reads QR style preferences from settings.
+class _AccentGradientQrContainer extends ConsumerWidget {
+  const _AccentGradientQrContainer({required this.qrData});
+
+  final String qrData;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settingsAsync = ref.watch(settingsServiceProvider);
+    final accent = context.accentColor;
+
+    return settingsAsync.when(
+      loading: () => _buildQrCode(
+        context,
+        accent: accent,
+        style: QrStyle.dots,
+        useAccentColor: false,
+      ),
+      error: (_, _) => _buildQrCode(
+        context,
+        accent: accent,
+        style: QrStyle.dots,
+        useAccentColor: false,
+      ),
+      data: (settings) {
+        final styleIndex = settings.qrStyleIndex.clamp(0, 2);
+        final styles = [QrStyle.dots, QrStyle.smooth, QrStyle.squares];
+        return _buildQrCode(
+          context,
+          accent: accent,
+          style: styles[styleIndex],
+          useAccentColor: settings.qrUsesAccentColor,
+        );
+      },
+    );
+  }
+
+  Widget _buildQrCode(
+    BuildContext context, {
+    required Color accent,
+    required QrStyle style,
+    required bool useAccentColor,
+  }) {
+    // Default: black on white, no gradient container
+    if (!useAccentColor) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: BrandedQrCode(
+          data: qrData,
+          size: 220,
+          style: style,
+          foregroundColor: const Color(0xFF1F2633),
+          backgroundColor: Colors.white,
+        ),
+      );
+    }
+
+    // Premium: accent gradient container
+    final lightAccent = HSLColor.fromColor(accent)
+        .withLightness(
+          (HSLColor.fromColor(accent).lightness + 0.15).clamp(0.0, 1.0),
+        )
+        .toColor();
+    final darkAccent = HSLColor.fromColor(accent)
+        .withLightness(
+          (HSLColor.fromColor(accent).lightness - 0.15).clamp(0.0, 1.0),
+        )
+        .toColor();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [lightAccent, accent, darkAccent],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.4),
+            blurRadius: 25,
+            spreadRadius: -4,
+          ),
+          BoxShadow(
+            color: darkAccent.withValues(alpha: 0.25),
+            blurRadius: 40,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              spreadRadius: -2,
+            ),
+          ],
+        ),
+        child: BrandedQrCode(
+          data: qrData,
+          size: 220,
+          style: style,
+          foregroundColor: accent,
+          backgroundColor: Colors.white,
+        ),
+      ),
     );
   }
 }

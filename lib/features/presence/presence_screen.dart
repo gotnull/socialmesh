@@ -11,7 +11,6 @@ import '../../models/node_encounter.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/presence_providers.dart';
 import '../../utils/presence_utils.dart';
-import 'widgets/my_presence_settings.dart';
 
 class PresenceScreen extends ConsumerStatefulWidget {
   const PresenceScreen({super.key});
@@ -36,8 +35,6 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
         actions: [IcoHelpAppBarButton(topicId: 'presence_overview')],
         slivers: presences.isEmpty
             ? [
-                // My presence settings (always visible)
-                const SliverToBoxAdapter(child: MyPresenceSettings()),
                 // Quiet mesh hint
                 if (showQuietMeshHint)
                   const SliverToBoxAdapter(child: _QuietMeshHint()),
@@ -47,8 +44,6 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                 ),
               ]
             : [
-                // My presence settings at top
-                const SliverToBoxAdapter(child: MyPresenceSettings()),
                 // Quiet mesh hint for small meshes
                 if (showQuietMeshHint)
                   const SliverToBoxAdapter(child: _QuietMeshHint()),
@@ -299,20 +294,24 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
                 _ConfidenceTierBadge(tier: presence.confidenceTier),
                 // Back nearby badge
-                if (presence.isBackNearby) ...[
-                  const SizedBox(width: 6),
-                  _BackNearbyBadge(),
-                ],
+                if (presence.isBackNearby) _BackNearbyBadge(),
                 // Familiar badge
                 if (presence.encounter != null &&
                     presence.encounter!.isFamiliar &&
-                    !presence.isBackNearby) ...[
-                  const SizedBox(width: 6),
+                    !presence.isBackNearby)
                   _FamiliarBadge(),
-                ],
+                // Role badge
+                if (presence.node.role != null)
+                  _RoleBadge(role: presence.node.role!),
               ],
             ),
             // Encounter history
@@ -332,22 +331,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
             ],
           ],
         ),
-        trailing: presence.node.role != null
-            ? Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryPurple.withAlpha(51),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  presence.node.role!,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppTheme.primaryPurple,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              )
-            : null,
+        trailing: null,
       ),
     );
   }
@@ -766,6 +750,33 @@ class _BackNearbyBadge extends StatelessWidget {
         'Back nearby',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: AppTheme.accentOrange,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+}
+
+/// Badge showing node role.
+class _RoleBadge extends StatelessWidget {
+  const _RoleBadge({required this.role});
+
+  final String role;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryPurple.withAlpha(26),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: AppTheme.primaryPurple.withAlpha(51)),
+      ),
+      child: Text(
+        role,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: AppTheme.primaryPurple,
           fontSize: 10,
           fontWeight: FontWeight.w500,
         ),

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/branded_qr_code.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/premium_feature_gate.dart';
 import '../../models/subscription_models.dart';
@@ -65,6 +66,17 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                 _buildSectionHeader('ACCENT COLOR'),
                 const SizedBox(height: 12),
                 _buildAccentColorGrid(
+                  context,
+                  ref,
+                  settingsService,
+                  currentColor,
+                ),
+                const SizedBox(height: 24),
+
+                // QR Code Style Section (Premium)
+                _buildSectionHeader('QR CODE STYLE'),
+                const SizedBox(height: 12),
+                _buildQrStyleSection(
                   context,
                   ref,
                   settingsService,
@@ -285,6 +297,262 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
     );
   }
 
+  Widget _buildQrStyleSection(
+    BuildContext context,
+    WidgetRef ref,
+    SettingsService settingsService,
+    Color accentColor,
+  ) {
+    final theme = Theme.of(context);
+    final hasThemePack = ref.watch(
+      hasFeatureProvider(PremiumFeature.premiumThemes),
+    );
+    final currentStyleIndex = settingsService.qrStyleIndex;
+    final usesAccentColor = settingsService.qrUsesAccentColor;
+
+    final styles = [
+      (QrStyle.dots, 'Dots', 'Clean circular modules'),
+      (QrStyle.smooth, 'Smooth', 'Premium liquid modules'),
+      (QrStyle.squares, 'Classic', 'Maximum compatibility'),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // QR Preview
+          Center(
+            child: usesAccentColor
+                ? _buildAccentGradientPreview(
+                    accentColor,
+                    styles[currentStyleIndex].$1,
+                  )
+                : Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: BrandedQrCode(
+                      data: 'socialmesh://preview',
+                      size: 120,
+                      style: styles[currentStyleIndex].$1,
+                      foregroundColor: const Color(0xFF1F2633),
+                      backgroundColor: Colors.white,
+                    ),
+                  ),
+          ),
+          const SizedBox(height: 20),
+
+          // Style selector
+          Text(
+            'Pattern',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: styles.asMap().entries.map((entry) {
+              final index = entry.key;
+              final (style, name, _) = entry.value;
+              final isSelected = index == currentStyleIndex;
+              // Smooth style is premium
+              final isPremium = style == QrStyle.smooth;
+              final isLocked = isPremium && !hasThemePack;
+
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(right: index < 2 ? 8 : 0),
+                  child: BouncyTap(
+                    onTap: () async {
+                      if (isLocked) {
+                        final purchased = await checkPremiumOrShowUpsell(
+                          context: context,
+                          ref: ref,
+                          feature: PremiumFeature.premiumThemes,
+                        );
+                        if (!purchased) return;
+                      }
+                      HapticFeedback.selectionClick();
+                      await settingsService.setQrStyleIndex(index);
+                      setState(() {});
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? accentColor.withValues(alpha: 0.15)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isSelected ? accentColor : theme.dividerColor,
+                          width: isSelected ? 2 : 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          if (isLocked)
+                            Icon(
+                              Icons.lock,
+                              size: 16,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.4,
+                              ),
+                            )
+                          else
+                            Icon(
+                              isSelected
+                                  ? Icons.check_circle
+                                  : Icons.circle_outlined,
+                              size: 16,
+                              color: isSelected
+                                  ? accentColor
+                                  : theme.colorScheme.onSurface.withValues(
+                                      alpha: 0.4,
+                                    ),
+                            ),
+                          const SizedBox(height: 4),
+                          Text(
+                            name,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              color: isSelected
+                                  ? accentColor
+                                  : theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+
+          // Accent color toggle (premium)
+          BouncyTap(
+            onTap: () async {
+              if (!hasThemePack) {
+                final purchased = await checkPremiumOrShowUpsell(
+                  context: context,
+                  ref: ref,
+                  feature: PremiumFeature.premiumThemes,
+                );
+                if (!purchased) return;
+              }
+              HapticFeedback.selectionClick();
+              await settingsService.setQrUsesAccentColor(!usesAccentColor);
+              setState(() {});
+            },
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: usesAccentColor
+                    ? accentColor.withValues(alpha: 0.1)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: usesAccentColor ? accentColor : theme.dividerColor,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          HSLColor.fromColor(accentColor)
+                              .withLightness(
+                                (HSLColor.fromColor(accentColor).lightness +
+                                        0.15)
+                                    .clamp(0.0, 1.0),
+                              )
+                              .toColor(),
+                          accentColor,
+                          HSLColor.fromColor(accentColor)
+                              .withLightness(
+                                (HSLColor.fromColor(accentColor).lightness -
+                                        0.15)
+                                    .clamp(0.0, 1.0),
+                              )
+                              .toColor(),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Use Accent Gradient',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        Text(
+                          'Apply accent color to QR codes',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!hasThemePack)
+                    Icon(
+                      Icons.lock,
+                      size: 18,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    )
+                  else
+                    Switch(
+                      value: usesAccentColor,
+                      onChanged: (value) async {
+                        HapticFeedback.selectionClick();
+                        await settingsService.setQrUsesAccentColor(value);
+                        setState(() {});
+                      },
+                      activeTrackColor: accentColor,
+                      thumbColor: WidgetStateProperty.all(Colors.white),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPreviewElements(BuildContext context, Color accentColor) {
     final theme = Theme.of(context);
 
@@ -469,6 +737,60 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  /// Builds an accent gradient QR preview matching the elevated styles.
+  Widget _buildAccentGradientPreview(Color accent, QrStyle style) {
+    final lightAccent = HSLColor.fromColor(accent)
+        .withLightness(
+          (HSLColor.fromColor(accent).lightness + 0.15).clamp(0.0, 1.0),
+        )
+        .toColor();
+    final darkAccent = HSLColor.fromColor(accent)
+        .withLightness(
+          (HSLColor.fromColor(accent).lightness - 0.15).clamp(0.0, 1.0),
+        )
+        .toColor();
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [lightAccent, accent, darkAccent],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.4),
+            blurRadius: 20,
+            spreadRadius: -4,
+          ),
+        ],
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              spreadRadius: -2,
+            ),
+          ],
+        ),
+        child: BrandedQrCode(
+          data: 'socialmesh://preview',
+          size: 110,
+          style: style,
+          foregroundColor: accent,
+          backgroundColor: Colors.white,
+        ),
       ),
     );
   }
