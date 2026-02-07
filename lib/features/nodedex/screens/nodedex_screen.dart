@@ -22,6 +22,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logging.dart';
+import '../../../providers/app_providers.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/glass_scaffold.dart';
@@ -67,6 +68,15 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     final entries = ref.watch(nodeDexSortedEntriesProvider);
     final currentSort = ref.watch(nodeDexSortProvider);
     final currentFilter = ref.watch(nodeDexFilterProvider);
+    final myNodeNum = ref.watch(myNodeNumProvider);
+
+    // Separate own device from other entries.
+    final myEntry = myNodeNum != null
+        ? entries.where((e) => e.$1.nodeNum == myNodeNum).toList()
+        : <(NodeDexEntry, MeshNode?)>[];
+    final otherEntries = entries
+        .where((e) => e.$1.nodeNum != myNodeNum)
+        .toList();
 
     AppLogging.nodeDex(
       'Screen build — ${entries.length} entries, '
@@ -134,22 +144,43 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
               ),
             ),
 
-            // Node list or empty state
-            if (entries.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: _EmptyState(filter: currentFilter),
-              )
-            else
+            // Your Device section
+            if (myEntry.isNotEmpty) ...[
+              SliverToBoxAdapter(child: SectionHeader(title: 'Your Device')),
               SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  final (entry, node) = entries[index];
+                  final (entry, node) = myEntry[index];
                   return _NodeDexListTile(
                     entry: entry,
                     node: node,
                     onTap: () => _openDetail(entry, node),
                   );
-                }, childCount: entries.length),
+                }, childCount: myEntry.length),
+              ),
+            ],
+
+            // Other nodes list or empty state
+            if (otherEntries.isNotEmpty) ...[
+              SliverToBoxAdapter(
+                child: SectionHeader(
+                  title: 'Discovered Nodes',
+                  count: otherEntries.length,
+                ),
+              ),
+              SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final (entry, node) = otherEntries[index];
+                  return _NodeDexListTile(
+                    entry: entry,
+                    node: node,
+                    onTap: () => _openDetail(entry, node),
+                  );
+                }, childCount: otherEntries.length),
+              ),
+            ] else if (myEntry.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _EmptyState(filter: currentFilter),
               ),
 
             // Bottom padding for safe area

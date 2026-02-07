@@ -34,6 +34,11 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
 import '../navigation/main_shell.dart';
+import '../nodedex/models/nodedex_entry.dart';
+import '../nodedex/providers/nodedex_providers.dart';
+import '../nodedex/services/sigil_generator.dart';
+import '../nodedex/services/trait_engine.dart';
+import '../nodedex/widgets/sigil_card_sheet.dart';
 import '../../providers/presence_providers.dart';
 // import '../social/screens/profile_social_screen.dart';
 
@@ -1680,6 +1685,29 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
     return colors[node.nodeNum % colors.length];
   }
 
+  void _shareSigilCard(BuildContext context, MeshNode node) {
+    // Close the details sheet first
+    Navigator.pop(context);
+
+    // Get or create NodeDex entry for this node
+    final entries = ref.read(nodeDexProvider);
+    final entry =
+        entries[node.nodeNum] ??
+        NodeDexEntry.discovered(
+          nodeNum: node.nodeNum,
+          sigil: SigilGenerator.generate(node.nodeNum),
+        );
+
+    final traitResult = TraitEngine.infer(entry: entry);
+
+    showSigilCardSheet(
+      context: context,
+      entry: entry,
+      traitResult: traitResult,
+      node: node,
+    );
+  }
+
   void _showNodeQrCode(BuildContext context, MeshNode node) {
     // Close the details sheet first
     Navigator.pop(context);
@@ -2330,6 +2358,15 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
                   },
                   icon: Icon(Icons.map, color: context.accentColor),
                 ),
+              // Share sigil card button
+              IconButton(
+                onPressed: () => _shareSigilCard(context, node),
+                icon: Icon(
+                  Icons.auto_awesome_outlined,
+                  color: context.textSecondary,
+                ),
+                tooltip: 'Share Sigil Card',
+              ),
               // QR code button
               IconButton(
                 onPressed: () => _showNodeQrCode(context, node),

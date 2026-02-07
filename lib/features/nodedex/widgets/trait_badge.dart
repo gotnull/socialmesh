@@ -87,7 +87,7 @@ class TraitBadge extends StatelessWidget {
       NodeTrait.ghost => Icons.visibility_off_outlined,
       NodeTrait.sentinel => Icons.shield_outlined,
       NodeTrait.relay => Icons.swap_horiz,
-      NodeTrait.unknown => Icons.help_outline,
+      NodeTrait.unknown => Icons.auto_awesome_outlined,
     };
   }
 

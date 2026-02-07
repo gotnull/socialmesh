@@ -350,24 +350,21 @@ class _CardBody extends StatelessWidget {
                   // Ornament divider
                   _OrnamentDivider(color: rarity.borderColor, scale: s),
 
-                  // Stats grid
+                  // Device identity info
                   Expanded(
                     flex: 5,
-                    child: _StatsGrid(
-                      entry: entry,
+                    child: _DeviceInfoGrid(
                       sigil: sigil,
                       rarity: rarity,
+                      hardwareModel: hardwareModel,
+                      role: role,
+                      firmwareVersion: firmwareVersion,
                       scale: s,
                     ),
                   ),
 
-                  // Device info + palette
-                  _DeviceAndPaletteLine(
-                    sigil: sigil,
-                    hardwareModel: hardwareModel,
-                    firmwareVersion: firmwareVersion,
-                    scale: s,
-                  ),
+                  // Palette dots
+                  _PaletteLine(sigil: sigil, scale: s),
 
                   // Brand footer
                   _BrandFooter(entry: entry, rarity: rarity, scale: s),
@@ -907,32 +904,28 @@ class _OrnamentDividerPainter extends CustomPainter {
 // Stats grid — RPG-style ability scores
 // =============================================================================
 
-class _StatsGrid extends StatelessWidget {
-  final NodeDexEntry entry;
+class _DeviceInfoGrid extends StatelessWidget {
   final SigilData sigil;
   final CardRarity rarity;
+  final String? hardwareModel;
+  final String? role;
+  final String? firmwareVersion;
   final double scale;
 
-  const _StatsGrid({
-    required this.entry,
+  const _DeviceInfoGrid({
     required this.sigil,
     required this.rarity,
+    this.hardwareModel,
+    this.role,
+    this.firmwareVersion,
     required this.scale,
   });
 
   @override
   Widget build(BuildContext context) {
-    final stats = <_StatData>[
-      _StatData(label: 'ENC', value: _formatCompact(entry.encounterCount)),
-      _StatData(label: 'RNG', value: _formatDistance(entry.maxDistanceSeen)),
-      _StatData(label: 'MSG', value: _formatCompact(entry.messageCount)),
-      _StatData(
-        label: 'SNR',
-        value: entry.bestSnr != null ? '${entry.bestSnr}' : '—',
-      ),
-      _StatData(label: 'LNK', value: _formatCompact(entry.coSeenCount)),
-      _StatData(label: 'AGE', value: _formatAge(entry.age)),
-    ];
+    final hw = hardwareModel ?? '—';
+    final deviceRole = _formatRole(role);
+    final fw = _formatFirmware(firmwareVersion);
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -942,37 +935,34 @@ class _StatsGrid extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Top row: ENC, RNG, MSG
-          Row(
-            children: [
-              for (int i = 0; i < 3; i++) ...[
-                if (i > 0) SizedBox(width: 4 * scale),
-                Expanded(
-                  child: _StatCell(
-                    stat: stats[i],
-                    color: _colorForIndex(i),
-                    scale: scale,
-                    isHighlight: _isHighlight(i),
-                  ),
-                ),
-              ],
-            ],
+          // Hardware — full width row
+          _DeviceInfoCell(
+            label: 'HARDWARE',
+            value: hw,
+            color: sigil.primaryColor,
+            scale: scale,
           ),
           SizedBox(height: 4 * scale),
-          // Bottom row: SNR, LNK, AGE
+          // Role + Firmware side by side
           Row(
             children: [
-              for (int i = 3; i < 6; i++) ...[
-                if (i > 3) SizedBox(width: 4 * scale),
-                Expanded(
-                  child: _StatCell(
-                    stat: stats[i],
-                    color: _colorForIndex(i),
-                    scale: scale,
-                    isHighlight: _isHighlight(i),
-                  ),
+              Expanded(
+                child: _DeviceInfoCell(
+                  label: 'ROLE',
+                  value: deviceRole,
+                  color: sigil.secondaryColor,
+                  scale: scale,
                 ),
-              ],
+              ),
+              SizedBox(width: 4 * scale),
+              Expanded(
+                child: _DeviceInfoCell(
+                  label: 'FIRMWARE',
+                  value: fw,
+                  color: sigil.tertiaryColor,
+                  scale: scale,
+                ),
+              ),
             ],
           ),
         ],
@@ -980,111 +970,83 @@ class _StatsGrid extends StatelessWidget {
     );
   }
 
-  Color _colorForIndex(int index) {
-    return switch (index % 3) {
-      0 => sigil.primaryColor,
-      1 => sigil.secondaryColor,
-      _ => sigil.tertiaryColor,
-    };
+  /// Format role for display — title-case, strip underscores.
+  static String _formatRole(String? role) {
+    if (role == null || role.isEmpty) return '—';
+    // Convert e.g. "ROUTER_CLIENT" → "Router Client"
+    return role
+        .split('_')
+        .map(
+          (w) => w.isEmpty
+              ? ''
+              : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}',
+        )
+        .join(' ');
   }
 
-  /// Highlight cells with significant values to draw attention.
-  bool _isHighlight(int index) {
-    return switch (index) {
-      0 => entry.encounterCount >= 20,
-      1 => entry.maxDistanceSeen != null && entry.maxDistanceSeen! >= 1000,
-      2 => entry.messageCount >= 10,
-      3 => entry.bestSnr != null && entry.bestSnr! >= 10,
-      4 => entry.coSeenCount >= 20,
-      5 => entry.age.inDays >= 30,
-      _ => false,
-    };
-  }
-
-  static String _formatCompact(int value) {
-    if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}k';
-    return '$value';
-  }
-
-  static String _formatDistance(double? meters) {
-    if (meters == null) return '—';
-    if (meters >= 1000) return '${(meters / 1000).toStringAsFixed(1)}km';
-    return '${meters.round()}m';
-  }
-
-  static String _formatAge(Duration age) {
-    if (age.inDays >= 365) {
-      final years = age.inDays ~/ 365;
-      return '${years}y';
+  /// Format firmware for display — strip long hashes, keep version core.
+  static String _formatFirmware(String? fw) {
+    if (fw == null || fw.isEmpty) return '—';
+    // Trim long git hashes: "2.7.15.567b8ea" → "2.7.15"
+    final parts = fw.split('.');
+    if (parts.length > 3) {
+      return parts.take(3).join('.');
     }
-    if (age.inDays > 0) return '${age.inDays}d';
-    if (age.inHours > 0) return '${age.inHours}h';
-    return '${age.inMinutes}m';
+    return fw;
   }
 }
 
-class _StatData {
+class _DeviceInfoCell extends StatelessWidget {
   final String label;
   final String value;
-
-  const _StatData({required this.label, required this.value});
-}
-
-class _StatCell extends StatelessWidget {
-  final _StatData stat;
   final Color color;
   final double scale;
-  final bool isHighlight;
 
-  const _StatCell({
-    required this.stat,
+  const _DeviceInfoCell({
+    required this.label,
+    required this.value,
     required this.color,
     required this.scale,
-    this.isHighlight = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bgAlpha = isHighlight ? 0.12 : 0.06;
-    final borderAlpha = isHighlight ? 0.25 : 0.12;
-
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6 * scale, vertical: 7 * scale),
+      padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 7 * scale),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: bgAlpha),
+        color: color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(6 * scale),
-        border: Border.all(
-          color: color.withValues(alpha: borderAlpha),
-          width: 0.5,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.12), width: 0.5),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
-          // Value
+          // Label
           Text(
-            stat.value,
+            label,
             style: TextStyle(
-              fontSize: 15 * scale,
+              fontSize: 7 * scale,
               fontWeight: FontWeight.w700,
-              color: isHighlight
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.85),
+              color: color.withValues(alpha: 0.6),
+              letterSpacing: 1.0 * scale,
               fontFamily: AppTheme.fontFamily,
               height: 1.1,
             ),
           ),
-          SizedBox(height: 1 * scale),
-          // Label
-          Text(
-            stat.label,
-            style: TextStyle(
-              fontSize: 7.5 * scale,
-              fontWeight: FontWeight.w700,
-              color: color.withValues(alpha: isHighlight ? 0.9 : 0.6),
-              letterSpacing: 1.2 * scale,
-              fontFamily: AppTheme.fontFamily,
-              height: 1.1,
+          const Spacer(),
+          // Value
+          Flexible(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 11 * scale,
+                fontWeight: FontWeight.w600,
+                color: Colors.white.withValues(alpha: 0.85),
+                fontFamily: AppTheme.fontFamily,
+                height: 1.1,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
             ),
           ),
         ],
@@ -1097,30 +1059,14 @@ class _StatCell extends StatelessWidget {
 // Device info + palette line
 // =============================================================================
 
-class _DeviceAndPaletteLine extends StatelessWidget {
+class _PaletteLine extends StatelessWidget {
   final SigilData sigil;
-  final String? hardwareModel;
-  final String? firmwareVersion;
   final double scale;
 
-  const _DeviceAndPaletteLine({
-    required this.sigil,
-    this.hardwareModel,
-    this.firmwareVersion,
-    required this.scale,
-  });
+  const _PaletteLine({required this.sigil, required this.scale});
 
   @override
   Widget build(BuildContext context) {
-    final parts = <String>[];
-    if (hardwareModel != null && hardwareModel!.isNotEmpty) {
-      parts.add(hardwareModel!);
-    }
-    if (firmwareVersion != null && firmwareVersion!.isNotEmpty) {
-      parts.add('FW $firmwareVersion');
-    }
-    final deviceText = parts.isNotEmpty ? parts.join(' \u00B7 ') : null;
-
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: 14 * scale,
@@ -1134,26 +1080,7 @@ class _DeviceAndPaletteLine extends StatelessWidget {
           _PaletteDot(color: sigil.secondaryColor, size: 7 * scale),
           SizedBox(width: 3 * scale),
           _PaletteDot(color: sigil.tertiaryColor, size: 7 * scale),
-
-          if (deviceText != null) ...[
-            SizedBox(width: 8 * scale),
-            Expanded(
-              child: Text(
-                deviceText,
-                style: TextStyle(
-                  fontSize: 7.5 * scale,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white.withValues(alpha: 0.3),
-                  fontFamily: AppTheme.fontFamily,
-                  letterSpacing: 0.3 * scale,
-                ),
-                textAlign: TextAlign.right,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ] else
-            const Spacer(),
+          const Spacer(),
         ],
       ),
     );

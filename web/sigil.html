@@ -298,10 +298,10 @@
             }
 
             /* ============================================================ */
-            /* Stats Grid                                                    */
+            /* Device Info Grid                                               */
             /* ============================================================ */
 
-            .stats-grid {
+            .device-info-grid {
                 flex: 5;
                 display: flex;
                 flex-direction: column;
@@ -311,38 +311,41 @@
                 min-height: 0;
             }
 
-            .stats-row {
+            .device-info-row {
                 display: flex;
                 gap: 4px;
             }
 
-            .stat-cell {
+            .device-info-cell {
                 flex: 1;
-                text-align: center;
-                padding: 4px 2px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 7px 8px;
                 border-radius: 6px;
                 background: rgba(255, 255, 255, 0.03);
                 border: 1px solid rgba(255, 255, 255, 0.05);
-                transition: background 0.2s;
             }
 
-            .stat-cell.highlight {
-                background: rgba(255, 255, 255, 0.06);
-                border-color: rgba(255, 255, 255, 0.08);
-            }
-
-            .stat-value {
-                font-size: 13px;
-                font-weight: 700;
-                line-height: 1.2;
-            }
-
-            .stat-label {
+            .device-info-label {
                 font-size: 7px;
-                font-weight: 600;
+                font-weight: 700;
                 letter-spacing: 1px;
-                opacity: 0.4;
-                margin-top: 1px;
+                opacity: 0.6;
+                line-height: 1.1;
+                white-space: nowrap;
+            }
+
+            .device-info-value {
+                font-size: 11px;
+                font-weight: 600;
+                color: rgba(255, 255, 255, 0.85);
+                line-height: 1.1;
+                text-align: right;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 70%;
             }
 
             /* ============================================================ */
@@ -365,19 +368,6 @@
                 height: 7px;
                 border-radius: 50%;
                 border: 0.5px solid rgba(255, 255, 255, 0.12);
-            }
-
-            .device-text {
-                flex: 1;
-                text-align: right;
-                font-size: 7.5px;
-                font-weight: 500;
-                color: rgba(255, 255, 255, 0.3);
-                letter-spacing: 0.3px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                margin-left: 8px;
             }
 
             /* ============================================================ */
@@ -548,8 +538,8 @@
                 .node-name {
                     font-size: 14px;
                 }
-                .stat-value {
-                    font-size: 11px;
+                .device-info-value {
+                    font-size: 10px;
                 }
             }
 
@@ -737,7 +727,7 @@
                     desc: "High throughput, forwards traffic",
                 },
                 unknown: {
-                    label: "Unknown",
+                    label: "Newcomer",
                     color: colorFromInt(0xff9ca3af),
                     desc: "Recently discovered",
                 },
@@ -1267,6 +1257,45 @@
                 return "0d";
             }
 
+            function formatRole(role) {
+                if (!role) return "\u2014";
+                return role
+                    .split("_")
+                    .map((w) =>
+                        w.length === 0
+                            ? ""
+                            : w[0].toUpperCase() + w.slice(1).toLowerCase(),
+                    )
+                    .join(" ");
+            }
+
+            function formatFirmware(fw) {
+                if (!fw) return "\u2014";
+                const parts = fw.split(".");
+                if (parts.length > 3) return parts.slice(0, 3).join(".");
+                return fw;
+            }
+
+            function buildInfoCell(label, value, color) {
+                const cell = document.createElement("div");
+                cell.className = "device-info-cell";
+                cell.style.background = colorToCSS(color, 0.06);
+                cell.style.borderColor = colorToCSS(color, 0.12);
+
+                const lbl = document.createElement("div");
+                lbl.className = "device-info-label";
+                lbl.style.color = colorToCSS(color, 0.6);
+                lbl.textContent = label;
+                cell.appendChild(lbl);
+
+                const val = document.createElement("div");
+                val.className = "device-info-value";
+                val.textContent = value;
+                cell.appendChild(val);
+
+                return cell;
+            }
+
             function formatDate(dateStr) {
                 if (!dateStr) return "--";
                 try {
@@ -1325,56 +1354,10 @@
                 const borderColorCSS = colorToCSS(rarity.borderColor);
                 const traitColorCSS = colorToCSS(trait.color);
 
-                const stats = [
-                    {
-                        label: "ENC",
-                        value: formatCompact(data.encounterCount),
-                        highlight: data.encounterCount >= 20,
-                    },
-                    {
-                        label: "RNG",
-                        value: formatDistance(data.maxDistance),
-                        highlight:
-                            data.maxDistance != null &&
-                            data.maxDistance >= 1000,
-                    },
-                    {
-                        label: "MSG",
-                        value: formatCompact(data.messageCount),
-                        highlight: data.messageCount >= 10,
-                    },
-                    {
-                        label: "SNR",
-                        value: data.bestSnr != null ? "" + data.bestSnr : "--",
-                        highlight: data.bestSnr != null && data.bestSnr >= 10,
-                    },
-                    {
-                        label: "LNK",
-                        value: formatCompact(data.coSeenCount),
-                        highlight: data.coSeenCount >= 20,
-                    },
-                    {
-                        label: "AGE",
-                        value: formatAge(data.ageDays),
-                        highlight: data.ageDays >= 30,
-                    },
-                ];
-
-                function statColorForIndex(i) {
-                    const colors = [
-                        sigil.primaryColor,
-                        sigil.secondaryColor,
-                        sigil.tertiaryColor,
-                    ];
-                    return colors[i % 3];
-                }
-
-                // Device + palette text
-                const deviceParts = [];
-                if (data.hardwareModel) deviceParts.push(data.hardwareModel);
-                if (data.firmwareVersion)
-                    deviceParts.push("FW " + data.firmwareVersion);
-                const deviceText = deviceParts.join(" \u00B7 ");
+                // Device identity info
+                const hwValue = data.hardwareModel || "\u2014";
+                const roleValue = formatRole(data.role);
+                const fwValue = formatFirmware(data.firmwareVersion);
 
                 // Discovery date
                 const discoveryStr = data.firstSeen
@@ -1531,42 +1514,32 @@
 
                 content.appendChild(divider);
 
-                // -- Stats Grid --
-                const statsGrid = document.createElement("div");
-                statsGrid.className = "stats-grid";
+                // -- Device Info Grid --
+                const infoGrid = document.createElement("div");
+                infoGrid.className = "device-info-grid";
 
-                for (let row = 0; row < 2; row++) {
-                    const rowEl = document.createElement("div");
-                    rowEl.className = "stats-row";
-                    for (let col = 0; col < 3; col++) {
-                        const idx = row * 3 + col;
-                        const stat = stats[idx];
-                        const cell = document.createElement("div");
-                        cell.className =
-                            "stat-cell" + (stat.highlight ? " highlight" : "");
-                        const statColor = statColorForIndex(idx);
+                // Row 1: Hardware (full width)
+                const hwRow = document.createElement("div");
+                hwRow.className = "device-info-row";
+                hwRow.appendChild(
+                    buildInfoCell("HARDWARE", hwValue, sigil.primaryColor),
+                );
+                infoGrid.appendChild(hwRow);
 
-                        const val = document.createElement("div");
-                        val.className = "stat-value";
-                        val.style.color = colorToCSS(
-                            statColor,
-                            stat.highlight ? 1.0 : 0.8,
-                        );
-                        val.textContent = stat.value;
-                        cell.appendChild(val);
+                // Row 2: Role + Firmware
+                const row2 = document.createElement("div");
+                row2.className = "device-info-row";
+                row2.appendChild(
+                    buildInfoCell("ROLE", roleValue, sigil.secondaryColor),
+                );
+                row2.appendChild(
+                    buildInfoCell("FIRMWARE", fwValue, sigil.tertiaryColor),
+                );
+                infoGrid.appendChild(row2);
 
-                        const lbl = document.createElement("div");
-                        lbl.className = "stat-label";
-                        lbl.textContent = stat.label;
-                        cell.appendChild(lbl);
+                content.appendChild(infoGrid);
 
-                        rowEl.appendChild(cell);
-                    }
-                    statsGrid.appendChild(rowEl);
-                }
-                content.appendChild(statsGrid);
-
-                // -- Device & Palette --
+                // -- Palette Dots --
                 const devLine = document.createElement("div");
                 devLine.className = "device-palette-line";
 
@@ -1584,13 +1557,6 @@
                     paletteDots.appendChild(dot);
                 });
                 devLine.appendChild(paletteDots);
-
-                if (deviceText) {
-                    const devEl = document.createElement("div");
-                    devEl.className = "device-text";
-                    devEl.textContent = deviceText;
-                    devLine.appendChild(devEl);
-                }
                 content.appendChild(devLine);
 
                 // -- Brand Footer --
@@ -1696,8 +1662,14 @@
                 const ogDesc = document.querySelector(
                     'meta[property="og:description"]',
                 );
-                if (ogDesc)
-                    ogDesc.content = `${trait.label} node with ${data.encounterCount} encounters. ${rarity.label} rarity.`;
+                if (ogDesc) {
+                    const descParts = [trait.label + " node"];
+                    if (data.hardwareModel)
+                        descParts.push("running on " + data.hardwareModel);
+                    if (data.role) descParts.push(formatRole(data.role));
+                    descParts.push(rarity.label + " rarity");
+                    ogDesc.content = descParts.join(". ") + ".";
+                }
             }
 
             function showError(message) {

@@ -79,7 +79,7 @@ enum NodeTrait {
       NodeTrait.ghost => 'Ghost',
       NodeTrait.sentinel => 'Sentinel',
       NodeTrait.relay => 'Relay',
-      NodeTrait.unknown => 'Unknown',
+      NodeTrait.unknown => 'Newcomer',
     };
   }
 
