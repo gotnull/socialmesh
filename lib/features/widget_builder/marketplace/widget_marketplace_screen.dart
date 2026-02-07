@@ -14,7 +14,8 @@ import '../../../providers/subscription_providers.dart';
 import '../marketplace/widget_marketplace_service.dart';
 import '../models/widget_schema.dart';
 import '../renderer/widget_renderer.dart';
-import '../storage/widget_storage_service.dart';
+
+import '../widget_sync_providers.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/widget_preview_card.dart';
 import '../../../providers/app_providers.dart';
@@ -830,8 +831,8 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
       final schema = await service.downloadWidget(marketplaceId);
 
       // Save to local storage with marketplace ID for proper tracking
-      final storage = WidgetStorageService();
-      await storage.init();
+      final storage = await ref.read(widgetStorageServiceProvider.future);
+      if (!mounted) return;
       await storage.installMarketplaceWidget(
         schema,
         marketplaceId: marketplaceId,

@@ -30,6 +30,9 @@ import '../services/bug_report_service.dart';
 import '../services/config/mesh_firestore_config_service.dart';
 import '../features/automations/automation_providers.dart';
 import '../features/automations/automation_engine.dart';
+import '../features/widget_builder/storage/widget_storage_service.dart';
+import '../features/widget_builder/widget_sync_providers.dart';
+import 'cloud_sync_entitlement_providers.dart';
 import '../models/mesh_models.dart';
 import '../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../generated/meshtastic/mesh.pb.dart' as mesh_pb;
@@ -135,6 +138,78 @@ class AppInitNotifier extends Notifier<AppInitState> {
       await ref.read(nodeStorageProvider.future);
       await ref.read(iftttServiceProvider).init();
       await ref.read(automationEngineInitProvider.future);
+
+      // Eagerly activate Cloud Sync services so they start on login,
+      // not only when the user navigates to specific screens.
+      // Without this, sync only fires when a screen watches the provider
+      // (e.g. widget sync only ran when the dashboard rendered custom widgets).
+      try {
+        AppLogging.sync('[AppInit] Eagerly activating Automation sync...');
+        await ref.read(automationStoreProvider.future);
+        final autoSync = ref.read(automationSyncServiceProvider);
+        AppLogging.sync(
+          '[AppInit] Automation sync service eagerly activated '
+          '(service=${autoSync != null ? "created" : "NULL"})',
+        );
+        AppLogging.debug('Automation sync service eagerly activated');
+      } catch (e) {
+        AppLogging.sync('[AppInit] Automation sync eager init FAILED: $e');
+        AppLogging.debug('Automation sync eager init skipped: $e');
+      }
+      try {
+        AppLogging.sync(
+          '[AppInit] Step 1/3: Awaiting widgetSqliteStoreProvider...',
+        );
+        final store = await ref.read(widgetSqliteStoreProvider.future);
+        AppLogging.sync(
+          '[AppInit] Step 1/3 OK: WidgetSqliteStore ready '
+          '(hashCode=${identityHashCode(store)}, '
+          'syncEnabled=${store.syncEnabled}, '
+          'count=${store.count})',
+        );
+
+        // Resolve the storage service BEFORE starting sync — this runs
+        // the one-time SharedPreferences → SQLite migration which calls
+        // enqueueAllForSync(), ensuring migrated widgets are in the outbox
+        // before the first sync cycle drains it.
+        AppLogging.sync(
+          '[AppInit] Step 2/3: Awaiting widgetStorageServiceProvider (migration)...',
+        );
+        await ref.read(widgetStorageServiceProvider.future);
+        AppLogging.sync(
+          '[AppInit] Step 2/3 OK: WidgetStorageService ready '
+          '(hasStore=${WidgetStorageService.hasStore}, '
+          'store.syncEnabled=${store.syncEnabled}, '
+          'store.count=${store.count})',
+        );
+
+        AppLogging.sync(
+          '[AppInit] Step 3/3: Reading widgetSyncServiceProvider...',
+        );
+        final canWrite = ref.read(canCloudSyncWriteProvider);
+        AppLogging.sync(
+          '[AppInit] Step 3/3: canCloudSyncWriteProvider = $canWrite',
+        );
+        final widgetSync = ref.read(widgetSyncServiceProvider);
+        AppLogging.sync(
+          '[AppInit] Step 3/3 OK: widgetSyncServiceProvider returned '
+          '${widgetSync != null ? "WidgetSyncService(hashCode=${identityHashCode(widgetSync)}, enabled=${widgetSync.isEnabled})" : "NULL — SYNC IS DISABLED!"} '
+          'store.syncEnabled=${store.syncEnabled}',
+        );
+        if (widgetSync == null) {
+          AppLogging.sync(
+            '[AppInit] WARNING: Widget sync service is NULL! '
+            'Possible causes: store not ready, entitlement not resolved. '
+            'canWrite=$canWrite',
+          );
+        }
+        AppLogging.debug('Widget sync service eagerly activated');
+      } catch (e, stack) {
+        AppLogging.sync('[AppInit] Widget sync eager init FAILED: $e');
+        AppLogging.sync('[AppInit] Widget sync failure stack: $stack');
+        AppLogging.debug('Widget sync eager init skipped: $e');
+      }
+
       AppLogging.debug('Background services initialized');
 
       // Start background device connection (if auto-reconnect enabled)

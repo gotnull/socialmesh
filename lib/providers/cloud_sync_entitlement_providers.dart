@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/logging.dart';
 import '../../services/subscription/cloud_sync_entitlement_service.dart';
 
 /// Provider for cloud sync entitlement service
@@ -42,13 +43,33 @@ final cloudSyncEntitlementProvider = StreamProvider<CloudSyncEntitlement>((
 /// Provider for checking if cloud sync write is allowed
 final canCloudSyncWriteProvider = Provider<bool>((ref) {
   final entitlement = ref.watch(cloudSyncEntitlementProvider);
-  return entitlement.whenOrNull(data: (e) => e.canWrite) ?? false;
+  final canWrite = entitlement.whenOrNull(data: (e) => e.canWrite) ?? false;
+
+  final stateDesc = entitlement.when(
+    data: (e) =>
+        'data(state=${e.state}, canWrite=${e.canWrite}, canRead=${e.canRead})',
+    loading: () => 'LOADING',
+    error: (e, _) => 'ERROR($e)',
+  );
+
+  AppLogging.sync(
+    '[Entitlement] canCloudSyncWriteProvider evaluated: '
+    'canWrite=$canWrite, entitlement=$stateDesc',
+  );
+
+  return canWrite;
 });
 
 /// Provider for checking if cloud sync read is allowed
 final canCloudSyncReadProvider = Provider<bool>((ref) {
   final entitlement = ref.watch(cloudSyncEntitlementProvider);
-  return entitlement.whenOrNull(data: (e) => e.canRead) ?? false;
+  final canRead = entitlement.whenOrNull(data: (e) => e.canRead) ?? false;
+
+  AppLogging.sync(
+    '[Entitlement] canCloudSyncReadProvider evaluated: canRead=$canRead',
+  );
+
+  return canRead;
 });
 
 /// Provider for the current entitlement state

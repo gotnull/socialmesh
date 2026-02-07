@@ -15,7 +15,8 @@ import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
 import '../dashboard/widgets/schema_widget_content.dart';
 import 'models/widget_schema.dart';
-import 'storage/widget_storage_service.dart';
+
+import 'widget_sync_providers.dart';
 import 'editor/widget_editor_screen.dart';
 import 'widget_builder_screen.dart';
 
@@ -37,8 +38,6 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
   WidgetSchema? _widget;
   bool _isLoading = true;
   String? _error;
-
-  final _storageService = WidgetStorageService();
 
   @override
   void initState() {
@@ -134,25 +133,50 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
       if (!purchased || !mounted) return;
     }
 
+    // Capture navigator and messenger BEFORE any awaits
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
     try {
-      await _storageService.init();
-      await _storageService.saveWidget(_widget!);
+      AppLogging.sync(
+        '[WidgetImport] _importWidget — id=${_widget!.id}, '
+        'name=${_widget!.name}',
+      );
+      final storageService = await ref.read(
+        widgetStorageServiceProvider.future,
+      );
+      if (!mounted) return;
+      await storageService.saveWidget(_widget!);
+      if (!mounted) return;
+
+      // Drain outbox immediately so the widget syncs promptly
+      // (matching the pattern used by Automations)
+      AppLogging.sync(
+        '[WidgetImport] Widget saved, triggering drainOutboxNow()...',
+      );
+      final syncService = ref.read(widgetSyncServiceProvider);
+      AppLogging.sync(
+        '[WidgetImport] syncService=${syncService != null ? "exists(enabled=${syncService.isEnabled})" : "NULL"}',
+      );
+      await syncService?.drainOutboxNow();
+      AppLogging.sync('[WidgetImport] drainOutboxNow() complete');
       if (!mounted) return;
 
       // Trigger refresh on any watching screens
       ref.read(widgetRefreshTriggerProvider.notifier).refresh();
 
-      final navigator = Navigator.of(context);
-      showActionSnackBar(
-        context,
-        'Widget imported successfully',
-        actionLabel: 'View',
-        onAction: () {
-          navigator.push(
-            MaterialPageRoute(builder: (_) => const WidgetBuilderScreen()),
-          );
-        },
-        type: SnackBarType.success,
+      messenger.showSnackBar(
+        SnackBar(
+          content: const Text('Widget imported successfully'),
+          action: SnackBarAction(
+            label: 'View',
+            onPressed: () {
+              navigator.push(
+                MaterialPageRoute(builder: (_) => const WidgetBuilderScreen()),
+              );
+            },
+          ),
+        ),
       );
       navigator.pop();
     } catch (e) {

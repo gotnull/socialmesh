@@ -5,21 +5,129 @@ import '../../../core/logging.dart';
 import '../models/widget_schema.dart';
 
 /// Service for persisting custom widgets locally
+import '../services/widget_sqlite_store.dart';
+
 class WidgetStorageService {
   static const _storageKey = 'custom_widgets';
   static const _installedKey = 'installed_widgets';
   // Maps schema ID (UUID) -> marketplace ID (Firebase doc ID)
   static const _schemaToMarketplaceKey = 'schema_to_marketplace_map';
+  static const _migratedKey = 'widgets_migrated_to_sqlite';
 
   SharedPreferences? _prefs;
 
+  // Import for sync logging
+
+  /// Shared SQLite store for Cloud Sync support.
+  ///
+  /// When set (via [setSharedStore]), all CRUD operations delegate to
+  /// the SQLite store instead of SharedPreferences. This allows any
+  /// instance of WidgetStorageService (including ad-hoc ones created
+  /// in screens) to participate in Cloud Sync automatically.
+  static WidgetSqliteStore? _sharedStore;
+
+  /// Set the shared SQLite store for all WidgetStorageService instances.
+  ///
+  /// Call this once during app initialization (from the widget store
+  /// provider) before any screen creates a WidgetStorageService.
+  static void setSharedStore(WidgetSqliteStore store) {
+    AppLogging.sync(
+      '[WidgetStorage] setSharedStore() called — '
+      'store hashCode=${identityHashCode(store)}, '
+      'syncEnabled=${store.syncEnabled}',
+    );
+    _sharedStore = store;
+  }
+
+  /// Whether the SQLite store is available for delegation.
+  static bool get hasStore => _sharedStore != null;
+
   WidgetStorageService();
 
-  /// Initialize the service
+  /// Initialize the service.
+  ///
+  /// If a shared SQLite store has been set via [setSharedStore],
+  /// performs a one-time migration from SharedPreferences to SQLite
+  /// on first run.
   Future<void> init() async {
     AppLogging.widgets('[WidgetStorage] Initializing...');
+    AppLogging.sync(
+      '[WidgetStorage] init() ENTER — hasStore=$hasStore, '
+      'sharedStore hashCode=${_sharedStore != null ? identityHashCode(_sharedStore) : "null"}, '
+      'syncEnabled=${_sharedStore?.syncEnabled}',
+    );
     _prefs = await SharedPreferences.getInstance();
+
+    if (_sharedStore != null) {
+      await _migrateToSqliteIfNeeded();
+    }
+
     AppLogging.widgets('[WidgetStorage] Initialized successfully');
+    AppLogging.sync(
+      '[WidgetStorage] init() EXIT — hasStore=$hasStore, '
+      'syncEnabled=${_sharedStore?.syncEnabled}',
+    );
+  }
+
+  /// One-time migration from SharedPreferences to SQLite.
+  Future<void> _migrateToSqliteIfNeeded() async {
+    final alreadyMigrated = _prefs?.getBool(_migratedKey) ?? false;
+    AppLogging.sync(
+      '[WidgetStorage] _migrateToSqliteIfNeeded() — '
+      'alreadyMigrated=$alreadyMigrated',
+    );
+    if (alreadyMigrated) return;
+
+    final json = _prefs?.getString(_storageKey);
+    AppLogging.sync(
+      '[WidgetStorage] Migration: SharedPreferences data '
+      '${json != null ? "found (${json.length} chars)" : "NOT found"}',
+    );
+    if (json != null && json.isNotEmpty) {
+      try {
+        final list = jsonDecode(json) as List<dynamic>;
+        final widgets = list
+            .map((item) => WidgetSchema.fromJson(item as Map<String, dynamic>))
+            .toList();
+
+        if (widgets.isNotEmpty) {
+          AppLogging.widgets(
+            '[WidgetStorage] Migrating ${widgets.length} widgets '
+            'from SharedPreferences to SQLite',
+          );
+          AppLogging.sync(
+            '[WidgetStorage] Migration: importing ${widgets.length} widgets '
+            'to SQLite + enqueuing for sync',
+          );
+          await _sharedStore!.bulkImport(widgets);
+          await _sharedStore!.enqueueAllForSync();
+          AppLogging.sync(
+            '[WidgetStorage] Migration: bulkImport + enqueueAllForSync complete',
+          );
+        }
+      } catch (e) {
+        AppLogging.widgets(
+          '[WidgetStorage] Error migrating from SharedPreferences: $e',
+        );
+        AppLogging.sync('[WidgetStorage] Migration ERROR: $e');
+      }
+    }
+
+    // Clear the old SharedPreferences key for widgets data
+    // (keep _installedKey and _schemaToMarketplaceKey — those are
+    // marketplace tracking, not widget schema storage)
+    await _prefs?.remove(_storageKey);
+    await _prefs?.setBool(_migratedKey, true);
+
+    AppLogging.widgets(
+      '[WidgetStorage] Migration to SQLite complete '
+      '(${_sharedStore!.count} widgets)',
+    );
+    AppLogging.sync(
+      '[WidgetStorage] Migration complete — '
+      '${_sharedStore!.count} widgets in SQLite, '
+      'syncEnabled=${_sharedStore!.syncEnabled}',
+    );
   }
 
   SharedPreferences get _preferences {
@@ -35,15 +143,48 @@ class WidgetStorageService {
     AppLogging.widgets(
       '[WidgetStorage] saveWidget called for id=${widget.id}, name=${widget.name}',
     );
+    AppLogging.sync(
+      '[WidgetStorage] saveWidget() ENTER — '
+      'id=${widget.id}, name=${widget.name}, '
+      'hasStore=$hasStore, '
+      'store hashCode=${_sharedStore != null ? identityHashCode(_sharedStore) : "null"}, '
+      'store.syncEnabled=${_sharedStore?.syncEnabled}',
+    );
     try {
       // Ensure initialized
       if (_prefs == null) {
         AppLogging.widgets(
           '[WidgetStorage] Not initialized, initializing now...',
         );
+        AppLogging.sync(
+          '[WidgetStorage] saveWidget: NOT initialized, calling init()',
+        );
         await init();
       }
 
+      // Delegate to SQLite store if available
+      if (_sharedStore != null) {
+        AppLogging.sync(
+          '[WidgetStorage] saveWidget: DELEGATING to SQLite store '
+          '(syncEnabled=${_sharedStore!.syncEnabled}) — '
+          'if syncEnabled=false, this widget will NOT be enqueued for sync!',
+        );
+        await _sharedStore!.save(widget);
+        AppLogging.widgets(
+          '[WidgetStorage] Widget saved to SQLite: ${widget.name}',
+        );
+        AppLogging.sync(
+          '[WidgetStorage] saveWidget() EXIT — saved to SQLite OK, '
+          'widget ${widget.id} (${widget.name})',
+        );
+        return;
+      }
+
+      // Legacy SharedPreferences path
+      AppLogging.sync(
+        '[WidgetStorage] saveWidget: NO SQLite store — using legacy '
+        'SharedPreferences path (widget will NOT sync!)',
+      );
       final widgets = await getWidgets();
       AppLogging.widgets(
         '[WidgetStorage] Current widgets count: ${widgets.length}',
@@ -67,16 +208,27 @@ class WidgetStorageService {
         '[WidgetStorage] Widget saved successfully, new count: ${widgets.length}',
       );
       AppLogging.widgets('Saved widget: ${widget.name}');
+      AppLogging.sync(
+        '[WidgetStorage] saveWidget() EXIT — saved to SharedPreferences '
+        '(NO sync), widget ${widget.id}',
+      );
     } catch (e, stack) {
       AppLogging.widgets('[WidgetStorage] ERROR saving widget: $e');
       AppLogging.widgets('[WidgetStorage] Stack: $stack');
-      AppLogging.widgets('⚠️ Error saving widget: $e');
+      AppLogging.widgets('Error saving widget: $e');
+      AppLogging.sync('[WidgetStorage] saveWidget() ERROR: $e');
       rethrow;
     }
   }
 
   /// Get all custom widgets
   Future<List<WidgetSchema>> getWidgets() async {
+    // Delegate to SQLite store if available
+    if (_sharedStore != null) {
+      return _sharedStore!.getAll();
+    }
+
+    // Legacy SharedPreferences path
     try {
       // Ensure initialized
       if (_prefs == null) {
@@ -112,6 +264,12 @@ class WidgetStorageService {
 
   /// Get a specific widget by ID
   Future<WidgetSchema?> getWidget(String id) async {
+    // Delegate to SQLite store if available
+    if (_sharedStore != null) {
+      return _sharedStore!.getById(id);
+    }
+
+    // Legacy SharedPreferences path
     final widgets = await getWidgets();
     try {
       return widgets.firstWhere((w) => w.id == id);
@@ -123,10 +281,20 @@ class WidgetStorageService {
   /// Delete a widget
   /// Returns the marketplace ID if this was a marketplace widget (for profile cleanup)
   Future<String?> deleteWidget(String id) async {
+    AppLogging.sync(
+      '[WidgetStorage] deleteWidget() ENTER — '
+      'id=$id, hasStore=$hasStore, '
+      'store.syncEnabled=${_sharedStore?.syncEnabled}',
+    );
     try {
-      final widgets = await getWidgets();
-      widgets.removeWhere((w) => w.id == id);
-      await _saveWidgetsList(widgets);
+      // Delete from SQLite store if available, otherwise from SharedPreferences
+      if (_sharedStore != null) {
+        await _sharedStore!.delete(id);
+      } else {
+        final widgets = await getWidgets();
+        widgets.removeWhere((w) => w.id == id);
+        await _saveWidgetsList(widgets);
+      }
 
       // Look up marketplace ID from schema ID mapping
       final marketplaceId = await getMarketplaceIdForSchema(id);
@@ -160,9 +328,14 @@ class WidgetStorageService {
       }
 
       AppLogging.widgets('Deleted widget: $id');
+      AppLogging.sync(
+        '[WidgetStorage] deleteWidget() EXIT — '
+        'id=$id deleted, marketplaceId=$marketplaceId',
+      );
       return marketplaceId; // Return for profile cleanup
     } catch (e) {
-      AppLogging.widgets('⚠️ Error deleting widget: $e');
+      AppLogging.widgets('Error deleting widget: $e');
+      AppLogging.sync('[WidgetStorage] deleteWidget() ERROR: $e');
       rethrow;
     }
   }
@@ -323,6 +496,9 @@ class WidgetStorageService {
 
   /// Clear all widgets (for testing/debug)
   Future<void> clearAll() async {
+    if (_sharedStore != null) {
+      await _sharedStore!.clearAll();
+    }
     await _preferences.remove(_storageKey);
     await _preferences.remove(_installedKey);
     await _preferences.remove(_schemaToMarketplaceKey);

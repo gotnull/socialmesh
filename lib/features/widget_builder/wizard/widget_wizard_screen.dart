@@ -896,7 +896,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
           SliverToBoxAdapter(child: _buildLivePreviewPanel()),
         // Page content + Bottom actions
         SliverFillRemaining(
-          hasScrollBody: false,
+          hasScrollBody: true,
           child: Column(
             children: [
               Expanded(
@@ -1132,7 +1132,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
         onTap: () => _handleTemplateSelection(template),
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(12),
+          clipBehavior: Clip.hardEdge,
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: context.card,
             borderRadius: BorderRadius.circular(16),
@@ -1143,34 +1144,37 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Icon
               Container(
-                width: 48,
-                height: 48,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: template.color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(template.icon, color: template.color, size: 24),
+                child: Icon(template.icon, color: template.color, size: 22),
               ),
-              SizedBox(height: 10),
+              SizedBox(height: 8),
               // Name
-              Text(
-                template.name,
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+              Flexible(
+                child: Text(
+                  template.name,
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
               // Selection indicator
               if (isSelected) ...[
-                const SizedBox(height: 6),
-                Icon(Icons.check_circle, color: context.accentColor, size: 18),
+                const SizedBox(height: 4),
+                Icon(Icons.check_circle, color: context.accentColor, size: 16),
               ],
             ],
           ),

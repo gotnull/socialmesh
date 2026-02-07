@@ -5,7 +5,8 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
 import '../renderer/widget_renderer.dart';
-import '../storage/widget_storage_service.dart';
+
+import '../widget_sync_providers.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/glass_scaffold.dart';
@@ -46,8 +47,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
 
   Future<void> _checkMarketplaceStatus() async {
     if (widget.initialSchema != null) {
-      final storage = WidgetStorageService();
-      await storage.init();
+      final storage = await ref.read(widgetStorageServiceProvider.future);
       if (!mounted) return;
       final isMarketplace = await storage.isMarketplaceWidget(_schema.id);
       if (!mounted) return;

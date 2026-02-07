@@ -12,7 +12,8 @@ import '../../providers/help_providers.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
-import '../widget_builder/storage/widget_storage_service.dart';
+
+import '../widget_builder/widget_sync_providers.dart';
 import '../widget_builder/wizard/widget_wizard_screen.dart';
 import 'models/dashboard_widget_config.dart';
 import 'providers/dashboard_providers.dart';
@@ -502,8 +503,8 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
   Future<void> _editCustomWidget(String? schemaId) async {
     if (schemaId == null) return;
 
-    final storageService = WidgetStorageService();
-    await storageService.init();
+    final storageService = await ref.read(widgetStorageServiceProvider.future);
+    if (!mounted) return;
     final schema = await storageService.getWidget(schemaId);
 
     if (schema == null || !mounted) return;

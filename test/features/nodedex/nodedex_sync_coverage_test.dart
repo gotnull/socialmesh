@@ -1397,11 +1397,8 @@ void main() {
     test('profile types do not require entitlement', () {
       final profileConfig = syncTypeConfigs[SyncType.userProfile]!;
       final prefsConfig = syncTypeConfigs[SyncType.userPreferences]!;
-      final automationsConfig = syncTypeConfigs[SyncType.automationRules]!;
-
       expect(profileConfig.requiresEntitlement, isFalse);
       expect(prefsConfig.requiresEntitlement, isFalse);
-      expect(automationsConfig.requiresEntitlement, isFalse);
     });
   });
 

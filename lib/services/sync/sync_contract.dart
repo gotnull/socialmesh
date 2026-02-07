@@ -35,8 +35,17 @@ enum SyncType {
   /// User preferences (theme, haptics, animations, canned responses, etc.).
   userPreferences,
 
-  /// Automation rules (synced as JSON blob inside profile preferences).
-  automationRules,
+  /// Automation rules — per-document sync via outbox pattern.
+  ///
+  /// Each automation is its own Firestore document in
+  /// `users/{uid}/automations_sync/{docId}`.
+  automations,
+
+  /// Custom widget schemas — per-document sync via outbox pattern.
+  ///
+  /// Each user-created widget is its own Firestore document in
+  /// `users/{uid}/widgets_sync/{docId}`.
+  widgetSchemas,
 }
 
 /// Configuration for a single syncable entity type.
@@ -157,17 +166,27 @@ const Map<SyncType, SyncTypeConfig> syncTypeConfigs = {
         'Null-coalescing merge: non-null values win per field. '
         'Embedded in profile document.',
   ),
-  SyncType.automationRules: SyncTypeConfig(
-    displayName: 'Automation Rules',
-    entityTypeKey: 'automations',
-    cloudCollectionPath: 'users',
-    usesOutbox: false,
-    isEmbeddedInParent: true,
-    parentType: SyncType.userPreferences,
-    requiresEntitlement: false,
+  SyncType.automations: SyncTypeConfig(
+    displayName: 'Automations',
+    entityTypeKey: 'automation',
+    cloudCollectionPath: 'automations_sync',
+    usesOutbox: true,
+    supportsTombstone: true,
+    requiresEntitlement: true,
     conflictPolicy:
-        'Full list replace via automationsJson in UserPreferences. '
-        'Last writer wins the entire list.',
+        'Per-document last-write-wins. Each automation is an independent '
+        'Firestore document with its own updated_at_ms timestamp.',
+  ),
+  SyncType.widgetSchemas: SyncTypeConfig(
+    displayName: 'Widget Schemas',
+    entityTypeKey: 'widget',
+    cloudCollectionPath: 'widgets_sync',
+    usesOutbox: true,
+    supportsTombstone: true,
+    requiresEntitlement: true,
+    conflictPolicy:
+        'Per-document last-write-wins. Each custom widget is an independent '
+        'Firestore document with its own updated_at_ms timestamp.',
   ),
 };
 

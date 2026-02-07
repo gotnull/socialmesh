@@ -6,47 +6,164 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'models/automation.dart';
 import 'models/schedule_spec.dart';
+import 'services/automation_sqlite_store.dart';
 
-/// Repository for storing and retrieving automations
+/// Repository for storing and retrieving automations.
+///
+/// Uses [AutomationSqliteStore] as the backing store for automations
+/// (with Cloud Sync outbox support). SharedPreferences is still used
+/// for logs and schedules which are device-local and do not sync.
 class AutomationRepository extends ChangeNotifier {
   static const String _automationsKey = 'automations';
   static const String _logKey = 'automation_log';
   static const String _schedulesKey = 'automation_schedules';
+  static const String _migratedKey = 'automations_migrated_to_sqlite';
   static const int _maxLogEntries = 100;
 
   SharedPreferences? _prefs;
-  List<Automation> _automations = [];
+  AutomationSqliteStore? _store;
   List<AutomationLogEntry> _log = [];
   List<ScheduleSpec> _schedules = [];
 
-  List<Automation> get automations => List.unmodifiable(_automations);
+  List<Automation> get automations => List.unmodifiable(_store?.getAll() ?? []);
   List<AutomationLogEntry> get log => List.unmodifiable(_log);
   List<ScheduleSpec> get schedules => List.unmodifiable(_schedules);
 
-  /// Initialize the repository
+  /// Set the SQLite store. Must be called before [init].
+  void setStore(AutomationSqliteStore store) {
+    _store = store;
+  }
+
+  /// Initialize the repository.
+  ///
+  /// If a [AutomationSqliteStore] has been set via [setStore], automations
+  /// are read from SQLite. Otherwise, falls back to SharedPreferences
+  /// (legacy path for tests or pre-migration state).
+  ///
+  /// On first run with a store, migrates any existing automations from
+  /// SharedPreferences into SQLite and enqueues them for sync.
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
-    await _loadAutomations();
+
+    if (_store != null) {
+      await _migrateFromSharedPreferencesIfNeeded();
+    } else {
+      // Legacy fallback: load from SharedPreferences directly
+      await _loadAutomationsFromPrefs();
+    }
+
     await _loadLog();
     await _loadSchedules();
   }
 
-  Future<void> _loadAutomations() async {
+  // ============== Migration ==============
+
+  /// One-time migration from SharedPreferences to SQLite.
+  ///
+  /// Checks if automations have already been migrated. If not:
+  /// 1. Reads automations from SharedPreferences
+  /// 2. Bulk-imports them into the SQLite store
+  /// 3. Enqueues them all for sync so they reach Firestore
+  /// 4. Clears the SharedPreferences key
+  /// 5. Sets the migration flag
+  ///
+  /// Also handles the profile-blob migration: if automationsJson
+  /// exists in the profile preferences, those are imported too.
+  Future<void> _migrateFromSharedPreferencesIfNeeded() async {
+    final alreadyMigrated = _prefs?.getBool(_migratedKey) ?? false;
+    if (alreadyMigrated) return;
+
     final jsonString = _prefs?.getString(_automationsKey);
     if (jsonString != null && jsonString.isNotEmpty) {
       try {
         final list = jsonDecode(jsonString) as List;
-        _automations = list
+        final automations = list
+            .map((item) => Automation.fromJson(item as Map<String, dynamic>))
+            .toList();
+
+        if (automations.isNotEmpty) {
+          AppLogging.automations(
+            'AutomationRepository: Migrating ${automations.length} '
+            'automations from SharedPreferences to SQLite',
+          );
+          await _store!.bulkImport(automations);
+          await _store!.enqueueAllForSync();
+        }
+      } catch (e) {
+        AppLogging.automations(
+          'AutomationRepository: Error migrating from SharedPreferences: $e',
+        );
+      }
+    }
+
+    // Clear the old SharedPreferences key
+    await _prefs?.remove(_automationsKey);
+    // Set migration flag
+    await _prefs?.setBool(_migratedKey, true);
+
+    AppLogging.automations(
+      'AutomationRepository: Migration to SQLite complete '
+      '(${_store!.count} automations)',
+    );
+  }
+
+  /// Import automations from a cloud profile preferences JSON string.
+  ///
+  /// This is the one-time safety net for users who synced automations
+  /// via the old profile-blob approach. Called when the profile loads
+  /// and automationsJson is non-empty, but only if the SQLite store
+  /// is empty (to avoid overwriting newer per-document synced data).
+  Future<void> importFromCloudPrefsIfEmpty(String automationsJson) async {
+    if (_store == null) return;
+    if (_store!.count > 0) {
+      // SQLite already has automations — per-document sync is authoritative
+      return;
+    }
+
+    try {
+      final list = jsonDecode(automationsJson) as List;
+      final automations = list
+          .map((item) => Automation.fromJson(item as Map<String, dynamic>))
+          .toList();
+
+      if (automations.isNotEmpty) {
+        AppLogging.automations(
+          'AutomationRepository: Importing ${automations.length} '
+          'automations from cloud profile preferences (one-time)',
+        );
+        await _store!.bulkImport(automations);
+        await _store!.enqueueAllForSync();
+        notifyListeners();
+      }
+    } catch (e) {
+      AppLogging.automations(
+        'AutomationRepository: Error importing from cloud prefs: $e',
+      );
+    }
+  }
+
+  // ============== Legacy SharedPreferences loader ==============
+
+  /// Legacy: used only when no SQLite store is available.
+  List<Automation> _legacyAutomations = [];
+
+  Future<void> _loadAutomationsFromPrefs() async {
+    final jsonString = _prefs?.getString(_automationsKey);
+    if (jsonString != null && jsonString.isNotEmpty) {
+      try {
+        final list = jsonDecode(jsonString) as List;
+        _legacyAutomations = list
             .map((item) => Automation.fromJson(item as Map<String, dynamic>))
             .toList();
         AppLogging.automations(
-          'AutomationRepository: Loaded ${_automations.length} automations',
+          'AutomationRepository: Loaded ${_legacyAutomations.length} '
+          'automations (legacy SharedPreferences)',
         );
       } catch (e) {
         AppLogging.automations(
           'AutomationRepository: Error loading automations: $e',
         );
-        _automations = [];
+        _legacyAutomations = [];
       }
     }
   }
@@ -87,11 +204,6 @@ class AutomationRepository extends ChangeNotifier {
         _schedules = [];
       }
     }
-  }
-
-  Future<void> _saveAutomations() async {
-    final jsonString = jsonEncode(_automations.map((a) => a.toJson()).toList());
-    await _prefs?.setString(_automationsKey, jsonString);
   }
 
   Future<void> _saveLog() async {
@@ -168,20 +280,33 @@ class AutomationRepository extends ChangeNotifier {
 
   /// Export automations as JSON string for cloud sync
   String toJsonString() {
-    return jsonEncode(_automations.map((a) => a.toJson()).toList());
+    if (_store != null) {
+      return _store!.toJsonString();
+    }
+    return jsonEncode(_legacyAutomations.map((a) => a.toJson()).toList());
   }
 
-  /// Load automations from JSON string (for cloud sync restore)
+  /// Load automations from JSON string (for cloud sync restore).
+  ///
+  /// With the new per-document sync, this is only used as a fallback
+  /// for the profile-blob import path. Prefer [importFromCloudPrefsIfEmpty].
   Future<void> loadFromJson(String jsonString) async {
+    if (_store != null) {
+      await importFromCloudPrefsIfEmpty(jsonString);
+      return;
+    }
+
+    // Legacy path: direct SharedPreferences write
     try {
       final list = jsonDecode(jsonString) as List;
-      _automations = list
+      _legacyAutomations = list
           .map((item) => Automation.fromJson(item as Map<String, dynamic>))
           .toList();
-      await _saveAutomations();
+      await _prefs?.setString(_automationsKey, jsonString);
       notifyListeners();
       AppLogging.automations(
-        'AutomationRepository: Loaded ${_automations.length} automations from cloud',
+        'AutomationRepository: Loaded ${_legacyAutomations.length} '
+        'automations from cloud (legacy)',
       );
     } catch (e) {
       AppLogging.automations(
@@ -192,8 +317,13 @@ class AutomationRepository extends ChangeNotifier {
 
   /// Add a new automation
   Future<void> addAutomation(Automation automation) async {
-    _automations.add(automation);
-    await _saveAutomations();
+    if (_store != null) {
+      await _store!.save(automation);
+    } else {
+      _legacyAutomations.add(automation);
+      await _saveLegacyAutomations();
+    }
+    notifyListeners();
     AppLogging.automations(
       'AutomationRepository: Added automation "${automation.name}"',
     );
@@ -201,27 +331,40 @@ class AutomationRepository extends ChangeNotifier {
 
   /// Update an existing automation
   Future<void> updateAutomation(Automation automation) async {
-    final index = _automations.indexWhere((a) => a.id == automation.id);
-    if (index != -1) {
-      _automations[index] = automation;
-      await _saveAutomations();
-      AppLogging.automations(
-        'AutomationRepository: Updated automation "${automation.name}"',
-      );
+    if (_store != null) {
+      await _store!.save(automation);
+    } else {
+      final index = _legacyAutomations.indexWhere((a) => a.id == automation.id);
+      if (index != -1) {
+        _legacyAutomations[index] = automation;
+        await _saveLegacyAutomations();
+      }
     }
+    notifyListeners();
+    AppLogging.automations(
+      'AutomationRepository: Updated automation "${automation.name}"',
+    );
   }
 
   /// Delete an automation
   Future<void> deleteAutomation(String id) async {
-    _automations.removeWhere((a) => a.id == id);
-    await _saveAutomations();
+    if (_store != null) {
+      await _store!.delete(id);
+    } else {
+      _legacyAutomations.removeWhere((a) => a.id == id);
+      await _saveLegacyAutomations();
+    }
+    notifyListeners();
     AppLogging.automations('AutomationRepository: Deleted automation $id');
   }
 
   /// Get an automation by ID
   Automation? getAutomation(String id) {
+    if (_store != null) {
+      return _store!.getById(id);
+    }
     try {
-      return _automations.firstWhere((a) => a.id == id);
+      return _legacyAutomations.firstWhere((a) => a.id == id);
     } catch (_) {
       return null;
     }
@@ -229,25 +372,47 @@ class AutomationRepository extends ChangeNotifier {
 
   /// Toggle automation enabled state
   Future<void> toggleAutomation(String id, bool enabled) async {
-    final index = _automations.indexWhere((a) => a.id == id);
-    if (index != -1) {
-      _automations[index] = _automations[index].copyWith(enabled: enabled);
-      await _saveAutomations();
+    if (_store != null) {
+      final automation = _store!.getById(id);
+      if (automation != null) {
+        await _store!.save(automation.copyWith(enabled: enabled));
+      }
+    } else {
+      final index = _legacyAutomations.indexWhere((a) => a.id == id);
+      if (index != -1) {
+        _legacyAutomations[index] = _legacyAutomations[index].copyWith(
+          enabled: enabled,
+        );
+        await _saveLegacyAutomations();
+      }
     }
+    notifyListeners();
   }
 
   /// Record that an automation was triggered
   Future<void> recordTrigger(String id) async {
-    final index = _automations.indexWhere((a) => a.id == id);
-    if (index != -1) {
-      final automation = _automations[index];
-      _automations[index] = automation.copyWith(
-        lastTriggered: DateTime.now(),
-        triggerCount: automation.triggerCount + 1,
-      );
-      await _saveAutomations();
-      notifyListeners();
+    if (_store != null) {
+      final automation = _store!.getById(id);
+      if (automation != null) {
+        await _store!.save(
+          automation.copyWith(
+            lastTriggered: DateTime.now(),
+            triggerCount: automation.triggerCount + 1,
+          ),
+        );
+      }
+    } else {
+      final index = _legacyAutomations.indexWhere((a) => a.id == id);
+      if (index != -1) {
+        final automation = _legacyAutomations[index];
+        _legacyAutomations[index] = automation.copyWith(
+          lastTriggered: DateTime.now(),
+          triggerCount: automation.triggerCount + 1,
+        );
+        await _saveLegacyAutomations();
+      }
     }
+    notifyListeners();
   }
 
   /// Add a log entry
@@ -269,12 +434,12 @@ class AutomationRepository extends ChangeNotifier {
 
   /// Get automations by trigger type
   List<Automation> getAutomationsByTrigger(TriggerType type) {
-    return _automations.where((a) => a.trigger.type == type).toList();
+    return automations.where((a) => a.trigger.type == type).toList();
   }
 
   /// Get enabled automations
   List<Automation> get enabledAutomations {
-    return _automations.where((a) => a.enabled).toList();
+    return automations.where((a) => a.enabled).toList();
   }
 
   /// Import automations from JSON
@@ -295,10 +460,9 @@ class AutomationRepository extends ChangeNotifier {
           actions: automation.actions,
           conditions: automation.conditions,
         );
-        _automations.add(newAutomation);
+        await addAutomation(newAutomation);
       }
 
-      await _saveAutomations();
       return imported.length;
     } catch (e) {
       AppLogging.automations('AutomationRepository: Error importing: $e');
@@ -308,7 +472,15 @@ class AutomationRepository extends ChangeNotifier {
 
   /// Export automations to JSON
   String exportAutomations() {
-    return jsonEncode(_automations.map((a) => a.toJson()).toList());
+    return toJsonString();
+  }
+
+  /// Save automations to SharedPreferences (legacy path only).
+  Future<void> _saveLegacyAutomations() async {
+    final jsonString = jsonEncode(
+      _legacyAutomations.map((a) => a.toJson()).toList(),
+    );
+    await _prefs?.setString(_automationsKey, jsonString);
   }
 
   /// Create a template automation

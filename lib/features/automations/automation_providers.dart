@@ -8,7 +8,8 @@ import 'package:socialmesh/core/logging.dart';
 import '../../models/mesh_models.dart';
 import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/auth_providers.dart';
+
+import '../../providers/cloud_sync_entitlement_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/glyph_provider.dart';
 import '../../services/notifications/notification_service.dart';
@@ -19,16 +20,79 @@ import 'models/automation.dart';
 import 'models/schedule_spec.dart';
 import 'platform_scheduler.dart';
 import 'scheduler_service.dart';
+import 'services/automation_database.dart';
+import 'services/automation_sqlite_store.dart';
+import 'services/automation_sync_service.dart';
 
-/// Provider for the automation repository
-final automationRepositoryProvider = Provider<AutomationRepository>((ref) {
-  return AutomationRepository();
+// =============================================================================
+// Storage Providers
+// =============================================================================
+
+/// Provides the Automation SQLite database instance.
+final automationDatabaseProvider = Provider<AutomationDatabase>((ref) {
+  final db = AutomationDatabase();
+  ref.onDispose(() {
+    db.close();
+  });
+  return db;
 });
 
-/// Provider for initializing the repository
+/// Provides an initialized AutomationSqliteStore instance.
+///
+/// The store is initialized once and shared across all providers.
+final automationStoreProvider = FutureProvider<AutomationSqliteStore>((
+  ref,
+) async {
+  final db = ref.watch(automationDatabaseProvider);
+  final store = AutomationSqliteStore(db);
+  await store.init();
+  return store;
+});
+
+/// Provides the Automation Cloud Sync service.
+///
+/// Enabled/disabled based on the user's Cloud Sync entitlement.
+final automationSyncServiceProvider = Provider<AutomationSyncService?>((ref) {
+  final storeAsync = ref.watch(automationStoreProvider);
+  final store = storeAsync.asData?.value;
+  if (store == null) return null;
+
+  final syncService = AutomationSyncService(store);
+
+  // Watch cloud sync entitlement to enable/disable.
+  final canWrite = ref.watch(canCloudSyncWriteProvider);
+  syncService.setEnabled(canWrite);
+
+  ref.onDispose(() async {
+    await syncService.dispose();
+  });
+
+  return syncService;
+});
+
+/// Provider for the automation repository.
+///
+/// The repository is wired to the SQLite store when available.
+final automationRepositoryProvider = Provider<AutomationRepository>((ref) {
+  final repository = AutomationRepository();
+
+  // Wire the SQLite store into the repository when available
+  final storeAsync = ref.watch(automationStoreProvider);
+  final store = storeAsync.asData?.value;
+  if (store != null) {
+    repository.setStore(store);
+  }
+
+  return repository;
+});
+
+/// Provider for initializing the repository.
 final automationRepositoryInitProvider = FutureProvider<AutomationRepository>((
   ref,
 ) async {
+  // Ensure the store is initialized first
+  await ref.read(automationStoreProvider.future);
+
   final repository = ref.read(automationRepositoryProvider);
   await repository.init();
   return repository;
@@ -212,8 +276,19 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
     final repository = ref.watch(automationRepositoryProvider);
     repository.addListener(_onRepositoryChanged);
 
-    // Watch the current user profile and restore automations from cloud prefs
-    // whenever the profile changes (sign-in / sign-out / profile update).
+    // Activate sync service (reads entitlement, enables/disables).
+    // Wire up onPullApplied so remote data reloads into the UI.
+    final syncService = ref.watch(automationSyncServiceProvider);
+    syncService?.onPullApplied = (appliedCount) {
+      if (!ref.mounted) return;
+      AppLogging.automations(
+        'Sync pull applied $appliedCount automations — reloading state',
+      );
+      state = AsyncValue.data(_repository.automations);
+    };
+
+    // One-time safety net: if the profile still has automationsJson from
+    // the old blob-sync approach, import it into SQLite (only if empty).
     ref.listen<AsyncValue<UserProfile?>>(userProfileProvider, (
       prev,
       next,
@@ -222,16 +297,12 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
         final profile = next.value;
         final cloudJson = profile?.preferences?.automationsJson;
         if (cloudJson != null && cloudJson.isNotEmpty) {
-          // Avoid unnecessary loads if already identical
-          if (repository.toJsonString() != cloudJson) {
-            await repository.loadFromJson(cloudJson);
-            AppLogging.automations(
-              'Automations restored from cloud preferences',
-            );
-          }
+          await repository.importFromCloudPrefsIfEmpty(cloudJson);
         }
       } catch (e) {
-        AppLogging.automations('Error restoring automations from cloud: $e');
+        AppLogging.automations(
+          'Error importing automations from cloud prefs: $e',
+        );
       }
     });
 
@@ -264,27 +335,16 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
     await _loadAutomations();
   }
 
-  /// Sync automations to cloud
-  Future<void> _syncToCloud() async {
-    final user = ref.read(currentUserProvider);
-    if (user != null) {
-      try {
-        await ref
-            .read(userProfileProvider.notifier)
-            .updatePreferences(
-              UserPreferences(automationsJson: _repository.toJsonString()),
-            );
-        AppLogging.automations('Synced automations to cloud');
-      } catch (e) {
-        AppLogging.automations('Failed to sync automations to cloud: $e');
-      }
-    }
+  /// Drain the sync outbox immediately after a local mutation.
+  void _drainOutbox() {
+    final syncService = ref.read(automationSyncServiceProvider);
+    syncService?.drainOutboxNow();
   }
 
   Future<void> addAutomation(Automation automation) async {
     await _repository.addAutomation(automation);
     state = AsyncValue.data(_repository.automations);
-    await _syncToCloud();
+    _drainOutbox();
 
     // Register schedule if this is a scheduled trigger
     if (automation.enabled &&
@@ -299,7 +359,7 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
 
     await _repository.updateAutomation(automation);
     state = AsyncValue.data(_repository.automations);
-    await _syncToCloud();
+    _drainOutbox();
 
     // Register new schedule if enabled and scheduled
     if (automation.enabled &&
@@ -314,7 +374,7 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
 
     await _repository.deleteAutomation(id);
     state = AsyncValue.data(_repository.automations);
-    await _syncToCloud();
+    _drainOutbox();
   }
 
   Future<void> toggleAutomation(String id, bool enabled) async {
@@ -324,7 +384,7 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
 
     await _repository.toggleAutomation(id, enabled);
     state = AsyncValue.data(_repository.automations);
-    await _syncToCloud();
+    _drainOutbox();
 
     // Handle schedule registration/unregistration
     if (automation?.trigger.type == TriggerType.scheduled) {

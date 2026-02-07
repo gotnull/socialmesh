@@ -10,6 +10,7 @@ import '../../providers/help_providers.dart';
 import '../../providers/subscription_providers.dart';
 import 'models/widget_schema.dart';
 import 'storage/widget_storage_service.dart';
+import 'widget_sync_providers.dart';
 import 'wizard/widget_wizard_screen.dart';
 import 'marketplace/widget_marketplace_screen.dart';
 import 'marketplace/widget_marketplace_service.dart';
@@ -37,7 +38,6 @@ class WidgetBuilderScreen extends ConsumerStatefulWidget {
 
 class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     with LifecycleSafeMixin<WidgetBuilderScreen> {
-  final _storageService = WidgetStorageService();
   List<WidgetSchema> _myWidgets = [];
   Set<String> _marketplaceIds = {};
   bool _isLoading = true;
@@ -53,9 +53,12 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     safeSetState(() => _isLoading = true);
 
     try {
-      await _storageService.init();
-      final widgets = await _storageService.getWidgets();
-      final installedIds = await _storageService.getInstalledMarketplaceIds();
+      final storageService = await ref.read(
+        widgetStorageServiceProvider.future,
+      );
+      if (!mounted) return;
+      final widgets = await storageService.getWidgets();
+      final installedIds = await storageService.getInstalledMarketplaceIds();
 
       AppLogging.widgets(
         '[WidgetBuilder] Loaded ${widgets.length} widgets from local storage',
@@ -89,16 +92,16 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
             '[WidgetBuilder] Found ${missingIds.length} widgets to restore from cloud',
           );
           // Restore missing widgets from marketplace
-          await _restoreMissingWidgets(missingIds);
+          await _restoreMissingWidgets(missingIds, storageService);
           // Reload after restoration
-          final updatedWidgets = await _storageService.getWidgets();
-          final updatedInstalledIds = await _storageService
+          final updatedWidgets = await storageService.getWidgets();
+          final updatedInstalledIds = await storageService
               .getInstalledMarketplaceIds();
           AppLogging.widgets(
             '[WidgetBuilder] After restore: ${updatedWidgets.length} widgets',
           );
           safeSetState(() {
-            _myWidgets = updatedWidgets;
+            _myWidgets = List.of(updatedWidgets);
             _marketplaceIds = updatedInstalledIds.toSet();
             _isLoading = false;
           });
@@ -108,7 +111,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
       if (!mounted) return;
       safeSetState(() {
-        _myWidgets = widgets;
+        _myWidgets = List.of(widgets);
         _marketplaceIds = installedIds.toSet();
         _isLoading = false;
       });
@@ -121,7 +124,10 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
   }
 
   /// Restore widgets from marketplace that are in profile but not local storage
-  Future<void> _restoreMissingWidgets(List<String> widgetIds) async {
+  Future<void> _restoreMissingWidgets(
+    List<String> widgetIds,
+    WidgetStorageService storageService,
+  ) async {
     final service = ref.read(marketplaceServiceProvider);
     final failedIds = <String>[];
 
@@ -133,7 +139,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         // Use previewWidget to NOT increment install count (user already owns this)
         final schema = await service.previewWidget(marketplaceId);
         // Pass the marketplace ID so it's tracked correctly
-        await _storageService.installMarketplaceWidget(
+        await storageService.installMarketplaceWidget(
           schema,
           marketplaceId: marketplaceId,
         );
@@ -492,7 +498,32 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
             AppLogging.widgets(
               '[WidgetBuilder] onSave callback - saving new widget: ${schema.id}',
             );
-            await _storageService.saveWidget(schema);
+            AppLogging.sync(
+              '[WidgetBuilder] onSave NEW widget — id=${schema.id}, '
+              'name=${schema.name}',
+            );
+            final storage = ref
+                .read(widgetStorageServiceProvider)
+                .asData
+                ?.value;
+            if (storage != null) {
+              await storage.saveWidget(schema);
+              AppLogging.sync(
+                '[WidgetBuilder] Widget saved, triggering drainOutboxNow()...',
+              );
+              // Drain outbox immediately so the widget syncs promptly
+              // (matching the pattern used by Automations)
+              final syncService = ref.read(widgetSyncServiceProvider);
+              AppLogging.sync(
+                '[WidgetBuilder] syncService=${syncService != null ? "exists(enabled=${syncService.isEnabled})" : "NULL"}',
+              );
+              await syncService?.drainOutboxNow();
+              AppLogging.sync('[WidgetBuilder] drainOutboxNow() complete');
+            } else {
+              AppLogging.sync(
+                '[WidgetBuilder] WARNING: storage is null, widget NOT saved!',
+              );
+            }
             AppLogging.widgets('[WidgetBuilder] New widget saved successfully');
           },
         ),
@@ -550,7 +581,30 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
             AppLogging.widgets(
               '[WidgetBuilder] onSave callback - saving widget: ${updated.id}',
             );
-            await _storageService.saveWidget(updated);
+            AppLogging.sync(
+              '[WidgetBuilder] onSave EDIT widget — id=${updated.id}, '
+              'name=${updated.name}',
+            );
+            final storage = ref
+                .read(widgetStorageServiceProvider)
+                .asData
+                ?.value;
+            if (storage != null) {
+              await storage.saveWidget(updated);
+              AppLogging.sync(
+                '[WidgetBuilder] Widget updated, triggering drainOutboxNow()...',
+              );
+              final syncService = ref.read(widgetSyncServiceProvider);
+              AppLogging.sync(
+                '[WidgetBuilder] syncService=${syncService != null ? "exists(enabled=${syncService.isEnabled})" : "NULL"}',
+              );
+              await syncService?.drainOutboxNow();
+              AppLogging.sync('[WidgetBuilder] drainOutboxNow() complete');
+            } else {
+              AppLogging.sync(
+                '[WidgetBuilder] WARNING: storage is null, widget NOT saved!',
+              );
+            }
             AppLogging.widgets('[WidgetBuilder] Widget saved successfully');
           },
         ),
@@ -591,7 +645,30 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
             AppLogging.widgets(
               '[WidgetBuilder] onSave callback - saving template copy: ${schema.id}',
             );
-            await _storageService.saveWidget(schema);
+            AppLogging.sync(
+              '[WidgetBuilder] onSave TEMPLATE COPY — id=${schema.id}, '
+              'name=${schema.name}',
+            );
+            final storage = ref
+                .read(widgetStorageServiceProvider)
+                .asData
+                ?.value;
+            if (storage != null) {
+              await storage.saveWidget(schema);
+              AppLogging.sync(
+                '[WidgetBuilder] Template copy saved, triggering drainOutboxNow()...',
+              );
+              final syncService = ref.read(widgetSyncServiceProvider);
+              AppLogging.sync(
+                '[WidgetBuilder] syncService=${syncService != null ? "exists(enabled=${syncService.isEnabled})" : "NULL"}',
+              );
+              await syncService?.drainOutboxNow();
+              AppLogging.sync('[WidgetBuilder] drainOutboxNow() complete');
+            } else {
+              AppLogging.sync(
+                '[WidgetBuilder] WARNING: storage is null, template NOT saved!',
+              );
+            }
             AppLogging.widgets(
               '[WidgetBuilder] Template copy saved successfully',
             );
@@ -626,7 +703,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         break;
       case 'duplicate':
         AppLogging.widgets('[WidgetBuilder] Duplicating widget: ${schema.id}');
-        await _storageService.duplicateWidget(schema.id);
+        final dupStorage = ref.read(widgetStorageServiceProvider).asData?.value;
+        if (dupStorage != null) await dupStorage.duplicateWidget(schema.id);
         await _loadWidgets();
         AppLogging.widgets('[WidgetBuilder] Widget duplicated');
         break;
@@ -675,10 +753,15 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
               'Are you sure you want to delete "${schema.name}"? This cannot be undone.'
         : 'Are you sure you want to delete "${schema.name}"? This cannot be undone.';
 
+    // Capture refs BEFORE showing dialog (before any await)
+    final dashboardNotifier = ref.read(dashboardWidgetsProvider.notifier);
+    final delStorage = ref.read(widgetStorageServiceProvider).asData?.value;
+    final profileNotifier = ref.read(userProfileProvider.notifier);
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: dialogContext.card,
         title: Row(
           children: [
             if (isOnDashboard) ...[
@@ -691,56 +774,85 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
             ],
             Text(
               'Delete Widget?',
-              style: TextStyle(color: context.textPrimary),
+              style: TextStyle(color: dialogContext.textPrimary),
             ),
           ],
         ),
         content: Text(
           warningMessage,
-          style: TextStyle(color: context.textSecondary),
+          style: TextStyle(color: dialogContext.textSecondary),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'Cancel',
-              style: TextStyle(color: context.textSecondary),
+              style: TextStyle(color: dialogContext.textSecondary),
             ),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
-              showLoadingSnackBar(context, 'Deleting "${schema.name}"...');
-              // Remove from dashboard first if needed
+              // Pop dialog immediately
+              Navigator.pop(dialogContext);
+
+              // Remove from local state first so the card disappears
+              // and the 3-dot menu is no longer accessible.
+              final schemaId = schema.id;
+              final schemaName = schema.name;
+              safeSetState(() {
+                _myWidgets.removeWhere((w) => w.id == schemaId);
+              });
+
+              // Remove from dashboard if needed (sync, no await)
               if (isOnDashboard) {
                 final widgetToRemove = dashboardWidgets.firstWhere(
-                  (w) => w.schemaId == schema.id && w.isVisible,
+                  (w) => w.schemaId == schemaId && w.isVisible,
                 );
-                ref
-                    .read(dashboardWidgetsProvider.notifier)
-                    .removeWidget(widgetToRemove.id);
+                dashboardNotifier.removeWidget(widgetToRemove.id);
               }
+
               // Delete from local storage and get marketplace ID
-              final marketplaceId = await _storageService.deleteWidget(
-                schema.id,
+              AppLogging.sync(
+                '[WidgetBuilder] DELETE widget — id=$schemaId, name=$schemaName',
               );
+              final marketplaceId = await delStorage?.deleteWidget(schemaId);
               AppLogging.widgets(
-                '[WidgetBuilder] Deleted widget ${schema.id}, marketplaceId=$marketplaceId',
+                '[WidgetBuilder] Deleted widget $schemaId, marketplaceId=$marketplaceId',
               );
+              AppLogging.sync(
+                '[WidgetBuilder] Widget deleted from storage, '
+                'triggering drainOutboxNow()...',
+              );
+
+              // Drain outbox immediately so the deletion syncs promptly
+              // (matching the pattern used by Automations)
+              final syncService = ref.read(widgetSyncServiceProvider);
+              AppLogging.sync(
+                '[WidgetBuilder] syncService=${syncService != null ? "exists(enabled=${syncService.isEnabled})" : "NULL"}',
+              );
+              await syncService?.drainOutboxNow();
+              AppLogging.sync(
+                '[WidgetBuilder] drainOutboxNow() complete after delete',
+              );
+
+              if (!mounted) return;
+
               // Remove from user profile using marketplace ID (or schema ID as fallback)
-              final idToRemoveFromProfile = marketplaceId ?? schema.id;
-              await ref
-                  .read(userProfileProvider.notifier)
-                  .removeInstalledWidget(idToRemoveFromProfile);
+              final idToRemoveFromProfile = marketplaceId ?? schemaId;
+              await profileNotifier.removeInstalledWidget(
+                idToRemoveFromProfile,
+              );
               AppLogging.widgets(
                 '[WidgetBuilder] Removed $idToRemoveFromProfile from profile',
               );
-              // Update state directly without reload (avoids restore logic)
+
+              if (!mounted) return;
+
+              // Update marketplace IDs tracking
               safeSetState(() {
-                _myWidgets.removeWhere((w) => w.id == schema.id);
-                _marketplaceIds.remove(marketplaceId ?? schema.id);
+                _marketplaceIds.remove(marketplaceId ?? schemaId);
               });
-              showGlobalSuccessSnackBar('Deleted "${schema.name}"');
+              showGlobalSuccessSnackBar('Deleted "$schemaName"');
             },
             child: Text('Delete', style: TextStyle(color: AppTheme.errorRed)),
           ),

@@ -176,6 +176,20 @@ service cloud.firestore {
         allow read: if isOwner(userId);
         allow write: if isOwner(userId) && isValidSize();
       }
+
+      // Automations Cloud Sync subcollection - per-document automation sync
+      // Each automation is its own document with LWW conflict resolution
+      match /automations_sync/{docId} {
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId) && isValidSize();
+      }
+
+      // Widget Schemas Cloud Sync subcollection - per-document custom widget sync
+      // Each user-created widget schema is its own document with LWW conflict resolution
+      match /widgets_sync/{docId} {
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId) && isValidSize();
+      }
     }
 
     // User presence - public read, owner write

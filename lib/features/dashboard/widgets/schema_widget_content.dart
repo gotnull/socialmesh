@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
 import '../../widget_builder/models/widget_schema.dart';
 import '../../widget_builder/renderer/widget_renderer.dart';
-import '../../widget_builder/storage/widget_storage_service.dart';
+
+import '../../widget_builder/widget_sync_providers.dart';
 import '../../map/map_screen.dart';
 import '../../../core/widgets/loading_indicator.dart';
 
@@ -23,7 +25,6 @@ class SchemaWidgetContent extends ConsumerStatefulWidget {
 
 class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent>
     with LifecycleSafeMixin {
-  final _storageService = WidgetStorageService();
   WidgetSchema? _schema;
   bool _isLoading = true;
   String? _error;
@@ -36,8 +37,18 @@ class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent>
 
   Future<void> _loadSchema() async {
     try {
-      await _storageService.init();
-      final schema = await _storageService.getWidget(widget.schemaId);
+      final storageAsync = ref.read(widgetStorageServiceProvider);
+      final storage = storageAsync.asData?.value;
+      WidgetSchema? schema;
+      if (storage != null) {
+        schema = await storage.getWidget(widget.schemaId);
+      } else {
+        // Await the provider if not yet ready
+        final service = await ref.read(widgetStorageServiceProvider.future);
+        if (!mounted) return;
+        schema = await service.getWidget(widget.schemaId);
+      }
+      if (!mounted) return;
       safeSetState(() {
         _schema = schema;
         _isLoading = false;
@@ -135,14 +146,67 @@ class WidgetRefreshNotifier extends Notifier<int> {
 final widgetRefreshTriggerProvider =
     NotifierProvider<WidgetRefreshNotifier, int>(WidgetRefreshNotifier.new);
 
-/// Provider for custom widgets stored in widget builder
+/// Provider for custom widgets stored in widget builder.
+///
+/// Uses the SQLite store when available (for Cloud Sync support),
+/// falling back to SharedPreferences via WidgetStorageService.
+/// Also activates the widget sync service so remote changes are pulled.
 final customWidgetsProvider = FutureProvider<List<WidgetSchema>>((ref) async {
   // Watch the refresh trigger to refetch when it changes
   ref.watch(widgetRefreshTriggerProvider);
 
-  final storageService = WidgetStorageService();
-  await storageService.init();
-  return storageService.getWidgets();
+  // Ensure the SQLite store is initialized (this also sets the shared
+  // store on WidgetStorageService so all instances delegate to SQLite).
+  final storeAsync = ref.watch(widgetSqliteStoreProvider);
+  final store = storeAsync.asData?.value;
+
+  AppLogging.sync(
+    '[customWidgetsProvider] store state: '
+    '${storeAsync.isLoading
+        ? "LOADING"
+        : storeAsync.hasError
+        ? "ERROR(${storeAsync.error})"
+        : "READY"}, '
+    'store=${store != null ? "hashCode=${identityHashCode(store)}, syncEnabled=${store.syncEnabled}, count=${store.count}" : "NULL"}',
+  );
+
+  // Activate sync service — wire up onPullApplied to trigger refresh
+  // when remote widget schemas arrive from another device.
+  final syncService = ref.watch(widgetSyncServiceProvider);
+
+  AppLogging.sync(
+    '[customWidgetsProvider] syncService=${syncService != null ? "hashCode=${identityHashCode(syncService)}, enabled=${syncService.isEnabled}" : "NULL — widget sync NOT active!"}',
+  );
+
+  syncService?.onPullApplied = (appliedCount) {
+    if (!ref.mounted) return;
+    AppLogging.widgets(
+      'Sync pull applied $appliedCount widgets — triggering refresh',
+    );
+    AppLogging.sync(
+      '[customWidgetsProvider] onPullApplied callback — $appliedCount widgets arrived from remote, triggering UI refresh',
+    );
+    ref.read(widgetRefreshTriggerProvider.notifier).refresh();
+  };
+
+  if (store != null) {
+    final widgets = store.getAll();
+    AppLogging.sync(
+      '[customWidgetsProvider] returning ${widgets.length} widgets from SQLite store',
+    );
+    return widgets;
+  }
+
+  // Fallback: SQLite store not ready yet, use provider-managed service
+  AppLogging.sync(
+    '[customWidgetsProvider] store not ready, falling back to widgetStorageServiceProvider',
+  );
+  final storageService = await ref.watch(widgetStorageServiceProvider.future);
+  final widgets = await storageService.getWidgets();
+  AppLogging.sync(
+    '[customWidgetsProvider] fallback returned ${widgets.length} widgets',
+  );
+  return widgets;
 });
 
 /// Provider for a specific custom widget
@@ -150,7 +214,15 @@ final customWidgetProvider = FutureProvider.family<WidgetSchema?, String>((
   ref,
   schemaId,
 ) async {
-  final storageService = WidgetStorageService();
-  await storageService.init();
+  // Use the SQLite store when available
+  final storeAsync = ref.watch(widgetSqliteStoreProvider);
+  final store = storeAsync.asData?.value;
+
+  if (store != null) {
+    return store.getById(schemaId);
+  }
+
+  // Fallback: SQLite store not ready yet, use provider-managed service
+  final storageService = await ref.watch(widgetStorageServiceProvider.future);
   return storageService.getWidget(schemaId);
 });

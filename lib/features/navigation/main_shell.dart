@@ -160,20 +160,20 @@ class HamburgerMenuButton extends ConsumerWidget {
         ),
         if (totalBadgeCount > 0)
           Positioned(
-            right: 8,
-            top: 8,
+            right: 4,
+            top: 4,
             child: IgnorePointer(
               child: Container(
-                padding: const EdgeInsets.all(4),
+                padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
                   color: Colors.red,
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: theme.scaffoldBackgroundColor,
-                    width: 2,
+                    width: 1.5,
                   ),
                 ),
-                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
                 child: Text(
                   totalBadgeCount > 99 ? '99+' : '$totalBadgeCount',
                   style: const TextStyle(
@@ -189,12 +189,12 @@ class HamburgerMenuButton extends ConsumerWidget {
         // Gradient dot for unseen What's New features
         if (hasUnseenWhatsNew && totalBadgeCount == 0)
           Positioned(
-            right: 8,
-            top: 8,
+            right: 6,
+            top: 6,
             child: IgnorePointer(
               child: Container(
-                width: 10,
-                height: 10,
+                width: 8,
+                height: 8,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [AppTheme.primaryMagenta, AppTheme.primaryPurple],

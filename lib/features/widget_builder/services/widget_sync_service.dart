@@ -1,21 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// NodeDex Cloud Sync Service — syncs NodeDex data across devices.
+// Widget Cloud Sync Service — syncs custom widget schemas across devices.
 //
-// Uses an outbox pattern:
+// Uses the same outbox + watermark pattern proven in NodeDexSyncService:
 // - Local mutations write to SQLite and enqueue outbox records
 // - This service drains the outbox when Cloud Sync is enabled
 //   and network is available
 // - Pull updates fetch remote changes since the last watermark
 //   and apply them to SQLite
 //
-// If Cloud Sync is disabled, this service is a no-op.
-// Everything remains fully offline-first.
-//
-// Debug logging:
-// All sync operations are logged with a `[SYNC]` prefix for easy grepping.
-// Verbose mode is enabled via `--dart-define=SYNC_DEBUG=true` or by calling
-// `setSyncDebug(true)` at runtime.
+// Firestore collection: users/{uid}/widgets_sync/{docId}
 
 import 'dart:async';
 import 'dart:convert';
@@ -27,19 +21,17 @@ import '../../../core/logging.dart';
 import '../../../services/sync/sync_contract.dart';
 import '../../../services/sync/sync_diagnostics.dart';
 import '../../../services/sync/sync_probe_result.dart';
-import '../models/nodedex_entry.dart';
-import 'nodedex_sqlite_store.dart';
+import '../models/widget_schema.dart';
+import 'widget_sqlite_store.dart';
 
-/// Firestore collection for NodeDex sync data.
-const String _firestoreCollection = 'nodedex_sync';
+/// Firestore collection for Widget sync data.
+const String _firestoreCollection = 'widgets_sync';
 
 /// Sync state key prefix for last pull watermark.
 ///
-/// The actual key is per-uid: `nodedex_last_pull_ms_<uid>` to prevent
-/// watermark leaking between users on the same device. Without this,
-/// User B inherits User A's watermark and skips all their data older
-/// than that timestamp.
-const String _lastPullWatermarkPrefix = 'nodedex_last_pull_ms';
+/// The actual key is per-uid: `widgets_last_pull_ms_<uid>` to prevent
+/// watermark leaking between users on the same device.
+const String _lastPullWatermarkPrefix = 'widgets_last_pull_ms';
 
 /// Build the per-uid watermark key.
 String _watermarkKey(String uid) => '${_lastPullWatermarkPrefix}_$uid';
@@ -50,48 +42,34 @@ const int _outboxDrainBatchSize = 50;
 /// Maximum retries for a single outbox entry before skipping.
 const int _maxOutboxRetries = 5;
 
-/// Whether verbose sync debug logging is enabled.
-///
-/// Controlled via `--dart-define=SYNC_DEBUG=true` at build time,
-/// or toggled at runtime via [setSyncDebug].
-bool _syncDebug = const bool.fromEnvironment('SYNC_DEBUG', defaultValue: false);
-
-/// Enable or disable verbose sync debug logging at runtime.
-void setSyncDebug(bool enabled) {
-  _syncDebug = enabled;
-  _syncLog('Debug logging ${enabled ? "ENABLED" : "DISABLED"}');
-}
-
-/// Whether sync debug logging is currently enabled.
-bool get isSyncDebugEnabled => _syncDebug;
-
-/// Log a sync message with `[SYNC]` prefix. Always logs critical messages;
-/// verbose messages only when [_syncDebug] is true.
+/// Log a sync message with `[SYNC]` prefix.
+/// Logs to BOTH the widgets channel and the always-on sync channel.
 void _syncLog(String message, {bool verbose = false}) {
-  if (verbose && !_syncDebug) return;
-  AppLogging.nodeDex('[SYNC] $message');
+  if (verbose) return;
+  AppLogging.widgets('[SYNC] $message');
+  AppLogging.sync('[Widget] $message');
 }
 
-/// Log a sync error with `[SYNC]` prefix. Always logs.
+/// Log a sync error with `[SYNC]` prefix.
+/// Logs to BOTH the widgets channel and the always-on sync channel.
 void _syncLogError(String message, [Object? error, StackTrace? stack]) {
-  AppLogging.nodeDex(
-    '[SYNC] ERROR: $message${error != null ? ' — $error' : ''}',
+  final full = '[SYNC] ERROR: $message${error != null ? ' — $error' : ''}';
+  AppLogging.widgets(full);
+  AppLogging.sync(
+    '[Widget] ERROR: $message${error != null ? ' — $error' : ''}',
   );
-  if (stack != null && _syncDebug) {
-    AppLogging.nodeDex('[SYNC] STACK: $stack');
-  }
 }
 
-/// Cloud Sync service for NodeDex data.
+/// Cloud Sync service for custom Widget data.
 ///
 /// Manages the bidirectional sync between the local SQLite store
 /// and Firestore. The service is designed to be:
 /// - Optional: does nothing when Cloud Sync is disabled
 /// - Offline-first: all data lives in SQLite first
-/// - Conflict-safe: uses merge semantics consistent with local merge
+/// - Conflict-safe: uses last-write-wins at the item level
 /// - Non-blocking: sync runs in the background
-class NodeDexSyncService {
-  final NodeDexSqliteStore _store;
+class WidgetSyncService {
+  final WidgetSqliteStore _store;
 
   Timer? _syncTimer;
   bool _isSyncing = false;
@@ -108,15 +86,14 @@ class NodeDexSyncService {
   /// Callback invoked after a sync pull applies remote entries to the
   /// local store. The argument is the number of entries applied.
   ///
-  /// The NodeDex notifier sets this so it can reload its in-memory
-  /// state after remote data arrives — without this, pulled data
-  /// sits in SQLite but never reaches the UI until app restart.
+  /// The widget providers set this so they can reload their in-memory
+  /// state after remote data arrives.
   void Function(int appliedCount)? onPullApplied;
 
   /// Sync interval for periodic drain and pull.
   static const Duration _syncInterval = Duration(minutes: 2);
 
-  NodeDexSyncService(this._store);
+  WidgetSyncService(this._store);
 
   /// Diagnostics tracker for sync observability.
   final SyncDiagnostics _diagnostics = SyncDiagnostics.instance;
@@ -132,8 +109,10 @@ class NodeDexSyncService {
     _diagnostics.recordEntitlementState(enabled);
 
     _syncLog(
-      'setEnabled: $wasEnabled → $enabled '
-      '(store.syncEnabled=${_store.syncEnabled})',
+      'setEnabled: $wasEnabled -> $enabled '
+      '(store.syncEnabled=${_store.syncEnabled}, '
+      'service hashCode=${identityHashCode(this)}, '
+      'store hashCode=${identityHashCode(_store)})',
     );
 
     if (enabled) {
@@ -151,7 +130,10 @@ class NodeDexSyncService {
   /// Trigger a one-shot sync cycle (drain outbox + pull updates).
   Future<void> syncNow() async {
     if (!_enabled) {
-      _syncLog('syncNow: skipped — sync not enabled');
+      _syncLog(
+        'syncNow: skipped — sync not enabled '
+        '(service hashCode=${identityHashCode(this)})',
+      );
       return;
     }
     _syncLog('syncNow: triggering manual sync cycle');
@@ -160,35 +142,41 @@ class NodeDexSyncService {
 
   /// Drain the outbox immediately without pulling.
   ///
-  /// Call this after user-initiated mutations (social tag, user note)
+  /// Call this after user-initiated mutations (save, edit, delete widget)
   /// to ensure the change reaches Firestore promptly rather than
   /// waiting for the next periodic cycle.
-  ///
-  /// The store must be flushed before calling this so that the
-  /// outbox entries exist in SQLite.
   ///
   /// If a drain is already in progress (from a sync cycle or another
   /// drainOutboxNow call), this is a no-op to avoid reading overlapping
   /// outbox entries and uploading them to Firestore multiple times.
   Future<void> drainOutboxNow() async {
+    _syncLog(
+      'drainOutboxNow: ENTER — enabled=$_enabled, isDraining=$_isDraining, '
+      'store.syncEnabled=${_store.syncEnabled}',
+    );
+
     if (!_enabled) {
-      _syncLog('drainOutboxNow: skipped — sync not enabled');
+      _syncLog(
+        'drainOutboxNow: SKIPPED — sync not enabled '
+        '(service hashCode=${identityHashCode(this)})',
+      );
       return;
     }
 
     if (_isDraining) {
-      _syncLog('drainOutboxNow: skipped — drain already in progress');
+      _syncLog('drainOutboxNow: SKIPPED — drain already in progress');
       return;
     }
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      _syncLog('drainOutboxNow: skipped — no authenticated user');
+      _syncLog('drainOutboxNow: SKIPPED — no authenticated Firebase user');
       return;
     }
 
     _syncLog(
-      'drainOutboxNow: starting immediate drain for uid=${user.uid.substring(0, 8)}...',
+      'drainOutboxNow: starting immediate drain for '
+      'uid=${user.uid.substring(0, 8)}...',
     );
 
     try {
@@ -202,19 +190,32 @@ class NodeDexSyncService {
   /// Start periodic sync.
   void _startPeriodicSync() {
     _syncTimer?.cancel();
+    _syncLog(
+      '_startPeriodicSync: creating timer '
+      '(interval=${_syncInterval.inSeconds}s, '
+      'service hashCode=${identityHashCode(this)})',
+    );
     _syncTimer = Timer.periodic(_syncInterval, (_) {
+      _syncLog(
+        'Periodic timer fired — enabled=$_enabled, isSyncing=$_isSyncing',
+      );
       if (_enabled && !_isSyncing) {
         _runSyncCycle();
       }
     });
     // Also run immediately on enable.
     if (!_isSyncing) {
+      _syncLog('_startPeriodicSync: running immediate first cycle');
       _runSyncCycle();
     }
   }
 
   /// Stop periodic sync.
   void _stopPeriodicSync() {
+    _syncLog(
+      '_stopPeriodicSync: canceling timer '
+      '(service hashCode=${identityHashCode(this)})',
+    );
     _syncTimer?.cancel();
     _syncTimer = null;
   }
@@ -222,18 +223,25 @@ class NodeDexSyncService {
   /// Run a single sync cycle: drain outbox then pull.
   Future<void> _runSyncCycle() async {
     if (_isSyncing) {
-      _syncLog('_runSyncCycle: skipped — already syncing', verbose: true);
+      _syncLog('_runSyncCycle: SKIPPED — already syncing');
       return;
     }
     _isSyncing = true;
 
     final cycleStart = DateTime.now();
-    _syncLog('--- Sync cycle START ---');
+    _syncLog('========== Widget Sync cycle START ==========');
+    _syncLog(
+      'Cycle context: enabled=$_enabled, '
+      'store.syncEnabled=${_store.syncEnabled}, '
+      'store.count=${_store.count}, '
+      'service hashCode=${identityHashCode(this)}, '
+      'store hashCode=${identityHashCode(_store)}',
+    );
 
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        _syncLog('Sync cycle: no authenticated user — aborting');
+        _syncLog('Sync cycle: NO authenticated Firebase user — aborting');
         return;
       }
 
@@ -242,12 +250,24 @@ class NodeDexSyncService {
         'enabled=$_enabled store.syncEnabled=${_store.syncEnabled}',
       );
 
+      // Initial push: if this is the first sync for this user (no watermark),
+      // enqueue any local widgets that exist in SQLite but were never outboxed.
+      // This handles the case where widgets were saved before Cloud Sync was
+      // activated (syncEnabled was false at save time -> no outbox entries).
+      _syncLog('Sync cycle: checking initial push...');
+      await _ensureInitialPushIfNeeded(user.uid);
+
+      _syncLog('Sync cycle: draining outbox...');
       await _drainOutbox(user.uid);
+
+      _syncLog('Sync cycle: pulling updates...');
       await _pullUpdates(user.uid);
       _diagnostics.recordSyncCycleComplete();
 
       final elapsed = DateTime.now().difference(cycleStart).inMilliseconds;
-      _syncLog('--- Sync cycle COMPLETE (${elapsed}ms) ---');
+      _syncLog(
+        '========== Widget Sync cycle COMPLETE (${elapsed}ms) ==========',
+      );
     } catch (e, stack) {
       final elapsed = DateTime.now().difference(cycleStart).inMilliseconds;
       _syncLogError('Sync cycle FAILED after ${elapsed}ms', e, stack);
@@ -256,14 +276,63 @@ class NodeDexSyncService {
     }
   }
 
+  /// Ensure all local widgets are enqueued for sync on the very first cycle.
+  ///
+  /// When the sync service starts for the first time (no watermark for this
+  /// user), any widgets already in SQLite were saved before sync was active.
+  /// Those saves had [syncEnabled] = false, so no outbox entries were created.
+  /// This method detects that situation and enqueues everything once.
+  Future<void> _ensureInitialPushIfNeeded(String userId) async {
+    _syncLog('_ensureInitialPushIfNeeded: ENTER');
+    final wmKey = _watermarkKey(userId);
+    final existingWatermark = await _store.getSyncState(wmKey);
+    if (existingWatermark != null) {
+      _syncLog(
+        '_ensureInitialPushIfNeeded: watermark exists ($existingWatermark) '
+        '— not first sync, skipping initial push',
+      );
+      return;
+    }
+
+    final localCount = _store.count;
+    _syncLog(
+      '_ensureInitialPushIfNeeded: NO watermark (first sync), '
+      'localCount=$localCount',
+    );
+    if (localCount == 0) {
+      _syncLog('_ensureInitialPushIfNeeded: no local widgets to push');
+      return;
+    }
+
+    final outboxCount = await _store.outboxCount;
+    if (outboxCount > 0) {
+      _syncLog(
+        '_ensureInitialPushIfNeeded: outbox already has $outboxCount entries '
+        '(e.g. from migration), skipping bulk enqueue',
+      );
+      return;
+    }
+
+    _syncLog(
+      'Initial push: first sync for uid=${userId.substring(0, 8)}... '
+      '— enqueuing $localCount local widgets to outbox',
+    );
+
+    final enqueued = await _store.enqueueAllForSync();
+    _syncLog('Initial push: enqueued $enqueued widgets');
+  }
+
   // ---------------------------------------------------------------------------
   // Outbox drain (push local changes to Firestore)
   // ---------------------------------------------------------------------------
 
   /// Drain pending outbox entries to Firestore.
   Future<void> _drainOutbox(String userId) async {
+    _syncLog(
+      '_drainOutbox: ENTER — isDraining=$_isDraining, uid=${userId.substring(0, 8)}...',
+    );
     if (_isDraining) {
-      _syncLog('Drain: skipped — another drain already in progress');
+      _syncLog('_drainOutbox: SKIPPED — another drain already in progress');
       return;
     }
     _isDraining = true;
@@ -272,6 +341,7 @@ class NodeDexSyncService {
       await _drainOutboxInner(userId);
     } finally {
       _isDraining = false;
+      _syncLog('_drainOutbox: EXIT — isDraining reset to false');
     }
   }
 
@@ -280,14 +350,14 @@ class NodeDexSyncService {
     final outboxEntries = await _store.readOutbox(limit: _outboxDrainBatchSize);
 
     if (outboxEntries.isEmpty) {
-      _syncLog('Drain: outbox empty — nothing to push', verbose: true);
+      _syncLog('_drainOutboxInner: outbox is EMPTY — nothing to push');
       return;
     }
 
     final collectionPath = 'users/$userId/$_firestoreCollection';
     _syncLog(
       'Drain: ${outboxEntries.length} outbox entries to push '
-      '→ $collectionPath',
+      '-> $collectionPath',
     );
 
     final collection = FirebaseFirestore.instance
@@ -306,42 +376,41 @@ class NodeDexSyncService {
       final op = row['op'] as String;
       final payloadJson = row['payload_json'] as String;
       final attemptCount = row['attempt_count'] as int? ?? 0;
-      final updatedAtMs = row['updated_at_ms'] as int? ?? 0;
+
+      _syncLog(
+        'Drain: processing outbox[$id] $entityType/$entityId '
+        'op=$op attempt=$attemptCount',
+      );
 
       if (attemptCount >= _maxOutboxRetries) {
         _syncLog(
           'Drain: SKIPPING outbox[$id] $entityType/$entityId '
-          '— max retries ($attemptCount) reached',
+          '— max retries ($attemptCount) reached, removing from outbox',
         );
         await _store.removeOutboxEntry(id);
         skippedCount++;
         continue;
       }
 
-      final docId = _entityIdToDocId(entityType, entityId);
-
-      _syncLog(
-        'Drain: pushing outbox[$id] op=$op type=$entityType '
-        'id=$entityId → doc=$docId attempt=${attemptCount + 1}/$_maxOutboxRetries '
-        'updatedAtMs=$updatedAtMs',
-        verbose: true,
-      );
+      // Firestore doc ID: widget_<uuid>
+      final docId = '${entityType}_$entityId';
 
       try {
         final nowMs = DateTime.now().millisecondsSinceEpoch;
 
         if (op == 'delete') {
+          _syncLog('Drain: UPLOADING delete for $docId to $collectionPath');
           await collection.doc(docId).set({
             'deleted': true,
             'updated_at_ms': nowMs,
             'entity_type': entityType,
             'entity_id': entityId,
           }, SetOptions(merge: true));
-          _syncLog(
-            'Drain: DELETE success doc=$docId updated_at_ms=$nowMs',
-            verbose: true,
-          );
         } else {
+          _syncLog(
+            'Drain: UPLOADING upsert for $docId to $collectionPath '
+            '(payload ${payloadJson.length} chars)',
+          );
           final payload = jsonDecode(payloadJson) as Map<String, dynamic>;
           await collection.doc(docId).set({
             'data': payload,
@@ -350,26 +419,25 @@ class NodeDexSyncService {
             'entity_type': entityType,
             'entity_id': entityId,
           }, SetOptions(merge: true));
-          _syncLog(
-            'Drain: UPSERT success doc=$docId updated_at_ms=$nowMs '
-            'payload_keys=${payload.keys.toList()}',
-            verbose: true,
-          );
         }
 
         await _store.removeOutboxEntry(id);
-        _diagnostics.recordUploadSuccess(SyncType.nodedexEntry);
+        _diagnostics.recordUploadSuccess(SyncType.widgetSchemas);
         successCount++;
+        _syncLog(
+          'Drain: SUCCESS — outbox[$id] $entityType/$entityId '
+          'uploaded to Firestore as $docId',
+        );
       } catch (e, stack) {
         _syncLogError(
           'Drain: FAILED outbox[$id] $entityType/$entityId '
           'doc=$docId attempt=${attemptCount + 1}: $e',
           null,
-          _syncDebug ? stack : null,
+          stack,
         );
         await _store.markOutboxAttemptFailed(id, e.toString());
         _diagnostics.recordError(
-          SyncType.nodedexEntry,
+          SyncType.widgetSchemas,
           'Outbox push failed for $entityType/$entityId: $e',
         );
         failCount++;
@@ -377,7 +445,7 @@ class NodeDexSyncService {
     }
 
     _syncLog(
-      'Drain: complete — '
+      'Drain: COMPLETE — '
       'success=$successCount fail=$failCount skipped=$skippedCount',
     );
   }
@@ -391,6 +459,8 @@ class NodeDexSyncService {
     final collectionPath = 'users/$userId/$_firestoreCollection';
 
     final wmKey = _watermarkKey(userId);
+
+    _syncLog('_pullUpdates: ENTER — uid=${userId.substring(0, 8)}...');
 
     try {
       final lastPullStr = await _store.getSyncState(wmKey);
@@ -415,15 +485,15 @@ class NodeDexSyncService {
       final snapshot = await query.limit(200).get();
 
       if (snapshot.docs.isEmpty) {
-        _syncLog('Pull: no remote updates since watermark', verbose: true);
+        _syncLog('Pull: no new remote documents since watermark');
         return;
       }
 
       _syncLog('Pull: fetched ${snapshot.docs.length} remote documents');
 
       int maxPullMs = lastPullMs ?? 0;
-      final remoteEntries = <NodeDexEntry>[];
-      int deletedCount = 0;
+      final remoteWidgets = <WidgetSchema>[];
+      final remoteDeletedIds = <String>[];
       int parseErrors = 0;
 
       for (final doc in snapshot.docs) {
@@ -433,91 +503,72 @@ class NodeDexSyncService {
         final updatedAtMs = docData['updated_at_ms'] as int? ?? 0;
         final deleted = docData['deleted'] as bool? ?? false;
 
-        _syncLog(
-          'Pull: doc=${doc.id} type=$entityType id=$entityId '
-          'updated_at_ms=$updatedAtMs deleted=$deleted',
-          verbose: true,
-        );
-
         if (updatedAtMs > maxPullMs) {
           maxPullMs = updatedAtMs;
         }
 
         if (deleted) {
-          deletedCount++;
-          // Handle remote deletions — not implemented for entries
-          // since we use soft-delete locally. The merge will handle it.
-          _syncLog('Pull: skipping deleted doc=${doc.id}', verbose: true);
+          if (entityId != null) {
+            remoteDeletedIds.add(entityId);
+          }
           continue;
         }
 
-        if (entityType == 'entry') {
+        if (entityType == 'widget') {
           final data = docData['data'] as Map<String, dynamic>?;
           if (data != null) {
             try {
-              final entry = NodeDexEntry.fromJson(data);
-              remoteEntries.add(entry);
-              _syncLog(
-                'Pull: parsed entry node=${entry.nodeNum} '
-                'socialTag=${entry.socialTag?.name ?? "null"} '
-                'userNote=${entry.userNote != null ? "${entry.userNote!.length} chars" : "null"} '
-                'socialTagMs=${entry.socialTagUpdatedAtMs} '
-                'userNoteMs=${entry.userNoteUpdatedAtMs}',
-                verbose: true,
-              );
+              final widget = WidgetSchema.fromJson(data);
+              remoteWidgets.add(widget);
             } catch (e) {
               parseErrors++;
               _syncLogError(
-                'Pull: failed to parse entry from doc=${doc.id}',
+                'Pull: failed to parse widget from doc=${doc.id}',
                 e,
               );
             }
-          } else {
-            _syncLog(
-              'Pull: doc=${doc.id} has null data field — skipping',
-              verbose: true,
-            );
           }
-        } else {
-          _syncLog(
-            'Pull: unknown entity_type=$entityType in doc=${doc.id} — skipping',
-            verbose: true,
-          );
         }
       }
 
       _syncLog(
-        'Pull: parsed ${remoteEntries.length} entries, '
-        '$deletedCount deleted, $parseErrors parse errors',
+        'Pull: parsed ${remoteWidgets.length} widgets, '
+        '${remoteDeletedIds.length} deleted, $parseErrors parse errors',
       );
 
-      if (remoteEntries.isNotEmpty) {
-        _syncLog(
-          'Pull: applying ${remoteEntries.length} entries via applySyncPull',
-        );
-        final applied = await _store.applySyncPull(remoteEntries);
-        _diagnostics.recordPullApplied(SyncType.nodedexEntry, count: applied);
-        _syncLog('Pull: applied $applied entries to local store');
+      // Apply deletions
+      for (final deletedId in remoteDeletedIds) {
+        await _store.applySyncDeletion(deletedId);
+      }
 
-        // Notify the notifier so it can reload its in-memory state.
-        // Without this, pulled data sits in SQLite but the UI stays stale.
-        onPullApplied?.call(applied);
+      // Apply upserts
+      if (remoteWidgets.isNotEmpty) {
         _syncLog(
-          'Pull: notified UI callback (onPullApplied=$applied)',
-          verbose: true,
+          'Pull: applying ${remoteWidgets.length} widgets '
+          'via applySyncPull',
         );
+        final applied = await _store.applySyncPull(remoteWidgets);
+        _diagnostics.recordPullApplied(SyncType.widgetSchemas, count: applied);
+        _syncLog('Pull: applied $applied widgets to local store');
+
+        // Notify providers so they can reload their in-memory state.
+        onPullApplied?.call(applied + remoteDeletedIds.length);
+      } else if (remoteDeletedIds.isNotEmpty) {
+        // Notify even if only deletions were applied
+        onPullApplied?.call(remoteDeletedIds.length);
       }
 
       // Update watermark (per-uid so user switches don't leak).
       await _store.setSyncState(wmKey, maxPullMs.toString());
 
       _syncLog(
-        'Pull: complete — ${remoteEntries.length} entries applied, '
+        'Pull: complete — ${remoteWidgets.length} upserts, '
+        '${remoteDeletedIds.length} deletions, '
         'new watermark=$maxPullMs',
       );
     } catch (e, stack) {
       _syncLogError('Pull FAILED from $collectionPath', e, stack);
-      _diagnostics.recordError(SyncType.nodedexEntry, 'Pull error: $e');
+      _diagnostics.recordError(SyncType.widgetSchemas, 'Pull error: $e');
     }
   }
 
@@ -525,17 +576,17 @@ class NodeDexSyncService {
   // Sync Probe — deterministic end-to-end sync validation
   // ---------------------------------------------------------------------------
 
-  /// Run a deterministic end-to-end sync probe.
+  /// Run a deterministic end-to-end sync probe for Widget schemas.
   ///
-  /// This creates a test entry, enqueues it, flushes, drains to Firestore,
+  /// This creates a test widget, enqueues it, drains to Firestore,
   /// pulls it back, and verifies the round-trip. The result is logged with
   /// a `[SYNC] PROBE_RESULT` line for easy grepping.
   ///
   /// Use this to diagnose sync failures without guessing.
   Future<SyncProbeResult> runSyncProbe() async {
-    const probeNodeNum = 999999999; // Deterministic probe ID
-    final probeTag = NodeSocialTag.trustedNode;
-    const probeNote = 'sync_probe_note';
+    const probeId = 'sync_probe_widget_00000000';
+    const probeName = 'Sync Probe Test Widget';
+    const probeDescription = 'sync_probe_verify';
     final stages = <String, String>{};
     final logs = <String>[];
 
@@ -544,69 +595,68 @@ class NodeDexSyncService {
       _syncLog('PROBE: $msg');
     }
 
-    probeLog('=== SYNC PROBE START ===');
+    probeLog('=== WIDGET SYNC PROBE START ===');
 
-    // Stage 1: Check entitlement
+    // Stage A: Check entitlement
     probeLog('Stage A: Checking entitlement...');
     if (!_enabled) {
       probeLog('Stage A: FAIL — sync not enabled (entitlement=$_enabled)');
       stages['A'] = 'FAIL: sync not enabled';
-      return SyncProbeResult(
-        ok: false,
-        failedStage: 'A',
+      return SyncProbeResult.failed(
+        stage: 'A',
+        reason: 'sync not enabled',
         stages: stages,
         logs: logs,
+        domain: 'Widgets',
       );
     }
     stages['A'] =
         'OK: enabled=$_enabled store.syncEnabled=${_store.syncEnabled}';
     probeLog('Stage A: OK');
 
-    // Stage 2: Check auth
+    // Stage B: Check auth
     probeLog('Stage B: Checking Firebase auth...');
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       probeLog('Stage B: FAIL — no authenticated user');
       stages['B'] = 'FAIL: no authenticated user';
-      return SyncProbeResult(
-        ok: false,
-        failedStage: 'B',
+      return SyncProbeResult.failed(
+        stage: 'B',
+        reason: 'no authenticated user',
         stages: stages,
         logs: logs,
+        domain: 'Widgets',
       );
     }
     final uid = user.uid;
     stages['B'] = 'OK: uid=${uid.substring(0, 8)}...';
     probeLog('Stage B: OK — uid=${uid.substring(0, 8)}...');
 
-    // Stage 3: Create test entry locally
-    probeLog('Stage C: Creating test entry node=$probeNodeNum...');
+    // Stage C: Create test widget locally
+    probeLog('Stage C: Creating test widget id=$probeId...');
     try {
-      final now = DateTime.now();
-      final probeEntry = NodeDexEntry(
-        nodeNum: probeNodeNum,
-        firstSeen: now,
-        lastSeen: now,
-        socialTag: probeTag,
-        socialTagUpdatedAtMs: now.millisecondsSinceEpoch,
-        userNote: probeNote,
-        userNoteUpdatedAtMs: now.millisecondsSinceEpoch,
+      final probeWidget = WidgetSchema(
+        id: probeId,
+        name: probeName,
+        description: probeDescription,
+        root: ElementSchema(type: ElementType.container),
       );
-      await _store.saveEntryImmediate(probeEntry);
-      stages['C'] = 'OK: entry saved to SQLite';
-      probeLog('Stage C: OK — entry saved');
+      await _store.save(probeWidget);
+      stages['C'] = 'OK: widget saved to SQLite';
+      probeLog('Stage C: OK — widget saved');
     } catch (e) {
       probeLog('Stage C: FAIL — $e');
       stages['C'] = 'FAIL: $e';
-      return SyncProbeResult(
-        ok: false,
-        failedStage: 'C',
+      return SyncProbeResult.failed(
+        stage: 'C',
+        reason: '$e',
         stages: stages,
         logs: logs,
+        domain: 'Widgets',
       );
     }
 
-    // Stage 4: Check outbox
+    // Stage D: Check outbox
     probeLog('Stage D: Checking outbox...');
     try {
       final outboxCount = await _store.outboxCount;
@@ -616,8 +666,6 @@ class NodeDexSyncService {
           'syncEnabled=${_store.syncEnabled}',
         );
         stages['D'] = 'WARN: outbox empty (syncEnabled=${_store.syncEnabled})';
-        // Not a hard failure — the entry might have been deduped or
-        // syncEnabled was false during save.
       } else {
         stages['D'] = 'OK: outbox has $outboxCount entries';
         probeLog('Stage D: OK — $outboxCount entries in outbox');
@@ -627,7 +675,7 @@ class NodeDexSyncService {
       stages['D'] = 'FAIL: $e';
     }
 
-    // Stage 5: Drain outbox (upload)
+    // Stage E: Drain outbox (upload)
     probeLog('Stage E: Draining outbox to Firestore...');
     try {
       await _drainOutbox(uid);
@@ -637,17 +685,18 @@ class NodeDexSyncService {
     } catch (e) {
       probeLog('Stage E: FAIL — $e');
       stages['E'] = 'FAIL: $e';
-      return SyncProbeResult(
-        ok: false,
-        failedStage: 'E',
+      return SyncProbeResult.failed(
+        stage: 'E',
+        reason: '$e',
         stages: stages,
         logs: logs,
+        domain: 'Widgets',
       );
     }
 
-    // Stage 6: Verify document exists in Firestore
+    // Stage F: Verify document exists in Firestore
     probeLog('Stage F: Verifying document in Firestore...');
-    final docId = _entityIdToDocId('entry', 'node:$probeNodeNum');
+    final docId = 'widget_$probeId';
     final docPath = 'users/$uid/$_firestoreCollection/$docId';
     try {
       final docRef = FirebaseFirestore.instance
@@ -660,11 +709,12 @@ class NodeDexSyncService {
       if (!docSnapshot.exists) {
         probeLog('Stage F: FAIL — doc not found at $docPath');
         stages['F'] = 'FAIL: doc not found at $docPath';
-        return SyncProbeResult(
-          ok: false,
-          failedStage: 'F',
+        return SyncProbeResult.failed(
+          stage: 'F',
+          reason: 'doc not found at $docPath',
           stages: stages,
           logs: logs,
+          domain: 'Widgets',
         );
       }
 
@@ -679,18 +729,18 @@ class NodeDexSyncService {
     } catch (e) {
       probeLog('Stage F: FAIL — $e');
       stages['F'] = 'FAIL: $e';
-      return SyncProbeResult(
-        ok: false,
-        failedStage: 'F',
+      return SyncProbeResult.failed(
+        stage: 'F',
+        reason: '$e',
         stages: stages,
         logs: logs,
+        domain: 'Widgets',
       );
     }
 
-    // Stage 7: Reset watermark and pull
+    // Stage G: Reset watermark and pull
     probeLog('Stage G: Pulling from Firestore...');
     try {
-      // Reset watermark to 0 so we pull everything including our probe
       await _store.setSyncState(_watermarkKey(uid), '0');
       await _pullUpdates(uid);
       stages['G'] = 'OK: pull complete';
@@ -698,63 +748,67 @@ class NodeDexSyncService {
     } catch (e) {
       probeLog('Stage G: FAIL — $e');
       stages['G'] = 'FAIL: $e';
-      return SyncProbeResult(
-        ok: false,
-        failedStage: 'G',
+      return SyncProbeResult.failed(
+        stage: 'G',
+        reason: '$e',
         stages: stages,
         logs: logs,
+        domain: 'Widgets',
       );
     }
 
-    // Stage 8: Verify entry exists locally after pull
-    probeLog('Stage H: Verifying local entry after pull...');
+    // Stage H: Verify widget exists locally after pull
+    probeLog('Stage H: Verifying local widget after pull...');
     try {
-      final localEntry = await _store.getEntry(probeNodeNum);
-      if (localEntry == null) {
-        probeLog('Stage H: FAIL — entry not found in local store');
-        stages['H'] = 'FAIL: entry not in local store after pull';
-        return SyncProbeResult(
-          ok: false,
-          failedStage: 'H',
+      final localWidget = _store.getById(probeId);
+      if (localWidget == null) {
+        probeLog('Stage H: FAIL — widget not found in local store');
+        stages['H'] = 'FAIL: widget not in local store after pull';
+        return SyncProbeResult.failed(
+          stage: 'H',
+          reason: 'widget not in local store after pull',
           stages: stages,
           logs: logs,
+          domain: 'Widgets',
         );
       }
 
-      final tagMatch = localEntry.socialTag == probeTag;
-      final noteMatch = localEntry.userNote == probeNote;
+      final nameMatch = localWidget.name == probeName;
+      final descMatch = localWidget.description == probeDescription;
       probeLog(
-        'Stage H: local entry found — '
-        'socialTag=${localEntry.socialTag?.name} (match=$tagMatch) '
-        'userNote=${localEntry.userNote} (match=$noteMatch)',
+        'Stage H: local widget found — '
+        'name=${localWidget.name} (match=$nameMatch) '
+        'description=${localWidget.description} (match=$descMatch)',
       );
 
-      if (!tagMatch || !noteMatch) {
-        stages['H'] = 'FAIL: data mismatch tag=$tagMatch note=$noteMatch';
-        return SyncProbeResult(
-          ok: false,
-          failedStage: 'H',
+      if (!nameMatch || !descMatch) {
+        stages['H'] = 'FAIL: data mismatch name=$nameMatch desc=$descMatch';
+        return SyncProbeResult.failed(
+          stage: 'H',
+          reason: 'data mismatch name=$nameMatch desc=$descMatch',
           stages: stages,
           logs: logs,
+          domain: 'Widgets',
         );
       }
 
-      stages['H'] = 'OK: entry verified locally';
+      stages['H'] = 'OK: widget verified locally';
     } catch (e) {
       probeLog('Stage H: FAIL — $e');
       stages['H'] = 'FAIL: $e';
-      return SyncProbeResult(
-        ok: false,
-        failedStage: 'H',
+      return SyncProbeResult.failed(
+        stage: 'H',
+        reason: '$e',
         stages: stages,
         logs: logs,
+        domain: 'Widgets',
       );
     }
 
-    // Stage 9: Clean up probe entry from Firestore
+    // Stage I: Clean up probe data
     probeLog('Stage I: Cleaning up probe data...');
     try {
-      await _store.deleteEntry(probeNodeNum);
+      await _store.delete(probeId);
       final cleanupDocRef = FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
@@ -764,68 +818,61 @@ class NodeDexSyncService {
       stages['I'] = 'OK: cleaned up';
       probeLog('Stage I: OK — probe data cleaned up');
     } catch (e) {
-      // Non-fatal — probe succeeded even if cleanup fails
       stages['I'] = 'WARN: cleanup failed: $e';
       probeLog('Stage I: WARN — cleanup failed: $e');
     }
 
-    probeLog('=== SYNC PROBE COMPLETE: ALL STAGES PASSED ===');
+    probeLog('=== WIDGET SYNC PROBE COMPLETE: ALL STAGES PASSED ===');
     _syncLog(
       'PROBE_RESULT ok=true stages=${stages.entries.map((e) => "${e.key}=${e.value}").join(", ")}',
     );
 
-    return SyncProbeResult(
-      ok: true,
-      failedStage: null,
+    return SyncProbeResult.success(
       stages: stages,
       logs: logs,
+      domain: 'Widgets',
     );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
-
-  /// Convert an entity type and ID pair to a Firestore document ID.
-  ///
-  /// Firestore doc IDs cannot contain '/' so we use '-' as separator.
-  String _entityIdToDocId(String entityType, String entityId) {
-    return '${entityType}_${entityId.replaceAll(':', '-')}';
   }
 
   /// Dispose the sync service.
   ///
   /// Drains any remaining outbox entries before shutting down so that
-  /// user mutations (social tag, notes) are not silently lost when the
-  /// user signs out or the provider is disposed.
+  /// user mutations are not silently lost when the user signs out
+  /// or the provider is disposed.
   Future<void> dispose() async {
-    _syncLog('Disposing sync service...');
+    _syncLog('Disposing sync service (hashCode=${identityHashCode(this)})...');
     _stopPeriodicSync();
 
-    // Best-effort drain before shutdown — if the user just set a social
-    // tag or note and then signed out, this ensures the outbox is pushed.
+    // Best-effort drain before shutdown
     if (_enabled) {
       try {
-        // Flush any debounced writes so outbox entries exist.
-        await _store.flush();
-
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
-          final outboxCount = await _store.outboxCount;
-          if (outboxCount > 0) {
+          final pendingCount = await _store.outboxCount;
+          if (pendingCount > 0) {
             _syncLog(
-              'Dispose: draining $outboxCount outbox entries before shutdown',
+              'Dispose: draining $pendingCount outbox entries before shutdown',
             );
             await _drainOutbox(user.uid);
+          } else {
+            _syncLog('Dispose: outbox empty, nothing to drain');
           }
+        } else {
+          _syncLog('Dispose: no Firebase user, skipping final drain');
         }
       } catch (e) {
         _syncLogError('Dispose drain failed', e);
       }
+    } else {
+      _syncLog('Dispose: sync was disabled, skipping final drain');
     }
 
+    _syncLog(
+      'Dispose: setting store.syncEnabled=false '
+      '(was ${_store.syncEnabled})',
+    );
     _store.syncEnabled = false;
     onPullApplied = null;
-    _syncLog('Sync service disposed');
+    _syncLog('Sync service disposed (hashCode=${identityHashCode(this)})');
   }
 }

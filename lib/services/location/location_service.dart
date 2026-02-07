@@ -13,6 +13,10 @@ class LocationService {
   Position? _lastPosition;
   bool _isRunning = false;
 
+  /// Guards against concurrent permission requests which cause
+  /// "A request for location permissions is already running" crashes.
+  Completer<bool>? _permissionCompleter;
+
   /// How often to send position updates (in seconds)
   static const int positionUpdateIntervalSeconds = 30;
 
@@ -21,8 +25,34 @@ class LocationService {
   /// Current position
   Position? get lastPosition => _lastPosition;
 
-  /// Check if location services are enabled and we have permission
+  /// Check if location services are enabled and we have permission.
+  ///
+  /// Serializes permission requests so that only one
+  /// [Geolocator.requestPermission] call is in flight at a time.
   Future<bool> checkPermissions() async {
+    // If a permission request is already running, wait for it.
+    if (_permissionCompleter != null) {
+      AppLogging.nodes(
+        'Permission request already in progress, waiting for result',
+      );
+      return _permissionCompleter!.future;
+    }
+
+    _permissionCompleter = Completer<bool>();
+
+    try {
+      final result = await _checkPermissionsInternal();
+      _permissionCompleter!.complete(result);
+      return result;
+    } catch (e) {
+      _permissionCompleter!.completeError(e);
+      rethrow;
+    } finally {
+      _permissionCompleter = null;
+    }
+  }
+
+  Future<bool> _checkPermissionsInternal() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       AppLogging.nodes('Location services are disabled');

@@ -53,6 +53,7 @@ class AppLogging {
   static bool? _bugReportLoggingEnabled;
   static bool? _shopLoggingEnabled;
   static bool? _nodeDexLoggingEnabled;
+  static bool? _syncLoggingEnabled;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
   static Logger? _noOpLogger;
@@ -237,6 +238,14 @@ class AppLogging {
     return _nodeDexLoggingEnabled!;
   }
 
+  /// Cloud Sync logging — always enabled by default for debugging sync issues.
+  /// Disable with SYNC_LOGGING_ENABLED=false if needed.
+  static bool get syncLoggingEnabled {
+    _syncLoggingEnabled ??=
+        _safeGetEnv('SYNC_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _syncLoggingEnabled!;
+  }
+
   static Logger get bleLogger {
     if (bleLoggingEnabled) {
       _bleLogger ??= Logger(
@@ -381,6 +390,15 @@ class AppLogging {
     if (nodeDexLoggingEnabled) debugPrint('NodeDex: $message');
   }
 
+  /// Always-on Cloud Sync logging channel.
+  ///
+  /// Use this for sync pipeline instrumentation so sync issues
+  /// are always visible in device logs regardless of other logging flags.
+  /// Grep with: `adb logcat | grep "SYNC:"` or filter for "SYNC:" in Xcode.
+  static void sync(String message) {
+    if (syncLoggingEnabled) debugPrint('SYNC: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -411,6 +429,7 @@ class AppLogging {
     _bugReportLoggingEnabled = null;
     _shopLoggingEnabled = null;
     _nodeDexLoggingEnabled = null;
+    _syncLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }
