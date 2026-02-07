@@ -229,50 +229,55 @@ class AppBottomSheet extends StatelessWidget {
     return show<T>(
       context: context,
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (header != null) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: header,
-            ),
-          ],
-          ...actions.map(
-            (action) => ListTile(
-              leading: Icon(
-                action.icon,
-                color: action.isDestructive
-                    ? AppTheme.errorRed
-                    : (action.iconColor ?? SemanticColors.onAccent),
+      // Use Builder to obtain the bottom sheet's own context for
+      // Navigator.pop. The caller's context may be stale if the
+      // parent widget was disposed while the sheet was showing.
+      child: Builder(
+        builder: (sheetContext) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (header != null) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: header,
               ),
-              title: Text(
-                action.label,
-                style: TextStyle(
+            ],
+            ...actions.map(
+              (action) => ListTile(
+                leading: Icon(
+                  action.icon,
                   color: action.isDestructive
                       ? AppTheme.errorRed
-                      : SemanticColors.onAccent,
+                      : (action.iconColor ?? SemanticColors.onAccent),
                 ),
+                title: Text(
+                  action.label,
+                  style: TextStyle(
+                    color: action.isDestructive
+                        ? AppTheme.errorRed
+                        : SemanticColors.onAccent,
+                  ),
+                ),
+                subtitle: action.subtitle != null
+                    ? Text(
+                        action.subtitle!,
+                        style: TextStyle(
+                          color: sheetContext.textTertiary,
+                          fontSize: 12,
+                        ),
+                      )
+                    : null,
+                enabled: action.enabled,
+                onTap: action.enabled
+                    ? () {
+                        Navigator.pop(sheetContext, action.value);
+                        action.onTap?.call();
+                      }
+                    : null,
               ),
-              subtitle: action.subtitle != null
-                  ? Text(
-                      action.subtitle!,
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 12,
-                      ),
-                    )
-                  : null,
-              enabled: action.enabled,
-              onTap: action.enabled
-                  ? () {
-                      Navigator.pop(context, action.value);
-                      action.onTap?.call();
-                    }
-                  : null,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

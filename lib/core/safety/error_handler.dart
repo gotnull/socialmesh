@@ -67,17 +67,19 @@ class AppErrorHandler {
 
   /// Handle platform/isolate errors.
   static bool _handlePlatformError(Object error, StackTrace stack) {
-    final isFatal = _isExceptionFatal(error);
+    AppLogging.debug('PlatformError [HANDLED]: $error');
 
-    AppLogging.debug(
-      'PlatformError [${isFatal ? "FATAL" : "NON-FATAL"}]: $error',
-    );
-
+    // Platform errors are always reported as non-fatal to Crashlytics.
+    // We return true below which means we've handled the error and
+    // prevented an app crash. Reporting fatal: true here would cause
+    // the Crashlytics native SDK to invoke its crash recording path
+    // (FIRCLSExceptionRecordOnDemand) which can itself crash — creating
+    // a crash-in-crash loop.
     _reportToCrashlytics(
       error,
       stack,
       reason: 'Platform error',
-      isFatal: isFatal,
+      isFatal: false,
     );
 
     // Return true to indicate the error was handled
@@ -122,29 +124,6 @@ class AppErrorHandler {
     }
 
     // Default: treat as potentially fatal
-    return true;
-  }
-
-  /// Determine if an exception should be treated as fatal.
-  static bool _isExceptionFatal(Object exception) {
-    // Image decode errors
-    if (_isImageError(exception, null)) {
-      return false;
-    }
-
-    // Network errors
-    if (exception.toString().toLowerCase().contains('socket') ||
-        exception.toString().toLowerCase().contains('connection') ||
-        exception.toString().toLowerCase().contains('timeout')) {
-      return false;
-    }
-
-    // File not found
-    if (exception.toString().toLowerCase().contains('file not found') ||
-        exception.toString().toLowerCase().contains('no such file')) {
-      return false;
-    }
-
     return true;
   }
 
