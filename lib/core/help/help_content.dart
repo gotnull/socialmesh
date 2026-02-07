@@ -1322,9 +1322,9 @@ class HelpContent {
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
-        id: 'nodedex_constellation',
+        id: 'nodedex_field_journal',
         bubbleText:
-            "Tap the **constellation icon** in the top bar to see your entire mesh as a visual graph — nodes that appear together are linked. It is like a star chart of your network!",
+            "As you observe more nodes, your **field journal** fills in — each node earns a **Patina score** and **identity overlay** based on real encounters. The more you observe, the richer the detail!",
         icoMood: MeshBrainMood.playful,
       ),
       HelpStep(
@@ -1398,9 +1398,9 @@ class HelpContent {
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
-        id: 'nodedex_constellation',
+        id: 'nodedex_coseen',
         bubbleText:
-            "**Constellation Links** show nodes frequently seen in the same session as this one. Tap any link to see the full relationship — shared encounters, message counts, and connection strength.",
+            "**Co-Seen Links** show nodes frequently observed in the same session as this one. Tap any link to see the full relationship — shared encounters, message counts, and connection strength.",
         icoMood: MeshBrainMood.playful,
       ),
       HelpStep(
@@ -1450,8 +1450,8 @@ class HelpContent {
         'Each encounter records the timestamp, signal quality (SNR/RSSI), '
         'and distance if GPS coordinates were available on both sides. '
         'The most recent 10 encounters are shown.',
-    'constellation':
-        'Nodes that are frequently seen in the same session as this node. '
+    'coseen':
+        'Nodes that are frequently observed in the same session as this node. '
         'A higher count means these nodes tend to appear together — they may '
         'be co-located, part of the same deployment, or carried by the same '
         'person. Tap any link to see the full edge detail including shared '

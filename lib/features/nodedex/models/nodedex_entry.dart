@@ -69,6 +69,15 @@ enum NodeTrait {
   /// High throughput role (ROUTER, ROUTER_CLIENT), forwarding traffic.
   relay,
 
+  /// High message volume relative to encounters — carries data.
+  courier,
+
+  /// Persistent fixed infrastructure with high co-seen connectivity.
+  anchor,
+
+  /// Intermittent presence with irregular timing — appears and fades.
+  drifter,
+
   /// Recently discovered, not enough data to classify.
   unknown;
 
@@ -79,6 +88,9 @@ enum NodeTrait {
       NodeTrait.ghost => 'Ghost',
       NodeTrait.sentinel => 'Sentinel',
       NodeTrait.relay => 'Relay',
+      NodeTrait.courier => 'Courier',
+      NodeTrait.anchor => 'Anchor',
+      NodeTrait.drifter => 'Drifter',
       NodeTrait.unknown => 'Newcomer',
     };
   }
@@ -90,6 +102,9 @@ enum NodeTrait {
       NodeTrait.ghost => 'Rarely seen, elusive presence',
       NodeTrait.sentinel => 'Fixed position, long-lived guardian',
       NodeTrait.relay => 'High throughput, forwards traffic',
+      NodeTrait.courier => 'Carries messages across the mesh',
+      NodeTrait.anchor => 'Persistent hub with many connections',
+      NodeTrait.drifter => 'Irregular timing, fades in and out',
       NodeTrait.unknown => 'Recently discovered',
     };
   }
@@ -102,6 +117,9 @@ enum NodeTrait {
       NodeTrait.ghost => const Color(0xFF8B5CF6),
       NodeTrait.sentinel => const Color(0xFF10B981),
       NodeTrait.relay => const Color(0xFFF97316),
+      NodeTrait.courier => const Color(0xFF06B6D4),
+      NodeTrait.anchor => const Color(0xFF6366F1),
+      NodeTrait.drifter => const Color(0xFFEC4899),
       NodeTrait.unknown => const Color(0xFF9CA3AF),
     };
   }
@@ -575,8 +593,22 @@ class NodeDexEntry {
   /// User-assigned social classification.
   final NodeSocialTag? socialTag;
 
+  /// Timestamp (ms since epoch) when socialTag was last modified.
+  ///
+  /// Used for last-write-wins conflict resolution during Cloud Sync.
+  /// When null, the field is treated as "never explicitly set" and
+  /// loses to any timestamped value during merge.
+  final int? socialTagUpdatedAtMs;
+
   /// User-written note about this node (optional, max 280 chars).
   final String? userNote;
+
+  /// Timestamp (ms since epoch) when userNote was last modified.
+  ///
+  /// Used for last-write-wins conflict resolution during Cloud Sync.
+  /// When null, the field is treated as "never explicitly set" and
+  /// loses to any timestamped value during merge.
+  final int? userNoteUpdatedAtMs;
 
   /// Rolling window of recent encounters (most recent 50).
   final List<EncounterRecord> encounters;
@@ -600,6 +632,13 @@ class NodeDexEntry {
   /// Minimum gap between encounters to count as a new encounter (minutes).
   static const int encounterCooldownMinutes = 5;
 
+  /// Conflict window for near-simultaneous edits (milliseconds).
+  ///
+  /// If two devices modify the same field within this window and produce
+  /// different values, the merge produces a conflict indicator rather
+  /// than silently dropping one value.
+  static const int conflictWindowMs = 5000;
+
   const NodeDexEntry({
     required this.nodeNum,
     required this.firstSeen,
@@ -610,7 +649,9 @@ class NodeDexEntry {
     this.bestRssi,
     this.messageCount = 0,
     this.socialTag,
+    this.socialTagUpdatedAtMs,
     this.userNote,
+    this.userNoteUpdatedAtMs,
     this.encounters = const [],
     this.seenRegions = const [],
     this.coSeenNodes = const {},
@@ -708,13 +749,25 @@ class NodeDexEntry {
     int? messageCount,
     NodeSocialTag? socialTag,
     bool clearSocialTag = false,
+    int? socialTagUpdatedAtMs,
     String? userNote,
     bool clearUserNote = false,
+    int? userNoteUpdatedAtMs,
     List<EncounterRecord>? encounters,
     List<SeenRegion>? seenRegions,
     Map<int, CoSeenRelationship>? coSeenNodes,
     SigilData? sigil,
   }) {
+    // Auto-stamp when socialTag changes via copyWith.
+    final effectiveStMs = clearSocialTag || socialTag != null
+        ? (socialTagUpdatedAtMs ?? DateTime.now().millisecondsSinceEpoch)
+        : (socialTagUpdatedAtMs ?? this.socialTagUpdatedAtMs);
+
+    // Auto-stamp when userNote changes via copyWith.
+    final effectiveUnMs = clearUserNote || userNote != null
+        ? (userNoteUpdatedAtMs ?? DateTime.now().millisecondsSinceEpoch)
+        : (userNoteUpdatedAtMs ?? this.userNoteUpdatedAtMs);
+
     return NodeDexEntry(
       nodeNum: nodeNum ?? this.nodeNum,
       firstSeen: firstSeen ?? this.firstSeen,
@@ -725,7 +778,9 @@ class NodeDexEntry {
       bestRssi: bestRssi ?? this.bestRssi,
       messageCount: messageCount ?? this.messageCount,
       socialTag: clearSocialTag ? null : (socialTag ?? this.socialTag),
+      socialTagUpdatedAtMs: effectiveStMs,
       userNote: clearUserNote ? null : (userNote ?? this.userNote),
+      userNoteUpdatedAtMs: effectiveUnMs,
       encounters: encounters ?? this.encounters,
       seenRegions: seenRegions ?? this.seenRegions,
       coSeenNodes: coSeenNodes ?? this.coSeenNodes,
@@ -880,8 +935,11 @@ class NodeDexEntry {
   /// - bestSnr: maximum of the two
   /// - bestRssi: maximum of the two (closer to 0)
   /// - messageCount: maximum of the two
-  /// - socialTag: prefer this entry's tag if set, else other's
-  /// - userNote: prefer this entry's note if set, else other's
+  /// - socialTag: last-write-wins by socialTagUpdatedAtMs timestamp;
+  ///   if both edited within [conflictWindowMs] with different values,
+  ///   the later timestamp wins but a conflict is flagged
+  /// - userNote: last-write-wins by userNoteUpdatedAtMs timestamp;
+  ///   same conflict detection as socialTag
   /// - encounters: union by timestamp, capped at maxEncounterRecords
   /// - seenRegions: merged by regionId using SeenRegion.merge
   /// - coSeenNodes: merged per-edge using CoSeenRelationship.merge
@@ -929,9 +987,20 @@ class NodeDexEntry {
       mergedBestRssi = bestRssi ?? other.bestRssi;
     }
 
-    // --- Local-only fields: prefer this entry's values ---
-    final mergedTag = socialTag ?? other.socialTag;
-    final mergedNote = userNote ?? other.userNote;
+    // --- User-editable fields: last-write-wins by per-field timestamp ---
+    final mergedTagResult = _mergeUserField<NodeSocialTag>(
+      localValue: socialTag,
+      localTimestamp: socialTagUpdatedAtMs,
+      remoteValue: other.socialTag,
+      remoteTimestamp: other.socialTagUpdatedAtMs,
+    );
+    final mergedNoteResult = _mergeUserField<String>(
+      localValue: userNote,
+      localTimestamp: userNoteUpdatedAtMs,
+      remoteValue: other.userNote,
+      remoteTimestamp: other.userNoteUpdatedAtMs,
+    );
+
     final mergedSigil = sigil ?? other.sigil;
 
     // --- Encounters: union by timestamp, keep most recent N ---
@@ -988,13 +1057,76 @@ class NodeDexEntry {
       bestSnr: mergedBestSnr,
       bestRssi: mergedBestRssi,
       messageCount: mergedMessageCount,
-      socialTag: mergedTag,
-      userNote: mergedNote,
+      socialTag: mergedTagResult.value,
+      socialTagUpdatedAtMs: mergedTagResult.timestamp,
+      userNote: mergedNoteResult.value,
+      userNoteUpdatedAtMs: mergedNoteResult.timestamp,
       encounters: mergedEncounters,
       seenRegions: regionMap.values.toList(),
       coSeenNodes: mergedCoSeen,
       sigil: mergedSigil,
     );
+  }
+
+  /// Merge a single user-editable field using last-write-wins semantics.
+  ///
+  /// Rules:
+  /// 1. If only one side has a timestamp, that side wins.
+  /// 2. If both have timestamps, the later timestamp wins.
+  /// 3. If both are null timestamps, prefer non-null value (legacy compat).
+  /// 4. If timestamps are within [conflictWindowMs] and values differ,
+  ///    the later timestamp still wins but [isConflict] is set true.
+  static _MergeResult<T> _mergeUserField<T>({
+    required T? localValue,
+    required int? localTimestamp,
+    required T? remoteValue,
+    required int? remoteTimestamp,
+  }) {
+    // Both timestamps null: legacy fallback — prefer non-null, favor local.
+    if (localTimestamp == null && remoteTimestamp == null) {
+      return _MergeResult(
+        value: localValue ?? remoteValue,
+        timestamp: null,
+        isConflict: false,
+      );
+    }
+
+    // Only one side has a timestamp — that side wins.
+    if (localTimestamp == null) {
+      return _MergeResult(
+        value: remoteValue,
+        timestamp: remoteTimestamp,
+        isConflict: false,
+      );
+    }
+    if (remoteTimestamp == null) {
+      return _MergeResult(
+        value: localValue,
+        timestamp: localTimestamp,
+        isConflict: false,
+      );
+    }
+
+    // Both have timestamps — compare.
+    final diff = (localTimestamp - remoteTimestamp).abs();
+    final valuesMatch = localValue == remoteValue;
+    final isConflict = diff <= conflictWindowMs && !valuesMatch;
+
+    if (localTimestamp >= remoteTimestamp) {
+      return _MergeResult(
+        value: localValue,
+        timestamp: localTimestamp,
+        isConflict: isConflict,
+        losingValue: isConflict ? remoteValue : null,
+      );
+    } else {
+      return _MergeResult(
+        value: remoteValue,
+        timestamp: remoteTimestamp,
+        isConflict: isConflict,
+        losingValue: isConflict ? localValue : null,
+      );
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -1012,7 +1144,9 @@ class NodeDexEntry {
       if (bestRssi != null) 'br': bestRssi,
       'mc': messageCount,
       if (socialTag != null) 'st': socialTag!.index,
+      if (socialTagUpdatedAtMs != null) 'st_ms': socialTagUpdatedAtMs,
       if (userNote != null) 'un': userNote,
+      if (userNoteUpdatedAtMs != null) 'un_ms': userNoteUpdatedAtMs,
       'enc': encounters.map((e) => e.toJson()).toList(),
       'sr': seenRegions.map((r) => r.toJson()).toList(),
       // Schema v2: store CoSeenRelationship objects.
@@ -1056,7 +1190,9 @@ class NodeDexEntry {
       socialTag: json['st'] != null
           ? NodeSocialTag.values[json['st'] as int]
           : null,
+      socialTagUpdatedAtMs: json['st_ms'] as int?,
       userNote: json['un'] as String?,
+      userNoteUpdatedAtMs: json['un_ms'] as int?,
       encounters:
           (json['enc'] as List<dynamic>?)
               ?.map((e) => EncounterRecord.fromJson(e as Map<String, dynamic>))
@@ -1115,6 +1251,24 @@ class NodeDexEntry {
       'encounters: $encounterCount, '
       'regions: $regionCount, '
       'tag: ${socialTag?.displayLabel ?? "none"})';
+}
+
+/// Result of merging a single user-editable field.
+///
+/// Carries the winning value, its timestamp, and whether a conflict
+/// was detected (both sides edited within the conflict window).
+class _MergeResult<T> {
+  final T? value;
+  final int? timestamp;
+  final bool isConflict;
+  final T? losingValue;
+
+  const _MergeResult({
+    required this.value,
+    required this.timestamp,
+    required this.isConflict,
+    this.losingValue,
+  });
 }
 
 /// Aggregate statistics across the entire NodeDex.

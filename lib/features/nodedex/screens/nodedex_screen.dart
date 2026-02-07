@@ -30,8 +30,12 @@ import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../models/mesh_models.dart';
 import '../models/nodedex_entry.dart';
+import '../models/sigil_evolution.dart';
 import '../providers/nodedex_providers.dart';
+
 import '../../settings/settings_screen.dart';
+import '../widgets/identity_overlay_painter.dart';
+import '../widgets/patina_stamp.dart';
 import '../widgets/sigil_painter.dart';
 import '../widgets/trait_badge.dart';
 import 'nodedex_detail_screen.dart';
@@ -479,6 +483,60 @@ class _NodeDexControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
                                   onFilterChanged(NodeDexFilter.tagged),
                             ),
                             const SizedBox(width: 12),
+                            _SocialTagFilterChip(
+                              filter: NodeDexFilter.tagContact,
+                              tag: NodeSocialTag.contact,
+                              isSelected:
+                                  currentFilter == NodeDexFilter.tagContact,
+                              count:
+                                  stats.socialTagDistribution[NodeSocialTag
+                                      .contact] ??
+                                  0,
+                              onTap: () =>
+                                  onFilterChanged(NodeDexFilter.tagContact),
+                            ),
+                            const SizedBox(width: 12),
+                            _SocialTagFilterChip(
+                              filter: NodeDexFilter.tagTrustedNode,
+                              tag: NodeSocialTag.trustedNode,
+                              isSelected:
+                                  currentFilter == NodeDexFilter.tagTrustedNode,
+                              count:
+                                  stats.socialTagDistribution[NodeSocialTag
+                                      .trustedNode] ??
+                                  0,
+                              onTap: () =>
+                                  onFilterChanged(NodeDexFilter.tagTrustedNode),
+                            ),
+                            const SizedBox(width: 12),
+                            _SocialTagFilterChip(
+                              filter: NodeDexFilter.tagKnownRelay,
+                              tag: NodeSocialTag.knownRelay,
+                              isSelected:
+                                  currentFilter == NodeDexFilter.tagKnownRelay,
+                              count:
+                                  stats.socialTagDistribution[NodeSocialTag
+                                      .knownRelay] ??
+                                  0,
+                              onTap: () =>
+                                  onFilterChanged(NodeDexFilter.tagKnownRelay),
+                            ),
+                            const SizedBox(width: 12),
+                            _SocialTagFilterChip(
+                              filter: NodeDexFilter.tagFrequentPeer,
+                              tag: NodeSocialTag.frequentPeer,
+                              isSelected:
+                                  currentFilter ==
+                                  NodeDexFilter.tagFrequentPeer,
+                              count:
+                                  stats.socialTagDistribution[NodeSocialTag
+                                      .frequentPeer] ??
+                                  0,
+                              onTap: () => onFilterChanged(
+                                NodeDexFilter.tagFrequentPeer,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
                             SectionFilterChip(
                               label: 'Recent',
                               count: 0,
@@ -594,6 +652,102 @@ class _NodeDexControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
 // =============================================================================
 // Trait Filter Chip (inline in controls header)
 // =============================================================================
+
+class _SocialTagFilterChip extends StatelessWidget {
+  final NodeDexFilter filter;
+  final NodeSocialTag tag;
+  final bool isSelected;
+  final int count;
+  final VoidCallback onTap;
+
+  const _SocialTagFilterChip({
+    required this.filter,
+    required this.tag,
+    required this.isSelected,
+    required this.count,
+    required this.onTap,
+  });
+
+  IconData get _icon {
+    return switch (tag) {
+      NodeSocialTag.contact => Icons.person_outline,
+      NodeSocialTag.trustedNode => Icons.verified_user_outlined,
+      NodeSocialTag.knownRelay => Icons.cell_tower,
+      NodeSocialTag.frequentPeer => Icons.people_outline,
+    };
+  }
+
+  Color get _color {
+    return switch (tag) {
+      NodeSocialTag.contact => const Color(0xFF0EA5E9),
+      NodeSocialTag.trustedNode => const Color(0xFF10B981),
+      NodeSocialTag.knownRelay => const Color(0xFFF97316),
+      NodeSocialTag.frequentPeer => const Color(0xFF8B5CF6),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _color;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.15) : context.card,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? color.withValues(alpha: 0.4)
+                : context.border.withValues(alpha: 0.3),
+            width: isSelected ? 1.0 : 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _icon,
+              size: 13,
+              color: isSelected ? color : context.textSecondary,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              tag.displayLabel,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? color : context.textSecondary,
+              ),
+            ),
+            if (count > 0) ...[
+              const SizedBox(width: 5),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? color.withValues(alpha: 0.25)
+                      : context.border.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  count.toString(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? color : context.textTertiary,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _TraitFilterChip extends StatelessWidget {
   final NodeDexFilter filter;
@@ -830,11 +984,13 @@ class _NodeDexListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final traitResult = ref.watch(nodeDexTraitProvider(entry.nodeNum));
+    final disclosure = ref.watch(nodeDexDisclosureProvider(entry.nodeNum));
+    final patinaResult = ref.watch(nodeDexPatinaProvider(entry.nodeNum));
     final displayName = node?.displayName ?? 'Node ${entry.nodeNum}';
     final hexId =
         '!${entry.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 
-    return Material(
+    final tileContent = Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -849,6 +1005,10 @@ class _NodeDexListTile extends ConsumerWidget {
                 nodeNum: entry.nodeNum,
                 size: 48,
                 badge: _onlineBadge(context),
+                evolution: SigilEvolution.fromPatina(
+                  patinaResult.score,
+                  trait: traitResult.primary,
+                ),
               ),
               const SizedBox(width: 14),
 
@@ -886,16 +1046,26 @@ class _NodeDexListTile extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
 
-                    // Metadata row: trait + stats
+                    // Metadata row: trait + stats + patina indicator
                     Row(
                       children: [
-                        TraitBadge(
-                          trait: traitResult.primary,
-                          size: TraitBadgeSize.compact,
-                        ),
+                        if (disclosure.showPrimaryTrait)
+                          TraitBadge(
+                            trait: traitResult.primary,
+                            size: TraitBadgeSize.compact,
+                          ),
                         if (entry.socialTag != null) ...[
                           const SizedBox(width: 6),
                           SocialTagBadge(tag: entry.socialTag!, compact: true),
+                        ],
+                        if (disclosure.showPatinaStamp) ...[
+                          const SizedBox(width: 6),
+                          PatinaIndicator(
+                            result: patinaResult,
+                            accentColor:
+                                entry.sigil?.primaryColor ??
+                                context.accentColor,
+                          ),
                         ],
                         const Spacer(),
                         // Encounter count
@@ -946,6 +1116,17 @@ class _NodeDexListTile extends ConsumerWidget {
         ),
       ),
     );
+
+    // Wrap with identity overlay when disclosure tier permits it.
+    if (disclosure.showOverlay && disclosure.overlayDensity > 0) {
+      return IdentityOverlayTile(
+        nodeNum: entry.nodeNum,
+        density: disclosure.overlayDensity * 0.5, // Halved for list tiles
+        child: tileContent,
+      );
+    }
+
+    return tileContent;
   }
 
   /// Build an online indicator badge if the node is currently active.
@@ -1154,6 +1335,26 @@ class _EmptyState extends StatelessWidget {
         Icons.label_outline,
         'No tagged nodes',
         'Long-press a node in the list to assign a social tag like Contact, Trusted Node, or Known Relay.',
+      ),
+      NodeDexFilter.tagContact => (
+        Icons.person_outline,
+        'No contacts',
+        'Nodes you classify as Contact will appear here. Long-press a node to assign this tag.',
+      ),
+      NodeDexFilter.tagTrustedNode => (
+        Icons.verified_user_outlined,
+        'No trusted nodes',
+        'Nodes you classify as Trusted Node will appear here. Long-press a node to assign this tag.',
+      ),
+      NodeDexFilter.tagKnownRelay => (
+        Icons.cell_tower,
+        'No known relays',
+        'Nodes you classify as Known Relay will appear here. Long-press a node to assign this tag.',
+      ),
+      NodeDexFilter.tagFrequentPeer => (
+        Icons.people_outline,
+        'No frequent peers',
+        'Nodes you classify as Frequent Peer will appear here. Long-press a node to assign this tag.',
       ),
       NodeDexFilter.recent => (
         Icons.schedule,

@@ -21,7 +21,7 @@ import '../../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int nodedexSchemaVersion = 1;
+const int nodedexSchemaVersion = 2;
 
 /// Table and column name constants for NodeDex SQLite schema.
 abstract final class NodeDexTables {
@@ -36,7 +36,9 @@ abstract final class NodeDexTables {
   static const colBestRssi = 'best_rssi';
   static const colMessageCount = 'message_count';
   static const colSocialTag = 'social_tag';
+  static const colSocialTagUpdatedAtMs = 'social_tag_updated_at_ms';
   static const colUserNote = 'user_note';
+  static const colUserNoteUpdatedAtMs = 'user_note_updated_at_ms';
   static const colSigilJson = 'sigil_json';
   static const colSchemaVersion = 'schema_version';
   static const colUpdatedAtMs = 'updated_at_ms';
@@ -184,7 +186,9 @@ class NodeDexDatabase {
         ${NodeDexTables.colBestRssi} INTEGER,
         ${NodeDexTables.colMessageCount} INTEGER NOT NULL DEFAULT 0,
         ${NodeDexTables.colSocialTag} INTEGER,
+        ${NodeDexTables.colSocialTagUpdatedAtMs} INTEGER,
         ${NodeDexTables.colUserNote} TEXT,
+        ${NodeDexTables.colUserNoteUpdatedAtMs} INTEGER,
         ${NodeDexTables.colSigilJson} TEXT NOT NULL,
         ${NodeDexTables.colSchemaVersion} INTEGER NOT NULL DEFAULT 1,
         ${NodeDexTables.colUpdatedAtMs} INTEGER NOT NULL,
@@ -296,8 +300,22 @@ class NodeDexDatabase {
     AppLogging.storage(
       'NodeDexDatabase: Upgrading v$oldVersion -> v$newVersion',
     );
-    // Future migrations go here as incremental steps:
-    // if (oldVersion < 2) { ... }
+
+    if (oldVersion < 2) {
+      // v2: Add per-field timestamps for socialTag and userNote to support
+      // last-write-wins conflict resolution during Cloud Sync.
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} '
+        'ADD COLUMN ${NodeDexTables.colSocialTagUpdatedAtMs} INTEGER',
+      );
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} '
+        'ADD COLUMN ${NodeDexTables.colUserNoteUpdatedAtMs} INTEGER',
+      );
+      AppLogging.storage(
+        'NodeDexDatabase: v2 migration — added socialTag/userNote timestamps',
+      );
+    }
     // if (oldVersion < 3) { ... }
   }
 

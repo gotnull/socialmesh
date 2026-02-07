@@ -62,11 +62,11 @@ class SigilGenerator {
   static SigilData generate(int nodeNum) {
     // Mix the bits of the node number to distribute entropy.
     // We use multiple rounds of mixing to extract independent parameters.
-    final h0 = _mix(nodeNum);
-    final h1 = _mix(h0);
-    final h2 = _mix(h1);
-    final h3 = _mix(h2);
-    final h4 = _mix(h3);
+    final h0 = mix(nodeNum);
+    final h1 = mix(h0);
+    final h2 = mix(h1);
+    final h3 = mix(h2);
+    final h4 = mix(h3);
 
     // Extract sigil parameters from different hash rounds.
 
@@ -237,7 +237,10 @@ class SigilGenerator {
   /// This is a well-known integer hash function that provides good
   /// avalanche properties: a single bit change in the input flips
   /// roughly half the output bits.
-  static int _mix(int value) {
+  ///
+  /// Public so that other identity-derived services (field notes,
+  /// overlay painters) can share the same deterministic hash.
+  static int mix(int value) {
     // Work with 32-bit integers to stay in smi range.
     int h = value & 0xFFFFFFFF;
     h ^= h >> 16;

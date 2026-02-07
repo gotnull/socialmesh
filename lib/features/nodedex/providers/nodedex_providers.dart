@@ -19,7 +19,7 @@
 // Storage: SQLite via NodeDexSqliteStore.
 // Cloud Sync: optional outbox-based sync via NodeDexSyncService.
 
-import 'dart:async';
+import 'dart:async' show Timer, unawaited;
 
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,6 +34,9 @@ import '../models/nodedex_entry.dart';
 import '../services/nodedex_database.dart';
 import '../services/nodedex_sqlite_store.dart';
 import '../services/nodedex_sync_service.dart';
+import '../services/field_note_generator.dart';
+import '../services/patina_score.dart';
+import '../services/progressive_disclosure.dart';
 import '../services/sigil_generator.dart';
 import '../services/trait_engine.dart';
 
@@ -79,8 +82,8 @@ final nodeDexSyncServiceProvider = Provider<NodeDexSyncService?>((ref) {
   final canWrite = ref.watch(canCloudSyncWriteProvider);
   syncService.setEnabled(canWrite);
 
-  ref.onDispose(() {
-    syncService.dispose();
+  ref.onDispose(() async {
+    await syncService.dispose();
   });
 
   return syncService;
@@ -150,7 +153,15 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     _store = storeAsync.asData?.value;
 
     // Activate sync service (reads entitlement, enables/disables).
-    ref.watch(nodeDexSyncServiceProvider);
+    // Wire up onPullApplied so remote data reloads into the UI.
+    final syncService = ref.watch(nodeDexSyncServiceProvider);
+    syncService?.onPullApplied = (appliedCount) {
+      if (!ref.mounted || _store == null) return;
+      AppLogging.nodeDex(
+        'Sync pull applied $appliedCount entries — reloading state',
+      );
+      _reloadFromStore();
+    };
 
     // Listen to node changes for automatic discovery tracking.
     ref.listen<Map<int, MeshNode>>(nodesProvider, (previous, next) {
@@ -472,6 +483,10 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
 
     final hexId = '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
     AppLogging.nodeDex('Social tag updated for $hexId: $previousTag → $newTag');
+
+    // Push to cloud immediately so user mutations are not lost if the
+    // app is closed or the user signs out before the periodic cycle.
+    _triggerImmediateSync();
   }
 
   /// Set the user note for a node.
@@ -503,6 +518,64 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       'User note updated for $hexId: '
       '${(trimmed == null || trimmed.isEmpty) ? "(cleared)" : "${trimmed.length} chars"}',
     );
+
+    // Push to cloud immediately so user mutations are not lost if the
+    // app is closed or the user signs out before the periodic cycle.
+    _triggerImmediateSync();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Cloud sync helpers
+  // ---------------------------------------------------------------------------
+
+  /// Reload the notifier's in-memory state from the SQLite store.
+  ///
+  /// Called after the sync service pulls remote changes so the UI
+  /// reflects data that was merged into SQLite by [applySyncPull].
+  Future<void> _reloadFromStore() async {
+    if (_store == null) return;
+
+    try {
+      final entries = await _store!.loadAllAsMap();
+      if (!ref.mounted) return;
+
+      state = entries;
+      _lastKnownState = entries;
+      AppLogging.nodeDex(
+        'Reloaded ${entries.length} entries from store after sync pull',
+      );
+    } catch (e) {
+      AppLogging.nodeDex('Error reloading from store after sync pull: $e');
+    }
+  }
+
+  /// Flush pending saves to SQLite and drain the outbox immediately.
+  ///
+  /// This ensures user-initiated mutations (social tag, notes) reach
+  /// Firestore promptly rather than waiting for the 2-minute periodic
+  /// sync cycle. Without this, data is silently lost if the user signs
+  /// out or closes the app before the next cycle.
+  void _triggerImmediateSync() {
+    if (_store == null) return;
+
+    // Read the sync service once — do not watch (this is a callback,
+    // not a build method).
+    final syncService = ref.read(nodeDexSyncServiceProvider);
+    if (syncService == null || !syncService.isEnabled) return;
+
+    // Fire-and-forget: flush debounced saves then drain outbox.
+    unawaited(_doImmediateSync(syncService));
+  }
+
+  Future<void> _doImmediateSync(NodeDexSyncService syncService) async {
+    try {
+      // Flush ensures the outbox entry exists in SQLite.
+      await _store!.flush();
+      // Drain pushes it to Firestore.
+      await syncService.drainOutboxNow();
+    } catch (e) {
+      AppLogging.nodeDex('Immediate sync after mutation failed: $e');
+    }
   }
 
   /// Increment the message count for a node and its co-seen edges.
@@ -705,6 +778,103 @@ final nodeDexTraitProvider = Provider.family<TraitResult, int>((ref, nodeNum) {
   );
 });
 
+/// Provider for the full ranked trait list with evidence for a node.
+///
+/// Returns 3–7 [ScoredTrait] entries sorted by descending confidence,
+/// each with evidence lines explaining the score. Used by the field
+/// journal detail view to show "why this trait" information.
+final nodeDexScoredTraitsProvider = Provider.family<List<ScoredTrait>, int>((
+  ref,
+  nodeNum,
+) {
+  final entry = ref.watch(nodeDexEntryProvider(nodeNum));
+  if (entry == null) {
+    return const [
+      ScoredTrait(
+        trait: NodeTrait.unknown,
+        confidence: 1.0,
+        evidence: [
+          TraitEvidence(observation: 'Node not found in NodeDex', weight: 1.0),
+        ],
+      ),
+    ];
+  }
+
+  final nodes = ref.watch(nodesProvider);
+  final node = nodes[nodeNum];
+
+  return TraitEngine.inferAll(
+    entry: entry,
+    role: node?.role,
+    uptimeSeconds: node?.uptimeSeconds,
+    channelUtilization: node?.channelUtilization,
+    airUtilTx: node?.airUtilTx,
+  );
+});
+
+/// Provider for the patina score of a specific node.
+///
+/// Computes the 0–100 digital history score from six orthogonal
+/// axes: tenure, encounters, reach, signal depth, social, and recency.
+final nodeDexPatinaProvider = Provider.family<PatinaResult, int>((
+  ref,
+  nodeNum,
+) {
+  final entry = ref.watch(nodeDexEntryProvider(nodeNum));
+  if (entry == null) {
+    return const PatinaResult(
+      score: 0,
+      tenure: 0,
+      encounters: 0,
+      reach: 0,
+      signalDepth: 0,
+      social: 0,
+      recency: 0,
+      stampLabel: 'Trace',
+    );
+  }
+  return PatinaScore.compute(entry);
+});
+
+/// Provider for the progressive disclosure state of a specific node.
+///
+/// Determines which field journal elements are visible based on
+/// the node's accumulated history. Controls overlay density,
+/// trait evidence visibility, field note display, and more.
+final nodeDexDisclosureProvider = Provider.family<DisclosureState, int>((
+  ref,
+  nodeNum,
+) {
+  final entry = ref.watch(nodeDexEntryProvider(nodeNum));
+  if (entry == null) {
+    return const DisclosureState(
+      showSigil: true,
+      showPrimaryTrait: false,
+      showTraitEvidence: false,
+      showFieldNote: false,
+      showAllTraits: false,
+      showPatinaStamp: false,
+      showTimeline: false,
+      showOverlay: false,
+      overlayDensity: 0,
+      tier: DisclosureTier.trace,
+    );
+  }
+  return ProgressiveDisclosure.compute(entry);
+});
+
+/// Provider for the deterministic field note of a specific node.
+///
+/// Returns the auto-generated field journal observation text.
+/// The note is deterministic: same node + same trait = same note.
+final nodeDexFieldNoteProvider = Provider.family<String, int>((ref, nodeNum) {
+  final entry = ref.watch(nodeDexEntryProvider(nodeNum));
+  if (entry == null) return '';
+
+  final trait = ref.watch(nodeDexTraitProvider(nodeNum));
+  return FieldNoteGenerator.generate(entry: entry, trait: trait.primary);
+});
+
 /// Aggregate statistics across all NodeDex entries.
 ///
 /// Recomputed whenever entries change. Used for the stats header
@@ -811,8 +981,20 @@ enum NodeDexFilter {
   /// Show all entries.
   all,
 
-  /// Only entries with a social tag.
+  /// Only entries with a social tag (any tag).
   tagged,
+
+  /// Only entries classified as Contact.
+  tagContact,
+
+  /// Only entries classified as Trusted Node.
+  tagTrustedNode,
+
+  /// Only entries classified as Known Relay.
+  tagKnownRelay,
+
+  /// Only entries classified as Frequent Peer.
+  tagFrequentPeer,
 
   /// Only recently discovered (last 24h).
   recent,
@@ -956,6 +1138,13 @@ List<(NodeDexEntry, MeshNode?)> _applyFilter(
     return switch (filter) {
       NodeDexFilter.all => true,
       NodeDexFilter.tagged => entry.socialTag != null,
+      NodeDexFilter.tagContact => entry.socialTag == NodeSocialTag.contact,
+      NodeDexFilter.tagTrustedNode =>
+        entry.socialTag == NodeSocialTag.trustedNode,
+      NodeDexFilter.tagKnownRelay =>
+        entry.socialTag == NodeSocialTag.knownRelay,
+      NodeDexFilter.tagFrequentPeer =>
+        entry.socialTag == NodeSocialTag.frequentPeer,
       NodeDexFilter.recent => entry.isRecentlyDiscovered,
       NodeDexFilter.wanderers =>
         ref.read(nodeDexTraitProvider(entry.nodeNum)).primary ==

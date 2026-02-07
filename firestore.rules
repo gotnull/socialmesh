@@ -2,34 +2,34 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // =============================================================================
     // HELPER FUNCTIONS
     // =============================================================================
-    
+
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-    
+
     function isAdmin() {
-      return isAuthenticated() && 
+      return isAuthenticated() &&
         exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
-    
+
     // Validate document size (Firestore limit is 1MB, use 500KB for safety)
     function isValidSize() {
       return request.resource.size() < 500 * 1024;
     }
-    
+
     // Owner UID - can use any display name
     function isOwner_displayName() {
       return request.auth.uid == '9ltxJGViWHW5aj5HhLGmiVwkrLU2';
     }
-    
+
     // Reserved exact usernames - blocked for everyone except owner
     function isReservedExactName(displayName) {
       let reserved = [
@@ -39,7 +39,7 @@ service cloud.firestore {
       ];
       return displayName.lower() in reserved;
     }
-    
+
     // Check if display name contains blocked substrings
     // Note: Firestore rules don't support regex, so we use contains() for patterns
     function containsBlockedPattern(displayName) {
@@ -63,7 +63,7 @@ service cloud.firestore {
              // Block meshtastic brand
              lowerName.matches('meshtastic.*');
     }
-    
+
     // Validate display name format
     function isValidDisplayNameFormat(displayName) {
       // Only letters, numbers, periods, underscores (2-30 chars)
@@ -76,7 +76,7 @@ service cloud.firestore {
              !displayName.matches('.*\\.\\..*') &&
              !displayName.matches('^[0-9]+$');
     }
-    
+
     // Main validation function for display names
     function canUseDisplayName(displayName) {
       // Owner can use any name
@@ -85,28 +85,28 @@ service cloud.firestore {
               !isReservedExactName(displayName) &&
               !containsBlockedPattern(displayName));
     }
-    
+
     // =============================================================================
     // COLLECTION GROUP QUERIES
     // =============================================================================
-    
+
     // Votes collection group - allows querying votes across all comments
     // Used to fetch all of a user's votes on a signal's comments in one query
     match /{path=**}/votes/{voteId} {
       // Users can read their own votes via collection group query
-      allow read: if isAuthenticated() && 
+      allow read: if isAuthenticated() &&
         resource.data.voterId == request.auth.uid;
     }
-    
+
     // =============================================================================
     // USER DATA COLLECTIONS
     // =============================================================================
-    
+
     // User data - owner read/write (with reserved name enforcement)
     // Admins can write for seeding/testing purposes
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      allow write: if (isOwner(userId) && 
+      allow write: if (isOwner(userId) &&
         (!('displayName' in request.resource.data) || canUseDisplayName(request.resource.data.displayName))) ||
         isAdmin();
 
@@ -114,14 +114,14 @@ service cloud.firestore {
       match /activities/{activityId} {
         // User can read their own activities
         allow read: if isOwner(userId);
-        
+
         // Activities are created by Cloud Functions or authenticated users
         // (e.g., when someone likes your story, they create an activity in your feed)
         allow create: if isAuthenticated();
-        
+
         // User can update their own activities (mark as read)
         allow update: if isOwner(userId);
-        
+
         // User can delete their own activities
         allow delete: if isOwner(userId);
       }
@@ -130,11 +130,11 @@ service cloud.firestore {
       match /saved_signals/{signalId} {
         // Only owner can read their saved signals
         allow read: if isOwner(userId);
-        
+
         // Only owner can create/delete their saved signals
         allow create: if isOwner(userId);
         allow delete: if isOwner(userId);
-        
+
         // No updates needed - just add/remove
         allow update: if false;
       }
@@ -169,15 +169,22 @@ service cloud.firestore {
         allow read: if isOwner(userId) || isAdmin();
         allow write: if false; // Managed by Cloud Functions
       }
+
+      // NodeDex Cloud Sync subcollection - syncs classifications, notes, and entries
+      // Requires cloud sync entitlement for write, read-only for expired subscribers
+      match /nodedex_sync/{docId} {
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId) && isValidSize();
+      }
     }
-    
+
     // User presence - public read, owner write
     // Tracks online/offline status for social features
     match /presence/{userId} {
       allow read: if true;
       allow write: if isOwner(userId);
     }
-    
+
     // User profiles - public read, owner write (except counters)
     // Admins can write for testing/seeding purposes (full access)
     match /profiles/{userId} {
@@ -205,31 +212,31 @@ service cloud.firestore {
       // Admins can delete test profiles
       allow delete: if isOwner(userId) || isAdmin();
     }
-    
+
     // Admin list - only readable by admins
     match /admins/{adminId} {
       allow read: if isAdmin() || isOwner(adminId);
       allow write: if false; // Managed via Firebase Console
     }
-    
+
     // =============================================================================
     // APP CONFIG & WIDGETS
     // =============================================================================
-    
+
     // App config - public read, admin write
     match /app_config/{configId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    
+
     // Widgets marketplace - public read, authenticated write with field protection
     match /widgets/{widgetId} {
       allow read: if true;
-      
+
       // Create: authenticated user, valid size, must set authorId to self
       allow create: if isAuthenticated() && isValidSize() &&
         request.resource.data.authorId == request.auth.uid;
-      
+
       // Update: owner or admin, with immutable field protection
       // Cannot modify: authorId, createdAt, downloadCount, ratingSum, ratingCount
       allow update: if isAuthenticated() && isValidSize() &&
@@ -243,17 +250,17 @@ service cloud.firestore {
           (!('ratingCount' in request.resource.data) || request.resource.data.ratingCount == resource.data.ratingCount) &&
           (!('averageRating' in request.resource.data) || request.resource.data.averageRating == resource.data.averageRating)
         ));
-      
+
       // Delete: owner or admin only
-      allow delete: if isAuthenticated() && 
+      allow delete: if isAuthenticated() &&
         (resource.data.authorId == request.auth.uid || isAdmin());
-      
+
       // Widget ratings subcollection
       match /ratings/{ratingId} {
         allow read: if true;
         allow write: if isAuthenticated() && ratingId == request.auth.uid;
       }
-      
+
       // Widget installers subcollection - tracks who has installed (for idempotency)
       // Created by Cloud Functions, read-only for clients
       match /installers/{installerId} {
@@ -261,25 +268,25 @@ service cloud.firestore {
         allow write: if false; // Only Cloud Functions can write
       }
     }
-    
+
     // Categories - public read, admin write
     match /categories/{categoryId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    
+
     // =============================================================================
     // SHARING & SOCIAL
     // =============================================================================
-    
+
     // Shared nodes (for share links)
     match /shared_nodes/{nodeId} {
       allow read: if true;
       allow create: if isAuthenticated() && isValidSize();
-      allow update, delete: if isAuthenticated() && 
+      allow update, delete: if isAuthenticated() &&
         resource.data.createdBy == request.auth.uid;
     }
-    
+
     // Shared automations (for QR code sharing)
     match /shared_automations/{automationId} {
       // Anyone can read shared automations (needed for QR scanning)
@@ -289,10 +296,10 @@ service cloud.firestore {
         request.resource.data.keys().hasAll(['name', 'trigger', 'actions', 'createdBy', 'createdAt']) &&
         request.resource.data.createdBy == request.auth.uid;
       // Only the creator can update or delete
-      allow update, delete: if isAuthenticated() && 
+      allow update, delete: if isAuthenticated() &&
         resource.data.createdBy == request.auth.uid;
     }
-    
+
     // Shared widgets (for QR code sharing)
     match /shared_widgets/{widgetId} {
       // Anyone can read shared widgets (needed for QR scanning)
@@ -302,32 +309,32 @@ service cloud.firestore {
         request.resource.data.keys().hasAll(['name', 'createdBy', 'createdAt']) &&
         request.resource.data.createdBy == request.auth.uid;
       // Only the creator can update or delete
-      allow update, delete: if isAuthenticated() && 
+      allow update, delete: if isAuthenticated() &&
         resource.data.createdBy == request.auth.uid;
     }
-    
+
     // =============================================================================
     // DEVICE SHOP COLLECTIONS
     // =============================================================================
-    
+
     // Shop Products - public read, admin write, authenticated users can increment viewCount
     match /shopProducts/{productId} {
       allow read: if true;
       allow create: if isAdmin();
       allow delete: if isAdmin();
       // Allow admins full update, or authenticated users to only update viewCount
-      allow update: if isAdmin() || 
-        (isAuthenticated() && 
+      allow update: if isAdmin() ||
+        (isAuthenticated() &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount']) &&
          request.resource.data.viewCount == resource.data.viewCount + 1);
     }
-    
+
     // Shop Sellers - public read, admin write
     match /shopSellers/{sellerId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    
+
     // Product Reviews - public read, authenticated create, owner/admin manage
     match /productReviews/{reviewId} {
       allow read: if true;
@@ -335,20 +342,20 @@ service cloud.firestore {
         request.resource.data.userId == request.auth.uid;
       allow update: if isAuthenticated() && isValidSize() &&
         (resource.data.userId == request.auth.uid || isAdmin());
-      allow delete: if isAuthenticated() && 
+      allow delete: if isAuthenticated() &&
         (resource.data.userId == request.auth.uid || isAdmin());
     }
-    
+
     // Product Favorites - owner only
     match /productFavorites/{favoriteId} {
-      allow read: if isAuthenticated() && 
+      allow read: if isAuthenticated() &&
         resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && 
+      allow create: if isAuthenticated() &&
         request.resource.data.userId == request.auth.uid;
-      allow delete: if isAuthenticated() && 
+      allow delete: if isAuthenticated() &&
         resource.data.userId == request.auth.uid;
     }
-    
+
     // Shop Analytics - admin only
     match /shopAnalytics/{docId} {
       allow read, write: if isAdmin();
@@ -357,57 +364,57 @@ service cloud.firestore {
     // =============================================================================
     // CLOUD SYNC / SUBSCRIPTION COLLECTIONS
     // =============================================================================
-    
+
     // User entitlements - owner read, admins can read all for admin dashboard
     // Write via Cloud Functions only (RevenueCat webhook)
     match /user_entitlements/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow write: if false; // Managed by Cloud Functions (RevenueCat webhook)
     }
-    
+
     // Helper function to check cloud sync entitlement
     function hasCloudSyncAccess(userId) {
       let entitlement = get(/databases/$(database)/documents/user_entitlements/$(userId));
-      return entitlement != null && 
-        (entitlement.data.cloud_sync == 'active' || 
+      return entitlement != null &&
+        (entitlement.data.cloud_sync == 'active' ||
          entitlement.data.cloud_sync == 'grace_period' ||
          entitlement.data.cloud_sync == 'grandfathered');
     }
-    
+
     function hasCloudSyncReadAccess(userId) {
       let entitlement = get(/databases/$(database)/documents/user_entitlements/$(userId));
       return entitlement != null && entitlement.data.cloud_sync != null;
     }
-    
+
     // Synced nodes - cloud sync required for write, read-only for expired
     match /synced_nodes/{userId}/{document=**} {
       allow read: if isOwner(userId) && hasCloudSyncReadAccess(userId);
       allow write: if isOwner(userId) && hasCloudSyncAccess(userId) && isValidSize();
     }
-    
-    // Synced messages - cloud sync required for write, read-only for expired  
+
+    // Synced messages - cloud sync required for write, read-only for expired
     match /synced_messages/{userId}/{document=**} {
       allow read: if isOwner(userId) && hasCloudSyncReadAccess(userId);
       allow write: if isOwner(userId) && hasCloudSyncAccess(userId) && isValidSize();
     }
-    
+
     // Synced channels - cloud sync required for write, read-only for expired
     match /synced_channels/{userId}/{document=**} {
       allow read: if isOwner(userId) && hasCloudSyncReadAccess(userId);
       allow write: if isOwner(userId) && hasCloudSyncAccess(userId) && isValidSize();
     }
-    
+
     // Synced settings - cloud sync required for write, read-only for expired
     match /synced_settings/{userId} {
       allow read: if isOwner(userId) && hasCloudSyncReadAccess(userId);
       allow write: if isOwner(userId) && hasCloudSyncAccess(userId) && isValidSize();
     }
-    
+
     // Sync data (generic sync collection used by Cloud Functions)
     match /sync_data/{userId}/{collection}/{docId} {
       allow read: if isOwner(userId) && hasCloudSyncReadAccess(userId);
       allow write: if isOwner(userId) && hasCloudSyncAccess(userId) && isValidSize();
-      
+
       // Rate limit tracking (managed by Cloud Functions)
       match /_rate_limit/{limitId} {
         allow read, write: if false; // Cloud Functions only
@@ -431,11 +438,11 @@ service cloud.firestore {
         followId == request.resource.data.followerId + '_' + request.resource.data.followeeId &&
         (request.resource.data.followerId == request.auth.uid ||
          request.resource.data.followeeId == request.auth.uid);
-      
+
       // Delete: only the follower can unfollow (or admin for testing)
       allow delete: if isAdmin() || (isAuthenticated() &&
         resource.data.followerId == request.auth.uid);
-      
+
       // No updates allowed - delete and recreate
       allow update: if false;
     }
@@ -462,12 +469,12 @@ service cloud.firestore {
       // Admins can read all requests (for testing/moderation)
       // Users can read requests they sent or received
       // Also allow read if document doesn't exist (to check existence)
-      allow read: if isAdmin() || 
+      allow read: if isAdmin() ||
         (isAuthenticated() &&
          (resource == null ||
           resource.data.requesterId == request.auth.uid ||
           resource.data.targetId == request.auth.uid));
-      
+
       // Create: authenticated, must be requesting as yourself, cannot self-request
       // Admins can create on behalf of others (for seeding/testing)
       allow create: if isAdmin() ||
@@ -476,13 +483,13 @@ service cloud.firestore {
          request.resource.data.requesterId != request.resource.data.targetId &&
          request.resource.data.status == 'pending' &&
          requestId == request.resource.data.requesterId + '_' + request.resource.data.targetId);
-      
+
       // Update: only target can update status (approve/decline), or admin
       allow update: if isAdmin() ||
         (isAuthenticated() &&
          resource.data.targetId == request.auth.uid &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'respondedAt']));
-      
+
       // Delete: requester can cancel, target can delete after responding, or admin
       allow delete: if isAdmin() ||
         (isAuthenticated() &&
@@ -494,7 +501,7 @@ service cloud.firestore {
     // Admins can create/delete for testing purposes
     match /posts/{postId} {
       allow read: if true; // Public posts
-      
+
       // Create: authenticated, must be author, content required
       // Signals must have expiresAt and valid TTL
       // Admins can create posts for seeding test data
@@ -510,11 +517,11 @@ service cloud.firestore {
           request.resource.data.expiresAt.toMillis() <= request.time.toMillis() + (86400 * 1000) // max 24h TTL
         )) &&
         isValidSize());
-      
+
       // Delete: only author can delete their post (or admin)
       allow delete: if isAdmin() || (isAuthenticated() &&
         resource.data.authorId == request.auth.uid);
-      
+
       // Update rules:
       // 1. Anyone authenticated can update commentCount/likeCount (social interactions)
       // 2. Author can update image fields (mediaUrls, imageState, imageUrl) for upload after creation
@@ -522,11 +529,11 @@ service cloud.firestore {
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount', 'likeCount']) ||
          (resource.data.authorId == request.auth.uid &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mediaUrls', 'imageState', 'imageUrl'])));
-      
+
       // Signal comments subcollection (canonical path)
       match /comments/{commentId} {
         allow read: if true; // Public comments on signals
-        
+
         // Create: authenticated, must be author, valid content
         // Cannot set aggregate fields directly (Cloud Functions only)
         allow create: if isAuthenticated() &&
@@ -540,11 +547,11 @@ service cloud.firestore {
           (!('downvoteCount' in request.resource.data) || request.resource.data.downvoteCount == 0) &&
           (!('replyCount' in request.resource.data) || request.resource.data.replyCount == 0) &&
           (!('isDeleted' in request.resource.data) || request.resource.data.isDeleted == false);
-        
+
         // Delete: only author (or admin)
         allow delete: if isAdmin() || (isAuthenticated() &&
           resource.data.authorId == request.auth.uid);
-        
+
         // Update: only Cloud Functions can update aggregate fields
         // Authors can soft-delete by setting isDeleted=true and content="[deleted]"
         allow update: if isAuthenticated() &&
@@ -552,19 +559,19 @@ service cloud.firestore {
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isDeleted', 'content']) &&
           request.resource.data.isDeleted == true &&
           request.resource.data.content == '[deleted]';
-        
+
         // Votes subcollection - one vote per user per comment
         match /votes/{voterId} {
           allow read: if true; // Public vote counts
-          
+
           // Create: authenticated, must be voter, valid value
           allow create: if isOwner(voterId) &&
             (request.resource.data.value == 1 || request.resource.data.value == -1);
-          
+
           // Update: can change vote value (upvote <-> downvote)
           allow update: if isOwner(voterId) &&
             (request.resource.data.value == 1 || request.resource.data.value == -1);
-          
+
           // Delete: voter can remove their vote
           allow delete: if isOwner(voterId);
         }
@@ -575,13 +582,13 @@ service cloud.firestore {
         // Author can read viewers (for stats)
         allow read: if isAuthenticated() && resource.data.viewerId == request.auth.uid ||
           resource.data.authorId == request.auth.uid;
-        
+
         // Any authenticated user can record a view (only once per user)
         allow create: if isOwner(viewerId);
-        
+
         // Merge updates allowed for first-view tracking
         allow update: if isOwner(viewerId);
-        
+
         // No delete - views are permanent for analytics
         allow delete: if false;
       }
@@ -590,11 +597,11 @@ service cloud.firestore {
       match /stats/{statsId} {
         // Public read for displaying view counts
         allow read: if true;
-        
+
         // Authenticated users can increment counters
         allow create: if isAuthenticated();
         allow update: if isAuthenticated();
-        
+
         // No delete - stats are permanent
         allow delete: if false;
       }
@@ -604,7 +611,7 @@ service cloud.firestore {
     match /feeds/{userId} {
       allow read: if isOwner(userId);
       allow write: if false; // Cloud Functions only
-      
+
       // Feed items subcollection
       match /items/{itemId} {
         allow read: if isOwner(userId);
@@ -616,7 +623,7 @@ service cloud.firestore {
     // Admins can create/delete for testing purposes
     match /comments/{commentId} {
       allow read: if true; // Public comments
-      
+
       // Create: authenticated, must be author, content required, max depth check
       // Admins can create comments for seeding test data
       allow create: if isAdmin() || (isAuthenticated() &&
@@ -626,42 +633,42 @@ service cloud.firestore {
         request.resource.data.content.size() <= 1000 &&
         request.resource.data.postId is string &&
         isValidSize());
-      
+
       // Delete: only author can delete their comment (or admin)
       allow delete: if isAdmin() || (isAuthenticated() &&
         resource.data.authorId == request.auth.uid);
-      
+
       // Allow authenticated users to update only replyCount
       allow update: if isAuthenticated() &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replyCount']);
     }
 
     // Likes - user likes on posts and comments
-    // Document ID formats: 
+    // Document ID formats:
     //   Posts: {userId}_{postId}
     //   Comments: {userId}_comment_{commentId}
     match /likes/{likeId} {
       allow read: if true; // Public likes
-      
+
       // Create: authenticated, must be liking as yourself
       allow create: if isAuthenticated() &&
         request.resource.data.userId == request.auth.uid &&
         (
           // Legacy post likes: {userId}_{postId} with postId field
-          ('postId' in request.resource.data && 
+          ('postId' in request.resource.data &&
            likeId == request.resource.data.userId + '_' + request.resource.data.postId) ||
           // New post likes: {userId}_{postId} with targetType/targetId
-          (request.resource.data.targetType == 'post' && 
+          (request.resource.data.targetType == 'post' &&
            likeId == request.resource.data.userId + '_' + request.resource.data.targetId) ||
           // Comment likes: {userId}_comment_{commentId}
-          (request.resource.data.targetType == 'comment' && 
+          (request.resource.data.targetType == 'comment' &&
            likeId == request.resource.data.userId + '_comment_' + request.resource.data.targetId)
         );
-      
+
       // Delete: only the liker can unlike
       allow delete: if isAuthenticated() &&
         resource.data.userId == request.auth.uid;
-      
+
       // No updates allowed
       allow update: if false;
     }
@@ -671,17 +678,17 @@ service cloud.firestore {
       // Only the blocker can read their own blocks
       allow read: if isAuthenticated() &&
         resource.data.blockerId == request.auth.uid;
-      
+
       // Create: authenticated, must be blocking as yourself, cannot self-block
       allow create: if isAuthenticated() &&
         request.resource.data.blockerId == request.auth.uid &&
         request.resource.data.blockerId != request.resource.data.blockedId &&
         blockId == request.resource.data.blockerId + '_' + request.resource.data.blockedId;
-      
+
       // Delete: only the blocker can unblock
       allow delete: if isAuthenticated() &&
         resource.data.blockerId == request.auth.uid;
-      
+
       allow update: if false;
     }
 
@@ -689,15 +696,15 @@ service cloud.firestore {
     match /reports/{reportId} {
       // Admins can read all reports
       allow read: if isAdmin();
-      
+
       // Any authenticated user can create a report
       allow create: if isAuthenticated() &&
         request.resource.data.reporterId == request.auth.uid &&
         request.resource.data.status == 'pending';
-      
+
       // Only admins can update (resolve) reports
       allow update: if isAdmin();
-      
+
       // Only admins can delete reports
       allow delete: if isAdmin();
     }
@@ -734,12 +741,12 @@ service cloud.firestore {
     // User strikes - violations tracking
     match /user_strikes/{strikeId} {
       // Users can read their own strikes, admins can read all
-      allow read: if isAdmin() || 
+      allow read: if isAdmin() ||
         (isAuthenticated() && resource.data.userId == request.auth.uid);
       // Cloud Functions create strikes
       allow create: if false;
       // Users can acknowledge their strikes
-      allow update: if isAuthenticated() && 
+      allow update: if isAuthenticated() &&
         resource.data.userId == request.auth.uid &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['acknowledged', 'acknowledgedAt']);
       // Only admins can delete strikes
@@ -766,18 +773,18 @@ service cloud.firestore {
       // Public stories are visible to everyone
       // Private stories require follower relationship check
       allow read: if true; // Visibility filtering done in app queries
-      
+
       // Create: authenticated, must be author (or admin for seeding)
       allow create: if isAuthenticated() &&
         (request.resource.data.authorId == request.auth.uid || isAdmin()) &&
         request.resource.data.mediaUrl is string &&
         request.resource.data.mediaUrl.size() > 0 &&
         isValidSize();
-      
+
       // Delete: only author can delete their story (or admin)
       allow delete: if isAdmin() || (isAuthenticated() &&
         resource.data.authorId == request.auth.uid);
-      
+
       // Update: view count and like count updates allowed by authenticated users
       allow update: if isAuthenticated() &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount', 'likeCount']);
@@ -789,15 +796,15 @@ service cloud.firestore {
         allow read: if isAuthenticated() &&
           (get(/databases/$(database)/documents/stories/$(storyId)).data.authorId == request.auth.uid ||
            viewerId == request.auth.uid);
-        
+
         // Author can delete viewers (when deleting story)
         allow delete: if isAuthenticated() &&
           get(/databases/$(database)/documents/stories/$(storyId)).data.authorId == request.auth.uid;
-        
+
         // Any authenticated user can record their view (as themselves)
         allow create: if isAuthenticated() &&
           viewerId == request.auth.uid;
-        
+
         // No updates
         allow update: if false;
       }
@@ -809,15 +816,15 @@ service cloud.firestore {
         allow read: if isAuthenticated() &&
           (get(/databases/$(database)/documents/stories/$(storyId)).data.authorId == request.auth.uid ||
            likerId == request.auth.uid);
-        
+
         // Any authenticated user can like (as themselves)
         allow create: if isAuthenticated() &&
           likerId == request.auth.uid;
-        
+
         // Users can unlike their own likes
         allow delete: if isAuthenticated() &&
           likerId == request.auth.uid;
-        
+
         // No updates
         allow update: if false;
       }

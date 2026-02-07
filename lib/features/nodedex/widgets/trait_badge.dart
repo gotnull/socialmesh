@@ -87,6 +87,9 @@ class TraitBadge extends StatelessWidget {
       NodeTrait.ghost => Icons.visibility_off_outlined,
       NodeTrait.sentinel => Icons.shield_outlined,
       NodeTrait.relay => Icons.swap_horiz,
+      NodeTrait.courier => Icons.local_shipping_outlined,
+      NodeTrait.anchor => Icons.anchor_outlined,
+      NodeTrait.drifter => Icons.waves_outlined,
       NodeTrait.unknown => Icons.auto_awesome_outlined,
     };
   }
@@ -294,6 +297,9 @@ class TraitIcon extends StatelessWidget {
       NodeTrait.ghost => Icons.visibility_off_outlined,
       NodeTrait.sentinel => Icons.shield_outlined,
       NodeTrait.relay => Icons.swap_horiz,
+      NodeTrait.courier => Icons.local_shipping_outlined,
+      NodeTrait.anchor => Icons.anchor_outlined,
+      NodeTrait.drifter => Icons.waves_outlined,
       NodeTrait.unknown => Icons.help_outline,
     };
 

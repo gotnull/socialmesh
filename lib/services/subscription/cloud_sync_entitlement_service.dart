@@ -558,10 +558,14 @@ class CloudSyncEntitlementService {
       orElse: () => CloudSyncEntitlementState.none,
     );
 
+    // Must match the canWrite logic in _resolveEntitlementFromCustomerInfo:
+    // active, cancelled (still active until expiry), gracePeriod, and
+    // grandfathered all grant write access.
     return CloudSyncEntitlement(
       state: state,
       canWrite:
           state == CloudSyncEntitlementState.active ||
+          state == CloudSyncEntitlementState.cancelled ||
           state == CloudSyncEntitlementState.gracePeriod ||
           state == CloudSyncEntitlementState.grandfathered,
       canRead: state != CloudSyncEntitlementState.none,

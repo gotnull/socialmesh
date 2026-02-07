@@ -38,6 +38,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../models/nodedex_entry.dart';
+import '../models/sigil_evolution.dart';
 import '../services/sigil_generator.dart';
 import 'animated_sigil_painter.dart';
 
@@ -87,6 +88,10 @@ class AnimatedSigilContainer extends StatefulWidget {
   /// Optional trait for the colored ring around the sigil.
   final NodeTrait? trait;
 
+  /// Optional evolution state for visual maturity effects.
+  /// If null, the sigil renders with default (seed-level) appearance.
+  final SigilEvolution? evolution;
+
   /// Base opacity (0.0 → 1.0). Useful for cross-fading.
   final double opacity;
 
@@ -121,6 +126,7 @@ class AnimatedSigilContainer extends StatefulWidget {
     this.showGlow = true,
     this.showBorder = false,
     this.trait,
+    this.evolution,
     this.opacity = 1.0,
     this.backgroundColor,
     this.onRevealComplete,
@@ -569,6 +575,7 @@ class _AnimatedSigilContainerState extends State<AnimatedSigilContainer>
         opacity: widget.opacity,
         showGlow: widget.showGlow,
         showBorder: widget.showBorder,
+        evolution: widget.evolution,
       ),
     );
   }

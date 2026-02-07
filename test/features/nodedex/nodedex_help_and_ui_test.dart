@@ -51,7 +51,7 @@ void main() {
       expect(stepIds, contains('nodedex_note'));
       expect(stepIds, contains('nodedex_regions'));
       expect(stepIds, contains('nodedex_encounters'));
-      expect(stepIds, contains('nodedex_constellation'));
+      expect(stepIds, contains('nodedex_coseen'));
       expect(stepIds, contains('nodedex_device'));
     });
 
@@ -112,7 +112,7 @@ void main() {
         'note',
         'regions',
         'encounters',
-        'constellation',
+        'coseen',
         'device',
       ];
 
@@ -172,10 +172,10 @@ void main() {
       expect(text, contains('RSSI'));
     });
 
-    test('constellation section mentions session and edge detail', () {
-      final text = HelpContent.nodeDexSectionHelp['constellation']!;
+    test('coseen section mentions session and edge detail', () {
+      final text = HelpContent.nodeDexSectionHelp['coseen']!;
       expect(text.toLowerCase(), contains('session'));
-      expect(text.toLowerCase(), contains('edge detail'));
+      expect(text.toLowerCase(), contains('together'));
     });
 
     test('social_tag section mentions local storage', () {

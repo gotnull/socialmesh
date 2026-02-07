@@ -35,10 +35,17 @@ import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
 
 import '../models/nodedex_entry.dart';
+import '../models/sigil_evolution.dart';
 import '../providers/nodedex_providers.dart';
+import '../services/patina_score.dart';
+
 import '../services/trait_engine.dart';
 import '../widgets/edge_detail_sheet.dart';
 import '../widgets/animated_sigil_container.dart';
+import '../widgets/field_note_widget.dart';
+import '../widgets/identity_overlay_painter.dart';
+import '../widgets/observation_timeline.dart';
+import '../widgets/patina_stamp.dart';
 import '../widgets/sigil_card_sheet.dart';
 import '../widgets/sigil_painter.dart';
 import '../widgets/trait_badge.dart';
@@ -87,6 +94,9 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     final nodes = ref.watch(nodesProvider);
     final node = nodes[widget.nodeNum];
     final traitResult = ref.watch(nodeDexTraitProvider(widget.nodeNum));
+    final disclosure = ref.watch(nodeDexDisclosureProvider(widget.nodeNum));
+    final patinaResult = ref.watch(nodeDexPatinaProvider(widget.nodeNum));
+    final scoredTraits = ref.watch(nodeDexScoredTraitsProvider(widget.nodeNum));
 
     if (entry == null) {
       return GlassScaffold.body(
@@ -152,19 +162,79 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           IcoHelpAppBarButton(topicId: 'nodedex_detail'),
         ],
         slivers: [
-          // Sigil hero section
+          // Sigil hero section with identity overlay
           SliverToBoxAdapter(
-            child: _SigilHeroSection(
-              entry: entry,
-              node: node,
-              displayName: displayName,
-              hexId: hexId,
-              traitResult: traitResult,
+            child: IdentityOverlay(
+              nodeNum: entry.nodeNum,
+              density: disclosure.showOverlay ? disclosure.overlayDensity : 0,
+              pointCount: 20,
+              child: _SigilHeroSection(
+                entry: entry,
+                node: node,
+                displayName: displayName,
+                hexId: hexId,
+                traitResult: traitResult,
+                patinaResult: disclosure.showPatinaStamp ? patinaResult : null,
+                evolution: SigilEvolution.fromPatina(
+                  patinaResult.score,
+                  trait: traitResult.primary,
+                ),
+              ),
             ),
           ),
 
           // Trait card
-          SliverToBoxAdapter(child: _TraitCard(traitResult: traitResult)),
+          if (disclosure.showPrimaryTrait)
+            SliverToBoxAdapter(child: _TraitCard(traitResult: traitResult)),
+
+          // Trait evidence bullets
+          if (disclosure.showTraitEvidence && scoredTraits.isNotEmpty)
+            SliverToBoxAdapter(
+              child: TraitEvidenceList(
+                observations: scoredTraits.first.evidence
+                    .map((e) => e.observation)
+                    .toList(),
+                accentColor: entry.sigil?.primaryColor ?? context.accentColor,
+                visible: disclosure.showTraitEvidence,
+              ),
+            ),
+
+          // Field note (collapsible)
+          if (disclosure.showFieldNote)
+            SliverToBoxAdapter(
+              child: CollapsibleFieldNote(
+                entry: entry,
+                trait: traitResult.primary,
+                accentColor: entry.sigil?.primaryColor ?? context.accentColor,
+                visible: disclosure.showFieldNote,
+              ),
+            ),
+
+          // Observation timeline strip
+          if (disclosure.showTimeline)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: ObservationTimeline(
+                  entry: entry,
+                  accentColor: entry.sigil?.primaryColor ?? context.accentColor,
+                  showDensityMarkers: true,
+                  showEncounterCount: true,
+                ),
+              ),
+            ),
+
+          // All scored traits list (progressive: only at Tier 3+)
+          if (disclosure.showAllTraits && scoredTraits.length > 1)
+            SliverToBoxAdapter(
+              child: _ScoredTraitsList(
+                scoredTraits: scoredTraits,
+                showEvidence: disclosure.showTraitEvidence,
+              ),
+            ),
 
           // Discovery stats
           SliverToBoxAdapter(
@@ -223,9 +293,9 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
             SliverPersistentHeader(
               pinned: true,
               delegate: _NodeDexStickyHeaderDelegate(
-                title: 'Constellation Links',
+                title: 'Co-Seen Links',
                 icon: Icons.auto_awesome,
-                helpKey: 'constellation',
+                helpKey: 'coseen',
                 trailing: '${entry.coSeenNodes.length} total',
               ),
             ),
@@ -286,12 +356,140 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
 // Sigil Hero Section
 // =============================================================================
 
+/// Displays the full ranked trait list with optional evidence.
+///
+/// Shown only at Tier 3+ disclosure. Each trait shows its name,
+/// confidence, and (if enabled) the evidence bullets explaining
+/// why the score was assigned.
+class _ScoredTraitsList extends StatelessWidget {
+  final List<ScoredTrait> scoredTraits;
+  final bool showEvidence;
+
+  const _ScoredTraitsList({
+    required this.scoredTraits,
+    required this.showEvidence,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Skip the first trait (already shown in the primary TraitCard).
+    final remaining = scoredTraits.length > 1
+        ? scoredTraits.sublist(1)
+        : <ScoredTrait>[];
+
+    if (remaining.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Additional Traits',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: context.textTertiary,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: remaining.map((scored) {
+              final pct = (scored.confidence * 100).round();
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: scored.trait.color.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: scored.trait.color.withValues(alpha: 0.15),
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      scored.trait.displayLabel,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: scored.trait.color.withValues(alpha: 0.8),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$pct%',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontFamily: AppTheme.fontFamily,
+                        color: scored.trait.color.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          if (showEvidence) ...[
+            const SizedBox(height: 8),
+            ...remaining
+                .where((s) => s.evidence.isNotEmpty && s.confidence >= 0.2)
+                .take(3)
+                .expand(
+                  (s) => s.evidence
+                      .take(2)
+                      .map(
+                        (e) => Padding(
+                          padding: const EdgeInsets.only(bottom: 3),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(top: 5),
+                                child: Container(
+                                  width: 3,
+                                  height: 3,
+                                  decoration: BoxDecoration(
+                                    color: s.trait.color.withValues(alpha: 0.3),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  '${s.trait.displayLabel}: ${e.observation}',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: context.textTertiary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _SigilHeroSection extends StatelessWidget {
   final NodeDexEntry entry;
   final MeshNode? node;
   final String displayName;
   final String hexId;
   final TraitResult traitResult;
+  final PatinaResult? patinaResult;
+  final SigilEvolution? evolution;
 
   const _SigilHeroSection({
     required this.entry,
@@ -299,6 +497,8 @@ class _SigilHeroSection extends StatelessWidget {
     required this.displayName,
     required this.hexId,
     required this.traitResult,
+    this.patinaResult,
+    this.evolution,
   });
 
   @override
@@ -341,6 +541,7 @@ class _SigilHeroSection extends StatelessWidget {
                 showGlow: isOnline,
                 showTracer: isOnline,
                 trait: traitResult.primary,
+                evolution: evolution,
               ),
               if (isOnline)
                 Positioned(
@@ -410,6 +611,15 @@ class _SigilHeroSection extends StatelessWidget {
                 ),
               ),
             ),
+
+          // Patina stamp (shown when disclosure permits)
+          if (patinaResult != null) ...[
+            const SizedBox(height: 12),
+            PatinaStamp(
+              result: patinaResult!,
+              accentColor: entry.sigil?.primaryColor ?? const Color(0xFF9CA3AF),
+            ),
+          ],
 
           // Color palette
           const SizedBox(height: 16),

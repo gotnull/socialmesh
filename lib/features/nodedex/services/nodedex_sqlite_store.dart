@@ -404,7 +404,9 @@ class NodeDexSqliteStore {
       NodeDexTables.colBestRssi: entry.bestRssi,
       NodeDexTables.colMessageCount: entry.messageCount,
       NodeDexTables.colSocialTag: entry.socialTag?.index,
+      NodeDexTables.colSocialTagUpdatedAtMs: entry.socialTagUpdatedAtMs,
       NodeDexTables.colUserNote: entry.userNote,
+      NodeDexTables.colUserNoteUpdatedAtMs: entry.userNoteUpdatedAtMs,
       NodeDexTables.colSigilJson: entry.sigil != null
           ? jsonEncode(entry.sigil!.toJson())
           : jsonEncode(SigilGenerator.generate(entry.nodeNum).toJson()),
@@ -496,7 +498,9 @@ class NodeDexSqliteStore {
       bestRssi: row[NodeDexTables.colBestRssi] as int?,
       messageCount: row[NodeDexTables.colMessageCount] as int? ?? 0,
       socialTag: socialTag,
+      socialTagUpdatedAtMs: row[NodeDexTables.colSocialTagUpdatedAtMs] as int?,
       userNote: row[NodeDexTables.colUserNote] as String?,
+      userNoteUpdatedAtMs: row[NodeDexTables.colUserNoteUpdatedAtMs] as int?,
       encounters: encounters,
       seenRegions: regions,
       coSeenNodes: coSeen,
@@ -754,26 +758,41 @@ class NodeDexSqliteStore {
   /// - encounters: append-only, deduplicate by timestamp
   /// - regions: merge counts and min/max times
   /// - edges: merge counts and max lastSeen
+  ///
+  /// IMPORTANT: Outbox enqueuing is disabled during pull to prevent
+  /// a sync loop where pulled entries are re-uploaded, generating
+  /// new timestamps and triggering another pull cycle.
   Future<int> applySyncPull(List<NodeDexEntry> remoteEntries) async {
     if (remoteEntries.isEmpty) return 0;
+
+    // Disable outbox enqueuing during pull — pulled data must NOT be
+    // re-enqueued, otherwise it creates an infinite push/pull loop:
+    //   pull → enqueue → drain (new timestamp) → pull again → ...
+    // This mirrors the same guard used by bulkInsert().
+    final prevSync = syncEnabled;
+    syncEnabled = false;
 
     _cache ??= {};
     int appliedCount = 0;
 
-    await _db.transaction((txn) async {
-      for (final remote in remoteEntries) {
-        final local = _cache![remote.nodeNum];
-        final merged = local != null ? local.mergeWith(remote) : remote;
+    try {
+      await _db.transaction((txn) async {
+        for (final remote in remoteEntries) {
+          final local = _cache![remote.nodeNum];
+          final merged = local != null ? local.mergeWith(remote) : remote;
 
-        _cache![merged.nodeNum] = merged;
-        await _upsertEntryInTxn(txn, merged);
-        appliedCount++;
-      }
-    });
+          _cache![merged.nodeNum] = merged;
+          await _upsertEntryInTxn(txn, merged);
+          appliedCount++;
+        }
+      });
 
-    AppLogging.storage(
-      'NodeDexSqliteStore: Sync pull applied $appliedCount entries',
-    );
+      AppLogging.storage(
+        'NodeDexSqliteStore: Sync pull applied $appliedCount entries',
+      );
+    } finally {
+      syncEnabled = prevSync;
+    }
     return appliedCount;
   }
 

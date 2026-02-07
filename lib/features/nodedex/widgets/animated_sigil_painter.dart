@@ -41,6 +41,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../models/nodedex_entry.dart';
+import '../models/sigil_evolution.dart';
 
 /// CustomPainter that renders animated sigil geometry.
 ///
@@ -80,6 +81,10 @@ class AnimatedSigilPainter extends CustomPainter {
   /// Border color override. Uses sigil primary color if null.
   final Color? borderColor;
 
+  /// Optional evolution state for visual maturity effects.
+  /// If null, the sigil renders with default (seed-level) appearance.
+  final SigilEvolution? evolution;
+
   AnimatedSigilPainter({
     required this.sigil,
     this.revealProgress = 1.0,
@@ -91,6 +96,7 @@ class AnimatedSigilPainter extends CustomPainter {
     this.showGlow = false,
     this.showBorder = false,
     this.borderColor,
+    this.evolution,
   });
 
   // ---------------------------------------------------------------------------
@@ -195,6 +201,14 @@ class AnimatedSigilPainter extends CustomPainter {
       _drawEdge(canvas, edge, edgeFraction, effectiveOpacity, radius);
     }
 
+    // --- Draw micro-etch marks (evolution detail) ---
+
+    if (evolution != null &&
+        evolution!.detailTier >= 1 &&
+        revealProgress >= 1.0) {
+      _drawMicroEtch(canvas, center, radius, outerVertices, effectiveOpacity);
+    }
+
     // --- Draw vertex dots with reveal and pulse ---
 
     _drawAnimatedVertexDots(
@@ -207,6 +221,14 @@ class AnimatedSigilPainter extends CustomPainter {
       allEdges,
       revealEdgeCount.toDouble(),
     );
+
+    // --- Draw augment marks (evolution) ---
+
+    if (evolution != null &&
+        evolution!.augments.isNotEmpty &&
+        revealProgress >= 1.0) {
+      _drawAugments(canvas, center, radius, outerVertices, effectiveOpacity);
+    }
 
     // --- Draw edge tracer ---
 
@@ -485,10 +507,16 @@ class AnimatedSigilPainter extends CustomPainter {
     final alphaBase = _alphaForTier(edge.colorTier);
     final widthFactor = _widthFactorForTier(edge.colorTier);
 
+    // Apply evolution scaling if present.
+    final weightScale = evolution?.lineWeightScale ?? 1.0;
+    final toneScale = evolution?.toneScale ?? 1.0;
+
     final paint = Paint()
-      ..color = color.withValues(alpha: alphaBase * effectiveOpacity)
+      ..color = color.withValues(
+        alpha: (alphaBase * toneScale).clamp(0.0, 1.0) * effectiveOpacity,
+      )
       ..style = PaintingStyle.stroke
-      ..strokeWidth = _edgeWidth(radius) * widthFactor
+      ..strokeWidth = _edgeWidth(radius) * widthFactor * weightScale
       ..strokeCap = StrokeCap.round;
 
     if (fraction >= 1.0) {
@@ -854,6 +882,169 @@ class AnimatedSigilPainter extends CustomPainter {
   // Repaint
   // ---------------------------------------------------------------------------
 
+  // ---------------------------------------------------------------------------
+  // Evolution rendering
+  // ---------------------------------------------------------------------------
+
+  /// Draw subtle micro-etch marks inside the sigil based on detailTier.
+  ///
+  /// Tier 1: sparse inner dots along midpoints of outer edges.
+  /// Tier 2: + faint bisecting lines between alternate vertices.
+  /// Tier 3: + secondary midpoint dots at inner ring scale.
+  /// Tier 4: + fine concentric arc fragments near center.
+  void _drawMicroEtch(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    List<Offset> outerVertices,
+    double effectiveOpacity,
+  ) {
+    final tier = evolution!.detailTier;
+    final etchAlpha =
+        (0.12 * evolution!.toneScale).clamp(0.0, 1.0) * effectiveOpacity;
+
+    final etchPaint = Paint()
+      ..color = sigil.tertiaryColor.withValues(alpha: etchAlpha)
+      ..style = PaintingStyle.fill;
+
+    final etchStrokePaint = Paint()
+      ..color = sigil.tertiaryColor.withValues(alpha: etchAlpha * 0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _edgeWidth(radius) * 0.35
+      ..strokeCap = StrokeCap.round;
+
+    final dotR = _dotRadius(radius) * 0.4;
+
+    // Tier 1+: dots at midpoints of outer edges.
+    for (int i = 0; i < outerVertices.length; i++) {
+      final next = (i + 1) % outerVertices.length;
+      final mid = Offset(
+        (outerVertices[i].dx + outerVertices[next].dx) / 2.0,
+        (outerVertices[i].dy + outerVertices[next].dy) / 2.0,
+      );
+      canvas.drawCircle(mid, dotR, etchPaint);
+    }
+
+    // Tier 2+: faint bisecting lines from alternate vertex midpoints
+    // toward center, stopping at 40% radius.
+    if (tier >= 2) {
+      for (int i = 0; i < outerVertices.length; i += 2) {
+        final next = (i + 1) % outerVertices.length;
+        final mid = Offset(
+          (outerVertices[i].dx + outerVertices[next].dx) / 2.0,
+          (outerVertices[i].dy + outerVertices[next].dy) / 2.0,
+        );
+        final dx = mid.dx - center.dx;
+        final dy = mid.dy - center.dy;
+        final innerPoint = Offset(center.dx + dx * 0.4, center.dy + dy * 0.4);
+        canvas.drawLine(mid, innerPoint, etchStrokePaint);
+      }
+    }
+
+    // Tier 3+: secondary dots at 55% radius, offset from vertices.
+    if (tier >= 3) {
+      for (int i = 0; i < outerVertices.length; i++) {
+        final dx = outerVertices[i].dx - center.dx;
+        final dy = outerVertices[i].dy - center.dy;
+        final innerDot = Offset(center.dx + dx * 0.55, center.dy + dy * 0.55);
+        canvas.drawCircle(innerDot, dotR * 0.8, etchPaint);
+      }
+    }
+
+    // Tier 4: fine arc fragments near center (20% radius).
+    if (tier >= 4) {
+      final arcRadius = radius * 0.2;
+      final arcPaint = Paint()
+        ..color = sigil.secondaryColor.withValues(alpha: etchAlpha * 0.6)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = _edgeWidth(radius) * 0.3
+        ..strokeCap = StrokeCap.round;
+
+      for (int i = 0; i < sigil.vertices; i++) {
+        final startAngle =
+            sigil.rotation +
+            rotationDelta +
+            (i * math.pi * 2.0 / sigil.vertices) -
+            math.pi / 2.0;
+        final sweepAngle = math.pi * 2.0 / sigil.vertices * 0.4;
+        canvas.drawArc(
+          Rect.fromCircle(center: center, radius: arcRadius),
+          startAngle,
+          sweepAngle,
+          false,
+          arcPaint,
+        );
+      }
+    }
+  }
+
+  /// Draw tiny augment marks near the outer ring.
+  void _drawAugments(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    List<Offset> outerVertices,
+    double effectiveOpacity,
+  ) {
+    final augAlpha =
+        (0.25 * evolution!.toneScale).clamp(0.0, 1.0) * effectiveOpacity;
+    final markSize = radius * 0.08;
+
+    for (final augment in evolution!.augments) {
+      switch (augment) {
+        case SigilAugment.relayMark:
+          if (outerVertices.isNotEmpty) {
+            final v = outerVertices[0];
+            final dx = v.dx - center.dx;
+            final dy = v.dy - center.dy;
+            final len = math.sqrt(dx * dx + dy * dy);
+            if (len > 0) {
+              final nx = dx / len;
+              final ny = dy / len;
+              final px = -ny * markSize;
+              final py = nx * markSize;
+              final tip = Offset(
+                v.dx + nx * markSize * 1.5,
+                v.dy + ny * markSize * 1.5,
+              );
+              final paint = Paint()
+                ..color = sigil.primaryColor.withValues(alpha: augAlpha)
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = _edgeWidth(radius) * 0.5
+                ..strokeCap = StrokeCap.round;
+              canvas.drawLine(Offset(tip.dx - px, tip.dy - py), tip, paint);
+              canvas.drawLine(Offset(tip.dx + px, tip.dy + py), tip, paint);
+            }
+          }
+
+        case SigilAugment.wandererMark:
+          final arcPaint = Paint()
+            ..color = sigil.secondaryColor.withValues(alpha: augAlpha)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = _edgeWidth(radius) * 0.5
+            ..strokeCap = StrokeCap.round;
+          canvas.drawArc(
+            Rect.fromCircle(center: center, radius: radius * 1.05),
+            math.pi * 0.35,
+            math.pi * 0.3,
+            false,
+            arcPaint,
+          );
+
+        case SigilAugment.ghostMark:
+          final ghostCenter = Offset(
+            center.dx + radius * 0.7,
+            center.dy - radius * 0.7,
+          );
+          final ghostPaint = Paint()
+            ..color = sigil.tertiaryColor.withValues(alpha: augAlpha * 0.7)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = _edgeWidth(radius) * 0.4;
+          canvas.drawCircle(ghostCenter, markSize * 0.6, ghostPaint);
+      }
+    }
+  }
+
   @override
   bool shouldRepaint(AnimatedSigilPainter oldDelegate) {
     return oldDelegate.sigil != sigil ||
@@ -864,7 +1055,8 @@ class AnimatedSigilPainter extends CustomPainter {
         oldDelegate.tracePosition != tracePosition ||
         oldDelegate.opacity != opacity ||
         oldDelegate.showGlow != showGlow ||
-        oldDelegate.showBorder != showBorder;
+        oldDelegate.showBorder != showBorder ||
+        oldDelegate.evolution != evolution;
   }
 }
 
