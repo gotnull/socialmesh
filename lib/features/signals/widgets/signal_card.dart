@@ -141,25 +141,22 @@ class _SignalHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
-    final isMeshSignal = signal.authorId.startsWith('mesh_');
+    // A signal is mesh-originated if it has a meshNodeId — regardless of
+    // whether the sender was also signed in (which sets a non-mesh_ authorId).
+    final isMeshSignal = signal.meshNodeId != null;
     final isOwnMeshSignal =
         signal.meshNodeId != null && signal.meshNodeId == myNodeNum;
 
-    // AppLogging.signals(
-    //   'SignalHeader: id=${signal.id}, authorId=${signal.authorId}, isMeshSignal=$isMeshSignal, hasAuthorSnapshot=${signal.authorSnapshot != null}',
-    // );
-
-    // Get author info
+    // Get author info — mesh identity (Sigil + node name) takes priority
+    // so the card looks the same as what receivers see on their devices.
     String authorName = 'Anonymous';
     String? authorShortName;
     String? avatarUrl;
     Color avatarColor = context.accentColor;
 
-    if (signal.authorSnapshot != null) {
-      authorName = signal.authorSnapshot!.displayName;
-      avatarUrl = signal.authorSnapshot!.avatarUrl;
-    } else if (isMeshSignal && signal.meshNodeId != null) {
-      // Look up node info
+    if (isMeshSignal) {
+      // Always resolve from node info when meshNodeId is present — this
+      // mirrors what the receiving device shows (Sigil + node long/short name).
       final hexId = signal.meshNodeId!.toRadixString(16).toUpperCase();
       final shortHex = hexId.length >= 4
           ? hexId.substring(hexId.length - 4)
@@ -173,6 +170,9 @@ class _SignalHeader extends ConsumerWidget {
         authorName = '!$hexId';
         authorShortName = shortHex;
       }
+    } else if (signal.authorSnapshot != null) {
+      authorName = signal.authorSnapshot!.displayName;
+      avatarUrl = signal.authorSnapshot!.avatarUrl;
     }
 
     return Padding(
@@ -180,8 +180,9 @@ class _SignalHeader extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar — use Sigil for mesh nodes, UserAvatar for cloud authors
-          if (isMeshSignal && signal.meshNodeId != null)
+          // Avatar — use Sigil for any signal with a meshNodeId so it matches
+          // what receivers see on their devices.
+          if (isMeshSignal)
             GestureDetector(
               onTap: () {
                 Navigator.of(context).push(
@@ -207,10 +208,10 @@ class _SignalHeader extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Row 1: Name + Bookmark
+                // Row 1: Name + You badge + Bookmark
                 Row(
                   children: [
-                    Expanded(
+                    Flexible(
                       child: Text(
                         authorName,
                         style: TextStyle(
@@ -222,6 +223,27 @@ class _SignalHeader extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    if (isOwnMeshSignal) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AccentColors.yellow.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'you',
+                          style: TextStyle(
+                            color: AccentColors.yellow,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                     if (isBookmarked) ...[
                       const SizedBox(width: 6),
                       Icon(

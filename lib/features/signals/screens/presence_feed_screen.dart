@@ -674,7 +674,10 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen>
                       child: _ActiveAuthorsHeader(
                         authors: activeAuthors,
                         signalCount: feedState.signals.length,
-                        isVisible: _showStickyHeader,
+                        isVisible:
+                            _showStickyHeader &&
+                            ref.watch(signalViewModeProvider) !=
+                                SignalViewMode.map,
                         onTap: _scrollToTop,
                       ),
                     ),
@@ -2342,10 +2345,9 @@ class _AuthorAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMeshNode = author.authorId.startsWith('mesh_');
-
-    // Use Sigil for mesh nodes
-    if (isMeshNode && author.meshNodeId != null) {
+    // Use Sigil for any author with a meshNodeId — mirrors the signal card
+    // behaviour so the banner matches what receivers see on their devices.
+    if (author.meshNodeId != null) {
       return GestureDetector(
         onTap: () {
           Navigator.of(context).push(

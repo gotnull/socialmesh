@@ -35,7 +35,9 @@ class SignalGridCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
-    final isMeshSignal = signal.authorId.startsWith('mesh_');
+    // A signal is mesh-originated if it has a meshNodeId — regardless of
+    // whether the sender was also signed in (which sets a non-mesh_ authorId).
+    final isMeshSignal = signal.meshNodeId != null;
     final isOwnMeshSignal =
         signal.meshNodeId != null && signal.meshNodeId == myNodeNum;
     final hasImage =
@@ -52,13 +54,9 @@ class SignalGridCard extends ConsumerWidget {
     String? avatarUrl;
     Color avatarColor = context.accentColor;
 
-    if (signal.authorSnapshot != null) {
-      authorName = signal.authorSnapshot!.displayName;
-      if (authorName.length > 12) {
-        authorName = '${authorName.substring(0, 11)}…';
-      }
-      avatarUrl = signal.authorSnapshot!.avatarUrl;
-    } else if (isMeshSignal && signal.meshNodeId != null) {
+    if (isMeshSignal) {
+      // Always resolve from node info when meshNodeId is present — this
+      // mirrors what the receiving device shows (Sigil + node long/short name).
       final hexId = signal.meshNodeId!.toRadixString(16).toUpperCase();
       final shortHex = hexId.length >= 4
           ? hexId.substring(hexId.length - 4)
@@ -75,6 +73,12 @@ class SignalGridCard extends ConsumerWidget {
         authorName = '!$hexId';
         authorShortName = shortHex;
       }
+    } else if (signal.authorSnapshot != null) {
+      authorName = signal.authorSnapshot!.displayName;
+      if (authorName.length > 12) {
+        authorName = '${authorName.substring(0, 11)}…';
+      }
+      avatarUrl = signal.authorSnapshot!.avatarUrl;
     }
 
     return BouncyTap(
@@ -209,7 +213,7 @@ class SignalGridCard extends ConsumerWidget {
                       // Author row
                       Row(
                         children: [
-                          if (isMeshSignal && signal.meshNodeId != null)
+                          if (isMeshSignal)
                             GestureDetector(
                               onTap: () {
                                 Navigator.of(context).push(
@@ -238,21 +242,58 @@ class SignalGridCard extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(
-                                  authorName,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black87,
-                                        blurRadius: 4,
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        authorName,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          shadows: [
+                                            Shadow(
+                                              color: Colors.black87,
+                                              blurRadius: 4,
+                                            ),
+                                          ],
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (isOwnMeshSignal) ...[
+                                      const SizedBox(width: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                          vertical: 1,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AccentColors.yellow.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            3,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'you',
+                                          style: TextStyle(
+                                            color: AccentColors.yellow,
+                                            fontSize: 8,
+                                            fontWeight: FontWeight.w600,
+                                            shadows: const [
+                                              Shadow(
+                                                color: Colors.black87,
+                                                blurRadius: 4,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
                                     ],
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  ],
                                 ),
                                 if (isMeshSignal &&
                                     authorShortName != null &&
