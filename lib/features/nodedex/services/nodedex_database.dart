@@ -2,8 +2,7 @@
 
 // NodeDex Database — SQLite schema and lifecycle management.
 //
-// This file defines the database schema for NodeDex persistence,
-// replacing the previous SharedPreferences + JSON approach.
+// This file defines the database schema for NodeDex persistence.
 // All tables, indices, and migration logic live here.
 //
 // Database: nodedex.db

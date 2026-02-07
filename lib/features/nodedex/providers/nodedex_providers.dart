@@ -16,7 +16,7 @@
 // tracking. When a new node appears or an existing node updates, the
 // NodeDex entry is created or refreshed without any user action.
 //
-// Storage: SQLite via NodeDexSqliteStore (migrated from SharedPreferences).
+// Storage: SQLite via NodeDexSqliteStore.
 // Cloud Sync: optional outbox-based sync via NodeDexSyncService.
 
 import 'dart:async';
@@ -31,7 +31,6 @@ import '../../../providers/cloud_sync_entitlement_providers.dart';
 import '../models/import_preview.dart';
 import '../models/nodedex_entry.dart';
 import '../services/nodedex_database.dart';
-import '../services/nodedex_migration.dart';
 import '../services/nodedex_sqlite_store.dart';
 import '../services/nodedex_sync_service.dart';
 import '../services/sigil_generator.dart';
@@ -53,15 +52,10 @@ final nodeDexDatabaseProvider = Provider<NodeDexDatabase>((ref) {
 /// Provides an initialized NodeDexSqliteStore instance.
 ///
 /// The store is initialized once and shared across all providers.
-/// On first launch after upgrade, migrates from SharedPreferences.
 final nodeDexStoreProvider = FutureProvider<NodeDexSqliteStore>((ref) async {
   final db = ref.watch(nodeDexDatabaseProvider);
   final store = NodeDexSqliteStore(db);
   await store.init();
-
-  // Run one-time migration from SharedPreferences if needed.
-  final migration = NodeDexMigration(store);
-  await migration.migrateIfNeeded();
 
   ref.onDispose(() {
     store.flush();

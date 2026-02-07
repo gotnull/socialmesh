@@ -34,7 +34,6 @@ import '../../settings/settings_screen.dart';
 import '../widgets/sigil_painter.dart';
 import '../widgets/trait_badge.dart';
 import 'nodedex_detail_screen.dart';
-import '../constellation/constellation_screen.dart';
 
 /// The main NodeDex screen — a personal mesh field journal.
 ///
@@ -83,12 +82,6 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
           title: 'NodeDex',
           actions: [
             IcoHelpAppBarButton(topicId: 'nodedex_overview'),
-            // Constellation view button
-            IconButton(
-              icon: const Icon(Icons.auto_awesome, size: 22),
-              tooltip: 'Mesh Constellation',
-              onPressed: _openConstellation,
-            ),
             // Settings link
             IconButton(
               icon: const Icon(Icons.settings_outlined, size: 22),
@@ -184,13 +177,6 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
       MaterialPageRoute<void>(
         builder: (_) => NodeDexDetailScreen(nodeNum: entry.nodeNum),
       ),
-    );
-  }
-
-  void _openConstellation() {
-    AppLogging.nodeDex('Opening constellation view');
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const ConstellationScreen()),
     );
   }
 }

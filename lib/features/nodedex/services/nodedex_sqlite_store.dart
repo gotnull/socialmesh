@@ -2,12 +2,8 @@
 
 // NodeDex SQLite Store — persistent local storage backed by SQLite.
 //
-// Replaces the SharedPreferences + JSON store with structured SQLite
-// tables for better query performance, relational integrity, and
-// Cloud Sync support via an outbox pattern.
-//
-// All public methods match the interface expected by NodeDexNotifier
-// so the provider layer can switch stores transparently.
+// Provides structured SQLite tables for query performance, relational
+// integrity, and Cloud Sync support via an outbox pattern.
 
 import 'dart:async';
 import 'dart:convert';
@@ -22,9 +18,8 @@ import 'nodedex_database.dart';
 
 /// SQLite-backed persistent storage for NodeDex entries.
 ///
-/// Exposes the same capabilities as the legacy SharedPreferences store
-/// while adding relational queries, efficient filtering, and sync
-/// outbox support.
+/// Provides relational queries, efficient filtering, and sync
+/// outbox support for the NodeDex field journal.
 class NodeDexSqliteStore {
   final NodeDexDatabase _database;
 
@@ -641,9 +636,6 @@ class NodeDexSqliteStore {
   // ---------------------------------------------------------------------------
 
   /// Export all entries as a JSON string.
-  ///
-  /// Produces the same format as the legacy SharedPreferences store
-  /// for backward compatibility.
   Future<String?> exportJson() async {
     final entries = await loadAll();
     if (entries.isEmpty) return null;
@@ -778,13 +770,13 @@ class NodeDexSqliteStore {
   }
 
   // ---------------------------------------------------------------------------
-  // Bulk insert for migration
+  // Bulk insert
   // ---------------------------------------------------------------------------
 
   /// Insert a list of entries in a single transaction.
   ///
-  /// Used by the SharedPreferences -> SQLite migration.
   /// Skips outbox enqueuing since this is a local-only operation.
+  /// Useful for batch imports and test setup.
   Future<void> bulkInsert(List<NodeDexEntry> entries) async {
     final prevSync = syncEnabled;
     syncEnabled = false;
