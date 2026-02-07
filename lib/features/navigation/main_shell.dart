@@ -189,8 +189,8 @@ class HamburgerMenuButton extends ConsumerWidget {
         // Gradient dot for unseen What's New features
         if (hasUnseenWhatsNew && totalBadgeCount == 0)
           Positioned(
-            right: 10,
-            top: 10,
+            right: 8,
+            top: 8,
             child: IgnorePointer(
               child: Container(
                 width: 10,
