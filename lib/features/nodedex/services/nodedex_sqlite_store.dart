@@ -36,7 +36,7 @@ class NodeDexSqliteStore {
   final Map<int, NodeDexEntry> _pendingSaves = {};
 
   /// Debounce duration for batched saves.
-  static const Duration _saveDebounceDuration = Duration(seconds: 2);
+  final Duration _saveDebounceDuration;
 
   /// Guard to prevent re-entrant flushes (which cause SQLite lock deadlock).
   bool _flushing = false;
@@ -44,7 +44,10 @@ class NodeDexSqliteStore {
   /// Tracks the active flush Future so dispose() can await it.
   Future<void>? _activeFlush;
 
-  NodeDexSqliteStore(this._database);
+  NodeDexSqliteStore(
+    this._database, {
+    Duration saveDebounceDuration = const Duration(seconds: 2),
+  }) : _saveDebounceDuration = saveDebounceDuration;
 
   /// The underlying database instance.
   Database get _db => _database.database;
@@ -294,7 +297,12 @@ class NodeDexSqliteStore {
   Future<void> dispose() async {
     _cancelPendingSave();
     // Wait for any in-flight flush (e.g. from an unawaited onDispose callback).
-    await _activeFlush;
+    // Use a timeout to prevent hanging if the flush Future never completes
+    // (e.g. when triggered inside fakeAsync where FFI futures are orphaned).
+    if (_activeFlush != null) {
+      await _activeFlush!.timeout(const Duration(seconds: 5), onTimeout: () {});
+    }
+    _activeFlush = null;
     // Flush remaining pending saves.
     await _flushPendingSaves();
     _cache = null;

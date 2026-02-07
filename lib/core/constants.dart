@@ -22,11 +22,9 @@ class AppUrls {
   static String get worldMeshApiUrl =>
       dotenv.env['WORLD_MESH_API_URL'] ?? 'https://api.socialmesh.app';
 
-  /// Sigil API URL (Railway-hosted)
-  /// Uses Railway-generated domain until sigil.socialmesh.app DNS propagates.
+  /// Sigil API URL (Railway-hosted, custom domain)
   static String get sigilApiUrl =>
-      dotenv.env['SIGIL_API_URL'] ??
-      'https://sigil-api-production.up.railway.app';
+      dotenv.env['SIGIL_API_URL'] ?? 'https://sigil.socialmesh.app';
 
   // Legal & Documentation URLs
   static String get termsUrl => '$baseUrl/terms';

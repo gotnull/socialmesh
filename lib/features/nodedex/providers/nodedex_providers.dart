@@ -23,6 +23,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../core/logging.dart';
 import '../../../models/mesh_models.dart';
@@ -115,10 +116,33 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   final Map<int, DateTime> _lastEncounterTime = {};
 
   /// Minimum gap between encounter recordings for the same node.
-  static const Duration _encounterCooldown = Duration(minutes: 5);
+  /// Override via [encounterCooldownOverride] in tests.
+  static Duration _defaultEncounterCooldown = const Duration(minutes: 5);
 
   /// Interval for co-seen relationship batch updates.
-  static const Duration _coSeenFlushInterval = Duration(minutes: 2);
+  /// Override via [coSeenFlushIntervalOverride] in tests.
+  static Duration _defaultCoSeenFlushInterval = const Duration(minutes: 2);
+
+  /// Test-only override for encounter cooldown duration.
+  @visibleForTesting
+  static set encounterCooldownOverride(Duration value) =>
+      _defaultEncounterCooldown = value;
+
+  /// Test-only override for co-seen flush interval.
+  @visibleForTesting
+  static set coSeenFlushIntervalOverride(Duration value) =>
+      _defaultCoSeenFlushInterval = value;
+
+  /// Test-only: reset durations to production defaults.
+  @visibleForTesting
+  static void resetTestOverrides() {
+    _defaultEncounterCooldown = const Duration(minutes: 5);
+    _defaultCoSeenFlushInterval = const Duration(minutes: 2);
+  }
+
+  /// Test-only: manually trigger co-seen relationship flush.
+  @visibleForTesting
+  void flushCoSeenForTest() => _flushCoSeenRelationships();
 
   @override
   Map<int, NodeDexEntry> build() {
@@ -147,6 +171,9 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
 
     return {};
   }
+
+  Duration get _encounterCooldown => _defaultEncounterCooldown;
+  Duration get _coSeenFlushInterval => _defaultCoSeenFlushInterval;
 
   Future<void> _init() async {
     if (_store == null) return;
