@@ -131,7 +131,11 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
         title: displayName,
         actions: [
           IconButton(
-            icon: const Icon(Icons.style_outlined, size: 20),
+            icon: Icon(
+              Icons.style_outlined,
+              size: 20,
+              color: context.accentColor,
+            ),
             tooltip: 'Share Sigil Card',
             onPressed: () {
               AppLogging.nodeDex(
@@ -2500,70 +2504,75 @@ class _NodeDexStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   ) {
     final isPinned = shrinkOffset > 0 || overlapsContent;
 
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          height: maxExtent,
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: isPinned
-                ? context.card.withValues(alpha: 0.95)
-                : context.card,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(isPinned ? 0 : 16),
-            ),
-            border: Border(
-              top: BorderSide(
-                color: context.border.withValues(alpha: 0.15),
-                width: 0.5,
-              ),
-              left: BorderSide(
-                color: context.border.withValues(alpha: 0.15),
-                width: 0.5,
-              ),
-              right: BorderSide(
-                color: context.border.withValues(alpha: 0.15),
-                width: 0.5,
-              ),
-            ),
-            boxShadow: isPinned
-                ? [
-                    BoxShadow(
-                      color: context.background.withValues(alpha: 0.4),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 16, color: context.textTertiary),
-              const SizedBox(width: 8),
-              Text(
-                title.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: context.textTertiary,
-                  letterSpacing: 0.8,
+    final borderRadius = BorderRadius.vertical(
+      top: Radius.circular(isPinned ? 0 : 16),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ClipRRect(
+        borderRadius: borderRadius,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            height: maxExtent,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: isPinned
+                  ? context.card.withValues(alpha: 0.95)
+                  : context.card,
+              borderRadius: borderRadius,
+              border: Border(
+                top: BorderSide(
+                  color: context.border.withValues(alpha: 0.15),
+                  width: 0.5,
+                ),
+                left: BorderSide(
+                  color: context.border.withValues(alpha: 0.15),
+                  width: 0.5,
+                ),
+                right: BorderSide(
+                  color: context.border.withValues(alpha: 0.15),
+                  width: 0.5,
                 ),
               ),
-              const SizedBox(width: 4),
-              _SectionInfoButton(helpKey: helpKey),
-              const Spacer(),
-              if (trailing != null)
+              boxShadow: isPinned
+                  ? [
+                      BoxShadow(
+                        color: context.background.withValues(alpha: 0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 16, color: context.textTertiary),
+                const SizedBox(width: 8),
                 Text(
-                  trailing!,
+                  title.toUpperCase(),
                   style: TextStyle(
                     fontSize: 11,
+                    fontWeight: FontWeight.w700,
                     color: context.textTertiary,
-                    fontFamily: AppTheme.fontFamily,
+                    letterSpacing: 0.8,
                   ),
                 ),
-            ],
+                const SizedBox(width: 4),
+                _SectionInfoButton(helpKey: helpKey),
+                const Spacer(),
+                if (trailing != null)
+                  Text(
+                    trailing!,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: context.textTertiary,
+                      fontFamily: AppTheme.fontFamily,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

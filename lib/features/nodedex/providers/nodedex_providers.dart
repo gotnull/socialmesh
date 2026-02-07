@@ -1001,28 +1001,45 @@ class ConstellationData {
   /// Maximum edge weight for normalization.
   final int maxWeight;
 
-  const ConstellationData({
+  /// Sorted edge weights for percentile lookups.
+  final List<int> _sortedWeights;
+
+  ConstellationData({
     this.nodes = const [],
     this.edges = const [],
     this.maxWeight = 1,
-  });
+  }) : _sortedWeights = edges.map((e) => e.weight).toList()..sort();
 
   bool get isEmpty => nodes.isEmpty;
   int get nodeCount => nodes.length;
   int get edgeCount => edges.length;
+
+  /// Returns the edge weight at the given percentile (0.0–1.0).
+  ///
+  /// For example, `weightAtPercentile(0.75)` returns the weight value
+  /// below which 75% of edges fall. Used for edge density filtering.
+  int weightAtPercentile(double percentile) {
+    if (_sortedWeights.isEmpty) return 0;
+    final index = (percentile * (_sortedWeights.length - 1)).round();
+    return _sortedWeights[index.clamp(0, _sortedWeights.length - 1)];
+  }
+
+  /// Median edge weight — the natural threshold for "significant" edges.
+  int get medianWeight => weightAtPercentile(0.5);
 }
 
 /// Provider for the constellation graph data.
 ///
-/// Builds a force-directed-like layout using deterministic positioning
-/// based on node numbers. The positions are stable — they don't change
-/// between rebuilds unless nodes are added or removed.
+/// Builds a force-directed layout where strongly-connected nodes cluster
+/// together. The layout is deterministic — seeded from node number hashes
+/// and then refined through force simulation. Edge weight statistics are
+/// computed for UI-side density filtering.
 final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
   final entries = ref.watch(nodeDexProvider);
   final nodes = ref.watch(nodesProvider);
 
   if (entries.isEmpty) {
-    return const ConstellationData();
+    return ConstellationData();
   }
 
   final allEntries = entries.values.toList();
@@ -1059,26 +1076,139 @@ final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
     }
   }
 
-  // Build constellation nodes with deterministic positions.
-  // Uses a hash-based spiral layout: nodes are placed on a spiral
-  // pattern where the angle and radius are derived from the node number.
-  // This ensures stable, non-overlapping positions.
-  final constellationNodes = <ConstellationNode>[];
-  final nodeCount = allEntries.length;
+  final edgeList = edgeSet.values.toList();
 
+  // --- Force-directed layout ---
+  //
+  // 1. Seed positions deterministically from node number hashes.
+  // 2. Run force simulation: repulsion between all nodes, attraction
+  //    along edges (weighted). Only strong edges (above median) provide
+  //    attraction to avoid everything collapsing into a ball.
+  // 3. Normalize final positions to [0.05, 0.95].
+
+  final nodeCount = allEntries.length;
+  final posX = List<double>.filled(nodeCount, 0);
+  final posY = List<double>.filled(nodeCount, 0);
+  final nodeNumToIndex = <int, int>{};
+
+  // Seed initial positions from hash.
+  for (int i = 0; i < nodeCount; i++) {
+    final hash = _positionHash(allEntries[i].nodeNum);
+    final angle = (hash & 0xFFFF) / 65535.0 * 2.0 * 3.14159265358979;
+    final radius = 0.15 + ((hash >> 16) & 0xFFFF) / 65535.0 * 0.3;
+    posX[i] = 0.5 + radius * _fastCos(angle);
+    posY[i] = 0.5 + radius * _fastSin(angle);
+    nodeNumToIndex[allEntries[i].nodeNum] = i;
+  }
+
+  // Compute median weight for attraction threshold.
+  final sortedWeights = edgeList.map((e) => e.weight).toList()..sort();
+  final medianWeight = sortedWeights.isEmpty
+      ? 1
+      : sortedWeights[sortedWeights.length ~/ 2];
+
+  // Build an edge index for the simulation (only strong edges attract).
+  final attractionEdges = <(int, int, double)>[];
+  for (final edge in edgeList) {
+    final fromIdx = nodeNumToIndex[edge.from];
+    final toIdx = nodeNumToIndex[edge.to];
+    if (fromIdx == null || toIdx == null) continue;
+    // Only edges above median attract — prevents the hairball collapse.
+    if (edge.weight >= medianWeight) {
+      final normalizedWeight = edge.weight / maxWeight;
+      attractionEdges.add((fromIdx, toIdx, normalizedWeight));
+    }
+  }
+
+  // Force simulation parameters.
+  const iterations = 250;
+  const repulsionStrength = 0.008;
+  const attractionStrength = 0.04;
+  const dampingStart = 0.1;
+  const dampingEnd = 0.005;
+
+  for (int iter = 0; iter < iterations; iter++) {
+    // Temperature / damping decreases over iterations (simulated annealing).
+    final t = 1.0 - iter / iterations;
+    final damping = dampingEnd + (dampingStart - dampingEnd) * t;
+
+    final forceX = List<double>.filled(nodeCount, 0);
+    final forceY = List<double>.filled(nodeCount, 0);
+
+    // Repulsion: all pairs push apart (Barnes-Hut would be better for
+    // large N but 59^2 ≈ 3500 operations is trivial).
+    for (int i = 0; i < nodeCount; i++) {
+      for (int j = i + 1; j < nodeCount; j++) {
+        var dx = posX[i] - posX[j];
+        var dy = posY[i] - posY[j];
+        var distSq = dx * dx + dy * dy;
+        if (distSq < 1e-6) {
+          // Jitter to break exact overlaps.
+          dx = ((_positionHash(i * 31 + j) & 0xFFFF) / 65535.0 - 0.5) * 0.01;
+          dy = ((_positionHash(j * 31 + i) & 0xFFFF) / 65535.0 - 0.5) * 0.01;
+          distSq = dx * dx + dy * dy;
+        }
+        final force = repulsionStrength / distSq;
+        final fx = dx * force;
+        final fy = dy * force;
+        forceX[i] += fx;
+        forceY[i] += fy;
+        forceX[j] -= fx;
+        forceY[j] -= fy;
+      }
+    }
+
+    // Attraction: strong edges pull endpoints together.
+    for (final (fromIdx, toIdx, weight) in attractionEdges) {
+      final dx = posX[toIdx] - posX[fromIdx];
+      final dy = posY[toIdx] - posY[fromIdx];
+      final dist = _sqrt(dx * dx + dy * dy);
+      if (dist < 1e-6) continue;
+      final force = dist * attractionStrength * weight;
+      final fx = (dx / dist) * force;
+      final fy = (dy / dist) * force;
+      forceX[fromIdx] += fx;
+      forceY[fromIdx] += fy;
+      forceX[toIdx] -= fx;
+      forceY[toIdx] -= fy;
+    }
+
+    // Apply forces with damping.
+    for (int i = 0; i < nodeCount; i++) {
+      posX[i] += forceX[i] * damping;
+      posY[i] += forceY[i] * damping;
+    }
+  }
+
+  // Normalize positions to [0.05, 0.95].
+  double minX = double.infinity, maxX = double.negativeInfinity;
+  double minY = double.infinity, maxY = double.negativeInfinity;
+  for (int i = 0; i < nodeCount; i++) {
+    if (posX[i] < minX) minX = posX[i];
+    if (posX[i] > maxX) maxX = posX[i];
+    if (posY[i] < minY) minY = posY[i];
+    if (posY[i] > maxY) maxY = posY[i];
+  }
+  final rangeX = maxX - minX;
+  final rangeY = maxY - minY;
+  final range = rangeX > rangeY ? rangeX : rangeY;
+  if (range > 1e-6) {
+    final cx = (minX + maxX) / 2.0;
+    final cy = (minY + maxY) / 2.0;
+    for (int i = 0; i < nodeCount; i++) {
+      posX[i] = 0.5 + (posX[i] - cx) / range * 0.85;
+      posY[i] = 0.5 + (posY[i] - cy) / range * 0.85;
+      posX[i] = posX[i].clamp(0.05, 0.95);
+      posY[i] = posY[i].clamp(0.05, 0.95);
+    }
+  }
+
+  // Build constellation nodes.
+  final constellationNodes = <ConstellationNode>[];
   for (int i = 0; i < nodeCount; i++) {
     final entry = allEntries[i];
     final node = nodes[entry.nodeNum];
     final trait = ref.read(nodeDexTraitProvider(entry.nodeNum));
-
-    // Deterministic position from node number hash.
-    final hash = _positionHash(entry.nodeNum);
-    final angle = (hash & 0xFFFF) / 65535.0 * 3.14159265358979 * 2.0;
-    final radius = 0.15 + ((hash >> 16) & 0xFFFF) / 65535.0 * 0.35;
-
-    // Convert polar to cartesian, centered at (0.5, 0.5).
-    final x = 0.5 + radius * _fastCos(angle);
-    final y = 0.5 + radius * _fastSin(angle);
 
     constellationNodes.add(
       ConstellationNode(
@@ -1087,15 +1217,20 @@ final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
         sigil: entry.sigil,
         trait: trait.primary,
         connectionCount: entry.coSeenCount,
-        x: x.clamp(0.05, 0.95),
-        y: y.clamp(0.05, 0.95),
+        x: posX[i],
+        y: posY[i],
       ),
     );
   }
 
+  // Sort by connection count ascending so high-degree nodes render on top.
+  constellationNodes.sort(
+    (a, b) => a.connectionCount.compareTo(b.connectionCount),
+  );
+
   return ConstellationData(
     nodes: constellationNodes,
-    edges: edgeSet.values.toList(),
+    edges: edgeList,
     maxWeight: maxWeight,
   );
 });
@@ -1127,4 +1262,14 @@ double _fastSin(double x) {
 /// Fast cosine approximation for constellation layout.
 double _fastCos(double x) {
   return _fastSin(x + 3.14159265358979 / 2.0);
+}
+
+/// Fast square root (dart:math is fine but this avoids the import).
+double _sqrt(double x) {
+  if (x <= 0) return 0;
+  double guess = x / 2;
+  for (int i = 0; i < 8; i++) {
+    guess = (guess + x / guess) / 2;
+  }
+  return guess;
 }

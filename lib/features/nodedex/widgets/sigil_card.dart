@@ -928,7 +928,7 @@ class _StatsGrid extends StatelessWidget {
       _StatData(label: 'MSG', value: _formatCompact(entry.messageCount)),
       _StatData(
         label: 'SNR',
-        value: entry.bestSnr != null ? '${entry.bestSnr}' : '--',
+        value: entry.bestSnr != null ? '${entry.bestSnr}' : '—',
       ),
       _StatData(label: 'LNK', value: _formatCompact(entry.coSeenCount)),
       _StatData(label: 'AGE', value: _formatAge(entry.age)),
@@ -1007,7 +1007,7 @@ class _StatsGrid extends StatelessWidget {
   }
 
   static String _formatDistance(double? meters) {
-    if (meters == null) return '--';
+    if (meters == null) return '—';
     if (meters >= 1000) return '${(meters / 1000).toStringAsFixed(1)}km';
     return '${meters.round()}m';
   }

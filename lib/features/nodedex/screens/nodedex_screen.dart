@@ -30,7 +30,7 @@ import '../../../core/widgets/section_header.dart';
 import '../../../models/mesh_models.dart';
 import '../models/nodedex_entry.dart';
 import '../providers/nodedex_providers.dart';
-import '../widgets/import_sheet.dart';
+import '../../settings/settings_screen.dart';
 import '../widgets/sigil_painter.dart';
 import '../widgets/trait_badge.dart';
 import 'nodedex_detail_screen.dart';
@@ -89,58 +89,17 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
               tooltip: 'Mesh Constellation',
               onPressed: _openConstellation,
             ),
-            // Export / Import menu
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, size: 22),
-              tooltip: 'More actions',
-              color: context.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              onSelected: (value) {
-                switch (value) {
-                  case 'export':
-                    showNodeDexExportSheet(context: context, ref: ref);
-                  case 'import':
-                    startNodeDexImport(context: context, ref: ref);
-                }
+            // Settings link
+            IconButton(
+              icon: const Icon(Icons.settings_outlined, size: 22),
+              tooltip: 'Settings',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const SettingsScreen(),
+                  ),
+                );
               },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'export',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.file_upload_outlined,
-                        size: 18,
-                        color: context.textSecondary,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Export NodeDex',
-                        style: TextStyle(color: context.textPrimary),
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'import',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.file_download_outlined,
-                        size: 18,
-                        color: context.textSecondary,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Import NodeDex',
-                        style: TextStyle(color: context.textPrimary),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
             ),
           ],
           slivers: [

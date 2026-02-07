@@ -3,17 +3,13 @@
 // NodeDex Constellation Screen — interactive mesh graph visualization.
 //
 // Renders the co-seen node relationships as a constellation-style graph.
-// Each node is drawn as a colored dot using its sigil palette, with
-// edges connecting nodes that have been observed together. Edge thickness
-// reflects co-seen frequency.
+// Uses force-directed layout computed by nodeDexConstellationProvider for
+// meaningful spatial clustering. Key design principles:
 //
-// Layout is deterministic — positions are derived from node number hashes
-// via nodeDexConstellationProvider. The view supports:
-// - Pan and zoom via InteractiveViewer
-// - Tap a node to inspect it (shows info card, navigates to detail screen)
-// - Tap an edge to inspect the co-seen relationship (shows edge info card)
-// - Visual encoding of trait via halo color
-// - Edge weight visualization via opacity and width
+// - Clean by default: only significant edges shown, labels only on top nodes
+// - Focus mode: tap a node to see ALL its connections, everything else dims
+// - Edge density control: slider lets users tune visible edge threshold
+// - Tap edges to inspect co-seen relationships
 //
 // This screen is purely additive and Meshtastic-only.
 
@@ -36,11 +32,34 @@ import '../widgets/edge_detail_sheet.dart';
 import '../widgets/sigil_painter.dart';
 import 'nodedex_detail_screen.dart';
 
+// =============================================================================
+// Edge density presets
+// =============================================================================
+
+/// Controls how many edges are visible in the constellation.
+///
+/// The percentile value determines the minimum weight threshold:
+/// edges below this percentile are hidden.
+enum EdgeDensity {
+  sparse(0.80, 'Sparse'),
+  normal(0.60, 'Normal'),
+  dense(0.30, 'Dense'),
+  all(0.0, 'All');
+
+  final double percentile;
+  final String label;
+  const EdgeDensity(this.percentile, this.label);
+}
+
+// =============================================================================
+// Constellation Screen
+// =============================================================================
+
 /// Interactive constellation visualization of the mesh field journal.
 ///
 /// Shows all discovered nodes as a graph where edges represent
-/// co-seen relationships. The graph uses deterministic positioning
-/// so the layout is stable across rebuilds.
+/// co-seen relationships. Layout is force-directed — strongly connected
+/// nodes cluster together naturally.
 class NodeDexConstellationScreen extends ConsumerStatefulWidget {
   const NodeDexConstellationScreen({super.key});
 
@@ -54,13 +73,15 @@ class _NodeDexConstellationScreenState
     with SingleTickerProviderStateMixin {
   final TransformationController _transformController =
       TransformationController();
-  final GlobalKey _repaintBoundaryKey = GlobalKey();
 
   /// Currently selected node for the info overlay.
   int? _selectedNodeNum;
 
   /// Currently selected edge for the edge info overlay.
   ConstellationEdge? _selectedEdge;
+
+  /// Edge density level controlling visible edge threshold.
+  EdgeDensity _edgeDensity = EdgeDensity.normal;
 
   /// Animation controller for the pulse effect on selected node.
   late final AnimationController _pulseController;
@@ -72,9 +93,9 @@ class _NodeDexConstellationScreenState
     AppLogging.nodeDex('Constellation screen opened');
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
+    _pulseAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
   }
@@ -92,9 +113,24 @@ class _NodeDexConstellationScreenState
     final constellation = ref.watch(nodeDexConstellationProvider);
     final isDark = context.isDarkMode;
 
+    // Compute the weight threshold from the current density level.
+    final weightThreshold = constellation.edges.isEmpty
+        ? 0
+        : constellation.weightAtPercentile(_edgeDensity.percentile);
+
+    // Count visible edges for the stats bar.
+    final visibleEdgeCount = _selectedNodeNum != null
+        ? constellation.edges
+              .where(
+                (e) => e.from == _selectedNodeNum || e.to == _selectedNodeNum,
+              )
+              .length
+        : constellation.edges.where((e) => e.weight >= weightThreshold).length;
+
     AppLogging.nodeDex(
       'Constellation build — ${constellation.nodeCount} nodes, '
-      '${constellation.edgeCount} edges',
+      '$visibleEdgeCount/${constellation.edgeCount} edges visible '
+      '(density: ${_edgeDensity.label})',
     );
 
     return GlassScaffold.body(
@@ -119,7 +155,7 @@ class _NodeDexConstellationScreenState
                         center: Alignment.center,
                         radius: 1.2,
                         colors: isDark
-                            ? [context.background, const Color(0xFF0A0E1A)]
+                            ? [const Color(0xFF0F1320), const Color(0xFF060810)]
                             : [context.background, const Color(0xFFF0F2F8)],
                       ),
                     ),
@@ -128,55 +164,97 @@ class _NodeDexConstellationScreenState
 
                 // Interactive constellation graph
                 Positioned.fill(
-                  child: RepaintBoundary(
-                    key: _repaintBoundaryKey,
-                    child: InteractiveViewer(
-                      transformationController: _transformController,
-                      minScale: 0.3,
-                      maxScale: 4.0,
-                      boundaryMargin: const EdgeInsets.all(200),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final size = Size(
-                            math.max(constraints.maxWidth, 300),
-                            math.max(constraints.maxHeight, 300),
-                          );
-                          return GestureDetector(
-                            onTapUp: (details) =>
-                                _handleTap(details, size, constellation),
-                            child: AnimatedBuilder(
-                              animation: _pulseAnimation,
-                              builder: (context, _) {
-                                return CustomPaint(
-                                  size: size,
-                                  painter: _ConstellationPainter(
-                                    data: constellation,
-                                    isDark: isDark,
-                                    selectedNodeNum: _selectedNodeNum,
-                                    selectedEdge: _selectedEdge,
-                                    pulseValue: _pulseAnimation.value,
-                                    accentColor: context.accentColor,
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
+                  child: InteractiveViewer(
+                    transformationController: _transformController,
+                    minScale: 0.3,
+                    maxScale: 5.0,
+                    boundaryMargin: const EdgeInsets.all(300),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final size = Size(
+                          math.max(constraints.maxWidth, 300),
+                          math.max(constraints.maxHeight, 300),
+                        );
+                        return GestureDetector(
+                          onTapUp: (details) =>
+                              _handleTap(details, size, constellation),
+                          child: AnimatedBuilder(
+                            animation: _pulseAnimation,
+                            builder: (context, _) {
+                              return CustomPaint(
+                                size: size,
+                                painter: _ConstellationPainter(
+                                  data: constellation,
+                                  isDark: isDark,
+                                  selectedNodeNum: _selectedNodeNum,
+                                  selectedEdge: _selectedEdge,
+                                  pulseValue: _pulseAnimation.value,
+                                  accentColor: context.accentColor,
+                                  weightThreshold: weightThreshold,
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
 
-                // Stats bar at top
+                // Top controls: stats + density
                 Positioned(
                   left: 0,
                   right: 0,
                   top: 0,
-                  child: _StatsBar(
+                  child: _ControlBar(
                     nodeCount: constellation.nodeCount,
-                    edgeCount: constellation.edgeCount,
+                    visibleEdgeCount: visibleEdgeCount,
+                    totalEdgeCount: constellation.edgeCount,
+                    density: _edgeDensity,
+                    hasSelection: _selectedNodeNum != null,
+                    onDensityChanged: (d) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _edgeDensity = d);
+                    },
+                    onClearSelection: _selectedNodeNum != null
+                        ? () => setState(() {
+                            _selectedNodeNum = null;
+                            _selectedEdge = null;
+                          })
+                        : null,
                   ),
                 ),
+
+                // Hint text when nothing selected
+                if (_selectedNodeNum == null && _selectedEdge == null)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: MediaQuery.of(context).padding.bottom + 16,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: (isDark ? Colors.black : Colors.white)
+                              .withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: context.border.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Text(
+                          'Tap a node to explore its connections',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
 
                 // Selected node info card
                 if (_selectedNodeNum != null)
@@ -186,7 +264,10 @@ class _NodeDexConstellationScreenState
                     bottom: MediaQuery.of(context).padding.bottom + 16,
                     child: _NodeInfoCard(
                       nodeNum: _selectedNodeNum!,
-                      onClose: () => setState(() => _selectedNodeNum = null),
+                      onClose: () => setState(() {
+                        _selectedNodeNum = null;
+                        _selectedEdge = null;
+                      }),
                       onOpenDetail: () => _openDetail(_selectedNodeNum!),
                     ),
                   ),
@@ -213,9 +294,7 @@ class _NodeDexConstellationScreenState
                           context: context,
                           fromNodeNum: edge.from,
                           toNodeNum: edge.to,
-                          onOpenNodeDetail: (nodeNum) {
-                            _openDetail(nodeNum);
-                          },
+                          onOpenNodeDetail: _openDetail,
                         );
                       },
                     ),
@@ -224,6 +303,10 @@ class _NodeDexConstellationScreenState
             ),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Tap handling
+  // ---------------------------------------------------------------------------
 
   void _handleTap(
     TapUpDetails details,
@@ -259,15 +342,19 @@ class _NodeDexConstellationScreenState
     }
 
     if (nearestNode != null) {
-      final hexId =
-          '!${nearestNode.toRadixString(16).toUpperCase().padLeft(4, '0')}';
       AppLogging.nodeDex(
-        'Constellation node tapped: $hexId '
+        'Constellation node tapped: '
+        '!${nearestNode.toRadixString(16).toUpperCase().padLeft(4, '0')} '
         '(distance: ${nearestNodeDist.toStringAsFixed(1)}px)',
       );
       HapticFeedback.selectionClick();
       setState(() {
-        _selectedNodeNum = nearestNode;
+        // Toggle selection if tapping the same node.
+        if (_selectedNodeNum == nearestNode) {
+          _selectedNodeNum = null;
+        } else {
+          _selectedNodeNum = nearestNode;
+        }
         _selectedEdge = null;
       });
       return;
@@ -301,14 +388,11 @@ class _NodeDexConstellationScreenState
 
     HapticFeedback.selectionClick();
     if (nearestEdge != null) {
-      final fromHex =
-          '!${nearestEdge.from.toRadixString(16).toUpperCase().padLeft(4, '0')}';
-      final toHex =
-          '!${nearestEdge.to.toRadixString(16).toUpperCase().padLeft(4, '0')}';
       AppLogging.nodeDex(
-        'Constellation edge tapped: $fromHex ↔ $toHex '
-        '(weight: ${nearestEdge.weight}, '
-        'distance: ${nearestEdgeDist.toStringAsFixed(1)}px)',
+        'Constellation edge tapped: '
+        '!${nearestEdge.from.toRadixString(16).toUpperCase().padLeft(4, '0')} ↔ '
+        '!${nearestEdge.to.toRadixString(16).toUpperCase().padLeft(4, '0')} '
+        '(weight: ${nearestEdge.weight})',
       );
     } else {
       AppLogging.nodeDex('Constellation background tapped — deselecting');
@@ -326,46 +410,46 @@ class _NodeDexConstellationScreenState
   }
 
   /// Compute the shortest distance from a point to a line segment.
-  ///
-  /// Uses the standard projection formula:
-  /// - Project point P onto the line defined by A–B
-  /// - Clamp the projection parameter t to [0, 1]
-  /// - Return the distance from P to the clamped projection point
   double _pointToSegmentDistance(Offset point, Offset segA, Offset segB) {
     final dx = segB.dx - segA.dx;
     final dy = segB.dy - segA.dy;
     final lengthSq = dx * dx + dy * dy;
 
     if (lengthSq < 1e-10) {
-      // Degenerate segment (A == B).
       final px = point.dx - segA.dx;
       final py = point.dy - segA.dy;
       return math.sqrt(px * px + py * py);
     }
 
-    // Parameter t of the projection of point onto segment [0, 1].
     final t =
         ((point.dx - segA.dx) * dx + (point.dy - segA.dy) * dy) / lengthSq;
     final clamped = t.clamp(0.0, 1.0);
-
-    // Closest point on segment.
     final closestX = segA.dx + clamped * dx;
     final closestY = segA.dy + clamped * dy;
-
     final px = point.dx - closestX;
     final py = point.dy - closestY;
     return math.sqrt(px * px + py * py);
   }
 
+  // ---------------------------------------------------------------------------
+  // Actions
+  // ---------------------------------------------------------------------------
+
   void _resetView() {
     AppLogging.nodeDex('Constellation view reset to identity');
     HapticFeedback.lightImpact();
     _transformController.value = Matrix4.identity();
+    setState(() {
+      _selectedNodeNum = null;
+      _selectedEdge = null;
+    });
   }
 
   void _openDetail(int nodeNum) {
-    final hexId = '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
-    AppLogging.nodeDex('Constellation → opening detail for $hexId');
+    AppLogging.nodeDex(
+      'Constellation → opening detail for '
+      '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}',
+    );
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => NodeDexDetailScreen(nodeNum: nodeNum),
@@ -420,6 +504,7 @@ class _ConstellationPainter extends CustomPainter {
   final ConstellationEdge? selectedEdge;
   final double pulseValue;
   final Color accentColor;
+  final int weightThreshold;
 
   _ConstellationPainter({
     required this.data,
@@ -428,13 +513,34 @@ class _ConstellationPainter extends CustomPainter {
     this.selectedEdge,
     required this.pulseValue,
     required this.accentColor,
+    required this.weightThreshold,
   });
+
+  /// Set of node numbers directly connected to the selected node.
+  Set<int> get _selectedNeighbors {
+    if (selectedNodeNum == null) return const {};
+    final neighbors = <int>{};
+    for (final edge in data.edges) {
+      if (edge.from == selectedNodeNum) neighbors.add(edge.to);
+      if (edge.to == selectedNodeNum) neighbors.add(edge.from);
+    }
+    return neighbors;
+  }
+
+  /// Top N nodes by connection count for default label display.
+  Set<int> get _topNodes {
+    if (data.nodes.isEmpty) return const {};
+    // Show labels for top 5 nodes only when nothing is selected.
+    final sorted = [...data.nodes]
+      ..sort((a, b) => b.connectionCount.compareTo(a.connectionCount));
+    final count = math.min(5, sorted.length);
+    return sorted.take(count).map((n) => n.nodeNum).toSet();
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
     if (data.isEmpty) return;
 
-    // Build a position lookup for edge drawing.
     final positions = <int, Offset>{};
     for (final node in data.nodes) {
       positions[node.nodeNum] = Offset(
@@ -443,181 +549,271 @@ class _ConstellationPainter extends CustomPainter {
       );
     }
 
+    final neighbors = _selectedNeighbors;
+    final topNodes = selectedNodeNum == null ? _topNodes : const <int>{};
+
     // Draw edges first (underneath nodes).
-    _drawEdges(canvas, positions);
+    _drawEdges(canvas, positions, neighbors);
 
     // Draw nodes on top.
-    _drawNodes(canvas, size, positions);
+    _drawNodes(canvas, size, positions, neighbors, topNodes);
   }
 
-  void _drawEdges(Canvas canvas, Map<int, Offset> positions) {
+  // ---------------------------------------------------------------------------
+  // Edge drawing
+  // ---------------------------------------------------------------------------
+
+  void _drawEdges(
+    Canvas canvas,
+    Map<int, Offset> positions,
+    Set<int> neighbors,
+  ) {
+    final hasFocus = selectedNodeNum != null;
+
     for (final edge in data.edges) {
       final from = positions[edge.from];
       final to = positions[edge.to];
       if (from == null || to == null) continue;
 
-      // Normalize edge weight for visual mapping.
-      final normalizedWeight = data.maxWeight > 1
-          ? edge.weight / data.maxWeight.toDouble()
-          : 0.5;
-
-      // Edge opacity and width scale with weight.
-      final baseAlpha = isDark ? 0.15 : 0.12;
-      final alpha = baseAlpha + normalizedWeight * (isDark ? 0.35 : 0.28);
-      final strokeWidth = 0.5 + normalizedWeight * 2.0;
-
-      // Determine edge color: blend the two endpoint node colors.
-      final fromNode = data.nodes.cast<ConstellationNode?>().firstWhere(
-        (n) => n!.nodeNum == edge.from,
-        orElse: () => null,
-      );
-      final toNode = data.nodes.cast<ConstellationNode?>().firstWhere(
-        (n) => n!.nodeNum == edge.to,
-        orElse: () => null,
-      );
-
-      Color edgeColor;
-      if (fromNode?.sigil != null && toNode?.sigil != null) {
-        edgeColor =
-            Color.lerp(
-              fromNode!.sigil!.primaryColor,
-              toNode!.sigil!.primaryColor,
-              0.5,
-            ) ??
-            (isDark ? Colors.white : Colors.black);
-      } else {
-        edgeColor = isDark ? Colors.white : Colors.black;
-      }
-
-      // Highlight edges connected to the selected node or the selected edge.
-      final isNodeHighlighted =
-          selectedNodeNum != null &&
+      final isConnectedToSelected =
+          hasFocus &&
           (edge.from == selectedNodeNum || edge.to == selectedNodeNum);
 
-      final isEdgeSelected =
+      final isSelectedEdge =
           selectedEdge != null &&
           edge.from == selectedEdge!.from &&
           edge.to == selectedEdge!.to;
 
-      double effectiveAlpha = alpha;
-      double effectiveStrokeWidth = strokeWidth;
-
-      if (isEdgeSelected) {
-        // Selected edge gets a strong glow and pulse effect.
-        effectiveAlpha = (alpha + 0.4 + pulseValue * 0.1).clamp(0.0, 1.0);
-        effectiveStrokeWidth = strokeWidth + 2.0;
-
-        // Draw glow behind selected edge.
-        final glowPaint = Paint()
-          ..color = accentColor.withValues(alpha: 0.15 * pulseValue)
-          ..strokeWidth = effectiveStrokeWidth + 6.0
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0);
-        canvas.drawLine(from, to, glowPaint);
-      } else if (isNodeHighlighted) {
-        effectiveAlpha = (alpha + 0.3).clamp(0.0, 1.0);
-        effectiveStrokeWidth = strokeWidth + 1.0;
+      // --- Visibility rules ---
+      // Focus mode: only draw edges connected to the selected node.
+      // Default mode: only draw edges above the weight threshold.
+      if (hasFocus && !isConnectedToSelected && !isSelectedEdge) continue;
+      if (!hasFocus && edge.weight < weightThreshold && !isSelectedEdge) {
+        continue;
       }
 
-      final paint = Paint()
-        ..color = edgeColor.withValues(alpha: effectiveAlpha)
-        ..strokeWidth = effectiveStrokeWidth
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
+      // Normalize weight for visual mapping.
+      final normalizedWeight = data.maxWeight > 1
+          ? edge.weight / data.maxWeight.toDouble()
+          : 0.5;
 
-      canvas.drawLine(from, to, paint);
+      if (isSelectedEdge) {
+        // Selected edge: bright glow + thick line.
+        _drawSelectedEdge(canvas, from, to, normalizedWeight);
+      } else if (isConnectedToSelected) {
+        // Focus mode: connected edge — visible and colored.
+        _drawFocusEdge(canvas, from, to, edge, normalizedWeight);
+      } else {
+        // Default mode: subtle, thin line.
+        _drawDefaultEdge(canvas, from, to, edge, normalizedWeight);
+      }
     }
   }
 
-  void _drawNodes(Canvas canvas, Size size, Map<int, Offset> positions) {
+  void _drawSelectedEdge(
+    Canvas canvas,
+    Offset from,
+    Offset to,
+    double normalizedWeight,
+  ) {
+    final strokeWidth = 1.5 + normalizedWeight * 2.5;
+
+    // Glow layer.
+    final glowPaint = Paint()
+      ..color = accentColor.withValues(alpha: 0.2 * pulseValue)
+      ..strokeWidth = strokeWidth + 8.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0);
+    canvas.drawLine(from, to, glowPaint);
+
+    // Core line.
+    final paint = Paint()
+      ..color = accentColor.withValues(alpha: 0.6 + 0.3 * pulseValue)
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(from, to, paint);
+  }
+
+  void _drawFocusEdge(
+    Canvas canvas,
+    Offset from,
+    Offset to,
+    ConstellationEdge edge,
+    double normalizedWeight,
+  ) {
+    // Blend the two endpoint colors.
+    final color = _edgeColor(edge) ?? accentColor;
+    final alpha = 0.2 + normalizedWeight * 0.5;
+    final strokeWidth = 0.8 + normalizedWeight * 2.0;
+
+    final paint = Paint()
+      ..color = color.withValues(alpha: alpha)
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(from, to, paint);
+  }
+
+  void _drawDefaultEdge(
+    Canvas canvas,
+    Offset from,
+    Offset to,
+    ConstellationEdge edge,
+    double normalizedWeight,
+  ) {
+    // Very subtle — just enough to hint at structure.
+    final color = _edgeColor(edge) ?? (isDark ? Colors.white : Colors.black);
+    final baseAlpha = isDark ? 0.04 : 0.03;
+    final alpha = baseAlpha + normalizedWeight * (isDark ? 0.12 : 0.08);
+    final strokeWidth = 0.3 + normalizedWeight * 1.0;
+
+    final paint = Paint()
+      ..color = color.withValues(alpha: alpha)
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(from, to, paint);
+  }
+
+  Color? _edgeColor(ConstellationEdge edge) {
+    final fromNode = data.nodes.cast<ConstellationNode?>().firstWhere(
+      (n) => n!.nodeNum == edge.from,
+      orElse: () => null,
+    );
+    final toNode = data.nodes.cast<ConstellationNode?>().firstWhere(
+      (n) => n!.nodeNum == edge.to,
+      orElse: () => null,
+    );
+    if (fromNode?.sigil != null && toNode?.sigil != null) {
+      return Color.lerp(
+        fromNode!.sigil!.primaryColor,
+        toNode!.sigil!.primaryColor,
+        0.5,
+      );
+    }
+    return null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Node drawing
+  // ---------------------------------------------------------------------------
+
+  void _drawNodes(
+    Canvas canvas,
+    Size size,
+    Map<int, Offset> positions,
+    Set<int> neighbors,
+    Set<int> topNodes,
+  ) {
+    final hasFocus = selectedNodeNum != null;
+
     for (final node in data.nodes) {
       final pos = positions[node.nodeNum];
       if (pos == null) continue;
 
       final isSelected = node.nodeNum == selectedNodeNum;
+      final isNeighbor = neighbors.contains(node.nodeNum);
       final isEdgeEndpoint =
           selectedEdge != null &&
           (node.nodeNum == selectedEdge!.from ||
               node.nodeNum == selectedEdge!.to);
+
       final sigil = node.sigil ?? SigilGenerator.generate(node.nodeNum);
       final primaryColor = sigil.primaryColor;
-      final traitColor = node.trait.color;
 
-      // Node radius scales with connection count.
-      const baseRadius = 6.0;
+      // Dim non-relevant nodes in focus mode.
+      final isDimmed = hasFocus && !isSelected && !isNeighbor;
+
+      // Node radius scales with connection count (subtly).
+      const baseRadius = 5.0;
       final connectionBonus =
-          math.min(node.connectionCount.toDouble(), 10.0) * 0.5;
+          math.min(node.connectionCount.toDouble(), 15.0) * 0.3;
       final radius = baseRadius + connectionBonus;
 
-      // Draw selection halo.
+      // --- Selection halo ---
       if (isSelected) {
-        final haloRadius = radius + 8.0 + (pulseValue * 4.0);
+        final haloRadius = radius + 10.0 + (pulseValue * 5.0);
         final haloPaint = Paint()
-          ..color = accentColor.withValues(alpha: 0.2 * pulseValue)
+          ..color = accentColor.withValues(alpha: 0.12 * pulseValue)
           ..style = PaintingStyle.fill;
         canvas.drawCircle(pos, haloRadius, haloPaint);
 
         final haloRingPaint = Paint()
-          ..color = accentColor.withValues(alpha: 0.5 * pulseValue)
+          ..color = accentColor.withValues(alpha: 0.4 * pulseValue)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.5;
         canvas.drawCircle(pos, haloRadius, haloRingPaint);
       }
 
-      // Draw edge-endpoint halo (softer than full selection).
+      // --- Edge endpoint halo ---
       if (isEdgeEndpoint && !isSelected) {
-        final haloRadius = radius + 5.0 + (pulseValue * 2.0);
+        final haloRadius = radius + 6.0 + (pulseValue * 3.0);
         final haloPaint = Paint()
-          ..color = primaryColor.withValues(alpha: 0.15 * pulseValue)
+          ..color = primaryColor.withValues(alpha: 0.1 * pulseValue)
           ..style = PaintingStyle.fill;
         canvas.drawCircle(pos, haloRadius, haloPaint);
-
-        final haloRingPaint = Paint()
-          ..color = primaryColor.withValues(alpha: 0.35 * pulseValue)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.0;
-        canvas.drawCircle(pos, haloRadius, haloRingPaint);
       }
 
-      // Draw trait color ring.
-      if (node.trait != NodeTrait.unknown) {
+      // --- Trait ring (only for non-dimmed nodes) ---
+      if (!isDimmed && node.trait != NodeTrait.unknown) {
+        final traitAlpha = isSelected || isNeighbor || isEdgeEndpoint
+            ? 0.7
+            : 0.25;
         final ringPaint = Paint()
-          ..color = traitColor.withValues(
-            alpha: isSelected || isEdgeEndpoint ? 0.8 : 0.4,
-          )
+          ..color = node.trait.color.withValues(alpha: traitAlpha)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.0;
-        canvas.drawCircle(pos, radius + 3.0, ringPaint);
+          ..strokeWidth = 1.5;
+        canvas.drawCircle(pos, radius + 2.5, ringPaint);
       }
 
-      // Draw outer glow.
-      final glowPaint = Paint()
-        ..color = primaryColor.withValues(
-          alpha: isSelected || isEdgeEndpoint ? 0.25 : 0.1,
-        )
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6.0);
-      canvas.drawCircle(pos, radius + 2.0, glowPaint);
+      // --- Outer glow ---
+      if (!isDimmed) {
+        final glowAlpha = isSelected || isNeighbor ? 0.2 : 0.06;
+        final glowPaint = Paint()
+          ..color = primaryColor.withValues(alpha: glowAlpha)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0);
+        canvas.drawCircle(pos, radius + 1.5, glowPaint);
+      }
 
-      // Draw node fill.
+      // --- Node fill ---
+      final fillAlpha = isDimmed
+          ? 0.15
+          : (isSelected || isNeighbor ? 1.0 : 0.7);
       final fillPaint = Paint()
-        ..color = primaryColor.withValues(
-          alpha: isSelected || isEdgeEndpoint ? 1.0 : 0.85,
-        )
+        ..color = primaryColor.withValues(alpha: fillAlpha)
         ..style = PaintingStyle.fill;
-      canvas.drawCircle(pos, radius, fillPaint);
+      canvas.drawCircle(pos, isDimmed ? radius * 0.7 : radius, fillPaint);
 
-      // Draw a lighter center highlight.
-      final highlightPaint = Paint()
-        ..color = Colors.white.withValues(
-          alpha: isSelected || isEdgeEndpoint ? 0.5 : 0.25,
-        )
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(pos, radius * 0.4, highlightPaint);
+      // --- Center highlight ---
+      if (!isDimmed) {
+        final highlightAlpha = isSelected ? 0.5 : 0.2;
+        final highlightPaint = Paint()
+          ..color = Colors.white.withValues(alpha: highlightAlpha)
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(pos, radius * 0.35, highlightPaint);
+      }
 
-      // Draw node label for selected, edge-endpoint, or well-connected nodes.
-      if (isSelected || isEdgeEndpoint || node.connectionCount >= 3) {
-        _drawLabel(canvas, pos, radius, node.displayName, primaryColor);
+      // --- Label ---
+      final showLabel =
+          isSelected ||
+          isNeighbor ||
+          isEdgeEndpoint ||
+          (!hasFocus && topNodes.contains(node.nodeNum));
+
+      if (showLabel && !isDimmed) {
+        final labelAlpha = isSelected || isNeighbor || isEdgeEndpoint
+            ? 0.9
+            : 0.6;
+        _drawLabel(
+          canvas,
+          pos,
+          radius,
+          node.displayName,
+          primaryColor,
+          labelAlpha,
+        );
       }
     }
   }
@@ -628,16 +824,14 @@ class _ConstellationPainter extends CustomPainter {
     double nodeRadius,
     String label,
     Color color,
+    double alpha,
   ) {
-    // Truncate long labels.
-    final displayLabel = label.length > 14
-        ? '${label.substring(0, 12)}\u2026'
+    final displayLabel = label.length > 16
+        ? '${label.substring(0, 14)}\u2026'
         : label;
 
     final textStyle = ui.TextStyle(
-      color: isDark
-          ? Colors.white.withValues(alpha: 0.9)
-          : Colors.black.withValues(alpha: 0.85),
+      color: (isDark ? Colors.white : Colors.black).withValues(alpha: alpha),
       fontSize: 10,
       fontWeight: FontWeight.w500,
     );
@@ -654,28 +848,30 @@ class _ConstellationPainter extends CustomPainter {
           ..addText(displayLabel);
 
     final paragraph = paragraphBuilder.build()
-      ..layout(const ui.ParagraphConstraints(width: 100));
+      ..layout(const ui.ParagraphConstraints(width: 120));
 
     final textOffset = Offset(
       position.dx - paragraph.width / 2,
       position.dy + nodeRadius + 6,
     );
 
-    // Draw a subtle background behind the text for readability.
+    // Subtle background pill behind the text.
     final bgRect = RRect.fromRectAndRadius(
       Rect.fromCenter(
         center: Offset(
           textOffset.dx + paragraph.width / 2,
           textOffset.dy + paragraph.height / 2,
         ),
-        width: paragraph.width + 8,
-        height: paragraph.height + 4,
+        width: paragraph.width + 10,
+        height: paragraph.height + 5,
       ),
-      const Radius.circular(4),
+      const Radius.circular(5),
     );
 
     final bgPaint = Paint()
-      ..color = (isDark ? Colors.black : Colors.white).withValues(alpha: 0.6);
+      ..color = (isDark ? const Color(0xFF0F1320) : Colors.white).withValues(
+        alpha: 0.7,
+      );
     canvas.drawRRect(bgRect, bgPaint);
 
     canvas.drawParagraph(paragraph, textOffset);
@@ -687,19 +883,33 @@ class _ConstellationPainter extends CustomPainter {
         oldDelegate.selectedNodeNum != selectedNodeNum ||
         oldDelegate.selectedEdge != selectedEdge ||
         oldDelegate.pulseValue != pulseValue ||
-        oldDelegate.isDark != isDark;
+        oldDelegate.isDark != isDark ||
+        oldDelegate.weightThreshold != weightThreshold;
   }
 }
 
 // =============================================================================
-// Stats Bar
+// Control Bar
 // =============================================================================
 
-class _StatsBar extends StatelessWidget {
+class _ControlBar extends StatelessWidget {
   final int nodeCount;
-  final int edgeCount;
+  final int visibleEdgeCount;
+  final int totalEdgeCount;
+  final EdgeDensity density;
+  final bool hasSelection;
+  final ValueChanged<EdgeDensity> onDensityChanged;
+  final VoidCallback? onClearSelection;
 
-  const _StatsBar({required this.nodeCount, required this.edgeCount});
+  const _ControlBar({
+    required this.nodeCount,
+    required this.visibleEdgeCount,
+    required this.totalEdgeCount,
+    required this.density,
+    required this.hasSelection,
+    required this.onDensityChanged,
+    this.onClearSelection,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -707,43 +917,145 @@ class _StatsBar extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.border.withValues(alpha: 0.3)),
+        color: (isDark ? const Color(0xFF0F1320) : Colors.white).withValues(
+          alpha: 0.8,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.border.withValues(alpha: 0.2)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.scatter_plot_outlined,
-            size: 16,
-            color: context.textSecondary,
+          // Stats row
+          Row(
+            children: [
+              Icon(
+                Icons.scatter_plot_outlined,
+                size: 14,
+                color: context.textTertiary,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                '$nodeCount nodes',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: context.textSecondary,
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 12,
+                margin: const EdgeInsets.symmetric(horizontal: 10),
+                color: context.border.withValues(alpha: 0.2),
+              ),
+              Icon(Icons.link, size: 14, color: context.textTertiary),
+              const SizedBox(width: 5),
+              Text(
+                hasSelection
+                    ? '$visibleEdgeCount links'
+                    : '$visibleEdgeCount / $totalEdgeCount links',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: context.textSecondary,
+                ),
+              ),
+              const Spacer(),
+              if (hasSelection && onClearSelection != null)
+                GestureDetector(
+                  onTap: onClearSelection,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.close, size: 10, color: context.accentColor),
+                        const SizedBox(width: 3),
+                        Text(
+                          'Clear',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: context.accentColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(width: 6),
-          Text(
-            '$nodeCount nodes',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: context.textSecondary,
-              fontWeight: FontWeight.w600,
+
+          // Density selector (hidden when a node is focused)
+          if (!hasSelection) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  'DENSITY',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: context.textTertiary,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Row(
+                    children: EdgeDensity.values.map((d) {
+                      final isActive = d == density;
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () => onDensityChanged(d),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            padding: const EdgeInsets.symmetric(vertical: 5),
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? context.accentColor.withValues(alpha: 0.15)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: isActive
+                                    ? context.accentColor.withValues(alpha: 0.3)
+                                    : context.border.withValues(alpha: 0.15),
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                d.label,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: isActive
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: isActive
+                                      ? context.accentColor
+                                      : context.textTertiary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
             ),
-          ),
-          Container(
-            width: 1,
-            height: 14,
-            margin: const EdgeInsets.symmetric(horizontal: 12),
-            color: context.border.withValues(alpha: 0.3),
-          ),
-          Icon(Icons.link, size: 16, color: context.textSecondary),
-          const SizedBox(width: 6),
-          Text(
-            '$edgeCount links',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: context.textSecondary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          ],
         ],
       ),
     );
@@ -777,19 +1089,19 @@ class _NodeInfoCard extends ConsumerWidget {
 
     final sigil = entry.sigil ?? SigilGenerator.generate(nodeNum);
     final displayName = node?.displayName ?? 'Node $nodeNum';
-    final hexId = '!${nodeNum.toRadixString(16).padLeft(8, '0')}';
+    final hexId = '!${nodeNum.toRadixString(16).toUpperCase().padLeft(8, '0')}';
 
     return Material(
       color: Colors.transparent,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xE6181C28) : const Color(0xE6FFFFFF),
+          color: isDark ? const Color(0xE6121724) : const Color(0xE6FFFFFF),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: sigil.primaryColor.withValues(alpha: 0.3)),
+          border: Border.all(color: sigil.primaryColor.withValues(alpha: 0.25)),
           boxShadow: [
             BoxShadow(
-              color: sigil.primaryColor.withValues(alpha: 0.15),
+              color: sigil.primaryColor.withValues(alpha: 0.1),
               blurRadius: 20,
               spreadRadius: 2,
             ),
@@ -801,8 +1113,8 @@ class _NodeInfoCard extends ConsumerWidget {
             Row(
               children: [
                 // Sigil avatar
-                SigilAvatar(sigil: sigil, nodeNum: nodeNum, size: 44),
-                const SizedBox(width: 12),
+                SigilAvatar(sigil: sigil, nodeNum: nodeNum, size: 40),
+                const SizedBox(width: 10),
 
                 // Name and metadata
                 Expanded(
@@ -811,9 +1123,10 @@ class _NodeInfoCard extends ConsumerWidget {
                     children: [
                       Text(
                         displayName,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: context.textPrimary,
+                        style: TextStyle(
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: context.textPrimary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -821,10 +1134,10 @@ class _NodeInfoCard extends ConsumerWidget {
                       const SizedBox(height: 2),
                       Text(
                         hexId,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        style: TextStyle(
+                          fontSize: 10,
                           color: context.textTertiary,
-                          fontFamily: 'monospace',
-                          fontSize: 11,
+                          fontFamily: AppTheme.fontFamily,
                         ),
                       ),
                     ],
@@ -834,18 +1147,19 @@ class _NodeInfoCard extends ConsumerWidget {
                 // Trait badge
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                    horizontal: 7,
+                    vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: trait.primary.color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    color: trait.primary.color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     trait.primary.displayLabel,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: trait.primary.color,
+                    style: TextStyle(
+                      fontSize: 10,
                       fontWeight: FontWeight.w600,
+                      color: trait.primary.color,
                     ),
                   ),
                 ),
@@ -857,14 +1171,14 @@ class _NodeInfoCard extends ConsumerWidget {
                   onTap: onClose,
                   child: Icon(
                     Icons.close,
-                    size: 20,
+                    size: 18,
                     color: context.textTertiary,
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
             // Quick stats row
             Row(
@@ -890,16 +1204,16 @@ class _NodeInfoCard extends ConsumerWidget {
                 // Open detail button
                 TextButton.icon(
                   onPressed: onOpenDetail,
-                  icon: const Icon(Icons.open_in_new, size: 16),
+                  icon: const Icon(Icons.open_in_new, size: 14),
                   label: const Text('Profile'),
                   style: TextButton.styleFrom(
                     foregroundColor: sigil.primaryColor,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+                      horizontal: 10,
+                      vertical: 4,
                     ),
                     textStyle: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -952,7 +1266,6 @@ class _EdgeInfoCard extends ConsumerWidget {
     final fromName = fromNode?.displayName ?? 'Node ${edge.from}';
     final toName = toNode?.displayName ?? 'Node ${edge.to}';
 
-    // Blend the two endpoint colors for the card accent.
     final blendedColor =
         Color.lerp(fromSigil.primaryColor, toSigil.primaryColor, 0.5) ??
         context.accentColor;
@@ -960,14 +1273,14 @@ class _EdgeInfoCard extends ConsumerWidget {
     return Material(
       color: Colors.transparent,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xE6181C28) : const Color(0xE6FFFFFF),
+          color: isDark ? const Color(0xE6121724) : const Color(0xE6FFFFFF),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: blendedColor.withValues(alpha: 0.3)),
+          border: Border.all(color: blendedColor.withValues(alpha: 0.25)),
           boxShadow: [
             BoxShadow(
-              color: blendedColor.withValues(alpha: 0.12),
+              color: blendedColor.withValues(alpha: 0.08),
               blurRadius: 20,
               spreadRadius: 2,
             ),
@@ -976,33 +1289,34 @@ class _EdgeInfoCard extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header: edge icon + title + close
+            // Header
             Row(
               children: [
                 Container(
-                  width: 36,
-                  height: 36,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        fromSigil.primaryColor.withValues(alpha: 0.2),
-                        toSigil.primaryColor.withValues(alpha: 0.2),
+                        fromSigil.primaryColor.withValues(alpha: 0.15),
+                        toSigil.primaryColor.withValues(alpha: 0.15),
                       ],
                     ),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: blendedColor.withValues(alpha: 0.3),
+                      color: blendedColor.withValues(alpha: 0.2),
                     ),
                   ),
-                  child: Icon(Icons.link, size: 18, color: blendedColor),
+                  child: Icon(Icons.link, size: 16, color: blendedColor),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Constellation Link',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: context.textPrimary,
+                    style: TextStyle(
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
                     ),
                   ),
                 ),
@@ -1010,19 +1324,18 @@ class _EdgeInfoCard extends ConsumerWidget {
                   onTap: onClose,
                   child: Icon(
                     Icons.close,
-                    size: 20,
+                    size: 18,
                     color: context.textTertiary,
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Endpoint nodes row
             Row(
               children: [
-                // From node
                 Expanded(
                   child: _EdgeEndpoint(
                     sigil: fromSigil,
@@ -1031,31 +1344,29 @@ class _EdgeInfoCard extends ConsumerWidget {
                     onTap: () => onOpenNodeDetail(edge.from),
                   ),
                 ),
-
-                // Connection indicator
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
                   child: Column(
                     children: [
                       Icon(
                         Icons.sync_alt,
-                        size: 16,
-                        color: blendedColor.withValues(alpha: 0.6),
+                        size: 14,
+                        color: blendedColor.withValues(alpha: 0.5),
                       ),
                       const SizedBox(height: 2),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
+                          horizontal: 5,
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: blendedColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
+                          color: blendedColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(5),
                         ),
                         child: Text(
                           '${edge.weight}x',
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 9,
                             fontWeight: FontWeight.w700,
                             color: blendedColor,
                             fontFamily: AppTheme.fontFamily,
@@ -1065,8 +1376,6 @@ class _EdgeInfoCard extends ConsumerWidget {
                     ],
                   ),
                 ),
-
-                // To node
                 Expanded(
                   child: _EdgeEndpoint(
                     sigil: toSigil,
@@ -1078,18 +1387,18 @@ class _EdgeInfoCard extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
             // Stats row
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: (isDark ? Colors.white : Colors.black).withValues(
-                  alpha: 0.04,
+                  alpha: 0.03,
                 ),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: context.border.withValues(alpha: 0.15),
+                  color: context.border.withValues(alpha: 0.1),
                 ),
               ),
               child: Row(
@@ -1112,60 +1421,39 @@ class _EdgeInfoCard extends ConsumerWidget {
                       value: _formatRelativeTime(edge.timeSinceLastSeen),
                       label: 'last seen',
                     ),
-                  if (edge.messageCount > 0)
-                    _QuickStat(
-                      icon: Icons.chat_bubble_outline,
-                      value: '${edge.messageCount}',
-                      label: 'messages',
-                    ),
                 ],
               ),
             ),
 
-            // Relationship age line
-            if (edge.relationshipAge != null &&
-                edge.relationshipAge!.inHours >= 1)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  'Linked for ${_formatDuration(edge.relationshipAge!)}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: context.textTertiary,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-
             // View Details button
             if (onViewDetails != null)
               Padding(
-                padding: const EdgeInsets.only(top: 10),
+                padding: const EdgeInsets.only(top: 8),
                 child: SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: onViewDetails,
                     icon: Icon(
                       Icons.open_in_new_outlined,
-                      size: 14,
+                      size: 12,
                       color: blendedColor,
                     ),
                     label: Text(
                       'View Details',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: blendedColor,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(
-                        color: blendedColor.withValues(alpha: 0.3),
+                        color: blendedColor.withValues(alpha: 0.2),
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
                     ),
                   ),
                 ),
@@ -1183,24 +1471,6 @@ class _EdgeInfoCard extends ConsumerWidget {
     if (duration.inHours < 24) return '${duration.inHours}h ago';
     if (duration.inDays < 30) return '${duration.inDays}d ago';
     return '${(duration.inDays / 30).floor()}mo ago';
-  }
-
-  String _formatDuration(Duration duration) {
-    if (duration.inDays >= 365) {
-      final years = duration.inDays ~/ 365;
-      final months = (duration.inDays % 365) ~/ 30;
-      if (months > 0) return '$years yr $months mo';
-      return '$years yr';
-    }
-    if (duration.inDays >= 30) {
-      final months = duration.inDays ~/ 30;
-      final days = duration.inDays % 30;
-      if (days > 0) return '$months mo $days d';
-      return '$months mo';
-    }
-    if (duration.inDays >= 1) return '${duration.inDays} d';
-    if (duration.inHours >= 1) return '${duration.inHours} hr';
-    return '${duration.inMinutes} min';
   }
 }
 
@@ -1227,27 +1497,18 @@ class _EdgeEndpoint extends StatelessWidget {
       onTap: onTap,
       child: Column(
         children: [
-          SigilAvatar(sigil: sigil, nodeNum: nodeNum, size: 36),
-          const SizedBox(height: 6),
+          SigilAvatar(sigil: sigil, nodeNum: nodeNum, size: 32),
+          const SizedBox(height: 4),
           Text(
             name,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w500,
               color: context.textPrimary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}',
-            style: TextStyle(
-              fontSize: 9,
-              color: context.textTertiary,
-              fontFamily: 'monospace',
-            ),
           ),
         ],
       ),
@@ -1273,18 +1534,18 @@ class _QuickStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(right: 16),
+      padding: const EdgeInsets.only(right: 14),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: context.textTertiary),
-          const SizedBox(width: 4),
+          Icon(icon, size: 12, color: context.textTertiary),
+          const SizedBox(width: 3),
           Text(
             value,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: context.textPrimary,
+            style: TextStyle(
+              fontSize: 11,
               fontWeight: FontWeight.w600,
-              fontSize: 12,
+              color: context.textPrimary,
             ),
           ),
         ],
