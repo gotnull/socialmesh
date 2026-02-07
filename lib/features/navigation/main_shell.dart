@@ -56,6 +56,8 @@ import '../debug/device_logs_screen.dart';
 import '../nodedex/screens/nodedex_screen.dart';
 import '../social/screens/activity_timeline_screen.dart';
 import '../../providers/activity_providers.dart';
+import '../../providers/whats_new_providers.dart';
+import '../../core/whats_new/whats_new_sheet.dart';
 import '../admin/screens/admin_screen.dart';
 
 /// Combined admin notification count provider
@@ -121,6 +123,7 @@ class HamburgerMenuButton extends ConsumerWidget {
     final theme = Theme.of(context);
     final adminNotificationCount = ref.watch(adminNotificationCountProvider);
     final activityCount = ref.watch(unreadActivityCountProvider);
+    final hasUnseenWhatsNew = ref.watch(whatsNewHasUnseenProvider);
 
     // Combine admin and activity counts for hamburger badge
     final totalBadgeCount = adminNotificationCount + activityCount;
@@ -179,6 +182,28 @@ class HamburgerMenuButton extends ConsumerWidget {
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+        // Gradient dot for unseen What's New features
+        if (hasUnseenWhatsNew && totalBadgeCount == 0)
+          Positioned(
+            right: 10,
+            top: 10,
+            child: IgnorePointer(
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppTheme.primaryMagenta, AppTheme.primaryPurple],
+                  ),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: theme.scaffoldBackgroundColor,
+                    width: 1.5,
+                  ),
                 ),
               ),
             ),
@@ -257,6 +282,11 @@ class _DrawerMenuItem {
   /// Provider key for badge count - use 'activity' for activity count
   final String? badgeProviderKey;
 
+  /// Key that links this item to a What's New payload badge.
+  /// When a matching key is in the unseen badge keys set, a NEW chip
+  /// is shown next to this drawer item.
+  final String? whatsNewBadgeKey;
+
   const _DrawerMenuItem({
     required this.icon,
     required this.label,
@@ -266,6 +296,7 @@ class _DrawerMenuItem {
     this.iconColor,
     this.requiresConnection = false,
     this.badgeProviderKey,
+    this.whatsNewBadgeKey,
   });
 }
 
@@ -310,6 +341,10 @@ class _MainShellState extends ConsumerState<MainShell> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(mainShellScaffoldKeyProvider.notifier).setKey(_scaffoldKey);
+
+        // Trigger What's New popup if there is an unseen payload.
+        // This runs after the first frame so the navigator is ready.
+        WhatsNewSheet.showIfNeeded(ref);
       }
     });
   }
@@ -342,6 +377,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       screen: const NodeDexScreen(),
       iconColor: Colors.amber.shade400,
       requiresConnection: false,
+      whatsNewBadgeKey: 'nodedex',
     ),
     _DrawerMenuItem(
       icon: Icons.timeline,
@@ -533,6 +569,9 @@ class _MainShellState extends ConsumerState<MainShell> {
       error: (_, _) => false,
     );
 
+    // Watch unseen What's New badge keys for NEW chip indicators
+    final unseenBadgeKeys = ref.watch(whatsNewUnseenBadgeKeysProvider);
+
     // Add top padding
     slivers.add(const SliverPadding(padding: EdgeInsets.only(top: 8)));
 
@@ -619,6 +658,11 @@ class _MainShellState extends ConsumerState<MainShell> {
                 badgeCount = ref.watch(unreadActivityCountProvider);
               }
 
+              // Check if this item should show a NEW chip
+              final isNew =
+                  item.whatsNewBadgeKey != null &&
+                  unseenBadgeKeys.contains(item.whatsNewBadgeKey);
+
               return Column(
                 children: [
                   _DrawerMenuTile(
@@ -633,10 +677,17 @@ class _MainShellState extends ConsumerState<MainShell> {
                     isDisabled: needsConnection,
                     iconColor: item.iconColor,
                     badgeCount: badgeCount,
+                    showNewChip: isNew,
                     onTap: needsConnection
                         ? null
                         : () {
                             ref.haptics.tabChange();
+                            // Dismiss the NEW badge if this item has one
+                            if (item.whatsNewBadgeKey != null) {
+                              ref
+                                  .read(whatsNewProvider.notifier)
+                                  .dismissBadgeKey(item.whatsNewBadgeKey!);
+                            }
                             if (isPremium && !allowNavigation) {
                               // Upsell disabled - redirect to subscription screen
                               _navigateFromDrawer(
@@ -1401,6 +1452,7 @@ class _DrawerMenuTile extends StatelessWidget {
   final VoidCallback? onTap;
   final int? badgeCount;
   final Color? iconColor;
+  final bool showNewChip;
 
   const _DrawerMenuTile({
     required this.icon,
@@ -1413,6 +1465,7 @@ class _DrawerMenuTile extends StatelessWidget {
     this.isDisabled = false,
     this.badgeCount,
     this.iconColor,
+    this.showNewChip = false,
   });
 
   @override
@@ -1504,23 +1557,95 @@ class _DrawerMenuTile extends StatelessWidget {
                           ),
                         ),
                       ),
+                    // NEW dot indicator on icon (shown when no count badge)
+                    if (showNewChip && (badgeCount == null || badgeCount! <= 0))
+                      Positioned(
+                        right: -3,
+                        top: -3,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                AppTheme.primaryMagenta,
+                                AppTheme.primaryPurple,
+                              ],
+                            ),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: theme.scaffoldBackgroundColor,
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
               const SizedBox(width: 14),
               Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    fontFamily: AppTheme.fontFamily,
-                    color: isSelected
-                        ? accentColor
-                        : isLocked
-                        ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.8),
-                  ),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                          fontFamily: AppTheme.fontFamily,
+                          color: isSelected
+                              ? accentColor
+                              : isLocked
+                              ? theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                )
+                              : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.8,
+                                ),
+                        ),
+                      ),
+                    ),
+                    if (showNewChip) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              AppTheme.primaryMagenta,
+                              AppTheme.primaryPurple,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primaryMagenta.withValues(
+                                alpha: 0.3,
+                              ),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          'NEW',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: AppTheme.fontFamily,
+                            color: SemanticColors.onAccent,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
               // Show lock icon and PRO badge for locked premium features
