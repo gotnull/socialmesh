@@ -141,27 +141,44 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
               ),
             ),
             const Spacer(),
-            // Rarity badge.
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: rarity.borderColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: rarity.borderColor.withValues(alpha: 0.3),
-                  width: 0.5,
+            // Rarity badge + info icon.
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: rarity.borderColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: rarity.borderColor.withValues(alpha: 0.3),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Text(
+                    rarity.label,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: rarity.borderColor,
+                      letterSpacing: 1.0,
+                      fontFamily: AppTheme.fontFamily,
+                    ),
+                  ),
                 ),
-              ),
-              child: Text(
-                rarity.label,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: rarity.borderColor,
-                  letterSpacing: 1.0,
-                  fontFamily: AppTheme.fontFamily,
+                const SizedBox(width: 4),
+                GestureDetector(
+                  onTap: () => _showRarityInfo(context),
+                  child: Icon(
+                    Icons.info_outline_rounded,
+                    size: 18,
+                    color: context.textTertiary,
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),
@@ -271,6 +288,103 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
 
   // ---------------------------------------------------------------------------
   // Share logic
+  // ---------------------------------------------------------------------------
+
+  void _showRarityInfo(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: context.border.withValues(alpha: 0.5)),
+        ),
+        title: Text(
+          'Card Rarity',
+          style: TextStyle(
+            color: context.textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'A card\'s rarity reflects how often you\'ve encountered '
+              'this node on the mesh. The more you cross paths, the '
+              'rarer the card becomes.',
+              style: TextStyle(
+                color: context.textSecondary,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildRarityRow(CardRarity.common, 'Under 5 encounters'),
+            const SizedBox(height: 8),
+            _buildRarityRow(CardRarity.uncommon, '5 - 19 encounters'),
+            const SizedBox(height: 8),
+            _buildRarityRow(CardRarity.rare, '20 - 49 encounters'),
+            const SizedBox(height: 8),
+            _buildRarityRow(CardRarity.epic, '50 - 99 encounters'),
+            const SizedBox(height: 8),
+            _buildRarityRow(CardRarity.legendary, '100+ encounters'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Got it', style: TextStyle(color: context.accentColor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRarityRow(CardRarity tier, String description) {
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: tier.borderColor,
+            boxShadow: tier.hasGlow
+                ? [
+                    BoxShadow(
+                      color: tier.glowColor.withValues(alpha: 0.5),
+                      blurRadius: 4,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : null,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          tier.label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: tier.borderColor,
+            letterSpacing: 0.8,
+            fontFamily: AppTheme.fontFamily,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            description,
+            style: TextStyle(fontSize: 12, color: context.textTertiary),
+          ),
+        ),
+      ],
+    );
+  }
+
   // ---------------------------------------------------------------------------
 
   Future<void> _shareCard() async {

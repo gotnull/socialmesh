@@ -56,7 +56,7 @@ enum CardRarity {
 extension CardRarityVisuals on CardRarity {
   String get label {
     return switch (this) {
-      CardRarity.common => 'COMMON',
+      CardRarity.common => 'STANDARD',
       CardRarity.uncommon => 'UNCOMMON',
       CardRarity.rare => 'RARE',
       CardRarity.epic => 'EPIC',

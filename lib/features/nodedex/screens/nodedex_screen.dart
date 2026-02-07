@@ -146,7 +146,10 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
 
             // Your Device section
             if (myEntry.isNotEmpty) ...[
-              SliverToBoxAdapter(child: SectionHeader(title: 'Your Device')),
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: SectionHeaderDelegate(title: 'Your Device'),
+              ),
               SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final (entry, node) = myEntry[index];
@@ -161,8 +164,9 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
 
             // Other nodes list or empty state
             if (otherEntries.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: SectionHeader(
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: SectionHeaderDelegate(
                   title: 'Discovered Nodes',
                   count: otherEntries.length,
                 ),
