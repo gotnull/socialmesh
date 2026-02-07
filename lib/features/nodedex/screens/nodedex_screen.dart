@@ -34,7 +34,7 @@ import '../../settings/settings_screen.dart';
 import '../widgets/sigil_painter.dart';
 import '../widgets/trait_badge.dart';
 import 'nodedex_detail_screen.dart';
-import 'nodedex_constellation_screen.dart';
+import '../constellation/constellation_screen.dart';
 
 /// The main NodeDex screen — a personal mesh field journal.
 ///
@@ -190,9 +190,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
   void _openConstellation() {
     AppLogging.nodeDex('Opening constellation view');
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const NodeDexConstellationScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const ConstellationScreen()),
     );
   }
 }

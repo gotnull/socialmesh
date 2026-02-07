@@ -15,6 +15,9 @@
 // The nodeDexProvider listens to nodesProvider for automatic discovery
 // tracking. When a new node appears or an existing node updates, the
 // NodeDex entry is created or refreshed without any user action.
+//
+// Storage: SQLite via NodeDexSqliteStore (migrated from SharedPreferences).
+// Cloud Sync: optional outbox-based sync via NodeDexSyncService.
 
 import 'dart:async';
 
@@ -24,9 +27,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/logging.dart';
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/cloud_sync_entitlement_providers.dart';
 import '../models/import_preview.dart';
 import '../models/nodedex_entry.dart';
-import '../services/nodedex_store.dart';
+import '../services/nodedex_database.dart';
+import '../services/nodedex_migration.dart';
+import '../services/nodedex_sqlite_store.dart';
+import '../services/nodedex_sync_service.dart';
 import '../services/sigil_generator.dart';
 import '../services/trait_engine.dart';
 
@@ -34,19 +41,54 @@ import '../services/trait_engine.dart';
 // Storage Provider
 // =============================================================================
 
-/// Provides an initialized NodeDexStore instance.
+/// Provides the NodeDex SQLite database instance.
+final nodeDexDatabaseProvider = Provider<NodeDexDatabase>((ref) {
+  final db = NodeDexDatabase();
+  ref.onDispose(() {
+    db.close();
+  });
+  return db;
+});
+
+/// Provides an initialized NodeDexSqliteStore instance.
 ///
 /// The store is initialized once and shared across all providers.
-/// Uses FutureProvider to handle the async init.
-final nodeDexStoreProvider = FutureProvider<NodeDexStore>((ref) async {
-  final store = NodeDexStore();
+/// On first launch after upgrade, migrates from SharedPreferences.
+final nodeDexStoreProvider = FutureProvider<NodeDexSqliteStore>((ref) async {
+  final db = ref.watch(nodeDexDatabaseProvider);
+  final store = NodeDexSqliteStore(db);
   await store.init();
+
+  // Run one-time migration from SharedPreferences if needed.
+  final migration = NodeDexMigration(store);
+  await migration.migrateIfNeeded();
 
   ref.onDispose(() {
     store.flush();
   });
 
   return store;
+});
+
+/// Provides the NodeDex Cloud Sync service.
+///
+/// Enabled/disabled based on the user's Cloud Sync entitlement.
+final nodeDexSyncServiceProvider = Provider<NodeDexSyncService?>((ref) {
+  final storeAsync = ref.watch(nodeDexStoreProvider);
+  final store = storeAsync.asData?.value;
+  if (store == null) return null;
+
+  final syncService = NodeDexSyncService(store);
+
+  // Watch cloud sync entitlement to enable/disable.
+  final canWrite = ref.watch(canCloudSyncWriteProvider);
+  syncService.setEnabled(canWrite);
+
+  ref.onDispose(() {
+    syncService.dispose();
+  });
+
+  return syncService;
 });
 
 // =============================================================================
@@ -60,11 +102,11 @@ final nodeDexStoreProvider = FutureProvider<NodeDexStore>((ref) async {
 /// - Listens to nodesProvider for automatic discovery tracking
 /// - Updates encounter records when nodes are re-seen
 /// - Tracks co-seen relationships for the constellation
-/// - Persists changes via debounced writes to NodeDexStore
+/// - Persists changes via debounced writes to NodeDexSqliteStore
 ///
 /// All UI components read from this provider for NodeDex data.
 class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
-  NodeDexStore? _store;
+  NodeDexSqliteStore? _store;
   Timer? _coSeenTimer;
 
   /// Snapshot of the last known state, used during dispose when
@@ -88,6 +130,9 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   Map<int, NodeDexEntry> build() {
     final storeAsync = ref.watch(nodeDexStoreProvider);
     _store = storeAsync.asData?.value;
+
+    // Activate sync service (reads entitlement, enables/disables).
+    ref.watch(nodeDexSyncServiceProvider);
 
     // Listen to node changes for automatic discovery tracking.
     ref.listen<Map<int, MeshNode>>(nodesProvider, (previous, next) {
@@ -1082,75 +1127,107 @@ final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
   //
   // 1. Seed positions deterministically from node number hashes.
   // 2. Run force simulation: repulsion between all nodes, attraction
-  //    along edges (weighted). Only strong edges (above median) provide
-  //    attraction to avoid everything collapsing into a ball.
-  // 3. Normalize final positions to [0.05, 0.95].
+  //    along edges (weighted by strength).
+  // 3. Gravity pulls all nodes gently toward center to prevent outliers.
+  // 4. Normalize final positions to [0.08, 0.92] with aspect-ratio awareness.
+  //
+  // Key design: strong repulsion + weak attraction + gravity produces
+  // a well-spread organic constellation rather than a collapsed hairball.
+  // The "ideal edge length" concept from Fruchterman-Reingold ensures
+  // connected nodes are close but not on top of each other.
 
   final nodeCount = allEntries.length;
   final posX = List<double>.filled(nodeCount, 0);
   final posY = List<double>.filled(nodeCount, 0);
   final nodeNumToIndex = <int, int>{};
 
-  // Seed initial positions from hash.
+  // Compute degree (connection count) for each node to inform layout.
+  final degree = List<int>.filled(nodeCount, 0);
+
+  // Seed initial positions from hash — spread in a wider circle.
   for (int i = 0; i < nodeCount; i++) {
     final hash = _positionHash(allEntries[i].nodeNum);
     final angle = (hash & 0xFFFF) / 65535.0 * 2.0 * 3.14159265358979;
-    final radius = 0.15 + ((hash >> 16) & 0xFFFF) / 65535.0 * 0.3;
+    // Start with a wider spread (0.2..0.5 radius from center).
+    final radius = 0.20 + ((hash >> 16) & 0xFFFF) / 65535.0 * 0.30;
     posX[i] = 0.5 + radius * _fastCos(angle);
     posY[i] = 0.5 + radius * _fastSin(angle);
     nodeNumToIndex[allEntries[i].nodeNum] = i;
   }
 
-  // Compute median weight for attraction threshold.
+  // Compute median weight for attraction weighting.
   final sortedWeights = edgeList.map((e) => e.weight).toList()..sort();
   final medianWeight = sortedWeights.isEmpty
       ? 1
       : sortedWeights[sortedWeights.length ~/ 2];
 
-  // Build an edge index for the simulation (only strong edges attract).
+  // Build edge index for simulation. ALL edges participate in attraction,
+  // but weak edges attract much less than strong ones.
   final attractionEdges = <(int, int, double)>[];
   for (final edge in edgeList) {
     final fromIdx = nodeNumToIndex[edge.from];
     final toIdx = nodeNumToIndex[edge.to];
     if (fromIdx == null || toIdx == null) continue;
-    // Only edges above median attract — prevents the hairball collapse.
-    if (edge.weight >= medianWeight) {
-      final normalizedWeight = edge.weight / maxWeight;
-      attractionEdges.add((fromIdx, toIdx, normalizedWeight));
-    }
+
+    degree[fromIdx]++;
+    degree[toIdx]++;
+
+    // Normalize weight: weak edges get very little pull.
+    // Strong edges (above median) get more, but still bounded.
+    final rawWeight = edge.weight / maxWeight;
+    // Sigmoid-like scaling: suppresses weak edges, boosts strong ones.
+    final effectiveWeight = edge.weight >= medianWeight
+        ? 0.3 + rawWeight * 0.7
+        : rawWeight * 0.2;
+    attractionEdges.add((fromIdx, toIdx, effectiveWeight));
   }
 
-  // Force simulation parameters.
-  const iterations = 250;
-  const repulsionStrength = 0.008;
-  const attractionStrength = 0.04;
-  const dampingStart = 0.1;
-  const dampingEnd = 0.005;
+  // Fruchterman-Reingold inspired parameters.
+  // The ideal edge length scales with the number of nodes so that
+  // larger graphs naturally spread further.
+  final area = 1.0; // Unit square.
+  final idealLength = _sqrt(area / nodeCount) * 1.8;
+  final idealLengthSq = idealLength * idealLength;
+
+  // Force simulation parameters — tuned for spread, not collapse.
+  const iterations = 350;
+  // Strong repulsion prevents hairball formation.
+  final repulsionStrength = idealLengthSq * 0.8;
+  // Weak attraction keeps connected nodes loosely grouped.
+  const attractionStrength = 0.015;
+  // Gentle gravity prevents disconnected nodes from flying to infinity.
+  const gravityStrength = 0.002;
+  const gravityCenter = 0.5;
+  // Temperature schedule (simulated annealing).
+  final tempStart = idealLength * 0.5;
+  const tempEnd = 0.001;
 
   for (int iter = 0; iter < iterations; iter++) {
-    // Temperature / damping decreases over iterations (simulated annealing).
-    final t = 1.0 - iter / iterations;
-    final damping = dampingEnd + (dampingStart - dampingEnd) * t;
+    final t = iter / iterations;
+    // Exponential cooling for smooth convergence.
+    final temp = tempStart * _pow(tempEnd / tempStart, t);
 
     final forceX = List<double>.filled(nodeCount, 0);
     final forceY = List<double>.filled(nodeCount, 0);
 
-    // Repulsion: all pairs push apart (Barnes-Hut would be better for
-    // large N but 59^2 ≈ 3500 operations is trivial).
+    // 1) Repulsion: all pairs push apart (Coulomb's law).
+    // O(n^2) but fine for hundreds of nodes on mobile.
     for (int i = 0; i < nodeCount; i++) {
       for (int j = i + 1; j < nodeCount; j++) {
         var dx = posX[i] - posX[j];
         var dy = posY[i] - posY[j];
         var distSq = dx * dx + dy * dy;
-        if (distSq < 1e-6) {
-          // Jitter to break exact overlaps.
+        if (distSq < 1e-8) {
+          // Deterministic jitter to break exact overlaps.
           dx = ((_positionHash(i * 31 + j) & 0xFFFF) / 65535.0 - 0.5) * 0.01;
           dy = ((_positionHash(j * 31 + i) & 0xFFFF) / 65535.0 - 0.5) * 0.01;
           distSq = dx * dx + dy * dy;
         }
-        final force = repulsionStrength / distSq;
-        final fx = dx * force;
-        final fy = dy * force;
+        final dist = _sqrt(distSq);
+        // Repulsion force: F = k^2 / d (FR model).
+        final force = repulsionStrength / (dist * distSq.clamp(0.001, 1e6));
+        final fx = dx / dist * force;
+        final fy = dy / dist * force;
         forceX[i] += fx;
         forceY[i] += fy;
         forceX[j] -= fx;
@@ -1158,48 +1235,84 @@ final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
       }
     }
 
-    // Attraction: strong edges pull endpoints together.
+    // 2) Attraction: edges pull endpoints together (Hooke's law).
+    // Force is proportional to distance, weighted by edge strength.
     for (final (fromIdx, toIdx, weight) in attractionEdges) {
       final dx = posX[toIdx] - posX[fromIdx];
       final dy = posY[toIdx] - posY[fromIdx];
-      final dist = _sqrt(dx * dx + dy * dy);
-      if (dist < 1e-6) continue;
-      final force = dist * attractionStrength * weight;
-      final fx = (dx / dist) * force;
-      final fy = (dy / dist) * force;
+      final distSq = dx * dx + dy * dy;
+      if (distSq < 1e-8) continue;
+      final dist = _sqrt(distSq);
+
+      // Attraction force: F = d^2 / k (FR model), scaled by weight.
+      // High-degree nodes have weaker per-edge attraction to prevent
+      // them from collapsing all their neighbors onto themselves.
+      final degreeScale =
+          1.0 / (1.0 + 0.15 * (degree[fromIdx] + degree[toIdx]));
+      final force =
+          dist * dist / idealLength * attractionStrength * weight * degreeScale;
+      final fx = dx / dist * force;
+      final fy = dy / dist * force;
       forceX[fromIdx] += fx;
       forceY[fromIdx] += fy;
       forceX[toIdx] -= fx;
       forceY[toIdx] -= fy;
     }
 
-    // Apply forces with damping.
+    // 3) Gravity: gentle pull toward center prevents drift.
     for (int i = 0; i < nodeCount; i++) {
-      posX[i] += forceX[i] * damping;
-      posY[i] += forceY[i] * damping;
+      final dx = gravityCenter - posX[i];
+      final dy = gravityCenter - posY[i];
+      forceX[i] += dx * gravityStrength;
+      forceY[i] += dy * gravityStrength;
+    }
+
+    // 4) Apply forces, clamped by temperature.
+    for (int i = 0; i < nodeCount; i++) {
+      final fx = forceX[i];
+      final fy = forceY[i];
+      final forceMag = _sqrt(fx * fx + fy * fy);
+      if (forceMag < 1e-8) continue;
+
+      // Clamp displacement by temperature.
+      final scale = (forceMag < temp) ? 1.0 : temp / forceMag;
+      posX[i] += fx * scale;
+      posY[i] += fy * scale;
     }
   }
 
-  // Normalize positions to [0.05, 0.95].
-  double minX = double.infinity, maxX = double.negativeInfinity;
-  double minY = double.infinity, maxY = double.negativeInfinity;
+  // Normalize positions to [0.08, 0.92] with aspect-ratio preservation.
+  // Use independent X and Y ranges to fill the available space better,
+  // while maintaining the relative shape of the layout.
+  double minX = double.infinity, maxXPos = double.negativeInfinity;
+  double minY = double.infinity, maxYPos = double.negativeInfinity;
   for (int i = 0; i < nodeCount; i++) {
     if (posX[i] < minX) minX = posX[i];
-    if (posX[i] > maxX) maxX = posX[i];
+    if (posX[i] > maxXPos) maxXPos = posX[i];
     if (posY[i] < minY) minY = posY[i];
-    if (posY[i] > maxY) maxY = posY[i];
+    if (posY[i] > maxYPos) maxYPos = posY[i];
   }
-  final rangeX = maxX - minX;
-  final rangeY = maxY - minY;
-  final range = rangeX > rangeY ? rangeX : rangeY;
-  if (range > 1e-6) {
-    final cx = (minX + maxX) / 2.0;
-    final cy = (minY + maxY) / 2.0;
+  final rangeX = maxXPos - minX;
+  final rangeY = maxYPos - minY;
+  // Use the larger range to preserve aspect ratio, but ensure both
+  // axes use at least 70% of available space for better spread.
+  final maxRange = rangeX > rangeY ? rangeX : rangeY;
+  final effectiveRangeX = maxRange > 1e-6
+      ? rangeX.clamp(maxRange * 0.7, maxRange)
+      : 1.0;
+  final effectiveRangeY = maxRange > 1e-6
+      ? rangeY.clamp(maxRange * 0.7, maxRange)
+      : 1.0;
+
+  if (maxRange > 1e-6) {
+    final cxLayout = (minX + maxXPos) / 2.0;
+    final cyLayout = (minY + maxYPos) / 2.0;
+    const spread = 0.82; // Use 82% of the [0,1] space.
     for (int i = 0; i < nodeCount; i++) {
-      posX[i] = 0.5 + (posX[i] - cx) / range * 0.85;
-      posY[i] = 0.5 + (posY[i] - cy) / range * 0.85;
-      posX[i] = posX[i].clamp(0.05, 0.95);
-      posY[i] = posY[i].clamp(0.05, 0.95);
+      posX[i] = 0.5 + (posX[i] - cxLayout) / effectiveRangeX * spread;
+      posY[i] = 0.5 + (posY[i] - cyLayout) / effectiveRangeY * spread;
+      posX[i] = posX[i].clamp(0.08, 0.92);
+      posY[i] = posY[i].clamp(0.08, 0.92);
     }
   }
 
@@ -1272,4 +1385,62 @@ double _sqrt(double x) {
     guess = (guess + x / guess) / 2;
   }
   return guess;
+}
+
+/// Fast power approximation for exponential temperature cooling.
+/// Uses exp(exponent * ln(base)) via a simple Taylor-ish approach.
+double _pow(double base, double exponent) {
+  if (base <= 0) return 0;
+  if (exponent == 0) return 1;
+  if (exponent == 1) return base;
+  // Use dart:math for correctness — this is called once per iteration,
+  // not per-node, so performance is not critical.
+  // ln(base) * exponent, then exp().
+  // Approximation: repeated squaring for integer-ish exponents,
+  // but for fractional exponents we need the real thing.
+  // Since we avoid importing dart:math in this file, use a series
+  // approximation of exp(y * ln(x)).
+  double lnBase = _ln(base);
+  double y = lnBase * exponent;
+  return _exp(y);
+}
+
+/// Natural logarithm approximation using the series expansion.
+/// Accurate enough for layout temperature scheduling.
+double _ln(double x) {
+  if (x <= 0) return -1e10;
+  // Reduce x to [0.5, 2) range, then use series.
+  int k = 0;
+  double v = x;
+  while (v > 2.0) {
+    v /= 2.718281828459045;
+    k++;
+  }
+  while (v < 0.5) {
+    v *= 2.718281828459045;
+    k--;
+  }
+  // Now v is near 1. Use ln(1+u) series where u = v - 1.
+  final u = v - 1.0;
+  double sum = 0;
+  double term = u;
+  for (int n = 1; n <= 20; n++) {
+    sum += term / n;
+    term *= -u;
+  }
+  return sum + k;
+}
+
+/// Exponential function approximation using Taylor series.
+double _exp(double x) {
+  // Clamp to avoid overflow.
+  if (x > 20) return 4.85165195e8;
+  if (x < -20) return 0;
+  double sum = 1.0;
+  double term = 1.0;
+  for (int n = 1; n <= 25; n++) {
+    term *= x / n;
+    sum += term;
+  }
+  return sum;
 }
