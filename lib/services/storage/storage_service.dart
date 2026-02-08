@@ -378,6 +378,39 @@ class SettingsService {
   bool get regionConfigured =>
       _preferences.getBool('region_configured') ?? false;
 
+  // Terms and Privacy acceptance
+  Future<void> setTermsAccepted({
+    required String termsVersion,
+    required String privacyVersion,
+    required String platform,
+    String? buildNumber,
+  }) async {
+    await _preferences.setString('accepted_terms_version', termsVersion);
+    await _preferences.setString('accepted_privacy_version', privacyVersion);
+    await _preferences.setString(
+      'terms_accepted_at',
+      DateTime.now().toIso8601String(),
+    );
+    await _preferences.setString('terms_accepted_platform', platform);
+    if (buildNumber != null) {
+      await _preferences.setString('terms_accepted_build', buildNumber);
+    }
+  }
+
+  String? get acceptedTermsVersion =>
+      _preferences.getString('accepted_terms_version');
+
+  String? get acceptedPrivacyVersion =>
+      _preferences.getString('accepted_privacy_version');
+
+  String? get termsAcceptedAt => _preferences.getString('terms_accepted_at');
+
+  String? get termsAcceptedPlatform =>
+      _preferences.getString('terms_accepted_platform');
+
+  String? get termsAcceptedBuild =>
+      _preferences.getString('terms_accepted_build');
+
   // Canned responses
   Future<void> setCannedResponses(List<CannedResponse> responses) async {
     final jsonList = responses.map((r) => r.toJson()).toList();

@@ -149,6 +149,23 @@ class DeepLinkParser {
       case 'channel-invite':
         AppLogging.qr('🔗 Parser: Processing channel invite link');
         return _parseChannelInviteLink(data, uri.fragment, original);
+      case 'legal':
+        // socialmesh://legal/terms or socialmesh://legal/privacy
+        AppLogging.qr('🔗 Parser: Processing legal document link');
+        final document = data; // 'terms' or 'privacy'
+        if (document == null ||
+            (document != 'terms' && document != 'privacy')) {
+          return ParsedDeepLink.invalid(original, [
+            'Invalid legal document type: $document',
+          ]);
+        }
+        final anchor = uri.fragment.isNotEmpty ? uri.fragment : null;
+        return ParsedDeepLink(
+          type: DeepLinkType.legal,
+          originalUri: original,
+          legalDocument: document,
+          legalSectionAnchor: anchor,
+        );
       default:
         AppLogging.qr('🔗 Parser: ERROR - Unknown link type: $type');
         return ParsedDeepLink.invalid(original, ['Unknown link type: $type']);
@@ -159,6 +176,23 @@ class DeepLinkParser {
   ParsedDeepLink _parseUniversalLink(Uri uri, String original) {
     final segments = uri.pathSegments;
     AppLogging.qr('🔗 Parser: Universal link - segments=$segments');
+
+    // Handle legal document links: /terms and /privacy
+    if (segments.length == 1 &&
+        (segments[0] == 'terms' || segments[0] == 'privacy')) {
+      final document = segments[0];
+      // Extract optional section anchor from the fragment (e.g. #radio-compliance)
+      final anchor = uri.fragment.isNotEmpty ? uri.fragment : null;
+      AppLogging.qr(
+        '🔗 Parser: Legal document link - document=$document, anchor=$anchor',
+      );
+      return ParsedDeepLink(
+        type: DeepLinkType.legal,
+        originalUri: original,
+        legalDocument: document,
+        legalSectionAnchor: anchor,
+      );
+    }
 
     // Expect: /share/{type}/{id} or /share/{type}?params
     if (segments.isEmpty || segments[0] != 'share') {

@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/legal/legal_constants.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
@@ -33,6 +34,7 @@ import '../../../utils/location_privacy.dart';
 import '../../../services/signal_service.dart';
 import '../../settings/account_subscriptions_screen.dart';
 import '../../settings/signal_settings_screen.dart';
+import '../../../core/widgets/legal_document_sheet.dart';
 import '../../../utils/snackbar.dart';
 import '../widgets/ttl_selector.dart';
 
@@ -1351,7 +1353,21 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                 ),
             ],
           ),
-          actions: const [IcoHelpAppBarButton(topicId: 'signal_creation')],
+          actions: [
+            IconButton(
+              icon: Icon(
+                Icons.security_rounded,
+                color: context.textSecondary,
+                size: 20,
+              ),
+              tooltip: 'Your Responsibility',
+              onPressed: () => LegalDocumentSheet.showTermsSection(
+                context,
+                LegalConstants.anchorAcceptableUse,
+              ),
+            ),
+            const IcoHelpAppBarButton(topicId: 'signal_creation'),
+          ],
         ),
         body: GestureDetector(
           onTap: _dismissKeyboard,

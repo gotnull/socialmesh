@@ -15,9 +15,34 @@ class LegalDocumentSheet {
     _showWebView(context, 'Terms of Service', AppUrls.termsUrlInApp);
   }
 
+  /// Show Terms of Service scrolled to a specific section anchor.
+  ///
+  /// The [sectionAnchor] must match an `id` attribute on a heading in
+  /// `terms-of-service.html` (e.g. `radio-compliance`, `acceptable-use`).
+  /// See [LegalConstants] for the full list of anchor constants.
+  static void showTermsSection(BuildContext context, String sectionAnchor) {
+    _showWebView(
+      context,
+      'Terms of Service',
+      AppUrls.termsUrlInAppWithSection(sectionAnchor),
+    );
+  }
+
   /// Show Privacy Policy
   static void showPrivacy(BuildContext context) {
     _showWebView(context, 'Privacy Policy', AppUrls.privacyUrlInApp);
+  }
+
+  /// Show Privacy Policy scrolled to a specific section anchor.
+  ///
+  /// The [sectionAnchor] must match an `id` attribute on a heading in
+  /// `privacy-policy.html` (e.g. `third-party-services`, `local-data`).
+  static void showPrivacySection(BuildContext context, String sectionAnchor) {
+    _showWebView(
+      context,
+      'Privacy Policy',
+      AppUrls.privacyUrlInAppWithSection(sectionAnchor),
+    );
   }
 
   /// Show Support / FAQ

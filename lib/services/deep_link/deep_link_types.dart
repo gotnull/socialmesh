@@ -31,6 +31,10 @@ enum DeepLinkType {
   /// or https://socialmesh.app/share/channel/{inviteId}#t={secret}
   channelInvite,
 
+  /// Legal document: https://socialmesh.app/terms or https://socialmesh.app/privacy
+  /// or socialmesh://legal/terms or socialmesh://legal/privacy
+  legal,
+
   /// Invalid/unrecognized deep link - routes to fallback
   invalid,
 }
@@ -64,6 +68,8 @@ class ParsedDeepLink {
     this.automationFirestoreId,
     this.channelInviteId,
     this.channelInviteSecret,
+    this.legalDocument,
+    this.legalSectionAnchor,
     this.validationErrors = const [],
   });
 
@@ -120,6 +126,13 @@ class ParsedDeepLink {
   /// Invite secret from the URL fragment (#t=...)
   final String? channelInviteSecret;
 
+  // Legal document fields
+  /// Which legal document: 'terms' or 'privacy'
+  final String? legalDocument;
+
+  /// Optional section anchor within the document (e.g. 'radio-compliance')
+  final String? legalSectionAnchor;
+
   /// Validation errors encountered during parsing.
   /// Empty list means the deep link is valid.
   final List<String> validationErrors;
@@ -155,6 +168,15 @@ class ParsedDeepLink {
       type == DeepLinkType.channelInvite &&
       channelInviteId != null &&
       channelInviteSecret != null;
+
+  /// Whether this is a legal document link.
+  bool get isLegalLink => type == DeepLinkType.legal && legalDocument != null;
+
+  /// Whether this legal link targets the terms of service.
+  bool get isTermsLink => legalDocument == 'terms';
+
+  /// Whether this legal link targets the privacy policy.
+  bool get isPrivacyLink => legalDocument == 'privacy';
 
   /// Create an invalid deep link with errors.
   factory ParsedDeepLink.invalid(String originalUri, List<String> errors) {
@@ -195,6 +217,8 @@ class ParsedDeepLink {
       automationFirestoreId: automationFirestoreId,
       channelInviteId: channelInviteId,
       channelInviteSecret: channelInviteSecret,
+      legalDocument: legalDocument,
+      legalSectionAnchor: legalSectionAnchor,
       locationLongitude: locationLongitude,
       locationLabel: locationLabel,
       validationErrors: validationErrors,

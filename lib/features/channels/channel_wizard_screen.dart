@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/legal/legal_constants.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 
 import '../../core/theme.dart';
@@ -18,6 +19,7 @@ import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/legal_document_sheet.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
@@ -308,6 +310,45 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                 ),
               ),
               const SizedBox(height: 16),
+              // Radio compliance link — contextual legal help
+              InkWell(
+                onTap: () {
+                  Navigator.pop(context);
+                  LegalDocumentSheet.showTermsSection(
+                    this.context,
+                    LegalConstants.anchorRadioCompliance,
+                  );
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.cell_tower,
+                        size: 18,
+                        color: context.accentColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'View Radio Compliance Rules',
+                          style: TextStyle(
+                            color: context.accentColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.open_in_new,
+                        size: 16,
+                        color: context.accentColor,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),

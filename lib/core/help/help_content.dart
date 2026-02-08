@@ -74,6 +74,7 @@ class HelpContent {
   static const String catNetwork = 'Network';
   static const String catAutomations = 'Automations';
   static const String catSettings = 'Settings';
+  static const String catLegal = 'Legal & Safety';
 
   // ============================================================================
   // CHANNEL CREATION HELP
@@ -1604,6 +1605,139 @@ class HelpContent {
   };
 
   // ============================================================================
+  // LEGAL & SAFETY HELP TOPICS
+  // ============================================================================
+
+  /// Radio compliance help — linked from Channel Wizard screen.
+  static final HelpTopic radioCompliance = HelpTopic(
+    id: 'radio_compliance',
+    title: 'Radio Rules & Your Responsibilities',
+    description: 'Understand your legal obligations when using radio devices',
+    icon: Icons.cell_tower,
+    category: catLegal,
+    priority: 1,
+    steps: [
+      HelpStep(
+        id: 'radio_intro',
+        bubbleText:
+            "Mesh radios operate on **regulated frequencies**. That means there are rules about where, when, and how you can transmit.",
+        icoMood: MeshBrainMood.focused,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'radio_responsibility',
+        bubbleText:
+            "**You** are responsible for making sure your radio equipment is legal in your country and that you operate within permitted frequency bands and power limits.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'radio_licence',
+        bubbleText:
+            "Some regions require an **amateur radio licence** before you can transmit. Check with your local regulatory authority — for example, ACMA in Australia or FCC in the US.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'radio_interference',
+        bubbleText:
+            "Never interfere with **emergency communications** or licensed services. Violations can result in fines or criminal penalties.",
+        icoMood: MeshBrainMood.alert,
+      ),
+      HelpStep(
+        id: 'radio_terms_link',
+        bubbleText:
+            "For full details, check the **Radio and Legal Compliance** section in our Terms of Service. You can find it in Settings under Terms of Service.",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  /// Acceptable use help — linked from Automations screen.
+  static final HelpTopic acceptableUse = HelpTopic(
+    id: 'acceptable_use',
+    title: 'Acceptable Use & Prohibited Activities',
+    description: 'What you can and cannot do with Socialmesh',
+    icon: Icons.gavel_rounded,
+    category: catLegal,
+    priority: 2,
+    steps: [
+      HelpStep(
+        id: 'use_intro',
+        bubbleText:
+            "Socialmesh is a powerful tool — automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!",
+        icoMood: MeshBrainMood.focused,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'use_lawful',
+        bubbleText:
+            "Use the App only for **lawful purposes**. Do not transmit harmful, threatening, or abusive content over the mesh network.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'use_automations',
+        bubbleText:
+            "Automations are great for alerts and notifications, but do not use them to **spam the mesh** or flood other users with unwanted messages.",
+        icoMood: MeshBrainMood.alert,
+      ),
+      HelpStep(
+        id: 'use_impersonation',
+        bubbleText:
+            "Do not **impersonate** other people or entities on the mesh network. Be yourself!",
+        icoMood: MeshBrainMood.playful,
+      ),
+      HelpStep(
+        id: 'use_terms_link',
+        bubbleText:
+            "The full list of prohibited activities is in the **Use of the Service** section of our Terms. You can review it anytime in Settings.",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  /// User responsibility help — linked from Signals / Create Signal screen.
+  static final HelpTopic userResponsibility = HelpTopic(
+    id: 'user_responsibility',
+    title: 'Your Data, Your Responsibility',
+    description: 'How Socialmesh handles data and what you are responsible for',
+    icon: Icons.security_rounded,
+    category: catLegal,
+    priority: 3,
+    steps: [
+      HelpStep(
+        id: 'responsibility_intro',
+        bubbleText:
+            "Socialmesh is designed to be **privacy-first**. Your messages and data stay on your device — we do not store them on any server.",
+        icoMood: MeshBrainMood.focused,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'responsibility_signals',
+        bubbleText:
+            "When you create a **Signal**, it is broadcast over the mesh network. Anyone within range can receive it. Think of it like a public radio broadcast.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'responsibility_content',
+        bubbleText:
+            "You are responsible for **everything you transmit**. Do not share personal information, sensitive data, or content that could harm others.",
+        icoMood: MeshBrainMood.alert,
+      ),
+      HelpStep(
+        id: 'responsibility_third_party',
+        bubbleText:
+            "Some features use **third-party services** like RevenueCat for purchases and Firebase for crash reports. These have their own privacy policies.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'responsibility_terms_link',
+        bubbleText:
+            "For complete details, review our **Terms of Service** and **Privacy Policy** in Settings. They explain exactly what data stays local and what is shared.",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
   // ALL TOPICS
   // ============================================================================
 
@@ -1612,6 +1746,9 @@ class HelpContent {
     channelsOverview,
     encryptionLevels,
     deviceConnection,
+    radioCompliance,
+    acceptableUse,
+    userResponsibility,
     regionSelection,
     nodesOverview,
     nodeRoles,
@@ -1667,6 +1804,7 @@ class HelpContent {
     catNetwork,
     catAutomations,
     catSettings,
+    catLegal,
   ];
 
   /// Get topics sorted by priority

@@ -37,6 +37,12 @@ class AppUrls {
   // In-app versions (hide navigation when viewed in webview)
   static String get termsUrlInApp => '$baseUrl/terms?inapp=true';
   static String get privacyUrlInApp => '$baseUrl/privacy?inapp=true';
+
+  // In-app versions with section anchor for deep linking to specific sections
+  static String termsUrlInAppWithSection(String anchor) =>
+      '$baseUrl/terms?inapp=true#$anchor';
+  static String privacyUrlInAppWithSection(String anchor) =>
+      '$baseUrl/privacy?inapp=true#$anchor';
   static String get supportUrlInApp => '$baseUrl/support?inapp=true';
   static String get docsUrlInApp => '$baseUrl/docs?inapp=true';
   static String get faqUrlInApp => '$baseUrl/faq?inapp=true';

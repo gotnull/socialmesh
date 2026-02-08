@@ -107,6 +107,8 @@
                 <data android:pathPrefix="/share/post" />
                 <data android:pathPrefix="/share/node" />
                 <data android:pathPrefix="/share/channel" />
+                <data android:pathPrefix="/terms" />
+                <data android:pathPrefix="/privacy" />
             </intent-filter>
             <!-- File type handlers for map data imports -->
             <intent-filter>

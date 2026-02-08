@@ -2,8 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/legal/legal_constants.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../core/widgets/legal_document_sheet.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/premium_gating.dart';
@@ -53,6 +55,11 @@ class AutomationsScreen extends ConsumerWidget {
                   ref
                       .read(helpProvider.notifier)
                       .startTour('automations_overview');
+                case 'acceptable_use':
+                  LegalDocumentSheet.showTermsSection(
+                    context,
+                    LegalConstants.anchorAcceptableUse,
+                  );
               }
             },
             itemBuilder: (context) => [
@@ -69,6 +76,14 @@ class AutomationsScreen extends ConsumerWidget {
                 child: ListTile(
                   leading: Icon(Icons.qr_code_scanner),
                   title: Text('Scan QR Code'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'acceptable_use',
+                child: ListTile(
+                  leading: Icon(Icons.gavel_rounded),
+                  title: Text('Acceptable Use'),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),

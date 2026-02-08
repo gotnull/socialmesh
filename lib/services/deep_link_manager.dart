@@ -188,6 +188,9 @@ class DeepLinkManager {
             link.automationFirestoreId ??
             link.automationBase64Data?.hashCode.toString();
         return id != null ? 'automation:$id' : null;
+      case DeepLinkType.legal:
+        final doc = link.legalDocument;
+        return doc != null ? 'legal:$doc' : null;
       case DeepLinkType.invalid:
         return null;
     }

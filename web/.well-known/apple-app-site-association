@@ -7,12 +7,22 @@
           "U336GVDWCE.com.gotnull.socialmesh"
         ],
         "paths": [
-          "/share/*"
+          "/share/*",
+          "/terms",
+          "/privacy"
         ],
         "components": [
           {
             "/": "/share/*",
             "comment": "Share links for nodes, profiles, widgets, and locations"
+          },
+          {
+            "/": "/terms",
+            "comment": "Terms of Service deep link"
+          },
+          {
+            "/": "/privacy",
+            "comment": "Privacy Policy deep link"
           }
         ]
       }

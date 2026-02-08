@@ -48,6 +48,7 @@ class DeepLinkRouter {
       DeepLinkType.post => _routePost(link),
       DeepLinkType.location => _routeLocation(link),
       DeepLinkType.automation => _routeAutomation(link),
+      DeepLinkType.legal => _routeLegal(link),
       DeepLinkType.invalid => DeepLinkRouteResult.fallback,
     };
 
@@ -233,6 +234,26 @@ class DeepLinkRouter {
       arguments: {
         'base64Data': link.automationBase64Data,
         'firestoreId': link.automationFirestoreId,
+      },
+      requiresDevice: false,
+    );
+  }
+
+  /// Route a legal document deep link.
+  DeepLinkRouteResult _routeLegal(ParsedDeepLink link) {
+    final document = link.legalDocument;
+    if (document == null) {
+      return const DeepLinkRouteResult(
+        routeName: '/main',
+        fallbackMessage: 'Invalid legal document link',
+      );
+    }
+
+    return DeepLinkRouteResult(
+      routeName: '/legal/$document',
+      arguments: {
+        'document': document,
+        'sectionAnchor': link.legalSectionAnchor,
       },
       requiresDevice: false,
     );

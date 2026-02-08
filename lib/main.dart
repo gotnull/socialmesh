@@ -70,6 +70,8 @@ import 'features/device/device_config_screen.dart';
 import 'features/settings/device_management_screen.dart';
 import 'features/navigation/main_shell.dart';
 import 'features/navigation/app_root_shell.dart';
+import 'features/legal/legal_acceptance_screen.dart';
+import 'core/widgets/legal_document_sheet.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/onboarding/screens/mesh_brain_emotion_test_screen.dart';
 import 'features/timeline/timeline_screen.dart';
@@ -1285,6 +1287,34 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
             // This route requires device - it will be checked by the builder
           }
 
+          // Handle legal document deep links
+          if (settings.name == '/legal/terms') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            final anchor = args?['sectionAnchor'] as String?;
+            return MaterialPageRoute(
+              builder: (context) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (anchor != null) {
+                    LegalDocumentSheet.showTermsSection(context, anchor);
+                  } else {
+                    LegalDocumentSheet.showTerms(context);
+                  }
+                });
+                return const MainShell();
+              },
+            );
+          }
+          if (settings.name == '/legal/privacy') {
+            return MaterialPageRoute(
+              builder: (context) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  LegalDocumentSheet.showPrivacy(context);
+                });
+                return const MainShell();
+              },
+            );
+          }
+
           // Handle routes that need arguments
           if (settings.name == '/route-detail') {
             final route = settings.arguments as route_model.Route;
@@ -2210,6 +2240,8 @@ class _AppRouterState extends ConsumerState<_AppRouter> {
         return const _ErrorScreen();
       case AppInitState.needsOnboarding:
         return const OnboardingScreen();
+      case AppInitState.needsTermsAcceptance:
+        return const LegalAcceptanceScreen();
       case AppInitState.needsScanner:
         // First time user needs to pair a device before using mesh features
         return const ScannerScreen();

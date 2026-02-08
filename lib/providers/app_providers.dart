@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/admin_config.dart';
+import '../core/legal/legal_constants.dart';
 import '../core/logging.dart';
 import '../core/transport.dart';
 import '../dev/demo/demo.dart';
@@ -48,6 +49,7 @@ enum AppInitState {
   initializing,
   ready, // App services loaded, UI can be shown (renamed from initialized)
   needsOnboarding,
+  needsTermsAcceptance, // Terms version changed or never accepted
   needsScanner, // First launch after onboarding, need to pair a device
   error,
   // REMOVED: needsRegionSetup - handled by MainShell when connected
@@ -88,6 +90,24 @@ class AppInitNotifier extends Notifier<AppInitState> {
       // Check for onboarding completion FIRST
       if (!settings.onboardingComplete) {
         state = AppInitState.needsOnboarding;
+        return;
+      }
+
+      // Check terms acceptance AFTER onboarding but BEFORE device pairing.
+      // This ensures the user sees updated terms on version bumps too.
+      final acceptedTerms = settings.acceptedTermsVersion;
+      final acceptedPrivacy = settings.acceptedPrivacyVersion;
+      final needsTerms =
+          acceptedTerms != LegalConstants.termsVersion ||
+          acceptedPrivacy != LegalConstants.privacyVersion;
+
+      if (needsTerms) {
+        AppLogging.app(
+          '🔒 AppInitNotifier: Terms acceptance required - '
+          'storedTerms=$acceptedTerms (need ${LegalConstants.termsVersion}), '
+          'storedPrivacy=$acceptedPrivacy (need ${LegalConstants.privacyVersion})',
+        );
+        state = AppInitState.needsTermsAcceptance;
         return;
       }
 
