@@ -302,15 +302,38 @@ service cloud.firestore {
     }
 
     // Shared channels (for QR code sharing)
+    // SECURITY: PSK fields are no longer stored in channel documents.
+    // Legacy documents with plaintext PSK are being migrated server-side.
     match /shared_channels/{channelId} {
-      // Anyone can read shared channels (needed for QR scanning/import)
-      allow read: if true;
-      // Authenticated users can create shared channels
+      // Only authenticated users can read shared channels
+      allow read: if isAuthenticated();
+      // Authenticated users can create shared channels (PSK must NOT be included)
       allow create: if isAuthenticated() && isValidSize() &&
-        request.resource.data.createdBy == request.auth.uid;
+        request.resource.data.createdBy == request.auth.uid &&
+        !request.resource.data.keys().hasAny(['psk']);
       // Only the creator can update or delete
       allow update, delete: if isAuthenticated() &&
         resource.data.createdBy == request.auth.uid;
+
+      // Per-member encrypted key blobs
+      match /keys/{uid} {
+        // Only the target user can read their own key blob
+        allow read: if isAuthenticated() && request.auth.uid == uid;
+        // Only the channel creator (owner) can write key blobs
+        allow create, update: if isAuthenticated() &&
+          get(/databases/$(database)/documents/shared_channels/$(channelId)).data.createdBy == request.auth.uid;
+        allow delete: if isAuthenticated() &&
+          get(/databases/$(database)/documents/shared_channels/$(channelId)).data.createdBy == request.auth.uid;
+      }
+
+      // Channel membership
+      match /members/{uid} {
+        // Members can read their own membership
+        allow read: if isAuthenticated() && request.auth.uid == uid;
+        // Channel creator can manage members
+        allow write: if isAuthenticated() &&
+          get(/databases/$(database)/documents/shared_channels/$(channelId)).data.createdBy == request.auth.uid;
+      }
     }
 
     // Shared automations (for QR code sharing)

@@ -80,6 +80,12 @@ app.*.map.json
 # Test-generated widget templates
 assets/widget_templates/*.json
 
+# Internal docs (keep public-facing docs for repo links)
+docs/
+!docs/ARCHITECTURE.md
+!docs/BACKEND.md
+!docs/RELEASING.md
+
 # Scripts dependencies
 scripts/node_modules/
 scripts/package-lock.json

@@ -57,6 +57,7 @@ import 'services/content_moderation/profanity_checker.dart';
 import 'features/scanner/scanner_screen.dart';
 import 'features/messaging/messaging_screen.dart';
 import 'features/channels/channels_screen.dart';
+import 'features/channels/channel_form_screen.dart';
 import 'features/nodes/nodes_screen.dart';
 import 'features/qr_scanner/universal_qr_scanner_screen.dart';
 import 'features/map/map_screen.dart';
@@ -82,6 +83,7 @@ import 'features/widget_builder/marketplace/widget_marketplace_service.dart';
 import 'features/widget_builder/marketplace/marketplace_providers.dart';
 import 'services/user_presence_service.dart';
 import 'services/accessibility_preferences_service.dart';
+import 'services/channel_crypto_service.dart';
 // import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
 import 'core/navigation.dart';
@@ -1363,6 +1365,16 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
               ),
             );
           }
+          if (settings.name == '/channel-import') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            final firestoreId = args?['firestoreId'] as String?;
+            if (firestoreId != null) {
+              return MaterialPageRoute(
+                builder: (context) =>
+                    _ChannelImportLoader(firestoreId: firestoreId),
+              );
+            }
+          }
           if (settings.name == '/widget-import') {
             final args = settings.arguments as Map<String, dynamic>?;
             final base64Data = args?['base64Data'] as String?;
@@ -1474,6 +1486,90 @@ class _SignalDetailLoader extends ConsumerWidget {
             navigator.pushReplacement(
               MaterialPageRoute(
                 builder: (context) => SignalDetailScreen(signal: signal),
+              ),
+            );
+          });
+
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
+  }
+}
+
+/// Loader widget that fetches a shared channel securely from Firestore.
+/// Decrypts the PSK from the user's encrypted key blob.
+class _ChannelImportLoader extends ConsumerWidget {
+  final String firestoreId;
+
+  const _ChannelImportLoader({required this.firestoreId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cryptoService = ref.read(channelCryptoServiceProvider);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Import Channel')),
+      body: FutureBuilder<ChannelConfig?>(
+        future: cryptoService.fetchSecureChannel(firestoreId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text('Error loading channel: ${snapshot.error}'),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final channel = snapshot.data;
+          if (channel == null) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.lock_outline, size: 48),
+                  const SizedBox(height: 16),
+                  const Text('Channel not available'),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'You may not have access to this channel,\n'
+                    'or the owner needs to re-share it.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Navigate to channel form for import
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final navigator = navigatorKey.currentState;
+            if (navigator == null) return;
+            navigator.pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => ChannelFormScreen(
+                  existingChannel: channel,
+                  channelIndex: channel.index,
+                ),
               ),
             );
           });

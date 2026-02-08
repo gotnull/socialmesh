@@ -1169,13 +1169,18 @@ final userDisconnectedProvider =
 /// This follows the Meshtastic iOS approach of always fetching fresh data from the device.
 /// Should be called BEFORE protocol.start() in all connection paths.
 Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
-  AppLogging.app('🧹 Clearing device data before new connection...');
+  final messageCount = ref.read(messagesProvider).length;
+  AppLogging.app(
+    '🧹 Clearing device data before new connection '
+    '(preserving $messageCount messages)...',
+  );
 
   // Messages are intentionally NOT cleared here. They must survive
   // reconnections so that push-notification-delivered messages (and all
   // other user-received messages) are not lost. The deduplication logic
-  // in MessagesNotifier (by id, packetId, and signature) already prevents
-  // duplicates when the device re-sends messages after reconnection.
+  // in MessagesNotifier (by id, packetId, content-fingerprint, and
+  // signature) already prevents duplicates when the device re-sends
+  // messages after reconnection.
 
   // Clear in-memory device state (nodes, channels) — these are re-fetched
   // from the device on every connection.
@@ -1199,13 +1204,18 @@ Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
 
 /// Ref-based version for use in providers (non-widget contexts)
 Future<void> clearDeviceDataBeforeConnectRef(Ref ref) async {
-  AppLogging.app('🧹 Clearing device data before new connection...');
+  final messageCount = ref.read(messagesProvider).length;
+  AppLogging.app(
+    '🧹 Clearing device data before new connection '
+    '(preserving $messageCount messages)...',
+  );
 
   // Messages are intentionally NOT cleared here. They must survive
   // reconnections so that push-notification-delivered messages (and all
   // other user-received messages) are not lost. The deduplication logic
-  // in MessagesNotifier (by id, packetId, and signature) already prevents
-  // duplicates when the device re-sends messages after reconnection.
+  // in MessagesNotifier (by id, packetId, content-fingerprint, and
+  // signature) already prevents duplicates when the device re-sends
+  // messages after reconnection.
 
   // Clear in-memory device state (nodes, channels) — these are re-fetched
   // from the device on every connection.
@@ -2282,6 +2292,12 @@ class MessagesNotifier extends Notifier<List<Message>> {
   final LinkedHashMap<String, DateTime> _recentMessageSignatures =
       LinkedHashMap();
   static const Duration _duplicateSignatureWindow = Duration(seconds: 5);
+
+  /// Maximum timestamp drift allowed when matching message content across
+  /// delivery paths (e.g. push notification vs device protocol stream).
+  /// Push timestamps may be seconds-level while device timestamps are
+  /// packet-level, so allow up to 60 seconds of drift.
+  static const Duration _contentDedupeWindow = Duration(seconds: 60);
   MessageStorageService? _storage;
   StreamSubscription<Message>? _messageSubscription;
   StreamSubscription<MessageDeliveryUpdate>? _deliverySubscription;
@@ -2660,16 +2676,50 @@ class MessagesNotifier extends Notifier<List<Message>> {
   }
 
   bool _isDuplicateMessage(Message message) {
+    // Layer 1: Exact message ID match
     if (message.id.isNotEmpty && state.any((m) => m.id == message.id)) {
       return true;
     }
+    // Layer 2: Packet ID match
     if (message.packetId != null &&
         state.any((m) => m.packetId == message.packetId)) {
       return true;
     }
+    // Layer 3: Recent signature (short sliding window for rapid-fire)
     final signature = _messageSignature(message);
     if (_recentMessageSignatures.containsKey(signature)) {
       return true;
+    }
+    // Layer 4: Content-fingerprint match against full state.
+    // Catches push-to-device replays where the push-delivered message has a
+    // deterministic SHA1 id and the device-delivered copy has a random UUID,
+    // so layers 1-3 miss it once the signature window expires.
+    if (_isContentDuplicate(message)) {
+      AppLogging.messages(
+        '📨 Content-dedupe caught duplicate: from=${message.from}, '
+        'channel=${message.channel}, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
+      );
+      return true;
+    }
+    return false;
+  }
+
+  /// Returns true if [message] has the same sender, text, and channel as an
+  /// existing message in state whose timestamp is within [_contentDedupeWindow].
+  bool _isContentDuplicate(Message message) {
+    for (final m in state) {
+      if (m.from != message.from) continue;
+      if (m.text != message.text) continue;
+      // Treat null and 0 as equivalent (primary channel)
+      final mCh = (m.channel == null || m.channel == 0) ? 0 : m.channel;
+      final msgCh = (message.channel == null || message.channel == 0)
+          ? 0
+          : message.channel;
+      if (mCh != msgCh) continue;
+      final diff = m.timestamp.difference(message.timestamp).abs();
+      if (diff <= _contentDedupeWindow) {
+        return true;
+      }
     }
     return false;
   }
