@@ -180,7 +180,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       await settings.setOnboardingComplete(true);
 
       if (mounted) {
-        navigator.pushReplacementNamed('/main');
+        // Re-run app initialization so the state machine advances through
+        // the terms acceptance gate (and then to scanner/ready) rather than
+        // jumping straight to /main and bypassing the legal check.
+        ref.read(appInitProvider.notifier).initialize();
       }
     }
   }
