@@ -16,6 +16,8 @@ import 'package:vector_math/vector_math_64.dart' show Vector3;
 import 'package:socialmesh/features/scanner/widgets/connecting_animation.dart';
 import 'firebase_options.dart';
 import 'core/theme.dart';
+import 'core/widgets/glass_scaffold.dart';
+import 'core/widgets/loading_indicator.dart';
 import 'core/transport.dart';
 import 'core/accessibility_theme_adapter.dart';
 import 'core/logging.dart';
@@ -51,6 +53,7 @@ import 'models/mesh_models.dart';
 import 'models/social.dart';
 import 'services/app_intents/app_intents_service.dart';
 import 'services/deep_link_manager.dart';
+import 'utils/snackbar.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
 import 'services/notifications/push_notification_service.dart';
 import 'services/content_moderation/profanity_checker.dart';
@@ -135,6 +138,9 @@ Future<void> _initializeFirebaseInBackground() async {
         throw TimeoutException('Firebase initialization timed out');
       },
     );
+
+    // Suppress verbose Firestore SDK logs in the console
+    await FirebaseFirestore.setLoggingEnabled(false);
 
     // Configure Firestore settings to prevent cache corruption crashes
     // See: https://github.com/firebase/flutterfire/issues/9661
@@ -1619,7 +1625,6 @@ class _ChannelInviteRedeemerState
     extends ConsumerState<_ChannelInviteRedeemer> {
   late Future<void> _redeemFuture;
   String? _error;
-  bool _success = false;
 
   @override
   void initState() {
@@ -1637,6 +1642,32 @@ class _ChannelInviteRedeemerState
 
       if (!mounted) return;
 
+      if (result.alreadyMember) {
+        // Check if the channel actually exists locally — user may have
+        // deleted it from the device but their Firestore membership remains.
+        final localChannels = ref.read(channelsProvider);
+        final stillLocal = localChannels.any(
+          (c) =>
+              c.name == result.channel.name &&
+              c.name.isNotEmpty &&
+              c.role != 'DISABLED',
+        );
+
+        if (stillLocal) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final navigator = navigatorKey.currentState;
+            if (navigator == null) return;
+            navigator.pop();
+            final ctx = navigatorKey.currentContext;
+            if (ctx != null) {
+              showInfoSnackBar(ctx, 'You already have this channel');
+            }
+          });
+          return;
+        }
+        // Channel was deleted locally — fall through to re-add it
+      }
+
       // Fetch the decrypted channel (key blob was written by the server)
       final cryptoService = ref.read(channelCryptoServiceProvider);
       final channel = await cryptoService.fetchSecureChannel(result.channelId);
@@ -1647,8 +1678,6 @@ class _ChannelInviteRedeemerState
         setState(() => _error = 'Could not decrypt channel key');
         return;
       }
-
-      setState(() => _success = true);
 
       // Navigate to channel form
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1678,6 +1707,10 @@ class _ChannelInviteRedeemerState
       return 'This invite has reached its usage limit';
     }
     if (msg.contains('invalid invite secret')) return 'Invalid invite link';
+    if (msg.contains('channel no longer exists') ||
+        msg.contains('channel not found')) {
+      return 'This channel no longer exists';
+    }
     if (msg.contains('not-found') || msg.contains('not found')) {
       return 'Invite not found';
     }
@@ -1687,40 +1720,75 @@ class _ChannelInviteRedeemerState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Join Channel')),
+    return GlassScaffold.body(
+      title: 'Join Channel',
       body: FutureBuilder<void>(
         future: _redeemFuture,
         builder: (context, snapshot) {
           if (_error != null) {
             return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(_error!, textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Go Back'),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: SnackBarType.error.iconColor.withValues(
+                          alpha: 0.15,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Icon(
+                        Icons.error_outline_rounded,
+                        size: 32,
+                        color: SnackBarType.error.iconColor,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: context.textPrimary,
+                        side: BorderSide(color: context.border),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Go Back'),
+                    ),
+                  ],
+                ),
               ),
             );
           }
 
-          if (_success) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          return const Center(
+          return Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Joining channel...'),
+                const LoadingIndicator(size: 32, strokeWidth: 3),
+                const SizedBox(height: 20),
+                Text(
+                  'Joining channel...',
+                  style: TextStyle(fontSize: 15, color: context.textSecondary),
+                ),
               ],
             ),
           );

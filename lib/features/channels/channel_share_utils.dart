@@ -80,6 +80,13 @@ Future<void> shareChannelInviteLink(
       displayTitle ??
       (channel.name.isEmpty ? 'Channel ${channel.index}' : channel.name);
 
+  // Show loading indicator while generating
+  showLoadingSnackBar(
+    context,
+    'Creating invite link...',
+    duration: const Duration(seconds: 30),
+  );
+
   try {
     // Ensure the channel is shared (creates metadata + owner key blob)
     final cryptoService = ref.read(channelCryptoServiceProvider);
@@ -103,21 +110,14 @@ Future<void> shareChannelInviteLink(
       '(invite ${invite.inviteId})',
     );
 
-    messenger.showSnackBar(
-      const SnackBar(
-        content: Text('Invite link copied to clipboard'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    messenger.clearSnackBars();
+    if (!context.mounted) return;
+    showSuccessSnackBar(context, 'Invite link copied to clipboard');
   } catch (e) {
     AppLogging.channels('[ChannelShare] Invite link error: $e');
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text('Failed to create invite: $e'),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.red,
-      ),
-    );
+    messenger.clearSnackBars();
+    if (!context.mounted) return;
+    showErrorSnackBar(context, 'Failed to create invite link');
   }
 }
 

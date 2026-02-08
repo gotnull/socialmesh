@@ -133,9 +133,8 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
       if (!purchased || !mounted) return;
     }
 
-    // Capture navigator and messenger BEFORE any awaits
+    // Capture navigator BEFORE any awaits
     final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.of(context);
 
     try {
       AppLogging.sync(
@@ -165,19 +164,7 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
       // Trigger refresh on any watching screens
       ref.read(widgetRefreshTriggerProvider.notifier).refresh();
 
-      messenger.showSnackBar(
-        SnackBar(
-          content: const Text('Widget imported successfully'),
-          action: SnackBarAction(
-            label: 'View',
-            onPressed: () {
-              navigator.push(
-                MaterialPageRoute(builder: (_) => const WidgetBuilderScreen()),
-              );
-            },
-          ),
-        ),
-      );
+      showSuccessSnackBar(context, 'Widget imported successfully');
       navigator.pop();
     } catch (e) {
       if (!mounted) return;

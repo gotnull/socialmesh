@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../utils/snackbar.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../models/shop_models.dart';
@@ -830,12 +831,9 @@ class _DiscountCodeSectionState extends ConsumerState<_DiscountCodeSection>
                           code: widget.seller.discountCode!,
                         );
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Code copied to clipboard'),
-                            backgroundColor: context.accentColor,
-                            duration: const Duration(seconds: 2),
-                          ),
+                        showSuccessSnackBar(
+                          context,
+                          'Code copied to clipboard',
                         );
                       },
                       tooltip: 'Copy code',

@@ -63,14 +63,14 @@ class ChannelInviteService {
       'createChannelInvite',
     );
 
-    final result = await callable.call<Map<String, dynamic>>({
+    final result = await callable.call<dynamic>({
       'channelId': channelId,
       'expiresInHours': expiresInHours,
       'maxUses': maxUses,
       if (label != null) 'label': label,
     });
 
-    final data = result.data;
+    final data = Map<String, dynamic>.from(result.data as Map);
     AppLogging.channels(
       '[ChannelInvite] Created invite ${data['inviteId']} '
       'for channel $channelId',
@@ -100,13 +100,13 @@ class ChannelInviteService {
       'redeemChannelInvite',
     );
 
-    final result = await callable.call<Map<String, dynamic>>({
+    final result = await callable.call<dynamic>({
       'inviteId': inviteId,
       'inviteSecret': inviteSecret,
     });
 
-    final data = result.data;
-    final channelMap = data['channel'] as Map<String, dynamic>;
+    final data = Map<String, dynamic>.from(result.data as Map);
+    final channelMap = Map<String, dynamic>.from(data['channel'] as Map);
     final channelId = data['channelId'] as String;
 
     AppLogging.channels(
@@ -134,7 +134,7 @@ class ChannelInviteService {
       'revokeChannelInvite',
     );
 
-    await callable.call<Map<String, dynamic>>({'inviteId': inviteId});
+    await callable.call<dynamic>({'inviteId': inviteId});
 
     AppLogging.channels('[ChannelInvite] Revoked invite $inviteId');
   }

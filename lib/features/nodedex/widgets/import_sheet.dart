@@ -47,7 +47,6 @@ Future<void> showNodeDexExportSheet({
   required WidgetRef ref,
 }) async {
   // Capture before async.
-  final messenger = ScaffoldMessenger.of(context);
   final box = context.findRenderObject() as RenderBox?;
   final sharePosition = box != null
       ? box.localToGlobal(Offset.zero) & box.size
@@ -56,10 +55,9 @@ Future<void> showNodeDexExportSheet({
   final notifier = ref.read(nodeDexProvider.notifier);
 
   final json = await notifier.exportJson();
+  if (!context.mounted) return;
   if (json == null || json.isEmpty) {
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Nothing to export — NodeDex is empty')),
-    );
+    showInfoSnackBar(context, 'Nothing to export — NodeDex is empty');
     return;
   }
 
@@ -77,7 +75,8 @@ Future<void> showNodeDexExportSheet({
       sharePositionOrigin: sharePosition,
     );
   } catch (e) {
-    messenger.showSnackBar(SnackBar(content: Text('Export failed: $e')));
+    if (!context.mounted) return;
+    showErrorSnackBar(context, 'Export failed: $e');
   }
 }
 
@@ -94,7 +93,6 @@ Future<void> startNodeDexImport({
 }) async {
   // Capture before async.
   final navigator = Navigator.of(context);
-  final messenger = ScaffoldMessenger.of(context);
 
   try {
     final result = await FilePicker.platform.pickFiles(
@@ -115,9 +113,8 @@ Future<void> startNodeDexImport({
     }
 
     if (jsonString == null || jsonString.isEmpty) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Failed to read file')),
-      );
+      if (!context.mounted) return;
+      showErrorSnackBar(context, 'Failed to read file');
       return;
     }
 
@@ -126,9 +123,8 @@ Future<void> startNodeDexImport({
     final entries = notifier.parseImportJson(jsonString);
 
     if (entries.isEmpty) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('No valid NodeDex entries found in file')),
-      );
+      if (!context.mounted) return;
+      showInfoSnackBar(context, 'No valid NodeDex entries found in file');
       return;
     }
 
@@ -143,7 +139,8 @@ Future<void> startNodeDexImport({
       child: _ImportPreviewSheet(preview: preview),
     );
   } catch (e) {
-    messenger.showSnackBar(SnackBar(content: Text('Import failed: $e')));
+    if (!context.mounted) return;
+    showErrorSnackBar(context, 'Import failed: $e');
   }
 }
 
@@ -595,7 +592,6 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
     // Capture before async.
     final notifier = ref.read(nodeDexProvider.notifier);
     final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.of(context);
 
     safeSetState(() => _isImporting = true);
 
@@ -610,13 +606,13 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
 
       navigator.pop();
 
+      // Use global snackbar — sheet context is invalidated after pop.
       if (count > 0) {
-        showSuccessSnackBar(
-          messenger.context,
+        showGlobalSuccessSnackBar(
           'Imported $count ${count == 1 ? "entry" : "entries"}',
         );
       } else {
-        showInfoSnackBar(messenger.context, 'Nothing new to import');
+        showGlobalInfoSnackBar('Nothing new to import');
       }
     } catch (e) {
       if (!mounted) return;

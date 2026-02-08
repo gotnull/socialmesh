@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../utils/snackbar.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/accessibility_preferences.dart';
 import '../../providers/accessibility_providers.dart';
@@ -165,7 +166,6 @@ class _AppearanceAccessibilityScreenState
         onConfirm: () async {
           // Capture all context-dependent values BEFORE any await
           final navigator = Navigator.of(context);
-          final messenger = ScaffoldMessenger.of(context);
           final notifier = ref.read(accessibilityPreferencesProvider.notifier);
           final haptics = ref.read(hapticServiceProvider);
 
@@ -177,13 +177,8 @@ class _AppearanceAccessibilityScreenState
           await haptics.trigger(HapticType.success);
           if (!mounted) return;
 
-          // Use captured messenger instead of context after await
-          messenger.showSnackBar(
-            SnackBar(
-              content: const Text('Settings reset to defaults'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          ScaffoldMessenger.of(this.context).clearSnackBars();
+          showSuccessSnackBar(this.context, 'Settings reset to defaults');
         },
       ),
     );

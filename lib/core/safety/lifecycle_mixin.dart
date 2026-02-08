@@ -4,6 +4,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../theme.dart';
+import '../../utils/snackbar.dart';
+
 /// Result type for async operations - enables safe error handling without exceptions.
 /// Named with 'Safe' prefix to avoid conflict with Riverpod's AsyncError.
 sealed class SafeAsyncResult<T> {
@@ -137,22 +140,34 @@ mixin LifecycleSafeMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     return Navigator.of(context).pushNamed(routeName, arguments: arguments);
   }
 
-  /// Safely shows a SnackBar only if mounted.
-  /// Returns the ScaffoldFeatureController or null if skipped.
-  ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? safeShowSnackBar(
+  /// Safely shows a styled SnackBar only if mounted.
+  /// Uses the app's snackbar utilities for consistent glass-styled appearance.
+  void safeShowSnackBar(
     String message, {
     Duration duration = const Duration(seconds: 3),
     SnackBarAction? action,
     Color? backgroundColor,
+    SnackBarType type = SnackBarType.info,
   }) {
-    if (!mounted) return null;
-    final snackBar = SnackBar(
-      content: Text(message),
-      duration: duration,
-      action: action,
-      backgroundColor: backgroundColor,
-    );
-    return ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    if (!mounted) return;
+    if (backgroundColor == Colors.green ||
+        backgroundColor == AppTheme.successGreen) {
+      showSuccessSnackBar(context, message, duration: duration);
+    } else if (backgroundColor == Colors.red ||
+        backgroundColor == AppTheme.errorRed) {
+      showErrorSnackBar(context, message, duration: duration);
+    } else {
+      switch (type) {
+        case SnackBarType.success:
+          showSuccessSnackBar(context, message, duration: duration);
+        case SnackBarType.error:
+          showErrorSnackBar(context, message, duration: duration);
+        case SnackBarType.warning:
+          showWarningSnackBar(context, message, duration: duration);
+        case SnackBarType.info:
+          showInfoSnackBar(context, message, duration: duration);
+      }
+    }
   }
 
   /// Safely shows a dialog only if mounted.
@@ -287,21 +302,34 @@ mixin StatefulLifecycleSafeMixin<T extends StatefulWidget> on State<T> {
     return true;
   }
 
-  /// Safely shows a SnackBar only if mounted.
-  ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? safeShowSnackBar(
+  /// Safely shows a styled SnackBar only if mounted.
+  /// Uses the app's snackbar utilities for consistent glass-styled appearance.
+  void safeShowSnackBar(
     String message, {
     Duration duration = const Duration(seconds: 3),
     SnackBarAction? action,
     Color? backgroundColor,
+    SnackBarType type = SnackBarType.info,
   }) {
-    if (!mounted) return null;
-    final snackBar = SnackBar(
-      content: Text(message),
-      duration: duration,
-      action: action,
-      backgroundColor: backgroundColor,
-    );
-    return ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    if (!mounted) return;
+    if (backgroundColor == Colors.green ||
+        backgroundColor == AppTheme.successGreen) {
+      showSuccessSnackBar(context, message, duration: duration);
+    } else if (backgroundColor == Colors.red ||
+        backgroundColor == AppTheme.errorRed) {
+      showErrorSnackBar(context, message, duration: duration);
+    } else {
+      switch (type) {
+        case SnackBarType.success:
+          showSuccessSnackBar(context, message, duration: duration);
+        case SnackBarType.error:
+          showErrorSnackBar(context, message, duration: duration);
+        case SnackBarType.warning:
+          showWarningSnackBar(context, message, duration: duration);
+        case SnackBarType.info:
+          showInfoSnackBar(context, message, duration: duration);
+      }
+    }
   }
 
   /// Safely shows a dialog only if mounted.

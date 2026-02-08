@@ -10,6 +10,7 @@ import '../core/navigation.dart';
 import '../models/mesh_models.dart';
 import '../providers/app_providers.dart';
 import '../providers/connection_providers.dart';
+import '../utils/snackbar.dart';
 import '../utils/text_sanitizer.dart';
 import 'deep_link/deep_link.dart';
 import 'deep_link_service.dart';
@@ -403,13 +404,7 @@ class DeepLinkManager {
     }
 
     // Show success notification
-    _showSnackBar(
-      'Node "${longName ?? 'Unknown'}" added',
-      action: SnackBarAction(
-        label: 'View',
-        onPressed: () => _safeNavigate('/nodes'),
-      ),
-    );
+    _showSnackBar('Node "${longName ?? 'Unknown'}" added');
   }
 
   /// Safely navigate using the global navigator key.
@@ -436,28 +431,11 @@ class DeepLinkManager {
   }
 
   /// Show a snackbar using the global navigator context.
-  void _showSnackBar(
-    String message, {
-    bool isError = false,
-    SnackBarAction? action,
-  }) {
-    final context = navigatorKey.currentContext;
-    if (context == null) {
-      AppLogging.debug('DeepLinkManager: Cannot show snackbar - no context');
-      return;
-    }
-
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: isError ? Colors.red : null,
-          action: action,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } catch (e) {
-      AppLogging.debug('DeepLinkManager: showSnackBar failed: $e');
+  void _showSnackBar(String message, {bool isError = false}) {
+    if (isError) {
+      showGlobalErrorSnackBar(message);
+    } else {
+      showGlobalInfoSnackBar(message);
     }
   }
 

@@ -25,7 +25,8 @@ class AutomationRepository extends ChangeNotifier {
   List<AutomationLogEntry> _log = [];
   List<ScheduleSpec> _schedules = [];
 
-  List<Automation> get automations => List.unmodifiable(_store?.getAll() ?? []);
+  List<Automation> get automations =>
+      List.unmodifiable(_store?.getAll() ?? _legacyAutomations);
   List<AutomationLogEntry> get log => List.unmodifiable(_log);
   List<ScheduleSpec> get schedules => List.unmodifiable(_schedules);
 

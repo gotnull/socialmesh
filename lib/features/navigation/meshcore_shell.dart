@@ -591,16 +591,16 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
     final deviceName = settings?.lastDeviceName ?? 'MeshCore Device';
 
     if (deviceId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No saved device to reconnect to')),
-      );
+      showErrorSnackBar(context, 'No saved device to reconnect to');
       return;
     }
 
     // Show reconnecting feedback
-    ScaffoldMessenger.of(
+    showLoadingSnackBar(
       context,
-    ).showSnackBar(SnackBar(content: Text('Reconnecting to $deviceName...')));
+      'Reconnecting to $deviceName...',
+      duration: const Duration(seconds: 30),
+    );
 
     // Create device info and attempt connection
     final device = DeviceInfo(
@@ -625,22 +625,16 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
           .read(conn.deviceConnectionProvider.notifier)
           .markAsPaired(device, nodeNumParsed, isMeshCore: true);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Connected to ${result.deviceInfo?.displayName ?? deviceName}',
-          ),
-          backgroundColor: AppTheme.successGreen,
-        ),
+      ScaffoldMessenger.of(context).clearSnackBars();
+      showSuccessSnackBar(
+        context,
+        'Connected to ${result.deviceInfo?.displayName ?? deviceName}',
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Reconnect failed: ${result.errorMessage ?? "Unknown error"}',
-          ),
-          backgroundColor: AppTheme.errorRed,
-        ),
+      ScaffoldMessenger.of(context).clearSnackBars();
+      showErrorSnackBar(
+        context,
+        'Reconnect failed: ${result.errorMessage ?? "Unknown error"}',
       );
     }
   }

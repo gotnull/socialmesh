@@ -271,7 +271,7 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 1));
 
       // Should show Intent label
       expect(find.text('Intent'), findsOneWidget);
@@ -312,7 +312,7 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 1));
 
       // Should show Short Status text field (capital S)
       expect(find.text('Short Status (optional)'), findsOneWidget);
@@ -350,11 +350,11 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 1));
 
       // Tap on the intent row
       await tester.tap(find.text('Intent'));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 1));
 
       // Bottom sheet should show header and all intent options
       expect(find.text('Your Intent'), findsOneWidget);
@@ -398,18 +398,18 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 1));
 
       // Initially shows "Tap to set"
       expect(find.text('Tap to set'), findsOneWidget);
 
       // Open the picker
       await tester.tap(find.text('Intent'));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 1));
 
       // Tap on "Camping"
       await tester.tap(find.text('Camping'));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 1));
 
       // Should now show "Camping" in the intent row
       // (Bottom sheet closes, Camping appears in main view)
@@ -448,7 +448,7 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 1));
 
       // Find the status text field by finding all text fields and identifying
       // the one for short status

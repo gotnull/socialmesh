@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
-import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/review_providers.dart';
@@ -29,10 +28,9 @@ import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/node_avatar.dart';
-import '../channels/channel_share_utils.dart';
+import '../channels/channel_options_sheet.dart';
 import '../../services/messaging/offline_queue_service.dart';
 import '../../services/haptic_service.dart';
-import '../channels/channel_form_screen.dart';
 import '../settings/canned_responses_screen.dart';
 import '../settings/device_management_screen.dart';
 import '../nodes/nodes_screen.dart';
@@ -1263,107 +1261,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     );
   }
 
-  void _showChannelSettings(BuildContext context) {
+  void _showChannelSettings(BuildContext context, WidgetRef ref) {
     final channels = ref.read(channelsProvider);
     final channel = channels.firstWhere(
       (c) => c.index == widget.channelIndex,
       orElse: () =>
           ChannelConfig(index: widget.channelIndex ?? 0, name: '', psk: []),
     );
-
-    AppBottomSheet.show(
-      context: context,
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-            child: BottomSheetHeader(
-              icon: Icons.wifi_tethering,
-              title: widget.title,
-              subtitle: channel.psk.isNotEmpty ? 'Encrypted' : 'No encryption',
-            ),
-          ),
-          ListTile(
-            leading: Icon(Icons.edit, color: context.textSecondary),
-            title: Text(
-              'Edit Channel',
-              style: TextStyle(color: context.textPrimary),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChannelFormScreen(
-                    existingChannel: channel,
-                    channelIndex: channel.index,
-                  ),
-                ),
-              );
-            },
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.key,
-              color: channel.psk.isNotEmpty
-                  ? context.textPrimary
-                  : context.textTertiary,
-            ),
-            title: Text(
-              'View Encryption Key',
-              style: TextStyle(
-                color: channel.psk.isNotEmpty
-                    ? context.textPrimary
-                    : context.textTertiary,
-              ),
-            ),
-            enabled: channel.psk.isNotEmpty,
-            onTap: channel.psk.isNotEmpty
-                ? () {
-                    Navigator.pop(context);
-                    _showEncryptionKey(context, channel);
-                  }
-                : null,
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.share,
-              color: channel.psk.isNotEmpty
-                  ? context.textPrimary
-                  : context.textTertiary,
-            ),
-            title: Text(
-              'Share Channel',
-              style: TextStyle(
-                color: channel.psk.isNotEmpty
-                    ? context.textPrimary
-                    : context.textTertiary,
-              ),
-            ),
-            enabled: channel.psk.isNotEmpty,
-            onTap: channel.psk.isNotEmpty
-                ? () {
-                    Navigator.pop(context);
-                    _shareChannel(context, channel);
-                  }
-                : null,
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showEncryptionKey(BuildContext context, ChannelConfig channel) {
-    AppBottomSheet.show(
-      context: context,
-      child: _EncryptionKeyContent(channel: channel),
-    );
-  }
-
-  void _shareChannel(BuildContext context, ChannelConfig channel) {
-    showChannelShareSheet(
+    showChannelOptionsSheet(
       context,
       channel,
       ref: ref,
@@ -1527,7 +1432,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               IconButton(
                 icon: Icon(Icons.settings, color: context.textPrimary),
                 tooltip: 'Channel Settings',
-                onPressed: () => _showChannelSettings(context),
+                onPressed: () => _showChannelSettings(context, ref),
               ),
           ],
         ),
@@ -2347,118 +2252,6 @@ class _QuickResponseTile extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _EncryptionKeyContent extends StatefulWidget {
-  final ChannelConfig channel;
-
-  const _EncryptionKeyContent({required this.channel});
-
-  @override
-  State<_EncryptionKeyContent> createState() => _EncryptionKeyContentState();
-}
-
-class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
-  bool _showKey = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final base64Key = base64Encode(widget.channel.psk);
-    final keyBits = widget.channel.psk.length * 8;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        BottomSheetHeader(
-          icon: Icons.key,
-          title: 'Encryption Key',
-          subtitle: '$keyBits-bit · ${widget.channel.psk.length} bytes',
-        ),
-        SizedBox(height: 20),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: context.background,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: context.border),
-          ),
-          child: _showKey
-              ? SelectableText(
-                  base64Key,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: context.accentColor,
-                    fontFamily: AppTheme.fontFamily,
-                  ),
-                )
-              : Text(
-                  '•' * 32,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: context.textTertiary.withValues(alpha: 0.5),
-                    fontFamily: AppTheme.fontFamily,
-                  ),
-                ),
-        ),
-        SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => setState(() => _showKey = !_showKey),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: BorderSide(color: context.border),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: Icon(
-                  _showKey ? Icons.visibility_off : Icons.visibility,
-                  size: 20,
-                ),
-                label: Text(_showKey ? 'Hide' : 'Show'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _showKey
-                    ? () {
-                        // Capture messenger before pop since context becomes invalid after
-                        final messenger = ScaffoldMessenger.of(context);
-                        Clipboard.setData(ClipboardData(text: base64Key));
-                        Navigator.pop(context);
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: const Text('Key copied to clipboard'),
-                            backgroundColor: AppTheme.successGreen,
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      }
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.accentColor,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: context.background,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: const Icon(Icons.copy, size: 20),
-                label: const Text('Copy'),
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

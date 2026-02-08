@@ -1,24 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:convert';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
-import '../../core/transport.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
-import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
-import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
-import 'channel_form_screen.dart';
-import 'channel_share_utils.dart';
+import 'channel_options_sheet.dart';
 import 'channel_wizard_screen.dart';
 
 class ChannelsScreen extends ConsumerStatefulWidget {
@@ -385,7 +379,7 @@ class _ChannelTile extends ConsumerWidget {
 
     return BouncyTap(
       onTap: () => _openChannelChat(context),
-      onLongPress: () => _showChannelOptions(context, ref),
+      onLongPress: () => showChannelOptionsSheet(context, channel, ref: ref),
       scaleFactor: animationsEnabled ? 0.98 : 1.0,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
@@ -501,279 +495,6 @@ class _ChannelTile extends ConsumerWidget {
               : channel.name,
         ),
       ),
-    );
-  }
-
-  void _showChannelOptions(BuildContext context, WidgetRef ref) async {
-    final actions = [
-      BottomSheetAction(icon: Icons.edit, label: 'Edit Channel', value: 'edit'),
-      BottomSheetAction(
-        icon: Icons.key,
-        label: 'View Encryption Key',
-        value: 'key',
-        enabled: channel.psk.isNotEmpty,
-      ),
-      BottomSheetAction(
-        icon: Icons.share,
-        label: 'Share Channel',
-        value: 'qr',
-        enabled: channel.psk.isNotEmpty,
-      ),
-      BottomSheetAction(
-        icon: Icons.link,
-        label: 'Share Invite Link',
-        value: 'invite',
-        enabled: channel.psk.isNotEmpty,
-      ),
-      if (channel.index != 0)
-        BottomSheetAction(
-          icon: Icons.delete,
-          label: 'Delete Channel',
-          value: 'delete',
-          isDestructive: true,
-        ),
-    ];
-
-    final result = await AppBottomSheet.showActions<String>(
-      context: context,
-      actions: actions,
-    );
-
-    if (result == null || !context.mounted) return;
-
-    switch (result) {
-      case 'edit':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChannelFormScreen(
-              existingChannel: channel,
-              channelIndex: channel.index,
-            ),
-          ),
-        );
-        break;
-      case 'key':
-        _showEncryptionKey(context);
-        break;
-      case 'qr':
-        _shareChannel(context, ref);
-        break;
-      case 'invite':
-        shareChannelInviteLink(context, channel, ref: ref);
-        break;
-      case 'delete':
-        _deleteChannel(context, ref);
-        break;
-    }
-  }
-
-  void _showEncryptionKey(BuildContext context) {
-    final base64Key = base64Encode(channel.psk);
-    final keyBits = channel.psk.length * 8;
-
-    AppBottomSheet.show(
-      context: context,
-      child: _EncryptionKeyContent(
-        base64Key: base64Key,
-        keyBits: keyBits,
-        keyBytes: channel.psk.length,
-      ),
-    );
-  }
-
-  void _shareChannel(BuildContext context, WidgetRef ref) {
-    showChannelShareSheet(context, channel, ref: ref);
-  }
-
-  void _deleteChannel(BuildContext context, WidgetRef ref) {
-    // Check connection state before showing delete dialog
-    final connectionState = ref.read(connectionStateProvider);
-    final isConnected = connectionState.maybeWhen(
-      data: (state) => state == DeviceConnectionState.connected,
-      orElse: () => false,
-    );
-
-    if (!isConnected) {
-      showErrorSnackBar(context, 'Cannot delete channel: Device not connected');
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Channel'),
-        content: Text('Delete channel "${channel.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-
-              // Create disabled channel config
-              final disabledChannel = ChannelConfig(
-                index: channel.index,
-                name: '',
-                psk: [],
-                uplink: false,
-                downlink: false,
-                role: 'DISABLED',
-              );
-
-              // Send to device first
-              try {
-                final protocol = ref.read(protocolServiceProvider);
-                final channelsNotifier = ref.read(channelsProvider.notifier);
-                await protocol.setChannel(disabledChannel);
-
-                // Update local state only after successful device sync
-                channelsNotifier.removeChannel(channel.index);
-
-                // Don't show snackbar - the reconnecting overlay will handle UX
-              } catch (e) {
-                if (context.mounted) {
-                  showErrorSnackBar(context, 'Failed to delete channel: $e');
-                }
-              }
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(dialogContext).colorScheme.error,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Stateful content for encryption key bottom sheet
-class _EncryptionKeyContent extends StatefulWidget {
-  final String base64Key;
-  final int keyBits;
-  final int keyBytes;
-
-  const _EncryptionKeyContent({
-    required this.base64Key,
-    required this.keyBits,
-    required this.keyBytes,
-  });
-
-  @override
-  State<_EncryptionKeyContent> createState() => _EncryptionKeyContentState();
-}
-
-class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
-  bool _showKey = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        BottomSheetHeader(
-          icon: Icons.key,
-          title: 'Encryption Key',
-          subtitle: '${widget.keyBits}-bit · ${widget.keyBytes} bytes · Base64',
-        ),
-        SizedBox(height: 20),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: context.background,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: context.border),
-          ),
-          child: _showKey
-              ? SelectableText(
-                  widget.base64Key,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: context.accentColor,
-                    fontFamily: AppTheme.fontFamily,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.5,
-                    height: 1.5,
-                  ),
-                )
-              : Text(
-                  '•' * 32,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: context.textTertiary.withValues(alpha: 0.5),
-                    fontFamily: AppTheme.fontFamily,
-                    letterSpacing: 2,
-                  ),
-                ),
-        ),
-        SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => setState(() => _showKey = !_showKey),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: BorderSide(color: context.border),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: Icon(
-                  _showKey ? Icons.visibility_off : Icons.visibility,
-                  size: 20,
-                ),
-                label: Text(
-                  _showKey ? 'Hide' : 'Show',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _showKey
-                    ? () {
-                        Clipboard.setData(
-                          ClipboardData(text: widget.base64Key),
-                        );
-                        Navigator.pop(context);
-                        showSuccessSnackBar(context, 'Key copied to clipboard');
-                      }
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.accentColor,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: context.background,
-                  disabledForegroundColor: context.textTertiary.withValues(
-                    alpha: 0.5,
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: const Icon(Icons.copy, size: 20),
-                label: Text(
-                  'Copy',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

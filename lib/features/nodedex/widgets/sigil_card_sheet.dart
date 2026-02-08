@@ -395,7 +395,6 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
     );
 
     // Capture context-dependent values before any await.
-    final messenger = ScaffoldMessenger.of(context);
     final sharePosition = getSafeSharePosition(context);
 
     setState(() => _isSharing = true);
@@ -471,9 +470,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
         'Share failed for node ${widget.entry.nodeNum}: $e\n$stack',
       );
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text('Could not share card: $e')),
-      );
+      showErrorSnackBar(context, 'Could not share card');
     } finally {
       if (mounted) {
         setState(() => _isSharing = false);

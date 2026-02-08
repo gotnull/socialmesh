@@ -1268,7 +1268,6 @@ class _AccountSubscriptionsScreenState
 
     // Capture before async gap
     final cardColor = context.card;
-    final messenger = ScaffoldMessenger.of(context);
     final authService = ref.read(authServiceProvider);
 
     final shouldLink = await showDialog<bool>(
@@ -1306,23 +1305,16 @@ class _AccountSubscriptionsScreenState
         await authService.linkPendingCredential(e.pendingCredential);
 
         if (mounted) {
-          messenger.showSnackBar(
-            SnackBar(
-              content: const Text('GitHub account linked successfully!'),
-              backgroundColor: Colors.green,
-            ),
+          showSuccessSnackBar(
+            this.context,
+            'GitHub account linked successfully!',
           );
           ref.invalidate(userProfileProvider);
           await syncRevenueCatWithFirebase(ref);
         }
       } catch (linkError) {
         if (mounted) {
-          messenger.showSnackBar(
-            SnackBar(
-              content: const Text('Failed to link accounts'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          showErrorSnackBar(this.context, 'Failed to link accounts');
           AppLogging.auth('Account linking error: $linkError');
         }
       }
