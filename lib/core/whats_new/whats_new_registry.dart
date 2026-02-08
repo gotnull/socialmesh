@@ -98,6 +98,80 @@ class WhatsNewRegistry {
   // ===========================================================================
 
   static const List<WhatsNewPayload> _payloads = [
+    // v0.9.0 — Reachability introduction
+    WhatsNewPayload(
+      version: '0.9.0',
+      headline: "What's New in Socialmesh",
+      subtitle: 'Version 0.9.0',
+      items: [
+        WhatsNewItem(
+          id: 'reachability_intro',
+          title: 'Reachability',
+          description:
+              'Estimate how likely you are to reach each node on your mesh — '
+              'without sending a single test packet.\n\n'
+              'Reachability passively observes traffic flowing through the '
+              'network and assigns High, Medium, or Low confidence to every '
+              'node. Find it in the drawer menu under Mesh.',
+          icon: Icons.wifi_find,
+          iconColor: Color(0xFF26A69A),
+          deepLinkRoute: '/reachability',
+          helpTopicId: 'reachability_overview',
+          ctaLabel: 'Open Reachability',
+        ),
+      ],
+    ),
+
+    // v1.0.0 — World Map introduction
+    WhatsNewPayload(
+      version: '1.0.0',
+      headline: "What's New in Socialmesh",
+      subtitle: 'Version 1.0.0',
+      items: [
+        WhatsNewItem(
+          id: 'world_map_intro',
+          title: 'World Map',
+          description:
+              'See the entire global Meshtastic network on a single map. '
+              'Every dot is a node sharing its location — zoom, pan, and '
+              'tap to explore node details, hardware info, and last-seen '
+              'times.\n\n'
+              'No connection required. The World Map pulls live data from '
+              'the Socialmesh backend so you can explore the mesh anywhere.',
+          icon: Icons.public,
+          iconColor: Color(0xFF42A5F5),
+          deepLinkRoute: '/world-map',
+          helpTopicId: 'world_mesh_overview',
+          ctaLabel: 'Open World Map',
+        ),
+      ],
+    ),
+
+    // v1.1.0 — Signals / Presence Feed introduction
+    WhatsNewPayload(
+      version: '1.1.0',
+      headline: "What's New in Socialmesh",
+      subtitle: 'Version 1.1.0',
+      items: [
+        WhatsNewItem(
+          id: 'signals_intro',
+          title: 'Signals',
+          description:
+              'Broadcast ephemeral moments to your mesh. Signals are '
+              'presence markers — share text, a photo, or your location '
+              'with a TTL from 15 minutes up to 24 hours.\n\n'
+              'Nearby signals appear first with proximity badges showing '
+              'hop count. When they fade, they are gone. True off-grid, '
+              'ephemeral presence.',
+          icon: Icons.sensors,
+          iconColor: Color(0xFFAB47BC),
+          deepLinkRoute: '/signals',
+          helpTopicId: 'signals_overview',
+          ctaLabel: 'Open Signals',
+        ),
+      ],
+    ),
+
     // v1.2.0 — NodeDex introduction
     WhatsNewPayload(
       version: '1.2.0',

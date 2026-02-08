@@ -11,6 +11,9 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../../../utils/snackbar.dart';
 
+/// Filter modes for the user list.
+enum _UserFilter { all, paying, free, excluded, anonymous }
+
 /// Product prices in AUD for revenue calculation
 /// These should match RevenueCat product prices
 const _productPricesAud = <String, double>{
@@ -43,8 +46,55 @@ class _UserPurchasesAdminScreenState
 
   // Stats
   int _totalUsers = 0;
-  int _usersWithPurchases = 0;
-  double _totalRevenue = 0;
+
+  /// Active list filter.
+  _UserFilter _activeFilter = _UserFilter.all;
+
+  /// User IDs excluded from revenue calculation via the toggle icon.
+  final Set<String> _excludedUserIds = {};
+
+  /// Total paying users (before exclusions).
+  int get _totalPayingUsers =>
+      _users.where((u) => u.purchases.isNotEmpty).length;
+
+  /// Paying users after exclusions.
+  int get _netPayingUsers => _users
+      .where(
+        (u) => u.purchases.isNotEmpty && !_excludedUserIds.contains(u.userId),
+      )
+      .length;
+
+  /// Gross revenue (all paying users).
+  double get _grossRevenue {
+    double total = 0;
+    for (final user in _users) {
+      for (final purchase in user.purchases) {
+        total += _productPricesAud[purchase.productId] ?? 0;
+      }
+    }
+    return total;
+  }
+
+  /// Revenue from excluded users only.
+  double get _excludedRevenue {
+    double total = 0;
+    for (final user in _users) {
+      if (!_excludedUserIds.contains(user.userId)) continue;
+      for (final purchase in user.purchases) {
+        total += _productPricesAud[purchase.productId] ?? 0;
+      }
+    }
+    return total;
+  }
+
+  /// Net revenue (gross minus excluded).
+  double get _netRevenue => _grossRevenue - _excludedRevenue;
+
+  /// Number of users currently excluded from revenue.
+  int get _excludedCount => _excludedUserIds.length;
+
+  /// Whether any exclusions are active.
+  bool get _hasExclusions => _excludedUserIds.isNotEmpty;
 
   @override
   void initState() {
@@ -91,8 +141,6 @@ class _UserPurchasesAdminScreenState
       }
 
       final users = <_UserWithPurchases>[];
-      double totalRevenue = 0;
-      int usersWithPurchases = 0;
 
       for (final userDoc in usersSnapshot.docs) {
         final userId = userDoc.id;
@@ -164,14 +212,6 @@ class _UserPurchasesAdminScreenState
         // Note: Legacy subcollections (users/{uid}/entitlements and users/{uid}/purchases)
         // are no longer queried to avoid N+1 query problems. All purchase data now comes
         // from the top-level user_entitlements collection populated by RevenueCat webhooks.
-
-        if (purchases.isNotEmpty) {
-          usersWithPurchases++;
-          // Calculate revenue from this user's purchases
-          for (final purchase in purchases) {
-            totalRevenue += _productPricesAud[purchase.productId] ?? 0;
-          }
-        }
 
         users.add(
           _UserWithPurchases(
@@ -253,12 +293,6 @@ class _UserPurchasesAdminScreenState
             );
           }
 
-          usersWithPurchases++;
-          // Calculate revenue from this user's purchases
-          for (final purchase in purchases) {
-            totalRevenue += _productPricesAud[purchase.productId] ?? 0;
-          }
-
           users.add(
             _UserWithPurchases(
               userId: entUserId,
@@ -283,8 +317,6 @@ class _UserPurchasesAdminScreenState
       safeSetState(() {
         _users = users;
         _totalUsers = users.length;
-        _usersWithPurchases = usersWithPurchases;
-        _totalRevenue = totalRevenue;
         _isLoading = false;
       });
     } catch (e) {
@@ -297,9 +329,24 @@ class _UserPurchasesAdminScreenState
 
   List<_UserWithPurchases> get _filteredUsers {
     final query = _searchController.text.toLowerCase().trim();
-    if (query.isEmpty) return _users;
 
     return _users.where((user) {
+      // Apply category filter first
+      switch (_activeFilter) {
+        case _UserFilter.all:
+          break;
+        case _UserFilter.paying:
+          if (user.purchases.isEmpty) return false;
+        case _UserFilter.free:
+          if (user.purchases.isNotEmpty) return false;
+        case _UserFilter.excluded:
+          if (!_excludedUserIds.contains(user.userId)) return false;
+        case _UserFilter.anonymous:
+          if (!user.isAnonymous) return false;
+      }
+
+      // Then apply text search
+      if (query.isEmpty) return true;
       return (user.displayName?.toLowerCase().contains(query) ?? false) ||
           (user.email?.toLowerCase().contains(query) ?? false) ||
           user.userId.toLowerCase().contains(query) ||
@@ -308,15 +355,31 @@ class _UserPurchasesAdminScreenState
     }).toList();
   }
 
+  /// Count of users matching the current filter (for chip labels).
+  int _countForFilter(_UserFilter filter) {
+    switch (filter) {
+      case _UserFilter.all:
+        return _users.length;
+      case _UserFilter.paying:
+        return _totalPayingUsers;
+      case _UserFilter.free:
+        return _users.where((u) => u.purchases.isEmpty).length;
+      case _UserFilter.excluded:
+        return _excludedCount;
+      case _UserFilter.anonymous:
+        return _users.where((u) => u.isAnonymous).length;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GlassScaffold(
       title: 'User Purchases',
       slivers: [
-        // Stats cards
+        // Stats cards — row 1: users overview
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -332,19 +395,26 @@ class _UserPurchasesAdminScreenState
                   const SizedBox(width: 12),
                   Expanded(
                     child: _StatCard(
-                      label: 'With Purchases',
-                      value: _usersWithPurchases.toString(),
+                      label: 'Paying',
+                      value: _hasExclusions
+                          ? '$_netPayingUsers'
+                          : '$_totalPayingUsers',
                       icon: Icons.shopping_bag,
                       color: Colors.green,
+                      subtitle: _hasExclusions
+                          ? '$_excludedCount excluded'
+                          : null,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _StatCard(
-                      label: 'Revenue',
-                      value: 'A\$${_totalRevenue.toStringAsFixed(2)}',
+                      label: _hasExclusions ? 'Net Revenue' : 'Gross Revenue',
+                      value: _hasExclusions
+                          ? 'A\$${_netRevenue.toStringAsFixed(2)}'
+                          : 'A\$${_grossRevenue.toStringAsFixed(2)}',
                       icon: Icons.attach_money,
-                      color: Colors.orange,
+                      color: _hasExclusions ? Colors.green : Colors.orange,
                     ),
                   ),
                 ],
@@ -352,6 +422,47 @@ class _UserPurchasesAdminScreenState
             ),
           ),
         ),
+
+        // Stats cards — row 2: revenue breakdown (only when exclusions active)
+        if (_hasExclusions)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _StatCard(
+                        label: 'Gross Revenue',
+                        value: 'A\$${_grossRevenue.toStringAsFixed(2)}',
+                        icon: Icons.account_balance_wallet,
+                        color: Colors.orange,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _StatCard(
+                        label: 'Excluded',
+                        value: '-A\$${_excludedRevenue.toStringAsFixed(2)}',
+                        icon: Icons.money_off,
+                        color: Colors.red,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _StatCard(
+                        label: 'Net Revenue',
+                        value: 'A\$${_netRevenue.toStringAsFixed(2)}',
+                        icon: Icons.trending_up,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
 
         // Search bar
         SliverToBoxAdapter(
@@ -393,6 +504,31 @@ class _UserPurchasesAdminScreenState
               subtitle:
                   'Users must open the app while signed in for their purchases to appear here.',
               borderRadius: 8,
+            ),
+          ),
+        ),
+
+        // Filter chips
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip(context, _UserFilter.all, 'All'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip(context, _UserFilter.paying, 'Paying'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip(context, _UserFilter.free, 'Free'),
+                  if (_hasExclusions) ...[
+                    const SizedBox(width: 8),
+                    _buildFilterChip(context, _UserFilter.excluded, 'Excluded'),
+                  ],
+                  const SizedBox(width: 8),
+                  _buildFilterChip(context, _UserFilter.anonymous, 'Anonymous'),
+                ],
+              ),
             ),
           ),
         ),
@@ -461,10 +597,87 @@ class _UserPurchasesAdminScreenState
           SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               final user = _filteredUsers[index];
-              return _UserTile(user: user, onTap: () => _showUserDetail(user));
+              final isExcluded = _excludedUserIds.contains(user.userId);
+              return _UserTile(
+                user: user,
+                onTap: () => _showUserDetail(user),
+                isExcluded: isExcluded,
+                onToggleExclude: user.purchases.isNotEmpty
+                    ? () {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          if (isExcluded) {
+                            _excludedUserIds.remove(user.userId);
+                          } else {
+                            _excludedUserIds.add(user.userId);
+                          }
+                        });
+                      }
+                    : null,
+              );
             }, childCount: _filteredUsers.length),
           ),
       ],
+    );
+  }
+
+  Widget _buildFilterChip(
+    BuildContext context,
+    _UserFilter filter,
+    String label,
+  ) {
+    final isActive = _activeFilter == filter;
+    final count = _countForFilter(filter);
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _activeFilter = filter);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive
+              ? context.accentColor.withValues(alpha: 0.2)
+              : context.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isActive ? context.accentColor : context.border,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                color: isActive ? context.accentColor : context.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? context.accentColor.withValues(alpha: 0.15)
+                    : context.card,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isActive ? context.accentColor : context.textTertiary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -483,12 +696,14 @@ class _StatCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final String? subtitle;
 
   const _StatCard({
     required this.label,
     required this.value,
     required this.icon,
     required this.color,
+    this.subtitle,
   });
 
   @override
@@ -533,6 +748,17 @@ class _StatCard extends StatelessWidget {
               ),
             ),
           ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitle!,
+              style: TextStyle(
+                fontSize: 10,
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -542,159 +768,189 @@ class _StatCard extends StatelessWidget {
 class _UserTile extends StatelessWidget {
   final _UserWithPurchases user;
   final VoidCallback onTap;
+  final bool isExcluded;
+  final VoidCallback? onToggleExclude;
 
-  const _UserTile({required this.user, required this.onTap});
+  const _UserTile({
+    required this.user,
+    required this.onTap,
+    this.isExcluded = false,
+    this.onToggleExclude,
+  });
 
   @override
   Widget build(BuildContext context) {
     final hasPurchases = user.purchases.isNotEmpty;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Material(
-        color: context.surface,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: onTap,
+    return Opacity(
+      opacity: isExcluded ? 0.45 : 1.0,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: Material(
+          color: context.surface,
           borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                // Avatar
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: hasPurchases
-                      ? Colors.green.shade800
-                      : context.card,
-                  backgroundImage: user.avatarUrl != null
-                      ? NetworkImage(user.avatarUrl!)
-                      : null,
-                  child: user.avatarUrl == null
-                      ? Icon(
-                          Icons.person,
-                          size: 22,
-                          color: hasPurchases
-                              ? Colors.white
-                              : context.textSecondary,
-                        )
-                      : null,
-                ),
-                const SizedBox(width: 12),
-                // User info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              user.displayName ?? 'Unknown User',
-                              style: TextStyle(
-                                color: context.textPrimary,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 15,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (user.isAnonymous) ...[
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'Anonymous',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.orange.shade700,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      if (user.email != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          user.email!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: context.textSecondary,
-                          ),
-                        ),
-                      ],
-                      if (user.purchases.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 4,
-                          runSpacing: 4,
-                          children: user.purchases.map((p) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _getProductColor(
-                                  p.productId,
-                                ).withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                _formatProductName(p.productId),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: _getProductColor(p.productId),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                    ],
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  // Avatar
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: hasPurchases
+                        ? Colors.green.shade800
+                        : context.card,
+                    backgroundImage: user.avatarUrl != null
+                        ? NetworkImage(user.avatarUrl!)
+                        : null,
+                    child: user.avatarUrl == null
+                        ? Icon(
+                            Icons.person,
+                            size: 22,
+                            color: hasPurchases
+                                ? Colors.white
+                                : context.textSecondary,
+                          )
+                        : null,
                   ),
-                ),
-                // Purchase count badge
-                if (hasPurchases) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                  const SizedBox(width: 12),
+                  // User info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                user.displayName ?? 'Unknown User',
+                                style: TextStyle(
+                                  color: context.textPrimary,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 15,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (user.isAnonymous) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  'Anonymous',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.orange.shade700,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        if (user.email != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            user.email!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.textSecondary,
+                            ),
+                          ),
+                        ],
+                        if (user.purchases.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: user.purchases.map((p) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _getProductColor(
+                                    p.productId,
+                                  ).withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  _formatProductName(p.productId),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: _getProductColor(p.productId),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ],
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${user.purchases.length}',
-                      style: const TextStyle(
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                  ),
+                  // Purchase count badge
+                  if (hasPurchases) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${user.purchases.length}',
+                        style: const TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
+                  ],
+                  // Exclude from revenue toggle
+                  if (hasPurchases) ...[
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: onToggleExclude,
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          isExcluded
+                              ? Icons.money_off_csred_outlined
+                              : Icons.attach_money,
+                          color: isExcluded
+                              ? Colors.red.shade400
+                              : context.textTertiary,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                  // Chevron
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right,
+                    color: context.textTertiary,
+                    size: 20,
                   ),
                 ],
-                // Chevron
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.chevron_right,
-                  color: context.textTertiary,
-                  size: 20,
-                ),
-              ],
+              ),
             ),
           ),
         ),

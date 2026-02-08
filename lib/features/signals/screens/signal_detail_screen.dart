@@ -8,6 +8,7 @@ import 'package:socialmesh/features/settings/account_subscriptions_screen.dart';
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/ico_help_system.dart';
 import '../../nodedex/screens/nodedex_detail_screen.dart';
 import '../../nodedex/widgets/sigil_painter.dart';
 import '../../../core/widgets/glass_scaffold.dart';
@@ -964,111 +965,120 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       );
     }
 
-    return GlassScaffold(
-      title: 'Signal',
-      actions: [_buildSignalMenu(context, signal)],
-      controller: _scrollController,
-      resizeToAvoidBottomInset:
-          false, // We handle keyboard insets manually in buildReplyInput
-      bottomNavigationBar: buildReplyInput(),
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              // Animated signal card
-              SlideTransition(
-                position: _cardSlideAnimation,
-                child: FadeTransition(
-                  opacity: _cardFadeAnimation,
-                  child: SignalCard(signal: signal, showActions: false),
+    return HelpTourController(
+      topicId: 'signal_detail',
+      stepKeys: const {},
+      child: GlassScaffold(
+        title: 'Signal',
+        actions: [
+          IcoHelpAppBarButton(topicId: 'signal_detail'),
+          _buildSignalMenu(context, signal),
+        ],
+        controller: _scrollController,
+        resizeToAvoidBottomInset:
+            false, // We handle keyboard insets manually in buildReplyInput
+        bottomNavigationBar: buildReplyInput(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Animated signal card
+                SlideTransition(
+                  position: _cardSlideAnimation,
+                  child: FadeTransition(
+                    opacity: _cardFadeAnimation,
+                    child: SignalCard(signal: signal, showActions: false),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              // Animated responses header
-              SlideTransition(
-                position: _headerSlideAnimation,
-                child: FadeTransition(
-                  opacity: _headerFadeAnimation,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: context.accentColor.withValues(alpha: 0.1),
+                // Animated responses header
+                SlideTransition(
+                  position: _headerSlideAnimation,
+                  child: FadeTransition(
+                    opacity: _headerFadeAnimation,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: context.accentColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.forum_rounded,
-                            size: 16,
-                            color: context.accentColor,
-                          ),
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: context.accentColor.withValues(alpha: 0.1),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Conversation',
-                                style: TextStyle(
-                                  color: context.textPrimary,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: context.accentColor.withValues(
+                                alpha: 0.15,
                               ),
-                              if (_comments != null && _comments!.isNotEmpty)
-                                Text(
-                                  '${_comments!.length} ${_comments!.length == 1 ? 'comment' : 'comments'}',
-                                  style: TextStyle(
-                                    color: context.textTertiary,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        if (_isLoadingComments)
-                          SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.forum_rounded,
+                              size: 16,
                               color: context.accentColor,
                             ),
                           ),
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Conversation',
+                                  style: TextStyle(
+                                    color: context.textPrimary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (_comments != null && _comments!.isNotEmpty)
+                                  Text(
+                                    '${_comments!.length} ${_comments!.length == 1 ? 'comment' : 'comments'}',
+                                    style: TextStyle(
+                                      color: context.textTertiary,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          if (_isLoadingComments)
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: context.accentColor,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // Animated responses list
-              FadeTransition(
-                opacity: _headerFadeAnimation,
-                child: _buildCommentsList(context),
-              ),
-            ]),
+                // Animated responses list
+                FadeTransition(
+                  opacity: _headerFadeAnimation,
+                  child: _buildCommentsList(context),
+                ),
+              ]),
+            ),
           ),
-        ),
-        // Add some space at bottom to not be hidden by sticky header
-        const SliverToBoxAdapter(child: SizedBox(height: 60)),
-      ],
+          // Add some space at bottom to not be hidden by sticky header
+          const SliverToBoxAdapter(child: SizedBox(height: 60)),
+        ],
+      ),
     );
   }
 }

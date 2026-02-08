@@ -80,6 +80,7 @@ import '../telemetry/detection_sensor_log_screen.dart';
 import '../routes/routes_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import 'screens/help_center_screen.dart';
+import '../../core/whats_new/whats_new_sheet.dart';
 // import '../social/screens/follow_requests_screen.dart';
 import '../../core/widgets/loading_indicator.dart';
 
@@ -1773,6 +1774,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                     const AppearanceAccessibilityScreen(),
                               ),
                             ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // What's New Section
+                          const _SectionHeader(title: "WHAT'S NEW"),
+                          _SettingsTile(
+                            icon: Icons.auto_awesome_outlined,
+                            title: "What's New",
+                            subtitle: 'Browse recent features and updates',
+                            iconColor: Colors.amber.shade400,
+                            onTap: () => WhatsNewSheet.showHistory(context),
                           ),
 
                           const SizedBox(height: 16),

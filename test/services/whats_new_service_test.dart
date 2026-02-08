@@ -221,11 +221,11 @@ void main() {
 
     test('returns null when current version is older than all payloads', () {
       final payload = WhatsNewRegistry.getPendingPayload(
-        currentVersion: '1.0.0',
+        currentVersion: '0.8.0',
         lastSeenVersion: null,
       );
 
-      // 1.0.0 < 1.2.0 (the payload version), so payload should not be shown
+      // 0.8.0 < 0.9.0 (the earliest payload version), so payload should not be shown
       expect(payload, isNull);
     });
 
@@ -306,7 +306,7 @@ void main() {
 
     test('returns empty set when current is older than all payloads', () {
       final keys = WhatsNewRegistry.getUnseenBadgeKeys(
-        currentVersion: '1.0.0',
+        currentVersion: '0.8.0',
         lastSeenVersion: null,
       );
 

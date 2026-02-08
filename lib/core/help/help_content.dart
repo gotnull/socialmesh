@@ -765,6 +765,147 @@ class HelpContent {
   );
 
   // ============================================================================
+  // SIGNAL CREATION HELP
+  // ============================================================================
+
+  static final HelpTopic signalCreation = HelpTopic(
+    id: 'signal_creation',
+    title: 'Creating a Signal',
+    description: 'How to compose and broadcast a signal',
+    icon: Icons.edit_note,
+    category: catMessaging,
+    priority: 7,
+    steps: [
+      HelpStep(
+        id: 'create_intro',
+        bubbleText:
+            "Time to **Go Active**! A signal is an ephemeral broadcast — "
+            "it lives on the mesh for a set time, then fades away. Let me "
+            "walk you through it.",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'create_text',
+        bubbleText:
+            "Type your message in the main field — up to **280 characters**. "
+            "The circular counter in the corner shows how many you have left.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'create_image',
+        bubbleText:
+            "Tap the **image icon** to attach a photo. Images are uploaded "
+            "via cloud when you are online — they are not available in "
+            "mesh-only mode.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'create_location',
+        bubbleText:
+            "Tap the **location pin** to attach your device's GPS position. "
+            "Your location is fuzzed to a configurable radius for privacy. "
+            "Tap again to remove it.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'create_ttl',
+        bubbleText:
+            "The **timer icon** sets your TTL — how long the signal stays "
+            "alive. Choose from **15 minutes** up to **24 hours**. Shorter "
+            "times work great for quick check-ins.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'create_intent',
+        bubbleText:
+            "Pick a **Presence Intent** to tell the mesh what you are up to — "
+            "exploring, monitoring, helping, or just listening. It adds "
+            "context without extra words.",
+        icoMood: MeshBrainMood.playful,
+      ),
+      HelpStep(
+        id: 'create_status',
+        bubbleText:
+            "The **short status** field is a one-liner that appears as a "
+            "subtitle on your signal card. Think of it as a mood or caption.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'create_submit',
+        bubbleText:
+            "When you are ready, hit **Broadcast**! Your signal travels "
+            "through the mesh radio first. If cloud is available, it syncs "
+            "there too for wider reach.",
+        icoMood: MeshBrainMood.excited,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // SIGNAL DETAIL HELP
+  // ============================================================================
+
+  static final HelpTopic signalDetail = HelpTopic(
+    id: 'signal_detail',
+    title: 'Signal Details',
+    description: 'Interacting with a signal and its responses',
+    icon: Icons.forum_outlined,
+    category: catMessaging,
+    priority: 8,
+    steps: [
+      HelpStep(
+        id: 'detail_intro',
+        bubbleText:
+            "You are viewing a **signal in detail**. Here you can see the "
+            "full content, location, and all the responses from the mesh.",
+        icoMood: MeshBrainMood.speaking,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'detail_ttl',
+        bubbleText:
+            "The **TTL bar** at the bottom of the signal card shows how much "
+            "time is left before it fades. When it reaches zero, the signal "
+            "disappears and this screen closes automatically.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'detail_responses',
+        bubbleText:
+            "Responses are **threaded** — you can reply to the signal itself "
+            "or to someone else's response. Nested replies indent to show "
+            "the conversation flow.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'detail_voting',
+        bubbleText:
+            "Use the **up and down arrows** to vote on responses. Votes help "
+            "surface the most useful replies. You can change your vote at "
+            "any time.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'detail_reply',
+        bubbleText:
+            "Type in the **reply bar** at the bottom to respond. Tap the "
+            "reply arrow on any response to start a threaded conversation "
+            "with that person.",
+        icoMood: MeshBrainMood.playful,
+      ),
+      HelpStep(
+        id: 'detail_actions',
+        bubbleText:
+            "The **overflow menu** (three dots) gives you extra options like "
+            "bookmarking, sharing, or reporting. Signal authors can also "
+            "delete their own signals from here.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+    ],
+  );
+
+  // ============================================================================
   // WORLD MESH HELP
   // ============================================================================
 
@@ -1486,6 +1627,8 @@ class HelpContent {
     widgetBuilderOverview,
     marketplaceOverview,
     signalsOverview,
+    signalCreation,
+    signalDetail,
     worldMeshOverview,
     routesOverview,
     settingsOverview,
