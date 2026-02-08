@@ -228,6 +228,8 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   bool _isInitialized = false;
   bool _userDisconnected = false; // Track if user manually disconnected
   bool _backgroundScanInProgress = false; // Guard against concurrent scans
+  bool _authFailurePending =
+      false; // Track PIN/auth failure through disconnect sequence
   int _missingDeviceAttempts = 0;
   DateTime? _firstMissingAttemptAt;
   static const int _maxInvalidationAttempts = 3;
@@ -557,31 +559,43 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       if (isAuthError) {
         AppLogging.connection(
           '🔌 _initializeProtocolAfterAutoReconnect: PIN/auth error — '
-          'disconnecting transport and marking failed (requires user interaction)',
+          'disconnecting transport and routing to Scanner (requires user interaction)',
         );
         AppErrorHandler.addBreadcrumb(
-          'AutoReconnect: PIN/auth error, stopping retries',
+          'AutoReconnect: PIN/auth error, routing to Scanner',
         );
 
-        // Disconnect the BLE transport so the device is released cleanly
+        // Set flag BEFORE transport.disconnect() so _handleDisconnect
+        // preserves the auth failure reason instead of overwriting it
+        // with unexpectedDisconnect.
+        _authFailurePending = true;
+
+        // Mark as failed so the auto-reconnect manager stops retrying
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.failed);
+
+        // Disconnect the BLE transport so the device is released cleanly.
+        // This will trigger _handleDisconnect via the transport state
+        // stream, which checks _authFailurePending and routes to Scanner.
         try {
           final transport = ref.read(transportProvider);
           await transport.disconnect();
         } catch (_) {
-          // Ignore cleanup errors
+          // Ignore cleanup errors — ensure we still route to Scanner
+          // even if the disconnect itself fails.
+          _authFailurePending = false;
+          state = state.copyWith(
+            state: DevicePairingState.disconnected,
+            reason: DisconnectReason.authFailed,
+            errorMessage: e.toString(),
+          );
+          ref.read(appInitProvider.notifier).setNeedsScanner();
+          AppLogging.connection(
+            '🔌 _initializeProtocolAfterAutoReconnect: disconnect failed, '
+            'forcing Scanner navigation anyway',
+          );
         }
-
-        // Mark as failed so the auto-reconnect manager stops retrying
-        // and the TopStatusBanner shows the user-actionable "Device not found"
-        // state instead of endlessly scanning.
-        state = state.copyWith(
-          state: DevicePairingState.error,
-          reason: DisconnectReason.connectionFailed,
-          errorMessage: e.toString(),
-        );
-        ref
-            .read(autoReconnectStateProvider.notifier)
-            .setState(AutoReconnectState.failed);
       }
     }
   }
@@ -1370,6 +1384,19 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
   /// Handle disconnection
   void _handleDisconnect(DisconnectReason reason) {
+    // If an auth/PIN failure triggered this disconnect, override the
+    // reason so it propagates correctly to the UI (Scanner shows
+    // guidance cards instead of MainShell showing a "Device not found"
+    // banner that loops on retry).
+    if (_authFailurePending) {
+      _authFailurePending = false;
+      reason = DisconnectReason.authFailed;
+      AppLogging.connection(
+        '🔌 _handleDisconnect: Overriding reason to authFailed '
+        '(PIN/auth failure triggered this disconnect)',
+      );
+    }
+
     AppLogging.connection(
       '🔌 _handleDisconnect: reason=$reason, currentState=${state.state}',
     );
@@ -1409,24 +1436,36 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.idle);
     } else {
-      // Unexpected disconnect (e.g., device reboot after region change).
-      // Do NOT call startBackgroundConnection() here — the
-      // autoReconnectManagerProvider listener on connectionStateProvider
-      // already detects this disconnect and calls _performReconnect(),
-      // which has its own scan loop with retry logic. Calling
-      // startBackgroundConnection() from here creates a dual-scan race:
-      // both _performReconnect's FlutterBluePlus.startScan AND
-      // startBackgroundConnection's transport.scan run concurrently,
-      // causing BLE contention, interleaved scan results, and
-      // connection failures.
-      //
-      // startBackgroundConnection() is still used for app-launch
-      // reconnect (called from initialize()), which is the correct
-      // single-path reconnect on startup.
-      AppLogging.connection(
-        '🔌 _handleDisconnect: Unexpected disconnect — '
-        'autoReconnectManagerProvider will handle reconnect',
-      );
+      if (reason == DisconnectReason.authFailed) {
+        // PIN/auth failure: route to Scanner where the user gets
+        // guidance cards (forget device in Bluetooth settings, etc.)
+        // instead of staying on MainShell with a misleading
+        // "Device not found" banner that just loops on retry.
+        AppLogging.connection(
+          '🔌 _handleDisconnect: Auth failure — '
+          'setting needsScanner to route to Scanner screen',
+        );
+        ref.read(appInitProvider.notifier).setNeedsScanner();
+      } else {
+        // Unexpected disconnect (e.g., device reboot after region change).
+        // Do NOT call startBackgroundConnection() here — the
+        // autoReconnectManagerProvider listener on connectionStateProvider
+        // already detects this disconnect and calls _performReconnect(),
+        // which has its own scan loop with retry logic. Calling
+        // startBackgroundConnection() from here creates a dual-scan race:
+        // both _performReconnect's FlutterBluePlus.startScan AND
+        // startBackgroundConnection's transport.scan run concurrently,
+        // causing BLE contention, interleaved scan results, and
+        // connection failures.
+        //
+        // startBackgroundConnection() is still used for app-launch
+        // reconnect (called from initialize()), which is the correct
+        // single-path reconnect on startup.
+        AppLogging.connection(
+          '🔌 _handleDisconnect: Unexpected disconnect — '
+          'autoReconnectManagerProvider will handle reconnect',
+        );
+      }
       // Reset retry counter so the next startBackgroundConnection
       // (if triggered by autoReconnectManager) starts fresh.
       _reconnectAttempt = 0;

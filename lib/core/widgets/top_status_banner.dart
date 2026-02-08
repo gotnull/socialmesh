@@ -57,6 +57,8 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner> {
     final isTerminalInvalidated = widget.deviceState.isTerminalInvalidated;
     final isUserDisconnected =
         widget.deviceState.reason == DisconnectReason.userDisconnected;
+    final isAuthFailed =
+        widget.deviceState.reason == DisconnectReason.authFailed;
 
     // Auto-trigger reconnect when the banner appears in idle+disconnected
     // state (unexpected disconnect where autoReconnectManager didn't kick
@@ -64,9 +66,11 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner> {
     // "Disconnected" banner. Skip if user manually disconnected — they
     // intentionally want to be disconnected (and with the /app route fix,
     // they should be on Scanner, not MainShell, anyway).
+    // Also skip auth failures — auto-retry just hits the same PIN issue.
     if (isIdle &&
         !isUserDisconnected &&
         !isTerminalInvalidated &&
+        !isAuthFailed &&
         widget.autoReconnectEnabled &&
         !_autoRetryTriggered) {
       _autoRetryTriggered = true;
@@ -99,8 +103,13 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner> {
         ? invalidatedMessage
         : isReconnecting
         ? (isScanning ? 'Searching for device...' : 'Reconnecting...')
+        : isAuthFailed
+        ? 'Authentication failed — re-pair in Scanner'
         : (isFailed ? 'Device not found' : 'Disconnected');
-    final showRetryButton = isFailed && !isTerminalInvalidated;
+    // Don't show retry for auth failures — retrying background connect
+    // hits the same PIN/auth issue. The user needs Scanner to manually
+    // re-pair (which triggers the system PIN dialog).
+    final showRetryButton = isFailed && !isTerminalInvalidated && !isAuthFailed;
 
     // Connect button is tappable whenever we're NOT actively reconnecting.
     // This covers: failed, idle, user-disconnected, terminal-invalidated.

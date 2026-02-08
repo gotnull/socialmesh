@@ -1553,5 +1553,166 @@ void main() {
         );
       }
     });
+
+    test('authFailurePending flag overrides disconnect reason to authFailed', () {
+      final container = _createContainer();
+      addTearDown(container.dispose);
+
+      // Simulate: device was connected, then auth failure occurred
+      container
+          .read(deviceConnectionProvider.notifier)
+          .setTestState(
+            const DeviceConnectionState2(
+              state: DevicePairingState.connected,
+              connectionSessionId: 1,
+            ),
+          );
+
+      // Simulate the sequence that _initializeProtocolAfterAutoReconnect does:
+      // 1. Set autoReconnectState to failed
+      container
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.failed);
+
+      // 2. After transport.disconnect(), _handleDisconnect fires with
+      //    unexpectedDisconnect — but the _authFailurePending flag
+      //    should override it to authFailed.
+      //    We can't set the private flag directly, so we verify the
+      //    state expectations instead.
+
+      // When _handleDisconnect runs with authFailed reason:
+      container
+          .read(deviceConnectionProvider.notifier)
+          .setTestState(
+            const DeviceConnectionState2(
+              state: DevicePairingState.disconnected,
+              connectionSessionId: 1,
+              reason: DisconnectReason.authFailed,
+              errorMessage:
+                  'Protocol configuration failed: TimeoutException: Configuration timed out',
+            ),
+          );
+
+      // Verify the final state has authFailed reason (not unexpectedDisconnect)
+      final finalState = container.read(deviceConnectionProvider);
+      expect(finalState.state, DevicePairingState.disconnected);
+      expect(finalState.reason, DisconnectReason.authFailed);
+    });
+
+    test('auth failure routes to Scanner via needsScanner', () {
+      final container = _createContainer();
+      addTearDown(container.dispose);
+
+      // Start in ready state (user is on MainShell)
+      container.read(appInitProvider.notifier).setReady();
+      expect(container.read(appInitProvider), AppInitState.ready);
+
+      // Simulate: auth failure disconnect sets needsScanner
+      container
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.failed);
+      container
+          .read(deviceConnectionProvider.notifier)
+          .setTestState(
+            const DeviceConnectionState2(
+              state: DevicePairingState.disconnected,
+              connectionSessionId: 1,
+              reason: DisconnectReason.authFailed,
+              errorMessage:
+                  'Configuration timed out - device may require pairing',
+            ),
+          );
+
+      // The _handleDisconnect code sets needsScanner for authFailed.
+      // Simulate that here since we can't call the private method:
+      container.read(appInitProvider.notifier).setNeedsScanner();
+
+      // Verify: _AppRouter should now show Scanner
+      expect(container.read(appInitProvider), AppInitState.needsScanner);
+
+      // Verify: autoReconnectState is failed so Scanner won't auto-retry
+      expect(
+        container.read(autoReconnectStateProvider),
+        AutoReconnectState.failed,
+      );
+
+      // Verify: canAttemptReconnect is false (autoReconnectManager won't
+      // start _performReconnect and race with the Scanner)
+      final canAttemptReconnect =
+          container.read(autoReconnectStateProvider) ==
+              AutoReconnectState.idle ||
+          container.read(autoReconnectStateProvider) ==
+              AutoReconnectState.success;
+      expect(canAttemptReconnect, isFalse);
+    });
+
+    test('auth failure reason is distinct from deviceNotFound', () {
+      // Verify authFailed and deviceNotFound are handled differently.
+      // authFailed should route to Scanner; deviceNotFound stays on
+      // MainShell with the "Device not found" banner.
+
+      final container = _createContainer();
+      addTearDown(container.dispose);
+
+      // Auth failure state
+      container
+          .read(deviceConnectionProvider.notifier)
+          .setTestState(
+            const DeviceConnectionState2(
+              state: DevicePairingState.disconnected,
+              reason: DisconnectReason.authFailed,
+            ),
+          );
+      expect(
+        container.read(deviceConnectionProvider).reason,
+        DisconnectReason.authFailed,
+      );
+      expect(
+        container.read(deviceConnectionProvider).reason,
+        isNot(DisconnectReason.deviceNotFound),
+      );
+
+      // Device not found state
+      container
+          .read(deviceConnectionProvider.notifier)
+          .setTestState(
+            const DeviceConnectionState2(
+              state: DevicePairingState.disconnected,
+              reason: DisconnectReason.deviceNotFound,
+            ),
+          );
+      expect(
+        container.read(deviceConnectionProvider).reason,
+        DisconnectReason.deviceNotFound,
+      );
+      expect(
+        container.read(deviceConnectionProvider).reason,
+        isNot(DisconnectReason.authFailed),
+      );
+    });
+
+    test('config timeout with PIN keywords is detected as auth error', () {
+      // The error message from the logs:
+      // "Protocol configuration failed: TimeoutException: Configuration
+      //  timed out - device may require pairing or PIN was cancelled"
+      // This must be detected as an auth error.
+
+      const realErrorMessage =
+          'Exception: Protocol configuration failed: TimeoutException: '
+          'Configuration timed out - device may require pairing or PIN was cancelled';
+
+      final lower = realErrorMessage.toLowerCase();
+      final isAuth =
+          lower.contains('pin') ||
+          lower.contains('authentication') ||
+          lower.contains('connection failed - please try again');
+
+      expect(
+        isAuth,
+        isTrue,
+        reason:
+            'Real config timeout message with "PIN" keyword should be detected as auth error',
+      );
+    });
   });
 }

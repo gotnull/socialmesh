@@ -42,4 +42,85 @@ void main() {
     await tester.tap(find.byType(InkWell));
     expect(wentToScanner, isTrue);
   });
+
+  testWidgets('auth failure banner shows correct message and hides retry', (
+    tester,
+  ) async {
+    var wentToScanner = false;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: TopStatusBanner(
+              autoReconnectState: AutoReconnectState.failed,
+              autoReconnectEnabled: true,
+              onRetry: () =>
+                  fail('Retry should not be callable for auth failure'),
+              onGoToScanner: () => wentToScanner = true,
+              deviceState: const DeviceConnectionState2(
+                state: DevicePairingState.disconnected,
+                reason: DisconnectReason.authFailed,
+                errorMessage:
+                    'Protocol configuration failed: Configuration timed out - device may require pairing or PIN was cancelled',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Retry button should NOT be shown for auth failures
+    expect(find.text('Retry'), findsNothing);
+
+    // Auth failure message should be shown instead of "Device not found"
+    expect(
+      find.text('Authentication failed — re-pair in Scanner'),
+      findsOneWidget,
+    );
+    expect(find.text('Device not found'), findsNothing);
+
+    // Tapping the banner should navigate to Scanner
+    await tester.tap(find.byType(InkWell));
+    expect(wentToScanner, isTrue);
+  });
+
+  testWidgets('device not found banner still shows retry button', (
+    tester,
+  ) async {
+    var retryTapped = false;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: TopStatusBanner(
+              autoReconnectState: AutoReconnectState.failed,
+              autoReconnectEnabled: true,
+              onRetry: () => retryTapped = true,
+              onGoToScanner: () {},
+              deviceState: const DeviceConnectionState2(
+                state: DevicePairingState.disconnected,
+                reason: DisconnectReason.deviceNotFound,
+                errorMessage: 'Device not found',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Retry button SHOULD be shown for device-not-found
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.text('Device not found'), findsOneWidget);
+
+    // Auth failure message should NOT be shown
+    expect(
+      find.text('Authentication failed — re-pair in Scanner'),
+      findsNothing,
+    );
+
+    await tester.tap(find.text('Retry'));
+    expect(retryTapped, isTrue);
+  });
 }

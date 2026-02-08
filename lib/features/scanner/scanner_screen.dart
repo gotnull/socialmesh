@@ -87,6 +87,22 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       AppErrorHandler.addBreadcrumb('Scanner: pairing invalidation detected');
       _showPairingInvalidationHint = true;
     } else if (autoReconnectState == AutoReconnectState.failed &&
+        deviceState.reason == conn.DisconnectReason.authFailed) {
+      // PIN/auth failure during auto-reconnect — the device was found and
+      // BLE-connected but protocol configuration timed out (likely because
+      // the system pairing/PIN dialog wasn't shown during background
+      // reconnect). Show the same guidance as pairing invalidation so the
+      // user knows to forget the device in Bluetooth settings and re-pair.
+      AppLogging.connection(
+        '📡 SCANNER: Shown after auto-reconnect PIN/auth failure',
+      );
+      AppErrorHandler.addBreadcrumb('Scanner: auth failure detected');
+      _showPairingInvalidationHint = true;
+      _errorMessage =
+          'Authentication failed. The device may need to be re-paired. '
+          'Go to Settings > Bluetooth, forget the Meshtastic device, '
+          'then tap it below to reconnect.';
+    } else if (autoReconnectState == AutoReconnectState.failed &&
         deviceState.reason == conn.DisconnectReason.deviceNotFound) {
       AppLogging.connection(
         '📡 SCANNER: Shown after auto-reconnect failed with deviceNotFound',
