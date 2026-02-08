@@ -379,6 +379,18 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       return;
     }
 
+    // If user is manually connecting from Scanner (tapped a device),
+    // don't trigger resume-reconnect to the OLD saved device. Scanner
+    // owns the connection flow while manualConnecting is set — it will
+    // clear this state on success, retry, or dispose.
+    if (autoReconnectState == AutoReconnectState.manualConnecting) {
+      AppLogging.connection(
+        '📱 APP RESUMED: User is manually connecting from Scanner, '
+        'not triggering resume-reconnect to saved device',
+      );
+      return;
+    }
+
     // CRITICAL: Check the global userDisconnected flag
     if (userDisconnected) {
       AppLogging.connection(

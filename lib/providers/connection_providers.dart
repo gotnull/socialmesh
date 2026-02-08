@@ -542,6 +542,47 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       AppLogging.connection(
         '🔌 _initializeProtocolAfterAutoReconnect: Error: $e',
       );
+
+      // Determine if this is a PIN/auth error that requires user interaction.
+      // These errors cannot be resolved by retrying — the user must manually
+      // re-pair via the Scanner (which shows the system PIN dialog). Without
+      // this guard, the auto-reconnect manager keeps retrying indefinitely,
+      // creating a loop of connect → PIN fail → disconnect → reconnect.
+      final errorStr = e.toString().toLowerCase();
+      final isAuthError =
+          errorStr.contains('pin') ||
+          errorStr.contains('authentication') ||
+          errorStr.contains('connection failed - please try again');
+
+      if (isAuthError) {
+        AppLogging.connection(
+          '🔌 _initializeProtocolAfterAutoReconnect: PIN/auth error — '
+          'disconnecting transport and marking failed (requires user interaction)',
+        );
+        AppErrorHandler.addBreadcrumb(
+          'AutoReconnect: PIN/auth error, stopping retries',
+        );
+
+        // Disconnect the BLE transport so the device is released cleanly
+        try {
+          final transport = ref.read(transportProvider);
+          await transport.disconnect();
+        } catch (_) {
+          // Ignore cleanup errors
+        }
+
+        // Mark as failed so the auto-reconnect manager stops retrying
+        // and the TopStatusBanner shows the user-actionable "Device not found"
+        // state instead of endlessly scanning.
+        state = state.copyWith(
+          state: DevicePairingState.error,
+          reason: DisconnectReason.connectionFailed,
+          errorMessage: e.toString(),
+        );
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.failed);
+      }
     }
   }
 
@@ -551,6 +592,31 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     if (_userDisconnected) {
       AppLogging.connection(
         '🔌 startBackgroundConnection: BLOCKED - user manually disconnected',
+      );
+      return;
+    }
+
+    // CRITICAL: Don't start a duplicate scan if the auto-reconnect manager
+    // (_performReconnect) is already scanning or connecting. TopStatusBanner
+    // can trigger startBackgroundConnection at the same time as the manager,
+    // creating two concurrent BLE scans that race each other and cause
+    // connection failures and BLE contention.
+    final autoReconnectState = ref.read(autoReconnectStateProvider);
+    if (autoReconnectState == AutoReconnectState.scanning ||
+        autoReconnectState == AutoReconnectState.connecting) {
+      AppLogging.connection(
+        '🔌 startBackgroundConnection: BLOCKED - auto-reconnect manager '
+        'already active ($autoReconnectState)',
+      );
+      return;
+    }
+
+    // If user is manually connecting from Scanner, don't race with their
+    // chosen device connection.
+    if (autoReconnectState == AutoReconnectState.manualConnecting) {
+      AppLogging.connection(
+        '🔌 startBackgroundConnection: BLOCKED - user is manually '
+        'connecting from Scanner',
       );
       return;
     }

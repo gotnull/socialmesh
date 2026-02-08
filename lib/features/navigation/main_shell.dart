@@ -144,14 +144,14 @@ class HamburgerMenuButton extends ConsumerWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.red,
+        backgroundColor: context.accentColor,
         child: menuIcon,
       );
     } else if (hasUnseenWhatsNew) {
       // Gradient dot — small indicator for unseen What's New
       menuIcon = Badge(
         smallSize: 10,
-        backgroundColor: AppTheme.primaryMagenta,
+        backgroundColor: context.accentColor,
         child: menuIcon,
       );
     }
@@ -1321,7 +1321,10 @@ class _NavBarItem extends StatelessWidget {
                               accentColor,
                             );
                             return LinearGradient(
-                              colors: [gradientColors[0], gradientColors[1]],
+                              colors: [
+                                gradientColors.first,
+                                gradientColors.last,
+                              ],
                             ).createShader(bounds);
                           },
                           child: AnimatedMorphIcon(
@@ -1402,7 +1405,7 @@ class _NavBarItem extends StatelessWidget {
                         accentColor,
                       );
                       return LinearGradient(
-                        colors: [gradientColors[0], gradientColors[1]],
+                        colors: [gradientColors.first, gradientColors.last],
                       ).createShader(bounds);
                     },
                     child: Text(
@@ -1559,10 +1562,10 @@ class _DrawerMenuTile extends StatelessWidget {
                           width: 10,
                           height: 10,
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               colors: [
-                                AppTheme.primaryMagenta,
-                                AppTheme.primaryPurple,
+                                AccentColors.gradientFor(accentColor).first,
+                                AccentColors.gradientFor(accentColor).last,
                               ],
                             ),
                             shape: BoxShape.circle,
@@ -1609,18 +1612,16 @@ class _DrawerMenuTile extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
+                          gradient: LinearGradient(
                             colors: [
-                              AppTheme.primaryMagenta,
-                              AppTheme.primaryPurple,
+                              AccentColors.gradientFor(accentColor).first,
+                              AccentColors.gradientFor(accentColor).last,
                             ],
                           ),
                           borderRadius: BorderRadius.circular(6),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.primaryMagenta.withValues(
-                                alpha: 0.3,
-                              ),
+                              color: accentColor.withValues(alpha: 0.3),
                               blurRadius: 4,
                               offset: const Offset(0, 1),
                             ),
