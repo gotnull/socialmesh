@@ -206,3 +206,95 @@ class SkeletonDashboardWidget extends StatelessWidget {
     );
   }
 }
+
+/// A skeleton placeholder for the NodeDex stats card
+class SkeletonNodeDexStatsCard extends StatelessWidget {
+  const SkeletonNodeDexStatsCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: context.border, width: 0.5),
+        ),
+        child: Row(
+          children: [
+            const Bone.icon(size: 14),
+            const SizedBox(width: 6),
+            Bone.text(words: 2, fontSize: 12),
+            const Spacer(),
+            const Bone.icon(size: 12),
+            const SizedBox(width: 3),
+            Bone.text(words: 1, fontSize: 12),
+            const SizedBox(width: 12),
+            const Bone.icon(size: 12),
+            const SizedBox(width: 3),
+            Bone.text(words: 1, fontSize: 12),
+            const SizedBox(width: 12),
+            const Bone.icon(size: 12),
+            const SizedBox(width: 3),
+            Bone.text(words: 1, fontSize: 12),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A skeleton placeholder for a NodeDex list tile
+class SkeletonNodeDexCard extends StatelessWidget {
+  const SkeletonNodeDexCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          // Sigil avatar placeholder
+          const Bone.circle(size: 48),
+          const SizedBox(width: 14),
+          // Name + metadata
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Name row
+                Row(
+                  children: [
+                    Flexible(child: Bone.text(words: 2)),
+                    const SizedBox(width: 6),
+                    Bone.text(words: 1, fontSize: 11),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                // Trait + metrics row
+                Row(
+                  children: [
+                    Bone(
+                      width: 60,
+                      height: 18,
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    const Spacer(),
+                    const Bone.icon(size: 12),
+                    const SizedBox(width: 3),
+                    Bone.text(words: 1, fontSize: 11),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 4),
+          // Chevron
+          const Bone.icon(size: 20),
+        ],
+      ),
+    );
+  }
+}

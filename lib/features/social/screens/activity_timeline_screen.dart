@@ -16,6 +16,7 @@ import '../../../models/social_activity.dart';
 import '../../../providers/activity_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/signal_providers.dart';
+import '../../nodedex/widgets/sigil_painter.dart';
 import '../../signals/screens/signal_detail_screen.dart';
 
 /// Activity timeline screen showing signal interactions.
@@ -777,29 +778,12 @@ class _TimelineActivityTile extends StatelessWidget {
 
               const SizedBox(width: 12),
 
-              // Avatar with unread dot
+              // Sigil avatar with unread dot
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: context.surface,
-                      backgroundImage: activity.actorSnapshot?.avatarUrl != null
-                          ? NetworkImage(activity.actorSnapshot!.avatarUrl!)
-                          : null,
-                      child: activity.actorSnapshot?.avatarUrl == null
-                          ? Text(
-                              (activity.actorSnapshot?.displayName ?? 'U')[0]
-                                  .toUpperCase(),
-                              style: TextStyle(
-                                color: context.textPrimary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            )
-                          : null,
-                    ),
+                    SigilAvatar(nodeNum: activity.actorId.hashCode, size: 40),
                     // Unread indicator
                     if (!activity.isRead)
                       Positioned(

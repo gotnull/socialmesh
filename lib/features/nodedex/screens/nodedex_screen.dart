@@ -20,6 +20,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/logging.dart';
 import '../../../providers/app_providers.dart';
@@ -28,6 +29,7 @@ import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../../core/widgets/skeleton_config.dart';
 import '../../../models/mesh_models.dart';
 import '../models/nodedex_entry.dart';
 import '../models/sigil_evolution.dart';
@@ -68,6 +70,8 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final storeAsync = ref.watch(nodeDexStoreProvider);
+    final isLoading = storeAsync is AsyncLoading;
     final stats = ref.watch(nodeDexStatsProvider);
     final entries = ref.watch(nodeDexSortedEntriesProvider);
     final currentSort = ref.watch(nodeDexSortProvider);
@@ -114,7 +118,16 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
             const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
             // Stats summary — not pinned, sizes itself naturally
-            SliverToBoxAdapter(child: _NodeDexStatsCard(stats: stats)),
+            if (isLoading)
+              SliverToBoxAdapter(
+                child: Skeletonizer(
+                  enabled: true,
+                  effect: AppSkeletonConfig.effect(context),
+                  child: const SkeletonNodeDexStatsCard(),
+                ),
+              )
+            else
+              SliverToBoxAdapter(child: _NodeDexStatsCard(stats: stats)),
 
             // Pinned search + filter controls
             SliverPersistentHeader(
@@ -149,7 +162,19 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
             ),
 
             // Your Device section
-            if (myEntry.isNotEmpty) ...[
+            if (isLoading) ...[
+              // Show skeleton list while loading
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => Skeletonizer(
+                    enabled: true,
+                    effect: AppSkeletonConfig.effect(context),
+                    child: const SkeletonNodeDexCard(),
+                  ),
+                  childCount: 6,
+                ),
+              ),
+            ] else if (myEntry.isNotEmpty) ...[
               SliverPersistentHeader(
                 pinned: true,
                 delegate: SectionHeaderDelegate(title: 'Your Device'),
@@ -167,7 +192,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
             ],
 
             // Other nodes list or empty state
-            if (otherEntries.isNotEmpty) ...[
+            if (!isLoading && otherEntries.isNotEmpty) ...[
               SliverPersistentHeader(
                 pinned: true,
                 delegate: SectionHeaderDelegate(
@@ -185,7 +210,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
                   );
                 }, childCount: otherEntries.length),
               ),
-            ] else if (myEntry.isEmpty)
+            ] else if (!isLoading && myEntry.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: _EmptyState(filter: currentFilter),
