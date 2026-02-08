@@ -166,6 +166,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
   String _searchQuery = '';
   bool _initialized = false;
   bool _showPairingInvalidationHint = false;
+  bool _applying = false;
 
   @override
   void initState() {
@@ -262,6 +263,8 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       _showPairingInvalidationHint = false;
     });
 
+    safeSetState(() => _applying = true);
+
     if (isInitialSetup) {
       // ── ONBOARDING / INITIAL SETUP FLOW ──
       // Stay on screen so the user sees progress during the device reboot.
@@ -327,6 +330,8 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       // Pop back to caller (onboarding _checkAndHandleRegion await)
       navigator.pop();
     } on Exception catch (e) {
+      // Unlock the UI so the user can retry
+      safeSetState(() => _applying = false);
       if (!mounted) return;
 
       // Check if the region was actually applied despite the error
@@ -407,6 +412,8 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
             });
       }
     } on Exception catch (e) {
+      // Unlock the UI so the user can retry
+      safeSetState(() => _applying = false);
       if (!mounted) return;
       final message = 'Failed to set region: $e';
       safeSetState(() {
@@ -430,7 +437,8 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
   @override
   Widget build(BuildContext context) {
     final regionState = ref.watch(regionConfigProvider);
-    final isApplying = regionState.applyStatus == RegionApplyStatus.applying;
+    final isApplying =
+        _applying || regionState.applyStatus == RegionApplyStatus.applying;
     final statusText = regionState.applyStatus == RegionApplyStatus.failed
         ? _errorMessage
         : null;
@@ -443,10 +451,11 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
         leading: widget.isInitialSetup ? const SizedBox.shrink() : null,
         automaticallyImplyLeading: !widget.isInitialSetup,
         actions: [
-          IcoHelpAppBarButton(
-            topicId: 'region_selection',
-            autoTrigger: widget.isInitialSetup,
-          ),
+          if (!isApplying)
+            IcoHelpAppBarButton(
+              topicId: 'region_selection',
+              autoTrigger: widget.isInitialSetup,
+            ),
         ],
         slivers: [
           if (widget.isInitialSetup)
@@ -504,87 +513,81 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
             }, childCount: _filteredRegions.length),
           ),
 
-          // Bottom section with SafeArea - includes error, button, and pairing hint
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  // Error message - styled as a subtle card, not ugly red text
-                  if (statusText != null) ...[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                      child: StatusBanner.error(title: statusText),
-                    ),
-                  ],
+          // Bottom padding so the last region tile isn't hidden
+          // behind the fixed bottom bar
+          const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
+        ],
+        bottomNavigationBar: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Error message
+              if (statusText != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: StatusBanner.error(title: statusText),
+                ),
 
-                  // Save button
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(minHeight: 56),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          key: regionSelectionApplyButtonKey,
-                          onPressed: _selectedRegion != null && !isApplying
-                              ? _saveRegion
-                              : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: context.accentColor,
-                            foregroundColor: Colors.white,
-                            disabledBackgroundColor: context.card,
-                            disabledForegroundColor: context.textTertiary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: isApplying
-                              ? const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    SizedBox(width: 10),
-                                    Text(
-                                      'Applying...',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : Text(
-                                  widget.isInitialSetup ? 'Continue' : 'Save',
-                                  style: const TextStyle(
+              // Pairing invalidation hint
+              if (_showPairingInvalidationHint) ...[_buildPairingHint()],
+
+              // Save / Continue button
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 56),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      key: regionSelectionApplyButtonKey,
+                      onPressed: _selectedRegion != null && !isApplying
+                          ? _saveRegion
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.accentColor,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: context.card,
+                        disabledForegroundColor: context.textTertiary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: isApplying
+                          ? const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  'Applying...',
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                        ),
-                      ),
+                              ],
+                            )
+                          : Text(
+                              widget.isInitialSetup ? 'Continue' : 'Save',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
-
-                  // Pairing invalidation hint
-                  if (_showPairingInvalidationHint) ...[
-                    _buildPairingHint(),
-                    const SizedBox(height: 16),
-                  ],
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
