@@ -1207,6 +1207,10 @@ Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
   ref.read(nodesProvider.notifier).clearNodes();
   ref.read(channelsProvider.notifier).clearChannels();
 
+  // Reset new-nodes badge counter so it doesn't accumulate across reconnections.
+  // Without this, every reconnect re-discovers the same nodes and inflates the count.
+  ref.read(newNodesCountProvider.notifier).reset();
+
   // Clear persistent node storage (nodes come fresh from device)
   final nodeStorage = await ref.read(nodeStorageProvider.future);
   await nodeStorage.clearNodes();
@@ -1241,6 +1245,9 @@ Future<void> clearDeviceDataBeforeConnectRef(Ref ref) async {
   // from the device on every connection.
   ref.read(nodesProvider.notifier).clearNodes();
   ref.read(channelsProvider.notifier).clearChannels();
+
+  // Reset new-nodes badge counter so it doesn't accumulate across reconnections.
+  ref.read(newNodesCountProvider.notifier).reset();
 
   // Clear persistent node storage (nodes come fresh from device)
   final nodeStorage = await ref.read(nodeStorageProvider.future);

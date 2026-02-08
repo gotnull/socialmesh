@@ -122,6 +122,12 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
       error: (_, _) => false,
     );
 
+    // Watch discovery cooldown so skeletons disappear after the window expires
+    // (default 3 min). Without this, a factory-reset device with no neighbors
+    // would show "Discovering" skeletons forever.
+    final discoveryCooldown = ref.watch(nodeDiscoveryCooldownProvider);
+    final isInDiscoveryCooldown = discoveryCooldown.isInCooldown;
+
     var nodesList = nodes.values.toList();
 
     // Apply filter
@@ -318,6 +324,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                 linkedNodeIds,
                 presenceMap,
                 isConnected: isConnected,
+                isInDiscoveryCooldown: isInDiscoveryCooldown,
               ),
           ],
         ),
@@ -331,6 +338,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     List<int> linkedNodeIds,
     Map<int, NodePresence> presenceMap, {
     bool isConnected = false,
+    bool isInDiscoveryCooldown = false,
   }) {
     final animationsEnabled = ref.watch(animationsEnabledProvider);
 
@@ -391,11 +399,15 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     final nonEmptySections = sections.where((s) => s.nodes.isNotEmpty).toList();
 
     // Check if we should show loading placeholder:
-    // Connected, only have "Your Device" section, no other nodes yet
+    // Connected, only have "Your Device" section, no other nodes yet,
+    // AND still within the discovery cooldown window (default 3 min).
+    // Without the cooldown check, a factory-reset device with no neighbors
+    // would show "Discovering" skeletons forever.
     final hasOnlyMyDevice =
         nonEmptySections.length == 1 &&
         nonEmptySections.first.title == 'Your Device';
-    final showLoadingPlaceholder = isConnected && hasOnlyMyDevice;
+    final showLoadingPlaceholder =
+        isConnected && hasOnlyMyDevice && isInDiscoveryCooldown;
 
     return [
       for (
