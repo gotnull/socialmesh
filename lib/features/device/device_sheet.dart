@@ -15,6 +15,7 @@ import '../../providers/connection_providers.dart';
 import '../../providers/meshcore_providers.dart';
 import '../../utils/snackbar.dart';
 import 'package:socialmesh/core/navigation.dart';
+
 import 'widgets/meshcore_console.dart';
 
 /// Shows the device sheet as a modal bottom sheet
@@ -423,20 +424,32 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
         '🔌 DISCONNECT: Transport disconnected, now showing Scanner',
       );
 
-      // NOW tell the router to show Scanner. _AppRouter watches
-      // appInitProvider and returns ScannerScreen when state is
-      // needsScanner. The device is already disconnected at this point,
-      // so Scanner won't see stale connected state.
-      if (!mounted) return;
-      AppLogging.connection('🔌 DISCONNECT: Setting appInit to needsScanner');
+      // Set appInit to needsScanner so _AppRouter shows Scanner when
+      // the '/app' route mounts.
       ref.read(appInitProvider.notifier).setNeedsScanner();
 
-      // Pop all routes above _AppRouter (sheets, settings, device config,
-      // etc.) so the Scanner is visible immediately.
-      AppLogging.connection(
-        '🔌 DISCONNECT: Popping all routes to root (_AppRouter)',
-      );
-      navigatorKey.currentState?.popUntil((route) => route.isFirst);
+      // Navigate imperatively to '/app' which mounts a fresh _AppRouter.
+      // _AppRouter reads appInitProvider (needsScanner) and shows
+      // ScannerScreen. This replaces the ENTIRE nav stack — all sheets,
+      // dialogs, and the old home route are removed.
+      //
+      // The declarative approach (setNeedsScanner + popUntil to let the
+      // existing _AppRouter rebuild) was unreliable: the widget swap
+      // from AppRootShell to ScannerScreen didn't always propagate
+      // through the navigator frame, leaving the user stranded on
+      // the Nodes screen.
+      final nav = navigatorKey.currentState;
+      if (nav != null) {
+        AppLogging.connection(
+          '🔌 DISCONNECT: pushNamedAndRemoveUntil → /app (fresh _AppRouter)',
+        );
+        nav.pushNamedAndRemoveUntil('/app', (route) => false);
+      } else {
+        AppLogging.connection(
+          '🔌 DISCONNECT: navigatorKey.currentState is null — '
+          'needsScanner already set, _AppRouter should pick it up',
+        );
+      }
 
       AppLogging.connection('🔌 DISCONNECT: Disconnect sequence complete');
     } else {

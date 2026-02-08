@@ -1253,6 +1253,14 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         ],
         home: const _AppRouter(),
         routes: {
+          // Reset route: replaces the entire nav stack with _AppRouter,
+          // which reads appInitProvider and shows the correct screen
+          // (Scanner when needsScanner, MainShell when ready, etc.).
+          // Used by device_sheet disconnect to guarantee navigation
+          // to Scanner — the declarative setNeedsScanner + popUntil
+          // approach was unreliable because _AppRouter's widget swap
+          // didn't always propagate through the navigator frame.
+          '/app': (context) => const _AppRouter(),
           '/scanner': (context) => const ScannerScreen(),
           '/messages': (context) => const MessagingScreen(),
           '/channels': (context) => const ChannelsScreen(),

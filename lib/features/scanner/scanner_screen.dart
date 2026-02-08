@@ -185,7 +185,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           if (appState == AppInitState.needsScanner) {
             ref.read(appInitProvider.notifier).setReady();
           } else if (!widget.isInline) {
-            Navigator.of(context).pushReplacementNamed('/main');
+            _navigateToMain();
           }
         } else if (next == AutoReconnectState.failed ||
             next == AutoReconnectState.idle) {
@@ -203,6 +203,28 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         }
       },
     );
+  }
+
+  /// Navigate to main app after successful connection.
+  /// If Scanner was pushed on top of MainShell (e.g. from the
+  /// TopStatusBanner "Connect" button), just pop back — MainShell
+  /// will rebuild with the connected state automatically. If Scanner
+  /// is the root route (pushed via /app after disconnect), set
+  /// appInit to initialized so _AppRouter shows MainShell.
+  void _navigateToMain() {
+    if (!mounted) return;
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      AppLogging.connection(
+        '📡 SCANNER: Popping back to previous screen (pushed from banner/route)',
+      );
+      navigator.pop();
+    } else {
+      AppLogging.connection(
+        '📡 SCANNER: At root — setting appInit to initialized for _AppRouter',
+      );
+      ref.read(appInitProvider.notifier).setInitialized();
+    }
   }
 
   Future<void> _tryAutoReconnect() async {
@@ -241,7 +263,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       if (appState == AppInitState.needsScanner) {
         ref.read(appInitProvider.notifier).setReady();
       } else if (!widget.isInline) {
-        Navigator.of(context).pushReplacementNamed('/main');
+        _navigateToMain();
       }
       return;
     }
@@ -935,8 +957,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         // At root level from needsScanner - update app state to initialized
         ref.read(appInitProvider.notifier).setInitialized();
       } else if (!widget.isInline) {
-        // Navigate to main app
-        Navigator.of(context).pushReplacementNamed('/main');
+        _navigateToMain();
       }
       // If inline, don't navigate - let connection state trigger rebuild
     } catch (e, stack) {
@@ -1160,6 +1181,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           '📡 SCANNER: Region UNSET — pushing RegionSelectionScreen '
           '(isInitialSetup=true, isOnboarding=${widget.isOnboarding})',
         );
+        // CRITICAL: Clear manualConnecting BEFORE pushing RegionSelection.
+        // The region apply causes a device reboot (expected disconnect).
+        // The autoReconnectManager needs to handle that reconnect, but it
+        // checks autoReconnectState and blocks when manualConnecting is
+        // set. Scanner's manual connection is done at this point — the
+        // device is paired, protocol configured, region is the only
+        // remaining step. Hand off reconnect responsibility to the
+        // auto-reconnect manager so the reboot-reconnect cycle works.
+        autoReconnectNotifier.setState(AutoReconnectState.idle);
         await Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (context) =>
@@ -1176,7 +1206,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         if (isFromNeedsScanner) {
           appInitNotifier.setInitialized();
         } else if (!widget.isInline) {
-          Navigator.of(context).pushReplacementNamed('/main');
+          _navigateToMain();
         }
       } else if (needsRegionSetup) {
         AppLogging.app(
@@ -1186,7 +1216,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         if (isFromNeedsScanner) {
           appInitNotifier.setInitialized();
         } else if (!widget.isInline) {
-          Navigator.of(context).pushReplacementNamed('/main');
+          _navigateToMain();
         }
       } else if (isFromNeedsScanner) {
         // We're at the root level from needsScanner - update app state to initialized
@@ -1194,7 +1224,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         appInitNotifier.setInitialized();
       } else if (!widget.isInline) {
         // Navigate to main app (only if not inline - inline will auto-rebuild)
-        Navigator.of(context).pushReplacementNamed('/main');
+        _navigateToMain();
       }
       // If inline (shown within MainShell), don't navigate - just let the
       // connection state change trigger MainShell to rebuild and show main content

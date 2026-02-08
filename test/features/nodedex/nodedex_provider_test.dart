@@ -10,6 +10,7 @@ import 'package:socialmesh/features/nodedex/services/nodedex_database.dart';
 import 'package:socialmesh/features/nodedex/services/nodedex_sqlite_store.dart';
 import 'package:socialmesh/models/mesh_models.dart';
 import 'package:socialmesh/providers/app_providers.dart';
+import 'package:socialmesh/providers/cloud_sync_entitlement_providers.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // =============================================================================
@@ -139,6 +140,9 @@ _createTestContainer({
       nodesProvider.overrideWith(() => nodesNotifier),
       myNodeNumProvider.overrideWith(() => myNodeNumNotifier),
       nodeDexStoreProvider.overrideWith((ref) => preInitStore),
+      // Prevent Firebase cascade: cloudSyncEntitlementServiceProvider →
+      // CloudSyncEntitlementService() → FirebaseFirestore.instance
+      canCloudSyncWriteProvider.overrideWithValue(false),
     ],
   );
 

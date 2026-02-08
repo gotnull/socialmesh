@@ -4,13 +4,14 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/connection_providers.dart';
 
 /// A small, reusable top-of-screen connection status banner that matches
 /// the blurred snack-bar styling and can be used in multiple places.
-class TopStatusBanner extends ConsumerWidget {
+class TopStatusBanner extends ConsumerStatefulWidget {
   final AutoReconnectState autoReconnectState;
   final bool autoReconnectEnabled;
   final VoidCallback onRetry;
@@ -27,14 +28,58 @@ class TopStatusBanner extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TopStatusBanner> createState() => _TopStatusBannerState();
+}
+
+class _TopStatusBannerState extends ConsumerState<TopStatusBanner> {
+  bool _autoRetryTriggered = false;
+
+  @override
+  void didUpdateWidget(covariant TopStatusBanner oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reset the auto-retry flag when reconnect state changes so we
+    // can trigger again on a new disconnect cycle.
+    if (widget.autoReconnectState != oldWidget.autoReconnectState) {
+      _autoRetryTriggered = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final isScanning = autoReconnectState == AutoReconnectState.scanning;
-    final isConnecting = autoReconnectState == AutoReconnectState.connecting;
+    final isScanning = widget.autoReconnectState == AutoReconnectState.scanning;
+    final isConnecting =
+        widget.autoReconnectState == AutoReconnectState.connecting;
     final isReconnecting = isScanning || isConnecting;
-    final isFailed = autoReconnectState == AutoReconnectState.failed;
-    final isTerminalInvalidated = deviceState.isTerminalInvalidated;
+    final isFailed = widget.autoReconnectState == AutoReconnectState.failed;
+    final isIdle = widget.autoReconnectState == AutoReconnectState.idle;
+    final isTerminalInvalidated = widget.deviceState.isTerminalInvalidated;
+    final isUserDisconnected =
+        widget.deviceState.reason == DisconnectReason.userDisconnected;
+
+    // Auto-trigger reconnect when the banner appears in idle+disconnected
+    // state (unexpected disconnect where autoReconnectManager didn't kick
+    // in). This gives the user immediate feedback instead of a dead
+    // "Disconnected" banner. Skip if user manually disconnected — they
+    // intentionally want to be disconnected (and with the /app route fix,
+    // they should be on Scanner, not MainShell, anyway).
+    if (isIdle &&
+        !isUserDisconnected &&
+        !isTerminalInvalidated &&
+        widget.autoReconnectEnabled &&
+        !_autoRetryTriggered) {
+      _autoRetryTriggered = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          AppLogging.connection(
+            '📡 TopStatusBanner: Auto-triggering reconnect '
+            '(idle + disconnected + not user-initiated)',
+          );
+          widget.onRetry();
+        }
+      });
+    }
 
     final foregroundColor = isTerminalInvalidated
         ? AppTheme.errorRed
@@ -56,6 +101,12 @@ class TopStatusBanner extends ConsumerWidget {
         ? (isScanning ? 'Searching for device...' : 'Reconnecting...')
         : (isFailed ? 'Device not found' : 'Disconnected');
     final showRetryButton = isFailed && !isTerminalInvalidated;
+
+    // Connect button is tappable whenever we're NOT actively reconnecting.
+    // This covers: failed, idle, user-disconnected, terminal-invalidated.
+    // Previously this required auto-reconnect to be disabled, which left
+    // the button dead in most disconnect scenarios.
+    final connectTappable = !isReconnecting && widget.onGoToScanner != null;
 
     final topPadding = MediaQuery.of(context).padding.top;
     // Use kToolbarHeight as a single source of truth for common top bar sizes
@@ -89,13 +140,7 @@ class TopStatusBanner extends ConsumerWidget {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap:
-                    ((isTerminalInvalidated ||
-                            isFailed ||
-                            (!isReconnecting && !autoReconnectEnabled)) &&
-                        onGoToScanner != null)
-                    ? onGoToScanner
-                    : null,
+                onTap: connectTappable ? widget.onGoToScanner : null,
                 child: Padding(
                   padding: EdgeInsets.only(
                     left: 12,
@@ -142,7 +187,7 @@ class TopStatusBanner extends ConsumerWidget {
                         ),
                         if (showRetryButton) ...[
                           TextButton.icon(
-                            onPressed: onRetry,
+                            onPressed: widget.onRetry,
                             icon: Icon(
                               Icons.refresh_rounded,
                               size: 16,
