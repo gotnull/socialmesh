@@ -301,6 +301,18 @@ service cloud.firestore {
         resource.data.createdBy == request.auth.uid;
     }
 
+    // Shared channels (for QR code sharing)
+    match /shared_channels/{channelId} {
+      // Anyone can read shared channels (needed for QR scanning/import)
+      allow read: if true;
+      // Authenticated users can create shared channels
+      allow create: if isAuthenticated() && isValidSize() &&
+        request.resource.data.createdBy == request.auth.uid;
+      // Only the creator can update or delete
+      allow update, delete: if isAuthenticated() &&
+        resource.data.createdBy == request.auth.uid;
+    }
+
     // Shared automations (for QR code sharing)
     match /shared_automations/{automationId} {
       // Anyone can read shared automations (needed for QR scanning)
