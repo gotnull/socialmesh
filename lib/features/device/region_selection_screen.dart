@@ -430,6 +430,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
   @override
   Widget build(BuildContext context) {
     final regionState = ref.watch(regionConfigProvider);
+    final isApplying = regionState.applyStatus == RegionApplyStatus.applying;
     final statusText = regionState.applyStatus == RegionApplyStatus.failed
         ? _errorMessage
         : null;
@@ -471,6 +472,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                   border: Border.all(color: context.border),
                 ),
                 child: TextField(
+                  enabled: !isApplying,
                   style: TextStyle(color: context.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Search regions...',
@@ -497,7 +499,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
               final isSelected = _selectedRegion == region.code;
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _buildRegionTile(region, isSelected),
+                child: _buildRegionTile(region, isSelected, isApplying),
               );
             }, childCount: _filteredRegions.length),
           ),
@@ -527,10 +529,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                         width: double.infinity,
                         child: ElevatedButton(
                           key: regionSelectionApplyButtonKey,
-                          onPressed:
-                              _selectedRegion != null &&
-                                  regionState.applyStatus !=
-                                      RegionApplyStatus.applying
+                          onPressed: _selectedRegion != null && !isApplying
                               ? _saveRegion
                               : null,
                           style: ElevatedButton.styleFrom(
@@ -542,9 +541,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child:
-                              regionState.applyStatus ==
-                                  RegionApplyStatus.applying
+                          child: isApplying
                               ? const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -592,7 +589,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     );
   }
 
-  Widget _buildRegionTile(RegionInfo region, bool isSelected) {
+  Widget _buildRegionTile(RegionInfo region, bool isSelected, bool isApplying) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -608,7 +605,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => setState(() => _selectedRegion = region.code),
+          onTap: isApplying
+              ? null
+              : () => setState(() => _selectedRegion = region.code),
           borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.all(16),
