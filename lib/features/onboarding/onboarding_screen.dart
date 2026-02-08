@@ -30,6 +30,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   final PageController _pageController = PageController();
   int _currentPage = 0;
   double _pageOffset = 0.0;
+  bool _settingUpDevice = false;
 
   // Pulse animation for page content
   late final AnimationController _pulseController;
@@ -181,6 +182,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
 
     if (result != null && mounted) {
+      // Show a loading overlay so the user doesn't stare at the last
+      // onboarding page while we wait for LoRa config / region check.
+      safeSetState(() => _settingUpDevice = true);
+
       // Scanner paired the device but skipped region check (isOnboarding
       // returns early). Check region here and push RegionSelectionScreen
       // if UNSET, so the flow is: Scanner → Region → Terms → MainShell.
@@ -312,61 +317,105 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           // Animated background
           const Positioned.fill(child: ConnectingAnimationBackground()),
 
+          // Full-screen loading overlay while setting up device
+          // (waiting for LoRa config before pushing region selection)
+          if (_settingUpDevice)
+            Positioned.fill(
+              child: Container(
+                color: context.background,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            accentColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Setting up your device…',
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Checking radio configuration',
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
           // Main content
-          SafeArea(
-            child: Column(
-              children: [
-                // Skip button
-                Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 16, top: 8),
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 200),
-                      opacity: _currentPage < _pages.length - 1 ? 1.0 : 0.0,
-                      child: TextButton(
-                        onPressed: _currentPage < _pages.length - 1
-                            ? _skip
-                            : null,
-                        child: Text(
-                          'Skip',
-                          style: TextStyle(
-                            color: context.textSecondary,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
+          if (!_settingUpDevice)
+            SafeArea(
+              child: Column(
+                children: [
+                  // Skip button
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 16, top: 8),
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 200),
+                        opacity: _currentPage < _pages.length - 1 ? 1.0 : 0.0,
+                        child: TextButton(
+                          onPressed: _currentPage < _pages.length - 1
+                              ? _skip
+                              : null,
+                          child: Text(
+                            'Skip',
+                            style: TextStyle(
+                              color: context.textSecondary,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
 
-                // Main scrollable content area
-                Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    onPageChanged: _onPageChanged,
-                    itemCount: _pages.length,
-                    itemBuilder: (context, index) {
-                      return _buildFullPage(index, accentColor, meshConfig);
-                    },
+                  // Main scrollable content area
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      onPageChanged: _onPageChanged,
+                      itemCount: _pages.length,
+                      itemBuilder: (context, index) {
+                        return _buildFullPage(index, accentColor, meshConfig);
+                      },
+                    ),
                   ),
-                ),
 
-                // Page indicators
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: _buildPageIndicators(accentColor),
-                ),
+                  // Page indicators
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: _buildPageIndicators(accentColor),
+                  ),
 
-                // Action button
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-                  child: _buildActionButton(accentColor),
-                ),
-              ],
+                  // Action button
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                    child: _buildActionButton(accentColor),
+                  ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
