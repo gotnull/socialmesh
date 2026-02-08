@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/admin_config.dart';
-import '../core/legal/legal_constants.dart';
+
 import '../core/logging.dart';
 import '../core/transport.dart';
 import '../dev/demo/demo.dart';
@@ -93,23 +93,10 @@ class AppInitNotifier extends Notifier<AppInitState> {
         return;
       }
 
-      // Check terms acceptance AFTER onboarding but BEFORE device pairing.
-      // This ensures the user sees updated terms on version bumps too.
-      final acceptedTerms = settings.acceptedTermsVersion;
-      final acceptedPrivacy = settings.acceptedPrivacyVersion;
-      final needsTerms =
-          acceptedTerms != LegalConstants.termsVersion ||
-          acceptedPrivacy != LegalConstants.privacyVersion;
-
-      if (needsTerms) {
-        AppLogging.app(
-          '🔒 AppInitNotifier: Terms acceptance required - '
-          'storedTerms=$acceptedTerms (need ${LegalConstants.termsVersion}), '
-          'storedPrivacy=$acceptedPrivacy (need ${LegalConstants.privacyVersion})',
-        );
-        state = AppInitState.needsTermsAcceptance;
-        return;
-      }
+      // Terms acceptance is NOT checked here — it is gated in _AppRouter
+      // when state is ready, so that terms appear AFTER device setup
+      // (scanner + region select) but BEFORE the main shell. Returning
+      // users with a terms version bump will hit the gate there.
 
       // Check if device was ever paired
       final lastDeviceId = settings.lastDeviceId;
@@ -128,7 +115,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
           AppLogging.connection(
             '🎯 AppInitNotifier: User has paired before, auto-reconnect ON, setting ready',
           );
-          state = AppInitState.ready;
+          setReady();
         } else {
           // Auto-reconnect disabled - go to scanner so user can manually connect
           // This respects the user's choice to not auto-connect

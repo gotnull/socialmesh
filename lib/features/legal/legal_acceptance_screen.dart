@@ -66,9 +66,9 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
 
     if (!mounted) return;
 
-    // Re-run app initialisation from the terms-accepted state.
-    // This will advance past needsTermsAcceptance to the next state
-    // (needsScanner or ready).
+    // Re-run app initialisation so _AppRouter rebuilds.
+    // initialize() will see onboarding done, terms now accepted,
+    // and advance to needsScanner or ready as appropriate.
     appInit.initialize();
   }
 

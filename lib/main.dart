@@ -71,6 +71,7 @@ import 'features/settings/device_management_screen.dart';
 import 'features/navigation/main_shell.dart';
 import 'features/navigation/app_root_shell.dart';
 import 'features/legal/legal_acceptance_screen.dart';
+import 'core/legal/legal_constants.dart';
 import 'core/widgets/legal_document_sheet.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/onboarding/screens/mesh_brain_emotion_test_screen.dart';
@@ -2246,6 +2247,25 @@ class _AppRouterState extends ConsumerState<_AppRouter> {
         // First time user needs to pair a device before using mesh features
         return const ScannerScreen();
       case AppInitState.ready:
+        // Terms acceptance gate: check AFTER device setup (scanner + region)
+        // but BEFORE showing the main shell. This ensures region selection
+        // completes first (which uses pushReplacement and setInitialized),
+        // then terms are shown here at the router level where navigation
+        // is clean.
+        final settingsAsync = ref.watch(settingsServiceProvider);
+        final needsTerms =
+            settingsAsync.whenOrNull(
+              data: (settings) {
+                final acceptedTerms = settings.acceptedTermsVersion;
+                final acceptedPrivacy = settings.acceptedPrivacyVersion;
+                return acceptedTerms != LegalConstants.termsVersion ||
+                    acceptedPrivacy != LegalConstants.privacyVersion;
+              },
+            ) ??
+            false;
+        if (needsTerms) {
+          return const LegalAcceptanceScreen();
+        }
         // App is ready - route to protocol-specific shell
         // AppRootShell watches activeProtocolProvider and routes to:
         // - MainShell for Meshtastic/none

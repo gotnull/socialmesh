@@ -328,6 +328,7 @@ class SignalService {
   FirebaseStorage get _storage => FirebaseStorage.instance;
 
   Database? _db;
+  Completer<void>? _initCompleter;
   final _uuid = const Uuid();
 
   /// Active Firestore comments listeners keyed by signalId.
@@ -448,37 +449,56 @@ class SignalService {
   // ===========================================================================
 
   /// Initialize the SQLite database.
+  ///
+  /// Uses a [Completer] guard so concurrent callers await the same
+  /// initialisation rather than racing to open the database twice.
   Future<void> init() async {
     if (_db != null) return;
 
-    AppLogging.signals('Initializing SignalService database');
+    // If another caller is already initialising, wait for it.
+    if (_initCompleter != null) {
+      return _initCompleter!.future;
+    }
 
-    final documentsDir = await getApplicationDocumentsDirectory();
-    final dbPath = p.join(documentsDir.path, _dbName);
+    _initCompleter = Completer<void>();
 
-    _db = await openDatabase(
-      dbPath,
-      version: 6,
-      onCreate: (db, version) async {
-        AppLogging.signals('Creating signals database v$version');
-        await _createTables(db);
-      },
-    );
-    await _dedupeStore.init();
+    try {
+      AppLogging.signals('Initializing SignalService database');
 
-    _startAuthListener();
+      final documentsDir = await getApplicationDocumentsDirectory();
+      final dbPath = p.join(documentsDir.path, _dbName);
 
-    // Load proximity history from disk
-    await _loadProximityHistory();
+      _db = await openDatabase(
+        dbPath,
+        version: 6,
+        onCreate: (db, version) async {
+          AppLogging.signals('Creating signals database v$version');
+          await _createTables(db);
+        },
+      );
+      await _dedupeStore.init();
 
-    // Start retry timer for pending image updates (every 10 seconds)
-    _imageRetryTimer?.cancel();
-    _imageRetryTimer = Timer.periodic(
-      const Duration(seconds: 10),
-      (_) => _processPendingImageUpdates(),
-    );
+      _startAuthListener();
 
-    AppLogging.signals('SignalService initialized');
+      // Load proximity history from disk
+      await _loadProximityHistory();
+
+      // Start retry timer for pending image updates (every 10 seconds)
+      _imageRetryTimer?.cancel();
+      _imageRetryTimer = Timer.periodic(
+        const Duration(seconds: 10),
+        (_) => _processPendingImageUpdates(),
+      );
+
+      AppLogging.signals('SignalService initialized');
+      _initCompleter!.complete();
+    } catch (e, st) {
+      AppLogging.signals('SignalService init failed: $e');
+      _initCompleter!.completeError(e, st);
+      // Reset so the next caller can retry.
+      _initCompleter = null;
+      rethrow;
+    }
   }
 
   void _startAuthListener() {
@@ -2023,9 +2043,19 @@ class SignalService {
   /// that have cloud media URLs but no local cached file. Safe to call
   /// repeatedly; idempotent.
   Future<void> attemptResolveAllPendingImages() async {
-    await init();
+    try {
+      await init();
+    } catch (e) {
+      AppLogging.signals(
+        'attemptResolveAllPendingImages: DB init failed, skipping: $e',
+      );
+      return;
+    }
 
-    final rows = await _db!.query(
+    final db = _db;
+    if (db == null) return;
+
+    final rows = await db.query(
       _tableName,
       where:
           'mediaUrls IS NOT NULL AND (imageLocalPath IS NULL OR imageLocalPath = "")',

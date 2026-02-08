@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/auto_scroll_text.dart';
+import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../device/region_selection_screen.dart';
 import '../scanner/widgets/connecting_animation.dart';
 import '../scanner/scanner_screen.dart';
 import 'widgets/mesh_node_brain.dart';
@@ -176,6 +181,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
 
     if (result != null && mounted) {
+      // Scanner paired the device but skipped region check (isOnboarding
+      // returns early). Check region here and push RegionSelectionScreen
+      // if UNSET, so the flow is: Scanner → Region → Terms → MainShell.
+      await _checkAndHandleRegion(navigator);
+      if (!mounted) return;
+
       final settings = await settingsFuture;
       await settings.setOnboardingComplete(true);
 
@@ -184,6 +195,63 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         // the terms acceptance gate (and then to scanner/ready) rather than
         // jumping straight to /main and bypassing the legal check.
         ref.read(appInitProvider.notifier).initialize();
+      }
+    }
+  }
+
+  /// Check device region after pairing and show region selection if UNSET.
+  /// This fills the gap left by ScannerScreen's isOnboarding early-return
+  /// which skips region detection.
+  Future<void> _checkAndHandleRegion(NavigatorState navigator) async {
+    final protocol = ref.read(protocolServiceProvider);
+    var region = protocol.currentRegion;
+
+    // Region config may not have arrived yet — wait briefly for the stream
+    if (region == null ||
+        region == config_pbenum.Config_LoRaConfig_RegionCode.UNSET) {
+      AppLogging.app('🔍 Onboarding: Waiting for LoRa config...');
+      try {
+        final loraConfig = await protocol.loraConfigStream.first.timeout(
+          const Duration(seconds: 8),
+          onTimeout: () {
+            AppLogging.app('⏱️ Onboarding: LoRa config timeout');
+            throw TimeoutException('LoRa config timeout');
+          },
+        );
+        region = loraConfig.region;
+        AppLogging.app('✅ Onboarding: Received region: ${region.name}');
+      } catch (e) {
+        AppLogging.app('⚠️ Onboarding: Error getting region: $e');
+        region = protocol.currentRegion;
+      }
+    }
+
+    if (!mounted) return;
+
+    if (region == null ||
+        region == config_pbenum.Config_LoRaConfig_RegionCode.UNSET) {
+      AppLogging.app(
+        '⚠️ Onboarding: Region is UNSET — pushing RegionSelectionScreen',
+      );
+      // Push (not pushReplacement) so it pops back here when done.
+      // isInitialSetup: true so RegionSelectionScreen stays visible during
+      // applyRegion (device reboot), then pops back to onboarding.
+      // Onboarding then continues: setOnboardingComplete → initialize →
+      // terms acceptance → MainShell → What's New.
+      await navigator.push(
+        MaterialPageRoute<void>(
+          builder: (context) =>
+              const RegionSelectionScreen(isInitialSetup: true),
+        ),
+      );
+    } else {
+      // Region already set — mark as configured
+      final settings = await ref.read(settingsServiceProvider.future);
+      if (mounted) {
+        await settings.setRegionConfigured(true);
+        AppLogging.app(
+          '✅ Onboarding: Region ${region.name} already configured',
+        );
       }
     }
   }

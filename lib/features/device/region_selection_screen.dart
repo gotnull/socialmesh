@@ -4,7 +4,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/logging.dart';
 import '../../core/theme.dart';
+import '../../services/storage/storage_service.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../providers/app_providers.dart';
@@ -205,13 +207,14 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     if (regionState.applyStatus == RegionApplyStatus.applying) return;
     final isInitialSetup = widget.isInitialSetup;
 
-    // Capture settings reference BEFORE async work to avoid accessing ref after disposal
+    // Capture ALL references BEFORE any async work to avoid accessing
+    // ref/context after disposal
     final settingsAsync = ref.read(settingsServiceProvider);
     if (!settingsAsync.hasValue) return; // Settings not ready
     final settings = settingsAsync.requireValue;
-
-    // CRITICAL: Capture navigator BEFORE dialog to avoid BuildContext across async gaps
-    final navigator = !isInitialSetup ? Navigator.of(context) : null;
+    final navigator = Navigator.of(context);
+    final regionNotifier = ref.read(regionConfigProvider.notifier);
+    final settingsRefresh = ref.read(settingsRefreshProvider.notifier);
 
     // Show confirmation dialog explaining the device will reboot
     final confirmed = await showDialog<bool>(
@@ -243,21 +246,11 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     );
 
     if (confirmed != true) return;
-
-    // CRITICAL: For non-initial setup, navigate away IMMEDIATELY before ANY other logic
-    // Navigator was captured before dialog to avoid BuildContext issues
-    if (navigator != null) {
-      navigator.pushReplacementNamed('/main');
-      // Small delay to ensure navigation completes
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
-
     if (!mounted) return;
 
     // Check if device is still connected before attempting to apply region
     final connectionState = ref.read(conn.deviceConnectionProvider);
     if (!connectionState.isConnected) {
-      if (!mounted) return;
       safeSetState(() {
         _errorMessage = 'Device disconnected. Please reconnect and try again.';
       });
@@ -269,91 +262,157 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       _showPairingInvalidationHint = false;
     });
 
+    if (isInitialSetup) {
+      // ── ONBOARDING / INITIAL SETUP FLOW ──
+      // Stay on screen so the user sees progress during the device reboot.
+      // After apply completes, persist regionConfigured, refresh the
+      // settings provider, then POP back to the caller (onboarding).
+      // The caller (_connectDevice) handles setOnboardingComplete +
+      // initialize() which advances through terms → MainShell.
+      await _applyAndPop(
+        settings: settings,
+        settingsRefresh: settingsRefresh,
+        regionNotifier: regionNotifier,
+        navigator: navigator,
+      );
+    } else {
+      // ── NON-INITIAL FLOW (MainShell inline OR Settings push) ──
+      // Persist regionConfigured FIRST so MainShell's inline guard
+      // (needsRegionSetup && !regionConfigured) stops re-showing this
+      // screen. Then pop if this was a pushed route (Settings), or do
+      // nothing if inline (MainShell will rebuild). Fire applyRegion
+      // in the background — the notifier manages the full reboot cycle.
+      await _persistAndDismiss(
+        settings: settings,
+        settingsRefresh: settingsRefresh,
+        regionNotifier: regionNotifier,
+        navigator: navigator,
+      );
+    }
+  }
+
+  /// Initial-setup path: stay on screen during apply, then pop.
+  Future<void> _applyAndPop({
+    required SettingsService settings,
+    required SettingsRefreshNotifier settingsRefresh,
+    required RegionConfigNotifier regionNotifier,
+    required NavigatorState navigator,
+  }) async {
     try {
-      // If region was already applied (from a previous attempt that timed out but succeeded),
-      // skip the apply and just mark setup as complete
       final protocol = ref.read(protocolServiceProvider);
       final currentDeviceRegion = protocol.currentRegion;
       final alreadyApplied =
-          regionState.applyStatus == RegionApplyStatus.applied &&
-          regionState.regionChoice == _selectedRegion;
+          ref.read(regionConfigProvider).applyStatus ==
+              RegionApplyStatus.applied &&
+          ref.read(regionConfigProvider).regionChoice == _selectedRegion;
       final regionAlreadySet = currentDeviceRegion == _selectedRegion;
 
-      // CRITICAL: During initial setup, always call applyRegion() even if the region
-      // already matches. This ensures:
-      // 1. The loading overlay shows consistently ("This may take up to 30 seconds")
-      // 2. We properly handle the device reboot cycle
-      // 3. Users get visual feedback that setup is progressing
-      // Some Meshtastic devices ship with pre-configured regions, so we can't skip
-      // the apply flow just because the region matches - the user still needs to see
-      // the proper feedback and wait for any necessary device operations to complete.
-      final shouldSkipApply =
-          !widget.isInitialSetup && (alreadyApplied || regionAlreadySet);
-
-      if (!shouldSkipApply) {
-        final regionNotifier = ref.read(regionConfigProvider.notifier);
+      // During initial setup, always call applyRegion() even if the
+      // region already matches. This ensures the loading overlay shows
+      // consistently and we properly handle the device reboot cycle.
+      if (!alreadyApplied && !regionAlreadySet) {
         await regionNotifier.applyRegion(
           _selectedRegion!,
-          reason: widget.isInitialSetup ? 'initial_setup' : 'settings_change',
+          reason: 'initial_setup',
         );
       }
 
-      if (!mounted) return;
-
+      // Persist region configured (settings object was captured before
+      // async, safe to call even if widget is disposing)
       await settings.setRegionConfigured(true);
-      if (!mounted) return;
 
-      if (isInitialSetup) {
-        ref.read(appInitProvider.notifier).setInitialized();
-      }
+      if (!mounted) return;
+      settingsRefresh.refresh();
+
+      // Pop back to caller (onboarding _checkAndHandleRegion await)
+      navigator.pop();
     } on Exception catch (e) {
       if (!mounted) return;
 
-      // Check if the region was actually applied despite the error (e.g., timeout during reconnect
-      // but region stream already confirmed the change)
+      // Check if the region was actually applied despite the error
       final postErrorState = ref.read(regionConfigProvider);
       final protocol = ref.read(protocolServiceProvider);
       if ((postErrorState.applyStatus == RegionApplyStatus.applied &&
               postErrorState.regionChoice == _selectedRegion) ||
           protocol.currentRegion == _selectedRegion) {
-        // Region was actually applied - proceed with success flow
         await settings.setRegionConfigured(true);
         if (!mounted) return;
-        if (isInitialSetup) {
-          ref.read(appInitProvider.notifier).setInitialized();
-        }
-        // Note: For non-initial setup, we already popped earlier
+        settingsRefresh.refresh();
+        navigator.pop();
         return;
       }
 
-      final connectionState = ref.read(conn.deviceConnectionProvider);
+      final connState = ref.read(conn.deviceConnectionProvider);
       final pairingInvalidation = conn.isPairingInvalidationError(e);
-      if (connectionState.isTerminalInvalidated || pairingInvalidation) {
-        // For initial setup, we're still on the screen so we can navigate
-        // For non-initial setup, we already popped so this is a no-op
-        if (mounted && isInitialSetup) {
-          Navigator.of(context).pushNamed('/scanner');
+      if (connState.isTerminalInvalidated || pairingInvalidation) {
+        if (mounted) {
+          navigator.pushNamed('/scanner');
         }
         return;
       }
+
       final message = e is TimeoutException
           ? 'Reconnect timed out. Please try again.'
           : pairingInvalidation
-          ? 'Your phone removed the stored pairing info for this device.\nGo to Settings > Bluetooth, forget the Meshtastic device, and try again.'
+          ? 'Your phone removed the stored pairing info for this device.\n'
+                'Go to Settings > Bluetooth, forget the Meshtastic device, '
+                'and try again.'
           : 'Failed to set region: $e';
-      if (!mounted) return;
 
-      // Only show error UI if we're in initial setup mode (screen is still visible)
-      // For non-initial setup, we already popped the screen so we can't show error UI here
-      if (isInitialSetup) {
-        setState(() {
-          _errorMessage = message;
-          _showPairingInvalidationHint = pairingInvalidation;
-        });
-        showErrorSnackBar(context, message);
+      safeSetState(() {
+        _errorMessage = message;
+        _showPairingInvalidationHint = pairingInvalidation;
+      });
+      showErrorSnackBar(context, message);
+    }
+  }
+
+  /// Non-initial path: persist setting, dismiss, fire apply in background.
+  Future<void> _persistAndDismiss({
+    required SettingsService settings,
+    required SettingsRefreshNotifier settingsRefresh,
+    required RegionConfigNotifier regionNotifier,
+    required NavigatorState navigator,
+  }) async {
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      final currentDeviceRegion = protocol.currentRegion;
+      final regionState = ref.read(regionConfigProvider);
+      final alreadyApplied =
+          regionState.applyStatus == RegionApplyStatus.applied &&
+          regionState.regionChoice == _selectedRegion;
+      final regionAlreadySet = currentDeviceRegion == _selectedRegion;
+      final shouldSkipApply = alreadyApplied || regionAlreadySet;
+
+      // Persist regionConfigured BEFORE apply so MainShell's inline
+      // guard clears immediately on rebuild
+      await settings.setRegionConfigured(true);
+      settingsRefresh.refresh();
+
+      // Dismiss this screen: pop if pushed (Settings), otherwise let
+      // MainShell rebuild (inline case — regionConfigured is now true)
+      if (navigator.canPop()) {
+        navigator.pop();
       }
-      // For non-initial setup, the error will be visible through the connection state
-      // on the nodes screen (e.g., "Device not found - Retry" banner)
+
+      // Fire applyRegion in background. The notifier is a Riverpod-
+      // managed object; its ref stays valid regardless of widget
+      // lifecycle. Errors surface via connection state banners.
+      if (!shouldSkipApply) {
+        // ignore: unawaited_futures
+        regionNotifier
+            .applyRegion(_selectedRegion!, reason: 'settings_change')
+            .catchError((Object e) {
+              AppLogging.app('⚠️ Background region apply failed: $e');
+            });
+      }
+    } on Exception catch (e) {
+      if (!mounted) return;
+      final message = 'Failed to set region: $e';
+      safeSetState(() {
+        _errorMessage = message;
+      });
+      showErrorSnackBar(context, message);
     }
   }
 

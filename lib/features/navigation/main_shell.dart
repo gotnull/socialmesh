@@ -323,7 +323,20 @@ class _MainShellState extends ConsumerState<MainShell> {
 
         // Trigger What's New popup if there is an unseen payload.
         // This runs after the first frame so the navigator is ready.
-        WhatsNewSheet.showIfNeeded(ref);
+        // GUARD: Skip if region setup is still needed — the inline
+        // RegionSelectionScreen would be visible and What's New would
+        // overlay on top of it, creating a confusing UX.
+        final needsRegion = ref.read(needsRegionSetupProvider);
+        final regionConfigured =
+            ref
+                .read(settingsServiceProvider)
+                .whenOrNull(data: (settings) => settings.regionConfigured) ??
+            false;
+        if (needsRegion && !regionConfigured) {
+          AppLogging.app('WhatsNew: suppressed — region setup still needed');
+        } else {
+          WhatsNewSheet.showIfNeeded(ref);
+        }
       }
     });
   }
