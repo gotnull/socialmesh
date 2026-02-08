@@ -66,7 +66,7 @@ class SignalGridCard extends ConsumerWidget {
         authorName = node.longName ?? node.shortName ?? '!$hexId';
         authorShortName = node.shortName ?? shortHex;
         if (authorName.length > 12) {
-          authorName = '${authorName.substring(0, 11)}…';
+          authorName = '${authorName.substring(0, 11)}...';
         }
         avatarColor = Color((node.hardwareModel?.hashCode ?? 0) | 0xFF000000);
       } else {
@@ -76,7 +76,7 @@ class SignalGridCard extends ConsumerWidget {
     } else if (signal.authorSnapshot != null) {
       authorName = signal.authorSnapshot!.displayName;
       if (authorName.length > 12) {
-        authorName = '${authorName.substring(0, 11)}…';
+        authorName = '${authorName.substring(0, 11)}...';
       }
       avatarUrl = signal.authorSnapshot!.avatarUrl;
     }

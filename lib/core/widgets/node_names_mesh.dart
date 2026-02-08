@@ -445,7 +445,7 @@ class _OrbitingChipsPainter extends CustomPainter {
     // Clean up and truncate
     final cleaned = name.trim();
     if (cleaned.length > 12) {
-      return '${cleaned.substring(0, 10)}…';
+      return '${cleaned.substring(0, 10)}...';
     }
     return cleaned;
   }

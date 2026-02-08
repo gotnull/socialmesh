@@ -339,7 +339,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        'Setting up your device…',
+                        'Setting up your device...',
                         style: TextStyle(
                           color: context.textPrimary,
                           fontSize: 17,
