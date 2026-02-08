@@ -21,10 +21,13 @@ import 'whats_new_registry.dart';
 /// Presents the What's New bottom sheet as a swipeable carousel of all
 /// historical payloads.
 ///
-/// Each page sizes to its natural content height — no fixed heights, no
-/// scrolling, no [PageView]. Swipe gestures use velocity detection on
-/// [onHorizontalDragEnd] for a natural feel, and page transitions use
-/// [SlideTransition] + [FadeTransition] via [AnimatedSwitcher].
+/// Uses a standard [PageView] for natural drag-following carousel physics
+/// (matching the onboarding screen pattern). Each page is wrapped in a
+/// [SingleChildScrollView] for overflow safety on small devices.
+///
+/// The page indicator dots interpolate their color between adjacent pages
+/// during drag, using each payload's item icon color (matched to drawer
+/// icon colors for visual consistency).
 ///
 /// The container follows the exact same pattern as [AppBottomSheet.build]:
 /// [context.card] background, top border radius of 20, drag pill with
@@ -140,45 +143,77 @@ class _WhatsNewCarousel extends ConsumerStatefulWidget {
 
 class _WhatsNewCarouselState extends ConsumerState<_WhatsNewCarousel> {
   late final List<WhatsNewPayload> _payloads;
+  late final PageController _pageController;
+  List<Color> _pageColors = const [];
   int _currentPage = 0;
-
-  /// Tracks swipe direction so AnimatedSwitcher can slide the correct way.
-  bool _swipingForward = true;
 
   @override
   void initState() {
     super.initState();
     // All payloads in reverse chronological order (newest first)
     _payloads = WhatsNewRegistry.allPayloads.reversed.toList();
+    _pageController = PageController();
+    _pageController.addListener(_onPageScroll);
+  }
+
+  @override
+  void dispose() {
+    _pageController.removeListener(_onPageScroll);
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onPageScroll() {
+    // Trigger rebuild so the indicator color interpolates during drag.
+    setState(() {});
   }
 
   void _goToPage(int index) {
     if (index == _currentPage) return;
     if (index < 0 || index >= _payloads.length) return;
     HapticFeedback.selectionClick();
-    setState(() {
-      _swipingForward = index > _currentPage;
-      _currentPage = index;
-    });
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  /// Returns the interpolated color between adjacent page colors based
+  /// on the current scroll position — smooth transitions during drag.
+  Color _interpolatedColor(Color fallback) {
+    if (_pageColors.isEmpty) return fallback;
+    if (!_pageController.hasClients) return _pageColors[_currentPage];
+
+    final page = _pageController.page ?? _currentPage.toDouble();
+    final index = page.floor().clamp(0, _pageColors.length - 1);
+    final nextIndex = (index + 1).clamp(0, _pageColors.length - 1);
+    final t = page - page.floor();
+    return Color.lerp(_pageColors[index], _pageColors[nextIndex], t) ??
+        _pageColors[index];
   }
 
   @override
   Widget build(BuildContext context) {
     final accentColor = Theme.of(context).colorScheme.primary;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final viewPadding = MediaQuery.of(context).viewPadding;
 
-    return GestureDetector(
-      // Velocity-only swipe detection — no mid-drag firing.
-      onHorizontalDragEnd: (details) {
-        final velocity = details.primaryVelocity ?? 0;
-        if (velocity < -200) {
-          // Swiped left → next page
-          _goToPage(_currentPage + 1);
-        } else if (velocity > 200) {
-          // Swiped right → previous page
-          _goToPage(_currentPage - 1);
-        }
-      },
-      behavior: HitTestBehavior.opaque,
+    // Build color list from each payload's first item iconColor,
+    // falling back to the theme accent when no color is set.
+    // Computed as a local and stored in the mutable field so
+    // _interpolatedColor can reference it during drag callbacks.
+    final pageColors = _payloads.map((p) {
+      return p.items.first.iconColor ?? accentColor;
+    }).toList();
+    _pageColors = pageColors;
+
+    final activeColor = _interpolatedColor(accentColor);
+
+    return ConstrainedBox(
+      // Cap the sheet at 85% of screen height — tall enough for all
+      // content without any vertical scrolling.
+      constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
       child: Container(
         // Matches AppBottomSheet.build() exactly
         decoration: BoxDecoration(
@@ -186,11 +221,8 @@ class _WhatsNewCarouselState extends ConsumerState<_WhatsNewCarousel> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewPadding.bottom,
-          ),
+          padding: EdgeInsets.only(bottom: viewPadding.bottom),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
               // Drag pill — matches AppBottomSheet._DragPill
               Container(
@@ -203,47 +235,22 @@ class _WhatsNewCarouselState extends ConsumerState<_WhatsNewCarousel> {
                 ),
               ),
 
-              // Page content — sizes to its natural height, no scroll
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                switchInCurve: Curves.easeOut,
-                switchOutCurve: Curves.easeIn,
-                transitionBuilder: (child, animation) {
-                  // Determine slide direction from the key match.
-                  // The NEW child slides in from the swipe direction;
-                  // the OLD child slides out the opposite way.
-                  final isIncoming = child.key == ValueKey<int>(_currentPage);
-                  final slideOffset = Tween<Offset>(
-                    begin: Offset(
-                      isIncoming
-                          ? (_swipingForward ? 0.15 : -0.15)
-                          : (_swipingForward ? -0.15 : 0.15),
-                      0,
-                    ),
-                    end: Offset.zero,
-                  ).animate(animation);
-
-                  return SlideTransition(
-                    position: slideOffset,
-                    child: FadeTransition(opacity: animation, child: child),
-                  );
-                },
-                layoutBuilder: (currentChild, previousChildren) {
-                  // Stack children so the outgoing page doesn't cause a
-                  // layout jump while fading out.
-                  return Stack(
-                    alignment: Alignment.topCenter,
-                    children: [
-                      ...previousChildren,
-                      if (currentChild != null) currentChild,
-                    ],
-                  );
-                },
-                child: _WhatsNewPage(
-                  key: ValueKey<int>(_currentPage),
-                  payload: _payloads[_currentPage],
-                  onDismissSheet: widget.onDismiss,
-                  readOnly: widget.readOnly,
+              // PageView carousel — Expanded fills remaining space
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _currentPage = index);
+                  },
+                  itemCount: _payloads.length,
+                  itemBuilder: (context, index) {
+                    return _WhatsNewPage(
+                      payload: _payloads[index],
+                      onDismissSheet: widget.onDismiss,
+                      readOnly: widget.readOnly,
+                    );
+                  },
                 ),
               ),
 
@@ -257,7 +264,7 @@ class _WhatsNewCarouselState extends ConsumerState<_WhatsNewCarousel> {
                       _PageIndicator(
                         count: _payloads.length,
                         current: _currentPage,
-                        accentColor: accentColor,
+                        accentColor: activeColor,
                         onDotTap: _goToPage,
                       ),
                       const SizedBox(height: 16),
@@ -358,7 +365,6 @@ class _WhatsNewPage extends ConsumerWidget {
   final bool readOnly;
 
   const _WhatsNewPage({
-    super.key,
     required this.payload,
     required this.onDismissSheet,
     this.readOnly = false,

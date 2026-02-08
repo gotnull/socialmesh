@@ -114,7 +114,7 @@ class WhatsNewRegistry {
               'network and assigns High, Medium, or Low confidence to every '
               'node. Find it in the drawer menu under Mesh.',
           icon: Icons.wifi_find,
-          iconColor: Color(0xFF26A69A),
+          iconColor: Color(0xFF26A69A), // Colors.teal.shade400
           deepLinkRoute: '/reachability',
           helpTopicId: 'reachability_overview',
           ctaLabel: 'Open Reachability',
@@ -139,7 +139,7 @@ class WhatsNewRegistry {
               'No connection required. The World Map pulls live data from '
               'the Socialmesh backend so you can explore the mesh anywhere.',
           icon: Icons.public,
-          iconColor: Color(0xFF42A5F5),
+          iconColor: Color(0xFF42A5F5), // Colors.blue.shade400
           deepLinkRoute: '/world-map',
           helpTopicId: 'world_mesh_overview',
           ctaLabel: 'Open World Map',
@@ -164,7 +164,7 @@ class WhatsNewRegistry {
               'hop count. When they fade, they are gone. True off-grid, '
               'ephemeral presence.',
           icon: Icons.sensors,
-          iconColor: Color(0xFFAB47BC),
+          iconColor: Color(0xFFBA68C8), // Colors.purple.shade300
           deepLinkRoute: '/signals',
           helpTopicId: 'signals_overview',
           ctaLabel: 'Open Signals',
@@ -189,7 +189,7 @@ class WhatsNewRegistry {
               'search by name or hex ID, and tap any entry to explore its '
               'full profile — signal history, discovery timeline, and more.',
           icon: Icons.auto_stories_outlined,
-          iconColor: Color(0xFFFFC107),
+          iconColor: Color(0xFFFFCA28), // Colors.amber.shade400
           deepLinkRoute: '/nodedex',
           helpTopicId: 'nodedex_overview',
           badgeKey: 'nodedex',

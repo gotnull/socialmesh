@@ -244,7 +244,14 @@ class DeviceStatusButton extends ConsumerWidget {
 class _DrawerMenuItem {
   final IconData icon;
   final String label;
-  final Widget screen;
+
+  /// Screen to push when tapped. Null when [tabIndex] is used instead.
+  final Widget? screen;
+
+  /// When non-null, tapping this item switches the bottom-nav to this
+  /// tab index instead of pushing a new screen.
+  final int? tabIndex;
+
   final PremiumFeature? premiumFeature;
   final String? sectionHeader;
   final Color? iconColor;
@@ -261,7 +268,8 @@ class _DrawerMenuItem {
   const _DrawerMenuItem({
     required this.icon,
     required this.label,
-    required this.screen,
+    this.screen,
+    this.tabIndex,
     this.premiumFeature,
     this.sectionHeader,
     this.iconColor,
@@ -332,15 +340,14 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Drawer menu items for quick access screens not in bottom nav
   /// Organized into logical sections with headers
   final List<_DrawerMenuItem> _drawerMenuItems = [
-    // Social section - Activity (Signals is in bottom nav)
+    // Social section — Signals switches to bottom-nav tab 2
     _DrawerMenuItem(
-      icon: Icons.favorite_border,
-      label: 'Activity',
-      screen: const ActivityTimelineScreen(),
+      icon: Icons.sensors,
+      label: 'Signals',
+      tabIndex: 2,
       sectionHeader: 'SOCIAL',
-      iconColor: Colors.red.shade400,
-      requiresConnection: false,
-      badgeProviderKey: 'activity',
+      iconColor: Colors.purple.shade300,
+      requiresConnection: true,
     ),
     _DrawerMenuItem(
       icon: Icons.auto_stories_outlined,
@@ -349,6 +356,14 @@ class _MainShellState extends ConsumerState<MainShell> {
       iconColor: Colors.amber.shade400,
       requiresConnection: false,
       whatsNewBadgeKey: 'nodedex',
+    ),
+    _DrawerMenuItem(
+      icon: Icons.favorite_border,
+      label: 'Activity',
+      screen: const ActivityTimelineScreen(),
+      iconColor: Colors.red.shade400,
+      requiresConnection: false,
+      badgeProviderKey: 'activity',
     ),
     _DrawerMenuItem(
       icon: Icons.timeline,
@@ -659,16 +674,22 @@ class _MainShellState extends ConsumerState<MainShell> {
                                   .read(whatsNewProvider.notifier)
                                   .dismissBadgeKey(item.whatsNewBadgeKey!);
                             }
-                            if (isPremium && !allowNavigation) {
+                            if (item.tabIndex != null) {
+                              // Tab-based item — switch bottom-nav index
+                              Navigator.of(context).pop(); // close drawer
+                              ref
+                                  .read(mainShellIndexProvider.notifier)
+                                  .setIndex(item.tabIndex!);
+                            } else if (isPremium && !allowNavigation) {
                               // Upsell disabled - redirect to subscription screen
                               _navigateFromDrawer(
                                 context,
                                 const SubscriptionScreen(),
                               );
-                            } else {
+                            } else if (item.screen != null) {
                               // Push screen with back button for consistent navigation
                               // If upsell is enabled, the screen handles gating on actions
-                              _navigateFromDrawer(context, item.screen);
+                              _navigateFromDrawer(context, item.screen!);
                             }
                           },
                   ),
@@ -734,7 +755,15 @@ class _MainShellState extends ConsumerState<MainShell> {
               isSelected: false,
               onTap: () {
                 ref.haptics.tabChange();
-                _navigateFromDrawer(context, _drawerMenuItems[0].screen);
+                final firstItem = _drawerMenuItems[0];
+                if (firstItem.tabIndex != null) {
+                  Navigator.of(context).pop();
+                  ref
+                      .read(mainShellIndexProvider.notifier)
+                      .setIndex(firstItem.tabIndex!);
+                } else if (firstItem.screen != null) {
+                  _navigateFromDrawer(context, firstItem.screen!);
+                }
               },
             ),
           ),
