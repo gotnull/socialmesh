@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -250,6 +251,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                 favoritesCount: favoritesCount,
                 withPositionCount: withPositionCount,
                 recentlyDiscoveredCount: recentlyDiscoveredCount,
+                textScaler: MediaQuery.textScalerOf(context),
               ),
             ),
             // Node list content
@@ -844,6 +846,7 @@ class _NodesControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
   final int favoritesCount;
   final int withPositionCount;
   final int recentlyDiscoveredCount;
+  final TextScaler textScaler;
 
   _NodesControlsHeaderDelegate({
     required this.searchController,
@@ -861,13 +864,23 @@ class _NodesControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.favoritesCount,
     required this.withPositionCount,
     required this.recentlyDiscoveredCount,
+    required this.textScaler,
   });
 
-  @override
-  double get minExtent => 125; // Search bar (56) + padding (16) + filter chips (44) + divider (1) + spacing (8)
+  // The search field height is constrained explicitly via
+  // SizedBox + InputDecoration.constraints in build(), so the extent is
+  // deterministic across devices and font-scale settings.
+  // Layout: outerPad (8+8) + searchField + chipsRow (44) + spacing (8) + divider (1).
+  double get _searchFieldHeight =>
+      math.max(kMinInteractiveDimension, textScaler.scale(48));
+
+  double get _computedExtent => 16 + _searchFieldHeight + 44 + 8 + 1;
 
   @override
-  double get maxExtent => 125;
+  double get minExtent => _computedExtent;
+
+  @override
+  double get maxExtent => _computedExtent;
 
   @override
   Widget build(
@@ -876,47 +889,55 @@ class _NodesControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     return ClipRect(
+      clipBehavior: Clip.hardEdge,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           color: context.background.withValues(alpha: 0.8),
           child: Column(
             children: [
-              // Search bar
+              // Search bar — height constrained to match _computedExtent
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    controller: searchController,
-                    onChanged: onSearchChanged,
-                    style: TextStyle(color: context.textPrimary),
-                    decoration: InputDecoration(
-                      hintText: 'Find a node',
-                      hintStyle: TextStyle(color: context.textTertiary),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: context.textTertiary,
-                      ),
-                      suffixIcon: searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                color: context.textTertiary,
-                              ),
-                              onPressed: () {
-                                searchController.clear();
-                                onSearchChanged('');
-                              },
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
+                child: SizedBox(
+                  height: _searchFieldHeight,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextField(
+                      controller: searchController,
+                      onChanged: onSearchChanged,
+                      style: TextStyle(color: context.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'Find a node',
+                        hintStyle: TextStyle(color: context.textTertiary),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: context.textTertiary,
+                        ),
+                        suffixIcon: searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: context.textTertiary,
+                                ),
+                                onPressed: () {
+                                  searchController.clear();
+                                  onSearchChanged('');
+                                },
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        isDense: true,
+                        constraints: BoxConstraints.tightFor(
+                          height: _searchFieldHeight,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1020,51 +1021,84 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
             ],
           ),
           const SizedBox(height: 16),
-          Text(
-            _nodeInfoBroadcastSecs == 0
-                ? 'Disabled'
-                : '${(_nodeInfoBroadcastSecs / 60).round()} minutes',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: context.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: context.accentColor,
-              inactiveTrackColor: context.border,
-              thumbColor: context.accentColor,
-              overlayColor: context.accentColor.withValues(alpha: 0.2),
-            ),
-            child: Slider(
-              value: _nodeInfoBroadcastSecs.toDouble(),
-              min: 0,
-              max: 3600, // 0 to 60 minutes
-              divisions: 60,
-              onChanged: (value) {
-                setState(() => _nodeInfoBroadcastSecs = value.round());
-                _checkForChanges();
-              },
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Off',
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
-              ),
-              Text(
-                '60 min',
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
-              ),
-            ],
+          Builder(
+            builder: (context) {
+              // Dynamic max: at least 4 hours, but extends to accommodate
+              // any value the device reports (e.g. 10800 = 3h).
+              final sliderMax = math
+                  .max(14400, _nodeInfoBroadcastSecs)
+                  .toDouble();
+              final divisions = (sliderMax / 60).round();
+              final minutes = (_nodeInfoBroadcastSecs / 60).round();
+              final maxMinutes = (sliderMax / 60).round();
+
+              String formatInterval(int mins) {
+                if (mins == 0) return 'Disabled';
+                if (mins < 60) return '$mins minutes';
+                final h = mins ~/ 60;
+                final m = mins % 60;
+                if (m == 0) return '$h ${h == 1 ? 'hour' : 'hours'}';
+                return '${h}h ${m}m';
+              }
+
+              String formatMaxLabel(int mins) {
+                if (mins < 60) return '$mins min';
+                final h = mins ~/ 60;
+                final m = mins % 60;
+                if (m == 0) return '${h}h';
+                return '${h}h ${m}m';
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    formatInterval(minutes),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: context.accentColor,
+                      inactiveTrackColor: context.border,
+                      thumbColor: context.accentColor,
+                      overlayColor: context.accentColor.withValues(alpha: 0.2),
+                    ),
+                    child: Slider(
+                      value: _nodeInfoBroadcastSecs.toDouble(),
+                      min: 0,
+                      max: sliderMax,
+                      divisions: divisions,
+                      onChanged: (value) {
+                        setState(() => _nodeInfoBroadcastSecs = value.round());
+                        _checkForChanges();
+                      },
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Off',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: context.textTertiary,
+                        ),
+                      ),
+                      Text(
+                        formatMaxLabel(maxMinutes),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: context.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
