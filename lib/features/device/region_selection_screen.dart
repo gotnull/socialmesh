@@ -171,6 +171,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
   @override
   void initState() {
     super.initState();
+    AppLogging.connection(
+      '🌍 RegionSelection: initState — isInitialSetup=${widget.isInitialSetup}',
+    );
     // Load current region after build
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadCurrentRegion());
   }
@@ -180,6 +183,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     if (!mounted) return;
     final protocol = ref.read(protocolServiceProvider);
     final region = protocol.currentRegion;
+    AppLogging.connection(
+      '🌍 RegionSelection: _loadCurrentRegion — deviceRegion=${region?.name ?? "null"}',
+    );
     if (region != null && region != RegionCode.UNSET) {
       setState(() {
         _currentRegion = region;
@@ -207,6 +213,11 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     final regionState = ref.read(regionConfigProvider);
     if (regionState.applyStatus == RegionApplyStatus.applying) return;
     final isInitialSetup = widget.isInitialSetup;
+    AppLogging.connection(
+      '🌍 RegionSelection: _saveRegion called — '
+      'selected=$_selectedRegion, isInitialSetup=$isInitialSetup, '
+      'currentApplyStatus=${regionState.applyStatus}',
+    );
 
     // Capture ALL references BEFORE any async work to avoid accessing
     // ref/context after disposal
@@ -246,12 +257,24 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       ),
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true) {
+      AppLogging.connection(
+        '🌍 RegionSelection: Apply dialog cancelled by user',
+      );
+      return;
+    }
     if (!mounted) return;
+
+    AppLogging.connection(
+      '🌍 RegionSelection: Apply confirmed — checking device connection',
+    );
 
     // Check if device is still connected before attempting to apply region
     final connectionState = ref.read(conn.deviceConnectionProvider);
     if (!connectionState.isConnected) {
+      AppLogging.connection(
+        '🌍 RegionSelection: BLOCKED — device disconnected before apply',
+      );
       safeSetState(() {
         _errorMessage = 'Device disconnected. Please reconnect and try again.';
       });
@@ -264,6 +287,10 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     });
 
     safeSetState(() => _applying = true);
+    AppLogging.connection(
+      '🌍 RegionSelection: "Applying..." overlay shown — '
+      'region=$_selectedRegion, isInitialSetup=$isInitialSetup',
+    );
 
     if (isInitialSetup) {
       // ── ONBOARDING / INITIAL SETUP FLOW ──
@@ -318,6 +345,13 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
           ref.read(regionConfigProvider).regionChoice == _selectedRegion;
       final regionAlreadySet = currentDeviceRegion == _selectedRegion;
 
+      AppLogging.connection(
+        '🌍 RegionSelection: _applyAndPop — '
+        'alreadyApplied=$alreadyApplied, regionAlreadySet=$regionAlreadySet, '
+        'currentDeviceRegion=${protocol.currentRegion?.name ?? "null"}, '
+        'selected=${_selectedRegion?.name ?? "null"}',
+      );
+
       // During initial setup, always call applyRegion() even if the
       // region already matches. This ensures the loading overlay shows
       // consistently and we properly handle the device reboot cycle.
@@ -327,6 +361,11 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
         // timeout on the reconnect confirmation, but if that completer
         // deadlocks (e.g. background connection race disrupts the
         // reconnect listener) the outer timeout guarantees we pop.
+        AppLogging.connection(
+          '🌍 RegionSelection: Calling applyRegion($_selectedRegion) — '
+          'will send setRegion command and await reconnect confirmation '
+          '(hard timeout=${_applyHardTimeout.inSeconds}s)',
+        );
         await regionNotifier
             .applyRegion(_selectedRegion!, reason: 'initial_setup')
             .timeout(
@@ -343,6 +382,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
 
       // Persist region configured (settings object was captured before
       // async, safe to call even if widget is disposing)
+      AppLogging.connection(
+        '🌍 RegionSelection: applyRegion completed — persisting regionConfigured=true',
+      );
       await settings.setRegionConfigured(true);
 
       if (!mounted) return;
@@ -400,6 +442,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       }
 
       // Unlock the UI so the user can retry
+      AppLogging.connection(
+        '🌍 RegionSelection: _applyAndPop error — unlocking UI for retry: $e',
+      );
       safeSetState(() => _applying = false);
 
       final connState = ref.read(conn.deviceConnectionProvider);
@@ -444,6 +489,12 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       final regionAlreadySet = currentDeviceRegion == _selectedRegion;
       final shouldSkipApply = alreadyApplied || regionAlreadySet;
 
+      AppLogging.connection(
+        '🌍 RegionSelection: _persistAndDismiss — '
+        'shouldSkipApply=$shouldSkipApply, alreadyApplied=$alreadyApplied, '
+        'regionAlreadySet=$regionAlreadySet, selected=$_selectedRegion',
+      );
+
       // Persist regionConfigured BEFORE apply so MainShell's inline
       // guard clears immediately on rebuild
       await settings.setRegionConfigured(true);
@@ -471,12 +522,13 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       // managed object; its ref stays valid regardless of widget
       // lifecycle. Errors surface via connection state banners.
       if (!shouldSkipApply) {
-        // ignore: unawaited_futures
-        regionNotifier
-            .applyRegion(_selectedRegion!, reason: 'settings_change')
-            .catchError((Object e) {
-              AppLogging.app('⚠️ Background region apply failed: $e');
-            });
+        unawaited(
+          regionNotifier
+              .applyRegion(_selectedRegion!, reason: 'settings_change')
+              .catchError((Object e) {
+                AppLogging.app('⚠️ Background region apply failed: $e');
+              }),
+        );
       }
     } on Exception catch (e) {
       // Unlock the UI so the user can retry

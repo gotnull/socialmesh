@@ -5,6 +5,7 @@ import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/connection_providers.dart' as conn;
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -196,14 +197,21 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                   onTap: () => _executeAction(
                     'Reboot Device',
                     () async {
+                      final autoReconnectNotifier = ref.read(
+                        autoReconnectStateProvider.notifier,
+                      );
                       AppLogging.connection(
                         '🔧 DeviceManagement: Sending reboot command '
                         '(delay=2s) — device will restart and BLE will drop',
                       );
                       await protocol.reboot(delaySeconds: 2);
+                      // Clear stale manualConnecting so auto-reconnect
+                      // manager can handle the reboot/reconnect cycle
+                      autoReconnectNotifier.setState(AutoReconnectState.idle);
                       AppLogging.connection(
                         '🔧 DeviceManagement: Reboot command sent — '
-                        'expecting disconnect in ~2s',
+                        'expecting disconnect in ~2s, '
+                        'autoReconnectState set to idle for reconnect',
                       );
                     },
                     warningMessage:
@@ -221,14 +229,21 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                   onTap: () => _executeAction(
                     'Shutdown Device',
                     () async {
+                      final autoReconnectNotifier = ref.read(
+                        autoReconnectStateProvider.notifier,
+                      );
                       AppLogging.connection(
                         '🔧 DeviceManagement: Sending shutdown command '
                         '(delay=2s) — device will power off and BLE will drop',
                       );
                       await protocol.shutdown(delaySeconds: 2);
+                      // Clear stale manualConnecting so if user powers
+                      // device back on, auto-reconnect isn't blocked
+                      autoReconnectNotifier.setState(AutoReconnectState.idle);
                       AppLogging.connection(
                         '🔧 DeviceManagement: Shutdown command sent — '
-                        'expecting disconnect in ~2s',
+                        'expecting disconnect in ~2s, '
+                        'autoReconnectState set to idle',
                       );
                     },
                     warningMessage:
@@ -294,6 +309,9 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       final channelsNotifier = ref.read(
                         channelsProvider.notifier,
                       );
+                      final autoReconnectNotifier = ref.read(
+                        autoReconnectStateProvider.notifier,
+                      );
                       AppLogging.connection(
                         '🔧 DeviceManagement: Sending factoryResetConfig — '
                         'will wipe channels, region, all config but keep nodedb. '
@@ -321,6 +339,13 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         '🔧 DeviceManagement: Local channels cleared — '
                         'expecting device disconnect shortly',
                       );
+                      // Clear stale manualConnecting so auto-reconnect
+                      // manager can handle the reboot/reconnect cycle
+                      autoReconnectNotifier.setState(AutoReconnectState.idle);
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: autoReconnectState set to idle '
+                        '(cleared stale manualConnecting for reconnect)',
+                      );
                     },
                     warningMessage:
                         'This will wipe channels, region, and all settings but preserves the node database.\n\n'
@@ -338,9 +363,8 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                   onTap: () => _executeAction(
                     'Full Factory Reset',
                     () async {
-                      // Capture navigator before async operations
+                      // Capture ALL providers and navigator before any await
                       final navigator = Navigator.of(context);
-
                       final settingsAsync = ref.read(settingsServiceProvider);
                       final nodesNotifier = ref.read(nodesProvider.notifier);
                       final channelsNotifier = ref.read(
@@ -349,6 +373,16 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       final appInitNotifier = ref.read(
                         appInitProvider.notifier,
                       );
+                      final deviceConnectionNotifier = ref.read(
+                        conn.deviceConnectionProvider.notifier,
+                      );
+                      final userDisconnectedNotifier = ref.read(
+                        userDisconnectedProvider.notifier,
+                      );
+                      final autoReconnectNotifier = ref.read(
+                        autoReconnectStateProvider.notifier,
+                      );
+
                       AppLogging.connection(
                         '🔧 DeviceManagement: Sending factoryResetDevice — '
                         'will WIPE EVERYTHING (config, channels, nodes, identity). '
@@ -356,39 +390,72 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       );
                       await protocol.factoryResetDevice();
                       AppLogging.connection(
-                        '🔧 DeviceManagement: factoryResetDevice command sent — '
-                        'clearing ALL local state (region, lastDevice, nodes, channels)',
+                        '🔧 DeviceManagement: factoryResetDevice command sent',
                       );
-                      // Clear ALL local state - device is being wiped completely
+
+                      // CRITICAL: Follow the same disconnect-first pattern as
+                      // manual disconnect (device_sheet.dart). If we navigate to
+                      // Scanner while the transport is still connected, Scanner's
+                      // _tryAutoReconnect sees DevicePairingState.connected,
+                      // thinks "why am I here?", calls setReady() → router shows
+                      // MainShell → user is stranded on empty Nodes screen.
+
+                      // 1. Set userDisconnected to prevent auto-reconnect to
+                      //    the wiped device during/after disconnect
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Setting userDisconnected=true '
+                        'to prevent auto-reconnect to wiped device',
+                      );
+                      userDisconnectedNotifier.setUserDisconnected(true);
+
+                      // 2. Clear manualConnecting (stale from initial
+                      //    Scanner connection) so it doesn't block anything
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Setting autoReconnectState '
+                        'to idle (clearing stale manualConnecting)',
+                      );
+                      autoReconnectNotifier.setState(AutoReconnectState.idle);
+
+                      // 3. Disconnect transport and wait for it to complete
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Disconnecting transport '
+                        'before navigating to Scanner...',
+                      );
+                      await deviceConnectionNotifier.disconnect();
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Transport disconnected',
+                      );
+
+                      // 4. Stop protocol service
+                      protocol.stop();
+
+                      // 5. Clear ALL local state
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Clearing ALL local state '
+                        '(region, lastDevice, nodes, channels)',
+                      );
                       if (settingsAsync.hasValue) {
-                        // Region will be UNSET, clear configured flag
                         await settingsAsync.requireValue.setRegionConfigured(
                           false,
                         );
-                        // Device is being wiped, clear the last device
                         await settingsAsync.requireValue.clearLastDevice();
                         AppLogging.connection(
                           '🔧 DeviceManagement: regionConfigured + lastDevice cleared',
                         );
                       }
-                      // Clear nodes and channels from local cache
                       nodesNotifier.clearNodes();
                       channelsNotifier.clearChannels();
                       AppLogging.connection(
                         '🔧 DeviceManagement: Local nodes + channels cleared',
                       );
 
-                      // CRITICAL: Set app state to needsScanner BEFORE navigating
-                      // This ensures the router shows ScannerScreen instead of MainShell
+                      // 6. Set app state and navigate
                       appInitNotifier.setNeedsScanner();
                       AppLogging.connection(
                         '🔧 DeviceManagement: appInit set to needsScanner — '
                         'navigating to /app for fresh _AppRouter rebuild',
                       );
 
-                      // Navigate via canonical /app route so _AppRouter reads
-                      // needsScanner and shows Scanner. Using /scanner directly
-                      // bypasses the router and can cause stale state issues.
                       if (mounted) {
                         navigator.pushNamedAndRemoveUntil(
                           '/app',

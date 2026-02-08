@@ -3801,8 +3801,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         if (isSameDevice &&
             (state.applyStatus == RegionApplyStatus.applying ||
                 state.applyStatus == RegionApplyStatus.applied)) {
-          AppLogging.protocol(
-            'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} '
+          AppLogging.connection(
+            '🌍 REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} '
             'new_session=${next.connectionSessionId} status=${state.applyStatus.name} reason=session_change_same_device',
           );
           // Update the session ID but keep the apply status
@@ -3815,8 +3815,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
           connectionSessionId: next.connectionSessionId,
           targetDeviceId: currentDeviceId,
         );
-        AppLogging.protocol(
-          'REGION_FLOW choose=null session=${next.connectionSessionId} status=idle reason=new_session device=$currentDeviceId',
+        AppLogging.connection(
+          '🌍 REGION_FLOW choose=null session=${next.connectionSessionId} status=idle reason=new_session device=$currentDeviceId',
         );
         return;
       }
@@ -3824,8 +3824,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       if (state.applyStatus == RegionApplyStatus.applying) {
         if (next.isTerminalInvalidated) {
           state = state.copyWith(applyStatus: RegionApplyStatus.failed);
-          AppLogging.protocol(
-            'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=failed reason=pairing_invalidated',
+          AppLogging.connection(
+            '🌍 REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=failed reason=pairing_invalidated',
           );
           return;
         }
@@ -3835,8 +3835,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         // The _awaitRegionConfirmation method handles this expected disconnect/reconnect cycle.
         // Marking as failed here would abort the operation before reconnection can complete.
         if (previous?.isConnected == true && !next.isConnected) {
-          AppLogging.protocol(
-            'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=applying disconnect_expected=true reason=device_reboot',
+          AppLogging.connection(
+            '🌍 REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=applying disconnect_expected=true reason=device_reboot',
           );
           // DO NOT set applyStatus to failed - let _awaitRegionConfirmation handle it
           return;
@@ -3852,8 +3852,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
             state.regionChoice != null &&
             region == state.regionChoice) {
           state = state.copyWith(applyStatus: RegionApplyStatus.applied);
-          AppLogging.protocol(
-            'REGION_FLOW choose=${region.name} session=${state.connectionSessionId} status=applied reason=region_stream',
+          AppLogging.connection(
+            '🌍 REGION_FLOW choose=${region.name} session=${state.connectionSessionId} status=applied reason=region_stream',
           );
         }
       });
@@ -3881,8 +3881,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         connectionSessionId: sessionId,
         targetDeviceId: deviceId,
       );
-      AppLogging.protocol(
-        'REGION_FLOW choose=${region.name} session=$sessionId status=failed reason=not_connected',
+      AppLogging.connection(
+        '🌍 REGION_FLOW choose=${region.name} session=$sessionId status=failed reason=not_connected',
       );
       throw StateError('Cannot set region while disconnected');
     }
@@ -3890,8 +3890,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     // If already applied for this region, skip
     if (state.applyStatus == RegionApplyStatus.applied &&
         state.regionChoice == region) {
-      AppLogging.protocol(
-        'REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=already_applied',
+      AppLogging.connection(
+        '🌍 REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=already_applied',
       );
       return;
     }
@@ -3899,8 +3899,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     if (state.applyStatus == RegionApplyStatus.applying &&
         state.regionChoice == region &&
         state.connectionSessionId == sessionId) {
-      AppLogging.protocol(
-        'REGION_FLOW choose=${region.name} session=$sessionId status=applying reason=already_applying',
+      AppLogging.connection(
+        '🌍 REGION_FLOW choose=${region.name} session=$sessionId status=applying reason=already_applying',
       );
       return;
     }
@@ -3912,8 +3912,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       connectionSessionId: sessionId,
       targetDeviceId: deviceId,
     );
-    AppLogging.protocol(
-      'REGION_FLOW choose=${region.name} session=$sessionId device=$deviceId status=applying reason=$reason',
+    AppLogging.connection(
+      '🌍 REGION_FLOW choose=${region.name} session=$sessionId device=$deviceId status=applying reason=$reason',
     );
 
     try {
@@ -3935,8 +3935,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
 
       // Mark as applied - the reconnection confirms success
       state = state.copyWith(applyStatus: RegionApplyStatus.applied);
-      AppLogging.protocol(
-        'REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=reconnect_confirmed',
+      AppLogging.connection(
+        '🌍 REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=reconnect_confirmed',
       );
     } catch (e) {
       if (!ref.mounted) rethrow;
@@ -3946,8 +3946,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       final protocol = ref.read(protocolServiceProvider);
       if (state.applyStatus == RegionApplyStatus.applied &&
           state.regionChoice == region) {
-        AppLogging.protocol(
-          'REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=confirmed_despite_error',
+        AppLogging.connection(
+          '🌍 REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=confirmed_despite_error',
         );
         // Region was confirmed by stream - don't treat as failure
         return;
@@ -3955,8 +3955,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       if (protocol.currentRegion == region) {
         // Device has the correct region - mark as applied
         state = state.copyWith(applyStatus: RegionApplyStatus.applied);
-        AppLogging.protocol(
-          'REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=device_has_region',
+        AppLogging.connection(
+          '🌍 REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=device_has_region',
         );
         return;
       }
@@ -3964,8 +3964,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       // Only set failed if we're still in applying state
       if (state.applyStatus == RegionApplyStatus.applying) {
         state = state.copyWith(applyStatus: RegionApplyStatus.failed);
-        AppLogging.protocol(
-          'REGION_FLOW choose=${region.name} session=$sessionId status=failed reason=${e.runtimeType}',
+        AppLogging.connection(
+          '🌍 REGION_FLOW choose=${region.name} session=$sessionId status=failed reason=${e.runtimeType}',
         );
       }
       rethrow;
@@ -3987,8 +3987,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
 
     void completeSuccess() {
       if (!completer.isCompleted) {
-        AppLogging.protocol(
-          'REGION_FLOW session=$sessionId region_confirmed=${region.name}',
+        AppLogging.connection(
+          '🌍 REGION_FLOW session=$sessionId region_confirmed=${region.name}',
         );
         completer.complete();
       }
@@ -4003,8 +4003,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     // Check if already confirmed (device already has the region)
     // This handles test scenarios where setRegion completes synchronously
     if (protocol.currentRegion == region) {
-      AppLogging.protocol(
-        'REGION_FLOW session=$sessionId already_has_region=${region.name}',
+      AppLogging.connection(
+        '🌍 REGION_FLOW session=$sessionId already_has_region=${region.name}',
       );
       return; // Device already has the region - no need to wait for reboot
     }
@@ -4026,8 +4026,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       // Track disconnect (expected during region change)
       if (!sawDisconnect && !next.isConnected) {
         sawDisconnect = true;
-        AppLogging.protocol(
-          'REGION_FLOW session=$sessionId disconnect_during_apply (expected for reboot)',
+        AppLogging.connection(
+          '🌍 REGION_FLOW session=$sessionId disconnect_during_apply (expected for reboot)',
         );
         return;
       }
@@ -4056,8 +4056,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
           return;
         }
         sawReconnect = true;
-        AppLogging.protocol(
-          'REGION_FLOW session=$sessionId reconnected_after_reboot newSession=${next.connectionSessionId}',
+        AppLogging.connection(
+          '🌍 REGION_FLOW session=$sessionId reconnected_after_reboot newSession=${next.connectionSessionId}',
         );
 
         // Device is fully reconnected - region change succeeded
