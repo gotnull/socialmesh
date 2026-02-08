@@ -400,14 +400,22 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
 
     // Check if we should show loading placeholder:
     // Connected, only have "Your Device" section, no other nodes yet,
-    // AND still within the discovery cooldown window (default 3 min).
-    // Without the cooldown check, a factory-reset device with no neighbors
-    // would show "Discovering" skeletons forever.
+    // AND still within the discovery cooldown window (default 3 min),
+    // AND at least one node has actually been discovered during this
+    // cooldown period. Without the discovered check, a brand-new device
+    // with no neighbors would show misleading "Discovering" skeletons
+    // on every app restart (cooldown is fresh but nothing is coming).
     final hasOnlyMyDevice =
         nonEmptySections.length == 1 &&
         nonEmptySections.first.title == 'Your Device';
+    final cooldownState = ref.read(nodeDiscoveryCooldownProvider);
+    final hasDiscoveredNodes =
+        cooldownState.discoveredDuringCooldown.isNotEmpty;
     final showLoadingPlaceholder =
-        isConnected && hasOnlyMyDevice && isInDiscoveryCooldown;
+        isConnected &&
+        hasOnlyMyDevice &&
+        isInDiscoveryCooldown &&
+        hasDiscoveredNodes;
 
     return [
       for (
