@@ -118,16 +118,35 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       });
     }
 
-    // Skip auto-reconnect during onboarding or inline - user needs to select device
-    if (widget.isOnboarding || widget.isInline) {
-      AppLogging.connection(
-        '📡 SCANNER: Onboarding/inline mode - starting manual scan',
-      );
-      _startScan();
-    } else {
-      AppLogging.connection('📡 SCANNER: Normal mode - trying auto-reconnect');
-      _tryAutoReconnect();
-    }
+    // Defer BLE-triggering work (scan / auto-reconnect) to a post-frame
+    // callback. This prevents a cosmetic duplicate-Scanner issue that occurs
+    // during manual disconnect and factory reset:
+    //
+    //   1. setNeedsScanner() synchronously causes the OLD _AppRouter to
+    //      rebuild, swapping AppRootShell → ScannerScreen #1 (initState runs)
+    //   2. pushNamedAndRemoveUntil('/app', ...) creates a NEW _AppRouter
+    //      which also mounts ScannerScreen #2 (initState runs)
+    //   3. ScannerScreen #1 is disposed moments later when old routes are
+    //      removed — but its initState already ran
+    //
+    // By deferring the scan start to a post-frame callback, Scanner #1 is
+    // disposed before the callback fires (mounted == false → no-op), so
+    // only Scanner #2 starts BLE operations. The synchronous state reads
+    // above (hints, pairing invalidation) are harmless and stay in initState.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (widget.isOnboarding || widget.isInline) {
+        AppLogging.connection(
+          '📡 SCANNER: Onboarding/inline mode - starting manual scan',
+        );
+        _startScan();
+      } else {
+        AppLogging.connection(
+          '📡 SCANNER: Normal mode - trying auto-reconnect',
+        );
+        _tryAutoReconnect();
+      }
+    });
   }
 
   @override
