@@ -294,6 +294,14 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     }
   }
 
+  /// Hard ceiling for the entire apply-and-pop cycle. If the device
+  /// reboots but the reconnect never completes (BLE hiccup, background
+  /// connection race, etc.), we optimistically persist regionConfigured
+  /// and pop after this duration. The setRegion command was already sent
+  /// and the device accepted it (it rebooted), so the region IS applied
+  /// even if we can't confirm it via reconnect.
+  static const _applyHardTimeout = Duration(minutes: 1);
+
   /// Initial-setup path: stay on screen during apply, then pop.
   Future<void> _applyAndPop({
     required SettingsService settings,
@@ -314,10 +322,23 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       // region already matches. This ensures the loading overlay shows
       // consistently and we properly handle the device reboot cycle.
       if (!alreadyApplied && !regionAlreadySet) {
-        await regionNotifier.applyRegion(
-          _selectedRegion!,
-          reason: 'initial_setup',
-        );
+        // Wrap in a hard timeout so the screen never stays stuck at
+        // "Applying..." forever. The inner applyRegion has its own 90s
+        // timeout on the reconnect confirmation, but if that completer
+        // deadlocks (e.g. background connection race disrupts the
+        // reconnect listener) the outer timeout guarantees we pop.
+        await regionNotifier
+            .applyRegion(_selectedRegion!, reason: 'initial_setup')
+            .timeout(
+              _applyHardTimeout,
+              onTimeout: () {
+                AppLogging.connection(
+                  '⏱️ Region apply hard timeout (${_applyHardTimeout.inSeconds}s) — '
+                  'optimistically marking region as configured and falling through to pop',
+                );
+                // Don't throw — fall through to the persist-and-pop below
+              },
+            );
       }
 
       // Persist region configured (settings object was captured before
@@ -328,24 +349,58 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       settingsRefresh.refresh();
 
       // Pop back to caller (onboarding _checkAndHandleRegion await)
+      AppLogging.connection(
+        '✅ Region apply complete — popping RegionSelectionScreen '
+        '(region=$_selectedRegion, isInitialSetup=${widget.isInitialSetup})',
+      );
       navigator.pop();
     } on Exception catch (e) {
-      // Unlock the UI so the user can retry
-      safeSetState(() => _applying = false);
       if (!mounted) return;
 
       // Check if the region was actually applied despite the error
       final postErrorState = ref.read(regionConfigProvider);
       final protocol = ref.read(protocolServiceProvider);
-      if ((postErrorState.applyStatus == RegionApplyStatus.applied &&
+      final regionConfirmed =
+          (postErrorState.applyStatus == RegionApplyStatus.applied &&
               postErrorState.regionChoice == _selectedRegion) ||
-          protocol.currentRegion == _selectedRegion) {
+          protocol.currentRegion == _selectedRegion;
+
+      if (regionConfirmed) {
+        AppLogging.connection(
+          '✅ Region confirmed despite error — persisting and popping '
+          '(region=$_selectedRegion)',
+        );
         await settings.setRegionConfigured(true);
         if (!mounted) return;
         settingsRefresh.refresh();
         navigator.pop();
         return;
       }
+
+      // Timeout during initial setup = optimistic success.
+      // The setRegion command was sent, the device accepted it and
+      // rebooted (user can hear the reset), but the BLE reconnect
+      // never completed within the timeout window. The region IS
+      // applied — just persist and move on instead of stranding the
+      // user on an "Applying..." screen forever.
+      if (e is TimeoutException && widget.isInitialSetup) {
+        AppLogging.connection(
+          '⏱️ Region apply reconnect timed out during initial setup — '
+          'optimistically marking region as configured and popping '
+          '(region=$_selectedRegion)',
+        );
+        await settings.setRegionConfigured(true);
+        if (!mounted) return;
+        settingsRefresh.refresh();
+        AppLogging.connection(
+          '✅ Optimistic timeout pop — dismissing RegionSelectionScreen now',
+        );
+        navigator.pop();
+        return;
+      }
+
+      // Unlock the UI so the user can retry
+      safeSetState(() => _applying = false);
 
       final connState = ref.read(conn.deviceConnectionProvider);
       final pairingInvalidation = conn.isPairingInvalidationError(e);

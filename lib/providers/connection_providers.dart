@@ -554,6 +554,30 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       return;
     }
 
+    // CRITICAL: Don't disrupt an already-connected device.
+    // Without this guard, the aggressive BLE cleanup below disconnects
+    // the active connection (finds it in system devices and calls
+    // device.disconnect()), creating a cascade of disconnect→reconnect
+    // cycles that can leave the app in a broken state.
+    // This commonly happens when _initializeBackgroundServices() fires
+    // multiple times (e.g. onboarding + terms acceptance both call
+    // initialize()) while the scanner has already established a live
+    // connection.
+    if (state.isConnected) {
+      AppLogging.connection(
+        '🔌 startBackgroundConnection: BLOCKED - device already connected',
+      );
+      return;
+    }
+
+    // Also skip if we're in the middle of configuring (protocol handshake)
+    if (state.state == DevicePairingState.configuring) {
+      AppLogging.connection(
+        '🔌 startBackgroundConnection: BLOCKED - connection configuring',
+      );
+      return;
+    }
+
     // Guard against concurrent scans - only one background scan at a time
     if (_backgroundScanInProgress) {
       AppLogging.connection(

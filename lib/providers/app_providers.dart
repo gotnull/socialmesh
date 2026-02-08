@@ -57,6 +57,13 @@ enum AppInitState {
 }
 
 class AppInitNotifier extends Notifier<AppInitState> {
+  /// Guard to prevent _initializeBackgroundServices() from running more than
+  /// once. Without this, each call to initialize() (onboarding, terms
+  /// acceptance, etc.) fires a new background-services pass that eventually
+  /// calls startBackgroundConnection() — which can disconnect an already-live
+  /// connection and create a cascade of reconnect cycles.
+  bool _backgroundServicesStarted = false;
+
   @override
   AppInitState build() => AppInitState.uninitialized;
 
@@ -103,8 +110,15 @@ class AppInitNotifier extends Notifier<AppInitState> {
       final hasEverPaired = lastDeviceId != null;
 
       // Phase 2: Background services (can complete after UI shows)
-      // These run in parallel but don't block app ready state
-      _initializeBackgroundServices();
+      // These run in parallel but don't block app ready state.
+      // Guarded so only the first initialize() call triggers them —
+      // subsequent calls (e.g. from terms acceptance) skip this to
+      // avoid duplicate startBackgroundConnection() disrupting an
+      // already-active connection.
+      if (!_backgroundServicesStarted) {
+        _backgroundServicesStarted = true;
+        _initializeBackgroundServices();
+      }
 
       // Determine initial state based on whether user has ever paired
       // AND whether auto-reconnect is enabled
@@ -223,12 +237,29 @@ class AppInitNotifier extends Notifier<AppInitState> {
       // This happens AFTER storage is ready so we can load cached data
       final settings = await ref.read(settingsServiceProvider.future);
       if (settings.autoReconnect && settings.lastDeviceId != null) {
-        AppLogging.debug(
-          '🔄 AppInitNotifier: Starting background device connection...',
-        );
-        // Initialize and start background connection via the new notifier
-        await ref.read(deviceConnectionProvider.notifier).initialize();
-        ref.read(deviceConnectionProvider.notifier).startBackgroundConnection();
+        // Skip if the device is already connected (e.g. the scanner
+        // established a live connection during onboarding before this
+        // background init finished). Without this check,
+        // startBackgroundConnection()'s aggressive BLE cleanup would
+        // disconnect the active connection, triggering a cascade of
+        // reconnect cycles that can leave the app stuck.
+        final connState = ref.read(deviceConnectionProvider);
+        if (connState.isConnected ||
+            connState.state == DevicePairingState.configuring) {
+          AppLogging.debug(
+            '🔄 AppInitNotifier: Device already connected/configuring — '
+            'skipping background connection',
+          );
+        } else {
+          AppLogging.debug(
+            '🔄 AppInitNotifier: Starting background device connection...',
+          );
+          // Initialize and start background connection via the new notifier
+          await ref.read(deviceConnectionProvider.notifier).initialize();
+          ref
+              .read(deviceConnectionProvider.notifier)
+              .startBackgroundConnection();
+        }
       }
     } catch (e) {
       // Non-critical, log but don't fail
