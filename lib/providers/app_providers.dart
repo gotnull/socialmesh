@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/admin_config.dart';
 
 import '../core/logging.dart';
+import '../core/safety/error_handler.dart';
 import '../core/transport.dart';
 import '../dev/demo/demo.dart';
 import '../services/transport/ble_transport.dart';
@@ -4070,9 +4071,16 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     try {
       await completer.future.timeout(
         const Duration(seconds: 90), // Increased timeout for slow reboots
-        onTimeout: () => throw TimeoutException(
-          'Timed out waiting for device to reconnect after region change',
-        ),
+        onTimeout: () {
+          AppErrorHandler.addBreadcrumb(
+            'Region: 90s confirmation timeout '
+            '(region=${region.name}, session=$sessionId, '
+            'sawDisconnect=$sawDisconnect, sawReconnect=$sawReconnect)',
+          );
+          throw TimeoutException(
+            'Timed out waiting for device to reconnect after region change',
+          );
+        },
       );
     } finally {
       connectionSub.close();

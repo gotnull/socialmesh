@@ -6,6 +6,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/logging.dart';
+import '../../core/safety/error_handler.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../providers/connection_providers.dart' as conn;
 
@@ -83,6 +84,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // Show the pairing hint immediately so user knows to forget in Bluetooth settings
     if (deviceState.isTerminalInvalidated) {
       AppLogging.connection('📡 SCANNER: Shown after pairing invalidation');
+      AppErrorHandler.addBreadcrumb('Scanner: pairing invalidation detected');
       _showPairingInvalidationHint = true;
     } else if (autoReconnectState == AutoReconnectState.failed &&
         deviceState.reason == conn.DisconnectReason.deviceNotFound) {
@@ -153,6 +155,23 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   void dispose() {
     _backgroundReconnectSub?.close();
     _disconnectSub?.close();
+    // If manualConnecting is still set when Scanner closes (e.g., user
+    // backed out after a failed connection, or connection succeeded and
+    // router swapped to MainShell), clear it so the auto-reconnect
+    // manager can resume normal operation.
+    try {
+      final currentState = ref.read(autoReconnectStateProvider);
+      if (currentState == AutoReconnectState.manualConnecting) {
+        AppLogging.connection(
+          '📡 SCANNER: dispose — clearing stale manualConnecting → idle',
+        );
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.idle);
+      }
+    } catch (_) {
+      // ref may be invalid if container is already disposing — ignore
+    }
     AppLogging.connection('📡 SCANNER: dispose - hashCode=$hashCode');
     super.dispose();
   }
@@ -314,6 +333,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       AppLogging.connection(
         '📡 SCANNER: DEFERRED — background reconnect already active '
         '(state=$autoReconnectState), showing reconnecting UI instead of scanning',
+      );
+      AppErrorHandler.addBreadcrumb(
+        'Scanner: deferred to background reconnect ($autoReconnectState)',
       );
       safeSetState(() {
         _autoReconnecting = true;
@@ -1340,10 +1362,30 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         userMessage = sanitizedMessage;
       }
 
-      // Reset auto-reconnect state to idle since manual connection failed
-      // This prevents the auto-reconnect manager from trying to reconnect
-      // to the OLD saved device after the user's manual attempt failed
-      autoReconnectNotifier.setState(AutoReconnectState.idle);
+      // CRITICAL: Do NOT clear manualConnecting here. The transport may
+      // still be firing state transitions (error → disconnecting →
+      // disconnected) asynchronously. If we set autoReconnectState to
+      // idle now, the auto-reconnect manager sees idle + disconnected +
+      // saved device ID and starts _performReconnect — which races with
+      // the user's ability to manually retry from this Scanner screen.
+      //
+      // manualConnecting stays set, which blocks the auto-reconnect
+      // manager. It is cleared:
+      //  - On the next successful connection (success path above)
+      //  - When the user taps another device (_connect sets it again)
+      //  - In Scanner.dispose() when this screen closes
+      //
+      // For auto-reconnect paths (isAutoReconnect == true), the state
+      // is not manualConnecting so this is a no-op either way.
+      AppLogging.connection(
+        '📡 SCANNER: _connectToDevice error — keeping autoReconnectState '
+        'as-is to prevent background reconnect race '
+        '(isAutoReconnect=$isAutoReconnect)',
+      );
+      AppErrorHandler.addBreadcrumb(
+        'Scanner: connect error, race guard active '
+        '(isAutoReconnect=$isAutoReconnect, err=${e.runtimeType})',
+      );
 
       // Only reset connecting state on error
       safeSetState(() {

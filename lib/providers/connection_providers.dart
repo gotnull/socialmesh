@@ -20,6 +20,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
+import '../core/safety/error_handler.dart';
 import '../core/transport.dart';
 import '../services/meshcore/connection_coordinator.dart' show ConnectionResult;
 import 'app_providers.dart';
@@ -1154,6 +1155,10 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
     AppLogging.connection(
       'PAIRING_INVALIDATED deviceId=$savedDeviceId reason=${reason.logValue} appleCode=$appleCodeLabel',
+    );
+    AppErrorHandler.addBreadcrumb(
+      'Pairing invalidated: reason=${reason.logValue}, '
+      'appleCode=$appleCodeLabel, device=$savedDeviceId',
     );
 
     _resetInvalidationTracking();

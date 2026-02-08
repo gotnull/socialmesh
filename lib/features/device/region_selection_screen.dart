@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import '../../core/safety/lifecycle_mixin.dart';
+import '../../core/safety/error_handler.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -375,6 +376,10 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                   '⏱️ Region apply hard timeout (${_applyHardTimeout.inSeconds}s) — '
                   'optimistically marking region as configured and falling through to pop',
                 );
+                AppErrorHandler.addBreadcrumb(
+                  'Region: hard timeout ${_applyHardTimeout.inSeconds}s '
+                  '(region=$_selectedRegion, isInitialSetup=${widget.isInitialSetup})',
+                );
                 // Don't throw — fall through to the persist-and-pop below
               },
             );
@@ -431,6 +436,10 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
           'optimistically marking region as configured and popping '
           '(region=$_selectedRegion)',
         );
+        AppErrorHandler.addBreadcrumb(
+          'Region: reconnect timeout during initial setup '
+          '(region=$_selectedRegion)',
+        );
         await settings.setRegionConfigured(true);
         if (!mounted) return;
         settingsRefresh.refresh();
@@ -450,6 +459,10 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       final connState = ref.read(conn.deviceConnectionProvider);
       final pairingInvalidation = conn.isPairingInvalidationError(e);
       if (connState.isTerminalInvalidated || pairingInvalidation) {
+        AppErrorHandler.addBreadcrumb(
+          'Region: pairing invalidation during apply '
+          '(region=$_selectedRegion)',
+        );
         if (mounted) {
           navigator.pushNamed('/scanner');
         }
