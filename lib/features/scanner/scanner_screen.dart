@@ -140,6 +140,26 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       'deviceState=${deviceState.state}, reason=${deviceState.reason}',
     );
 
+    // CRITICAL: If a device is already connected or configuring, do NOT
+    // scan or do BLE cleanup — that would disconnect the active connection
+    // and create a cascade of reconnect cycles. This can happen when the
+    // router shows the scanner while a connection is already live (e.g.
+    // settings.lastDeviceId is null but the device is paired in memory).
+    if (deviceState.isConnected ||
+        deviceState.state == conn.DevicePairingState.configuring) {
+      AppLogging.connection(
+        '📡 SCANNER: BLOCKED — device already ${deviceState.state}, '
+        'navigating to main instead of scanning',
+      );
+      final appState = ref.read(appInitProvider);
+      if (appState == AppInitState.needsScanner) {
+        ref.read(appInitProvider.notifier).setReady();
+      } else if (!widget.isInline) {
+        Navigator.of(context).pushReplacementNamed('/main');
+      }
+      return;
+    }
+
     if (autoReconnectState == AutoReconnectState.failed) {
       AppLogging.connection(
         '📡 SCANNER: Auto-reconnect already failed, skipping to scan',
@@ -270,6 +290,20 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     if (_scanning) {
       AppLogging.connection(
         '📡 SCANNER: _startScan called but already scanning',
+      );
+      return;
+    }
+
+    // CRITICAL: Don't scan or do BLE cleanup if a device is already
+    // connected. The aggressive cleanup (stopScan, system device
+    // disconnect) can destroy an active connection and trigger a
+    // cascade of auto-reconnect cycles.
+    final currentDeviceState = ref.read(conn.deviceConnectionProvider);
+    if (currentDeviceState.isConnected ||
+        currentDeviceState.state == conn.DevicePairingState.configuring) {
+      AppLogging.connection(
+        '📡 SCANNER: _startScan BLOCKED — device already '
+        '${currentDeviceState.state}, skipping destructive BLE cleanup',
       );
       return;
     }
@@ -980,17 +1014,27 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           regionState.applyStatus != RegionApplyStatus.failed;
 
       if (shouldShowRegionPicker) {
-        // Navigate to region selection
-        // CRITICAL: isInitialSetup should ONLY be true during genuine first-time onboarding
-        // After factory reset, user is experienced and screen should pop immediately
-        // Use widget.isOnboarding (true only during onboarding flow, false for factory reset)
-        // Use direct MaterialPageRoute to bypass route guard protection
-        // The region save causes device reboot, which momentarily disconnects.
-        // Route guard would show "Device Required" screen during this brief disconnect.
+        // Navigate to region selection.
+        // isInitialSetup must be true whenever the device has UNSET region,
+        // not just during onboarding. The apply-and-wait flow (with hard
+        // timeout) is required because the device will reboot after region
+        // is set and the user must stay on-screen until reconnect completes
+        // (or the timeout fires and pops optimistically). The persist-and-
+        // dismiss path assumes there is a screen underneath to pop back to,
+        // which is not the case when the scanner was pushed as root via
+        // pushNamedAndRemoveUntil.
+        // Use direct MaterialPageRoute to bypass route guard protection —
+        // the region save causes device reboot, which momentarily disconnects.
+        // Route guard would show "Device Required" screen during this brief
+        // disconnect.
+        AppLogging.connection(
+          '📡 SCANNER: Region UNSET — pushing RegionSelectionScreen '
+          '(isInitialSetup=true, isOnboarding=${widget.isOnboarding})',
+        );
         Navigator.of(context).pushReplacement(
           MaterialPageRoute<void>(
             builder: (context) =>
-                RegionSelectionScreen(isInitialSetup: widget.isOnboarding),
+                const RegionSelectionScreen(isInitialSetup: true),
           ),
         );
       } else if (needsRegionSetup) {

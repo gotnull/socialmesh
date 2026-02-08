@@ -449,10 +449,22 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       await settings.setRegionConfigured(true);
       settingsRefresh.refresh();
 
-      // Dismiss this screen: pop if pushed (Settings), otherwise let
-      // MainShell rebuild (inline case — regionConfigured is now true)
+      // Dismiss this screen: pop if pushed (Settings), otherwise
+      // navigate to main. If the scanner used pushReplacement and
+      // this screen is the sole route, canPop() is false — in that
+      // case set appInit to ready so the router shows MainShell
+      // instead of leaving the user stranded on "Applying...".
       if (navigator.canPop()) {
+        AppLogging.connection(
+          '✅ _persistAndDismiss: popping RegionSelectionScreen',
+        );
         navigator.pop();
+      } else {
+        AppLogging.connection(
+          '✅ _persistAndDismiss: cannot pop (root route) — '
+          'setting appInit to ready so router shows MainShell',
+        );
+        ref.read(appInitProvider.notifier).setReady();
       }
 
       // Fire applyRegion in background. The notifier is a Riverpod-
