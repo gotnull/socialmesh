@@ -174,6 +174,10 @@ class DeepLinkManager {
         // Channels are unique by their base64 data
         final data = link.channelBase64Data;
         return data != null ? 'channel:${data.hashCode}' : null;
+      case DeepLinkType.channelInvite:
+        return link.channelInviteId != null
+            ? 'channel-invite:${link.channelInviteId}'
+            : null;
       case DeepLinkType.location:
         final lat = link.locationLatitude;
         final lng = link.locationLongitude;

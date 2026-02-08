@@ -42,6 +42,7 @@ class DeepLinkRouter {
     final result = switch (link.type) {
       DeepLinkType.node => _routeNode(link),
       DeepLinkType.channel => _routeChannel(link),
+      DeepLinkType.channelInvite => _routeChannelInvite(link),
       DeepLinkType.profile => _routeProfile(link),
       DeepLinkType.widget => _routeWidget(link),
       DeepLinkType.post => _routePost(link),
@@ -102,6 +103,26 @@ class DeepLinkRouter {
     return const DeepLinkRouteResult(
       routeName: '/channels',
       fallbackMessage: 'Invalid channel data',
+    );
+  }
+
+  /// Route a channel invite deep link.
+  DeepLinkRouteResult _routeChannelInvite(ParsedDeepLink link) {
+    if (!link.hasChannelInvite) {
+      return const DeepLinkRouteResult(
+        routeName: '/channels',
+        fallbackMessage: 'Invalid or incomplete invite link',
+      );
+    }
+
+    return DeepLinkRouteResult(
+      routeName: '/channel-invite',
+      arguments: {
+        'inviteId': link.channelInviteId,
+        'inviteSecret': link.channelInviteSecret,
+      },
+      requiresAuth: true,
+      fallbackMessage: 'Sign in to join this channel',
     );
   }
 

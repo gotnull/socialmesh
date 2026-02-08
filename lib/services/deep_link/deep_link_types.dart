@@ -27,6 +27,10 @@ enum DeepLinkType {
   /// Automation template: socialmesh://automation/{base64} or https://socialmesh.app/share/automation/{id}
   automation,
 
+  /// Channel invite: socialmesh://channel-invite/{inviteId}#t={secret}
+  /// or https://socialmesh.app/share/channel/{inviteId}#t={secret}
+  channelInvite,
+
   /// Invalid/unrecognized deep link - routes to fallback
   invalid,
 }
@@ -58,6 +62,8 @@ class ParsedDeepLink {
     this.locationLabel,
     this.automationBase64Data,
     this.automationFirestoreId,
+    this.channelInviteId,
+    this.channelInviteSecret,
     this.validationErrors = const [],
   });
 
@@ -107,6 +113,13 @@ class ParsedDeepLink {
   final String? automationBase64Data;
   final String? automationFirestoreId;
 
+  // Channel invite fields
+  /// Invite ID from the URL path
+  final String? channelInviteId;
+
+  /// Invite secret from the URL fragment (#t=...)
+  final String? channelInviteSecret;
+
   /// Validation errors encountered during parsing.
   /// Empty list means the deep link is valid.
   final List<String> validationErrors;
@@ -136,6 +149,12 @@ class ParsedDeepLink {
   /// Whether this channel link needs to fetch data from Firestore.
   bool get hasChannelFirestoreId =>
       type == DeepLinkType.channel && channelFirestoreId != null;
+
+  /// Whether this is a complete channel invite link.
+  bool get hasChannelInvite =>
+      type == DeepLinkType.channelInvite &&
+      channelInviteId != null &&
+      channelInviteSecret != null;
 
   /// Create an invalid deep link with errors.
   factory ParsedDeepLink.invalid(String originalUri, List<String> errors) {
@@ -174,6 +193,8 @@ class ParsedDeepLink {
       locationLatitude: locationLatitude,
       automationBase64Data: automationBase64Data,
       automationFirestoreId: automationFirestoreId,
+      channelInviteId: channelInviteId,
+      channelInviteSecret: channelInviteSecret,
       locationLongitude: locationLongitude,
       locationLabel: locationLabel,
       validationErrors: validationErrors,

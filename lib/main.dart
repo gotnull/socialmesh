@@ -84,6 +84,7 @@ import 'features/widget_builder/marketplace/marketplace_providers.dart';
 import 'services/user_presence_service.dart';
 import 'services/accessibility_preferences_service.dart';
 import 'services/channel_crypto_service.dart';
+import 'services/channel_invite_service.dart';
 // import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
 import 'core/navigation.dart';
@@ -1375,6 +1376,19 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
               );
             }
           }
+          if (settings.name == '/channel-invite') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            final inviteId = args?['inviteId'] as String?;
+            final inviteSecret = args?['inviteSecret'] as String?;
+            if (inviteId != null && inviteSecret != null) {
+              return MaterialPageRoute(
+                builder: (context) => _ChannelInviteRedeemer(
+                  inviteId: inviteId,
+                  inviteSecret: inviteSecret,
+                ),
+              );
+            }
+          }
           if (settings.name == '/widget-import') {
             final args = settings.arguments as Map<String, dynamic>?;
             final base64Data = args?['base64Data'] as String?;
@@ -1575,6 +1589,141 @@ class _ChannelImportLoader extends ConsumerWidget {
           });
 
           return const Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
+  }
+}
+
+/// Redeems a channel invite link and joins the channel.
+///
+/// Flow:
+/// 1. Calls `redeemChannelInvite` Cloud Function
+/// 2. On success, fetches the decrypted PSK via `ChannelCryptoService`
+/// 3. Navigates to `ChannelFormScreen` with the imported channel
+class _ChannelInviteRedeemer extends ConsumerStatefulWidget {
+  final String inviteId;
+  final String inviteSecret;
+
+  const _ChannelInviteRedeemer({
+    required this.inviteId,
+    required this.inviteSecret,
+  });
+
+  @override
+  ConsumerState<_ChannelInviteRedeemer> createState() =>
+      _ChannelInviteRedeemerState();
+}
+
+class _ChannelInviteRedeemerState
+    extends ConsumerState<_ChannelInviteRedeemer> {
+  late Future<void> _redeemFuture;
+  String? _error;
+  bool _success = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _redeemFuture = _redeem();
+  }
+
+  Future<void> _redeem() async {
+    try {
+      final inviteService = ref.read(channelInviteServiceProvider);
+      final result = await inviteService.redeemInvite(
+        inviteId: widget.inviteId,
+        inviteSecret: widget.inviteSecret,
+      );
+
+      if (!mounted) return;
+
+      // Fetch the decrypted channel (key blob was written by the server)
+      final cryptoService = ref.read(channelCryptoServiceProvider);
+      final channel = await cryptoService.fetchSecureChannel(result.channelId);
+
+      if (!mounted) return;
+
+      if (channel == null) {
+        setState(() => _error = 'Could not decrypt channel key');
+        return;
+      }
+
+      setState(() => _success = true);
+
+      // Navigate to channel form
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final navigator = navigatorKey.currentState;
+        if (navigator == null) return;
+        navigator.pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => ChannelFormScreen(
+              existingChannel: channel,
+              channelIndex: channel.index,
+            ),
+          ),
+        );
+      });
+    } catch (e) {
+      if (!mounted) return;
+      AppLogging.channels('[ChannelInvite] Redemption failed: $e');
+      setState(() => _error = _friendlyError(e));
+    }
+  }
+
+  String _friendlyError(Object error) {
+    final msg = error.toString().toLowerCase();
+    if (msg.contains('expired')) return 'This invite has expired';
+    if (msg.contains('revoked')) return 'This invite has been revoked';
+    if (msg.contains('maximum')) {
+      return 'This invite has reached its usage limit';
+    }
+    if (msg.contains('invalid invite secret')) return 'Invalid invite link';
+    if (msg.contains('not-found') || msg.contains('not found')) {
+      return 'Invite not found';
+    }
+    if (msg.contains('unauthenticated')) return 'Please sign in to join';
+    return 'Failed to join channel';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Join Channel')),
+      body: FutureBuilder<void>(
+        future: _redeemFuture,
+        builder: (context, snapshot) {
+          if (_error != null) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(_error!, textAlign: TextAlign.center),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (_success) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return const Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Joining channel...'),
+              ],
+            ),
+          );
         },
       ),
     );

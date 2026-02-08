@@ -519,6 +519,12 @@ class _ChannelTile extends ConsumerWidget {
         value: 'qr',
         enabled: channel.psk.isNotEmpty,
       ),
+      BottomSheetAction(
+        icon: Icons.link,
+        label: 'Share Invite Link',
+        value: 'invite',
+        enabled: channel.psk.isNotEmpty,
+      ),
       if (channel.index != 0)
         BottomSheetAction(
           icon: Icons.delete,
@@ -552,6 +558,9 @@ class _ChannelTile extends ConsumerWidget {
         break;
       case 'qr':
         _shareChannel(context, ref);
+        break;
+      case 'invite':
+        shareChannelInviteLink(context, channel, ref: ref);
         break;
       case 'delete':
         _deleteChannel(context, ref);

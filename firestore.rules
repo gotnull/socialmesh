@@ -302,8 +302,7 @@ service cloud.firestore {
     }
 
     // Shared channels (for QR code sharing)
-    // SECURITY: PSK fields are no longer stored in channel documents.
-    // Legacy documents with plaintext PSK are being migrated server-side.
+    // PSK fields are not stored in channel documents.
     match /shared_channels/{channelId} {
       // Only authenticated users can read shared channels
       allow read: if isAuthenticated();
@@ -334,6 +333,13 @@ service cloud.firestore {
         allow write: if isAuthenticated() &&
           get(/databases/$(database)/documents/shared_channels/$(channelId)).data.createdBy == request.auth.uid;
       }
+    }
+
+    // Channel invites — capability-based invite links.
+    // All access is via Cloud Functions using Admin SDK.
+    // Clients must NOT read, list, or write invites directly.
+    match /channel_invites/{inviteId} {
+      allow read, write: if false;
     }
 
     // Shared automations (for QR code sharing)

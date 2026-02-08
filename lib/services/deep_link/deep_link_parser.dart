@@ -146,6 +146,9 @@ class DeepLinkParser {
       case 'automation':
         AppLogging.qr('🔗 Parser: Processing automation link');
         return _parseAutomationLink(data, original);
+      case 'channel-invite':
+        AppLogging.qr('🔗 Parser: Processing channel invite link');
+        return _parseChannelInviteLink(data, uri.fragment, original);
       default:
         AppLogging.qr('🔗 Parser: ERROR - Unknown link type: $type');
         return ParsedDeepLink.invalid(original, ['Unknown link type: $type']);
@@ -239,6 +242,13 @@ class DeepLinkParser {
         return _parseLocationLink(uri.queryParameters, original);
 
       case 'channel':
+        // Check for invite fragment (#t=secret)
+        if (id != null && id.isNotEmpty && uri.fragment.isNotEmpty) {
+          AppLogging.qr(
+            '🔗 Parser: Channel URL has fragment — treating as invite',
+          );
+          return _parseChannelInviteLink(id, uri.fragment, original);
+        }
         // Web share links use Firestore doc ID
         if (id == null || id.isEmpty) {
           AppLogging.qr('🔗 Parser: ERROR - Missing channel ID');
@@ -608,6 +618,56 @@ class DeepLinkParser {
         automationFirestoreId: data,
       );
     }
+  }
+
+  /// Parse a channel invite link.
+  ///
+  /// Handles the #t=... fragment to extract the invite secret.
+  /// Used for both:
+  /// - `socialmesh://channel-invite/{inviteId}#t={secret}`
+  /// - `https://socialmesh.app/share/channel/{inviteId}#t={secret}`
+  ParsedDeepLink _parseChannelInviteLink(
+    String? inviteId,
+    String fragment,
+    String original,
+  ) {
+    if (inviteId == null || inviteId.isEmpty) {
+      return ParsedDeepLink.invalid(original, ['Missing invite ID']);
+    }
+
+    // Extract secret from fragment: "t=<secret>"
+    String? secret;
+    if (fragment.startsWith('t=')) {
+      secret = fragment.substring(2);
+    } else {
+      // Try parsing as key-value pairs
+      final parts = fragment.split('&');
+      for (final part in parts) {
+        if (part.startsWith('t=')) {
+          secret = part.substring(2);
+          break;
+        }
+      }
+    }
+
+    if (secret == null || secret.isEmpty) {
+      AppLogging.qr('🔗 Parser: Channel invite missing secret in fragment');
+      return ParsedDeepLink.invalid(original, [
+        'Missing invite secret in URL fragment',
+      ]);
+    }
+
+    AppLogging.qr(
+      '🔗 Parser: Channel invite parsed — id=$inviteId, '
+      'secret=<redacted ${secret.length} chars>',
+    );
+
+    return ParsedDeepLink(
+      type: DeepLinkType.channelInvite,
+      originalUri: original,
+      channelInviteId: inviteId,
+      channelInviteSecret: secret,
+    );
   }
 }
 

@@ -106,6 +106,7 @@
                 <data android:scheme="https" android:host="socialmesh.app" />
                 <data android:pathPrefix="/share/post" />
                 <data android:pathPrefix="/share/node" />
+                <data android:pathPrefix="/share/channel" />
             </intent-filter>
             <!-- File type handlers for map data imports -->
             <intent-filter>

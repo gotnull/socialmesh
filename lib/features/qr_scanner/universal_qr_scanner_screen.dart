@@ -143,6 +143,7 @@ class _UniversalQrScannerScreenState
           _handleLocationQr(parsed);
         case DeepLinkType.post:
           _handlePostQr(parsed);
+        case DeepLinkType.channelInvite:
         case DeepLinkType.invalid:
           throw Exception('Invalid QR code');
       }
