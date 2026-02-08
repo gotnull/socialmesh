@@ -58,6 +58,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   String? _savedDeviceName;
   TransportType? _savedDeviceTransportType;
 
+  /// Subscription used to monitor background reconnect outcome when the
+  /// Scanner defers to an active _performReconnect cycle.
+  ProviderSubscription<AutoReconnectState>? _backgroundReconnectSub;
+
+  /// Subscription used to wait for an in-flight disconnect to complete
+  /// before starting a scan. This happens when the user taps Disconnect
+  /// but the transport hasn't fully torn down by the time Scanner inits.
+  ProviderSubscription<conn.DeviceConnectionState2>? _disconnectSub;
+
   @override
   void initState() {
     super.initState();
@@ -123,8 +132,77 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   @override
   void dispose() {
+    _backgroundReconnectSub?.close();
+    _disconnectSub?.close();
     AppLogging.connection('📡 SCANNER: dispose - hashCode=$hashCode');
     super.dispose();
+  }
+
+  /// Listens for the background reconnect to reach a terminal state
+  /// (success or failed) so the Scanner can react without running its
+  /// own duplicate scan.
+  /// Listens for the transport to finish disconnecting so we can start
+  /// scanning. This is needed when the user taps Disconnect in the device
+  /// sheet — the Scanner may initialize before the transport is fully
+  /// torn down (the disconnect is async). Once we see disconnected state,
+  /// we start the normal scan flow.
+  void _listenForDisconnectCompletion() {
+    _disconnectSub?.close();
+    _disconnectSub = ref.listenManual<conn.DeviceConnectionState2>(
+      conn.deviceConnectionProvider,
+      (previous, next) {
+        if (next.state == conn.DevicePairingState.disconnected ||
+            next.state == conn.DevicePairingState.neverPaired) {
+          AppLogging.connection(
+            '📡 SCANNER: Transport disconnect completed (${next.state}) '
+            '— starting scan',
+          );
+          _disconnectSub?.close();
+          _disconnectSub = null;
+          if (!mounted) return;
+          _startScan();
+        }
+      },
+    );
+  }
+
+  void _listenForBackgroundReconnectOutcome() {
+    _backgroundReconnectSub?.close();
+    _backgroundReconnectSub = ref.listenManual<AutoReconnectState>(
+      autoReconnectStateProvider,
+      (previous, next) {
+        AppLogging.connection(
+          '📡 SCANNER: Background reconnect state changed: $previous -> $next',
+        );
+        if (next == AutoReconnectState.success) {
+          _backgroundReconnectSub?.close();
+          _backgroundReconnectSub = null;
+          AppLogging.connection(
+            '📡 SCANNER: Background reconnect succeeded — navigating to main',
+          );
+          if (!mounted) return;
+          final appState = ref.read(appInitProvider);
+          if (appState == AppInitState.needsScanner) {
+            ref.read(appInitProvider.notifier).setReady();
+          } else if (!widget.isInline) {
+            Navigator.of(context).pushReplacementNamed('/main');
+          }
+        } else if (next == AutoReconnectState.failed ||
+            next == AutoReconnectState.idle) {
+          _backgroundReconnectSub?.close();
+          _backgroundReconnectSub = null;
+          AppLogging.connection(
+            '📡 SCANNER: Background reconnect finished ($next) — '
+            'falling through to manual scan',
+          );
+          if (!mounted) return;
+          safeSetState(() {
+            _autoReconnecting = false;
+          });
+          _startScan();
+        }
+      },
+    );
   }
 
   Future<void> _tryAutoReconnect() async {
@@ -145,8 +223,16 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // and create a cascade of reconnect cycles. This can happen when the
     // router shows the scanner while a connection is already live (e.g.
     // settings.lastDeviceId is null but the device is paired in memory).
-    if (deviceState.isConnected ||
-        deviceState.state == conn.DevicePairingState.configuring) {
+    //
+    // EXCEPTION: If the user explicitly disconnected (userDisconnected flag
+    // is true), the transport disconnect may still be in flight when Scanner
+    // initializes. In that case do NOT redirect to main — the user wants
+    // to be here. The device state will transition to disconnected shortly;
+    // just fall through and let _startScan() handle it once the transport
+    // finishes tearing down.
+    if ((deviceState.isConnected ||
+            deviceState.state == conn.DevicePairingState.configuring) &&
+        !userDisconnected) {
       AppLogging.connection(
         '📡 SCANNER: BLOCKED — device already ${deviceState.state}, '
         'navigating to main instead of scanning',
@@ -157,6 +243,43 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       } else if (!widget.isInline) {
         Navigator.of(context).pushReplacementNamed('/main');
       }
+      return;
+    }
+
+    // If user disconnected but transport hasn't finished yet, wait for it
+    // before starting a scan (scanning while connected causes BLE errors).
+    if (userDisconnected &&
+        (deviceState.isConnected ||
+            deviceState.state == conn.DevicePairingState.configuring)) {
+      AppLogging.connection(
+        '📡 SCANNER: User disconnected but transport still ${deviceState.state} '
+        '— waiting for disconnect to complete before scanning',
+      );
+      _listenForDisconnectCompletion();
+      return;
+    }
+
+    // CRITICAL: If the background reconnect (autoReconnectManagerProvider →
+    // _performReconnect) is already scanning or connecting, do NOT start a
+    // duplicate scan from the Scanner. Running two concurrent BLE scans
+    // (one from _performReconnect's FlutterBluePlus.startScan and one from
+    // Scanner's transport.scan) causes BLE contention, interleaved results,
+    // and connection failures. Instead, show the "Reconnecting..." state and
+    // let the background reconnect finish. The Scanner will react to the
+    // autoReconnectState changing to success (navigate to main) or failed
+    // (fall through to manual scan).
+    if (autoReconnectState == AutoReconnectState.scanning ||
+        autoReconnectState == AutoReconnectState.connecting) {
+      AppLogging.connection(
+        '📡 SCANNER: DEFERRED — background reconnect already active '
+        '(state=$autoReconnectState), showing reconnecting UI instead of scanning',
+      );
+      safeSetState(() {
+        _autoReconnecting = true;
+      });
+      // Listen for background reconnect outcome — when it completes or
+      // fails, we either navigate away or fall through to manual scan.
+      _listenForBackgroundReconnectOutcome();
       return;
     }
 
@@ -1014,15 +1137,21 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           regionState.applyStatus != RegionApplyStatus.failed;
 
       if (shouldShowRegionPicker) {
-        // Navigate to region selection.
+        // Navigate to region selection using push (NOT pushReplacement).
+        // pushReplacement destroys Scanner from the nav stack, so when
+        // RegionSelectionScreen pops after apply, _AppRouter still has
+        // appInit == needsScanner → shows Scanner again → "No devices
+        // found" even though the device is connected. By using push and
+        // awaiting, Scanner stays in the stack and continues its normal
+        // post-connection flow (setInitialized / pushReplacementNamed)
+        // after RegionSelectionScreen pops.
+        //
         // isInitialSetup must be true whenever the device has UNSET region,
         // not just during onboarding. The apply-and-wait flow (with hard
         // timeout) is required because the device will reboot after region
         // is set and the user must stay on-screen until reconnect completes
-        // (or the timeout fires and pops optimistically). The persist-and-
-        // dismiss path assumes there is a screen underneath to pop back to,
-        // which is not the case when the scanner was pushed as root via
-        // pushNamedAndRemoveUntil.
+        // (or the timeout fires and pops optimistically).
+        //
         // Use direct MaterialPageRoute to bypass route guard protection —
         // the region save causes device reboot, which momentarily disconnects.
         // Route guard would show "Device Required" screen during this brief
@@ -1031,12 +1160,24 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           '📡 SCANNER: Region UNSET — pushing RegionSelectionScreen '
           '(isInitialSetup=true, isOnboarding=${widget.isOnboarding})',
         );
-        Navigator.of(context).pushReplacement(
+        await Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (context) =>
                 const RegionSelectionScreen(isInitialSetup: true),
           ),
         );
+        // RegionSelectionScreen popped — region is now applied (or timed
+        // out optimistically). Fall through to the normal post-connection
+        // navigation below to transition to MainShell.
+        if (!mounted) return;
+        AppLogging.connection(
+          '📡 SCANNER: RegionSelectionScreen returned — transitioning to MainShell',
+        );
+        if (isFromNeedsScanner) {
+          appInitNotifier.setInitialized();
+        } else if (!widget.isInline) {
+          Navigator.of(context).pushReplacementNamed('/main');
+        }
       } else if (needsRegionSetup) {
         AppLogging.app(
           'REGION_FLOW choose=${regionState.regionChoice?.name ?? "null"} session=$sessionId status=${regionState.applyStatus.name} reason=region_picker_suppressed',

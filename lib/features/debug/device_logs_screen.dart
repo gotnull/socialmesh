@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
-import '../../core/widgets/connection_required_wrapper.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart';
@@ -351,7 +350,7 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ConnectionRequiredWrapper(child: _buildContent(context));
+    return _buildContent(context);
   }
 
   Widget _buildContent(BuildContext context) {

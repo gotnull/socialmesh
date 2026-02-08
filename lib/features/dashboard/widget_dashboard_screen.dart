@@ -55,8 +55,6 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Connection state handling is done by ConnectionRequiredWrapper in MainShell
-    // This screen only needs to handle the connected state
     final widgetConfigs = ref.watch(dashboardWidgetsProvider);
 
     // Check if this screen was pushed (can pop) - show back button instead of hamburger

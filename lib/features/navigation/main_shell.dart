@@ -9,7 +9,6 @@ import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/admin_pin_dialog.dart';
 import '../../core/widgets/node_avatar.dart';
-import '../../core/widgets/connection_required_wrapper.dart';
 import '../../core/widgets/top_status_banner.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../core/widgets/animations.dart';
@@ -511,41 +510,22 @@ class _MainShellState extends ConsumerState<MainShell> {
   ];
 
   Widget _buildScreen(int index) {
-    // All screens are wrapped with ConnectionRequiredWrapper to show consistent
-    // "No Device Connected" UI when disconnected. The wrapper renders a full
-    // Scaffold when disconnected so user sees consistent UI across all tabs.
+    // Scanner is the sole destination when disconnected — no inline
+    // "No Device Connected" wrapper needed. MainShell's TopStatusBanner
+    // handles the reconnecting/disconnected banner at the top.
     switch (index) {
       case 0:
-        return const ConnectionRequiredWrapper(
-          screenTitle: 'Messages',
-          child: MessagesContainerScreen(),
-        );
+        return const MessagesContainerScreen();
       case 1:
-        return const ConnectionRequiredWrapper(
-          screenTitle: 'Map',
-          child: MapScreen(),
-        );
+        return const MapScreen();
       case 2:
-        return ConnectionRequiredWrapper(
-          screenTitle: 'Signals',
-          child: PresenceFeedScreen(key: presenceFeedScreenKey),
-        );
+        return PresenceFeedScreen(key: presenceFeedScreenKey);
       case 3:
-        return const ConnectionRequiredWrapper(
-          screenTitle: 'Nodes',
-          child: NodesScreen(),
-        );
+        return const NodesScreen();
       case 4:
-        // Dashboard requires connection for live widget data
-        return const ConnectionRequiredWrapper(
-          screenTitle: 'Dashboard',
-          child: WidgetDashboardScreen(),
-        );
+        return const WidgetDashboardScreen();
       default:
-        return const ConnectionRequiredWrapper(
-          screenTitle: 'Messages',
-          child: MessagesContainerScreen(),
-        );
+        return const MessagesContainerScreen();
     }
   }
 

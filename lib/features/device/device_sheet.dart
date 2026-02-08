@@ -403,39 +403,40 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
       );
       autoReconnectNotifier.setState(AutoReconnectState.idle);
 
-      // Close sheet FIRST before navigation to avoid conflicts
-      AppLogging.connection('🔌 DISCONNECT: Closing sheet');
-      if (context.mounted) {
-        Navigator.pop(context);
-      }
-
-      // Small delay to let sheet close animation start
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      // Navigate to Scanner, clearing back stack
-      // This prevents the brief flash of the "No Device Connected" empty state
-      // in MainShell when the connection state changes to disconnected.
-      // Make Scanner the only route so the user cannot navigate back to prior
-      // device-required screens after a manual disconnect.
-      AppLogging.connection(
-        '🔌 DISCONNECT: Navigating to Scanner - clearing back stack',
-      );
-      navigatorKey.currentState?.pushNamedAndRemoveUntil(
-        '/scanner',
-        (route) => false,
-      );
-
-      // Now perform the actual disconnect in the background
-      // Use DeviceConnectionNotifier for proper disconnect handling
-      // This sets the proper disconnect reason and prevents auto-reconnect
+      // CRITICAL: Disconnect transport FIRST, before showing Scanner.
+      // If we pop to Scanner while the device is still connected, the
+      // Scanner's _tryAutoReconnect sees DevicePairingState.connected,
+      // thinks "why am I here?", calls setReady() → router shows MainShell
+      // → user ends up on Nodes instead of Scanner. The userDisconnected
+      // flag is already set above, so no auto-reconnect will trigger
+      // during or after this disconnect.
       AppLogging.connection(
         '🔌 DISCONNECT: Calling DeviceConnectionNotifier.disconnect()',
       );
       await deviceConnectionNotifier.disconnect();
 
-      // Also stop protocol service
+      // Stop protocol service while we're at it
       AppLogging.connection('🔌 DISCONNECT: Stopping protocol service');
       protocol.stop();
+
+      AppLogging.connection(
+        '🔌 DISCONNECT: Transport disconnected, now showing Scanner',
+      );
+
+      // NOW tell the router to show Scanner. _AppRouter watches
+      // appInitProvider and returns ScannerScreen when state is
+      // needsScanner. The device is already disconnected at this point,
+      // so Scanner won't see stale connected state.
+      if (!mounted) return;
+      AppLogging.connection('🔌 DISCONNECT: Setting appInit to needsScanner');
+      ref.read(appInitProvider.notifier).setNeedsScanner();
+
+      // Pop all routes above _AppRouter (sheets, settings, device config,
+      // etc.) so the Scanner is visible immediately.
+      AppLogging.connection(
+        '🔌 DISCONNECT: Popping all routes to root (_AppRouter)',
+      );
+      navigatorKey.currentState?.popUntil((route) => route.isFirst);
 
       AppLogging.connection('🔌 DISCONNECT: Disconnect sequence complete');
     } else {

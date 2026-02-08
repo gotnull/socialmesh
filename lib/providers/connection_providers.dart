@@ -1338,18 +1338,27 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.idle);
     } else {
-      // Unexpected disconnect (e.g., device reboot after region change) - trigger auto-reconnect
+      // Unexpected disconnect (e.g., device reboot after region change).
+      // Do NOT call startBackgroundConnection() here — the
+      // autoReconnectManagerProvider listener on connectionStateProvider
+      // already detects this disconnect and calls _performReconnect(),
+      // which has its own scan loop with retry logic. Calling
+      // startBackgroundConnection() from here creates a dual-scan race:
+      // both _performReconnect's FlutterBluePlus.startScan AND
+      // startBackgroundConnection's transport.scan run concurrently,
+      // causing BLE contention, interleaved scan results, and
+      // connection failures.
+      //
+      // startBackgroundConnection() is still used for app-launch
+      // reconnect (called from initialize()), which is the correct
+      // single-path reconnect on startup.
       AppLogging.connection(
-        '🔌 _handleDisconnect: Unexpected disconnect, triggering auto-reconnect',
+        '🔌 _handleDisconnect: Unexpected disconnect — '
+        'autoReconnectManagerProvider will handle reconnect',
       );
-      // Reset retry counter for new disconnect event
+      // Reset retry counter so the next startBackgroundConnection
+      // (if triggered by autoReconnectManager) starts fresh.
       _reconnectAttempt = 0;
-      // Use a slight delay to allow disconnect to complete
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (ref.mounted) {
-          startBackgroundConnection();
-        }
-      });
     }
   }
 
