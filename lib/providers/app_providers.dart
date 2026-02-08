@@ -1620,6 +1620,32 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
       return;
     }
 
+    // CRITICAL: If the user started manually connecting to a (possibly
+    // different) device while we were waiting, abort immediately.
+    // Without this, _performReconnect continues its scan loop and will
+    // connect to the OLD device, disconnecting the user's chosen device.
+    if (currentState == AutoReconnectState.manualConnecting) {
+      AppLogging.connection(
+        '_performReconnect ABORTED after delay: User is manually connecting '
+        '— not disrupting their connection',
+      );
+      return;
+    }
+
+    // CRITICAL: If the saved device ID changed while we were waiting
+    // (user connected to a different device via Scanner), abort.
+    final currentSavedDeviceId = ref.read(_lastConnectedDeviceIdProvider);
+    if (currentSavedDeviceId != null && currentSavedDeviceId != deviceId) {
+      AppLogging.connection(
+        '_performReconnect ABORTED after delay: Saved device changed '
+        '($deviceId → $currentSavedDeviceId) — user connected to a different device',
+      );
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+      return;
+    }
+
     // Check settings for auto-reconnect preference
     AppLogging.connection('Checking settings...');
     final settings = await ref.read(settingsServiceProvider.future);
@@ -1650,8 +1676,51 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
       }
 
       // Check if cancelled
-      if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
+      final loopState = ref.read(autoReconnectStateProvider);
+      if (loopState == AutoReconnectState.idle) {
         AppLogging.connection('Reconnect cancelled');
+        return;
+      }
+
+      // CRITICAL: If the user started manually connecting (tapped a device
+      // in Scanner), abort the background reconnect immediately. Continuing
+      // would find the OLD device and call transport.connect(), which
+      // disconnects the user's chosen device — creating a reconnect loop.
+      if (loopState == AutoReconnectState.manualConnecting) {
+        AppLogging.connection(
+          '_performReconnect ABORTED in loop (attempt $attempt): '
+          'User is manually connecting — yielding to Scanner',
+        );
+        return;
+      }
+
+      // CRITICAL: If the transport is already connected (user connected
+      // to a device via Scanner while we were scanning), do NOT proceed
+      // — calling transport.connect() on a different device would
+      // disconnect the live connection.
+      final transportState = ref.read(transportProvider).state;
+      if (transportState == DeviceConnectionState.connected ||
+          transportState == DeviceConnectionState.connecting) {
+        AppLogging.connection(
+          '_performReconnect ABORTED in loop (attempt $attempt): '
+          'Transport already ${transportState.name} — not disrupting live connection',
+        );
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.idle);
+        return;
+      }
+
+      // Check if the saved device changed (user connected to different device)
+      final loopSavedId = ref.read(_lastConnectedDeviceIdProvider);
+      if (loopSavedId != null && loopSavedId != deviceId) {
+        AppLogging.connection(
+          '_performReconnect ABORTED in loop (attempt $attempt): '
+          'Saved device changed ($deviceId → $loopSavedId)',
+        );
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.idle);
         return;
       }
 
@@ -1757,6 +1826,36 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
       AppLogging.connection('After scan. foundDevice: ${foundDevice != null}');
 
       if (foundDevice != null) {
+        // CRITICAL: Final guard before connecting — if the user manually
+        // connected to a different device while we were scanning, do NOT
+        // call transport.connect() because it would disconnect their device.
+        final preConnectState = ref.read(autoReconnectStateProvider);
+        final preConnectTransport = ref.read(transportProvider).state;
+        if (preConnectState == AutoReconnectState.manualConnecting ||
+            preConnectState == AutoReconnectState.idle) {
+          AppLogging.connection(
+            '_performReconnect ABORTED before connect: '
+            'state=$preConnectState — not disrupting user connection',
+          );
+          if (preConnectState != AutoReconnectState.idle) {
+            ref
+                .read(autoReconnectStateProvider.notifier)
+                .setState(AutoReconnectState.idle);
+          }
+          return;
+        }
+        if (preConnectTransport == DeviceConnectionState.connected ||
+            preConnectTransport == DeviceConnectionState.connecting) {
+          AppLogging.connection(
+            '_performReconnect ABORTED before connect: '
+            'transport already ${preConnectTransport.name}',
+          );
+          ref
+              .read(autoReconnectStateProvider.notifier)
+              .setState(AutoReconnectState.idle);
+          return;
+        }
+
         AppLogging.connection('Device found! Connecting...');
         ref
             .read(autoReconnectStateProvider.notifier)

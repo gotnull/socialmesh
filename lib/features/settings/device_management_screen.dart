@@ -29,8 +29,9 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
     String? warningMessage,
     bool causesDisconnect = false,
   }) async {
-    AppLogging.protocol(
-      'DeviceManagement: _executeAction($actionName) started',
+    AppLogging.connection(
+      '🔧 DeviceManagement: $actionName started'
+      '${causesDisconnect ? " (causes disconnect)" : ""}',
     );
 
     if (!mounted) return;
@@ -99,7 +100,9 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
       );
 
       if (confirmed != true) {
-        AppLogging.protocol('DeviceManagement: $actionName cancelled by user');
+        AppLogging.connection(
+          '🔧 DeviceManagement: $actionName cancelled by user',
+        );
         return;
       }
     }
@@ -109,7 +112,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
     safeSetState(() => _isProcessing = true);
 
     try {
-      AppLogging.protocol('DeviceManagement: Executing $actionName...');
+      AppLogging.connection('🔧 DeviceManagement: Executing $actionName...');
       await action();
 
       if (mounted) {
@@ -120,8 +123,9 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
 
         // Pop the screen after triggering actions that cause disconnect
         if (causesDisconnect) {
-          AppLogging.protocol(
-            'DeviceManagement: $actionName causes disconnect, popping screen',
+          AppLogging.connection(
+            '🔧 DeviceManagement: $actionName complete — popping screen, '
+            'expect disconnect shortly',
           );
           Future.delayed(const Duration(milliseconds: 500), () {
             safeNavigatorPop();
@@ -129,7 +133,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
         }
       }
     } catch (e) {
-      AppLogging.protocol('DeviceManagement: $actionName failed: $e');
+      AppLogging.connection('🔧 DeviceManagement: $actionName FAILED: $e');
       if (mounted) {
         showErrorSnackBar(context, 'Failed: $e');
       }
@@ -191,7 +195,17 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                   enabled: isConnected,
                   onTap: () => _executeAction(
                     'Reboot Device',
-                    () => protocol.reboot(delaySeconds: 2),
+                    () async {
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Sending reboot command '
+                        '(delay=2s) — device will restart and BLE will drop',
+                      );
+                      await protocol.reboot(delaySeconds: 2);
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Reboot command sent — '
+                        'expecting disconnect in ~2s',
+                      );
+                    },
                     warningMessage:
                         'The device will reboot in 2 seconds. You will be briefly disconnected while the device restarts.',
                     causesDisconnect: true,
@@ -206,7 +220,17 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                   enabled: isConnected,
                   onTap: () => _executeAction(
                     'Shutdown Device',
-                    () => protocol.shutdown(delaySeconds: 2),
+                    () async {
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Sending shutdown command '
+                        '(delay=2s) — device will power off and BLE will drop',
+                      );
+                      await protocol.shutdown(delaySeconds: 2);
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Shutdown command sent — '
+                        'expecting disconnect in ~2s',
+                      );
+                    },
                     warningMessage:
                         'The device will shut down in 2 seconds. You will need to manually power it back on.',
                     causesDisconnect: true,
@@ -240,7 +264,15 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     'Reset Node Database',
                     () async {
                       final nodesNotifier = ref.read(nodesProvider.notifier);
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Sending nodeDbReset — '
+                        'will clear all discovered nodes from device',
+                      );
                       await protocol.nodeDbReset();
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: nodeDbReset sent — '
+                        'clearing local nodes cache',
+                      );
                       // Clear local nodes from the app's state and storage
                       nodesNotifier.clearNodes();
                     },
@@ -262,16 +294,33 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       final channelsNotifier = ref.read(
                         channelsProvider.notifier,
                       );
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Sending factoryResetConfig — '
+                        'will wipe channels, region, all config but keep nodedb. '
+                        'Device will reboot in ~5s',
+                      );
                       await protocol.factoryResetConfig();
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: factoryResetConfig command sent — '
+                        'clearing local region + channels state',
+                      );
                       // Clear local state that will be invalidated by config reset
                       if (settingsAsync.hasValue) {
                         // Region will be UNSET after config reset, so clear the configured flag
                         await settingsAsync.requireValue.setRegionConfigured(
                           false,
                         );
+                        AppLogging.connection(
+                          '🔧 DeviceManagement: regionConfigured cleared — '
+                          'region selection will be required on next connection',
+                        );
                       }
                       // Clear channels from local cache
                       channelsNotifier.clearChannels();
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Local channels cleared — '
+                        'expecting device disconnect shortly',
+                      );
                     },
                     warningMessage:
                         'This will wipe channels, region, and all settings but preserves the node database.\n\n'
@@ -300,7 +349,16 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       final appInitNotifier = ref.read(
                         appInitProvider.notifier,
                       );
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Sending factoryResetDevice — '
+                        'will WIPE EVERYTHING (config, channels, nodes, identity). '
+                        'Device will reboot in ~5s',
+                      );
                       await protocol.factoryResetDevice();
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: factoryResetDevice command sent — '
+                        'clearing ALL local state (region, lastDevice, nodes, channels)',
+                      );
                       // Clear ALL local state - device is being wiped completely
                       if (settingsAsync.hasValue) {
                         // Region will be UNSET, clear configured flag
@@ -309,20 +367,31 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         );
                         // Device is being wiped, clear the last device
                         await settingsAsync.requireValue.clearLastDevice();
+                        AppLogging.connection(
+                          '🔧 DeviceManagement: regionConfigured + lastDevice cleared',
+                        );
                       }
                       // Clear nodes and channels from local cache
                       nodesNotifier.clearNodes();
                       channelsNotifier.clearChannels();
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Local nodes + channels cleared',
+                      );
 
                       // CRITICAL: Set app state to needsScanner BEFORE navigating
                       // This ensures the router shows ScannerScreen instead of MainShell
                       appInitNotifier.setNeedsScanner();
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: appInit set to needsScanner — '
+                        'navigating to /app for fresh _AppRouter rebuild',
+                      );
 
-                      // Navigate directly to scanner after factory reset
-                      // The device is wiped and will need to be paired again
+                      // Navigate via canonical /app route so _AppRouter reads
+                      // needsScanner and shows Scanner. Using /scanner directly
+                      // bypasses the router and can cause stale state issues.
                       if (mounted) {
                         navigator.pushNamedAndRemoveUntil(
-                          '/scanner',
+                          '/app',
                           (route) => false,
                         );
                       }
@@ -348,7 +417,17 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                   enabled: isConnected,
                   onTap: () => _executeAction(
                     'Enter DFU Mode',
-                    () => protocol.enterDfuMode(),
+                    () async {
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: Sending enterDfuMode — '
+                        'device will boot into firmware update mode, BLE will drop',
+                      );
+                      await protocol.enterDfuMode();
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: enterDfuMode sent — '
+                        'expecting disconnect shortly',
+                      );
+                    },
                     warningMessage:
                         'The device will enter Device Firmware Update (DFU) mode. '
                         'You will need to use a firmware update tool to flash new firmware or reset the device.\n\n'

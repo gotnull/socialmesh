@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/logging.dart';
 import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -526,6 +527,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
   }
 
   Future<void> _showFactoryResetDialog() async {
+    AppLogging.connection('🔧 DeviceConfig: Factory reset dialog opened');
     // Capture provider before any await
     final protocol = ref.read(protocolServiceProvider);
 
@@ -570,8 +572,16 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
 
     if (!mounted) return;
     if (confirmed == true) {
+      AppLogging.connection(
+        '🔧 DeviceConfig: Factory reset confirmed — sending '
+        'factoryResetDevice command',
+      );
       try {
         await protocol.factoryResetDevice();
+        AppLogging.connection(
+          '🔧 DeviceConfig: factoryResetDevice command sent — '
+          'device will restart, expecting disconnect shortly',
+        );
         if (mounted) {
           showSuccessSnackBar(
             context,
@@ -579,10 +589,13 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
           );
         }
       } catch (e) {
+        AppLogging.connection('🔧 DeviceConfig: factoryResetDevice FAILED: $e');
         if (mounted) {
           showErrorSnackBar(context, 'Failed to reset: $e');
         }
       }
+    } else {
+      AppLogging.connection('🔧 DeviceConfig: Factory reset cancelled by user');
     }
   }
 

@@ -238,6 +238,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       AppLogging.app(
         '⚠️ Onboarding: Region is UNSET — pushing RegionSelectionScreen',
       );
+      // CRITICAL: Clear manualConnecting BEFORE pushing RegionSelection.
+      // The region apply causes a device reboot (expected disconnect).
+      // The autoReconnectManager needs to handle that reconnect, but it
+      // blocks when manualConnecting is set. Scanner's manual connection
+      // is done at this point — device is paired and protocol configured.
+      // Hand off reconnect responsibility so the reboot cycle works
+      // instead of waiting for the 60s hard timeout.
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
       // Push (not pushReplacement) so it pops back here when done.
       // isInitialSetup: true so RegionSelectionScreen stays visible during
       // applyRegion (device reboot), then pops back to onboarding.
