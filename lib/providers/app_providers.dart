@@ -1171,15 +1171,18 @@ final userDisconnectedProvider =
 Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
   AppLogging.app('🧹 Clearing device data before new connection...');
 
-  // Clear in-memory state
-  ref.read(messagesProvider.notifier).clearMessages();
+  // Messages are intentionally NOT cleared here. They must survive
+  // reconnections so that push-notification-delivered messages (and all
+  // other user-received messages) are not lost. The deduplication logic
+  // in MessagesNotifier (by id, packetId, and signature) already prevents
+  // duplicates when the device re-sends messages after reconnection.
+
+  // Clear in-memory device state (nodes, channels) — these are re-fetched
+  // from the device on every connection.
   ref.read(nodesProvider.notifier).clearNodes();
   ref.read(channelsProvider.notifier).clearChannels();
 
-  // Clear persistent message and node storage
-  final messageStorage = await ref.read(messageStorageProvider.future);
-  await messageStorage.clearMessages();
-
+  // Clear persistent node storage (nodes come fresh from device)
   final nodeStorage = await ref.read(nodeStorageProvider.future);
   await nodeStorage.clearNodes();
 
@@ -1198,15 +1201,18 @@ Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
 Future<void> clearDeviceDataBeforeConnectRef(Ref ref) async {
   AppLogging.app('🧹 Clearing device data before new connection...');
 
-  // Clear in-memory state
-  ref.read(messagesProvider.notifier).clearMessages();
+  // Messages are intentionally NOT cleared here. They must survive
+  // reconnections so that push-notification-delivered messages (and all
+  // other user-received messages) are not lost. The deduplication logic
+  // in MessagesNotifier (by id, packetId, and signature) already prevents
+  // duplicates when the device re-sends messages after reconnection.
+
+  // Clear in-memory device state (nodes, channels) — these are re-fetched
+  // from the device on every connection.
   ref.read(nodesProvider.notifier).clearNodes();
   ref.read(channelsProvider.notifier).clearChannels();
 
-  // Clear persistent message and node storage
-  final messageStorage = await ref.read(messageStorageProvider.future);
-  await messageStorage.clearMessages();
-
+  // Clear persistent node storage (nodes come fresh from device)
   final nodeStorage = await ref.read(nodeStorageProvider.future);
   await nodeStorage.clearNodes();
 
