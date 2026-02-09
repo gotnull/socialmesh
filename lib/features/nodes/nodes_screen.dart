@@ -17,6 +17,7 @@ import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
+import '../../core/navigation.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/presence_utils.dart';
 import '../../core/widgets/qr_share_sheet.dart';
@@ -1712,6 +1713,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
   bool _isSendingTraceroute = false;
   int _tracerouteCooldownRemaining = 0;
   Timer? _tracerouteCooldownTimer;
+  int? _lastTracerouteTargetNodeNum;
 
   /// Traceroute rate limit: 30 seconds between sends (matches Meshtastic iOS).
   static const _tracerouteCooldownSeconds = 30;
@@ -1936,6 +1938,8 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
         _tracerouteCooldownRemaining = _tracerouteCooldownSeconds;
       });
 
+      _lastTracerouteTargetNodeNum = node.nodeNum;
+
       _tracerouteCooldownTimer?.cancel();
       _tracerouteCooldownTimer = Timer.periodic(const Duration(seconds: 1), (
         timer,
@@ -1949,6 +1953,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
           if (_tracerouteCooldownRemaining <= 0) {
             _tracerouteCooldownRemaining = 0;
             timer.cancel();
+            _showTracerouteReadySnackBar();
           }
         });
       });
@@ -1967,6 +1972,35 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
         SnackBar(content: Text('Failed to send traceroute: $e')),
       );
     }
+  }
+
+  void _showTracerouteReadySnackBar() {
+    if (!mounted) return;
+    final targetNodeNum = _lastTracerouteTargetNodeNum;
+    if (targetNodeNum == null) return;
+
+    // Pop the sheet first so the snackbar is visible (not hidden behind it)
+    // and so we don't hold a reference to this disposed State's context.
+    Navigator.of(context).pop();
+
+    // Use global variant — by the time the user taps "View", this State is
+    // already disposed because we just popped the sheet.
+    showGlobalActionSnackBar(
+      'Traceroute results may be ready',
+      actionLabel: 'View',
+      onAction: () {
+        final ctx = navigatorKey.currentContext;
+        if (ctx == null) return;
+        Navigator.push(
+          ctx,
+          MaterialPageRoute(
+            builder: (_) => TraceRouteLogScreen(nodeNum: targetNodeNum),
+          ),
+        );
+      },
+      type: SnackBarType.success,
+      duration: const Duration(seconds: 6),
+    );
   }
 
   void _showTracerouteHistory(BuildContext context, MeshNode node) {
@@ -2774,32 +2808,40 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
                           ? Tooltip(
                               message:
                                   'Traceroute cooldown: ${_tracerouteCooldownRemaining}s',
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 46,
-                                    height: 46,
-                                    child: CircularProgressIndicator(
-                                      value:
-                                          _tracerouteCooldownRemaining /
-                                          _tracerouteCooldownSeconds,
-                                      strokeWidth: 2,
-                                      color: context.textTertiary.withValues(
-                                        alpha: 0.3,
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          value:
+                                              _tracerouteCooldownRemaining /
+                                              _tracerouteCooldownSeconds,
+                                          strokeWidth: 2,
+                                          color: context.accentColor.withValues(
+                                            alpha: 0.4,
+                                          ),
+                                          backgroundColor: context.textTertiary
+                                              .withValues(alpha: 0.15),
+                                        ),
                                       ),
-                                      backgroundColor: Colors.transparent,
-                                    ),
+                                      Text(
+                                        '$_tracerouteCooldownRemaining',
+                                        style: TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w600,
+                                          color: context.textTertiary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    '$_tracerouteCooldownRemaining',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: context.textTertiary,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             )
                           : IconButton(

@@ -872,11 +872,7 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent>
       await protocol.sendTraceroute(_selectedNodeNum!);
 
       if (!mounted) return;
-      Navigator.pop(context);
-      showInfoSnackBar(
-        context,
-        'Traceroute sent to $_selectedNodeName - check messages for response',
-      );
+      Navigator.pop(context, _selectedNodeNum);
     } catch (e) {
       if (!mounted) return;
       safeSetState(() => _isSending = false);

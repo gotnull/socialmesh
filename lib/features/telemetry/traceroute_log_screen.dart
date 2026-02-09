@@ -1,62 +1,216 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/section_header.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
+import '../nodes/node_display_name_resolver.dart';
 
-/// Screen showing TraceRoute history with hop visualization
-class TraceRouteLogScreen extends ConsumerWidget {
+/// Filter options for traceroute logs
+enum _TracerouteFilter { all, responded, noResponse }
+
+/// Screen showing traceroute history with hop visualization and filtering
+class TraceRouteLogScreen extends ConsumerStatefulWidget {
   final int? nodeNum;
 
   const TraceRouteLogScreen({super.key, this.nodeNum});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final logsAsync = nodeNum != null
-        ? ref.watch(nodeTraceRouteLogsProvider(nodeNum!))
+  ConsumerState<TraceRouteLogScreen> createState() =>
+      _TraceRouteLogScreenState();
+}
+
+class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
+    with LifecycleSafeMixin<TraceRouteLogScreen> {
+  String _searchQuery = '';
+  _TracerouteFilter _activeFilter = _TracerouteFilter.all;
+  DateTime? _startDate;
+  DateTime? _endDate;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  bool get _hasDateFilter => _startDate != null || _endDate != null;
+
+  List<TraceRouteLog> _applyFilters(List<TraceRouteLog> logs) {
+    var filtered = List<TraceRouteLog>.from(logs);
+
+    // Apply response filter
+    switch (_activeFilter) {
+      case _TracerouteFilter.all:
+        break;
+      case _TracerouteFilter.responded:
+        filtered = filtered.where((log) => log.response).toList();
+      case _TracerouteFilter.noResponse:
+        filtered = filtered.where((log) => !log.response).toList();
+    }
+
+    // Apply date range filter
+    if (_startDate != null) {
+      filtered = filtered
+          .where((log) => !log.timestamp.isBefore(_startDate!))
+          .toList();
+    }
+    if (_endDate != null) {
+      final endOfDay = _endDate!.add(const Duration(days: 1));
+      filtered = filtered
+          .where((log) => log.timestamp.isBefore(endOfDay))
+          .toList();
+    }
+
+    // Apply search filter
+    if (_searchQuery.isNotEmpty) {
+      final nodes = ref.read(nodesProvider);
+      final query = _searchQuery.toLowerCase();
+      filtered = filtered.where((log) {
+        final targetNode = nodes[log.targetNode];
+        final targetName =
+            targetNode?.displayName ??
+            NodeDisplayNameResolver.defaultName(log.targetNode);
+        if (targetName.toLowerCase().contains(query)) return true;
+        if (log.targetNode.toString().contains(query)) return true;
+
+        // Search hop node names
+        for (final hop in log.hops) {
+          final hopNode = nodes[hop.nodeNum];
+          final hopName =
+              hopNode?.displayName ??
+              NodeDisplayNameResolver.defaultName(hop.nodeNum);
+          if (hopName.toLowerCase().contains(query)) return true;
+        }
+        return false;
+      }).toList();
+    }
+
+    // Sort newest first
+    filtered.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return filtered;
+  }
+
+  void _clearFilters() {
+    safeSetState(() {
+      _startDate = null;
+      _endDate = null;
+    });
+  }
+
+  Future<void> _selectDateRange() async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDateRange: _startDate != null && _endDate != null
+          ? DateTimeRange(start: _startDate!, end: _endDate!)
+          : null,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && mounted) {
+      safeSetState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final logsAsync = widget.nodeNum != null
+        ? ref.watch(nodeTraceRouteLogsProvider(widget.nodeNum!))
         : ref.watch(traceRouteLogsProvider);
     final nodes = ref.watch(nodesProvider);
-    final node = nodeNum != null ? nodes[nodeNum] : null;
-    final nodeName = node?.displayName ?? 'All Nodes';
+    final node = widget.nodeNum != null ? nodes[widget.nodeNum] : null;
+    final subtitle = node?.displayName ?? 'All Nodes';
 
     return GlassScaffold(
-      title: 'TraceRoute Log',
+      title: 'Traceroute History',
+      actions: [
+        if (_hasDateFilter)
+          IconButton(
+            icon: const Icon(Icons.filter_alt_off),
+            tooltip: 'Clear date filter',
+            onPressed: _clearFilters,
+          ),
+        IconButton(
+          icon: Badge(
+            isLabelVisible: _hasDateFilter,
+            child: const Icon(Icons.date_range),
+          ),
+          tooltip: 'Date range',
+          onPressed: _selectDateRange,
+        ),
+      ],
       slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          sliver: SliverToBoxAdapter(
-            child: Text(
-              nodeName,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: context.textSecondary,
-              ),
+        // Controls header: search + filter chips
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _TracerouteControlsHeaderDelegate(
+            searchController: _searchController,
+            searchQuery: _searchQuery,
+            onSearchChanged: (value) =>
+                safeSetState(() => _searchQuery = value),
+            activeFilter: _activeFilter,
+            onFilterChanged: (filter) =>
+                safeSetState(() => _activeFilter = filter),
+            allCount: _countForFilter(logsAsync, _TracerouteFilter.all),
+            respondedCount: _countForFilter(
+              logsAsync,
+              _TracerouteFilter.responded,
             ),
+            noResponseCount: _countForFilter(
+              logsAsync,
+              _TracerouteFilter.noResponse,
+            ),
+            subtitle: subtitle,
+            textScaler: MediaQuery.textScalerOf(context),
           ),
         ),
         logsAsync.when(
           data: (logs) {
-            if (logs.isEmpty) {
+            final filtered = _applyFilters(logs);
+
+            if (filtered.isEmpty) {
               return SliverFillRemaining(
-                child: _buildEmptyState(context, 'No traceroutes recorded yet'),
+                child: _buildEmptyState(
+                  context,
+                  logs.isEmpty
+                      ? 'No traceroutes recorded yet'
+                      : 'No traceroutes match filters',
+                  showClearFilters: logs.isNotEmpty,
+                ),
               );
             }
-            final sortedLogs = logs.reversed.toList();
+
             return SliverPadding(
               padding: const EdgeInsets.all(16),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) =>
-                      _TraceRouteCard(log: sortedLogs[index], allNodes: nodes),
-                  childCount: sortedLogs.length,
+                      _TraceRouteCard(log: filtered[index], allNodes: nodes),
+                  childCount: filtered.length,
                 ),
               ),
             );
@@ -70,7 +224,30 @@ class TraceRouteLogScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, String message) {
+  int _countForFilter(
+    AsyncValue<List<TraceRouteLog>> logsAsync,
+    _TracerouteFilter filter,
+  ) {
+    return logsAsync.maybeWhen(
+      data: (logs) {
+        switch (filter) {
+          case _TracerouteFilter.all:
+            return logs.length;
+          case _TracerouteFilter.responded:
+            return logs.where((l) => l.response).length;
+          case _TracerouteFilter.noResponse:
+            return logs.where((l) => !l.response).length;
+        }
+      },
+      orElse: () => 0,
+    );
+  }
+
+  Widget _buildEmptyState(
+    BuildContext context,
+    String message, {
+    bool showClearFilters = false,
+  }) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -85,16 +262,220 @@ class TraceRouteLogScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Use TraceRoute to see network path',
+            'Send a traceroute from a node to see network paths',
             style: context.bodySecondaryStyle?.copyWith(
               color: context.textTertiary,
             ),
+            textAlign: TextAlign.center,
           ),
+          if (showClearFilters) ...[
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: () {
+                safeSetState(() {
+                  _activeFilter = _TracerouteFilter.all;
+                  _searchQuery = '';
+                  _searchController.clear();
+                  _startDate = null;
+                  _endDate = null;
+                });
+              },
+              icon: const Icon(Icons.filter_alt_off, size: 16),
+              label: const Text('Clear all filters'),
+            ),
+          ],
         ],
       ),
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Controls header (search bar + filter chips) — pinned via SliverPersistentHeader
+// ---------------------------------------------------------------------------
+
+class _TracerouteControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final TextEditingController searchController;
+  final String searchQuery;
+  final ValueChanged<String> onSearchChanged;
+  final _TracerouteFilter activeFilter;
+  final ValueChanged<_TracerouteFilter> onFilterChanged;
+  final int allCount;
+  final int respondedCount;
+  final int noResponseCount;
+  final String subtitle;
+  final TextScaler textScaler;
+
+  _TracerouteControlsHeaderDelegate({
+    required this.searchController,
+    required this.searchQuery,
+    required this.onSearchChanged,
+    required this.activeFilter,
+    required this.onFilterChanged,
+    required this.allCount,
+    required this.respondedCount,
+    required this.noResponseCount,
+    required this.subtitle,
+    required this.textScaler,
+  });
+
+  double get _searchFieldHeight {
+    final scaled = textScaler.scale(48);
+    return scaled < kMinInteractiveDimension
+        ? kMinInteractiveDimension
+        : scaled;
+  }
+
+  // subtitle row (28) + pad (8+8) + search (scaled 48) + chips row (44) + pad (8) + divider (1)
+  double get _computedExtent => 28 + 16 + _searchFieldHeight + 44 + 8 + 1;
+
+  @override
+  double get minExtent => _computedExtent;
+
+  @override
+  double get maxExtent => _computedExtent;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return ClipRect(
+      clipBehavior: Clip.hardEdge,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          color: context.background.withValues(alpha: 0.8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Subtitle showing node name or "All Nodes"
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
+                child: Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: context.textSecondary,
+                  ),
+                ),
+              ),
+              // Search bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: SizedBox(
+                  height: _searchFieldHeight,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextField(
+                      controller: searchController,
+                      onChanged: onSearchChanged,
+                      style: TextStyle(color: context.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'Search by node name',
+                        hintStyle: TextStyle(color: context.textTertiary),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: context.textTertiary,
+                        ),
+                        suffixIcon: searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: context.textTertiary,
+                                ),
+                                onPressed: () {
+                                  searchController.clear();
+                                  onSearchChanged('');
+                                },
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        isDense: true,
+                        constraints: BoxConstraints.tightFor(
+                          height: _searchFieldHeight,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Filter chips
+              SizedBox(
+                height: 44,
+                child: EdgeFade.end(
+                  fadeSize: 32,
+                  fadeColor: context.background,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.only(left: 16),
+                    children: [
+                      SectionFilterChip(
+                        label: 'All',
+                        count: allCount,
+                        isSelected: activeFilter == _TracerouteFilter.all,
+                        onTap: () => onFilterChanged(_TracerouteFilter.all),
+                      ),
+                      const SizedBox(width: 8),
+                      SectionFilterChip(
+                        label: 'Response',
+                        count: respondedCount,
+                        isSelected: activeFilter == _TracerouteFilter.responded,
+                        color: AccentColors.green,
+                        icon: Icons.check_circle_outline,
+                        onTap: () =>
+                            onFilterChanged(_TracerouteFilter.responded),
+                      ),
+                      const SizedBox(width: 8),
+                      SectionFilterChip(
+                        label: 'No Response',
+                        count: noResponseCount,
+                        isSelected:
+                            activeFilter == _TracerouteFilter.noResponse,
+                        color: AppTheme.errorRed,
+                        icon: Icons.cancel_outlined,
+                        onTap: () =>
+                            onFilterChanged(_TracerouteFilter.noResponse),
+                      ),
+                      const SizedBox(width: 16),
+                    ],
+                  ),
+                ),
+              ),
+              const Divider(height: 1),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _TracerouteControlsHeaderDelegate oldDelegate) {
+    return searchQuery != oldDelegate.searchQuery ||
+        activeFilter != oldDelegate.activeFilter ||
+        allCount != oldDelegate.allCount ||
+        respondedCount != oldDelegate.respondedCount ||
+        noResponseCount != oldDelegate.noResponseCount ||
+        subtitle != oldDelegate.subtitle;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Traceroute card
+// ---------------------------------------------------------------------------
 
 class _TraceRouteCard extends StatelessWidget {
   final TraceRouteLog log;
@@ -110,6 +491,9 @@ class _TraceRouteCard extends StatelessWidget {
         destNode?.displayName ??
         NodeDisplayNameResolver.defaultName(log.targetNode);
 
+    final forwardHops = log.hops.where((h) => !h.back).toList();
+    final returnHops = log.hops.where((h) => h.back).toList();
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -120,6 +504,7 @@ class _TraceRouteCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header: timestamp + response badge
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -167,14 +552,14 @@ class _TraceRouteCard extends StatelessWidget {
 
           const SizedBox(height: 8),
 
-          // Round trip info
+          // Overall SNR (packet-level)
           if (log.response && log.snr != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
                   const Icon(
-                    Icons.timer_outlined,
+                    Icons.sensors,
                     size: 16,
                     color: AccentColors.green,
                   ),
@@ -194,55 +579,140 @@ class _TraceRouteCard extends StatelessWidget {
           Row(
             children: [
               _HopCountChip(
-                label: 'Hops →',
+                label: 'Hops \u2192',
                 count: log.hopsTowards,
                 color: AccentColors.teal,
               ),
               const SizedBox(width: 12),
               _HopCountChip(
-                label: 'Hops ←',
+                label: 'Hops \u2190',
                 count: log.hopsBack,
                 color: AccentColors.purple,
               ),
             ],
           ),
 
-          // Individual hops
-          if (log.hops.isNotEmpty) ...[
+          // Forward route path
+          if (forwardHops.isNotEmpty) ...[
             const SizedBox(height: 12),
             const Divider(color: Colors.white12, height: 1),
             const SizedBox(height: 12),
-            Text(
-              'Route Path',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
+            _RoutePathSection(
+              title: 'Forward Path',
+              icon: Icons.arrow_forward,
+              color: AccentColors.teal,
+              hops: forwardHops,
+              allNodes: allNodes,
             ),
-            const SizedBox(height: 8),
-            ...log.hops.asMap().entries.map((entry) {
-              final index = entry.key;
-              final hop = entry.value;
-              final hopNode = allNodes[hop.nodeNum];
-              final hopName =
-                  hopNode?.displayName ??
-                  NodeDisplayNameResolver.defaultName(hop.nodeNum);
-              final isLast = index == log.hops.length - 1;
+          ],
 
-              return _HopItem(
-                index: index + 1,
-                name: hopName,
-                snr: hop.snr,
-                isLast: isLast,
-              );
-            }),
+          // Return route path
+          if (returnHops.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const Divider(color: Colors.white12, height: 1),
+            const SizedBox(height: 12),
+            _RoutePathSection(
+              title: 'Return Path',
+              icon: Icons.arrow_back,
+              color: AccentColors.purple,
+              hops: returnHops,
+              allNodes: allNodes,
+            ),
+          ],
+
+          // No hops hint for responses with zero hops (direct connection)
+          if (log.response &&
+              forwardHops.isEmpty &&
+              returnHops.isEmpty &&
+              log.hopsTowards == 0 &&
+              log.hopsBack == 0) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.link, size: 14, color: context.textTertiary),
+                const SizedBox(width: 6),
+                Text(
+                  'Direct connection — no intermediate hops',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                    color: context.textTertiary,
+                  ),
+                ),
+              ],
+            ),
           ],
         ],
       ),
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Route path section (forward or return)
+// ---------------------------------------------------------------------------
+
+class _RoutePathSection extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final List<TraceRouteHop> hops;
+  final Map<int, dynamic> allNodes;
+
+  const _RoutePathSection({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.hops,
+    required this.allNodes,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 6),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ...hops.asMap().entries.map((entry) {
+          final index = entry.key;
+          final hop = entry.value;
+          final hopNode = allNodes[hop.nodeNum];
+          final hopName =
+              hopNode?.displayName ??
+              NodeDisplayNameResolver.defaultName(hop.nodeNum);
+          final isLast = index == hops.length - 1;
+
+          return _HopItem(
+            index: index + 1,
+            name: hopName,
+            snr: hop.snr,
+            isLast: isLast,
+            color: color,
+          );
+        }),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Response badge
+// ---------------------------------------------------------------------------
 
 class _ResponseBadge extends StatelessWidget {
   final bool gotResponse;
@@ -282,6 +752,10 @@ class _ResponseBadge extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Hop count chip
+// ---------------------------------------------------------------------------
+
 class _HopCountChip extends StatelessWidget {
   final String label;
   final int count;
@@ -313,17 +787,23 @@ class _HopCountChip extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Individual hop item in the route path
+// ---------------------------------------------------------------------------
+
 class _HopItem extends StatelessWidget {
   final int index;
   final String name;
   final double? snr;
   final bool isLast;
+  final Color color;
 
   const _HopItem({
     required this.index,
     required this.name,
     this.snr,
     this.isLast = false,
+    required this.color,
   });
 
   @override
@@ -338,16 +818,16 @@ class _HopItem extends StatelessWidget {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: AccentColors.blue.withValues(alpha: 0.2),
+                  color: color.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     '$index',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: AccentColors.blue,
+                      color: color,
                     ),
                   ),
                 ),
@@ -356,7 +836,7 @@ class _HopItem extends StatelessWidget {
                 Container(
                   width: 2,
                   height: 16,
-                  color: AccentColors.blue.withValues(alpha: 0.3),
+                  color: color.withValues(alpha: 0.3),
                 ),
             ],
           ),
@@ -367,18 +847,24 @@ class _HopItem extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    name,
-                    style: context.bodySmallStyle?.copyWith(
-                      color: context.textPrimary,
+                  Flexible(
+                    child: Text(
+                      name,
+                      style: context.bodySmallStyle?.copyWith(
+                        color: context.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   if (snr != null)
-                    Text(
-                      'SNR: ${snr!.toStringAsFixed(1)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.textSecondary,
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Text(
+                        '${snr!.toStringAsFixed(1)} dB',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textSecondary,
+                        ),
                       ),
                     ),
                 ],

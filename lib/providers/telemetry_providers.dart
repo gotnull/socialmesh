@@ -145,7 +145,7 @@ final nodePositionLogsProvider = FutureProvider.family<List<PositionLog>, int>((
   return storage.getPositionLogs(nodeNum);
 });
 
-/// TraceRoute logs for a specific node
+/// Traceroute logs for a specific node
 final nodeTraceRouteLogsProvider =
     FutureProvider.family<List<TraceRouteLog>, int>((ref, nodeNum) async {
       final storage = await ref.watch(telemetryStorageProvider.future);
@@ -489,11 +489,13 @@ final tapbackActionsProvider = NotifierProvider<TapbackActionsNotifier, void>(
 /// Telemetry logger that automatically saves telemetry to storage when received
 class TelemetryLoggerNotifier extends Notifier<bool> {
   StreamSubscription? _nodeSubscription;
+  StreamSubscription? _traceRouteSubscription;
 
   @override
   bool build() {
     ref.onDispose(() {
       _nodeSubscription?.cancel();
+      _traceRouteSubscription?.cancel();
     });
     final storageAsync = ref.watch(telemetryStorageProvider);
     final storage = storageAsync.value;
@@ -507,8 +509,23 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
   ProtocolService get _protocol => ref.read(protocolServiceProvider);
 
   void _startLogging(TelemetryStorageService storage) {
-    // Cancel any existing subscription first
+    // Cancel any existing subscriptions first
     _nodeSubscription?.cancel();
+    _traceRouteSubscription?.cancel();
+
+    // Listen to traceroute events and persist them.
+    // Outbound requests arrive with response == false (placeholder).
+    // Inbound responses arrive with response == true and replace the placeholder.
+    _traceRouteSubscription = _protocol.traceRouteLogStream.listen((log) async {
+      if (log.response) {
+        await storage.replaceOrAddTraceRouteLog(log);
+      } else {
+        await storage.addTraceRouteLog(log);
+      }
+      ref.invalidate(traceRouteLogsProvider);
+      ref.invalidate(nodeTraceRouteLogsProvider(log.nodeNum));
+    });
+
     // Listen to node updates and log telemetry
     _nodeSubscription = _protocol.nodeStream.listen((node) async {
       // Log device metrics if present

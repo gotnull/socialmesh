@@ -162,9 +162,27 @@ class TelemetryStorageService {
     );
   }
 
-  // TraceRoute Log
+  // Traceroute log
   Future<void> addTraceRouteLog(TraceRouteLog log) async {
     final logs = await getTraceRouteLogs(log.nodeNum);
+    logs.add(log);
+    if (logs.length > _maxLogEntries) {
+      logs.removeRange(0, logs.length - _maxLogEntries);
+    }
+    await _saveTraceRouteLogs(log.nodeNum, logs);
+  }
+
+  /// Replace the most recent pending (response == false) traceroute entry for
+  /// the same target node with [log], or simply append if no pending entry
+  /// exists.  This keeps a single entry per traceroute attempt in the history.
+  Future<void> replaceOrAddTraceRouteLog(TraceRouteLog log) async {
+    final logs = await getTraceRouteLogs(log.nodeNum);
+    final pendingIdx = logs.lastIndexWhere(
+      (l) => l.targetNode == log.targetNode && !l.response,
+    );
+    if (pendingIdx >= 0) {
+      logs.removeAt(pendingIdx);
+    }
     logs.add(log);
     if (logs.length > _maxLogEntries) {
       logs.removeRange(0, logs.length - _maxLogEntries);

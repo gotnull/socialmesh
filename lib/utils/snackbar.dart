@@ -143,6 +143,28 @@ void showGlobalInfoSnackBar(
   showInfoSnackBar(ctx, message, duration: duration);
 }
 
+/// Global variant of [showActionSnackBar] that uses the app's global navigator
+/// key. Safe to call from disposed states or async contexts where a
+/// [BuildContext] may no longer be valid.
+void showGlobalActionSnackBar(
+  String message, {
+  required String actionLabel,
+  required VoidCallback onAction,
+  SnackBarType type = SnackBarType.info,
+  Duration duration = const Duration(seconds: 5),
+}) {
+  final ctx = navigatorKey.currentContext;
+  if (ctx == null) return;
+  showActionSnackBar(
+    ctx,
+    message,
+    actionLabel: actionLabel,
+    onAction: onAction,
+    type: type,
+    duration: duration,
+  );
+}
+
 void _showStyledSnackBar(
   BuildContext context,
   String message, {

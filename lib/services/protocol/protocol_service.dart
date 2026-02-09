@@ -8,6 +8,7 @@ import '../../core/logging.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_models.dart';
 import '../../models/device_error.dart';
+import '../../models/telemetry_log.dart';
 import '../../generated/meshtastic/admin.pb.dart' as admin;
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
@@ -264,6 +265,7 @@ class ProtocolService {
   final StreamController<pb.ClientNotification> _clientNotificationController;
   final StreamController<pb.User> _userConfigController;
   final StreamController<DetectionSensorEvent> _detectionSensorEventController;
+  final StreamController<TraceRouteLog> _traceRouteLogController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
@@ -385,6 +387,7 @@ class ProtocolService {
       _userConfigController = StreamController<pb.User>.broadcast(),
       _detectionSensorEventController =
           StreamController<DetectionSensorEvent>.broadcast(),
+      _traceRouteLogController = StreamController<TraceRouteLog>.broadcast(),
       _dedupeStore = dedupeStore ?? MeshPacketDedupeStore();
 
   /// Set the BLE device name for hardware model inference
@@ -411,6 +414,10 @@ class ProtocolService {
 
   String? _bleModelNumber;
   String? _bleManufacturerName;
+
+  /// Stream of parsed traceroute responses
+  Stream<TraceRouteLog> get traceRouteLogStream =>
+      _traceRouteLogController.stream;
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -1003,11 +1010,85 @@ class ProtocolService {
         case pn.PortNum.NODE_STATUS_APP:
           _handleNodeStatusMessage(packet, data);
           break;
+        case pn.PortNum.TRACEROUTE_APP:
+          _handleTracerouteMessage(packet, data);
+          break;
         default:
           AppLogging.protocol(
             'Received message with portnum: ${data.portnum} (${data.portnum.value})',
           );
       }
+    }
+  }
+
+  /// Handle inbound traceroute response (TRACEROUTE_APP portnum).
+  ///
+  /// The response arrives from the target node with a RouteDiscovery payload
+  /// containing forward/back route lists and per-hop SNR values (scaled x4).
+  void _handleTracerouteMessage(pb.MeshPacket packet, pb.Data data) {
+    try {
+      if (data.payload.isEmpty) {
+        AppLogging.protocol(
+          'Traceroute response from ${packet.from.toRadixString(16)} has empty payload, ignoring',
+        );
+        return;
+      }
+
+      final routeDiscovery = pb.RouteDiscovery.fromBuffer(data.payload);
+
+      final targetNode = packet.from;
+
+      // Build forward-path hops (route towards destination)
+      final forwardRoute = routeDiscovery.route.toList();
+      final forwardSnr = routeDiscovery.snrTowards.toList();
+      final forwardHops = <TraceRouteHop>[];
+      for (var i = 0; i < forwardRoute.length; i++) {
+        final snrRaw = i < forwardSnr.length ? forwardSnr[i] : null;
+        forwardHops.add(
+          TraceRouteHop(
+            nodeNum: forwardRoute[i],
+            snr: snrRaw != null ? snrRaw / 4.0 : null,
+          ),
+        );
+      }
+
+      // Build back-path hops (route back from destination)
+      final backRoute = routeDiscovery.routeBack.toList();
+      final backSnr = routeDiscovery.snrBack.toList();
+      final backHops = <TraceRouteHop>[];
+      for (var i = 0; i < backRoute.length; i++) {
+        final snrRaw = i < backSnr.length ? backSnr[i] : null;
+        backHops.add(
+          TraceRouteHop(
+            nodeNum: backRoute[i],
+            snr: snrRaw != null ? snrRaw / 4.0 : null,
+            back: true,
+          ),
+        );
+      }
+
+      // Aggregate SNR from the received packet (already in dB)
+      final rxSnr = packet.hasRxSnr() ? packet.rxSnr.toDouble() : null;
+
+      final log = TraceRouteLog(
+        nodeNum: targetNode,
+        targetNode: targetNode,
+        sent: true,
+        response: true,
+        hopsTowards: forwardRoute.length,
+        hopsBack: backRoute.length,
+        hops: [...forwardHops, ...backHops],
+        snr: rxSnr,
+      );
+
+      AppLogging.protocol(
+        'Traceroute response from ${targetNode.toRadixString(16)}: '
+        '${forwardRoute.length} hops towards, ${backRoute.length} hops back',
+      );
+
+      _traceRouteLogController.add(log);
+    } catch (e) {
+      AppLogging.protocol('Failed to parse traceroute response: $e');
     }
   }
 
@@ -3157,7 +3238,10 @@ class ProtocolService {
   }
 
   /// Send a traceroute request to a specific node
-  /// Returns immediately - results come via mesh packet responses
+  /// Returns immediately - results come via mesh packet responses.
+  /// Emits a placeholder [TraceRouteLog] with `response: false` so the UI
+  /// can show a "No Response" entry while waiting.  When the inbound
+  /// response arrives, the placeholder is replaced by the full log.
   Future<void> sendTraceroute(int nodeNum) async {
     AppLogging.protocol('Sending traceroute to node $nodeNum');
 
@@ -3180,6 +3264,18 @@ class ProtocolService {
     final bytes = toRadio.writeToBuffer();
 
     await _transport.send(_prepareForSend(bytes));
+
+    // Emit a placeholder log so the UI immediately shows a pending entry
+    _traceRouteLogController.add(
+      TraceRouteLog(
+        nodeNum: nodeNum,
+        targetNode: nodeNum,
+        sent: true,
+        response: false,
+        hopsTowards: 0,
+        hopsBack: 0,
+      ),
+    );
   }
 
   /// Set channel configuration
@@ -5650,5 +5746,6 @@ class ProtocolService {
     await _regionController.close();
     await _clientNotificationController.close();
     await _userConfigController.close();
+    await _traceRouteLogController.close();
   }
 }

@@ -350,7 +350,7 @@ class PositionLog extends TelemetryLogEntry {
   };
 }
 
-/// Trace route log entry
+/// Traceroute log entry
 class TraceRouteLog extends TelemetryLogEntry {
   final int targetNode;
   final bool sent;
@@ -409,7 +409,7 @@ class TraceRouteLog extends TelemetryLogEntry {
   };
 }
 
-/// Trace route hop
+/// Traceroute hop
 class TraceRouteHop {
   final int nodeNum;
   final String? name;
