@@ -10,6 +10,19 @@ import '../models/social_activity.dart';
 /// Service for managing social activities and the activity feed.
 ///
 /// Activities are stored per-user for efficient querying of "my activity feed".
+///
+/// ## nodeNum baking
+///
+/// All activity creation methods accept an optional [actorNodeNum] parameter.
+/// When provided, this value is baked into the [PostAuthorSnapshot.nodeNum]
+/// field of the activity document, ensuring that activity tiles can render
+/// a deterministic SigilAvatar without async cloud lookups.
+///
+/// Callers in the provider/UI layer have access to [myNodeNumProvider] and
+/// should always pass the current node number when available. The Firestore
+/// profile lookup in [_getActorSnapshot] is still performed for displayName,
+/// avatarUrl, and isVerified, but the caller-provided nodeNum takes priority
+/// over whatever the profile document contains.
 class SocialActivityService {
   SocialActivityService({FirebaseFirestore? firestore, FirebaseAuth? auth})
     : _firestore = firestore,
@@ -47,12 +60,21 @@ class SocialActivityService {
   /// - Someone follows → notify followed user
   /// - Someone comments → notify post owner
   /// - etc.
+  ///
+  /// [actorNodeNum] — the actor's mesh node number, if known by the caller.
+  /// When provided, this value is baked into the activity's
+  /// [PostAuthorSnapshot.nodeNum] so that activity tiles can render a
+  /// deterministic SigilAvatar without relying on async cloud profile
+  /// lookups. If the Firestore profile also contains a nodeNum, the
+  /// caller-provided value takes priority (the caller is closer to the
+  /// live mesh state).
   Future<void> createActivity({
     required SocialActivityType type,
     required String targetUserId,
     String? contentId,
     String? previewImageUrl,
     String? textContent,
+    int? actorNodeNum,
   }) async {
     final currentUserId = _currentUserId;
 
@@ -62,6 +84,7 @@ class SocialActivityService {
       '  targetUserId: $targetUserId\n'
       '  contentId: $contentId\n'
       '  currentUserId: $currentUserId\n'
+      '  actorNodeNum: $actorNodeNum\n'
       '  textContent: ${textContent?.substring(0, textContent.length.clamp(0, 50))}...',
     );
 
@@ -81,14 +104,18 @@ class SocialActivityService {
     }
 
     try {
-      // Get actor snapshot
+      // Get actor snapshot from Firestore (for displayName, avatarUrl, etc.)
       AppLogging.social(
         '📬 [ActivityService] Fetching actor snapshot for $currentUserId',
       );
-      final actorSnapshot = await _getActorSnapshot(currentUserId);
+      final actorSnapshot = await _getActorSnapshot(
+        currentUserId,
+        overrideNodeNum: actorNodeNum,
+      );
       AppLogging.social(
         '📬 [ActivityService] Actor snapshot: '
-        '${actorSnapshot?.displayName ?? 'null'}',
+        '${actorSnapshot?.displayName ?? 'null'}, '
+        'nodeNum: ${actorSnapshot?.nodeNum}',
       );
 
       final activity = SocialActivity(
@@ -126,7 +153,8 @@ class SocialActivityService {
         '  docId: ${docRef.id}\n'
         '  path: $docPath/${docRef.id}\n'
         '  targetUserId: $targetUserId\n'
-        '  actorId: $currentUserId',
+        '  actorId: $currentUserId\n'
+        '  bakedNodeNum: ${actorSnapshot?.nodeNum}',
       );
     } catch (e, stackTrace) {
       AppLogging.social(
@@ -144,20 +172,26 @@ class SocialActivityService {
     required String storyId,
     required String storyOwnerId,
     String? storyThumbnailUrl,
+    int? actorNodeNum,
   }) async {
     await createActivity(
       type: SocialActivityType.storyLike,
       targetUserId: storyOwnerId,
       contentId: storyId,
       previewImageUrl: storyThumbnailUrl,
+      actorNodeNum: actorNodeNum,
     );
   }
 
   /// Create a follow activity
-  Future<void> createFollowActivity({required String followedUserId}) async {
+  Future<void> createFollowActivity({
+    required String followedUserId,
+    int? actorNodeNum,
+  }) async {
     await createActivity(
       type: SocialActivityType.follow,
       targetUserId: followedUserId,
+      actorNodeNum: actorNodeNum,
     );
   }
 
@@ -166,12 +200,14 @@ class SocialActivityService {
     required String postId,
     required String postOwnerId,
     String? postThumbnailUrl,
+    int? actorNodeNum,
   }) async {
     await createActivity(
       type: SocialActivityType.postLike,
       targetUserId: postOwnerId,
       contentId: postId,
       previewImageUrl: postThumbnailUrl,
+      actorNodeNum: actorNodeNum,
     );
   }
 
@@ -180,12 +216,14 @@ class SocialActivityService {
     required String signalId,
     required String signalOwnerId,
     String? signalThumbnailUrl,
+    int? actorNodeNum,
   }) async {
     await createActivity(
       type: SocialActivityType.signalLike,
       targetUserId: signalOwnerId,
       contentId: signalId,
       previewImageUrl: signalThumbnailUrl,
+      actorNodeNum: actorNodeNum,
     );
   }
 
@@ -194,12 +232,14 @@ class SocialActivityService {
     required String signalId,
     required String signalOwnerId,
     required String commentPreview,
+    int? actorNodeNum,
   }) async {
     await createActivity(
       type: SocialActivityType.signalComment,
       targetUserId: signalOwnerId,
       contentId: signalId,
       textContent: commentPreview,
+      actorNodeNum: actorNodeNum,
     );
   }
 
@@ -209,12 +249,14 @@ class SocialActivityService {
     required String signalId,
     required String originalCommentAuthorId,
     required String replyPreview,
+    int? actorNodeNum,
   }) async {
     await createActivity(
       type: SocialActivityType.signalCommentReply,
       targetUserId: originalCommentAuthorId,
       contentId: signalId,
       textContent: replyPreview,
+      actorNodeNum: actorNodeNum,
     );
   }
 
@@ -223,11 +265,13 @@ class SocialActivityService {
   Future<void> createSignalResponseVoteActivity({
     required String signalId,
     required String responseAuthorId,
+    int? actorNodeNum,
   }) async {
     await createActivity(
       type: SocialActivityType.signalResponseVote,
       targetUserId: responseAuthorId,
       contentId: signalId,
+      actorNodeNum: actorNodeNum,
     );
   }
 
@@ -236,12 +280,14 @@ class SocialActivityService {
     required String postId,
     required String postOwnerId,
     required String commentPreview,
+    int? actorNodeNum,
   }) async {
     await createActivity(
       type: SocialActivityType.postComment,
       targetUserId: postOwnerId,
       contentId: postId,
       textContent: commentPreview,
+      actorNodeNum: actorNodeNum,
     );
   }
 
@@ -250,12 +296,14 @@ class SocialActivityService {
     required String postId,
     required String originalCommentAuthorId,
     required String replyPreview,
+    int? actorNodeNum,
   }) async {
     await createActivity(
       type: SocialActivityType.commentReply,
       targetUserId: originalCommentAuthorId,
       contentId: postId,
       textContent: replyPreview,
+      actorNodeNum: actorNodeNum,
     );
   }
 
@@ -263,21 +311,25 @@ class SocialActivityService {
   Future<void> createCommentLikeActivity({
     required String postId,
     required String commentAuthorId,
+    int? actorNodeNum,
   }) async {
     await createActivity(
       type: SocialActivityType.commentLike,
       targetUserId: commentAuthorId,
       contentId: postId,
+      actorNodeNum: actorNodeNum,
     );
   }
 
   /// Create a follow request activity (for private accounts)
   Future<void> createFollowRequestActivity({
     required String targetUserId,
+    int? actorNodeNum,
   }) async {
     await createActivity(
       type: SocialActivityType.followRequest,
       targetUserId: targetUserId,
+      actorNodeNum: actorNodeNum,
     );
   }
 
@@ -287,6 +339,7 @@ class SocialActivityService {
     required String contentId,
     required String textContent,
     String? previewImageUrl,
+    int? actorNodeNum,
   }) async {
     await createActivity(
       type: SocialActivityType.mention,
@@ -294,6 +347,7 @@ class SocialActivityService {
       contentId: contentId,
       textContent: textContent,
       previewImageUrl: previewImageUrl,
+      actorNodeNum: actorNodeNum,
     );
   }
 
@@ -451,23 +505,66 @@ class SocialActivityService {
   // ===========================================================================
 
   /// Get actor snapshot for the current user.
-  Future<PostAuthorSnapshot?> _getActorSnapshot(String userId) async {
+  ///
+  /// Reads the Firestore profile for displayName, avatarUrl, and isVerified.
+  /// If [overrideNodeNum] is provided (from the caller who knows the live
+  /// mesh state), it takes priority over whatever nodeNum exists in the
+  /// profile document.
+  Future<PostAuthorSnapshot?> _getActorSnapshot(
+    String userId, {
+    int? overrideNodeNum,
+  }) async {
     try {
       final firestore = _firestoreInstance;
-      if (firestore == null) return null;
+      if (firestore == null) {
+        // Firebase not ready — if we have a nodeNum from the caller, return
+        // a minimal snapshot so the activity still gets a baked nodeNum.
+        if (overrideNodeNum != null) {
+          return PostAuthorSnapshot(
+            displayName: 'User',
+            nodeNum: overrideNodeNum,
+          );
+        }
+        return null;
+      }
 
       final doc = await firestore.collection('profiles').doc(userId).get();
-      if (!doc.exists) return null;
+      if (!doc.exists) {
+        // Profile not synced yet — if we have a nodeNum from the caller,
+        // return a minimal snapshot with just the nodeNum baked in.
+        if (overrideNodeNum != null) {
+          return PostAuthorSnapshot(
+            displayName: 'User',
+            nodeNum: overrideNodeNum,
+          );
+        }
+        return null;
+      }
 
       final data = doc.data()!;
+      // Caller-provided nodeNum takes priority over profile's primaryNodeId.
+      // The caller (provider/UI layer) has direct access to the live mesh
+      // state via myNodeNumProvider, which is more current than whatever
+      // the profile document was last synced with.
+      final resolvedNodeNum =
+          overrideNodeNum ?? (data['primaryNodeId'] as int?);
+
       return PostAuthorSnapshot(
         displayName: data['displayName'] as String? ?? 'User',
         avatarUrl: data['avatarUrl'] as String?,
         isVerified: data['isVerified'] as bool? ?? false,
-        nodeNum: data['primaryNodeId'] as int?,
+        nodeNum: resolvedNodeNum,
       );
     } catch (e) {
       AppLogging.social('Error getting actor snapshot: $e');
+      // Even on error, if the caller provided a nodeNum, return a minimal
+      // snapshot so the activity document has a baked nodeNum for rendering.
+      if (overrideNodeNum != null) {
+        return PostAuthorSnapshot(
+          displayName: 'User',
+          nodeNum: overrideNodeNum,
+        );
+      }
       return null;
     }
   }

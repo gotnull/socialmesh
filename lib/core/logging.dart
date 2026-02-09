@@ -45,7 +45,6 @@ class AppLogging {
   static bool? _debugLoggingEnabled;
   static bool? _authLoggingEnabled;
   static bool? _socialLoggingEnabled;
-  static bool? _signalsLoggingEnabled;
   static bool? _storageLoggingEnabled;
   static bool? _permissionsLoggingEnabled;
   static bool? _marketplaceLoggingEnabled;
@@ -188,12 +187,6 @@ class AppLogging {
     _socialLoggingEnabled ??=
         _safeGetEnv('SOCIAL_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _socialLoggingEnabled!;
-  }
-
-  static bool get signalsLoggingEnabled {
-    _signalsLoggingEnabled ??=
-        _safeGetEnv('SIGNALS_LOGGING_ENABLED')?.toLowerCase() != 'false';
-    return _signalsLoggingEnabled!;
   }
 
   static bool get storageLoggingEnabled {
@@ -358,10 +351,6 @@ class AppLogging {
     if (socialLoggingEnabled) debugPrint('Social: $message');
   }
 
-  static void signals(String message) {
-    if (signalsLoggingEnabled) debugPrint('Signals: $message');
-  }
-
   static void storage(String message) {
     if (storageLoggingEnabled) debugPrint('Storage: $message');
   }
@@ -421,7 +410,6 @@ class AppLogging {
     _debugLoggingEnabled = null;
     _authLoggingEnabled = null;
     _socialLoggingEnabled = null;
-    _signalsLoggingEnabled = null;
     _storageLoggingEnabled = null;
     _permissionsLoggingEnabled = null;
     _marketplaceLoggingEnabled = null;

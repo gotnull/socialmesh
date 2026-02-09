@@ -899,7 +899,7 @@ class _SignalLocation extends StatelessWidget {
         (presenceState as dynamic).showSignalOnMap(signal);
         return;
       } catch (e) {
-        AppLogging.signals('showSignalOnMap failed, falling back to push: $e');
+        AppLogging.social('showSignalOnMap failed, falling back to push: $e');
       }
     }
 
@@ -915,7 +915,7 @@ class _SignalLocation extends StatelessWidget {
       final container = ProviderScope.containerOf(context);
       container.read(mainShellIndexProvider.notifier).setIndex(2);
     } catch (e) {
-      AppLogging.signals('Failed to set main shell index: $e');
+      AppLogging.social('Failed to set main shell index: $e');
     }
 
     // After the frame, focus the signal on the in-place PresenceFeedScreen
@@ -926,7 +926,7 @@ class _SignalLocation extends StatelessWidget {
           (presenceState as dynamic).showSignalOnMap(signal);
           return;
         } catch (e) {
-          AppLogging.signals('Failed to focus presence feed on signal: $e');
+          AppLogging.social('Failed to focus presence feed on signal: $e');
         }
       }
 

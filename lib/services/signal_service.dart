@@ -463,7 +463,7 @@ class SignalService {
     _initCompleter = Completer<void>();
 
     try {
-      AppLogging.signals('Initializing SignalService database');
+      AppLogging.social('Initializing SignalService database');
 
       final documentsDir = await getApplicationDocumentsDirectory();
       final dbPath = p.join(documentsDir.path, _dbName);
@@ -472,7 +472,7 @@ class SignalService {
         dbPath,
         version: 6,
         onCreate: (db, version) async {
-          AppLogging.signals('Creating signals database v$version');
+          AppLogging.social('Creating signals database v$version');
           await _createTables(db);
         },
       );
@@ -490,10 +490,10 @@ class SignalService {
         (_) => _processPendingImageUpdates(),
       );
 
-      AppLogging.signals('SignalService initialized');
+      AppLogging.social('SignalService initialized');
       _initCompleter!.complete();
     } catch (e, st) {
-      AppLogging.signals('SignalService init failed: $e');
+      AppLogging.social('SignalService init failed: $e');
       _initCompleter!.completeError(e, st);
       // Reset so the next caller can retry.
       _initCompleter = null;
@@ -504,7 +504,7 @@ class SignalService {
   void _startAuthListener() {
     if (_authSubscription != null) return;
     if (Firebase.apps.isEmpty) {
-      AppLogging.signals('📡 Auth listener skipped: Firebase not initialized');
+      AppLogging.social('📡 Auth listener skipped: Firebase not initialized');
       return;
     }
 
@@ -514,14 +514,14 @@ class SignalService {
         final uidChanged = uid != _lastAuthUid;
         _lastAuthUid = uid;
         if (uidChanged || user != null) {
-          AppLogging.signals(
+          AppLogging.social(
             '📡 Auth token change detected (uid=${uid ?? "none"}), reattaching listeners',
           );
         }
         Future.microtask(() => handleAuthChanged());
       },
       onError: (e) {
-        AppLogging.signals('📡 Auth token listener error: $e');
+        AppLogging.social('📡 Auth token listener error: $e');
       },
     );
   }
@@ -635,7 +635,7 @@ class SignalService {
       _nodeProximityHistory.putIfAbsent(nodeId, () => []).add(seenAt);
     }
 
-    AppLogging.signals(
+    AppLogging.social(
       'Loaded proximity history for ${_nodeProximityHistory.length} nodes',
     );
   }
@@ -664,7 +664,7 @@ class SignalService {
     _listenerRetryTimers[key] = Timer(Duration(seconds: delaySeconds), () {
       _listenerRetryTimers.remove(key);
       if (_currentUserId == null) return;
-      AppLogging.signals(
+      AppLogging.social(
         '📡 Listener retry: kind=$kind signalId=$signalId attempt=$attempt',
       );
       switch (kind) {
@@ -680,7 +680,7 @@ class SignalService {
       }
     });
 
-    AppLogging.signals(
+    AppLogging.social(
       '📡 Listener retry scheduled: kind=$kind signalId=$signalId '
       'attempt=$attempt delay=${delaySeconds}s',
     );
@@ -755,7 +755,7 @@ class SignalService {
   bool isImageUnlocked(Post signal) {
     // Rule 1: Authenticated users can always view/upload images
     if (isAuthenticated) {
-      AppLogging.signals(
+      AppLogging.social(
         'Image unlocked for signal ${signal.id}: authenticated',
       );
       return true;
@@ -763,7 +763,7 @@ class SignalService {
 
     // Rule 2: Check sustained proximity for mesh signals
     if (signal.meshNodeId != null && hasProximityUnlock(signal.meshNodeId!)) {
-      AppLogging.signals(
+      AppLogging.social(
         'Image unlocked for signal ${signal.id}: '
         'proximity to node ${signal.meshNodeId}',
       );
@@ -782,7 +782,7 @@ class SignalService {
     try {
       final sourceFile = File(sourcePath);
       if (!await sourceFile.exists()) {
-        AppLogging.signals('Source image file not found: $sourcePath');
+        AppLogging.social('Source image file not found: $sourcePath');
         return null;
       }
 
@@ -806,7 +806,7 @@ class SignalService {
 
       return destPath;
     } catch (e) {
-      AppLogging.signals('Failed to copy image to persistent storage: $e');
+      AppLogging.social('Failed to copy image to persistent storage: $e');
       return null;
     }
   }
@@ -819,10 +819,10 @@ class SignalService {
       final file = File(imagePath);
       if (await file.exists()) {
         await file.delete();
-        AppLogging.signals('Deleted signal image: $imagePath');
+        AppLogging.social('Deleted signal image: $imagePath');
       }
     } catch (e) {
-      AppLogging.signals('Failed to delete signal image: $e');
+      AppLogging.social('Failed to delete signal image: $e');
     }
   }
 
@@ -840,11 +840,11 @@ class SignalService {
         final cachedFile = File(p.join(cacheDir.path, '$signalId.jpg'));
         if (await cachedFile.exists()) {
           await cachedFile.delete();
-          AppLogging.signals('Deleted cached cloud image for signal $signalId');
+          AppLogging.social('Deleted cached cloud image for signal $signalId');
         }
       }
     } catch (e) {
-      AppLogging.signals('Failed to delete cached cloud images: $e');
+      AppLogging.social('Failed to delete cached cloud images: $e');
     }
   }
 
@@ -894,11 +894,11 @@ class SignalService {
 
         if (persistentPath != null) {
           persistentImagePaths.add(persistentPath);
-          AppLogging.signals(
+          AppLogging.social(
             'Image $i copied to persistent storage: $persistentPath',
           );
         } else {
-          AppLogging.signals('Failed to copy image $i to persistent storage');
+          AppLogging.social('Failed to copy image $i to persistent storage');
         }
       }
 
@@ -937,7 +937,7 @@ class SignalService {
       presenceInfo: presenceInfo,
     );
 
-    AppLogging.signals(
+    AppLogging.social(
       'Creating signal: id=$id, ttl=${ttlMinutes}m, '
       'imageCount=${persistentImagePaths.length}, meshNode=$meshNodeId',
     );
@@ -949,7 +949,7 @@ class SignalService {
     // for deterministic cloud matching. This must NOT be blocked by cloud sync.
     if (onBroadcastSignal != null) {
       try {
-        AppLogging.signals('SEND: broadcast started for ${signal.id}');
+        AppLogging.social('SEND: broadcast started for ${signal.id}');
         // If this is mesh-only send (useCloud==false) then use a short timeout
         // so UI doesn't feel stuck waiting for ACKs.
         final hasImage = persistentImagePaths.isNotEmpty;
@@ -971,7 +971,7 @@ class SignalService {
               onTimeout: () => null,
             );
           } catch (e) {
-            AppLogging.signals(
+            AppLogging.social(
               'SEND: broadcast timeout/failed for ${signal.id}: $e',
             );
             packetId = null;
@@ -988,45 +988,43 @@ class SignalService {
         }
 
         if (packetId != null) {
-          AppLogging.signals(
+          AppLogging.social(
             'SEND: broadcast completed packetId=$packetId for ${signal.id}',
           );
         } else {
-          AppLogging.signals(
+          AppLogging.social(
             'SEND: broadcast skipped (mesh not connected or timed out) for ${signal.id}',
           );
         }
       } catch (e, st) {
-        AppLogging.signals('SEND: broadcast failed for ${signal.id}: $e\n$st');
+        AppLogging.social('SEND: broadcast failed for ${signal.id}: $e\n$st');
       }
     }
 
     // Cloud sync should only happen if useCloud==true AND we have an auth'ed user.
     if (useCloud && _currentUserId != null && !signal.isExpired) {
-      AppLogging.signals('SEND: cloud sync queued for ${signal.id}');
+      AppLogging.social('SEND: cloud sync queued for ${signal.id}');
       // Fire-and-forget: schedule cloud save, then auto-upload images
       Future(() async {
         try {
           await _saveSignalToFirebase(signal);
           await _markSignalSynced(signal.id);
-          AppLogging.signals('SEND: cloud sync success for ${signal.id}');
+          AppLogging.social('SEND: cloud sync success for ${signal.id}');
 
           // Now that signal exists in Firestore, upload images if needed
           if (persistentImagePaths.isNotEmpty &&
               imageState == ImageState.local) {
-            AppLogging.signals(
+            AppLogging.social(
               'SEND: images upload starting for ${signal.id} (${persistentImagePaths.length} images)',
             );
             await _autoUploadMultipleImages(signal.id, persistentImagePaths);
           }
         } catch (e, st) {
-          AppLogging.signals(
-            'SEND: cloud sync error for ${signal.id}: $e\n$st',
-          );
+          AppLogging.social('SEND: cloud sync error for ${signal.id}: $e\n$st');
         }
       });
     } else if (!useCloud) {
-      AppLogging.signals(
+      AppLogging.social(
         'SEND: cloud sync skipped (offline/unauth) for ${signal.id}',
       );
     }
@@ -1039,7 +1037,7 @@ class SignalService {
         imageState == ImageState.local) {
       // Image upload moved to cloud sync block above
     } else if (persistentImagePaths.isNotEmpty && !useCloud) {
-      AppLogging.signals(
+      AppLogging.social(
         'SEND: images suppressed for ${signal.id} (cloud unavailable)',
       );
       // If images are suppressed, make sure we don't attempt uploads or set imageState to local-only
@@ -1050,7 +1048,7 @@ class SignalService {
     if (useCloud) {
       _startCommentsListener(signal.id);
     } else {
-      AppLogging.signals(
+      AppLogging.social(
         'SEND: cloud listeners skipped for ${signal.id} (mesh-only)',
       );
     }
@@ -1064,7 +1062,7 @@ class SignalService {
     String signalId,
     List<String> localPaths,
   ) async {
-    AppLogging.signals(
+    AppLogging.social(
       'Auto-uploading ${localPaths.length} images for signal $signalId',
     );
 
@@ -1079,14 +1077,14 @@ class SignalService {
       );
       if (url != null) {
         uploadedUrls.add(url);
-        AppLogging.signals('Image $i auto-uploaded: $signalId -> $url');
+        AppLogging.social('Image $i auto-uploaded: $signalId -> $url');
       } else {
-        AppLogging.signals('Image $i auto-upload failed for signal $signalId');
+        AppLogging.social('Image $i auto-upload failed for signal $signalId');
       }
     }
 
     if (uploadedUrls.isNotEmpty) {
-      AppLogging.signals(
+      AppLogging.social(
         'Uploaded ${uploadedUrls.length}/${localPaths.length} images for $signalId',
       );
 
@@ -1110,11 +1108,11 @@ class SignalService {
           whereArgs: [signalId],
         );
 
-        AppLogging.signals(
+        AppLogging.social(
           'Updated signal $signalId with ${uploadedUrls.length} mediaUrls',
         );
       } catch (e) {
-        AppLogging.signals(
+        AppLogging.social(
           'Failed to update signal $signalId with mediaUrls: $e',
         );
       }
@@ -1141,19 +1139,19 @@ class SignalService {
         return;
       }
       if (_imageResolveInProgress.contains(signal.id)) {
-        AppLogging.signals(
+        AppLogging.social(
           'RESOLVE_IMAGE: already in progress for ${signal.id}',
         );
         return;
       }
 
       _imageResolveInProgress.add(signal.id);
-      AppLogging.signals('RESOLVE_IMAGE_START signalId=${signal.id}');
+      AppLogging.social('RESOLVE_IMAGE_START signalId=${signal.id}');
 
       // Refresh latest local signal state
       final latest = await getSignalById(signal.id);
       if (latest == null) {
-        AppLogging.signals(
+        AppLogging.social(
           'RESOLVE_IMAGE: signal ${signal.id} not found locally',
         );
         return;
@@ -1161,7 +1159,7 @@ class SignalService {
 
       // If already downloaded by another actor in the meantime
       if (latest.imageLocalPath != null && latest.imageLocalPath!.isNotEmpty) {
-        AppLogging.signals(
+        AppLogging.social(
           'RESOLVE_IMAGE_OK signalId=${signal.id} (already present)',
         );
         return;
@@ -1171,7 +1169,7 @@ class SignalService {
       final unlocked = isImageUnlocked(latest);
       final url = latest.mediaUrls.isNotEmpty ? latest.mediaUrls.first : null;
       if (url == null) {
-        AppLogging.signals('RESOLVE_IMAGE: no mediaUrl for ${signal.id}');
+        AppLogging.social('RESOLVE_IMAGE: no mediaUrl for ${signal.id}');
         return;
       }
 
@@ -1182,21 +1180,19 @@ class SignalService {
           imageState: ImageState.cloud,
         );
         await updateSignal(updated);
-        AppLogging.signals(
-          'RESOLVE_IMAGE_PENDING_UNLOCK signalId=${signal.id}',
-        );
+        AppLogging.social('RESOLVE_IMAGE_PENDING_UNLOCK signalId=${signal.id}');
         return;
       }
 
       // Perform download (this will update DB and notify UI via updateSignal)
-      AppLogging.signals(
+      AppLogging.social(
         'RESOLVE_IMAGE_DOWNLOAD_START signalId=${signal.id} url=$url',
       );
       try {
         await _downloadAndCacheImage(signal.id, url);
-        AppLogging.signals('RESOLVE_IMAGE_OK signalId=${signal.id}');
+        AppLogging.social('RESOLVE_IMAGE_OK signalId=${signal.id}');
       } catch (e, st) {
-        AppLogging.signals(
+        AppLogging.social(
           'RESOLVE_IMAGE_ERROR signalId=${signal.id} error=$e\n$st',
         );
       }
@@ -1226,7 +1222,7 @@ class SignalService {
     await init();
 
     if (signalId == null || signalId.isEmpty) {
-      AppLogging.signals(
+      AppLogging.social(
         'RX_DROP missing_signalId packetId=${packetId ?? "none"} '
         'sender=${senderNodeId.toRadixString(16)}',
       );
@@ -1246,7 +1242,7 @@ class SignalService {
       );
 
       if (seen) {
-        AppLogging.signals(
+        AppLogging.social(
           'DEDUP_DROP signalId=$signalId packetId=$packetId reason=metadata',
         );
         return null;
@@ -1261,10 +1257,10 @@ class SignalService {
     // DEDUPLICATION LOGIC:
     // Dedupe strictly by signalId in signals table
     if (await _hasSignalById(signalId)) {
-      AppLogging.signals('DEDUP_DROP signalId=$signalId reason=exists_in_db');
+      AppLogging.social('DEDUP_DROP signalId=$signalId reason=exists_in_db');
       return null;
     }
-    AppLogging.signals(
+    AppLogging.social(
       'DEDUP_ACCEPT signalId=$signalId packetId=${packetId ?? "none"}',
     );
 
@@ -1274,12 +1270,12 @@ class SignalService {
     final now = DateTime.now();
     final expiresAt = now.add(Duration(minutes: ttlMinutes));
 
-    AppLogging.signals(
+    AppLogging.social(
       'Received mesh signal with id=$signalId from node $senderNodeId',
     );
 
     // TRACE: parsed packet
-    AppLogging.signals(
+    AppLogging.social(
       'RECV: mesh packet parsed signalId=$signalId '
       'packetId=${packetId ?? "none"} sender=${senderNodeId.toRadixString(16)}',
     );
@@ -1305,9 +1301,9 @@ class SignalService {
       presenceInfo: presenceInfo,
     );
 
-    AppLogging.signals('SIGNAL_DB_INSERT_START signalId=${signal.id}');
+    AppLogging.social('SIGNAL_DB_INSERT_START signalId=${signal.id}');
     await _saveSignalToDb(signal);
-    AppLogging.signals(
+    AppLogging.social(
       'SIGNAL_DB_INSERT_OK signalId=${signal.id} '
       'packetId=${packetId ?? "none"}',
     );
@@ -1315,9 +1311,9 @@ class SignalService {
     // Attach comments/post listeners and perform an async enrichment step
     // in the background. Do not await - fire-and-forget.
     if (allowCloud) {
-      AppLogging.signals('RECV: starting post listener posts/${signal.id}');
+      AppLogging.social('RECV: starting post listener posts/${signal.id}');
       _startPostListener(signal.id);
-      AppLogging.signals(
+      AppLogging.social(
         'RECV: starting comments listener posts/${signal.id}/comments',
       );
       _startCommentsListener(signal.id);
@@ -1325,7 +1321,7 @@ class SignalService {
         Future(() async {
           try {
             final cloudSignal = await cloudLookupOverride!(signal.id);
-            AppLogging.signals(
+            AppLogging.social(
               'RECV: override lookup exists=${cloudSignal != null} mediaUrls=${cloudSignal?.mediaUrls.length ?? 0}',
             );
             if (cloudSignal != null && cloudSignal.mediaUrls.isNotEmpty) {
@@ -1338,20 +1334,20 @@ class SignalService {
                   hasPendingCloudImage: false,
                 );
                 await updateSignal(updated);
-                AppLogging.signals(
+                AppLogging.social(
                   'RECV: override lookup updated local signal with ${cloudSignal.mediaUrls.length} cloud images for ${signal.id}',
                 );
               }
             }
           } catch (e, st) {
-            AppLogging.signals(
+            AppLogging.social(
               'RECV: override lookup error for ${signal.id}: $e\n$st',
             );
           }
         });
       }
     } else {
-      AppLogging.signals(
+      AppLogging.social(
         'RECV: cloud listeners skipped for ${signal.id} (mesh-only debug)',
       );
     }
@@ -1366,7 +1362,7 @@ class SignalService {
     if (_currentUserId == null) return null;
 
     try {
-      AppLogging.signals('Looking up cloud signal: posts/$signalId');
+      AppLogging.social('Looking up cloud signal: posts/$signalId');
 
       final doc = await _firestore.collection('posts').doc(signalId).get();
 
@@ -1383,8 +1379,8 @@ class SignalService {
       final imageUrl = data['imageUrl'] as String?;
       final mediaUrl = data['mediaUrl'] as String?;
 
-      AppLogging.signals('📷 Cloud doc keys: $docKeys');
-      AppLogging.signals(
+      AppLogging.social('📷 Cloud doc keys: $docKeys');
+      AppLogging.social(
         '📷 imageState=$imageState, '
         'mediaUrlsCount=${mediaUrls?.length ?? 0}, '
         'hasImageUrl=${imageUrl != null && imageUrl.isNotEmpty}, '
@@ -1395,12 +1391,12 @@ class SignalService {
 
       // Verify it's a signal and not expired
       if (signal.postMode != PostMode.signal) {
-        AppLogging.signals('Cloud doc exists but is not a signal');
+        AppLogging.social('Cloud doc exists but is not a signal');
         return null;
       }
 
       if (signal.isExpired) {
-        AppLogging.signals('Cloud signal exists but is expired');
+        AppLogging.social('Cloud signal exists but is expired');
         return null;
       }
 
@@ -1421,7 +1417,7 @@ class SignalService {
       }
 
       if (cloudMediaUrls.isNotEmpty) {
-        AppLogging.signals('📷 Cloud images detected via $usedField');
+        AppLogging.social('📷 Cloud images detected via $usedField');
         // Return signal with all detected image URLs
         return signal.copyWith(
           mediaUrls: cloudMediaUrls,
@@ -1432,7 +1428,7 @@ class SignalService {
 
       return signal;
     } catch (e) {
-      AppLogging.signals('Error looking up cloud signal $signalId: $e');
+      AppLogging.social('Error looking up cloud signal $signalId: $e');
       return null;
     }
   }
@@ -1441,20 +1437,20 @@ class SignalService {
   /// Updates SQLite with imageState=cloud and local cached path.
   /// Notifies providers so UI can rerender.
   Future<void> _downloadAndCacheImage(String signalId, String imageUrl) async {
-    AppLogging.signals(
+    AppLogging.social(
       '📷 Downloading cloud image for signal $signalId from: $imageUrl',
     );
 
     try {
       final response = await http.get(Uri.parse(imageUrl));
       if (response.statusCode != 200) {
-        AppLogging.signals(
+        AppLogging.social(
           '📷 Image download failed: HTTP ${response.statusCode}',
         );
         return;
       }
 
-      AppLogging.signals(
+      AppLogging.social(
         '📷 Image downloaded: ${response.bodyBytes.length} bytes',
       );
 
@@ -1482,7 +1478,7 @@ class SignalService {
           hasPendingCloudImage: false,
         );
         await updateSignal(updated);
-        AppLogging.signals(
+        AppLogging.social(
           '📷 Image cached locally: $localPath, '
           'SQLite updated with imageState=cloud',
         );
@@ -1490,10 +1486,10 @@ class SignalService {
         // Notify the feed stream so UI can rerender with the image
         // This is done by the updateSignal call which triggers DB change
       } else {
-        AppLogging.signals('📷 Warning: signal $signalId not found in DB');
+        AppLogging.social('📷 Warning: signal $signalId not found in DB');
       }
     } catch (e) {
-      AppLogging.signals('📷 Failed to download/cache image: $e');
+      AppLogging.social('📷 Failed to download/cache image: $e');
     }
   }
 
@@ -1556,7 +1552,7 @@ class SignalService {
         [DateTime.now().millisecondsSinceEpoch, deleteCount],
       );
 
-      AppLogging.signals(
+      AppLogging.social(
         'Trimmed $deleteCount old signals to maintain max limit',
       );
     }
@@ -1660,9 +1656,9 @@ class SignalService {
   Future<void> deleteSignal(String signalId) async {
     await init();
 
-    AppLogging.signals('Deleting signal: $signalId');
+    AppLogging.social('Deleting signal: $signalId');
 
-    // Stop listeners for this signal
+    // Stop listeners for this signal (includes vote listeners)
     _stopCommentsListener(signalId);
     _stopPostListener(signalId);
 
@@ -1687,10 +1683,7 @@ class SignalService {
     // Also delete from Firebase if authenticated
     if (_currentUserId != null) {
       try {
-        // Delete the post document (this doesn't delete subcollections)
-        await _firestore.collection('posts').doc(signalId).delete();
-
-        // Delete all comments in the subcollection
+        // 1. Delete all comments and their votes subcollections
         final commentsSnapshot = await _firestore
             .collection('posts')
             .doc(signalId)
@@ -1705,42 +1698,67 @@ class SignalService {
           await doc.reference.delete();
         }
 
-        // Delete images from Firebase Storage if they exist
+        // 2. Delete likes subcollection on the post
+        final likesSubSnapshot = await _firestore
+            .collection('posts')
+            .doc(signalId)
+            .collection('likes')
+            .get();
+        for (final doc in likesSubSnapshot.docs) {
+          await doc.reference.delete();
+        }
+
+        // 3. Delete flat likes referencing this signal (postId field)
+        final flatLikesSnapshot = await _firestore
+            .collection('likes')
+            .where('postId', isEqualTo: signalId)
+            .get();
+        for (final doc in flatLikesSnapshot.docs) {
+          await doc.reference.delete();
+        }
+        if (flatLikesSnapshot.docs.isNotEmpty) {
+          AppLogging.social(
+            'Deleted ${flatLikesSnapshot.docs.length} flat likes for signal $signalId',
+          );
+        }
+
+        // 4. Delete the post document itself (after subcollections)
+        await _firestore.collection('posts').doc(signalId).delete();
+
+        // 5. Delete images from Firebase Storage if they exist
         if (signal != null && signal.mediaUrls.isNotEmpty) {
           try {
             // Delete all images with suffixes (_0, _1, _2, _3)
-            // Only attempt deletion for non-empty URLs
             for (var i = 0; i < signal.mediaUrls.length; i++) {
               final url = signal.mediaUrls[i];
-              if (url.isEmpty) continue; // Skip empty URLs
+              if (url.isEmpty) continue;
 
               try {
                 final ref = _storage.ref(
                   'signals/$_currentUserId/${signalId}_$i.jpg',
                 );
                 await ref.delete();
-                AppLogging.signals(
+                AppLogging.social(
                   'Deleted signal image $i from Storage: $signalId',
                 );
               } catch (storageError) {
-                // Only log if it's not a simple "not found" error
                 if (storageError.toString().contains('object-not-found')) {
-                  AppLogging.signals(
+                  AppLogging.social(
                     'Signal image $i already deleted: $signalId',
                   );
                 } else {
-                  AppLogging.signals(
+                  AppLogging.social(
                     'Failed to delete signal image $i from Storage: $storageError',
                   );
                 }
               }
             }
           } catch (e) {
-            AppLogging.signals('Error deleting signal images from Storage: $e');
+            AppLogging.social('Error deleting signal images from Storage: $e');
           }
         }
       } catch (e) {
-        AppLogging.signals('Failed to delete signal from Firebase: $e');
+        AppLogging.social('Failed to delete signal from Firebase: $e');
       }
     }
   }
@@ -1750,7 +1768,7 @@ class SignalService {
   Future<void> _deleteSignalLocally(String signalId) async {
     await init();
 
-    AppLogging.signals('Deleting signal locally (remote deletion): $signalId');
+    AppLogging.social('Deleting signal locally (remote deletion): $signalId');
 
     // Get signal to delete its image file
     final signal = await getSignalById(signalId);
@@ -1771,7 +1789,7 @@ class SignalService {
     // Delete from local database
     await _db!.delete(_tableName, where: 'id = ?', whereArgs: [signalId]);
 
-    AppLogging.signals('Signal $signalId deleted locally');
+    AppLogging.social('Signal $signalId deleted locally');
   }
 
   // ===========================================================================
@@ -1808,21 +1826,33 @@ class SignalService {
       );
       final imagePath = row['imageLocalPath'] as String?;
 
-      AppLogging.signals('Signal expired: id=$id, expiredAt=$expiresAt');
-      AppLogging.signals('CLEANUP_DELETE signalId=$id reason=expired');
+      AppLogging.social('Signal expired: id=$id, expiredAt=$expiresAt');
+      AppLogging.social('CLEANUP_DELETE signalId=$id reason=expired');
       await _deleteSignalImage(imagePath);
 
-      // Delete from Firebase Storage if authenticated
+      // Delete from Firebase Storage if authenticated (own signals only)
       if (_currentUserId != null) {
+        // Try suffixed paths (_0 through _3) matching upload pattern
+        for (var i = 0; i < 4; i++) {
+          try {
+            final ref = _storage.ref('signals/$_currentUserId/${id}_$i.jpg');
+            await ref.delete();
+            AppLogging.social(
+              'Deleted expired signal image _$i from Storage: $id',
+            );
+          } catch (storageError) {
+            // Ignore - image index may not exist
+          }
+        }
+        // Also try unsuffixed path for backwards compatibility
         try {
           final ref = _storage.ref('signals/$_currentUserId/$id.jpg');
           await ref.delete();
-          AppLogging.signals('Deleted expired signal image from Storage: $id');
+          AppLogging.social(
+            'Deleted expired signal image (unsuffixed) from Storage: $id',
+          );
         } catch (storageError) {
           // Ignore - image may not exist in Storage
-          AppLogging.signals(
-            'Storage deletion skipped for expired signal (may not exist): $id',
-          );
         }
       }
 
@@ -1855,7 +1885,7 @@ class SignalService {
     final remaining = Sqflite.firstIntValue(
       await _db!.rawQuery('SELECT COUNT(*) FROM $_tableName'),
     );
-    AppLogging.signals(
+    AppLogging.social(
       'Cleanup complete: removed $deletedCount expired signals, remaining=${remaining ?? 0}',
     );
 
@@ -1879,7 +1909,7 @@ class SignalService {
     );
 
     if (deleted > 0) {
-      AppLogging.signals('Cleaned up $deleted expired comments');
+      AppLogging.social('Cleaned up $deleted expired comments');
     }
   }
 
@@ -1900,7 +1930,7 @@ class SignalService {
     );
 
     if (deleted > 0) {
-      AppLogging.signals('Cleaned up $deleted old proximity entries');
+      AppLogging.social('Cleaned up $deleted old proximity entries');
     }
   }
 
@@ -1941,7 +1971,7 @@ class SignalService {
   /// Called on app resume and when auth state changes.
   Future<int> retryCloudLookups() async {
     if (_currentUserId == null) {
-      AppLogging.signals('📡 Cloud retry: skipping - not authenticated');
+      AppLogging.social('📡 Cloud retry: skipping - not authenticated');
       return 0;
     }
 
@@ -1962,11 +1992,11 @@ class SignalService {
     );
 
     if (rows.isEmpty) {
-      AppLogging.signals('📡 Cloud retry: no signals need cloud lookup');
+      AppLogging.social('📡 Cloud retry: no signals need cloud lookup');
       return 0;
     }
 
-    AppLogging.signals(
+    AppLogging.social(
       '📡 Cloud retry: checking ${rows.length} signals for cloud data',
     );
 
@@ -1984,7 +2014,7 @@ class SignalService {
         final cloudSignal = await _lookupCloudSignal(signal.id);
 
         if (cloudSignal != null && cloudSignal.mediaUrls.isNotEmpty) {
-          AppLogging.signals(
+          AppLogging.social(
             '📡 Cloud retry: found ${cloudSignal.mediaUrls.length} images for ${signal.id}',
           );
 
@@ -2002,7 +2032,7 @@ class SignalService {
           try {
             resolveSignalImageIfNeeded(updated);
           } catch (e) {
-            AppLogging.signals(
+            AppLogging.social(
               '📡 Cloud retry: resolver error for ${signal.id}: $e',
             );
           }
@@ -2020,18 +2050,18 @@ class SignalService {
           try {
             resolveSignalImageIfNeeded(signal);
           } catch (e) {
-            AppLogging.signals(
+            AppLogging.social(
               '📡 Cloud retry: resolver error for ${signal.id}: $e',
             );
           }
         }
       } catch (e) {
-        AppLogging.signals('📡 Cloud retry: failed for ${signal.id}: $e');
+        AppLogging.social('📡 Cloud retry: failed for ${signal.id}: $e');
       }
     }
 
     if (updatedCount > 0) {
-      AppLogging.signals(
+      AppLogging.social(
         '📡 Cloud retry complete: updated $updatedCount signals with cloud data',
       );
     }
@@ -2046,7 +2076,7 @@ class SignalService {
     try {
       await init();
     } catch (e) {
-      AppLogging.signals(
+      AppLogging.social(
         'attemptResolveAllPendingImages: DB init failed, skipping: $e',
       );
       return;
@@ -2064,7 +2094,7 @@ class SignalService {
     for (final row in rows) {
       final signal = _postFromDbMap(row);
       if (signal.mediaUrls.isNotEmpty) {
-        AppLogging.signals('RESOLVE_BATCH signalId=${signal.id}');
+        AppLogging.social('RESOLVE_BATCH signalId=${signal.id}');
         // Fire-and-forget (resolver handles in-progress guard)
         Future.microtask(() => resolveSignalImageIfNeeded(signal));
       }
@@ -2082,7 +2112,7 @@ class SignalService {
 
     // Critical check: never upload expired signals
     if (signal.isExpired) {
-      AppLogging.signals(
+      AppLogging.social(
         'Refusing to upload expired signal ${signal.id} to Firebase',
       );
       return;
@@ -2112,26 +2142,26 @@ class SignalService {
   }) async {
     final currentUid = _currentUserId;
     if (currentUid == null) {
-      AppLogging.signals('Cannot upload image: not authenticated');
+      AppLogging.social('Cannot upload image: not authenticated');
       return null;
     }
 
     // Get the signal to check expiry and unlock rules
     final signal = await getSignalById(signalId);
     if (signal == null) {
-      AppLogging.signals('Cannot upload image: signal not found');
+      AppLogging.social('Cannot upload image: signal not found');
       return null;
     }
 
     if (signal.isExpired) {
-      AppLogging.signals(
+      AppLogging.social(
         'Refusing to upload image for expired signal $signalId',
       );
       return null;
     }
 
     if (!isImageUnlocked(signal)) {
-      AppLogging.signals(
+      AppLogging.social(
         'Cannot upload image: unlock rules not satisfied for signal $signalId',
       );
       return null;
@@ -2140,11 +2170,11 @@ class SignalService {
     try {
       final file = File(localPath);
       if (!await file.exists()) {
-        AppLogging.signals('📷 UPLOAD FAILED: file not found at $localPath');
+        AppLogging.social('📷 UPLOAD FAILED: file not found at $localPath');
         return null;
       }
 
-      AppLogging.signals(
+      AppLogging.social(
         '📷 UPLOAD START: signal $signalId$storageSuffix, file=$localPath',
       );
 
@@ -2157,7 +2187,7 @@ class SignalService {
       // Monitor upload progress
       uploadTask.snapshotEvents.listen((snapshot) {
         final progress = snapshot.bytesTransferred / snapshot.totalBytes * 100;
-        AppLogging.signals(
+        AppLogging.social(
           '📷 UPLOAD PROGRESS: ${progress.toStringAsFixed(1)}%',
         );
       });
@@ -2165,7 +2195,7 @@ class SignalService {
       await uploadTask;
       final url = await ref.getDownloadURL();
 
-      AppLogging.signals(
+      AppLogging.social(
         '📷 STORAGE UPLOAD SUCCESS: signal $signalId$storageSuffix, URL=$url',
       );
 
@@ -2175,33 +2205,33 @@ class SignalService {
         final result = await functions.httpsCallable('validateImages').call({
           'imageUrls': [url],
         });
-        AppLogging.signals('📷 validateImages response: ${result.data}');
+        AppLogging.social('📷 validateImages response: ${result.data}');
 
         final validationResult = result.data as Map<String, dynamic>;
         if (validationResult['passed'] == false) {
-          AppLogging.signals(
+          AppLogging.social(
             '📷 VALIDATION FAILED: ${validationResult['message']}',
           );
           // Delete the uploaded image
           try {
             await ref.delete();
-            AppLogging.signals('📷 Deleted invalid image from storage');
+            AppLogging.social('📷 Deleted invalid image from storage');
           } catch (deleteError) {
-            AppLogging.signals(
+            AppLogging.social(
               '📷 Failed to delete invalid image: $deleteError',
             );
           }
           return null;
         }
-        AppLogging.signals('📷 Image passed validation');
+        AppLogging.social('📷 Image passed validation');
       } catch (e) {
-        AppLogging.signals('📷 validateImages error: $e');
+        AppLogging.social('📷 validateImages error: $e');
         // Validation service error - delete the image and reject
         try {
           await ref.delete();
-          AppLogging.signals('📷 Deleted image after validation service error');
+          AppLogging.social('📷 Deleted image after validation service error');
         } catch (deleteError) {
-          AppLogging.signals('📷 Failed to delete image: $deleteError');
+          AppLogging.social('📷 Failed to delete image: $deleteError');
         }
         return null;
       }
@@ -2229,29 +2259,29 @@ class SignalService {
             hasPendingCloudImage: false,
           );
           await updateSignal(updated);
-          AppLogging.signals(
+          AppLogging.social(
             '📷 LOCAL DB UPDATED: signal $signalId, imageState=cloud',
           );
-          AppLogging.signals(
+          AppLogging.social(
             '📷 UPLOAD COMPLETE: signal $signalId uploaded successfully',
           );
           return url;
         } else {
           // Firestore failed - queue for retry but return URL since Storage succeeded
           _queueImageRetry(signalId, url);
-          AppLogging.signals(
+          AppLogging.social(
             '📷 UPLOAD PARTIAL: signal $signalId storage OK, Firestore queued for retry',
           );
           return url;
         }
       } else {
-        AppLogging.signals(
+        AppLogging.social(
           '📷 FIRESTORE SKIP: signal $signalId expired, not writing to cloud',
         );
         return url;
       }
     } catch (e, stackTrace) {
-      AppLogging.signals(
+      AppLogging.social(
         '📷 UPLOAD FAILED: signal $signalId, error=$e\n$stackTrace',
       );
       return null;
@@ -2267,7 +2297,7 @@ class SignalService {
     required String currentUid,
   }) async {
     // Diagnostic logging before write attempt
-    AppLogging.signals(
+    AppLogging.social(
       '📷 FIRESTORE PRE-WRITE DIAGNOSTIC:\n'
       '  - signalId: $signalId\n'
       '  - currentUid: $currentUid\n'
@@ -2277,7 +2307,7 @@ class SignalService {
     );
 
     if (currentUid != authorId) {
-      AppLogging.signals(
+      AppLogging.social(
         '📷 FIRESTORE WRITE BLOCKED: uid mismatch! '
         'currentUid=$currentUid, authorId=$authorId',
       );
@@ -2293,15 +2323,13 @@ class SignalService {
         'imageState': ImageState.cloud.name,
       });
 
-      AppLogging.signals(
+      AppLogging.social(
         '📷 FIRESTORE WRITE SUCCESS: posts/$signalId '
         'mediaUrls=[url], imageState=cloud',
       );
       return true;
     } catch (e) {
-      AppLogging.signals(
-        '📷 FIRESTORE WRITE FAILED: posts/$signalId, error=$e',
-      );
+      AppLogging.social('📷 FIRESTORE WRITE FAILED: posts/$signalId, error=$e');
       return false;
     }
   }
@@ -2315,7 +2343,7 @@ class SignalService {
     pending.scheduleRetry();
     _pendingImageUpdates[signalId] = pending;
 
-    AppLogging.signals(
+    AppLogging.social(
       '📷 RETRY QUEUED: signal $signalId, '
       'attempt ${pending.attemptCount}, '
       'next retry at ${pending.nextRetryTime.toIso8601String()}',
@@ -2337,7 +2365,7 @@ class SignalService {
       // Check if signal has expired
       final signal = await getSignalById(signalId);
       if (signal == null || signal.isExpired) {
-        AppLogging.signals(
+        AppLogging.social(
           '📷 RETRY CANCELLED: signal $signalId expired or deleted',
         );
         toRemove.add(signalId);
@@ -2346,7 +2374,7 @@ class SignalService {
 
       // Check if we've exceeded max attempts
       if (pending.shouldGiveUp) {
-        AppLogging.signals(
+        AppLogging.social(
           '📷 RETRY ABANDONED: signal $signalId after ${pending.attemptCount} attempts',
         );
         toRemove.add(signalId);
@@ -2356,7 +2384,7 @@ class SignalService {
       // Check if it's time to retry
       if (!pending.isReady) continue;
 
-      AppLogging.signals(
+      AppLogging.social(
         '📷 RETRY ATTEMPT ${pending.attemptCount + 1}: signal $signalId',
       );
 
@@ -2380,14 +2408,14 @@ class SignalService {
           hasPendingCloudImage: false,
         );
         await updateSignal(updated);
-        AppLogging.signals(
+        AppLogging.social(
           '📷 RETRY SUCCESS: signal $signalId, local DB updated',
         );
         toRemove.add(signalId);
       } else {
         // Schedule next retry with backoff
         pending.scheduleRetry();
-        AppLogging.signals(
+        AppLogging.social(
           '📷 RETRY FAILED: signal $signalId, '
           'attempt ${pending.attemptCount}, '
           'next retry at ${pending.nextRetryTime.toIso8601String()}',
@@ -2418,7 +2446,7 @@ class SignalService {
 
       return query.docs.map((doc) => Post.fromFirestore(doc)).toList();
     } catch (e) {
-      AppLogging.signals('Failed to fetch cloud signals: $e');
+      AppLogging.social('Failed to fetch cloud signals: $e');
       return [];
     }
   }
@@ -2440,17 +2468,17 @@ class SignalService {
   void _startCommentsListener(String signalId) {
     // Skip if not authenticated or already listening
     if (_currentUserId == null) {
-      AppLogging.signals(
+      AppLogging.social(
         '📡 Comments listener: skipping $signalId - not authenticated',
       );
       return;
     }
     if (_commentsListeners.containsKey(signalId)) {
-      AppLogging.signals('📡 Comments listener: already active for $signalId');
+      AppLogging.social('📡 Comments listener: already active for $signalId');
       return;
     }
 
-    AppLogging.signals(
+    AppLogging.social(
       '📡 Comments listener: ATTACHING posts/$signalId/comments',
     );
 
@@ -2475,7 +2503,7 @@ class SignalService {
                 ? comments.last.createdAt.toIso8601String()
                 : 'none';
 
-            AppLogging.signals(
+            AppLogging.social(
               '📡 Comments listener: snapshot for $signalId: '
               'docs=${snapshot.docs.length}, latestCreatedAt=$latestCreatedAt',
             );
@@ -2506,7 +2534,7 @@ class SignalService {
                   'isDeleted': comment.isDeleted ? 1 : 0,
                 }, conflictAlgorithm: ConflictAlgorithm.replace);
               }
-              AppLogging.signals(
+              AppLogging.social(
                 '📡 Comments listener: persisted ${comments.length} comments to local DB',
               );
             }
@@ -2520,7 +2548,7 @@ class SignalService {
                 where: 'id = ?',
                 whereArgs: [signalId],
               );
-              AppLogging.signals(
+              AppLogging.social(
                 '📡 Comments listener: updated local commentCount to ${comments.length}',
               );
             }
@@ -2528,7 +2556,7 @@ class SignalService {
             // Note: UI now refreshes via _commentUpdateController stream
           },
           onError: (e, stackTrace) {
-            AppLogging.signals(
+            AppLogging.social(
               '📡 Comments listener ERROR for $signalId: $e\n'
               'StackTrace: $stackTrace\n'
               'UserId: $_currentUserId\n'
@@ -2541,7 +2569,7 @@ class SignalService {
 
     _commentsListeners[signalId] = subscription;
     _clearListenerRetry(signalId, 'comments');
-    AppLogging.signals(
+    AppLogging.social(
       '📡 Comments listener: subscription stored for $signalId '
       '(total active: ${_commentsListeners.length})',
     );
@@ -2553,7 +2581,7 @@ class SignalService {
     final subscription = _commentsListeners.remove(signalId);
     if (subscription != null) {
       subscription.cancel();
-      AppLogging.signals('📡 Stopped comments listener for signal $signalId');
+      AppLogging.social('📡 Stopped comments listener for signal $signalId');
     }
     _clearListenerRetry(signalId, 'comments');
     // Also stop vote listener for this signal
@@ -2565,9 +2593,7 @@ class SignalService {
     for (final entry in _commentsListeners.entries) {
       entry.value.cancel();
       _clearListenerRetry(entry.key, 'comments');
-      AppLogging.signals(
-        '📡 Stopped comments listener for signal ${entry.key}',
-      );
+      AppLogging.social('📡 Stopped comments listener for signal ${entry.key}');
     }
     _commentsListeners.clear();
   }
@@ -2589,17 +2615,17 @@ class SignalService {
   void _startPostListener(String signalId) {
     // Skip if not authenticated or already listening
     if (_currentUserId == null) {
-      AppLogging.signals(
+      AppLogging.social(
         '📡 Post listener: skipping $signalId - not authenticated',
       );
       return;
     }
     if (_postListeners.containsKey(signalId)) {
-      AppLogging.signals('📡 Post listener: already active for $signalId');
+      AppLogging.social('📡 Post listener: already active for $signalId');
       return;
     }
 
-    AppLogging.signals('📡 Post listener: ATTACHING to posts/$signalId');
+    AppLogging.social('📡 Post listener: ATTACHING to posts/$signalId');
 
     final subscription = _firestore
         .collection('posts')
@@ -2607,7 +2633,7 @@ class SignalService {
         .snapshots()
         .listen(
           (snapshot) async {
-            AppLogging.signals(
+            AppLogging.social(
               '📡 Post listener: snapshot received for $signalId, '
               'exists=${snapshot.exists}',
             );
@@ -2619,20 +2645,40 @@ class SignalService {
               // doc exist yet, it may simply not have been uploaded yet (common
               // when receiving signals offline). In that case, do NOT delete;
               // wait for the doc to appear.
-              final hadExisted = _postDocumentSeen[signalId] == true;
+              var hadExisted = _postDocumentSeen[signalId] == true;
+
+              // If in-memory state was lost (e.g. app restart), check the
+              // persisted syncedToCloud flag in SQLite as evidence that the
+              // Firestore document was previously confirmed to exist.
+              if (!hadExisted) {
+                final rows = await _db!.query(
+                  _tableName,
+                  columns: ['syncedToCloud'],
+                  where: 'id = ?',
+                  whereArgs: [signalId],
+                );
+                if (rows.isNotEmpty &&
+                    (rows.first['syncedToCloud'] as int?) == 1) {
+                  hadExisted = true;
+                  _postDocumentSeen[signalId] = true;
+                  AppLogging.social(
+                    '📡 Post listener: restored cloud-seen state from DB for $signalId',
+                  );
+                }
+              }
 
               // Check if we have this signal locally
               final localSignal = await getSignalById(signalId);
 
               if (!hadExisted) {
-                AppLogging.signals(
+                AppLogging.social(
                   '📡 Post listener: doc posts/$signalId does NOT exist yet - waiting (no prior presence)',
                 );
                 return;
               }
 
               if (localSignal != null) {
-                AppLogging.signals(
+                AppLogging.social(
                   '📡 Post listener: doc posts/$signalId DELETED by author - removing locally',
                 );
 
@@ -2646,7 +2692,7 @@ class SignalService {
                 _stopPostListener(signalId);
                 _stopCommentsListener(signalId);
               } else {
-                AppLogging.signals(
+                AppLogging.social(
                   '📡 Post listener: doc posts/$signalId does NOT exist yet - waiting (no local signal)',
                 );
               }
@@ -2672,7 +2718,7 @@ class SignalService {
               cloudMediaUrls = [mediaUrl];
             }
 
-            AppLogging.signals(
+            AppLogging.social(
               '📡 Post listener: doc posts/$signalId exists: '
               'mediaUrls.length=${cloudMediaUrls.length}, '
               'hasCloudImages=${cloudMediaUrls.isNotEmpty}, '
@@ -2681,12 +2727,19 @@ class SignalService {
 
             // Record that the cloud post document exists. This allows us to
             // detect later transitions to not-exist as deletions by the author.
+            // Persist to SQLite so the state survives app restart.
             _postDocumentSeen[signalId] = true;
+            _db!.update(
+              _tableName,
+              {'syncedToCloud': 1},
+              where: 'id = ? AND syncedToCloud = 0',
+              whereArgs: [signalId],
+            );
 
             // Get current local signal state
             final signal = await getSignalById(signalId);
             if (signal == null) {
-              AppLogging.signals(
+              AppLogging.social(
                 '📡 Post listener: signal $signalId not found in local DB - '
                 'may have been cleaned up',
               );
@@ -2699,7 +2752,7 @@ class SignalService {
 
             // Update commentCount if changed
             if (signal.commentCount != cloudCommentCount) {
-              AppLogging.signals(
+              AppLogging.social(
                 '📡 Post listener: updating commentCount '
                 '${signal.commentCount} → $cloudCommentCount',
               );
@@ -2715,7 +2768,7 @@ class SignalService {
                 signal.imageLocalPath!.isNotEmpty;
 
             if (cloudMediaUrls.isNotEmpty && !hasLocalImage) {
-              AppLogging.signals(
+              AppLogging.social(
                 '📡 Post listener: ${cloudMediaUrls.length} cloud images detected, local missing',
               );
 
@@ -2732,7 +2785,7 @@ class SignalService {
               try {
                 resolveSignalImageIfNeeded(updatedSignal);
               } catch (e) {
-                AppLogging.signals(
+                AppLogging.social(
                   '📡 Post listener: resolver error for $signalId: $e',
                 );
               }
@@ -2741,13 +2794,13 @@ class SignalService {
             // Save any pending updates
             if (needsUpdate) {
               await updateSignal(updatedSignal);
-              AppLogging.signals(
+              AppLogging.social(
                 '📡 Post listener: local signal $signalId updated',
               );
             }
           },
           onError: (Object error, StackTrace stackTrace) {
-            AppLogging.signals(
+            AppLogging.social(
               '📡 Post listener ERROR for $signalId: $error\n$stackTrace',
             );
             _postListeners.remove(signalId)?.cancel();
@@ -2757,7 +2810,7 @@ class SignalService {
 
     _postListeners[signalId] = subscription;
     _clearListenerRetry(signalId, 'post');
-    AppLogging.signals(
+    AppLogging.social(
       '📡 Post listener: subscription stored for $signalId '
       '(total active: ${_postListeners.length})',
     );
@@ -2770,7 +2823,7 @@ class SignalService {
     _postDocumentSeen.remove(signalId);
     if (subscription != null) {
       subscription.cancel();
-      AppLogging.signals('📡 Stopped post listener for signal $signalId');
+      AppLogging.social('📡 Stopped post listener for signal $signalId');
     }
     _clearListenerRetry(signalId, 'post');
   }
@@ -2780,7 +2833,7 @@ class SignalService {
     for (final entry in _postListeners.entries) {
       entry.value.cancel();
       _clearListenerRetry(entry.key, 'post');
-      AppLogging.signals('📡 Stopped post listener for signal ${entry.key}');
+      AppLogging.social('📡 Stopped post listener for signal ${entry.key}');
     }
     _postListeners.clear();
     _postDocumentSeen.clear();
@@ -2793,32 +2846,36 @@ class SignalService {
   /// Create a comment on a signal.
   /// Stores locally in SQLite, syncs to Firestore for authenticated users.
   /// Use [parentId] to create a reply to another comment (threaded).
+  /// [actorNodeNum] — the actor's mesh node number, if known by the caller.
+  /// Baked into the activity's [PostAuthorSnapshot.nodeNum] for deterministic
+  /// SigilAvatar rendering without async cloud lookups.
   Future<SignalResponse?> createResponse({
     required String signalId,
     required String content,
     String? authorName,
     String? parentId,
+    int? actorNodeNum,
   }) async {
     await init();
 
-    AppLogging.signals(
+    AppLogging.social(
       '📝 createResponse: signalId=$signalId, parentId=$parentId',
     );
 
     if (_currentUserId == null) {
-      AppLogging.signals('Cannot create response: user not authenticated');
+      AppLogging.social('Cannot create response: user not authenticated');
       return null;
     }
 
     // Get parent signal to inherit expiresAt
     final signal = await getSignalById(signalId);
     if (signal == null) {
-      AppLogging.signals('Cannot create response: signal not found');
+      AppLogging.social('Cannot create response: signal not found');
       return null;
     }
 
     if (signal.isExpired) {
-      AppLogging.signals('Cannot create response: signal has expired');
+      AppLogging.social('Cannot create response: signal has expired');
       return null;
     }
 
@@ -2861,7 +2918,7 @@ class SignalService {
       whereArgs: [signalId],
     );
 
-    AppLogging.signals('Created response for signal $signalId: ${response.id}');
+    AppLogging.social('Created response for signal $signalId: ${response.id}');
 
     // Sync to Firestore for authenticated users (fire-and-forget)
     if (_currentUserId != null) {
@@ -2872,6 +2929,7 @@ class SignalService {
         response: response,
         signal: signal,
         parentId: parentId,
+        actorNodeNum: actorNodeNum,
       );
     }
 
@@ -2882,7 +2940,7 @@ class SignalService {
   /// Writes to posts/{signalId}/comments/{commentId} with serverTimestamp.
   void _syncResponseToFirestore(SignalResponse response) async {
     if (_currentUserId == null) {
-      AppLogging.signals(
+      AppLogging.social(
         '📡 Cannot sync comment: user not authenticated. '
         'SignalId: ${response.signalId}, CommentId: ${response.id}',
       );
@@ -2923,11 +2981,11 @@ class SignalService {
         }
       });
 
-      AppLogging.signals(
+      AppLogging.social(
         '📡 Comment ${response.id} synced to posts/${response.signalId}/comments',
       );
     } catch (e, stackTrace) {
-      AppLogging.signals(
+      AppLogging.social(
         '📡 Failed to sync comment to Firestore: $e\n'
         'StackTrace: $stackTrace\n'
         'UserId: $_currentUserId\n'
@@ -2946,6 +3004,7 @@ class SignalService {
     required SignalResponse response,
     required Post signal,
     String? parentId,
+    int? actorNodeNum,
   }) async {
     AppLogging.social(
       '📬 ACTIVITY_START: Creating activity for response ${response.id}\n'
@@ -3011,6 +3070,7 @@ class SignalService {
           signalId: response.signalId,
           originalCommentAuthorId: parentComment.authorId,
           replyPreview: preview,
+          actorNodeNum: actorNodeNum,
         );
         AppLogging.social(
           '📬 ACTIVITY_SUCCESS: signalCommentReply created for ${parentComment.authorId}',
@@ -3045,6 +3105,7 @@ class SignalService {
           signalId: response.signalId,
           signalOwnerId: realAuthorId,
           commentPreview: preview,
+          actorNodeNum: actorNodeNum,
         );
         AppLogging.social(
           '📬 ACTIVITY_SUCCESS: signalComment created for $realAuthorId',
@@ -3071,13 +3132,13 @@ class SignalService {
   ) async {
     // If it's already a real Firebase UID, use it
     if (!localAuthorId.startsWith('mesh_')) {
-      AppLogging.signals(
+      AppLogging.social(
         '📬 AUTHOR_RESOLVE: Using local authorId (not mesh): $localAuthorId',
       );
       return localAuthorId;
     }
 
-    AppLogging.signals(
+    AppLogging.social(
       '📬 AUTHOR_RESOLVE: Local has mesh_ prefix, checking Firestore for '
       'real authorId',
     );
@@ -3085,7 +3146,7 @@ class SignalService {
     try {
       final doc = await _firestore.collection('posts').doc(signalId).get();
       if (!doc.exists) {
-        AppLogging.signals(
+        AppLogging.social(
           '📬 AUTHOR_RESOLVE: Signal not in Firestore, no real author',
         );
         return null;
@@ -3095,27 +3156,25 @@ class SignalService {
       final firestoreAuthorId = data['authorId'] as String?;
 
       if (firestoreAuthorId == null) {
-        AppLogging.signals('📬 AUTHOR_RESOLVE: Firestore doc has no authorId');
+        AppLogging.social('📬 AUTHOR_RESOLVE: Firestore doc has no authorId');
         return null;
       }
 
       if (firestoreAuthorId.startsWith('mesh_')) {
-        AppLogging.signals(
+        AppLogging.social(
           '📬 AUTHOR_RESOLVE: Firestore also has mesh_ authorId, '
           'no real user to notify',
         );
         return null;
       }
 
-      AppLogging.signals(
+      AppLogging.social(
         '📬 AUTHOR_RESOLVE: Found real authorId in Firestore: '
         '$firestoreAuthorId (local was: $localAuthorId)',
       );
       return firestoreAuthorId;
     } catch (e) {
-      AppLogging.signals(
-        '📬 AUTHOR_RESOLVE: Error fetching from Firestore: $e',
-      );
+      AppLogging.social('📬 AUTHOR_RESOLVE: Error fetching from Firestore: $e');
       return null;
     }
   }
@@ -3125,7 +3184,7 @@ class SignalService {
     String signalId,
     String commentId,
   ) async {
-    AppLogging.signals(
+    AppLogging.social(
       '📬 COMMENT_LOOKUP: signalId=$signalId, commentId=$commentId',
     );
     await init();
@@ -3140,7 +3199,7 @@ class SignalService {
 
     if (rows.isNotEmpty) {
       final row = rows.first;
-      AppLogging.signals(
+      AppLogging.social(
         '📬 COMMENT_FOUND: in local DB, authorId=${row['authorId']}',
       );
       return SignalResponse(
@@ -3157,21 +3216,21 @@ class SignalService {
     }
 
     // Check cloud cache
-    AppLogging.signals(
+    AppLogging.social(
       '📬 COMMENT_LOOKUP: Not in local DB, checking cloud cache '
       '(${_cloudComments[signalId]?.length ?? 0} cached comments)',
     );
     final cloudComments = _cloudComments[signalId] ?? [];
     for (final comment in cloudComments) {
       if (comment.id == commentId) {
-        AppLogging.signals(
+        AppLogging.social(
           '📬 COMMENT_FOUND: in cloud cache, authorId=${comment.authorId}',
         );
         return comment;
       }
     }
 
-    AppLogging.signals('📬 COMMENT_NOT_FOUND: $commentId');
+    AppLogging.social('📬 COMMENT_NOT_FOUND: $commentId');
     return null;
   }
 
@@ -3232,7 +3291,7 @@ class SignalService {
     // Debug: log parentIds
     for (final r in merged) {
       if (r.parentId != null) {
-        AppLogging.signals(
+        AppLogging.social(
           '📝 Response ${r.id.substring(0, 8)} has parentId=${r.parentId?.substring(0, 8)}',
         );
       }
@@ -3263,19 +3322,23 @@ class SignalService {
 
   /// Set a vote on a comment. Value should be 1 (upvote) or -1 (downvote).
   /// Writes directly to Firestore - Cloud Functions handle aggregation.
+  ///
+  /// [actorNodeNum] — the actor's mesh node number, if known by the caller.
+  /// Passed through to activity creation for deterministic SigilAvatar.
   Future<void> setVote({
     required String signalId,
     required String commentId,
+    int? actorNodeNum,
     required int value,
   }) async {
     if (value != 1 && value != -1) {
-      AppLogging.signals('Invalid vote value: $value (must be 1 or -1)');
+      AppLogging.social('Invalid vote value: $value (must be 1 or -1)');
       return;
     }
 
     final voterId = _currentUserId;
     if (voterId == null) {
-      AppLogging.signals('Cannot vote: user not authenticated');
+      AppLogging.social('Cannot vote: user not authenticated');
       return;
     }
 
@@ -3300,20 +3363,24 @@ class SignalService {
             'createdAt': FieldValue.serverTimestamp(),
           });
 
-      AppLogging.signals(
+      AppLogging.social(
         '📊 Vote set: posts/$signalId/comments/$commentId/votes/$voterId = $value',
       );
 
       // Create activity for upvotes only (value == 1)
       // Downvotes don't create notifications
       if (value == 1) {
-        _createVoteActivity(signalId: signalId, commentId: commentId);
+        _createVoteActivity(
+          signalId: signalId,
+          commentId: commentId,
+          actorNodeNum: actorNodeNum,
+        );
       }
     } catch (e) {
       // Revert optimistic update on error
       _myVotesCache[signalId]?.remove(commentId);
       _commentUpdateController.add(signalId);
-      AppLogging.signals('📊 Failed to set vote: $e');
+      AppLogging.social('📊 Failed to set vote: $e');
       rethrow;
     }
   }
@@ -3323,10 +3390,11 @@ class SignalService {
   Future<void> clearVote({
     required String signalId,
     required String commentId,
+    int? actorNodeNum,
   }) async {
     final voterId = _currentUserId;
     if (voterId == null) {
-      AppLogging.signals('Cannot clear vote: user not authenticated');
+      AppLogging.social('Cannot clear vote: user not authenticated');
       return;
     }
 
@@ -3345,7 +3413,7 @@ class SignalService {
           .doc(voterId)
           .delete();
 
-      AppLogging.signals(
+      AppLogging.social(
         '📊 Vote cleared: posts/$signalId/comments/$commentId/votes/$voterId',
       );
     } catch (e) {
@@ -3355,7 +3423,7 @@ class SignalService {
         _myVotesCache[signalId]![commentId] = previousValue;
         _commentUpdateController.add(signalId);
       }
-      AppLogging.signals('📊 Failed to clear vote: $e');
+      AppLogging.social('📊 Failed to clear vote: $e');
       rethrow;
     }
   }
@@ -3366,6 +3434,7 @@ class SignalService {
   void _createVoteActivity({
     required String signalId,
     required String commentId,
+    int? actorNodeNum,
   }) async {
     AppLogging.social(
       '📬 VOTE_ACTIVITY_START: Creating upvote activity\n'
@@ -3419,6 +3488,7 @@ class SignalService {
       await activityService.createSignalResponseVoteActivity(
         signalId: signalId,
         responseAuthorId: comment.authorId,
+        actorNodeNum: actorNodeNum,
       );
 
       AppLogging.social(
@@ -3452,11 +3522,11 @@ class SignalService {
     if (voterId == null) return;
 
     if (_voteListeners.containsKey(signalId)) {
-      AppLogging.signals('📊 Vote listener already active for $signalId');
+      AppLogging.social('📊 Vote listener already active for $signalId');
       return;
     }
 
-    AppLogging.signals(
+    AppLogging.social(
       '📊 Starting vote listener for posts/$signalId/comments/*/votes/$voterId',
     );
 
@@ -3482,12 +3552,12 @@ class SignalService {
             _myVotesCache[signalId] = newVotes;
             _commentUpdateController.add(signalId);
 
-            AppLogging.signals(
+            AppLogging.social(
               '📊 Vote listener update for $signalId: ${newVotes.length} votes',
             );
           },
           onError: (e) {
-            AppLogging.signals('📊 Vote listener error for $signalId: $e');
+            AppLogging.social('📊 Vote listener error for $signalId: $e');
             _voteListeners.remove(signalId)?.cancel();
             _scheduleListenerRetry(signalId, 'votes');
           },
@@ -3503,7 +3573,7 @@ class SignalService {
     _voteListeners.remove(signalId);
     _myVotesCache.remove(signalId);
     _clearListenerRetry(signalId, 'votes');
-    AppLogging.signals('📊 Stopped vote listener for $signalId');
+    AppLogging.social('📊 Stopped vote listener for $signalId');
   }
 
   /// Stop all vote listeners.
@@ -3636,6 +3706,6 @@ class SignalService {
     _listenerRetryCounts.clear();
     await _db?.close();
     _db = null;
-    AppLogging.signals('SignalService database closed');
+    AppLogging.social('SignalService database closed');
   }
 }

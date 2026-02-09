@@ -282,7 +282,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
     // Connection gating check
     if (!connectivity.isBleConnected) {
-      AppLogging.signals('🚫 Send blocked: device not connected');
+      AppLogging.social('🚫 Send blocked: device not connected');
       showErrorSnackBar(context, 'Connect to a device to send signals');
       return;
     }
@@ -362,7 +362,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
         }
       }
     } else if (!canUseCloudNow) {
-      AppLogging.signals('SEND: mesh-only - skipping server moderation');
+      AppLogging.social('SEND: mesh-only - skipping server moderation');
     }
 
     try {
@@ -385,7 +385,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       }
 
       final sw = Stopwatch()..start();
-      AppLogging.signals(
+      AppLogging.social(
         'SEND_PATH: start validation -> location -> db -> broadcast',
       );
 
@@ -417,7 +417,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       );
 
       sw.stop();
-      AppLogging.signals('SEND_PATH: completed in ${sw.elapsedMilliseconds}ms');
+      AppLogging.social('SEND_PATH: completed in ${sw.elapsedMilliseconds}ms');
 
       if (signal != null && mounted) {
         // Update presence with selected intent/status
@@ -457,12 +457,12 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       await service.setMyIntent(_selectedIntent);
       await service.setMyStatus(trimmedStatus.isEmpty ? null : trimmedStatus);
 
-      AppLogging.signals(
+      AppLogging.social(
         'Updated presence: intent=${_selectedIntent.name}, '
         'status=${trimmedStatus.isEmpty ? "none" : trimmedStatus}',
       );
     } catch (e) {
-      AppLogging.signals('Failed to update presence: $e');
+      AppLogging.social('Failed to update presence: $e');
     }
   }
 
@@ -690,7 +690,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       // Can't validate without auth - allow all images (will be validated on upload)
-      AppLogging.signals(
+      AppLogging.social(
         '[CreateSignal] Skipping batch image validation: not authenticated',
       );
       return List.filled(localPaths.length, true);
@@ -702,7 +702,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       final timestamp = DateTime.now().millisecondsSinceEpoch;
 
       // PHASE 1: PARALLEL UPLOAD - all images upload simultaneously
-      AppLogging.signals(
+      AppLogging.social(
         '[CreateSignal] Starting batch upload of ${localPaths.length} images',
       );
 
@@ -712,7 +712,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
         final imageFile = File(path);
         if (!await imageFile.exists()) {
-          AppLogging.signals('[CreateSignal] Image $index not found: $path');
+          AppLogging.social('[CreateSignal] Image $index not found: $path');
           return null;
         }
 
@@ -735,12 +735,12 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
         try {
           await ref.putFile(imageFile, metadata);
-          AppLogging.signals(
+          AppLogging.social(
             '[CreateSignal] Uploaded image $index: signal_images_temp/$fileName',
           );
           return fileName;
         } on FirebaseException catch (e) {
-          AppLogging.signals(
+          AppLogging.social(
             '[CreateSignal] Upload error for image $index: ${e.code} - ${e.message}',
           );
           return null;
@@ -750,7 +750,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       final fileNames = await Future.wait(uploadFutures);
 
       // PHASE 2: PARALLEL MODERATION - wait for all results simultaneously
-      AppLogging.signals(
+      AppLogging.social(
         '[CreateSignal] Waiting for ${fileNames.where((f) => f != null).length} moderation results',
       );
 
@@ -775,7 +775,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
           final moderationData = moderationSnapshot.data();
           if (moderationData == null) {
-            AppLogging.signals(
+            AppLogging.social(
               '[CreateSignal] No moderation data for $moderationDocId',
             );
             return false;
@@ -785,7 +785,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
           final action = result?['action'] as String?;
           final passed = result?['passed'] as bool? ?? false;
 
-          AppLogging.signals(
+          AppLogging.social(
             '[CreateSignal] Moderation for $fileName: action=$action, passed=$passed',
           );
 
@@ -797,7 +797,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
           return passed && action != 'reject';
         } catch (e) {
-          AppLogging.signals(
+          AppLogging.social(
             '[CreateSignal] Moderation error for $fileName: $e',
           );
           return false;
@@ -823,13 +823,13 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       final passedCount = results.where((r) => r).length;
       final failedCount = results.length - passedCount;
 
-      AppLogging.signals(
+      AppLogging.social(
         '[CreateSignal] Batch validation complete: $passedCount passed, $failedCount failed',
       );
 
       return results;
     } catch (e) {
-      AppLogging.signals('[CreateSignal] Batch validation error: $e');
+      AppLogging.social('[CreateSignal] Batch validation error: $e');
       if (mounted) {
         showErrorSnackBar(context, 'Failed to validate images');
       }

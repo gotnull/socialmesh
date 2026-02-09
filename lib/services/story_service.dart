@@ -640,7 +640,10 @@ class StoryService {
   /// Like/favorite a story
   ///
   /// Returns true if this is a new like, false if already liked
-  Future<bool> likeStory(String storyId) async {
+  /// [actorNodeNum] — the actor's mesh node number, if known by the caller.
+  /// Baked into the activity's [PostAuthorSnapshot.nodeNum] for deterministic
+  /// SigilAvatar rendering without async cloud lookups.
+  Future<bool> likeStory(String storyId, {int? actorNodeNum}) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
       throw StateError('Must be signed in to like stories');
@@ -680,6 +683,7 @@ class StoryService {
       storyId: storyId,
       storyOwnerId: story.authorId,
       storyThumbnailUrl: story.mediaUrl,
+      actorNodeNum: actorNodeNum,
     );
 
     return true;

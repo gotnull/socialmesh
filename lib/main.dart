@@ -195,14 +195,14 @@ Future<void> _initializeFirebaseInBackground() async {
   try {
     final connectivity = Connectivity();
     connectivity.onConnectivityChanged.listen((results) {
-      AppLogging.signals('CONNECTIVITY_CHANGE: $results');
+      AppLogging.social('CONNECTIVITY_CHANGE: $results');
       if (!results.contains(ConnectivityResult.none) && results.isNotEmpty) {
         // Try resolving any pending images now that connectivity may be restored
         WidgetsBinding.instance.addPostFrameCallback((_) {
           try {
             final ctx = navigatorKey.currentContext;
             if (ctx == null) {
-              AppLogging.signals(
+              AppLogging.social(
                 'CONNECTIVITY_CHANGE: navigator context not ready',
               );
               return;
@@ -211,7 +211,7 @@ Future<void> _initializeFirebaseInBackground() async {
             final sigService = container.read(signalServiceProvider);
             sigService.attemptResolveAllPendingImages();
           } catch (e) {
-            AppLogging.signals(
+            AppLogging.social(
               'CONNECTIVITY_CHANGE: resolver invocation failed: $e',
             );
           }
@@ -219,7 +219,7 @@ Future<void> _initializeFirebaseInBackground() async {
       }
     });
   } catch (e) {
-    AppLogging.signals('Connectivity listener not available: $e');
+    AppLogging.social('Connectivity listener not available: $e');
     firebaseReadyCompleter.complete(false);
   }
 }

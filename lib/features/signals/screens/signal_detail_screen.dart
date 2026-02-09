@@ -16,6 +16,7 @@ import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../models/social.dart';
+import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/profile_providers.dart';
 import '../../../providers/signal_providers.dart';
@@ -156,14 +157,14 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   }
 
   void _setupRefreshListeners() {
-    AppLogging.signals(
+    AppLogging.social(
       '🔔 Setting up refresh listeners for signal ${widget.signal.id}',
     );
 
     // Listen for push notification refresh events
     _refreshSubscription = PushNotificationService().onContentRefresh.listen(
       _onContentRefresh,
-      onError: (e) => AppLogging.signals('🔔 Refresh listener error: $e'),
+      onError: (e) => AppLogging.social('🔔 Refresh listener error: $e'),
     );
 
     // Listen for Firestore comment updates (more reliable than push)
@@ -175,7 +176,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
 
   void _onCommentUpdate(String signalId) {
     if (signalId == widget.signal.id) {
-      AppLogging.signals(
+      AppLogging.social(
         '🔔 Firestore comment update for signal ${widget.signal.id}',
       );
       // Refresh without showing loading indicator to preserve scroll position
@@ -184,18 +185,18 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   }
 
   void _onContentRefresh(ContentRefreshEvent event) {
-    AppLogging.signals(
+    AppLogging.social(
       '🔔 Content refresh event: type=${event.contentType}, targetId=${event.targetId}',
     );
     // Only refresh if this is a signal response for the signal we're viewing
     if (event.contentType == 'signal_response' &&
         event.targetId == widget.signal.id) {
-      AppLogging.signals(
+      AppLogging.social(
         '🔔 Received refresh event for signal ${widget.signal.id}',
       );
       _loadComments();
     } else {
-      AppLogging.signals(
+      AppLogging.social(
         '🔔 Ignoring event - expected signal_response for ${widget.signal.id}',
       );
     }
@@ -223,7 +224,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
         });
       }
     } catch (e) {
-      AppLogging.signals('Error loading comments: $e');
+      AppLogging.social('Error loading comments: $e');
       if (mounted) {
         setState(() {
           _comments = [];
@@ -252,7 +253,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
         });
       }
     } catch (e) {
-      AppLogging.signals('Error refreshing comments: $e');
+      AppLogging.social('Error refreshing comments: $e');
     }
   }
 
@@ -288,7 +289,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
     // Auth gating check
     final isAuthenticated = ref.read(isSignedInProvider);
     if (!isAuthenticated) {
-      AppLogging.signals('🔒 Vote blocked: user not authenticated');
+      AppLogging.social('🔒 Vote blocked: user not authenticated');
       if (mounted) {
         showSignInRequiredSnackBar(context, 'Sign in to vote on responses');
       }
@@ -309,8 +310,9 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   Future<void> _setVote(SignalResponse response, int value) async {
     // Optimistic update
     final previousVote = _myVotes[response.id];
-    // Capture provider before any await
+    // Capture providers before any await
     final service = ref.read(signalServiceProvider);
+    final myNodeNum = ref.read(myNodeNumProvider);
     safeSetState(() {
       _myVotes[response.id] = value;
     });
@@ -319,12 +321,13 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       await service.setVote(
         signalId: widget.signal.id,
         commentId: response.id,
+        actorNodeNum: myNodeNum,
         value: value,
       );
       // Vote counts will be updated via Firestore listener and _loadComments
     } catch (e) {
       // Revert on error
-      AppLogging.signals('Vote error: $e');
+      AppLogging.social('Vote error: $e');
       if (mounted) {
         safeSetState(() {
           if (previousVote != null) {
@@ -341,8 +344,9 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   Future<void> _removeVote(SignalResponse response) async {
     // Optimistic update
     final previousVote = _myVotes[response.id];
-    // Capture provider before any await
+    // Capture providers before any await
     final service = ref.read(signalServiceProvider);
+    final myNodeNum = ref.read(myNodeNumProvider);
     safeSetState(() {
       _myVotes.remove(response.id);
     });
@@ -351,11 +355,12 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       await service.clearVote(
         signalId: widget.signal.id,
         commentId: response.id,
+        actorNodeNum: myNodeNum,
       );
       // Vote counts will be updated via Firestore listener and _loadComments
     } catch (e) {
       // Revert on error
-      AppLogging.signals('Clear vote error: $e');
+      AppLogging.social('Clear vote error: $e');
       if (mounted) {
         if (previousVote != null) {
           safeSetState(() {
@@ -377,7 +382,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
     final service = ref.read(signalServiceProvider);
     final profile = ref.read(userProfileProvider).value;
     if (!isAuthenticated) {
-      AppLogging.signals('🔒 Response blocked: user not authenticated');
+      AppLogging.social('🔒 Response blocked: user not authenticated');
       if (mounted) {
         showActionSnackBar(
           context,
@@ -454,24 +459,26 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
         }
       }
     } catch (e) {
-      AppLogging.signals('Content moderation check failed: $e');
+      AppLogging.social('Content moderation check failed: $e');
       // Continue with submission if moderation service fails
     }
 
     try {
-      AppLogging.signals(
+      AppLogging.social(
         '📝 SignalDetailScreen: Submitting response to signal ${widget.signal.id}'
         '${_replyingToId != null ? ' (reply to $_replyingToId)' : ''}',
       );
+      final myNodeNum = ref.read(myNodeNumProvider);
       final response = await service.createResponse(
         signalId: widget.signal.id,
         content: content,
         authorName: profile?.displayName,
         parentId: _replyingToId,
+        actorNodeNum: myNodeNum,
       );
 
       if (response != null) {
-        AppLogging.signals(
+        AppLogging.social(
           '📝 SignalDetailScreen: Response created: ${response.id}',
         );
         _replyController.clear();
@@ -486,7 +493,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
         // Reload responses to show the new one
         await _loadComments();
       } else {
-        AppLogging.signals(
+        AppLogging.social(
           '📝 SignalDetailScreen: Response creation returned null',
         );
         if (mounted) {
@@ -494,7 +501,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
         }
       }
     } catch (e) {
-      AppLogging.signals('Error creating response: $e');
+      AppLogging.social('Error creating response: $e');
       if (mounted) {
         showErrorSnackBar(context, 'Failed to send response');
       }

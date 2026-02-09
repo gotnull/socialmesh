@@ -294,6 +294,7 @@ Future<void> toggleFollow(WidgetRef ref, String targetUserId) async {
   try {
     final service = ref.read(socialServiceProvider);
     final currentUser = ref.read(currentUserProvider);
+    final myNodeNum = ref.read(myNodeNumProvider);
     final currentState = await ref.read(
       followStateProvider(targetUserId).future,
     );
@@ -332,7 +333,10 @@ Future<void> toggleFollow(WidgetRef ref, String targetUserId) async {
       await service.cancelFollowRequest(targetUserId);
     } else {
       // Follow or send request
-      final result = await service.followUser(targetUserId);
+      final result = await service.followUser(
+        targetUserId,
+        actorNodeNum: myNodeNum,
+      );
       // Only apply optimistic counts if it's an instant follow (not a request)
       if (result == 'followed') {
         if (targetProfile != null) {
@@ -400,6 +404,7 @@ final pendingFollowRequestsProvider =
 Future<void> acceptFollowRequest(WidgetRef ref, String requesterId) async {
   final service = ref.read(socialServiceProvider);
   final currentUser = ref.read(currentUserProvider);
+  final myNodeNum = ref.read(myNodeNumProvider);
 
   // Get profiles for optimistic updates
   final requesterProfile = ref
@@ -432,7 +437,7 @@ Future<void> acceptFollowRequest(WidgetRef ref, String requesterId) async {
   }
 
   try {
-    await service.acceptFollowRequest(requesterId);
+    await service.acceptFollowRequest(requesterId, actorNodeNum: myNodeNum);
   } catch (e) {
     // Rollback optimistic updates on failure
     if (requesterProfile != null) {
@@ -1478,12 +1483,14 @@ class CreatePostNotifier extends Notifier<CreatePostState> {
     state = const CreatePostState(isCreating: true);
 
     final service = ref.read(socialServiceProvider);
+    final myNodeNum = ref.read(myNodeNumProvider);
     try {
       final post = await service.createPost(
         content: content,
         imageUrls: mediaUrls,
         location: location,
         nodeId: nodeId,
+        actorNodeNum: myNodeNum,
       );
       state = CreatePostState(createdPost: post);
 
@@ -1543,10 +1550,12 @@ Future<Comment> addComment(
   String? parentId,
 }) async {
   final service = ref.read(socialServiceProvider);
+  final myNodeNum = ref.read(myNodeNumProvider);
   return service.createComment(
     postId: postId,
     content: content,
     parentId: parentId,
+    actorNodeNum: myNodeNum,
   );
 }
 
@@ -1580,12 +1589,13 @@ final likeStatusProvider = FutureProvider.autoDispose.family<bool, String>((
 /// Helper to toggle like status
 Future<void> toggleLike(WidgetRef ref, String postId) async {
   final service = ref.read(socialServiceProvider);
+  final myNodeNum = ref.read(myNodeNumProvider);
   final isLiked = await service.hasLikedPost(postId);
 
   if (isLiked) {
     await service.unlikePost(postId);
   } else {
-    await service.likePost(postId);
+    await service.likePost(postId, actorNodeNum: myNodeNum);
   }
 }
 

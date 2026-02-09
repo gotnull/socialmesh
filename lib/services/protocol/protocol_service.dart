@@ -1014,14 +1014,14 @@ class ProtocolService {
   /// Handle incoming signal packets (PRIVATE_APP portnum)
   void _handleSignalMessage(pb.MeshPacket packet, pb.Data data) {
     try {
-      AppLogging.signals(
+      AppLogging.social(
         'RX_SIGNAL_RAW packetId=${packet.id} from=${packet.from.toRadixString(16)} '
         'to=${packet.to.toRadixString(16)} bytes=${data.payload.length}',
       );
 
       // Ignore our own signals echoed back
       if (packet.from == _myNodeNum) {
-        AppLogging.signals('Ignoring own signal echo');
+        AppLogging.social('Ignoring own signal echo');
         return;
       }
 
@@ -1029,7 +1029,7 @@ class ProtocolService {
       // hopStart field is not available in current generated protobuf
       // Set to null until protobuf is updated to include hopStart
       final int? hopCount = null;
-      AppLogging.signals(
+      AppLogging.social(
         '📡 Signals: hopCount unavailable (hopStart not in generated proto) -> storing null',
       );
 
@@ -1040,13 +1040,13 @@ class ProtocolService {
         packetId: packet.id,
       );
 
-      AppLogging.signals(
+      AppLogging.social(
         'SIGNAL_PARSE_OK packetId=${signalPacket.packetId} '
         'signalId=${signalPacket.signalId ?? "none"} '
         'sender=${packet.from.toRadixString(16)} ttl=${signalPacket.ttlMinutes}',
       );
 
-      AppLogging.signals(
+      AppLogging.social(
         'Received mesh signal from !${packet.from.toRadixString(16)}: '
         '"${signalPacket.content.length > 30 ? '${signalPacket.content.substring(0, 30)}...' : signalPacket.content}" '
         '(ttl=${signalPacket.ttlMinutes}m)',
@@ -1054,7 +1054,7 @@ class ProtocolService {
 
       _signalController.add(signalPacket);
     } catch (e) {
-      AppLogging.signals('Failed to parse signal packet: $e');
+      AppLogging.social('Failed to parse signal packet: $e');
     }
   }
 
@@ -2779,7 +2779,7 @@ class ProtocolService {
 
       // Guard: Prevent oversized payloads that cause fragmentation or drops
       if (payload.length > _maxSignalPayloadBytes) {
-        AppLogging.signals(
+        AppLogging.social(
           'Signal payload too large: ${payload.length} bytes '
           '(max $_maxSignalPayloadBytes). Content: ${content.length} chars',
         );
@@ -2808,14 +2808,14 @@ class ProtocolService {
 
       await _transport.send(_prepareForSend(bytes));
 
-      AppLogging.signals(
+      AppLogging.social(
         'Broadcast signal: "${content.length > 30 ? '${content.substring(0, 30)}...' : content}" '
         '(ttl=${ttlMinutes}m, packetId=$packetId)',
       );
 
       return packetId;
     } catch (e) {
-      AppLogging.signals('Error broadcasting signal: $e');
+      AppLogging.social('Error broadcasting signal: $e');
       rethrow;
     }
   }

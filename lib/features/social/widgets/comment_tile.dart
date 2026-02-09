@@ -5,6 +5,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/verified_badge.dart';
+import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../services/social_service.dart';
@@ -233,9 +234,9 @@ class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton>
 
     safeSetState(() => _isLiking = true);
     try {
-      final socialService = ref.read(
-        socialServiceProvider,
-      ); // captured before await
+      // Capture providers before any await
+      final socialService = ref.read(socialServiceProvider);
+      final myNodeNum = ref.read(myNodeNumProvider);
       // Check current like status and toggle
       final currentlyLiked = await socialService.isCommentLiked(
         widget.commentId,
@@ -243,7 +244,10 @@ class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton>
       if (currentlyLiked) {
         await socialService.unlikeComment(widget.commentId);
       } else {
-        await socialService.likeComment(widget.commentId);
+        await socialService.likeComment(
+          widget.commentId,
+          actorNodeNum: myNodeNum,
+        );
       }
     } catch (e) {
       if (mounted) {

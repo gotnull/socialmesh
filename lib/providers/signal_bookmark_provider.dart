@@ -38,7 +38,7 @@ class SignalViewModeNotifier extends Notifier<SignalViewMode> {
         state = mode;
       }
     } catch (e) {
-      AppLogging.signals('Failed to load view mode: $e');
+      AppLogging.social('Failed to load view mode: $e');
     }
   }
 
@@ -48,7 +48,7 @@ class SignalViewModeNotifier extends Notifier<SignalViewMode> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefKey, mode.name);
     } catch (e) {
-      AppLogging.signals('Failed to save view mode: $e');
+      AppLogging.social('Failed to save view mode: $e');
     }
   }
 }
@@ -119,7 +119,7 @@ class SignalBookmarksNotifier extends AsyncNotifier<Set<String>> {
         state = AsyncData({...current, signalId});
       }
     } catch (e) {
-      AppLogging.signals('Failed to toggle bookmark: $e');
+      AppLogging.social('Failed to toggle bookmark: $e');
     }
   }
 
@@ -168,7 +168,7 @@ class HiddenSignalsNotifier extends Notifier<Set<String>> {
         state = stored.toSet();
       }
     } catch (e) {
-      AppLogging.signals('Failed to load hidden signals: $e');
+      AppLogging.social('Failed to load hidden signals: $e');
     }
   }
 
@@ -177,7 +177,7 @@ class HiddenSignalsNotifier extends Notifier<Set<String>> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList(_prefKey, state.toList());
     } catch (e) {
-      AppLogging.signals('Failed to save hidden signals: $e');
+      AppLogging.social('Failed to save hidden signals: $e');
     }
   }
 
@@ -228,7 +228,7 @@ Future<void> recordSignalView(String signalId, String? viewerId) async {
       'lastViewedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   } catch (e) {
-    AppLogging.signals('Failed to record signal view: $e');
+    AppLogging.social('Failed to record signal view: $e');
   }
 }
 

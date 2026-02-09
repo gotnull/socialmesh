@@ -31,7 +31,7 @@ class SocialService {
 
   /// Follow a user or send a follow request if the target account is private.
   /// Returns 'followed' if directly followed, 'requested' if request was sent.
-  Future<String> followUser(String targetUserId) async {
+  Future<String> followUser(String targetUserId, {int? actorNodeNum}) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
       throw StateError('Must be signed in to follow users');
@@ -46,7 +46,7 @@ class SocialService {
 
     if (isPrivate) {
       // Create a follow request instead of directly following
-      await _createFollowRequest(targetUserId);
+      await _createFollowRequest(targetUserId, actorNodeNum: actorNodeNum);
       return 'requested';
     }
 
@@ -70,7 +70,10 @@ class SocialService {
         firestore: _firestore,
         auth: _auth,
       );
-      await activityService.createFollowActivity(followedUserId: targetUserId);
+      await activityService.createFollowActivity(
+        followedUserId: targetUserId,
+        actorNodeNum: actorNodeNum,
+      );
     } catch (e) {
       // Don't fail the follow if activity creation fails
       AppLogging.social('Failed to create follow activity: $e');
@@ -80,7 +83,10 @@ class SocialService {
   }
 
   /// Create a follow request for a private account.
-  Future<void> _createFollowRequest(String targetUserId) async {
+  Future<void> _createFollowRequest(
+    String targetUserId, {
+    int? actorNodeNum,
+  }) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
       throw StateError('Must be signed in to send follow requests');
@@ -108,6 +114,7 @@ class SocialService {
       );
       await activityService.createFollowRequestActivity(
         targetUserId: targetUserId,
+        actorNodeNum: actorNodeNum,
       );
     } catch (e) {
       AppLogging.social('Failed to create follow request activity: $e');
@@ -132,7 +139,10 @@ class SocialService {
 
   /// Accept a follow request (creates follow and deletes request).
   /// Creates activity for the requester to notify them their request was accepted.
-  Future<void> acceptFollowRequest(String requesterId) async {
+  Future<void> acceptFollowRequest(
+    String requesterId, {
+    int? actorNodeNum,
+  }) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
       throw StateError('Must be signed in to accept follow requests');
@@ -168,7 +178,10 @@ class SocialService {
         firestore: _firestore,
         auth: _auth,
       );
-      await activityService.createFollowActivity(followedUserId: requesterId);
+      await activityService.createFollowActivity(
+        followedUserId: requesterId,
+        actorNodeNum: actorNodeNum,
+      );
     } catch (e) {
       // Don't fail the accept if activity creation fails
       AppLogging.social('Failed to create follow activity on accept: $e');
@@ -775,6 +788,7 @@ class SocialService {
     PostVisibility visibility = PostVisibility.public,
     PostLocation? location,
     String? nodeId,
+    int? actorNodeNum,
   }) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
@@ -820,7 +834,7 @@ class SocialService {
       firestore: _firestore,
       auth: _auth,
     );
-    await _processMentions(content, post.id, activityService);
+    await _processMentions(content, post.id, activityService, actorNodeNum);
 
     return post;
   }
@@ -1065,6 +1079,7 @@ class SocialService {
     required String postId,
     required String content,
     String? parentId,
+    int? actorNodeNum,
   }) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
@@ -1105,6 +1120,7 @@ class SocialService {
               postId: postId,
               postOwnerId: postOwnerId,
               commentPreview: preview,
+              actorNodeNum: actorNodeNum,
             );
           }
         }
@@ -1127,6 +1143,7 @@ class SocialService {
               postId: postId,
               originalCommentAuthorId: originalAuthorId,
               replyPreview: preview,
+              actorNodeNum: actorNodeNum,
             );
           }
         }
@@ -1136,7 +1153,7 @@ class SocialService {
     }
 
     // Parse and notify mentions in the comment
-    await _processMentions(content, postId, activityService);
+    await _processMentions(content, postId, activityService, actorNodeNum);
 
     return comment;
   }
@@ -1146,6 +1163,7 @@ class SocialService {
     String content,
     String postId,
     SocialActivityService activityService,
+    int? actorNodeNum,
   ) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) return;
@@ -1179,6 +1197,7 @@ class SocialService {
               mentionedUserId: mentionedUserId,
               contentId: postId,
               textContent: preview,
+              actorNodeNum: actorNodeNum,
             );
           }
         }
@@ -1278,7 +1297,7 @@ class SocialService {
 
   /// Like a post. Creates a like document with composite ID.
   /// Also creates an activity for the post owner.
-  Future<void> likePost(String postId) async {
+  Future<void> likePost(String postId, {int? actorNodeNum}) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
       throw StateError('Must be signed in to like posts');
@@ -1318,12 +1337,14 @@ class SocialService {
               signalId: postId,
               signalOwnerId: postOwnerId,
               signalThumbnailUrl: thumbnailUrl,
+              actorNodeNum: actorNodeNum,
             );
           } else {
             await activityService.createPostLikeActivity(
               postId: postId,
               postOwnerId: postOwnerId,
               postThumbnailUrl: thumbnailUrl,
+              actorNodeNum: actorNodeNum,
             );
           }
         }
@@ -1356,7 +1377,7 @@ class SocialService {
   }
 
   /// Like a comment. Creates a like document and activity.
-  Future<void> likeComment(String commentId) async {
+  Future<void> likeComment(String commentId, {int? actorNodeNum}) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
       throw StateError('Must be signed in to like comments');
@@ -1391,6 +1412,7 @@ class SocialService {
           await activityService.createCommentLikeActivity(
             postId: postId,
             commentAuthorId: commentAuthorId,
+            actorNodeNum: actorNodeNum,
           );
         }
       }

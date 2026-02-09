@@ -716,8 +716,9 @@ class _CommentTileState extends ConsumerState<_CommentTile>
     final currentUser = ref.read(currentUserProvider);
     if (currentUser == null) return;
 
-    // Capture provider before any await
+    // Capture providers before any await
     final socialService = ref.read(socialServiceProvider);
+    final myNodeNum = ref.read(myNodeNumProvider);
 
     safeSetState(() {
       _isLiking = true;
@@ -733,7 +734,10 @@ class _CommentTileState extends ConsumerState<_CommentTile>
 
     try {
       if (_isLiked) {
-        await socialService.likeComment(widget.comment.comment.id);
+        await socialService.likeComment(
+          widget.comment.comment.id,
+          actorNodeNum: myNodeNum,
+        );
       } else {
         await socialService.unlikeComment(widget.comment.comment.id);
       }

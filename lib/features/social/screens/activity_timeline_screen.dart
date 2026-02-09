@@ -10,7 +10,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/section_header.dart';
-import '../../../core/widgets/user_avatar.dart';
+
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
 import '../../../models/social_activity.dart';
@@ -742,11 +742,12 @@ class _TimelineActivityTile extends ConsumerWidget {
 
   /// Resolve the actor's mesh node number from the best available source.
   ///
-  /// Identical pattern to signal card's `isMeshSignal` / `meshNodeId` check:
-  /// if a node number exists, use SigilAvatar + resolveMeshNodeName.
-  /// If not, use UserAvatar + snapshot displayName. Never hash anything.
+  /// Same rule as signal card, signal detail, and presence feed:
+  ///   nodeNum exists  → SigilAvatar + resolveMeshNodeName
+  ///   nodeNum absent  → generic person icon + 'Someone'
+  ///   NEVER UserAvatar with profile avatar/displayName.
   ///
-  /// Resolution chain for nodeNum:
+  /// Resolution chain (all synchronous except step 3):
   /// 1. Baked-in snapshot nodeNum (activities created after the fix)
   /// 2. Local user profile primaryNodeId (actor is current user)
   /// 3. Cloud profile lookup (actor is another user)
@@ -774,17 +775,17 @@ class _TimelineActivityTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Resolve mesh identity — SAME pattern as signal card:
-    // isMeshSignal (has nodeNum) → SigilAvatar + resolveMeshNodeName
-    // !isMeshSignal             → UserAvatar  + snapshot displayName
-    // NEVER hash actorId to fake a sigil. NEVER show displayName when
-    // a mesh identity exists.
+    // Resolve mesh identity — identical rule to signal card, signal detail
+    // response tile, and presence feed avatar:
+    //   nodeNum present → SigilAvatar + resolveMeshNodeName
+    //   nodeNum absent  → generic person icon + 'Someone'
+    // NEVER show UserAvatar with profile avatar/displayName. NEVER.
     final meshNodeNum = _resolveActorNodeNum(ref);
     final isMeshActor = meshNodeNum != null;
 
     final actorName = isMeshActor
         ? resolveMeshNodeName(ref, meshNodeNum)
-        : activity.actorSnapshot?.displayName ?? 'Someone';
+        : 'Someone';
 
     return Dismissible(
       key: Key(activity.id),
@@ -832,8 +833,11 @@ class _TimelineActivityTile extends ConsumerWidget {
               const SizedBox(width: 12),
 
               // Avatar — mesh actors get SigilAvatar (tappable → NodeDex),
-              // non-mesh actors get UserAvatar (with profile photo if available).
-              // Mirrors signal card exactly.
+              // no-nodeNum actors get a generic person icon.
+              // Mirrors signal detail _ResponseTile exactly:
+              //   nodeNum → SigilAvatar
+              //   null    → generic person icon
+              // NEVER UserAvatar with profile avatar/displayName.
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: GestureDetector(
@@ -852,11 +856,18 @@ class _TimelineActivityTile extends ConsumerWidget {
                       if (isMeshActor)
                         SigilAvatar(nodeNum: meshNodeNum, size: 40)
                       else
-                        UserAvatar(
-                          imageUrl: activity.actorSnapshot?.avatarUrl,
-                          size: 40,
-                          foregroundColor: context.accentColor,
-                          fallbackIcon: Icons.person,
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: context.accentColor.withValues(alpha: 0.15),
+                          ),
+                          child: Icon(
+                            Icons.person_rounded,
+                            size: 24,
+                            color: context.accentColor.withValues(alpha: 0.7),
+                          ),
                         ),
                       // Unread indicator
                       if (!activity.isRead)

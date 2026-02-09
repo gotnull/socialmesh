@@ -506,11 +506,11 @@ class _AnimatedImagePageState extends State<_AnimatedImagePage>
               : <String>[]);
 
     // DEBUG: Log what we're actually seeing
-    AppLogging.signals(
+    AppLogging.social(
       'GALLERY_DEBUG: cloudUrls.length=${cloudUrls.length}, localPaths.length=${localPaths.length}, total=${cloudUrls.length + localPaths.length}',
     );
-    AppLogging.signals('GALLERY_DEBUG: cloudUrls=$cloudUrls');
-    AppLogging.signals('GALLERY_DEBUG: localPaths=$localPaths');
+    AppLogging.social('GALLERY_DEBUG: cloudUrls=$cloudUrls');
+    AppLogging.social('GALLERY_DEBUG: localPaths=$localPaths');
 
     return [...cloudUrls, ...localPaths];
   }
@@ -561,7 +561,7 @@ class _AnimatedImagePageState extends State<_AnimatedImagePage>
               if (metrics.pixels >= metrics.maxScrollExtent &&
                   notification.dragDetails != null &&
                   (notification.dragDetails!.delta.dx < -5)) {
-                AppLogging.signals(
+                AppLogging.social(
                   'BOUNDARY_DEBUG: At end, swiping left, going to NEXT signal',
                 );
                 widget.onRequestNextSignal();
@@ -572,7 +572,7 @@ class _AnimatedImagePageState extends State<_AnimatedImagePage>
               if (metrics.pixels <= metrics.minScrollExtent &&
                   notification.dragDetails != null &&
                   (notification.dragDetails!.delta.dx > 5)) {
-                AppLogging.signals(
+                AppLogging.social(
                   'BOUNDARY_DEBUG: At start, swiping right, going to PREVIOUS signal',
                 );
                 widget.onRequestPreviousSignal();

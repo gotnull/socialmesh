@@ -191,7 +191,7 @@ class _SnapEffectScreenState extends State<SnapEffectScreen> {
       randomDislocationOffset: const Offset(40, 20),
       numberOfBuckets: 24,
       onSnapped: () {
-        AppLogging.signals('Card ${card.title} snapped!');
+        AppLogging.social('Card ${card.title} snapped!');
       },
       child: GestureDetector(
         onTap: () => _snapCard(index),

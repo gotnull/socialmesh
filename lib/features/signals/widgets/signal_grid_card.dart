@@ -44,7 +44,7 @@ class SignalGridCard extends ConsumerWidget {
         signal.mediaUrls.isNotEmpty || signal.imageLocalPath != null;
     final hasLocation = signal.location != null;
 
-    AppLogging.signals(
+    AppLogging.social(
       'SignalGridCard: id=${signal.id}, authorId=${signal.authorId}, isMeshSignal=$isMeshSignal, hasAuthorSnapshot=${signal.authorSnapshot != null}',
     );
 

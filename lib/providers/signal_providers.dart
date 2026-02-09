@@ -92,7 +92,7 @@ class SignalFeedState {
     final existed = newMap.containsKey(signal.id);
 
     if (existed) {
-      AppLogging.signals(
+      AppLogging.social(
         '📡 Signals: ⚠️ Duplicate insert prevented for ${signal.id} (source=$source) - updating instead',
       );
     }
@@ -114,7 +114,7 @@ class SignalFeedState {
     final newMap = <String, Post>{};
     for (final signal in signals) {
       if (newMap.containsKey(signal.id)) {
-        AppLogging.signals(
+        AppLogging.social(
           '📡 Signals: ⚠️ Duplicate in batch for ${signal.id} - keeping latest',
         );
       }
@@ -140,9 +140,7 @@ List<Post> sortSignalsForFeed(List<Post> signals, int? myNodeNum) {
     final bHop = b.hopCount;
     if (aHop != null && bHop != null) {
       if (aHop != bHop) {
-        AppLogging.signals(
-          '📡 Signals: Sorting by hopCount (a=$aHop, b=$bHop)',
-        );
+        AppLogging.social('📡 Signals: Sorting by hopCount (a=$aHop, b=$bHop)');
         return aHop.compareTo(bHop); // ascending
       }
     } else if (aHop != null) {
@@ -251,7 +249,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
                 presenceService.shouldBroadcast(myPresence)) {
               presenceInfo = myPresence.toJson();
               await presenceService.recordBroadcast(myPresence);
-              AppLogging.signals(
+              AppLogging.social(
                 'Piggybacking presence on signal: intent=${myPresence.intent.name}',
               );
             }
@@ -267,7 +265,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
             );
             return packetId;
           } catch (e) {
-            AppLogging.signals('Mesh broadcast failed: $e');
+            AppLogging.social('Mesh broadcast failed: $e');
             return null;
           }
         };
@@ -277,31 +275,30 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     _signalSubscription = protocol.signalStream.listen(
       _handleIncomingMeshSignal,
       onError: (e) {
-        AppLogging.signals('Signal stream error: $e');
+        AppLogging.social('Signal stream error: $e');
       },
     );
 
     // Subscribe to remote deletions (signal deleted by author on another device)
-    _remoteDeleteSubscription?.cancel;
-    ();
+    _remoteDeleteSubscription?.cancel();
     _remoteDeleteSubscription = service.onRemoteDelete.listen(
       (signalId) {
-        AppLogging.signals(
+        AppLogging.social(
           'Remote deletion received for signal: $signalId - removing from feed',
         );
         state = state.withoutSignal(signalId);
       },
       onError: (e) {
-        AppLogging.signals('Remote delete stream error: $e');
+        AppLogging.social('Remote delete stream error: $e');
       },
     );
 
-    AppLogging.signals('Mesh integration wired');
+    AppLogging.social('Mesh integration wired');
   }
 
   /// Handle incoming mesh signal packet from ProtocolService.
   Future<void> _handleIncomingMeshSignal(MeshSignalPacket packet) async {
-    AppLogging.signals(
+    AppLogging.social(
       'Processing incoming mesh signal from !${packet.senderNodeId.toRadixString(16)}'
       ' (id=${packet.signalId ?? "none"}, packetId=${packet.packetId})',
     );
@@ -312,7 +309,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       final extendedInfo = ExtendedPresenceInfo.fromJson(packet.presenceInfo);
       if (extendedInfo.hasData) {
         presenceService.handleRemotePresence(packet.senderNodeId, extendedInfo);
-        AppLogging.signals(
+        AppLogging.social(
           'Cached extended presence for !${packet.senderNodeId.toRadixString(16)}: '
           'intent=${extendedInfo.intent.name}, status=${extendedInfo.shortStatus}',
         );
@@ -346,7 +343,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     if (!_isObserving) {
       WidgetsBinding.instance.addObserver(this);
       _isObserving = true;
-      AppLogging.signals('Started app lifecycle observer');
+      AppLogging.social('Started app lifecycle observer');
     }
   }
 
@@ -354,16 +351,14 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     if (_isObserving) {
       WidgetsBinding.instance.removeObserver(this);
       _isObserving = false;
-      AppLogging.signals('Stopped app lifecycle observer');
+      AppLogging.social('Stopped app lifecycle observer');
     }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      AppLogging.signals(
-        'App resumed - running signal cleanup and cloud retry',
-      );
+      AppLogging.social('App resumed - running signal cleanup and cloud retry');
       _cleanupExpired();
       _retryCloudLookups();
       refresh(silent: true);
@@ -384,7 +379,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     _cleanupTimer?.cancel();
     // Run cleanup every minute
     _cleanupTimer = Timer.periodic(const Duration(minutes: 1), (_) {
-      AppLogging.signals('Periodic cleanup triggered');
+      AppLogging.social('Periodic cleanup triggered');
       _cleanupExpired();
     });
   }
@@ -393,7 +388,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     _refreshTimer?.cancel();
     // Auto-refresh every 30 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      AppLogging.signals('PERIODIC_REFRESH triggered');
+      AppLogging.social('PERIODIC_REFRESH triggered');
       refresh(silent: true);
     });
   }
@@ -434,7 +429,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         ..addAll(newlyExpiredIds);
       state = state.copyWith(fadingSignalIds: newFading, lastRefresh: now);
 
-      AppLogging.signals(
+      AppLogging.social(
         'Countdown tick: starting fade-out for ${newlyExpiredIds.length} expired signals',
       );
 
@@ -468,7 +463,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     newState = newState.withoutSignal(signalId);
     state = newState;
 
-    AppLogging.signals('Fade-out complete: removed signal $signalId');
+    AppLogging.social('Fade-out complete: removed signal $signalId');
   }
 
   /// Clear the "newly added" flag for a signal after its entrance animation.
@@ -494,11 +489,11 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       // Sort signals
       final sorted = _sortSignals(signals);
 
-      AppLogging.signals('Feed refreshed: ${sorted.length} active signals');
+      AppLogging.social('Feed refreshed: ${sorted.length} active signals');
 
       // Diagnostic: log DB vs in-memory counts and any removals
       final inMemoryCount = state.signals.length;
-      AppLogging.signals(
+      AppLogging.social(
         'Feed diagnostics: dbCount=${sorted.length} inMemoryCount=$inMemoryCount',
       );
       // Detect signals present in memory but missing in DB
@@ -508,7 +503,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
           .toList();
       if (missingInDb.isNotEmpty) {
         for (final id in missingInDb) {
-          AppLogging.signals('REFRESH_REMOVE signalId=$id reason=not_in_db');
+          AppLogging.social('REFRESH_REMOVE signalId=$id reason=not_in_db');
         }
       }
 
@@ -520,7 +515,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
             : (signal.postMode != PostMode.signal)
             ? 'post_mode=${signal.postMode.name}'
             : 'filtered';
-        AppLogging.signals(
+        AppLogging.social(
           'REFRESH_EXCLUDE signalId=${signal.id} reason=$reason',
         );
       }
@@ -530,7 +525,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
           .withSignals(sorted)
           .copyWith(isLoading: false, lastRefresh: DateTime.now());
 
-      AppLogging.signals(
+      AppLogging.social(
         'Feed refresh complete: inMemory=${state.signals.length}',
       );
 
@@ -544,7 +539,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         }
       }
     } catch (e) {
-      AppLogging.signals('Feed refresh error: $e');
+      AppLogging.social('Feed refresh error: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -568,7 +563,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     final removed = await service.cleanupExpiredSignals();
 
     if (removed > 0) {
-      AppLogging.signals('Expired $removed signals, refreshing feed');
+      AppLogging.social('Expired $removed signals, refreshing feed');
       await refresh(silent: true);
     }
   }
@@ -596,7 +591,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       radiusMeters: settings.signalLocationRadiusMeters,
     );
 
-    AppLogging.signals(
+    AppLogging.social(
       'Creating new signal: ttl=${ttlMinutes}m, hasLocation=${safeLocation != null}, '
       'imageCount=${imageLocalPaths?.length ?? 0}, canUseCloud=$canUseCloud '
       'meshOnlyDebug=$meshOnlyDebug',
@@ -633,10 +628,10 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         newlyAddedSignalIds: {...newState.newlyAddedSignalIds, signal.id},
       );
 
-      AppLogging.signals('Signal created successfully: ${signal.id}');
+      AppLogging.social('Signal created successfully: ${signal.id}');
       return signal;
     } catch (e) {
-      AppLogging.signals('Failed to create signal: $e');
+      AppLogging.social('Failed to create signal: $e');
       return null;
     }
   }
@@ -657,13 +652,13 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
 
     // Check if signal already exists in state (early dedupe)
     if (signalId != null && state.hasSignal(signalId)) {
-      AppLogging.signals(
+      AppLogging.social(
         '📡 Signals: ⚠️ Duplicate insert prevented for $signalId (source=mesh) - already in state',
       );
       return;
     }
 
-    AppLogging.signals(
+    AppLogging.social(
       'Processing mesh signal from node !${senderNodeId.toRadixString(16)}'
       ' (id=${signalId ?? "none"}, packetId=${packetId ?? "none"})',
     );
@@ -685,7 +680,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       // If null, it was ignored or a duplicate in DB
       if (signal == null) {
         if (signalId != null && signalId.isNotEmpty) {
-          AppLogging.signals(
+          AppLogging.social(
             '📡 Signals: ⚠️ Duplicate insert prevented for $signalId (source=db)',
           );
         }
@@ -695,12 +690,12 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       // Add to state using map-based upsert
       state = state.withSignal(signal, source: 'mesh');
 
-      AppLogging.signals('Mesh signal added to feed: ${signal.id}');
-      AppLogging.signals(
+      AppLogging.social('Mesh signal added to feed: ${signal.id}');
+      AppLogging.social(
         'FEED_ADD_OK signalId=${signal.id} feedCount=${state.signals.length}',
       );
     } catch (e) {
-      AppLogging.signals('Failed to add mesh signal: $e');
+      AppLogging.social('Failed to add mesh signal: $e');
     }
   }
 
@@ -708,14 +703,14 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
   Future<void> deleteSignal(String signalId) async {
     final service = ref.read(signalServiceProvider);
 
-    AppLogging.signals('Deleting signal: $signalId');
+    AppLogging.social('Deleting signal: $signalId');
 
     try {
       await service.deleteSignal(signalId);
       state = state.withoutSignal(signalId);
-      AppLogging.signals('Signal deleted successfully');
+      AppLogging.social('Signal deleted successfully');
     } catch (e) {
-      AppLogging.signals('Failed to delete signal: $e');
+      AppLogging.social('Failed to delete signal: $e');
     }
   }
 
@@ -723,7 +718,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
   Future<String?> uploadImage(String signalId, String localPath) async {
     final service = ref.read(signalServiceProvider);
 
-    AppLogging.signals('Uploading image for signal: $signalId');
+    AppLogging.social('Uploading image for signal: $signalId');
 
     try {
       final url = await service.uploadSignalImage(signalId, localPath);
@@ -737,11 +732,11 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
           );
           state = state.withSignal(updated, source: 'upload');
         }
-        AppLogging.signals('Image uploaded successfully: $url');
+        AppLogging.social('Image uploaded successfully: $url');
       }
       return url;
     } catch (e) {
-      AppLogging.signals('Failed to upload image: $e');
+      AppLogging.social('Failed to upload image: $e');
       return null;
     }
   }

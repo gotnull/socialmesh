@@ -148,7 +148,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen>
         .toSet();
 
     if (ghostIds.isNotEmpty) {
-      AppLogging.signals('Cleaning up ${ghostIds.length} ghost hidden signals');
+      AppLogging.social('Cleaning up ${ghostIds.length} ghost hidden signals');
       final notifier = ref.read(hiddenSignalsProvider.notifier);
       for (final ghostId in ghostIds) {
         await notifier.unhideSignal(ghostId);
@@ -175,14 +175,14 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen>
   void _openCreateSignal() {
     final authState = ref.read(authStateProvider);
     if (authState.value == null) {
-      AppLogging.signals('ℹ️ Go Active: unauthenticated session (mesh-only)');
+      AppLogging.social('ℹ️ Go Active: unauthenticated session (mesh-only)');
     }
 
     // Connection gating check
     final connectivity = ref.read(signalConnectivityProvider);
     final isDeviceConnected = connectivity.isBleConnected;
     if (!isDeviceConnected) {
-      AppLogging.signals('🚫 Go Active blocked: device not connected');
+      AppLogging.social('🚫 Go Active blocked: device not connected');
       showErrorSnackBar(context, 'Connect to a device to go active');
       return;
     }
@@ -750,7 +750,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen>
     bool isConnected,
   ) {
     if (canGoActive && !_goActiveWasEnabled) {
-      AppLogging.signals(
+      AppLogging.social(
         'Go Active became enabled (connected=$isConnected, signedIn=$isSignedIn)',
       );
       _goActiveWasEnabled = true;
@@ -1010,7 +1010,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen>
                             );
                             final isLastHidden = currentHidden.length == 1;
 
-                            AppLogging.signals(
+                            AppLogging.social(
                               'Unhiding signal, was last hidden: $isLastHidden (count: ${currentHidden.length})',
                             );
 
@@ -1023,11 +1023,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen>
                             showGlobalSuccessSnackBar('Signal restored');
 
                             if (isLastHidden) {
-                              AppLogging.signals(
-                                'Switching filter back to All',
-                              );
+                              AppLogging.social('Switching filter back to All');
                               setState(() => _activeFilter = SignalFilter.all);
-                              AppLogging.signals(
+                              AppLogging.social(
                                 'Filter is now: $_activeFilter',
                               );
                             }
@@ -1211,7 +1209,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen>
         try {
           (mapState as dynamic).focusOnSignal(signal);
         } catch (e) {
-          AppLogging.signals('Failed to focus map on signal: $e');
+          AppLogging.social('Failed to focus map on signal: $e');
         }
       }
     });
@@ -2252,8 +2250,6 @@ class _ActiveAuthorsHeaderState extends State<_ActiveAuthorsHeader>
                                 child: _AuthorAvatar(
                                   author: displayAuthors[i],
                                   size: 36,
-                                  borderColor: context.card,
-                                  accentColor: accentColor,
                                 ),
                               ),
                           ],
@@ -2331,22 +2327,15 @@ class _ActiveAuthorsHeaderState extends State<_ActiveAuthorsHeader>
 
 /// Individual author avatar with glow effect
 class _AuthorAvatar extends StatelessWidget {
-  const _AuthorAvatar({
-    required this.author,
-    required this.size,
-    required this.borderColor,
-    required this.accentColor,
-  });
+  const _AuthorAvatar({required this.author, required this.size});
 
   final _AuthorInfo author;
   final double size;
-  final Color borderColor;
-  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
-    // Use Sigil for any author with a meshNodeId — mirrors the signal card
-    // behaviour so the banner matches what receivers see on their devices.
+    // Mesh author — bare SigilAvatar, same as signal card and activity tile.
+    // No extra Container, no foreign border, no accentColor glow.
     if (author.meshNodeId != null) {
       return GestureDetector(
         onTap: () {
@@ -2356,73 +2345,23 @@ class _AuthorAvatar extends StatelessWidget {
             ),
           );
         },
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: borderColor, width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: accentColor.withValues(alpha: 0.3),
-                blurRadius: 4,
-                spreadRadius: 0,
-              ),
-            ],
-          ),
-          child: ClipOval(
-            child: SigilAvatar(nodeNum: author.meshNodeId!, size: size),
-          ),
-        ),
+        child: SigilAvatar(nodeNum: author.meshNodeId!, size: size),
       );
     }
 
-    // Cloud author fallback
+    // No mesh identity — generic person icon, never profile avatar/displayName.
+    // Same pattern as signal detail _ResponseTile and activity timeline.
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: borderColor, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withValues(alpha: 0.3),
-            blurRadius: 4,
-            spreadRadius: 0,
-          ),
-        ],
+        color: context.accentColor.withValues(alpha: 0.15),
       ),
-      child: ClipOval(
-        child: author.avatarUrl != null
-            ? Image.network(
-                author.avatarUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _buildPlaceholder(context),
-              )
-            : _buildPlaceholder(context),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholder(BuildContext context) {
-    // Generate color from author ID
-    final hash = author.authorId.hashCode;
-    final hue = (hash % 360).toDouble();
-    final color = HSLColor.fromAHSL(1, hue, 0.6, 0.4).toColor();
-
-    return Container(
-      color: color,
-      child: Center(
-        child: Text(
-          author.displayName.isNotEmpty
-              ? author.displayName[0].toUpperCase()
-              : '?',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: size * 0.4,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+      child: Icon(
+        Icons.person_rounded,
+        size: size * 0.6,
+        color: context.accentColor.withValues(alpha: 0.7),
       ),
     );
   }

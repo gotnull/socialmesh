@@ -10,6 +10,7 @@ import 'package:socialmesh/core/logging.dart';
 import '../models/social.dart';
 import '../models/story.dart';
 import '../services/story_service.dart';
+import 'app_providers.dart';
 import 'auth_providers.dart';
 
 // ===========================================================================
@@ -332,13 +333,14 @@ final storyLikesProvider = FutureProvider.autoDispose
 /// Like or unlike a story.
 Future<bool> toggleStoryLike(WidgetRef ref, String storyId) async {
   final service = ref.read(storyServiceProvider);
+  final myNodeNum = ref.read(myNodeNumProvider);
   final isLiked = await service.hasLikedStory(storyId);
 
   if (isLiked) {
     await service.unlikeStory(storyId);
     return false;
   } else {
-    await service.likeStory(storyId);
+    await service.likeStory(storyId, actorNodeNum: myNodeNum);
     return true;
   }
 }

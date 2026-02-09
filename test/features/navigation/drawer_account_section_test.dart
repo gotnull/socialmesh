@@ -350,9 +350,9 @@ void main() {
   });
 
   // -----------------------------------------------------------------------
-  // No fake sigils from hashed IDs
+  // Activity timeline identity rules (must match signal card pattern)
   // -----------------------------------------------------------------------
-  group('No fake sigils from hashed IDs', () {
+  group('Activity timeline identity — must match signal card pattern', () {
     test('actorId.hashCode must never be used for SigilAvatar', () {
       if (!activityTimelineFile.existsSync()) return;
 
@@ -422,6 +422,154 @@ void main() {
                 'Line ${i + 1}: "${sourceLines[i].trim()}"',
           );
         }
+      },
+    );
+
+    test('must NOT import user_avatar.dart', () {
+      if (!activityTimelineFile.existsSync()) return;
+
+      final source = activityTimelineFile.readAsStringSync();
+
+      expect(
+        source.contains('user_avatar.dart'),
+        false,
+        reason:
+            'activity_timeline_screen.dart must NOT import user_avatar.dart — '
+            'UserAvatar with profile avatar/displayName is forbidden. '
+            'Use SigilAvatar for mesh actors and a generic person icon '
+            'for unknown actors (same as signal detail _ResponseTile)',
+      );
+    });
+
+    test('must NOT use UserAvatar widget in code', () {
+      if (!activityTimelineFile.existsSync()) return;
+
+      final sourceLines = activityTimelineFile.readAsStringSync().split('\n');
+      final codeLines = stripComments(sourceLines);
+
+      for (var i = 0; i < codeLines.length; i++) {
+        expect(
+          codeLines[i].contains('UserAvatar'),
+          false,
+          reason:
+              'UserAvatar must NEVER appear in activity timeline code — '
+              'profile-specific avatar is forbidden. '
+              'Line ${i + 1}: "${sourceLines[i].trim()}"',
+        );
+      }
+    });
+
+    test('must NOT reference actorSnapshot.avatarUrl in code', () {
+      if (!activityTimelineFile.existsSync()) return;
+
+      final sourceLines = activityTimelineFile.readAsStringSync().split('\n');
+      final codeLines = stripComments(sourceLines);
+
+      for (var i = 0; i < codeLines.length; i++) {
+        final line = codeLines[i];
+        if (line.contains('actorSnapshot') && line.contains('avatarUrl')) {
+          fail(
+            'actorSnapshot.avatarUrl must NEVER be used for display — '
+            'profile-specific avatar is forbidden in activity timeline. '
+            'Line ${i + 1}: "${sourceLines[i].trim()}"',
+          );
+        }
+      }
+    });
+
+    test(
+      'must NOT use actorSnapshot.displayName as fallback actor name in code',
+      () {
+        if (!activityTimelineFile.existsSync()) return;
+
+        final sourceLines = activityTimelineFile.readAsStringSync().split('\n');
+        final codeLines = stripComments(sourceLines);
+        final codeSource = codeLines.join('\n');
+
+        // The pattern "actorSnapshot?.displayName ?? 'Someone'" or any
+        // variant that uses the snapshot's displayName as the rendered
+        // actor name is forbidden. Name must come from
+        // resolveMeshNodeName() or be 'Someone'.
+        final displayNameFallback = RegExp(r'actorSnapshot\??\.\s*displayName');
+
+        // Only flag if it appears in a context that assigns to actorName
+        // or is used in a Text widget / TextSpan. References in doc
+        // comments are fine (already stripped).
+        final matches = displayNameFallback.allMatches(codeSource);
+        for (final match in matches) {
+          // Get surrounding context (100 chars each side)
+          final start = (match.start - 100).clamp(0, codeSource.length);
+          final end = (match.end + 100).clamp(0, codeSource.length);
+          final context = codeSource.substring(start, end);
+
+          // If it is used for display (actorName assignment, Text widget),
+          // fail. Allow it in description getter or model code (not in
+          // this file anyway).
+          fail(
+            'actorSnapshot.displayName must NOT be used as actor name '
+            'in activity timeline — only resolveMeshNodeName() or '
+            '"Someone" are allowed. '
+            'Context: "...${context.replaceAll('\n', ' ')}..."',
+          );
+        }
+      },
+    );
+
+    test(
+      'non-mesh fallback must use generic person icon, not profile data',
+      () {
+        if (!activityTimelineFile.existsSync()) return;
+
+        final sourceLines = activityTimelineFile.readAsStringSync().split('\n');
+        final codeLines = stripComments(sourceLines);
+        final codeSource = codeLines.join('\n');
+
+        // The non-mesh fallback must use Icons.person_rounded (same as
+        // signal detail _ResponseTile), not UserAvatar or Image.network
+        // with profile URLs.
+        //
+        // Find the else branch after the SigilAvatar and verify it uses
+        // a generic icon.
+        final hasSigilAvatar = codeSource.contains('SigilAvatar');
+        expect(
+          hasSigilAvatar,
+          true,
+          reason: 'Activity tile must use SigilAvatar for mesh actors',
+        );
+
+        // After SigilAvatar there should be an else branch with
+        // Icons.person_rounded — matching signal detail _ResponseTile.
+        expect(
+          codeSource.contains('Icons.person_rounded'),
+          true,
+          reason:
+              'Non-mesh fallback must use Icons.person_rounded (generic '
+              'person icon) — same as signal detail _ResponseTile. '
+              'NEVER UserAvatar with profile-specific data.',
+        );
+      },
+    );
+
+    test(
+      'actor name for non-mesh actors must be "Someone", not displayName',
+      () {
+        if (!activityTimelineFile.existsSync()) return;
+
+        final sourceLines = activityTimelineFile.readAsStringSync().split('\n');
+        final codeLines = stripComments(sourceLines);
+        final codeSource = codeLines.join('\n');
+
+        // The actorName assignment for non-mesh actors must be a static
+        // string like 'Someone', not derived from actorSnapshot.
+        // Pattern: isMeshActor ? resolveMeshNodeName(...) : 'Someone'
+        final correctPattern = RegExp(r":\s*'Someone'");
+        expect(
+          correctPattern.hasMatch(codeSource),
+          true,
+          reason:
+              'Non-mesh actor name must be the literal string "Someone" — '
+              'never actorSnapshot.displayName or any profile-specific name',
+        );
       },
     );
   });
@@ -505,5 +653,474 @@ void main() {
             'when profile is null',
       );
     });
+  });
+
+  // -----------------------------------------------------------------------
+  // Guaranteed nodeNum baking at activity creation
+  // -----------------------------------------------------------------------
+  group('Activity creation — guaranteed nodeNum baking', () {
+    late String activityServiceSource;
+    late String signalServiceSource;
+    late String socialServiceSource;
+    late String storyServiceSource;
+
+    final activityServiceFile = File(
+      'lib/services/social_activity_service.dart',
+    );
+    final signalServiceFile = File('lib/services/signal_service.dart');
+    final socialServiceFile = File('lib/services/social_service.dart');
+    final storyServiceFile = File('lib/services/story_service.dart');
+
+    setUpAll(() {
+      expect(
+        activityServiceFile.existsSync(),
+        true,
+        reason: 'social_activity_service.dart must exist',
+      );
+      expect(
+        signalServiceFile.existsSync(),
+        true,
+        reason: 'signal_service.dart must exist',
+      );
+      expect(
+        socialServiceFile.existsSync(),
+        true,
+        reason: 'social_service.dart must exist',
+      );
+      expect(
+        storyServiceFile.existsSync(),
+        true,
+        reason: 'story_service.dart must exist',
+      );
+
+      activityServiceSource = activityServiceFile.readAsStringSync();
+      signalServiceSource = signalServiceFile.readAsStringSync();
+      socialServiceSource = socialServiceFile.readAsStringSync();
+      storyServiceSource = storyServiceFile.readAsStringSync();
+    });
+
+    // ----- SocialActivityService -----
+
+    test('createActivity must accept actorNodeNum parameter', () {
+      // The createActivity method signature must include actorNodeNum
+      final pattern = RegExp(
+        r'Future<void>\s+createActivity\s*\(\{[^}]*int\?\s+actorNodeNum',
+        dotAll: true,
+      );
+      expect(
+        pattern.hasMatch(activityServiceSource),
+        true,
+        reason:
+            'createActivity() must accept an int? actorNodeNum parameter '
+            'so callers can bake the node number into the activity document',
+      );
+    });
+
+    test('_getActorSnapshot must accept overrideNodeNum parameter', () {
+      final pattern = RegExp(
+        r'_getActorSnapshot\s*\([^)]*overrideNodeNum',
+        dotAll: true,
+      );
+      expect(
+        pattern.hasMatch(activityServiceSource),
+        true,
+        reason:
+            '_getActorSnapshot must accept overrideNodeNum so that the '
+            'caller-provided nodeNum takes priority over Firestore profile',
+      );
+    });
+
+    test('createActivity must pass actorNodeNum to _getActorSnapshot', () {
+      final activityLines = activityServiceSource.split('\n');
+      final methodLines = extractMethodBody(
+        activityLines,
+        RegExp(r'Future<void>\s+createActivity\s*\('),
+      );
+      final methodBody = methodLines.join('\n');
+
+      expect(
+        methodBody.contains('overrideNodeNum: actorNodeNum'),
+        true,
+        reason:
+            'createActivity must forward actorNodeNum as overrideNodeNum '
+            'to _getActorSnapshot',
+      );
+    });
+
+    test('all signal convenience methods must accept actorNodeNum', () {
+      // These are the convenience methods that wrap createActivity
+      final signalMethods = [
+        'createSignalLikeActivity',
+        'createSignalCommentActivity',
+        'createSignalCommentReplyActivity',
+        'createSignalResponseVoteActivity',
+      ];
+
+      for (final method in signalMethods) {
+        final pattern = RegExp(
+          '$method\\s*\\(\\{[^}]*int\\?\\s+actorNodeNum',
+          dotAll: true,
+        );
+        expect(
+          pattern.hasMatch(activityServiceSource),
+          true,
+          reason:
+              '$method must accept int? actorNodeNum parameter '
+              'and forward it to createActivity',
+        );
+      }
+    });
+
+    test('all social convenience methods must accept actorNodeNum', () {
+      final socialMethods = [
+        'createFollowActivity',
+        'createFollowRequestActivity',
+        'createPostLikeActivity',
+        'createCommentActivity',
+        'createCommentReplyActivity',
+        'createCommentLikeActivity',
+        'createMentionActivity',
+        'createStoryLikeActivity',
+      ];
+
+      for (final method in socialMethods) {
+        final pattern = RegExp(
+          '$method\\s*\\(\\{[^}]*int\\?\\s+actorNodeNum',
+          dotAll: true,
+        );
+        expect(
+          pattern.hasMatch(activityServiceSource),
+          true,
+          reason:
+              '$method must accept int? actorNodeNum parameter '
+              'and forward it to createActivity',
+        );
+      }
+    });
+
+    test('convenience methods must pass actorNodeNum to createActivity', () {
+      // Every convenience method body that calls createActivity must
+      // include actorNodeNum: actorNodeNum in the call.
+      final convenienceMethods = [
+        'createSignalLikeActivity',
+        'createSignalCommentActivity',
+        'createSignalCommentReplyActivity',
+        'createSignalResponseVoteActivity',
+        'createFollowActivity',
+        'createFollowRequestActivity',
+        'createPostLikeActivity',
+        'createCommentActivity',
+        'createCommentReplyActivity',
+        'createCommentLikeActivity',
+        'createMentionActivity',
+        'createStoryLikeActivity',
+      ];
+
+      final activityLines = activityServiceSource.split('\n');
+      for (final method in convenienceMethods) {
+        final methodLines = extractMethodBody(
+          activityLines,
+          RegExp('$method\\s*\\('),
+        );
+        final methodBody = methodLines.join('\n');
+        expect(
+          methodBody.contains('actorNodeNum: actorNodeNum'),
+          true,
+          reason:
+              '$method must forward actorNodeNum: actorNodeNum '
+              'to createActivity',
+        );
+      }
+    });
+
+    // ----- SignalService -----
+
+    test('SignalService.createResponse must accept actorNodeNum', () {
+      final pattern = RegExp(
+        r'createResponse\s*\(\{[^}]*int\?\s+actorNodeNum',
+        dotAll: true,
+      );
+      expect(
+        pattern.hasMatch(signalServiceSource),
+        true,
+        reason:
+            'SignalService.createResponse() must accept int? actorNodeNum '
+            'to bake into activity documents',
+      );
+    });
+
+    test('SignalService.setVote must accept actorNodeNum', () {
+      final pattern = RegExp(
+        r'setVote\s*\(\{[^}]*int\?\s+actorNodeNum',
+        dotAll: true,
+      );
+      expect(
+        pattern.hasMatch(signalServiceSource),
+        true,
+        reason:
+            'SignalService.setVote() must accept int? actorNodeNum '
+            'to bake into vote activity documents',
+      );
+    });
+
+    test('SignalService._createResponseActivity must accept actorNodeNum', () {
+      final pattern = RegExp(
+        r'_createResponseActivity\s*\(\{[^}]*int\?\s+actorNodeNum',
+        dotAll: true,
+      );
+      expect(
+        pattern.hasMatch(signalServiceSource),
+        true,
+        reason:
+            '_createResponseActivity must accept int? actorNodeNum '
+            'and forward it to activity service convenience methods',
+      );
+    });
+
+    test('SignalService._createVoteActivity must accept actorNodeNum', () {
+      final pattern = RegExp(
+        r'_createVoteActivity\s*\(\{[^}]*int\?\s+actorNodeNum',
+        dotAll: true,
+      );
+      expect(
+        pattern.hasMatch(signalServiceSource),
+        true,
+        reason:
+            '_createVoteActivity must accept int? actorNodeNum '
+            'and forward it to createSignalResponseVoteActivity',
+      );
+    });
+
+    // ----- SocialService -----
+
+    test('SocialService.followUser must accept actorNodeNum', () {
+      final pattern = RegExp(
+        r'followUser\s*\(String\s+\w+,?\s*\{[^}]*int\?\s+actorNodeNum',
+        dotAll: true,
+      );
+      expect(
+        pattern.hasMatch(socialServiceSource),
+        true,
+        reason:
+            'SocialService.followUser() must accept int? actorNodeNum '
+            'to bake into follow activity documents',
+      );
+    });
+
+    test('SocialService.acceptFollowRequest must accept actorNodeNum', () {
+      final pattern = RegExp(
+        r'acceptFollowRequest\s*\([^)]*int\?\s+actorNodeNum',
+        dotAll: true,
+      );
+      expect(
+        pattern.hasMatch(socialServiceSource),
+        true,
+        reason:
+            'SocialService.acceptFollowRequest() must accept '
+            'int? actorNodeNum to bake into follow activity documents',
+      );
+    });
+
+    test('SocialService.createComment must accept actorNodeNum', () {
+      final pattern = RegExp(
+        r'createComment\s*\(\{[^}]*int\?\s+actorNodeNum',
+        dotAll: true,
+      );
+      expect(
+        pattern.hasMatch(socialServiceSource),
+        true,
+        reason:
+            'SocialService.createComment() must accept int? actorNodeNum '
+            'to bake into comment/reply/mention activity documents',
+      );
+    });
+
+    test('SocialService.likePost must accept actorNodeNum', () {
+      final pattern = RegExp(
+        r'likePost\s*\(String\s+\w+,?\s*\{[^}]*int\?\s+actorNodeNum',
+        dotAll: true,
+      );
+      expect(
+        pattern.hasMatch(socialServiceSource),
+        true,
+        reason:
+            'SocialService.likePost() must accept int? actorNodeNum '
+            'to bake into like activity documents',
+      );
+    });
+
+    test('SocialService.likeComment must accept actorNodeNum', () {
+      final pattern = RegExp(
+        r'likeComment\s*\(String\s+\w+,?\s*\{[^}]*int\?\s+actorNodeNum',
+        dotAll: true,
+      );
+      expect(
+        pattern.hasMatch(socialServiceSource),
+        true,
+        reason:
+            'SocialService.likeComment() must accept int? actorNodeNum '
+            'to bake into comment like activity documents',
+      );
+    });
+
+    // ----- StoryService -----
+
+    test('StoryService.likeStory must accept actorNodeNum', () {
+      final pattern = RegExp(
+        r'likeStory\s*\(String\s+\w+,?\s*\{[^}]*int\?\s+actorNodeNum',
+        dotAll: true,
+      );
+      expect(
+        pattern.hasMatch(storyServiceSource),
+        true,
+        reason:
+            'StoryService.likeStory() must accept int? actorNodeNum '
+            'to bake into story like activity documents',
+      );
+    });
+
+    // ----- Provider/UI callers must pass myNodeNumProvider -----
+
+    test('social_providers.dart callers must read myNodeNumProvider', () {
+      final socialProvidersFile = File('lib/providers/social_providers.dart');
+      expect(socialProvidersFile.existsSync(), true);
+      final source = socialProvidersFile.readAsStringSync();
+
+      // toggleFollow, acceptFollowRequest, addComment, toggleLike,
+      // CreatePostNotifier.createPost — all must read myNodeNumProvider
+      // and pass actorNodeNum to the service.
+      final myNodeNumReads = RegExp(
+        r'ref\.read\(myNodeNumProvider\)',
+      ).allMatches(source).length;
+
+      // At least 5 reads: toggleFollow, acceptFollowRequest, addComment,
+      // toggleLike, CreatePostNotifier.createPost
+      expect(
+        myNodeNumReads,
+        greaterThanOrEqualTo(5),
+        reason:
+            'social_providers.dart must read myNodeNumProvider at least '
+            '5 times (toggleFollow, acceptFollowRequest, addComment, '
+            'toggleLike, createPost). Found $myNodeNumReads reads.',
+      );
+
+      // Verify actorNodeNum is passed to service calls
+      expect(
+        source.contains('actorNodeNum: myNodeNum'),
+        true,
+        reason:
+            'social_providers.dart must pass actorNodeNum: myNodeNum '
+            'to service methods that create activities',
+      );
+    });
+
+    test('story_providers.dart callers must read myNodeNumProvider', () {
+      final storyProvidersFile = File('lib/providers/story_providers.dart');
+      expect(storyProvidersFile.existsSync(), true);
+      final source = storyProvidersFile.readAsStringSync();
+
+      expect(
+        source.contains('ref.read(myNodeNumProvider)'),
+        true,
+        reason:
+            'story_providers.dart must read myNodeNumProvider to pass '
+            'actorNodeNum when liking stories',
+      );
+
+      expect(
+        source.contains('actorNodeNum: myNodeNum'),
+        true,
+        reason:
+            'story_providers.dart must pass actorNodeNum: myNodeNum '
+            'to likeStory()',
+      );
+    });
+
+    test('signal_detail_screen.dart callers must read myNodeNumProvider', () {
+      final signalDetailFile = File(
+        'lib/features/signals/screens/signal_detail_screen.dart',
+      );
+      expect(signalDetailFile.existsSync(), true);
+      final source = signalDetailFile.readAsStringSync();
+
+      // Must read myNodeNumProvider for createResponse and setVote/clearVote
+      final myNodeNumReads = RegExp(
+        r'ref\.read\(myNodeNumProvider\)',
+      ).allMatches(source).length;
+
+      // At least 3: _setVote, _removeVote, _submitReply
+      expect(
+        myNodeNumReads,
+        greaterThanOrEqualTo(3),
+        reason:
+            'signal_detail_screen.dart must read myNodeNumProvider at '
+            'least 3 times (setVote, clearVote, createResponse). '
+            'Found $myNodeNumReads reads.',
+      );
+
+      expect(
+        source.contains('actorNodeNum: myNodeNum'),
+        true,
+        reason:
+            'signal_detail_screen.dart must pass actorNodeNum: myNodeNum '
+            'to SignalService methods',
+      );
+    });
+
+    // ----- Snapshot override semantics -----
+
+    test(
+      '_getActorSnapshot must prefer overrideNodeNum over Firestore value',
+      () {
+        // The method must contain logic that prefers the override.
+        // Pattern: overrideNodeNum ?? (data['primaryNodeId'] as int?)
+        final pattern = RegExp(
+          r"overrideNodeNum\s*\?\?\s*\(?\s*data\['primaryNodeId'\]",
+        );
+        expect(
+          pattern.hasMatch(activityServiceSource),
+          true,
+          reason:
+              '_getActorSnapshot must use '
+              "overrideNodeNum ?? data['primaryNodeId'] "
+              'to prefer the caller-provided nodeNum over the Firestore '
+              'profile value',
+        );
+      },
+    );
+
+    test(
+      '_getActorSnapshot must return minimal snapshot when Firebase is unavailable but nodeNum is provided',
+      () {
+        // When firestore is null but overrideNodeNum is present, the method
+        // must still return a PostAuthorSnapshot with the nodeNum baked in.
+        final activityLines = activityServiceSource.split('\n');
+        final methodLines = extractMethodBody(
+          activityLines,
+          RegExp(r'Future<PostAuthorSnapshot\?>\s+_getActorSnapshot\s*\('),
+        );
+        final methodBody = methodLines.join('\n');
+
+        // Must check: if overrideNodeNum != null, return snapshot
+        // even when firestore is null or doc doesn't exist
+        expect(
+          methodBody.contains('overrideNodeNum != null'),
+          true,
+          reason:
+              '_getActorSnapshot must check overrideNodeNum != null and '
+              'return a minimal PostAuthorSnapshot when Firebase is '
+              'unavailable, so the activity still gets a baked nodeNum',
+        );
+
+        // Must construct PostAuthorSnapshot with nodeNum: overrideNodeNum
+        expect(
+          methodBody.contains('nodeNum: overrideNodeNum'),
+          true,
+          reason:
+              '_getActorSnapshot must construct PostAuthorSnapshot with '
+              'nodeNum: overrideNodeNum in fallback paths',
+        );
+      },
+    );
   });
 }
