@@ -23,6 +23,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../providers/accessibility_providers.dart';
+
 import '../../../core/constants.dart';
 import '../../../core/help/help_content.dart';
 import '../../../core/logging.dart';
@@ -99,6 +101,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     final disclosure = ref.watch(nodeDexDisclosureProvider(widget.nodeNum));
     final patinaResult = ref.watch(nodeDexPatinaProvider(widget.nodeNum));
     final scoredTraits = ref.watch(nodeDexScoredTraitsProvider(widget.nodeNum));
+    final reduceMotion = ref.watch(reduceMotionEnabledProvider);
 
     if (entry == null) {
       return GlassScaffold.body(
@@ -169,20 +172,26 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
         slivers: [
           // Sigil hero section with identity overlay
           SliverToBoxAdapter(
-            child: IdentityOverlay(
-              nodeNum: entry.nodeNum,
-              density: disclosure.showOverlay ? disclosure.overlayDensity : 0,
-              pointCount: 20,
-              child: _SigilHeroSection(
-                entry: entry,
-                node: node,
-                displayName: displayName,
-                hexId: hexId,
-                traitResult: traitResult,
-                patinaResult: disclosure.showPatinaStamp ? patinaResult : null,
-                evolution: SigilEvolution.fromPatina(
-                  patinaResult.score,
-                  trait: traitResult.primary,
+            child: _DetailEntrance(
+              index: 0,
+              reduceMotion: reduceMotion,
+              child: IdentityOverlay(
+                nodeNum: entry.nodeNum,
+                density: disclosure.showOverlay ? disclosure.overlayDensity : 0,
+                pointCount: 20,
+                child: _SigilHeroSection(
+                  entry: entry,
+                  node: node,
+                  displayName: displayName,
+                  hexId: hexId,
+                  traitResult: traitResult,
+                  patinaResult: disclosure.showPatinaStamp
+                      ? patinaResult
+                      : null,
+                  evolution: SigilEvolution.fromPatina(
+                    patinaResult.score,
+                    trait: traitResult.primary,
+                  ),
                 ),
               ),
             ),
@@ -190,44 +199,63 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
 
           // Trait card
           if (disclosure.showPrimaryTrait)
-            SliverToBoxAdapter(child: _TraitCard(traitResult: traitResult)),
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 1,
+                reduceMotion: reduceMotion,
+                child: _TraitCard(traitResult: traitResult),
+              ),
+            ),
 
           // Trait evidence bullets
           if (disclosure.showTraitEvidence && scoredTraits.isNotEmpty)
             SliverToBoxAdapter(
-              child: TraitEvidenceList(
-                observations: scoredTraits.first.evidence
-                    .map((e) => e.observation)
-                    .toList(),
-                accentColor: entry.sigil?.primaryColor ?? context.accentColor,
-                visible: disclosure.showTraitEvidence,
+              child: _DetailEntrance(
+                index: 2,
+                reduceMotion: reduceMotion,
+                child: TraitEvidenceList(
+                  observations: scoredTraits.first.evidence
+                      .map((e) => e.observation)
+                      .toList(),
+                  accentColor: entry.sigil?.primaryColor ?? context.accentColor,
+                  visible: disclosure.showTraitEvidence,
+                ),
               ),
             ),
 
           // Field note (collapsible)
           if (disclosure.showFieldNote)
             SliverToBoxAdapter(
-              child: CollapsibleFieldNote(
-                entry: entry,
-                trait: traitResult.primary,
-                accentColor: entry.sigil?.primaryColor ?? context.accentColor,
-                visible: disclosure.showFieldNote,
+              child: _DetailEntrance(
+                index: 3,
+                reduceMotion: reduceMotion,
+                child: CollapsibleFieldNote(
+                  entry: entry,
+                  trait: traitResult.primary,
+                  accentColor: entry.sigil?.primaryColor ?? context.accentColor,
+                  visible: disclosure.showFieldNote,
+                ),
               ),
             ),
 
           // Observation timeline strip
           if (disclosure.showTimeline)
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: ObservationTimeline(
-                  entry: entry,
-                  accentColor: entry.sigil?.primaryColor ?? context.accentColor,
-                  showDensityMarkers: true,
-                  showEncounterCount: true,
+              child: _DetailEntrance(
+                index: 4,
+                reduceMotion: reduceMotion,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: ObservationTimeline(
+                    entry: entry,
+                    accentColor:
+                        entry.sigil?.primaryColor ?? context.accentColor,
+                    showDensityMarkers: true,
+                    showEncounterCount: true,
+                  ),
                 ),
               ),
             ),
@@ -235,63 +263,103 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           // All scored traits list (progressive: only at Tier 3+)
           if (disclosure.showAllTraits && scoredTraits.length > 1)
             SliverToBoxAdapter(
-              child: _ScoredTraitsList(
-                scoredTraits: scoredTraits,
-                showEvidence: disclosure.showTraitEvidence,
+              child: _DetailEntrance(
+                index: 5,
+                reduceMotion: reduceMotion,
+                child: _ScoredTraitsList(
+                  scoredTraits: scoredTraits,
+                  showEvidence: disclosure.showTraitEvidence,
+                ),
               ),
             ),
 
           // Discovery stats
           SliverToBoxAdapter(
-            child: _DiscoveryStatsCard(entry: entry, node: node),
+            child: _DetailEntrance(
+              index: 6,
+              reduceMotion: reduceMotion,
+              child: _DiscoveryStatsCard(entry: entry, node: node),
+            ),
           ),
 
           // Signal records
-          SliverToBoxAdapter(child: _SignalRecordsCard(entry: entry)),
+          SliverToBoxAdapter(
+            child: _DetailEntrance(
+              index: 7,
+              reduceMotion: reduceMotion,
+              child: _SignalRecordsCard(entry: entry),
+            ),
+          ),
 
           // Device info (from live MeshNode data) — placed near signal records
           if (node != null)
-            SliverToBoxAdapter(child: _DeviceInfoCard(node: node)),
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 8,
+                reduceMotion: reduceMotion,
+                child: _DeviceInfoCard(node: node),
+              ),
+            ),
 
           // Social tag
           SliverToBoxAdapter(
-            child: _SocialTagCard(
-              entry: entry,
-              onEditTag: () => _showTagSelector(context, entry),
+            child: _DetailEntrance(
+              index: 9,
+              reduceMotion: reduceMotion,
+              child: _SocialTagCard(
+                entry: entry,
+                onEditTag: () => _showTagSelector(context, entry),
+              ),
             ),
           ),
 
           // User note
           SliverToBoxAdapter(
-            child: _UserNoteCard(
-              entry: entry,
-              editing: _editingNote,
-              controller: _noteController,
-              onStartEditing: () {
-                AppLogging.nodeDex(
-                  'Note editing started for node ${widget.nodeNum}',
-                );
-                setState(() {
-                  _editingNote = true;
-                  _noteController.text = entry.userNote ?? '';
-                });
-              },
-              onSave: () => _saveNote(entry),
-              onCancel: () {
-                setState(() {
-                  _editingNote = false;
-                });
-              },
+            child: _DetailEntrance(
+              index: 10,
+              reduceMotion: reduceMotion,
+              child: _UserNoteCard(
+                entry: entry,
+                editing: _editingNote,
+                controller: _noteController,
+                onStartEditing: () {
+                  AppLogging.nodeDex(
+                    'Note editing started for node ${widget.nodeNum}',
+                  );
+                  setState(() {
+                    _editingNote = true;
+                    _noteController.text = entry.userNote ?? '';
+                  });
+                },
+                onSave: () => _saveNote(entry),
+                onCancel: () {
+                  setState(() {
+                    _editingNote = false;
+                  });
+                },
+              ),
             ),
           ),
 
           // Region history
           if (entry.seenRegions.isNotEmpty)
-            SliverToBoxAdapter(child: _RegionHistoryCard(entry: entry)),
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 11,
+                reduceMotion: reduceMotion,
+                child: _RegionHistoryCard(entry: entry),
+              ),
+            ),
 
           // Encounter activity visualization
           if (entry.encounters.isNotEmpty)
-            SliverToBoxAdapter(child: _EncounterActivityCard(entry: entry)),
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 12,
+                reduceMotion: reduceMotion,
+                child: _EncounterActivityCard(entry: entry),
+              ),
+            ),
 
           // Co-seen nodes — pinned header + body
           if (entry.coSeenNodes.isNotEmpty) ...[
@@ -304,7 +372,13 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 trailing: '${entry.coSeenNodes.length} total',
               ),
             ),
-            SliverToBoxAdapter(child: _CoSeenNodesBody(entry: entry)),
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 13,
+                reduceMotion: reduceMotion,
+                child: _CoSeenNodesBody(entry: entry),
+              ),
+            ),
           ],
 
           // Bottom padding
@@ -2869,6 +2943,97 @@ class _StickyCardBody extends StatelessWidget {
         ),
       ),
       child: child,
+    );
+  }
+}
+
+// =============================================================================
+// Detail screen entrance animation
+// =============================================================================
+
+/// Wraps a detail screen section with a staggered fade + slide-up entrance.
+///
+/// Each section fades in and rises subtly from below with a cascading
+/// delay based on [index]. The animation plays once on mount and does
+/// not replay. When [reduceMotion] is true, the child renders instantly
+/// with no animation.
+class _DetailEntrance extends StatefulWidget {
+  /// Stagger index — controls the delay before this section animates in.
+  final int index;
+
+  /// Whether to skip animation entirely.
+  final bool reduceMotion;
+
+  /// The content to animate in.
+  final Widget child;
+
+  const _DetailEntrance({
+    required this.index,
+    required this.reduceMotion,
+    required this.child,
+  });
+
+  @override
+  State<_DetailEntrance> createState() => _DetailEntranceState();
+}
+
+class _DetailEntranceState extends State<_DetailEntrance>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
+
+    _fade = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.8, curve: Curves.easeOut),
+    );
+
+    _slide = Tween<Offset>(
+      begin: const Offset(0.0, 0.06),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+
+    if (widget.reduceMotion) {
+      _controller.value = 1.0;
+    } else {
+      // Stagger: 60ms per section, capped at 600ms.
+      final delay = math.min(widget.index * 60, 600);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (delay == 0) {
+          _controller.forward();
+        } else {
+          Future.delayed(Duration(milliseconds: delay), () {
+            if (!mounted) return;
+            _controller.forward();
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.reduceMotion) return widget.child;
+
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(position: _slide, child: widget.child),
     );
   }
 }

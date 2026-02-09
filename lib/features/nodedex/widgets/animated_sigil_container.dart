@@ -130,7 +130,7 @@ class AnimatedSigilContainer extends StatefulWidget {
     this.opacity = 1.0,
     this.backgroundColor,
     this.onRevealComplete,
-    this.revealDuration = const Duration(milliseconds: 1800),
+    this.revealDuration = const Duration(milliseconds: 1000),
     this.rotationDuration = const Duration(milliseconds: 25000),
     this.pulseDuration = const Duration(milliseconds: 3500),
     this.glowDuration = const Duration(milliseconds: 4000),

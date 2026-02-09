@@ -634,6 +634,19 @@ class NodeDexEntry {
   /// longName or shortName.
   final String? lastKnownName;
 
+  /// Last known hardware model string (e.g. "HELTEC_V3"), cached from
+  /// MeshNode.hardwareModel so cards display device info even when the
+  /// node is offline. Updated on every encounter.
+  final String? lastKnownHardware;
+
+  /// Last known node role string (e.g. "ROUTER"), cached from
+  /// MeshNode.role. Updated on every encounter.
+  final String? lastKnownRole;
+
+  /// Last known firmware version string, cached from
+  /// MeshNode.firmwareVersion. Updated on every encounter.
+  final String? lastKnownFirmware;
+
   /// Maximum number of encounter records to retain.
   static const int maxEncounterRecords = 50;
 
@@ -665,6 +678,9 @@ class NodeDexEntry {
     this.coSeenNodes = const {},
     this.sigil,
     this.lastKnownName,
+    this.lastKnownHardware,
+    this.lastKnownRole,
+    this.lastKnownFirmware,
   });
 
   /// Create a new entry for a freshly discovered node.
@@ -678,6 +694,9 @@ class NodeDexEntry {
     double? longitude,
     SigilData? sigil,
     String? lastKnownName,
+    String? lastKnownHardware,
+    String? lastKnownRole,
+    String? lastKnownFirmware,
   }) {
     final now = timestamp ?? DateTime.now();
     final encounter = EncounterRecord(
@@ -700,6 +719,9 @@ class NodeDexEntry {
       encounters: [encounter],
       sigil: sigil,
       lastKnownName: lastKnownName,
+      lastKnownHardware: lastKnownHardware,
+      lastKnownRole: lastKnownRole,
+      lastKnownFirmware: lastKnownFirmware,
     );
   }
 
@@ -769,6 +791,9 @@ class NodeDexEntry {
     Map<int, CoSeenRelationship>? coSeenNodes,
     SigilData? sigil,
     String? lastKnownName,
+    String? lastKnownHardware,
+    String? lastKnownRole,
+    String? lastKnownFirmware,
   }) {
     // Auto-stamp when socialTag changes via copyWith.
     final effectiveStMs = clearSocialTag || socialTag != null
@@ -798,6 +823,9 @@ class NodeDexEntry {
       coSeenNodes: coSeenNodes ?? this.coSeenNodes,
       sigil: sigil ?? this.sigil,
       lastKnownName: lastKnownName ?? this.lastKnownName,
+      lastKnownHardware: lastKnownHardware ?? this.lastKnownHardware,
+      lastKnownRole: lastKnownRole ?? this.lastKnownRole,
+      lastKnownFirmware: lastKnownFirmware ?? this.lastKnownFirmware,
     );
   }
 
@@ -979,6 +1007,18 @@ class NodeDexEntry {
     } else {
       mergedName = other.lastKnownName ?? lastKnownName;
     }
+
+    // Merge device info: prefer the most recently seen value, fall back
+    // to whichever side has data.
+    final String? mergedHardware = lastSeen.isAfter(other.lastSeen)
+        ? (lastKnownHardware ?? other.lastKnownHardware)
+        : (other.lastKnownHardware ?? lastKnownHardware);
+    final String? mergedRole = lastSeen.isAfter(other.lastSeen)
+        ? (lastKnownRole ?? other.lastKnownRole)
+        : (other.lastKnownRole ?? lastKnownRole);
+    final String? mergedFirmware = lastSeen.isAfter(other.lastSeen)
+        ? (lastKnownFirmware ?? other.lastKnownFirmware)
+        : (other.lastKnownFirmware ?? lastKnownFirmware);
     final mergedEncounterCount = encounterCount > other.encounterCount
         ? encounterCount
         : other.encounterCount;
@@ -1088,6 +1128,9 @@ class NodeDexEntry {
       coSeenNodes: mergedCoSeen,
       sigil: mergedSigil,
       lastKnownName: mergedName,
+      lastKnownHardware: mergedHardware,
+      lastKnownRole: mergedRole,
+      lastKnownFirmware: mergedFirmware,
     );
   }
 
@@ -1176,6 +1219,9 @@ class NodeDexEntry {
       'csn': coSeenNodes.map((k, v) => MapEntry(k.toString(), v.toJson())),
       if (sigil != null) 'sig': sigil!.toJson(),
       if (lastKnownName != null) 'lkn': lastKnownName,
+      if (lastKnownHardware != null) 'lkh': lastKnownHardware,
+      if (lastKnownRole != null) 'lkr': lastKnownRole,
+      if (lastKnownFirmware != null) 'lkf': lastKnownFirmware,
     };
   }
 
@@ -1232,6 +1278,9 @@ class NodeDexEntry {
           ? SigilData.fromJson(json['sig'] as Map<String, dynamic>)
           : null,
       lastKnownName: json['lkn'] as String?,
+      lastKnownHardware: json['lkh'] as String?,
+      lastKnownRole: json['lkr'] as String?,
+      lastKnownFirmware: json['lkf'] as String?,
     );
   }
 

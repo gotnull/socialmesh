@@ -15,7 +15,7 @@
 // and nodesProvider without modifying any existing functionality.
 
 import 'dart:math' as math;
-import 'dart:ui';
+import 'dart:ui' hide TextStyle;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -148,6 +148,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
                   otherEntries: otherEntries,
                   currentSort: currentSort,
                   currentFilter: currentFilter,
+                  reduceMotion: reduceMotion,
                 ),
         ),
       ),
@@ -209,6 +210,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     required List<(NodeDexEntry, MeshNode?)> otherEntries,
     required NodeDexSortOrder currentSort,
     required NodeDexFilter currentFilter,
+    required bool reduceMotion,
   }) {
     return [
       // Top padding below glass app bar
@@ -279,11 +281,13 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
         SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
             final (entry, node) = myEntry[index];
-            return _NodeDexListTile(
+            final tile = _NodeDexListTile(
               entry: entry,
               node: node,
               onTap: () => _openDetail(entry, node),
             );
+            if (reduceMotion) return tile;
+            return _StaggeredListTile(index: index, child: tile);
           }, childCount: myEntry.length),
         ),
       ],
@@ -300,10 +304,16 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
         SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
             final (entry, node) = otherEntries[index];
-            return _NodeDexListTile(
+            final tile = _NodeDexListTile(
               entry: entry,
               node: node,
               onTap: () => _openDetail(entry, node),
+            );
+            if (reduceMotion) return tile;
+            // Offset by myEntry count so the stagger cascade is continuous.
+            return _StaggeredListTile(
+              index: myEntry.length + index,
+              child: tile,
             );
           }, childCount: otherEntries.length),
         ),
@@ -1520,6 +1530,99 @@ class _MetricChip extends StatelessWidget {
 
 // =============================================================================
 // Empty State
+// =============================================================================
+
+// =============================================================================
+// Staggered list tile entrance animation
+// =============================================================================
+
+/// Wraps a list tile with a staggered slide-in + fade entrance animation.
+///
+/// Each tile slides in from the right with a slight vertical offset and
+/// fades in, creating a cascading reveal effect. The stagger delay is
+/// capped so large lists don't wait forever.
+class _StaggeredListTile extends StatefulWidget {
+  final int index;
+  final Widget child;
+
+  const _StaggeredListTile({required this.index, required this.child});
+
+  @override
+  State<_StaggeredListTile> createState() => _StaggeredListTileState();
+}
+
+class _StaggeredListTileState extends State<_StaggeredListTile>
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+  bool _hasAnimated = false;
+
+  @override
+  bool get wantKeepAlive => _hasAnimated;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+
+    _fade = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.7, curve: Curves.easeOut),
+    );
+
+    _slide = Tween<Offset>(
+      begin: const Offset(0.0, 0.08), // subtle rise from below
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+
+    // Stagger delay: 40ms per tile, capped at 400ms.
+    // Use post-frame callback so the delay starts after the first frame
+    // renders, preventing Future.delayed from firing on a disposed widget.
+    final delay = math.min(widget.index * 40, 400);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (delay == 0) {
+        _controller.forward();
+        _hasAnimated = true;
+        updateKeepAlive();
+      } else {
+        Future.delayed(Duration(milliseconds: delay), () {
+          if (!mounted) return;
+          _controller.forward();
+          _hasAnimated = true;
+          updateKeepAlive();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // Required by AutomaticKeepAliveClientMixin
+    // If already animated (e.g. scrolled back into view), show without anim.
+    if (_hasAnimated && _controller.isCompleted) {
+      return widget.child;
+    }
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(position: _slide, child: widget.child),
+    );
+  }
+}
+
+// =============================================================================
+// Empty state
 // =============================================================================
 
 class _EmptyState extends StatelessWidget {

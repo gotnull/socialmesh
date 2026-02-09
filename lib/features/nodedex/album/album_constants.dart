@@ -199,29 +199,30 @@ class AlbumConstants {
   // ---------------------------------------------------------------------------
 
   /// Duration of the card flip animation.
-  static const Duration flipDuration = Duration(milliseconds: 500);
+  static const Duration flipDuration = Duration(milliseconds: 380);
 
-  /// Curve for the card flip animation.
-  static const Curve flipCurve = Curves.easeInOutCubic;
+  /// Curve for the card flip animation — fast start, springy settle.
+  static const Curve flipCurve = Curves.easeOutBack;
 
   /// Perspective value for the 3D flip transform.
-  static const double flipPerspective = 0.002;
+  /// Slightly stronger perspective for more dramatic depth.
+  static const double flipPerspective = 0.0025;
 
   // ---------------------------------------------------------------------------
   // Holographic effect
   // ---------------------------------------------------------------------------
 
   /// Duration of one full holographic shimmer cycle.
-  static const Duration holoCycleDuration = Duration(milliseconds: 3000);
+  static const Duration holoCycleDuration = Duration(milliseconds: 2400);
 
   /// Opacity of the holographic overlay on rare cards.
-  static const double holoOpacityRare = 0.08;
+  static const double holoOpacityRare = 0.12;
 
   /// Opacity of the holographic overlay on epic cards.
-  static const double holoOpacityEpic = 0.12;
+  static const double holoOpacityEpic = 0.18;
 
   /// Opacity of the holographic overlay on legendary cards.
-  static const double holoOpacityLegendary = 0.18;
+  static const double holoOpacityLegendary = 0.25;
 
   /// Width of individual holographic shimmer bands.
   static const double holoBandWidth = 0.15;
@@ -255,13 +256,13 @@ class AlbumConstants {
   // ---------------------------------------------------------------------------
 
   /// Duration for slot appear animation (staggered in grid).
-  static const Duration slotAppearDuration = Duration(milliseconds: 300);
+  static const Duration slotAppearDuration = Duration(milliseconds: 500);
 
   /// Stagger delay between consecutive slot animations.
-  static const Duration slotStaggerDelay = Duration(milliseconds: 40);
+  static const Duration slotStaggerDelay = Duration(milliseconds: 60);
 
   /// Maximum total stagger time (caps the delay for large collections).
-  static const Duration maxStaggerTime = Duration(milliseconds: 800);
+  static const Duration maxStaggerTime = Duration(milliseconds: 1200);
 
   /// Duration for the album cover entrance animation.
   static const Duration coverEntranceDuration = Duration(milliseconds: 600);
@@ -273,10 +274,10 @@ class AlbumConstants {
   static const Curve viewToggleCurve = Curves.easeInOutCubic;
 
   /// Duration for the mini card press feedback scale animation.
-  static const Duration pressScaleDuration = Duration(milliseconds: 120);
+  static const Duration pressScaleDuration = Duration(milliseconds: 80);
 
   /// Scale factor when a mini card is pressed.
-  static const double pressScaleFactor = 0.95;
+  static const double pressScaleFactor = 0.90;
 
   // ---------------------------------------------------------------------------
   // Grouping

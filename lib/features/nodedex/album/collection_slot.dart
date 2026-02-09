@@ -367,14 +367,21 @@ class _PressScaleWrapperState extends State<_PressScaleWrapper>
   @override
   void initState() {
     super.initState();
+    // Single controller drives both press and release.
+    // Short duration for snappy press; reverse uses same duration
+    // but the spring curve makes the release feel bouncy.
     _controller = AnimationController(
       vsync: this,
-      duration: AlbumConstants.pressScaleDuration,
+      duration: const Duration(milliseconds: 100),
+      reverseDuration: const Duration(milliseconds: 350),
     );
-    _scale = Tween<double>(
-      begin: 1.0,
-      end: AlbumConstants.pressScaleFactor,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _scale = Tween<double>(begin: 1.0, end: 0.93).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInCubic,
+        reverseCurve: Curves.elasticOut,
+      ),
+    );
   }
 
   @override
@@ -384,7 +391,8 @@ class _PressScaleWrapperState extends State<_PressScaleWrapper>
   }
 
   void _onTapDown(TapDownDetails _) {
-    if (widget.animate) _controller.forward();
+    if (!widget.animate) return;
+    _controller.forward();
   }
 
   void _onTapUp(TapUpDetails _) {
@@ -486,11 +494,14 @@ class MysterySlot extends StatelessWidget {
 // Pulsing mystery icon
 // =============================================================================
 
-/// A "?" icon with a slow, subtle opacity pulse animation.
+/// A "?" icon with a clean breathing pulse: opacity + scale.
 ///
-/// The pulse cycles between 60% and 100% of the base opacity
-/// over 2.5 seconds, creating a gentle breathing effect that
-/// hints at undiscovered content without being distracting.
+/// The pulse cycles over 2.5 seconds:
+///   - Opacity breathes between 0.3 and 0.8
+///   - Scale breathes between 0.9 and 1.05
+///
+/// No glow containers, no box shadows — just a simple, elegant
+/// breathing effect that hints at undiscovered content.
 class _PulsingMysteryIcon extends StatefulWidget {
   final Color color;
 
@@ -504,6 +515,7 @@ class _PulsingMysteryIconState extends State<_PulsingMysteryIcon>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _opacity;
+  late final Animation<double> _scale;
 
   @override
   void initState() {
@@ -512,10 +524,17 @@ class _PulsingMysteryIconState extends State<_PulsingMysteryIcon>
       vsync: this,
       duration: const Duration(milliseconds: 2500),
     );
+
     _opacity = Tween<double>(
-      begin: 0.6,
-      end: 1.0,
+      begin: 0.3,
+      end: 0.8,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    _scale = Tween<double>(
+      begin: 0.9,
+      end: 1.05,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
     _controller.repeat(reverse: true);
   }
 
@@ -528,9 +547,12 @@ class _PulsingMysteryIconState extends State<_PulsingMysteryIcon>
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _opacity,
+      animation: _controller,
       builder: (context, child) {
-        return Opacity(opacity: _opacity.value, child: child);
+        return Transform.scale(
+          scale: _scale.value,
+          child: Opacity(opacity: _opacity.value.clamp(0.0, 1.0), child: child),
+        );
       },
       child: Icon(
         Icons.help_outline_rounded,

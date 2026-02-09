@@ -30,6 +30,7 @@
 //   - Entrance animation uses a single AnimationController
 
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -72,27 +73,48 @@ class _AlbumCoverState extends ConsumerState<AlbumCover>
   late final AnimationController _entranceController;
   late final Animation<double> _fadeAnimation;
   late final Animation<Offset> _slideAnimation;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _blurAnimation;
 
   @override
   void initState() {
     super.initState();
     _entranceController = AnimationController(
       vsync: this,
-      duration: AlbumConstants.coverEntranceDuration,
+      duration: const Duration(milliseconds: 700),
     );
 
     _fadeAnimation = CurvedAnimation(
       parent: _entranceController,
-      curve: const Interval(0.0, 0.7, curve: Curves.easeOut),
+      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
     );
 
     _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(
+        Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero).animate(
           CurvedAnimation(
             parent: _entranceController,
-            curve: const Interval(0.0, 0.8, curve: Curves.easeOutCubic),
+            curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
           ),
         );
+
+    // Scale up from 0.96 — subtle enough to feel intentional,
+    // not dramatic enough to feel gimmicky.
+    _scaleAnimation = Tween<double>(begin: 0.96, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _entranceController,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    // Blur clears during the first 40% — a brief focus-rack effect
+    // that resolves quickly. 2.5px is enough to be cinematic without
+    // looking like a loading glitch.
+    _blurAnimation = Tween<double>(begin: 2.5, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _entranceController,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
+      ),
+    );
 
     if (widget.animate) {
       _entranceController.forward();
@@ -111,17 +133,40 @@ class _AlbumCoverState extends ConsumerState<AlbumCover>
   Widget build(BuildContext context) {
     final progress = ref.watch(collectionProgressProvider);
 
-    return SlideTransition(
-      position: _slideAnimation,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AlbumConstants.coverMarginH,
-            vertical: AlbumConstants.coverMarginV,
+    return AnimatedBuilder(
+      animation: _entranceController,
+      builder: (context, child) {
+        final blur = _blurAnimation.value;
+        final needsBlur = blur > 0.1;
+
+        Widget content = SlideTransition(
+          position: _slideAnimation,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: FadeTransition(opacity: _fadeAnimation, child: child!),
           ),
-          child: _CoverCard(progress: progress),
+        );
+
+        // Apply a clearing blur during entrance for a cinematic focus-in.
+        if (needsBlur) {
+          content = ImageFiltered(
+            imageFilter: ui.ImageFilter.blur(
+              sigmaX: blur,
+              sigmaY: blur,
+              tileMode: TileMode.decal,
+            ),
+            child: content,
+          );
+        }
+
+        return content;
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AlbumConstants.coverMarginH,
+          vertical: AlbumConstants.coverMarginV,
         ),
+        child: _CoverCard(progress: progress),
       ),
     );
   }

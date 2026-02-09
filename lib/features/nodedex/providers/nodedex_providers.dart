@@ -276,6 +276,9 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           longitude: node.hasPosition ? node.longitude : null,
           sigil: sigil,
           lastKnownName: liveName,
+          lastKnownHardware: node.hardwareModel,
+          lastKnownRole: node.role,
+          lastKnownFirmware: node.firmwareVersion,
         );
 
         // Add region if we can determine one.
@@ -314,6 +317,9 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           updatedEntry = updatedEntry.copyWith(lastKnownName: liveName);
         }
 
+        // Cache device info from live node data.
+        updatedEntry = _updateDeviceInfo(updatedEntry, node);
+
         // Update region data (own device can change location).
         final withRegion = _addRegionFromNode(updatedEntry, node);
         if (withRegion != existing) {
@@ -348,6 +354,9 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           if (liveName != null && liveName != updatedEntry.lastKnownName) {
             updatedEntry = updatedEntry.copyWith(lastKnownName: liveName);
           }
+
+          // Cache device info from live node data.
+          updatedEntry = _updateDeviceInfo(updatedEntry, node);
 
           // Update region data.
           updatedEntry = _addRegionFromNode(updatedEntry, node);
@@ -391,6 +400,28 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   }
 
   /// Resolve a cacheable display name from a live MeshNode.
+  /// Update cached device info (hardware model, role, firmware) from
+  /// the live [MeshNode] data. Only overwrites existing values when
+  /// the live node provides non-null data.
+  NodeDexEntry _updateDeviceInfo(NodeDexEntry entry, MeshNode node) {
+    final hw = node.hardwareModel;
+    final role = node.role;
+    final fw = node.firmwareVersion;
+
+    // Only copyWith when there's actually new data to cache.
+    final needsHw = hw != null && hw != entry.lastKnownHardware;
+    final needsRole = role != null && role != entry.lastKnownRole;
+    final needsFw = fw != null && fw != entry.lastKnownFirmware;
+
+    if (!needsHw && !needsRole && !needsFw) return entry;
+
+    return entry.copyWith(
+      lastKnownHardware: needsHw ? hw : null,
+      lastKnownRole: needsRole ? role : null,
+      lastKnownFirmware: needsFw ? fw : null,
+    );
+  }
+
   ///
   /// Returns null if the node only has a placeholder name (hex ID,
   /// firmware default like "Meshtastic 2d94", or BLE advertising

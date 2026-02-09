@@ -45,6 +45,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../providers/app_providers.dart';
+
 import '../../../core/theme.dart';
 import '../../../services/haptic_service.dart';
 import '../models/nodedex_entry.dart';
@@ -278,6 +280,15 @@ class _GalleryPage extends ConsumerWidget {
       trait: trait,
     );
 
+    // Resolve device info: prefer cached data from NodeDexEntry (persisted
+    // across sessions), fall back to live MeshNode if currently online.
+    final nodes = ref.watch(nodesProvider);
+    final liveNode = nodes[entry.nodeNum];
+    final hardwareModel = entry.lastKnownHardware ?? liveNode?.hardwareModel;
+    final role = entry.lastKnownRole ?? liveNode?.role;
+    final firmwareVersion =
+        entry.lastKnownFirmware ?? liveNode?.firmwareVersion;
+
     return AnimatedBuilder(
       animation: pageController,
       builder: (context, child) {
@@ -288,22 +299,30 @@ class _GalleryPage extends ConsumerWidget {
               pageIndex.toDouble();
         }
 
-        // Scale and opacity based on distance from center.
+        // Distance from center (0 = focused, 1 = fully off-screen).
         final distance = pageOffset.abs().clamp(0.0, 1.0);
-        final scale = lerpDouble(
-          1.0,
-          AlbumConstants.galleryUnfocusedScale,
-          distance,
-        )!;
-        final opacity = lerpDouble(
-          1.0,
-          AlbumConstants.galleryUnfocusedOpacity,
-          distance,
-        )!;
 
-        return Transform.scale(
-          scale: scale,
-          child: Opacity(opacity: opacity, child: child),
+        // Scale: focused cards are full size, off-cards recede gently.
+        final scale = lerpDouble(1.0, 0.88, distance)!;
+
+        // Opacity: off-cards dim but remain legible for context.
+        final opacity = lerpDouble(1.0, 0.5, distance)!;
+
+        // 3D Y-axis rotation: subtle tilt away (~8 degrees max).
+        // Cards feel like they're on a carousel, not a spinning wheel.
+        final rotationY = pageOffset.clamp(-1.0, 1.0) * -0.14;
+
+        // Vertical parallax: off-center cards sink slightly.
+        final translateY = distance * 12.0;
+
+        return Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.identity()
+            ..setEntry(3, 2, 0.001) // subtle perspective
+            ..rotateY(rotationY)
+            ..translate(0.0, translateY)
+            ..scale(scale),
+          child: Opacity(opacity: opacity.clamp(0.0, 1.0), child: child),
         );
       },
       child: Center(
@@ -340,6 +359,9 @@ class _GalleryPage extends ConsumerWidget {
                         hexId: hexId,
                         traitResult: traitResult,
                         entry: entry,
+                        hardwareModel: hardwareModel,
+                        role: role,
+                        firmwareVersion: firmwareVersion,
                         animated: animate,
                         width: cardWidth,
                       ),

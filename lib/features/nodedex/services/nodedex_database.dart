@@ -21,7 +21,7 @@ import '../../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int nodedexSchemaVersion = 3;
+const int nodedexSchemaVersion = 4;
 
 /// Table and column name constants for NodeDex SQLite schema.
 abstract final class NodeDexTables {
@@ -41,6 +41,9 @@ abstract final class NodeDexTables {
   static const colUserNoteUpdatedAtMs = 'user_note_updated_at_ms';
   static const colSigilJson = 'sigil_json';
   static const colLastKnownName = 'last_known_name';
+  static const colLastKnownHardware = 'last_known_hardware';
+  static const colLastKnownRole = 'last_known_role';
+  static const colLastKnownFirmware = 'last_known_firmware';
   static const colSchemaVersion = 'schema_version';
   static const colUpdatedAtMs = 'updated_at_ms';
   static const colDeleted = 'deleted';
@@ -192,6 +195,9 @@ class NodeDexDatabase {
         ${NodeDexTables.colUserNoteUpdatedAtMs} INTEGER,
         ${NodeDexTables.colSigilJson} TEXT NOT NULL,
         ${NodeDexTables.colLastKnownName} TEXT,
+        ${NodeDexTables.colLastKnownHardware} TEXT,
+        ${NodeDexTables.colLastKnownRole} TEXT,
+        ${NodeDexTables.colLastKnownFirmware} TEXT,
         ${NodeDexTables.colSchemaVersion} INTEGER NOT NULL DEFAULT 1,
         ${NodeDexTables.colUpdatedAtMs} INTEGER NOT NULL,
         ${NodeDexTables.colDeleted} INTEGER NOT NULL DEFAULT 0
@@ -330,7 +336,25 @@ class NodeDexDatabase {
         'NodeDexDatabase: v3 migration — added last_known_name column',
       );
     }
-    // if (oldVersion < 4) { ... }
+    if (oldVersion < 4) {
+      // v4: Cache device info (hardware model, role, firmware version) so
+      // SigilCards display this data even when the node is offline.
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} '
+        'ADD COLUMN ${NodeDexTables.colLastKnownHardware} TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} '
+        'ADD COLUMN ${NodeDexTables.colLastKnownRole} TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} '
+        'ADD COLUMN ${NodeDexTables.colLastKnownFirmware} TEXT',
+      );
+      AppLogging.storage(
+        'NodeDexDatabase: v4 migration — added hardware/role/firmware columns',
+      );
+    }
   }
 
   /// Handle downgrades by recreating.

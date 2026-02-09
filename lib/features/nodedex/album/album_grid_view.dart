@@ -8,7 +8,7 @@
 //   - Sticky page headers for each group
 //   - Card slot grids with filled slots for discovered nodes
 //   - Mystery slots at the end of each group suggesting more to find
-//   - Smooth staggered entrance animations for slots
+//   - Staggered entrance animations with shimmer sweep for slots
 //
 // The grid adapts its column count based on screen width (3 on phones,
 // 4 on tablets). Each slot maintains a 5:7 portrait aspect ratio
@@ -345,17 +345,28 @@ class _GroupingChip extends StatelessWidget {
 }
 
 // =============================================================================
-// Staggered slot animation
+// Staggered slot animation with shimmer sweep
 // =============================================================================
 
-/// Wraps a slot widget with a staggered fade+scale entrance animation.
+/// Wraps a slot widget with a staggered entrance animation that combines:
 ///
-/// Each slot receives a slight delay based on its [index] in the grid,
-/// creating a cascade effect as the album page loads. The total stagger
-/// time is capped by [AlbumConstants.maxStaggerTime] to keep it snappy
-/// even with large collections.
+///   1. **Fade in** — opacity ramps from 0 to 1 over the first 60%.
+///   2. **Scale settle** — card scales from 0.88 to 1.0 with easeOutCubic.
+///      No overshoot, no bounce — the card has weight and settles into place.
+///   3. **Slide up** — 20px vertical travel with decelerate curve.
+///   4. **Shimmer sweep** — a diagonal light streak sweeps across the card
+///      surface during the second half of the entrance, creating a brief
+///      "holographic scan" flash that makes each card feel like it's being
+///      revealed or printed. The sweep uses a narrow linear gradient mask
+///      with screen blend mode.
 ///
-/// When [animate] is false (reduce-motion), the child is shown immediately.
+/// The stagger delay between cards creates a wave that cascades diagonally
+/// across the grid (since SliverGrid fills left-to-right, top-to-bottom).
+/// The maximum total stagger time is capped so large collections don't
+/// wait forever.
+///
+/// When [animate] is false (reduce-motion), the child is shown immediately
+/// with no animation.
 class _StaggeredSlot extends StatefulWidget {
   final int index;
   final bool animate;
@@ -374,8 +385,14 @@ class _StaggeredSlot extends StatefulWidget {
 class _StaggeredSlotState extends State<_StaggeredSlot>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+
+  // Phase 1: materialization (fade + scale + slide)
   late final Animation<double> _fadeAnimation;
   late final Animation<double> _scaleAnimation;
+  late final Animation<double> _slideAnimation;
+
+  // Phase 2: shimmer sweep (diagonal light flash)
+  late final Animation<double> _shimmerAnimation;
 
   @override
   void initState() {
@@ -383,18 +400,43 @@ class _StaggeredSlotState extends State<_StaggeredSlot>
 
     _controller = AnimationController(
       vsync: this,
-      duration: AlbumConstants.slotAppearDuration,
+      duration: const Duration(milliseconds: 600),
     );
 
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
+    // Fade: ramp up in the first 60% of the animation.
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
     );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.85,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    // Scale: 0.88 → 1.0 with deceleration. No overshoot — the card
+    // has mass and settles cleanly.
+    _scaleAnimation = Tween<double>(begin: 0.88, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.75, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    // Slide: 20px upward with decelerate. Enough to be visible,
+    // not enough to feel bouncy.
+    _slideAnimation = Tween<double>(begin: 20.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    // Shimmer: sweeps during the second half of the entrance.
+    // Value goes from -0.5 to 1.5 (gradient position across the card).
+    _shimmerAnimation = Tween<double>(begin: -0.5, end: 1.5).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.35, 1.0, curve: Curves.easeInOut),
+      ),
+    );
 
     if (widget.animate) {
       // Compute stagger delay, capped at max.
@@ -423,21 +465,150 @@ class _StaggeredSlotState extends State<_StaggeredSlot>
   Widget build(BuildContext context) {
     if (!widget.animate) return widget.child;
 
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: ScaleTransition(scale: _scaleAnimation, child: widget.child),
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final opacity = _fadeAnimation.value.clamp(0.0, 1.0);
+        final scale = _scaleAnimation.value;
+        final slideY = _slideAnimation.value;
+        final shimmerPos = _shimmerAnimation.value;
+
+        // Only show shimmer during active sweep range.
+        final showShimmer =
+            shimmerPos > -0.3 && shimmerPos < 1.3 && _controller.value < 1.0;
+
+        return Opacity(
+          opacity: opacity,
+          child: Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()
+              ..translate(0.0, slideY)
+              ..scale(scale),
+            child: showShimmer
+                ? _ShimmerOverlay(position: shimmerPos, child: child!)
+                : child,
+          ),
+        );
+      },
+      child: widget.child,
     );
   }
 }
 
 // =============================================================================
-// Empty album state
+// Shimmer sweep overlay
 // =============================================================================
 
-/// Shown when no nodes have been discovered yet.
+/// Renders a diagonal light streak across a card surface.
 ///
-/// Displays a welcoming message encouraging the user to explore
-/// and discover their first mesh nodes.
+/// The [position] value controls where the streak is:
+///   - < 0.0: streak hasn't entered the card yet
+///   - 0.0–1.0: streak is sweeping across
+///   - > 1.0: streak has left the card
+///
+/// Uses a narrow LinearGradient with transparent → white → transparent
+/// in screen blend mode for a natural holographic scan look. The gradient
+/// is rotated ~30 degrees for a diagonal sweep.
+class _ShimmerOverlay extends StatelessWidget {
+  final double position;
+  final Widget child;
+
+  const _ShimmerOverlay({required this.position, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        child,
+        Positioned.fill(
+          child: IgnorePointer(
+            child: ClipRect(
+              child: CustomPaint(painter: _ShimmerPainter(position: position)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Paints the diagonal shimmer streak.
+class _ShimmerPainter extends CustomPainter {
+  final double position;
+
+  _ShimmerPainter({required this.position});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+
+    final rect = Offset.zero & size;
+
+    // Diagonal angle (~30 degrees).
+    const angle = 0.52; // radians
+    final diagonal = math.sqrt(
+      size.width * size.width + size.height * size.height,
+    );
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final dx = math.cos(angle) * diagonal;
+    final dy = math.sin(angle) * diagonal;
+
+    // Sweep the gradient center across the card based on position.
+    final sweepCenter = position;
+    final bandWidth = 0.12;
+
+    final stops = <double>[
+      (sweepCenter - bandWidth).clamp(0.0, 1.0),
+      (sweepCenter - bandWidth * 0.3).clamp(0.0, 1.0),
+      sweepCenter.clamp(0.0, 1.0),
+      (sweepCenter + bandWidth * 0.3).clamp(0.0, 1.0),
+      (sweepCenter + bandWidth).clamp(0.0, 1.0),
+    ];
+
+    // Ensure monotonically increasing stops.
+    for (int i = 1; i < stops.length; i++) {
+      if (stops[i] < stops[i - 1]) {
+        stops[i] = stops[i - 1];
+      }
+    }
+
+    final gradient = LinearGradient(
+      begin: Alignment(
+        -1.0 + (cx - dx) / size.width * 2,
+        -1.0 + (cy - dy) / size.height * 2,
+      ),
+      end: Alignment(
+        -1.0 + (cx + dx) / size.width * 2,
+        -1.0 + (cy + dy) / size.height * 2,
+      ),
+      colors: const [
+        Color(0x00FFFFFF),
+        Color(0x18FFFFFF),
+        Color(0x30FFFFFF),
+        Color(0x18FFFFFF),
+        Color(0x00FFFFFF),
+      ],
+      stops: stops,
+    );
+
+    final paint = Paint()
+      ..shader = gradient.createShader(rect)
+      ..blendMode = BlendMode.screen;
+
+    canvas.drawRect(rect, paint);
+  }
+
+  @override
+  bool shouldRepaint(_ShimmerPainter oldDelegate) {
+    return position != oldDelegate.position;
+  }
+}
+
+// =============================================================================
+// Empty state
+// =============================================================================
+
 class _EmptyAlbumState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -445,47 +616,42 @@ class _EmptyAlbumState extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.collections_bookmark_outlined,
-              size: 56,
+              size: 64,
               color: context.textTertiary.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 16),
             Text(
-              'Your Album Awaits',
+              'No cards yet',
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: context.textPrimary,
-                letterSpacing: 0.5,
+                fontWeight: FontWeight.w600,
+                color: context.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Discovered nodes will appear here as collectible\n'
-              'cards organized by trait, rarity, and region.',
+              'Connect to a mesh device and discover nodes\nto start building your collection',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
-                color: context.textSecondary,
+                color: context.textTertiary,
                 height: 1.5,
               ),
-              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _HintChip(
-                  icon: Icons.explore_outlined,
-                  label: 'Explore the mesh',
+                  icon: Icons.bluetooth_searching,
+                  label: 'Scan for devices',
                 ),
                 const SizedBox(width: 12),
-                _HintChip(
-                  icon: Icons.collections_outlined,
-                  label: 'Collect cards',
-                ),
+                _HintChip(icon: Icons.explore_outlined, label: 'Move around'),
               ],
             ),
           ],
@@ -495,7 +661,6 @@ class _EmptyAlbumState extends StatelessWidget {
   }
 }
 
-/// A small decorative chip used in the empty state hint row.
 class _HintChip extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -505,28 +670,24 @@ class _HintChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: context.border.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        color: context.surface,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: context.border.withValues(alpha: 0.2),
+          color: context.border.withValues(alpha: 0.3),
           width: 0.5,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 14,
-            color: context.textTertiary.withValues(alpha: 0.5),
-          ),
-          const SizedBox(width: 5),
+          Icon(icon, size: 14, color: context.textTertiary),
+          const SizedBox(width: 6),
           Text(
             label,
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 11,
               color: context.textTertiary,
               fontWeight: FontWeight.w500,
             ),
