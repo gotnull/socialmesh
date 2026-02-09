@@ -1,311 +1,493 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+        />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="black-translucent"
+        />
+        <meta name="theme-color" content="#0F1318" />
+        <title>Socialmesh</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=block"
+            rel="stylesheet"
+        />
+        <style>
+            :root {
+                --bg-deep: #0f1318;
+                --bg-tertiary: #262d3a;
+                --accent-magenta: #e91e8c;
+                --accent-purple: #8b5cf6;
+                --accent-blue: #4f6af6;
+                --text-secondary: #94a3b8;
+                --text-muted: #64748b;
+                --text-ghost: #475569;
+                --glow-magenta: rgba(233, 30, 140, 0.4);
+                --glow-purple: rgba(139, 92, 246, 0.35);
+                --glow-blue: rgba(79, 106, 246, 0.3);
+            }
 
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#1F2633">
-  <title>Socialmesh</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=block" rel="stylesheet">
-  <style>
-    :root {
-      --bg-primary: #1F2633;
-      --bg-secondary: #29303D;
-      --accent-magenta: #E91E8C;
-      --accent-purple: #8B5CF6;
-      --accent-blue: #4F6AF6;
-      --text-primary: #FFFFFF;
-      --text-secondary: #9CA3AF;
-      --text-muted: #6B7280;
-    }
+            html,
+            body {
+                height: 100%;
+                overflow: hidden;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+            body {
+                background: var(--bg-deep);
+                min-height: 100vh;
+                min-height: -webkit-fill-available;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                font-family: "JetBrains Mono", monospace;
+                padding: env(safe-area-inset-top) env(safe-area-inset-right)
+                    env(safe-area-inset-bottom) env(safe-area-inset-left);
+                position: relative;
+            }
 
-    html,
-    body {
-      height: 100%;
-      overflow: hidden;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
+            /* ── Background layers ── */
 
-    body {
-      background: var(--bg-primary);
-      min-height: 100vh;
-      min-height: -webkit-fill-available;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-family: 'JetBrains Mono', monospace;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-      position: relative;
-    }
+            .bg-gradient {
+                position: fixed;
+                inset: 0;
+                background:
+                    radial-gradient(
+                        ellipse 80% 60% at 30% 20%,
+                        rgba(139, 92, 246, 0.08) 0%,
+                        transparent 60%
+                    ),
+                    radial-gradient(
+                        ellipse 70% 50% at 70% 80%,
+                        rgba(233, 30, 140, 0.06) 0%,
+                        transparent 60%
+                    ),
+                    radial-gradient(
+                        ellipse 90% 90% at 50% 50%,
+                        rgba(79, 106, 246, 0.04) 0%,
+                        transparent 70%
+                    );
+                z-index: 0;
+            }
 
-    /* Main container */
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8vmin;
-      z-index: 1;
-      animation: containerFadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
+            /* Constellation dot grid */
+            .mesh-grid {
+                position: fixed;
+                inset: 0;
+                z-index: 0;
+                overflow: hidden;
+            }
 
-    @keyframes containerFadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(6vmin) scale(0.95);
-      }
+            .mesh-dot {
+                position: absolute;
+                width: 1.2px;
+                height: 1.2px;
+                border-radius: 50%;
+                background: var(--text-ghost);
+            }
 
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
+            .mesh-dot.bright {
+                width: 2px;
+                height: 2px;
+                background: var(--text-muted);
+                box-shadow: 0 0 4px rgba(139, 92, 246, 0.3);
+            }
 
-    /* App Icon */
-    .icon-container {
-      position: relative;
-      width: 40vmin;
-      height: 40vmin;
-    }
+            .mesh-dot.accent {
+                width: 2.5px;
+                height: 2.5px;
+                background: var(--accent-purple);
+                box-shadow: 0 0 8px var(--glow-purple);
+            }
 
-    .icon-glow {
-      position: absolute;
-      inset: -12vmin;
-      background: radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, rgba(233, 30, 140, 0.3) 40%, transparent 70%);
-      filter: blur(6vmin);
-      animation: glowPulse 4s ease-in-out infinite;
-    }
+            .mesh-line {
+                position: absolute;
+                height: 0.5px;
+                background: linear-gradient(
+                    90deg,
+                    transparent,
+                    rgba(139, 92, 246, 0.12),
+                    transparent
+                );
+                transform-origin: left center;
+            }
 
-    @keyframes glowPulse {
+            /* Horizontal scan line accents */
+            .scan-line {
+                position: fixed;
+                left: 0;
+                right: 0;
+                height: 0.5px;
+                background: linear-gradient(
+                    90deg,
+                    transparent 0%,
+                    rgba(139, 92, 246, 0.06) 20%,
+                    rgba(139, 92, 246, 0.1) 50%,
+                    rgba(139, 92, 246, 0.06) 80%,
+                    transparent 100%
+                );
+                z-index: 0;
+            }
 
-      0%,
-      100% {
-        opacity: 0.7;
-        transform: scale(1);
-      }
+            .scan-line:nth-child(1) {
+                top: 18%;
+            }
 
-      50% {
-        opacity: 1;
-        transform: scale(1.15);
-      }
-    }
+            .scan-line:nth-child(2) {
+                top: 82%;
+            }
 
-    .app-icon {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-      border-radius: 22%;
-      box-shadow: 0 2vmin 6vmin rgba(0, 0, 0, 0.4),
-        0 0 0 0.3vmin rgba(255, 255, 255, 0.1);
-      animation: iconFloat 8s ease-in-out infinite;
-    }
+            /* ── Main container ── */
 
-    @keyframes iconFloat {
+            .container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 7vmin;
+                z-index: 1;
+            }
 
-      0%,
-      100% {
-        transform: translateY(0);
-      }
+            /* ── App Icon ── */
 
-      50% {
-        transform: translateY(-2vmin);
-      }
-    }
+            .icon-container {
+                position: relative;
+                width: 36vmin;
+                height: 36vmin;
+            }
 
-    /* Logo section */
-    .logo-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2.5vmin;
-    }
+            .icon-glow {
+                position: absolute;
+                inset: -14vmin;
+                background:
+                    radial-gradient(
+                        circle at 40% 40%,
+                        var(--glow-magenta) 0%,
+                        transparent 50%
+                    ),
+                    radial-gradient(
+                        circle at 60% 60%,
+                        var(--glow-purple) 0%,
+                        transparent 50%
+                    ),
+                    radial-gradient(
+                        circle at 50% 50%,
+                        var(--glow-blue) 0%,
+                        transparent 60%
+                    );
+                filter: blur(7vmin);
+                opacity: 0.75;
+                z-index: 0;
+            }
 
-    .logo-text {
-      font-size: 10vmin;
-      font-weight: 700;
-      letter-spacing: -0.4vmin;
-      background: linear-gradient(135deg, #E91E8C 0%, #8B5CF6 50%, #4F6AF6 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: textReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
-    }
+            /* Subtle ring around icon */
+            .icon-ring {
+                position: absolute;
+                inset: -1.5vmin;
+                border-radius: 24%;
+                border: 0.3px solid rgba(139, 92, 246, 0.15);
+                opacity: 0.6;
+                z-index: 1;
+            }
 
-    @keyframes textReveal {
-      from {
-        opacity: 0;
-        transform: translateY(2vmin);
-        filter: blur(2vmin);
-      }
+            .app-icon {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                z-index: 2;
+                border-radius: 22%;
+                box-shadow:
+                    0 2vmin 8vmin rgba(0, 0, 0, 0.5),
+                    0 0 0 0.3px rgba(255, 255, 255, 0.08),
+                    0 0 4vmin rgba(139, 92, 246, 0.15);
+            }
 
-      to {
-        opacity: 1;
-        transform: translateY(0);
-        filter: blur(0);
-      }
-    }
+            /* ── Logo section ── */
 
-    .tagline {
-      font-size: 2.8vmin;
-      font-weight: 500;
-      color: var(--text-secondary);
-      letter-spacing: 0.6vmin;
-      text-transform: uppercase;
-      animation: textReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
-    }
+            .logo-section {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2.5vmin;
+            }
 
-    /* Loading section */
-    .loading-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3vmin;
-      margin-top: 4vmin;
-      animation: textReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both;
-    }
+            .logo-text {
+                font-size: 9.5vmin;
+                font-weight: 700;
+                letter-spacing: -0.3vmin;
+                background: linear-gradient(
+                    135deg,
+                    #e91e8c 0%,
+                    #c026d3 25%,
+                    #8b5cf6 50%,
+                    #6366f1 75%,
+                    #4f6af6 100%
+                );
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                filter: drop-shadow(0 0 3vmin rgba(139, 92, 246, 0.2));
+            }
 
-    .loading-bar {
-      width: 26vmin;
-      height: 0.6vmin;
-      background: var(--bg-secondary);
-      border-radius: 0.6vmin;
-      overflow: hidden;
-      position: relative;
-    }
+            .tagline-container {
+                display: flex;
+                align-items: center;
+                gap: 2.5vmin;
+            }
 
-    .loading-bar::after {
-      content: '';
-      position: absolute;
-      left: -40%;
-      width: 40%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, var(--accent-purple), transparent);
-      animation: loadingSlide 1.5s ease-in-out infinite;
-    }
+            .tagline-rule {
+                width: 4vmin;
+                height: 0.5px;
+                background: linear-gradient(
+                    90deg,
+                    transparent,
+                    var(--text-ghost)
+                );
+            }
 
-    @keyframes loadingSlide {
-      0% {
-        left: -40%;
-      }
+            .tagline-rule.right {
+                background: linear-gradient(
+                    90deg,
+                    var(--text-ghost),
+                    transparent
+                );
+            }
 
-      100% {
-        left: 100%;
-      }
-    }
+            .tagline {
+                font-size: 2.4vmin;
+                font-weight: 400;
+                color: var(--text-secondary);
+                letter-spacing: 0.8vmin;
+                text-transform: uppercase;
+            }
 
-    .loading-text {
-      font-size: 2.4vmin;
-      font-weight: 400;
-      color: var(--text-muted);
-      letter-spacing: 0.2vmin;
-    }
+            /* ── Loading section ── */
 
-    /* Footer */
-    .footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 5vmin;
-      padding-bottom: calc(5vmin + env(safe-area-inset-bottom));
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1.5vmin;
-      animation: footerFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) 1s both;
-    }
+            .loading-section {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2.5vmin;
+                margin-top: 3vmin;
+            }
 
-    @keyframes footerFadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(2vmin);
-      }
+            .loading-track {
+                width: 22vmin;
+                height: 0.5px;
+                background: var(--bg-tertiary);
+                border-radius: 1px;
+                overflow: hidden;
+                position: relative;
+            }
 
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+            /* Static gradient bar frozen at center to suggest loading in progress */
+            .loading-track::after {
+                content: "";
+                position: absolute;
+                left: 35%;
+                width: 30%;
+                height: 100%;
+                background: linear-gradient(
+                    90deg,
+                    transparent,
+                    var(--accent-purple),
+                    var(--accent-magenta),
+                    transparent
+                );
+            }
 
-    .version {
-      font-size: 2.4vmin;
-      font-weight: 500;
-      color: var(--text-muted);
-      letter-spacing: 0.1vmin;
-    }
+            .loading-text {
+                font-size: 2vmin;
+                font-weight: 300;
+                color: var(--text-ghost);
+                letter-spacing: 0.3vmin;
+            }
 
-    .copyright {
-      font-size: 2.2vmin;
-      color: var(--text-muted);
-      opacity: 0.6;
-    }
+            /* ── Footer ── */
 
-    /* Responsive - vmin handles most scaling, these are for extreme aspect ratios */
-    @media (max-aspect-ratio: 9/16) {
+            .footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 4vmin;
+                padding-bottom: calc(4vmin + env(safe-area-inset-bottom));
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 1.2vmin;
+                z-index: 1;
+            }
 
-      /* Extra tall/narrow screens - reduce slightly */
-      .mesh-container {
-        width: 35vmin;
-        height: 35vmin;
-      }
-    }
+            .version {
+                font-size: 2vmin;
+                font-weight: 400;
+                color: var(--text-ghost);
+                letter-spacing: 0.15vmin;
+            }
 
-    @media (min-aspect-ratio: 3/4) {
+            .copyright {
+                font-size: 1.8vmin;
+                font-weight: 300;
+                color: var(--text-ghost);
+                opacity: 0.5;
+            }
 
-      /* Wider screens (iPad-like) - adjust spacing */
-      .container {
-        gap: 6vmin;
-      }
-    }
+            /* ── Responsive ── */
 
-    /* Reduced motion */
-    @media (prefers-reduced-motion: reduce) {
+            @media (max-aspect-ratio: 9/16) {
+                .icon-container {
+                    width: 32vmin;
+                    height: 32vmin;
+                }
+            }
 
-      *,
-      *::before,
-      *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-      }
-    }
-  </style>
-</head>
+            @media (min-aspect-ratio: 3/4) {
+                .container {
+                    gap: 5vmin;
+                }
+            }
+        </style>
+    </head>
 
-<body>
-  <div class="container">
-    <!-- App Icon -->
-    <div class="icon-container">
-      <div class="icon-glow"></div>
-      <img class="app-icon" src="../app_icons/socialmesh_icon_512.png" alt="Socialmesh">
-    </div>
+    <body>
+        <!-- Background layers -->
+        <div class="bg-gradient"></div>
+        <div class="scan-line"></div>
+        <div class="scan-line"></div>
 
-    <!-- Logo -->
-    <div class="logo-section">
-      <div class="logo-text">Socialmesh</div>
-      <div class="tagline">Off-Grid Communication</div>
-    </div>
+        <!-- Constellation mesh grid (generated by script below) -->
+        <div class="mesh-grid" id="meshGrid"></div>
 
-    <!-- Footer -->
-    <div class="footer">
-      <div class="version">Version 1.14.1+107</div>
-      <div class="copyright">&copy; 2026 Socialmesh. All rights reserved.</div>
-    </div>
+        <!-- Main content -->
+        <div class="container">
+            <!-- App Icon -->
+            <div class="icon-container">
+                <div class="icon-glow"></div>
+                <div class="icon-ring"></div>
+                <img
+                    class="app-icon"
+                    src="../app_icons/socialmesh_icon_512.png"
+                    alt="Socialmesh"
+                />
+            </div>
 
+            <!-- Logo -->
+            <div class="logo-section">
+                <div class="logo-text">Socialmesh</div>
+                <div class="tagline-container">
+                    <div class="tagline-rule"></div>
+                    <div class="tagline">Off-Grid Communication</div>
+                    <div class="tagline-rule right"></div>
+                </div>
+            </div>
 
+            <!-- Loading -->
+            <div class="loading-section">
+                <div class="loading-track"></div>
+                <div class="loading-text">Initializing mesh</div>
+            </div>
+        </div>
 
-</body>
+        <!-- Footer -->
+        <div class="footer">
+            <div class="version">Version 1.14.1+107</div>
+            <div class="copyright">
+                &copy; 2026 Socialmesh. All rights reserved.
+            </div>
+        </div>
 
+        <script>
+            // Generate deterministic constellation dot grid with connecting lines.
+            // Uses a seed-based PRNG so the pattern is identical every render
+            // (important for consistent screenshot capture across device sizes).
+            (function () {
+                const grid = document.getElementById("meshGrid");
+                const seed = 42;
+                let s = seed;
+
+                function rand() {
+                    s = (s * 1103515245 + 12345) & 0x7fffffff;
+                    return s / 0x7fffffff;
+                }
+
+                const dots = [];
+                const count = 60;
+
+                for (let i = 0; i < count; i++) {
+                    const x = rand() * 100;
+                    const y = rand() * 100;
+                    const r = rand();
+
+                    const dot = document.createElement("div");
+                    dot.className =
+                        "mesh-dot" +
+                        (r > 0.92 ? " accent" : r > 0.78 ? " bright" : "");
+                    dot.style.left = x + "%";
+                    dot.style.top = y + "%";
+                    grid.appendChild(dot);
+                    dots.push({ x, y });
+                }
+
+                // Connect nearby dots with faint lines
+                for (let i = 0; i < dots.length; i++) {
+                    for (let j = i + 1; j < dots.length; j++) {
+                        const dx = dots[i].x - dots[j].x;
+                        const dy = dots[i].y - dots[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < 12 && rand() > 0.5) {
+                            const line = document.createElement("div");
+                            line.className = "mesh-line";
+                            const angle =
+                                (Math.atan2(
+                                    ((dots[j].y - dots[i].y) *
+                                        window.innerHeight) /
+                                        100,
+                                    ((dots[j].x - dots[i].x) *
+                                        window.innerWidth) /
+                                        100,
+                                ) *
+                                    180) /
+                                Math.PI;
+                            const length = Math.sqrt(
+                                Math.pow(
+                                    ((dots[j].x - dots[i].x) *
+                                        window.innerWidth) /
+                                        100,
+                                    2,
+                                ) +
+                                    Math.pow(
+                                        ((dots[j].y - dots[i].y) *
+                                            window.innerHeight) /
+                                            100,
+                                        2,
+                                    ),
+                            );
+                            line.style.left = dots[i].x + "%";
+                            line.style.top = dots[i].y + "%";
+                            line.style.width = length + "px";
+                            line.style.transform = "rotate(" + angle + "deg)";
+                            grid.appendChild(line);
+                        }
+                    }
+                }
+            })();
+        </script>
+    </body>
 </html>
