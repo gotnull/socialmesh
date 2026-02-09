@@ -13,12 +13,21 @@ import '../models/mesh_models.dart';
 
 /// Service for sharing content with rich Open Graph link previews
 class ShareLinkService {
-  final FirebaseFirestore _firestore;
-  final FirebaseAuth _auth;
+  final FirebaseFirestore? _firestoreOverride;
+  final FirebaseAuth? _authOverride;
 
   ShareLinkService({FirebaseFirestore? firestore, FirebaseAuth? auth})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _auth = auth ?? FirebaseAuth.instance;
+    : _firestoreOverride = firestore,
+      _authOverride = auth;
+
+  /// Lazy — avoids accessing FirebaseFirestore.instance before
+  /// Firebase.initializeApp() has completed.
+  FirebaseFirestore get _firestore =>
+      _firestoreOverride ?? FirebaseFirestore.instance;
+
+  /// Lazy — avoids accessing FirebaseAuth.instance before
+  /// Firebase.initializeApp() has completed.
+  FirebaseAuth get _auth => _authOverride ?? FirebaseAuth.instance;
 
   /// Get a safe share position for iOS/iPadOS
   /// Returns a centered rect that works for popover positioning

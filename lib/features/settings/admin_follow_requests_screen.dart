@@ -27,7 +27,9 @@ class AdminFollowRequestsScreen extends ConsumerStatefulWidget {
 class _AdminFollowRequestsScreenState
     extends ConsumerState<AdminFollowRequestsScreen>
     with LifecycleSafeMixin<AdminFollowRequestsScreen> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  /// Lazy — avoids accessing FirebaseFirestore.instance before
+  /// Firebase.initializeApp() has completed.
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {

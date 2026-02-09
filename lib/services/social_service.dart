@@ -17,11 +17,20 @@ import 'social_activity_service.dart';
 /// complex operations that need to maintain counters.
 class SocialService {
   SocialService({FirebaseFirestore? firestore, FirebaseAuth? auth})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _auth = auth ?? FirebaseAuth.instance;
+    : _firestoreOverride = firestore,
+      _authOverride = auth;
 
-  final FirebaseFirestore _firestore;
-  final FirebaseAuth _auth;
+  final FirebaseFirestore? _firestoreOverride;
+  final FirebaseAuth? _authOverride;
+
+  /// Lazy — avoids accessing FirebaseFirestore.instance before
+  /// Firebase.initializeApp() has completed.
+  FirebaseFirestore get _firestore =>
+      _firestoreOverride ?? FirebaseFirestore.instance;
+
+  /// Lazy — avoids accessing FirebaseAuth.instance before
+  /// Firebase.initializeApp() has completed.
+  FirebaseAuth get _auth => _authOverride ?? FirebaseAuth.instance;
 
   String? get _currentUserId => _auth.currentUser?.uid;
 

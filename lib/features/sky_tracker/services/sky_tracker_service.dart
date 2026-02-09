@@ -10,7 +10,9 @@ import '../models/sky_node.dart';
 
 /// Service for Sky Tracker functionality
 class SkyTrackerService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  /// Lazy — avoids accessing FirebaseFirestore.instance before
+  /// Firebase.initializeApp() has completed.
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   // Collection references
   CollectionReference<Map<String, dynamic>> get _skyNodesCollection =>

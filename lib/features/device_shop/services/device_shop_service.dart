@@ -12,8 +12,14 @@ import '../models/shop_models.dart';
 
 /// Service for device shop operations
 class DeviceShopService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  /// Lazy — avoids accessing FirebaseFirestore.instance before
+  /// Firebase.initializeApp() has completed.
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+
+  /// Lazy — avoids accessing FirebaseStorage.instance before
+  /// Firebase.initializeApp() has completed.
+  FirebaseStorage get _storage => FirebaseStorage.instance;
+
   final Uuid _uuid = const Uuid();
 
   CollectionReference<Map<String, dynamic>> get _productsCollection =>
