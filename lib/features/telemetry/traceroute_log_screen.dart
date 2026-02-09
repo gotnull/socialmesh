@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/section_header.dart';
@@ -14,6 +16,8 @@ import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/share_utils.dart';
+import '../../utils/snackbar.dart';
 import '../nodes/node_display_name_resolver.dart';
 
 /// Filter options for traceroute logs
@@ -36,6 +40,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
   _TracerouteFilter _activeFilter = _TracerouteFilter.all;
   DateTime? _startDate;
   DateTime? _endDate;
+  bool _isExporting = false;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -143,10 +148,37 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
         : ref.watch(traceRouteLogsProvider);
     final nodes = ref.watch(nodesProvider);
     final node = widget.nodeNum != null ? nodes[widget.nodeNum] : null;
-    final subtitle = node?.displayName ?? 'All Nodes';
+    final nodeName = node?.displayName;
 
     return GlassScaffold(
-      title: 'Traceroute History',
+      titleWidget: widget.nodeNum != null && nodeName != null
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Traceroute History',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+                Text(
+                  nodeName,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: context.textTertiary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+              ],
+            )
+          : null,
+      title: widget.nodeNum == null || nodeName == null
+          ? 'Traceroute History'
+          : null,
       actions: [
         if (_hasDateFilter)
           IconButton(
@@ -162,9 +194,57 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
           tooltip: 'Date range',
           onPressed: _selectDateRange,
         ),
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          tooltip: 'More actions',
+          onSelected: (value) {
+            switch (value) {
+              case 'export':
+                _exportCsv();
+              case 'clear':
+                _confirmClearData();
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'export',
+              enabled: !_isExporting,
+              child: Row(
+                children: [
+                  Icon(
+                    _isExporting ? Icons.hourglass_top : Icons.ios_share,
+                    size: 20,
+                    color: context.textSecondary,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(_isExporting ? 'Exporting...' : 'Export CSV'),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'clear',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.delete_outline,
+                    size: 20,
+                    color: AppTheme.errorRed,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Clear Data',
+                    style: TextStyle(color: AppTheme.errorRed),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ],
       slivers: [
-        // Controls header: search + filter chips
+        // Top padding to push content below the glass app bar
+        const SliverToBoxAdapter(child: SizedBox(height: 8)),
+        // Pinned search and filter controls
         SliverPersistentHeader(
           pinned: true,
           delegate: _TracerouteControlsHeaderDelegate(
@@ -184,7 +264,6 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
               logsAsync,
               _TracerouteFilter.noResponse,
             ),
-            subtitle: subtitle,
             textScaler: MediaQuery.textScalerOf(context),
           ),
         ),
@@ -288,6 +367,132 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
       ),
     );
   }
+
+  Future<void> _exportCsv() async {
+    safeSetState(() => _isExporting = true);
+
+    try {
+      final List<TraceRouteLog> logs;
+      if (widget.nodeNum != null) {
+        logs = await ref.read(
+          nodeTraceRouteLogsProvider(widget.nodeNum!).future,
+        );
+      } else {
+        logs = await ref.read(traceRouteLogsProvider.future);
+      }
+
+      if (!mounted) return;
+
+      if (logs.isEmpty) {
+        showInfoSnackBar(context, 'No traceroute data to export');
+        return;
+      }
+
+      final nodes = ref.read(nodesProvider);
+      final buffer = StringBuffer();
+      buffer.writeln(
+        'timestamp,target_node,target_name,response,hops_forward,hops_back,snr_db,forward_route,forward_snr,return_route,return_snr',
+      );
+
+      for (final log in logs) {
+        final targetNode = nodes[log.targetNode];
+        final targetName =
+            targetNode?.displayName ??
+            NodeDisplayNameResolver.defaultName(log.targetNode);
+
+        final forwardHops = log.hops.where((h) => !h.back).toList();
+        final returnHops = log.hops.where((h) => h.back).toList();
+
+        final forwardRoute = forwardHops
+            .map((h) {
+              final n = nodes[h.nodeNum];
+              return n?.displayName ??
+                  NodeDisplayNameResolver.defaultName(h.nodeNum);
+            })
+            .join(' > ');
+        final forwardSnr = forwardHops
+            .map((h) => h.snr?.toStringAsFixed(1) ?? 'N/A')
+            .join(',');
+
+        final returnRoute = returnHops
+            .map((h) {
+              final n = nodes[h.nodeNum];
+              return n?.displayName ??
+                  NodeDisplayNameResolver.defaultName(h.nodeNum);
+            })
+            .join(' > ');
+        final returnSnr = returnHops
+            .map((h) => h.snr?.toStringAsFixed(1) ?? 'N/A')
+            .join(',');
+
+        buffer.writeln(
+          '${log.timestamp.toIso8601String()},'
+          '${log.targetNode},'
+          '"$targetName",'
+          '${log.response},'
+          '${log.hopsTowards},'
+          '${log.hopsBack},'
+          '${log.snr?.toStringAsFixed(1) ?? ""},'
+          '"$forwardRoute","$forwardSnr",'
+          '"$returnRoute","$returnSnr"',
+        );
+      }
+
+      if (!mounted) return;
+
+      final scope = widget.nodeNum != null ? 'Node' : 'All';
+      await shareText(
+        buffer.toString(),
+        subject: 'Socialmesh Traceroute Export ($scope)',
+        context: context,
+      );
+
+      if (!mounted) return;
+      showSuccessSnackBar(context, 'Exported ${logs.length} traceroutes');
+    } catch (e) {
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Export failed: $e');
+    } finally {
+      if (mounted) {
+        safeSetState(() => _isExporting = false);
+      }
+    }
+  }
+
+  Future<void> _confirmClearData() async {
+    final scope = widget.nodeNum != null ? 'this node' : 'all nodes';
+    final messenger = ScaffoldMessenger.of(context);
+
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: 'Clear Traceroute Data',
+      message:
+          'This will permanently delete all traceroute history for $scope. This cannot be undone.',
+      confirmLabel: 'Clear',
+      isDestructive: true,
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final storage = await ref.read(telemetryStorageProvider.future);
+      if (widget.nodeNum != null) {
+        await storage.clearTraceRouteLogsForNode(widget.nodeNum!);
+        ref.invalidate(nodeTraceRouteLogsProvider(widget.nodeNum!));
+      } else {
+        await storage.clearTraceRouteLogs();
+        ref.invalidate(traceRouteLogsProvider);
+      }
+
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Traceroute data cleared')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Failed to clear data: $e');
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -303,7 +508,6 @@ class _TracerouteControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
   final int allCount;
   final int respondedCount;
   final int noResponseCount;
-  final String subtitle;
   final TextScaler textScaler;
 
   _TracerouteControlsHeaderDelegate({
@@ -315,19 +519,16 @@ class _TracerouteControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.allCount,
     required this.respondedCount,
     required this.noResponseCount,
-    required this.subtitle,
     required this.textScaler,
   });
 
-  double get _searchFieldHeight {
-    final scaled = textScaler.scale(48);
-    return scaled < kMinInteractiveDimension
-        ? kMinInteractiveDimension
-        : scaled;
-  }
+  // Match Nodes screen: search field height constrained explicitly via
+  // SizedBox + InputDecoration.constraints so extent is deterministic.
+  double get _searchFieldHeight =>
+      math.max(kMinInteractiveDimension, textScaler.scale(48));
 
-  // subtitle row (28) + pad (8+8) + search (scaled 48) + chips row (44) + pad (8) + divider (1)
-  double get _computedExtent => 28 + 16 + _searchFieldHeight + 44 + 8 + 1;
+  // Layout: outerPad (8+8) + searchField + chipsRow (44) + spacing (8) + divider (1)
+  double get _computedExtent => 16 + _searchFieldHeight + 44 + 8 + 1;
 
   @override
   double get minExtent => _computedExtent;
@@ -348,26 +549,10 @@ class _TracerouteControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
         child: Container(
           color: context.background.withValues(alpha: 0.8),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Subtitle showing node name or "All Nodes"
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                child: Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: context.textSecondary,
-                  ),
-                ),
-              ),
               // Search bar
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 child: SizedBox(
                   height: _searchFieldHeight,
                   child: Container(
@@ -468,8 +653,7 @@ class _TracerouteControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
         activeFilter != oldDelegate.activeFilter ||
         allCount != oldDelegate.allCount ||
         respondedCount != oldDelegate.respondedCount ||
-        noResponseCount != oldDelegate.noResponseCount ||
-        subtitle != oldDelegate.subtitle;
+        noResponseCount != oldDelegate.noResponseCount;
   }
 }
 

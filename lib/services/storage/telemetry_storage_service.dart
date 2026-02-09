@@ -314,6 +314,11 @@ class TelemetryStorageService {
     }
   }
 
+  // Clear traceroute logs for a specific node
+  Future<void> clearTraceRouteLogsForNode(int nodeNum) async {
+    await _prefs.remove('${_traceRouteLogKey}_$nodeNum');
+  }
+
   // Clear traceroute logs for all nodes
   Future<void> clearTraceRouteLogs() async {
     for (final nodeNum in _getNodeNumbersForKey(_traceRouteLogKey)) {
