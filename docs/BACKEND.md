@@ -23,6 +23,14 @@ These features are fully functional with only a Meshtastic radio:
 - QR code channel import/export
 - Emergency SOS broadcast
 - RTTTL ringtone preview and device upload
+- NodeDex — procedural sigils, trait inference, patina scoring, co-seen tracking
+- Signals — ephemeral mesh-first content with configurable TTL
+- Presence — node online/offline tracking and activity patterns
+- Mesh Health — network health metrics and utilization graphs
+- Reachability — probabilistic node reachability assessment
+- Route analysis — discovered routes and packet paths
+- 3D Mesh View — interactive network topology visualization
+- Automations — local rule-based event triggers and actions
 
 ### Requires Backend Services
 

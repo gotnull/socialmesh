@@ -241,8 +241,6 @@ These features are available via one-time in-app purchases:
 
 - [Architecture Overview](docs/ARCHITECTURE.md) — How the app is structured
 - [Backend Boundary](docs/BACKEND.md) — What requires cloud services
-- [Hardening Plan](docs/HARDENING_PLAN.md) — Lifecycle safety and crash prevention
-- [Signals and Presence](docs/signals-presence-reference.md) — Ephemeral content system reference
 - [Releasing](docs/RELEASING.md) — How to cut a release
 
 ---
@@ -450,8 +448,6 @@ For repository maintainers:
 
 - [Architecture Overview](docs/ARCHITECTURE.md)
 - [Backend Boundary](docs/BACKEND.md)
-- [Hardening Plan](docs/HARDENING_PLAN.md)
-- [Signals and Presence Reference](docs/signals-presence-reference.md)
 - [Contributing Guide](CONTRIBUTING.md)
 - [Security Policy](SECURITY.md)
 
