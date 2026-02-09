@@ -32,7 +32,9 @@ import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/ico_help_system.dart';
 
+import '../atmosphere/atmosphere_overlay.dart';
 import '../providers/nodedex_providers.dart';
 import '../screens/nodedex_detail_screen.dart';
 import 'cluster_engine.dart';
@@ -222,6 +224,7 @@ class _ConstellationScreenState extends ConsumerState<ConstellationScreen>
             onPressed: _resetView,
           ),
         ],
+        const IcoHelpAppBarButton(topicId: 'nodedex_constellation'),
       ],
       body: constellation.isEmpty
           ? _buildEmptyState(context)
@@ -292,6 +295,11 @@ class _ConstellationScreenState extends ConsumerState<ConstellationScreen>
             ),
           ),
         ),
+
+        // Elemental Atmosphere — ambient data-driven particle effects.
+        // Sits between the background gradient and the constellation
+        // canvas so particles appear behind nodes and edges.
+        const Positioned.fill(child: ConstellationAtmosphere()),
 
         // Fixed canvas — NO InteractiveViewer.
         // Pinch-to-zoom is handled manually via onScale* with a

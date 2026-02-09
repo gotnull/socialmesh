@@ -11,6 +11,7 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/accessibility_preferences.dart';
 import '../../providers/accessibility_providers.dart';
 import '../../services/haptic_service.dart';
+import '../nodedex/atmosphere/atmosphere_provider.dart';
 
 /// Appearance & Accessibility settings screen
 ///
@@ -106,6 +107,13 @@ class _AppearanceAccessibilityScreenState
               _ReduceMotionToggle(
                 reduceMotion: prefs.reduceMotionMode.shouldReduceMotion,
                 onChanged: (enabled) => _updateReduceMotion(enabled),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Elemental Atmosphere toggle
+              _AtmosphereToggle(
+                reduceMotionActive: prefs.reduceMotionMode.shouldReduceMotion,
               ),
 
               const SizedBox(height: 24),
@@ -590,6 +598,61 @@ class _ContrastToggle extends StatelessWidget {
 }
 
 /// Reduce motion toggle
+/// Toggle for the Elemental Atmosphere ambient particle effects.
+///
+/// Allows users to enable or disable ambient data-driven particle
+/// effects (rain, embers, mist, starlight) that visualize mesh
+/// activity behind NodeDex and map views. The toggle is disabled
+/// when reduce-motion is active because all particle effects are
+/// suppressed in that mode.
+class _AtmosphereToggle extends ConsumerWidget {
+  const _AtmosphereToggle({required this.reduceMotionActive});
+
+  /// Whether reduce-motion is currently active. When true, the
+  /// toggle is disabled and shows an explanatory subtitle.
+  final bool reduceMotionActive;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final atmosphereEnabled = ref.watch(atmosphereEnabledProvider);
+
+    return Card(
+      margin: EdgeInsets.zero,
+      color: context.card,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: SwitchListTile(
+        title: Text(
+          'Elemental Atmosphere',
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        subtitle: Text(
+          reduceMotionActive
+              ? 'Disabled while Reduce Motion is active'
+              : 'Ambient particle effects driven by mesh activity',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        secondary: Icon(
+          Icons.auto_awesome_outlined,
+          color: reduceMotionActive
+              ? context.textTertiary
+              : atmosphereEnabled
+              ? context.accentColor
+              : context.textSecondary,
+        ),
+        value: reduceMotionActive ? false : atmosphereEnabled,
+        onChanged: reduceMotionActive
+            ? null
+            : (enabled) {
+                HapticFeedback.selectionClick();
+                ref
+                    .read(atmosphereEnabledProvider.notifier)
+                    .setEnabled(enabled);
+              },
+      ),
+    );
+  }
+}
+
 class _ReduceMotionToggle extends StatelessWidget {
   const _ReduceMotionToggle({
     required this.reduceMotion,

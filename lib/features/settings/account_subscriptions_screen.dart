@@ -12,6 +12,7 @@ import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/user_avatar.dart';
@@ -54,6 +55,7 @@ class _AccountSubscriptionsScreenState
 
     return GlassScaffold(
       title: 'Account',
+      actions: const [IcoHelpAppBarButton(topicId: 'cloud_sync_overview')],
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.all(16),
@@ -605,14 +607,25 @@ class _AccountSubscriptionsScreenState
                   child: Column(
                     children: [
                       _FeatureRow(
-                        icon: Icons.devices,
-                        text: 'Sync across all devices',
+                        icon: Icons.hexagon_outlined,
+                        text: 'NodeDex — encounters, tags, notes',
                       ),
                       _FeatureRow(
-                        icon: Icons.backup,
-                        text: 'Automatic cloud backup',
+                        icon: Icons.auto_awesome,
+                        text: 'Automations — rules and triggers',
                       ),
-                      _FeatureRow(icon: Icons.share, text: 'Share profiles'),
+                      _FeatureRow(
+                        icon: Icons.widgets_outlined,
+                        text: 'Custom Widgets — layouts and data',
+                      ),
+                      _FeatureRow(
+                        icon: Icons.restore,
+                        text: 'Backup — restore after reinstall or new phone',
+                      ),
+                      _FeatureRow(
+                        icon: Icons.offline_bolt,
+                        text: 'Works fully offline without it',
+                      ),
                     ],
                   ),
                 ),
@@ -2371,17 +2384,33 @@ class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
           const SizedBox(height: 8),
 
           Text(
-            'Sync your mesh data across all your devices',
+            'Sync and back up your mesh data across all your devices',
             textAlign: TextAlign.center,
             style: TextStyle(color: context.textSecondary),
           ),
           SizedBox(height: 24),
 
-          // Features
-          _FeatureRow(icon: Icons.devices, text: 'Sync across all devices'),
-          _FeatureRow(icon: Icons.backup, text: 'Automatic cloud backup'),
-          _FeatureRow(icon: Icons.share, text: 'Share profiles & settings'),
-          _FeatureRow(icon: Icons.offline_bolt, text: 'Local mode always free'),
+          // Features — list actual premium sync types
+          _FeatureRow(
+            icon: Icons.hexagon_outlined,
+            text: 'NodeDex — encounters, tags, notes',
+          ),
+          _FeatureRow(
+            icon: Icons.auto_awesome,
+            text: 'Automations — rules and triggers',
+          ),
+          _FeatureRow(
+            icon: Icons.widgets_outlined,
+            text: 'Custom Widgets — layouts and data',
+          ),
+          _FeatureRow(
+            icon: Icons.restore,
+            text: 'Backup — restore after reinstall or new phone',
+          ),
+          _FeatureRow(
+            icon: Icons.offline_bolt,
+            text: 'Works fully offline without it',
+          ),
 
           const SizedBox(height: 24),
 

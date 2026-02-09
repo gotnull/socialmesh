@@ -197,6 +197,34 @@ class WhatsNewRegistry {
         ),
       ],
     ),
+
+    // v1.3.0 — Collector Album for NodeDex
+    WhatsNewPayload(
+      version: '1.3.0',
+      headline: "What's New in Socialmesh",
+      subtitle: 'Version 1.3.0',
+      items: [
+        WhatsNewItem(
+          id: 'collector_album',
+          title: 'Collector Album',
+          description:
+              'Your NodeDex is now a collector album. Tap the album icon '
+              'in the NodeDex toolbar to switch from list view to a card '
+              'grid — every discovered node displayed as a collectible '
+              'card with rarity borders and holographic shimmer.\n\n'
+              'Group pages by Trait, Rarity, or Region. Long-press any '
+              'card to open the full-screen gallery — swipe to browse, '
+              'tap to flip and reveal stats on the back. Mystery slots '
+              'hint at nodes still waiting to be found.',
+          icon: Icons.collections_bookmark_outlined,
+          iconColor: Color(0xFFD4AF37), // Gold
+          deepLinkRoute: '/nodedex',
+          helpTopicId: 'nodedex_overview',
+          badgeKey: 'nodedex',
+          ctaLabel: 'Open NodeDex',
+        ),
+      ],
+    ),
   ];
 
   // ===========================================================================

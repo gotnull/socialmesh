@@ -125,8 +125,27 @@ void main() {
       }
     });
 
-    test('has exactly 10 entries', () {
-      expect(HelpContent.nodeDexSectionHelp.length, equals(10));
+    test('contains all expected album section keys', () {
+      const expectedAlbumKeys = [
+        'album_rarity',
+        'album_grouping',
+        'album_explorer_title',
+        'album_holographic',
+        'album_patina',
+        'album_cloud_sync',
+      ];
+
+      for (final key in expectedAlbumKeys) {
+        expect(
+          HelpContent.nodeDexSectionHelp.containsKey(key),
+          isTrue,
+          reason: 'Missing album section help key: $key',
+        );
+      }
+    });
+
+    test('has exactly 16 entries (10 node-detail + 6 album)', () {
+      expect(HelpContent.nodeDexSectionHelp.length, equals(16));
     });
 
     test('all values are non-empty strings', () {
@@ -150,18 +169,43 @@ void main() {
       }
     });
 
-    test('section help keys align with tour step IDs', () {
+    test('node-detail section help keys align with tour step IDs', () {
       final topic = HelpContent.getTopic('nodedex_detail')!;
       final stepIds = topic.steps.map((s) => s.id).toSet();
-      final sectionKeys = HelpContent.nodeDexSectionHelp.keys.toSet();
 
-      // Every section key should have a corresponding step (with nodedex_ prefix)
-      for (final key in sectionKeys) {
+      // Only node-detail keys (non-album) should align with nodedex_detail steps
+      final nodeDetailKeys = HelpContent.nodeDexSectionHelp.keys
+          .where((k) => !k.startsWith('album_'))
+          .toSet();
+
+      for (final key in nodeDetailKeys) {
         expect(
           stepIds.contains('nodedex_$key'),
           isTrue,
           reason:
               'Section help key "$key" has no matching tour step "nodedex_$key"',
+        );
+      }
+    });
+
+    test('album section help keys are valid inline helpers', () {
+      // Album section help keys are contextual inline helpers shown in
+      // tooltips or info panels. Not all have matching tour steps — keys
+      // like album_explorer_title, album_patina, and album_cloud_sync
+      // are explanatory snippets, not guided tour steps.
+      final albumKeys = HelpContent.nodeDexSectionHelp.keys
+          .where((k) => k.startsWith('album_'))
+          .toList();
+
+      expect(albumKeys.length, equals(6));
+
+      for (final key in albumKeys) {
+        final text = HelpContent.nodeDexSectionHelp[key]!;
+        expect(
+          text.length,
+          greaterThanOrEqualTo(50),
+          reason:
+              'Album section help "$key" is too short: ${text.length} chars',
         );
       }
     });

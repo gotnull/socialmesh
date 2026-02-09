@@ -23,6 +23,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/logging.dart';
+import '../../../providers/accessibility_providers.dart';
 import '../../../providers/app_providers.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/edge_fade.dart';
@@ -32,6 +33,9 @@ import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton_config.dart';
 import '../../../models/mesh_models.dart';
 import '../../nodes/node_display_name_resolver.dart';
+import '../album/album_grid_view.dart' show buildAlbumSlivers;
+import '../album/album_providers.dart';
+import '../album/card_gallery_screen.dart';
 import '../models/nodedex_entry.dart';
 import '../models/sigil_evolution.dart';
 import '../providers/nodedex_providers.dart';
@@ -78,6 +82,8 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     final currentSort = ref.watch(nodeDexSortProvider);
     final currentFilter = ref.watch(nodeDexFilterProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
+    final viewMode = ref.watch(albumViewModeProvider);
+    final reduceMotion = ref.watch(reduceMotionEnabledProvider);
 
     // Separate own device from other entries.
     final myEntry = myNodeNum != null
@@ -89,18 +95,36 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
 
     AppLogging.nodeDex(
       'Screen build — ${entries.length} entries, '
-      'filter: ${currentFilter.name}, sort: ${currentSort.name}',
+      'filter: ${currentFilter.name}, sort: ${currentSort.name}, '
+      'view: ${viewMode.name}',
     );
 
+    final isAlbumMode = viewMode == AlbumViewMode.album;
+
+    final helpTopicId = isAlbumMode ? 'nodedex_album' : 'nodedex_overview';
+
     return HelpTourController(
-      topicId: 'nodedex_overview',
+      topicId: helpTopicId,
       stepKeys: const {},
       child: GestureDetector(
         onTap: _dismissKeyboard,
         child: GlassScaffold(
           title: 'NodeDex',
           actions: [
-            IcoHelpAppBarButton(topicId: 'nodedex_overview'),
+            // View mode toggle (list ↔ album).
+            _ViewModeToggle(
+              isAlbumMode: isAlbumMode,
+              onToggle: () {
+                final notifier = ref.read(albumViewModeProvider.notifier);
+                notifier.toggle();
+                AppLogging.nodeDex(
+                  'View mode toggled: ${isAlbumMode ? 'album → list' : 'list → album'}',
+                );
+              },
+            ),
+            IcoHelpAppBarButton(
+              topicId: isAlbumMode ? 'nodedex_album' : 'nodedex_overview',
+            ),
             // Settings link
             IconButton(
               icon: const Icon(Icons.settings_outlined, size: 22),
@@ -114,120 +138,191 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
               },
             ),
           ],
-          slivers: [
-            // Top padding below glass app bar
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
-
-            // Stats summary — not pinned, sizes itself naturally
-            if (isLoading)
-              SliverToBoxAdapter(
-                child: Skeletonizer(
-                  enabled: true,
-                  effect: AppSkeletonConfig.effect(context),
-                  child: const SkeletonNodeDexStatsCard(),
+          slivers: isAlbumMode
+              ? _buildAlbumSlivers(context, isLoading, reduceMotion)
+              : _buildListSlivers(
+                  context,
+                  isLoading: isLoading,
+                  stats: stats,
+                  myEntry: myEntry,
+                  otherEntries: otherEntries,
+                  currentSort: currentSort,
+                  currentFilter: currentFilter,
                 ),
-              )
-            else
-              SliverToBoxAdapter(child: _NodeDexStatsCard(stats: stats)),
-
-            // Pinned search + filter controls
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _NodeDexControlsHeaderDelegate(
-                textScaler: MediaQuery.textScalerOf(context),
-                searchController: _searchController,
-                searchQuery: _searchQuery,
-                onSearchChanged: (value) {
-                  setState(() => _searchQuery = value);
-                  ref.read(nodeDexSearchProvider.notifier).setQuery(value);
-                  if (value.isNotEmpty) {
-                    AppLogging.nodeDex('Search query changed: "$value"');
-                  }
-                },
-                currentFilter: currentFilter,
-                onFilterChanged: (filter) {
-                  AppLogging.nodeDex(
-                    'Filter changed: ${currentFilter.name} → ${filter.name}',
-                  );
-                  ref.read(nodeDexFilterProvider.notifier).setFilter(filter);
-                },
-                currentSort: currentSort,
-                onSortChanged: (order) {
-                  AppLogging.nodeDex(
-                    'Sort order changed: ${currentSort.name} → ${order.name}',
-                  );
-                  ref.read(nodeDexSortProvider.notifier).setOrder(order);
-                },
-                stats: stats,
-              ),
-            ),
-
-            // Your Device section
-            if (isLoading) ...[
-              // Show skeleton list while loading
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => Skeletonizer(
-                    enabled: true,
-                    effect: AppSkeletonConfig.effect(context),
-                    child: const SkeletonNodeDexCard(),
-                  ),
-                  childCount: 6,
-                ),
-              ),
-            ] else if (myEntry.isNotEmpty) ...[
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: SectionHeaderDelegate(title: 'Your Device'),
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final (entry, node) = myEntry[index];
-                  return _NodeDexListTile(
-                    entry: entry,
-                    node: node,
-                    onTap: () => _openDetail(entry, node),
-                  );
-                }, childCount: myEntry.length),
-              ),
-            ],
-
-            // Other nodes list or empty state
-            if (!isLoading && otherEntries.isNotEmpty) ...[
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: SectionHeaderDelegate(
-                  title: 'Discovered Nodes',
-                  count: otherEntries.length,
-                ),
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final (entry, node) = otherEntries[index];
-                  return _NodeDexListTile(
-                    entry: entry,
-                    node: node,
-                    onTap: () => _openDetail(entry, node),
-                  );
-                }, childCount: otherEntries.length),
-              ),
-            ] else if (!isLoading && myEntry.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: _EmptyState(filter: currentFilter),
-              ),
-
-            // Bottom padding for safe area
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: MediaQuery.of(context).padding.bottom + 16,
-              ),
-            ),
-          ],
         ),
       ),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Album view slivers
+  // ---------------------------------------------------------------------------
+
+  List<Widget> _buildAlbumSlivers(
+    BuildContext context,
+    bool isLoading,
+    bool reduceMotion,
+  ) {
+    if (isLoading) {
+      return [
+        const SliverToBoxAdapter(child: SizedBox(height: 8)),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => Skeletonizer(
+              enabled: true,
+              effect: AppSkeletonConfig.effect(context),
+              child: const SkeletonNodeDexCard(),
+            ),
+            childCount: 6,
+          ),
+        ),
+      ];
+    }
+
+    // buildAlbumSlivers returns slivers directly — no nested scroll view.
+    return buildAlbumSlivers(
+      context: context,
+      ref: ref,
+      animate: !reduceMotion,
+      onCardTap: (entry, flatIndex) {
+        _openDetailFromEntry(entry);
+      },
+      onCardLongPress: (entry, flatIndex) {
+        showCardGallery(
+          context: context,
+          initialIndex: flatIndex,
+          animate: !reduceMotion,
+        );
+      },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // List view slivers (original layout)
+  // ---------------------------------------------------------------------------
+
+  List<Widget> _buildListSlivers(
+    BuildContext context, {
+    required bool isLoading,
+    required NodeDexStats stats,
+    required List<(NodeDexEntry, MeshNode?)> myEntry,
+    required List<(NodeDexEntry, MeshNode?)> otherEntries,
+    required NodeDexSortOrder currentSort,
+    required NodeDexFilter currentFilter,
+  }) {
+    return [
+      // Top padding below glass app bar
+      const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+      // Stats summary — not pinned, sizes itself naturally
+      if (isLoading)
+        SliverToBoxAdapter(
+          child: Skeletonizer(
+            enabled: true,
+            effect: AppSkeletonConfig.effect(context),
+            child: const SkeletonNodeDexStatsCard(),
+          ),
+        )
+      else
+        SliverToBoxAdapter(child: _NodeDexStatsCard(stats: stats)),
+
+      // Pinned search + filter controls
+      SliverPersistentHeader(
+        pinned: true,
+        delegate: _NodeDexControlsHeaderDelegate(
+          textScaler: MediaQuery.textScalerOf(context),
+          searchController: _searchController,
+          searchQuery: _searchQuery,
+          onSearchChanged: (value) {
+            setState(() => _searchQuery = value);
+            ref.read(nodeDexSearchProvider.notifier).setQuery(value);
+            if (value.isNotEmpty) {
+              AppLogging.nodeDex('Search query changed: "$value"');
+            }
+          },
+          currentFilter: currentFilter,
+          onFilterChanged: (filter) {
+            AppLogging.nodeDex(
+              'Filter changed: ${currentFilter.name} → ${filter.name}',
+            );
+            ref.read(nodeDexFilterProvider.notifier).setFilter(filter);
+          },
+          currentSort: currentSort,
+          onSortChanged: (order) {
+            AppLogging.nodeDex(
+              'Sort order changed: ${currentSort.name} → ${order.name}',
+            );
+            ref.read(nodeDexSortProvider.notifier).setOrder(order);
+          },
+          stats: stats,
+        ),
+      ),
+
+      // Your Device section
+      if (isLoading) ...[
+        // Show skeleton list while loading
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => Skeletonizer(
+              enabled: true,
+              effect: AppSkeletonConfig.effect(context),
+              child: const SkeletonNodeDexCard(),
+            ),
+            childCount: 6,
+          ),
+        ),
+      ] else if (myEntry.isNotEmpty) ...[
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SectionHeaderDelegate(title: 'Your Device'),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final (entry, node) = myEntry[index];
+            return _NodeDexListTile(
+              entry: entry,
+              node: node,
+              onTap: () => _openDetail(entry, node),
+            );
+          }, childCount: myEntry.length),
+        ),
+      ],
+
+      // Other nodes list or empty state
+      if (!isLoading && otherEntries.isNotEmpty) ...[
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SectionHeaderDelegate(
+            title: 'Discovered Nodes',
+            count: otherEntries.length,
+          ),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final (entry, node) = otherEntries[index];
+            return _NodeDexListTile(
+              entry: entry,
+              node: node,
+              onTap: () => _openDetail(entry, node),
+            );
+          }, childCount: otherEntries.length),
+        ),
+      ] else if (!isLoading && myEntry.isEmpty)
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _EmptyState(filter: currentFilter),
+        ),
+
+      // Bottom padding for safe area
+      SliverToBoxAdapter(
+        child: SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+      ),
+    ];
+  }
+
+  // ---------------------------------------------------------------------------
+  // Navigation helpers
+  // ---------------------------------------------------------------------------
 
   void _openDetail(NodeDexEntry entry, MeshNode? node) {
     final hexId =
@@ -242,6 +337,54 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
       MaterialPageRoute<void>(
         builder: (_) => NodeDexDetailScreen(nodeNum: entry.nodeNum),
       ),
+    );
+  }
+
+  void _openDetailFromEntry(NodeDexEntry entry) {
+    AppLogging.nodeDex(
+      'Opening detail from album for node ${entry.nodeNum}, '
+      'encounters: ${entry.encounterCount}',
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => NodeDexDetailScreen(nodeNum: entry.nodeNum),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// View mode toggle button
+// =============================================================================
+
+/// Animated toggle button that switches between list and album views.
+///
+/// Shows a list icon in list mode and a grid/album icon in album mode.
+/// The icon cross-fades smoothly on toggle.
+class _ViewModeToggle extends StatelessWidget {
+  final bool isAlbumMode;
+  final VoidCallback onToggle;
+
+  const _ViewModeToggle({required this.isAlbumMode, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        transitionBuilder: (child, animation) {
+          return ScaleTransition(scale: animation, child: child);
+        },
+        child: Icon(
+          isAlbumMode
+              ? Icons.view_list_rounded
+              : Icons.collections_bookmark_outlined,
+          key: ValueKey(isAlbumMode),
+          size: 22,
+        ),
+      ),
+      tooltip: isAlbumMode ? 'Switch to list view' : 'Switch to album view',
+      onPressed: onToggle,
     );
   }
 }

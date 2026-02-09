@@ -82,6 +82,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     ),
 
     _OnboardingPage(
+      title: 'NodeDex — Collector Album',
+      description:
+          'Every node you encounter becomes a collectible card.\nBuild your field journal across the mesh.',
+      advisorText:
+          "Each node gets a unique sigil, a rarity tier, and a patina that deepens with every encounter. Collect them all — your NodeDex is your story across the mesh.",
+      mood: MeshBrainMood.excited,
+      showcaseType: ShowcaseType.nodedex,
+      accentColor: AccentColors.purple,
+    ),
+
+    _OnboardingPage(
       title: 'Intelligent Automations',
       description:
           'Trigger actions based on mesh events.\nBattery alerts, geofences, keywords, and more.',
@@ -860,11 +871,228 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         return _buildDeviceShowcase(page);
       case ShowcaseType.signals:
         return _buildSignalsShowcase(page);
+      case ShowcaseType.nodedex:
+        return _buildNodeDexShowcase(page);
       case ShowcaseType.automations:
         return _buildAutomationsShowcase(page);
       case ShowcaseType.widgets:
         return _buildWidgetsShowcase(page);
     }
+  }
+
+  Widget _buildNodeDexShowcase(_OnboardingPage page) {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        final glowIntensity = 0.2 + (_pulseController.value * 0.15);
+
+        return SizedBox(
+          height: 180,
+          child: ShaderMask(
+            shaderCallback: (Rect bounds) {
+              return LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Colors.transparent,
+                  Colors.white,
+                  Colors.white,
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.05, 0.9, 1.0],
+              ).createShader(bounds);
+            },
+            blendMode: BlendMode.dstIn,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              children: [
+                _buildNodeDexCard(
+                  nodeName: 'Summit Relay',
+                  rarityLabel: 'LEGENDARY',
+                  rarityColor: const Color(0xFFD4AF37),
+                  glowColor: const Color(0xFFFFCC00),
+                  encounters: 142,
+                  daysSeen: 87,
+                  coSeen: 9,
+                  glowIntensity: glowIntensity,
+                  borderWidth: 3.0,
+                  hasGlow: true,
+                ),
+                const SizedBox(width: 12),
+                _buildNodeDexCard(
+                  nodeName: 'Base Camp Node',
+                  rarityLabel: 'RARE',
+                  rarityColor: const Color(0xFF3B82F6),
+                  glowColor: const Color(0xFF3B82F6),
+                  encounters: 34,
+                  daysSeen: 22,
+                  coSeen: 5,
+                  glowIntensity: glowIntensity,
+                  borderWidth: 2.0,
+                  hasGlow: false,
+                ),
+                const SizedBox(width: 12),
+                _buildNodeDexCard(
+                  nodeName: 'Trail Marker',
+                  rarityLabel: 'EPIC',
+                  rarityColor: const Color(0xFF8B5CF6),
+                  glowColor: const Color(0xFF8B5CF6),
+                  encounters: 67,
+                  daysSeen: 41,
+                  coSeen: 7,
+                  glowIntensity: glowIntensity,
+                  borderWidth: 2.5,
+                  hasGlow: true,
+                ),
+                const SizedBox(width: 12),
+                _buildNodeDexCard(
+                  nodeName: 'Valley Scout',
+                  rarityLabel: 'STANDARD',
+                  rarityColor: const Color(0xFF6B7280),
+                  glowColor: const Color(0xFF6B7280),
+                  encounters: 3,
+                  daysSeen: 2,
+                  coSeen: 1,
+                  glowIntensity: glowIntensity,
+                  borderWidth: 1.5,
+                  hasGlow: false,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildNodeDexCard({
+    required String nodeName,
+    required String rarityLabel,
+    required Color rarityColor,
+    required Color glowColor,
+    required int encounters,
+    required int daysSeen,
+    required int coSeen,
+    required double glowIntensity,
+    required double borderWidth,
+    required bool hasGlow,
+  }) {
+    return Container(
+      width: 150,
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: rarityColor.withValues(alpha: 0.4),
+          width: borderWidth,
+        ),
+        boxShadow: hasGlow
+            ? [
+                BoxShadow(
+                  color: glowColor.withValues(alpha: glowIntensity * 0.4),
+                  blurRadius: 14,
+                  spreadRadius: 2,
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 14),
+          // Sigil placeholder — hexagon icon
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: rarityColor.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.hexagon_outlined, color: rarityColor, size: 28),
+          ),
+          const SizedBox(height: 8),
+          // Rarity badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: rarityColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              rarityLabel,
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w800,
+                color: rarityColor,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Node name
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              nodeName,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: context.textPrimary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const Spacer(),
+          // Stats footer
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: rarityColor.withValues(alpha: 0.15)),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildNodeDexStat(
+                  Icons.visibility_outlined,
+                  '$encounters',
+                  rarityColor,
+                ),
+                _buildNodeDexStat(
+                  Icons.calendar_today_outlined,
+                  '${daysSeen}d',
+                  rarityColor,
+                ),
+                _buildNodeDexStat(Icons.people_outline, '$coSeen', rarityColor),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNodeDexStat(IconData icon, String value, Color color) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: color.withValues(alpha: 0.7)),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: context.textSecondary,
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildSignalsShowcase(_OnboardingPage page) {
@@ -1463,7 +1691,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 }
 
 /// Types of showcases available in onboarding
-enum ShowcaseType { devices, signals, automations, widgets }
+enum ShowcaseType { devices, signals, nodedex, automations, widgets }
 
 /// Data class for onboarding pages
 class _OnboardingPage {

@@ -23,6 +23,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/ico_help_system.dart';
 import '../../../providers/app_providers.dart';
 
 import '../../nodes/node_display_name_resolver.dart';
@@ -111,6 +112,7 @@ class _NodeDexConstellationScreenState
             onPressed: _resetView,
           ),
         ],
+        const IcoHelpAppBarButton(topicId: 'nodedex_constellation'),
       ],
       body: constellation.isEmpty
           ? _buildEmptyState(context)

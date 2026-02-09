@@ -1020,7 +1020,7 @@ class HelpContent {
       HelpStep(
         id: 'settings_cloud',
         bubbleText:
-            "Enable **Cloud Sync** to backup your settings and access them on other devices. Your data, encrypted!",
+            "**Cloud Sync** is a premium subscription that syncs your **NodeDex**, **automations**, **widgets**, and **profile** across all your devices. It also serves as your **backup** — if you ever delete the app or switch phones, Cloud Sync restores everything. Without it, all data lives only on this device and is lost if the app is removed.",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -1060,7 +1060,7 @@ class HelpContent {
       HelpStep(
         id: 'profile_cloud',
         bubbleText:
-            "**Cloud Sync** backs up your settings across devices. Sign in to keep everything in sync!",
+            "**Cloud Sync** is a premium feature that backs up your profile, NodeDex, automations, and widgets to the cloud. It protects your data — if you delete the app or get a new phone, everything **restores automatically** when you sign back in. Without it, your data exists only on this device.",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -1470,9 +1470,27 @@ class HelpContent {
         icoMood: MeshBrainMood.playful,
       ),
       HelpStep(
+        id: 'nodedex_album_mode',
+        bubbleText:
+            "Tap the **view toggle** in the app bar to switch to **Album mode** — a collector-style card grid grouped by trait, rarity, or region. Each card shows the node's sigil with a holographic shimmer based on rarity!",
+        icoMood: MeshBrainMood.excited,
+      ),
+      HelpStep(
+        id: 'nodedex_atmosphere',
+        bubbleText:
+            "Notice the subtle **ambient particles** behind the screen? That is the **Elemental Atmosphere** — rain, embers, mist, and starlight driven by your real mesh data. More nodes and activity means more atmosphere!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'nodedex_cloud_sync',
+        bubbleText:
+            "Your NodeDex is stored locally in SQLite and survives app restarts — but **not** app deletion. If you uninstall the app or switch phones, your local NodeDex is gone. With a **Cloud Sync** subscription, your entire journal — sigils, encounters, social tags, notes, and co-seen links — backs up to the cloud and **restores automatically** on any device you sign into.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
         id: 'nodedex_export',
         bubbleText:
-            "Use the **menu** to **export** your NodeDex as a JSON file for backup, or **import** one from another device. Your field journal travels with you!",
+            "Use the **menu** to **export** your NodeDex as a JSON file for backup, or **import** one from another device. Your field journal travels with you — even without Cloud Sync!",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -1602,7 +1620,214 @@ class HelpContent {
         'Live telemetry from the node: battery percentage, hardware model, '
         'firmware version, channel utilization, and uptime. This data is only '
         'available when the node is actively heard on the mesh.',
+    // Album-specific section help
+    'album_rarity':
+        'Rarity tiers are computed from encounter count and inferred trait. '
+        'Common nodes have few encounters, while Legendary nodes combine rare '
+        'traits with deep observation history. Rarity determines the card '
+        'border color and holographic shimmer intensity.',
+    'album_grouping':
+        'Cards can be grouped by Trait (behavioral archetype), Rarity '
+        '(encounter-based tier), or Region (geographic area where first seen). '
+        'Tap the group chips below the cover to switch between views.',
+    'album_explorer_title':
+        'Your Explorer Title reflects your overall collection progress. '
+        'Newcomer, Scout, Cartographer, Pathfinder, and Chronicler are earned '
+        'by discovering more nodes, encountering them repeatedly, and exploring '
+        'multiple regions.',
+    'album_holographic':
+        'The holographic shimmer on cards is a visual indicator of rarity. '
+        'Common cards have no shimmer. Uncommon cards shimmer faintly. Rare, '
+        'Epic, and Legendary cards glow with increasing intensity. The effect '
+        'respects your reduce-motion preference.',
+    'album_patina':
+        'Patina is a composite score reflecting how deeply you have observed '
+        'a node — encounter frequency, signal quality, co-seen connections, '
+        'and time since first discovery all contribute. Higher patina means '
+        'richer visual detail on the card.',
+    'album_cloud_sync':
+        'With a Cloud Sync subscription, your entire NodeDex album backs up '
+        'to the cloud and syncs across devices — sigils, encounters, social '
+        'tags, notes, co-seen links, and collection progress. If you delete '
+        'the app or get a new phone, everything restores when you sign back '
+        'in. Without Cloud Sync, your collection exists only on this device '
+        'and is lost if the app is removed. You can still export/import as '
+        'JSON for manual backups.',
   };
+
+  // ============================================================================
+  // NODEDEX COLLECTOR ALBUM
+  // ============================================================================
+
+  static final HelpTopic nodeDexAlbum = HelpTopic(
+    id: 'nodedex_album',
+    title: 'Collector Album',
+    description: 'A collectible card view of your discovered nodes',
+    icon: Icons.style_outlined,
+    category: catNodes,
+    priority: 5,
+    steps: [
+      HelpStep(
+        id: 'album_intro',
+        bubbleText:
+            "Welcome to the **Collector Album** — a card-collector view of your NodeDex! Every discovered node becomes a collectible card with its sigil, trait, and rarity tier.",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'album_cover',
+        bubbleText:
+            "The **Album Cover** is your dashboard — it shows your **Explorer Title**, total nodes, encounters, regions explored, and a rarity breakdown bar. Watch your collection grow!",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'album_grouping',
+        bubbleText:
+            "Use the **group chips** to organize cards by **Trait** (Beacon, Relay, Ghost...), **Rarity** (Common through Legendary), or **Region** (geographic area). Each group gets its own album page.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'album_rarity',
+        bubbleText:
+            "Cards earn **rarity tiers** based on encounter count and trait. **Common** nodes are newly seen, while **Legendary** cards combine rare traits with deep observation history. Rarity drives the border glow and holographic shimmer!",
+        icoMood: MeshBrainMood.playful,
+      ),
+      HelpStep(
+        id: 'album_interactions',
+        bubbleText:
+            "**Tap** a card to open the node's full profile. **Long-press** to open the **Card Gallery** — a full-screen carousel where you can swipe through cards and tap to flip them over for stats!",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'album_gallery',
+        bubbleText:
+            "In the **Card Gallery**, swipe left and right to browse cards. **Tap** a card to flip it — the back shows discovery stats, signal records, encounter count, and patina score. Swipe down to dismiss.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'album_holographic',
+        bubbleText:
+            "Higher-rarity cards shimmer with a **holographic effect** — the rarer the card, the brighter the glow. This effect respects your **reduce-motion** setting and uses an optimized painter for grid thumbnails.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'album_persistence',
+        bubbleText:
+            "Your album view preference and grouping choice are **saved automatically**. With **Cloud Sync**, your entire collection — sigils, encounters, tags, notes — backs up and syncs across all your devices. Delete the app, get a new phone — your collection is safe and restores on sign-in.",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // NODEDEX CONSTELLATION
+  // ============================================================================
+
+  static final HelpTopic nodeDexConstellation = HelpTopic(
+    id: 'nodedex_constellation',
+    title: 'Constellation View',
+    description: 'A star-map visualization of co-seen node relationships',
+    icon: Icons.auto_awesome,
+    category: catNodes,
+    priority: 6,
+    steps: [
+      HelpStep(
+        id: 'constellation_intro',
+        bubbleText:
+            "Welcome to the **Constellation** — a star-map of your mesh network! Nodes appear as stars, and lines between them show **co-seen relationships** — nodes observed in the same session.",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'constellation_layout',
+        bubbleText:
+            "The layout is **force-directed** — nodes that are frequently co-seen cluster together, while isolated nodes drift to the edges. The graph stabilizes after a moment so nothing shifts while you explore.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'constellation_interactions',
+        bubbleText:
+            "**Tap** a node to highlight its connections. **Double-tap** to zoom into a cluster. **Long-press** to open the node's full profile. **Pinch** to zoom in and out of the star map.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'constellation_edges',
+        bubbleText:
+            "Use the **edge density** button in the app bar to control how many connections are shown. **Sparse** shows only the strongest links, **All** shows everything. The right density depends on your network size.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'constellation_search',
+        bubbleText:
+            "The **search** icon lets you find a specific node by name or hex ID. The view automatically zooms and pans to center the matching node with a pulse highlight.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'constellation_atmosphere',
+        bubbleText:
+            "The constellation has its own **Elemental Atmosphere** — subtle starlight and mist particles behind the graph, driven by your real mesh data. It never obstructs the visualization.",
+        icoMood: MeshBrainMood.playful,
+      ),
+      HelpStep(
+        id: 'constellation_data',
+        bubbleText:
+            "Co-seen data is built **automatically** from your encounters. The more sessions you observe, the richer the constellation becomes. All relationship data is stored locally — but is **lost if you delete the app**. With **Cloud Sync**, your entire constellation backs up and restores on any device you sign into.",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // CLOUD SYNC
+  // ============================================================================
+
+  static final HelpTopic cloudSyncOverview = HelpTopic(
+    id: 'cloud_sync_overview',
+    title: 'Cloud Sync',
+    description: 'Premium cross-device sync for your mesh data',
+    icon: Icons.cloud_sync,
+    category: catSettings,
+    priority: 16,
+    steps: [
+      HelpStep(
+        id: 'cloud_sync_intro',
+        bubbleText:
+            "**Cloud Sync** is a premium subscription that keeps your mesh data synchronized across all your devices — and serves as your **backup**. Without it, all data lives only on-device and is permanently lost if you delete the app or lose your phone.",
+        icoMood: MeshBrainMood.speaking,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'cloud_sync_what_syncs',
+        bubbleText:
+            "Cloud Sync backs up your **NodeDex** (sigils, encounters, social tags, notes, co-seen links), **automations**, **custom widgets**, and **profile**. Reinstall the app, switch phones, or sign in on a second device — your entire mesh identity restores automatically.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'cloud_sync_offline_first',
+        bubbleText:
+            "The app is **offline-first**. Changes are saved locally to SQLite immediately and queued in an **outbox**. When you are online, the outbox drains to the cloud automatically — no manual sync needed.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'cloud_sync_conflict',
+        bubbleText:
+            "If you edit the same node on two devices, Cloud Sync uses **last-write-wins** conflict resolution with per-field timestamps. Social tags and notes resolve independently so you never lose both edits.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'cloud_sync_subscription',
+        bubbleText:
+            "Cloud Sync is available as a **monthly** or **yearly** subscription. You can subscribe from **Settings > Account & Subscription**. Cancelled subscriptions keep working until the billing period ends.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'cloud_sync_without',
+        bubbleText:
+            "Without Cloud Sync, all your data stays on-device only. It survives app restarts, but **not** app deletion or a phone reset. You can **export** your NodeDex as JSON for manual backup. Cloud Sync automates this and adds cross-device restore — but the app works fully offline without it.",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
 
   // ============================================================================
   // LEGAL & SAFETY HELP TOPICS
@@ -1778,6 +2003,9 @@ class HelpContent {
     radioConfigOverview,
     nodeDexOverview,
     nodeDexDetail,
+    nodeDexAlbum,
+    nodeDexConstellation,
+    cloudSyncOverview,
   ];
 
   /// Get a topic by ID

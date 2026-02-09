@@ -186,11 +186,23 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
           ),
           const SizedBox(height: 24),
 
-          // Features list
-          _buildFeatureItem(Icons.devices, 'Sync across all your devices'),
-          _buildFeatureItem(Icons.backup, 'Automatic cloud backup'),
-          _buildFeatureItem(Icons.share, 'Share profiles & settings'),
-          _buildFeatureItem(Icons.offline_bolt, 'Local mode always free'),
+          // Features — list actual premium sync types
+          _buildFeatureItem(
+            Icons.hexagon_outlined,
+            'NodeDex — encounters, tags, notes',
+          ),
+          _buildFeatureItem(
+            Icons.auto_awesome,
+            'Automations — rules and triggers',
+          ),
+          _buildFeatureItem(
+            Icons.widgets_outlined,
+            'Custom Widgets — layouts and data',
+          ),
+          _buildFeatureItem(
+            Icons.offline_bolt,
+            'Works fully offline without it',
+          ),
 
           const SizedBox(height: 24),
 

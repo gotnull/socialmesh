@@ -47,6 +47,7 @@ import '../widgets/field_note_widget.dart';
 import '../widgets/identity_overlay_painter.dart';
 import '../widgets/observation_timeline.dart';
 import '../widgets/patina_stamp.dart';
+import '../atmosphere/atmosphere_overlay.dart';
 import '../widgets/sigil_card_sheet.dart';
 import '../widgets/sigil_painter.dart';
 import '../widgets/trait_badge.dart';
@@ -511,7 +512,6 @@ class _SigilHeroSection extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -529,106 +529,128 @@ class _SigilHeroSection extends StatelessWidget {
           width: 0.5,
         ),
       ),
-      child: Column(
-        children: [
-          // Sigil display
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              AnimatedSigilContainer(
-                sigil: entry.sigil,
-                nodeNum: entry.nodeNum,
-                size: 120,
-                mode: isOnline
-                    ? SigilAnimationMode.full
-                    : SigilAnimationMode.ambientOnly,
-                showGlow: isOnline,
-                showTracer: isOnline,
-                trait: traitResult.primary,
-                evolution: evolution,
-              ),
-              if (isOnline)
-                Positioned(
-                  bottom: 4,
-                  right: 4,
-                  child: Container(
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: AccentColors.green,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: context.card, width: 2.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AccentColors.green.withValues(alpha: 0.5),
-                          blurRadius: 6,
-                          spreadRadius: 1,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            // Subtle atmosphere behind the hero content.
+            // Only starlight and embers — very low intensity.
+            const Positioned.fill(child: DetailAtmosphere()),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  // Sigil display
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      AnimatedSigilContainer(
+                        sigil: entry.sigil,
+                        nodeNum: entry.nodeNum,
+                        size: 120,
+                        mode: isOnline
+                            ? SigilAnimationMode.full
+                            : SigilAnimationMode.ambientOnly,
+                        showGlow: isOnline,
+                        showTracer: isOnline,
+                        trait: traitResult.primary,
+                        evolution: evolution,
+                      ),
+                      if (isOnline)
+                        Positioned(
+                          bottom: 4,
+                          right: 4,
+                          child: Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: AccentColors.green,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: context.card,
+                                width: 2.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AccentColors.green.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                  blurRadius: 6,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Name
+                  Text(
+                    displayName,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: context.textPrimary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Hex ID
+                  Text(
+                    hexId,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: context.textTertiary,
+                      fontFamily: AppTheme.fontFamily,
+                      letterSpacing: 1.0,
                     ),
                   ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
+                  const SizedBox(height: 12),
 
-          // Name
-          Text(
-            displayName,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: context.textPrimary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 4),
+                  // Role badge (if known)
+                  if (node?.role != null && node!.role!.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.textTertiary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        node!.role!,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: context.textSecondary,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
 
-          // Hex ID
-          Text(
-            hexId,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: context.textTertiary,
-              fontFamily: AppTheme.fontFamily,
-              letterSpacing: 1.0,
-            ),
-          ),
-          const SizedBox(height: 12),
+                  // Patina stamp (shown when disclosure permits)
+                  if (patinaResult != null) ...[
+                    const SizedBox(height: 12),
+                    PatinaStamp(
+                      result: patinaResult!,
+                      accentColor:
+                          entry.sigil?.primaryColor ?? const Color(0xFF9CA3AF),
+                    ),
+                  ],
 
-          // Role badge (if known)
-          if (node?.role != null && node!.role!.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: context.textTertiary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                  // Color palette
+                  const SizedBox(height: 16),
+                  _ColorPalette(entry: entry),
+                ],
               ),
-              child: Text(
-                node!.role!,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: context.textSecondary,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-
-          // Patina stamp (shown when disclosure permits)
-          if (patinaResult != null) ...[
-            const SizedBox(height: 12),
-            PatinaStamp(
-              result: patinaResult!,
-              accentColor: entry.sigil?.primaryColor ?? const Color(0xFF9CA3AF),
             ),
           ],
-
-          // Color palette
-          const SizedBox(height: 16),
-          _ColorPalette(entry: entry),
-        ],
+        ),
       ),
     );
   }
