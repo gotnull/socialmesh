@@ -2947,7 +2947,7 @@ class SignalService {
     required Post signal,
     String? parentId,
   }) async {
-    AppLogging.signals(
+    AppLogging.social(
       '📬 ACTIVITY_START: Creating activity for response ${response.id}\n'
       '  signalId: ${response.signalId}\n'
       '  signalAuthorId: ${signal.authorId}\n'
@@ -2968,13 +2968,13 @@ class SignalService {
           ? '${response.content.substring(0, 100)}...'
           : response.content;
 
-      AppLogging.signals(
+      AppLogging.social(
         '📬 ACTIVITY_PREVIEW: "${preview.substring(0, preview.length.clamp(0, 50))}..."',
       );
 
       if (parentId != null) {
         // This is a reply - find the parent comment author
-        AppLogging.signals(
+        AppLogging.social(
           '📬 ACTIVITY_REPLY: Looking up parent comment $parentId',
         );
         final parentComment = await _getCommentById(
@@ -2982,28 +2982,28 @@ class SignalService {
           parentId,
         );
         if (parentComment == null) {
-          AppLogging.signals(
+          AppLogging.social(
             '📬 ACTIVITY_SKIP: Parent comment $parentId not found',
           );
           return;
         }
-        AppLogging.signals(
+        AppLogging.social(
           '📬 ACTIVITY_PARENT_FOUND: authorId=${parentComment.authorId}',
         );
         // Skip if parent author is a mesh node (no real user to notify)
         if (parentComment.authorId.startsWith('mesh_')) {
-          AppLogging.signals(
+          AppLogging.social(
             '📬 ACTIVITY_SKIP: Parent author is mesh node, no real user to notify',
           );
           return;
         }
         if (parentComment.authorId == _currentUserId) {
-          AppLogging.signals(
+          AppLogging.social(
             '📬 ACTIVITY_SKIP: Not notifying self (replying to own comment)',
           );
           return;
         }
-        AppLogging.signals(
+        AppLogging.social(
           '📬 ACTIVITY_CREATE: signalCommentReply -> ${parentComment.authorId}\n'
           '  targetCollection: users/${parentComment.authorId}/activities',
         );
@@ -3012,7 +3012,7 @@ class SignalService {
           originalCommentAuthorId: parentComment.authorId,
           replyPreview: preview,
         );
-        AppLogging.signals(
+        AppLogging.social(
           '📬 ACTIVITY_SUCCESS: signalCommentReply created for ${parentComment.authorId}',
         );
       } else {
@@ -3025,19 +3025,19 @@ class SignalService {
         );
 
         if (realAuthorId == null) {
-          AppLogging.signals(
+          AppLogging.social(
             '📬 ACTIVITY_SKIP: Could not resolve real authorId for signal',
           );
           return;
         }
 
         if (realAuthorId == _currentUserId) {
-          AppLogging.signals(
+          AppLogging.social(
             '📬 ACTIVITY_SKIP: Not notifying self (commenting on own signal)',
           );
           return;
         }
-        AppLogging.signals(
+        AppLogging.social(
           '📬 ACTIVITY_CREATE: signalComment -> $realAuthorId\n'
           '  targetCollection: users/$realAuthorId/activities',
         );
@@ -3046,13 +3046,13 @@ class SignalService {
           signalOwnerId: realAuthorId,
           commentPreview: preview,
         );
-        AppLogging.signals(
+        AppLogging.social(
           '📬 ACTIVITY_SUCCESS: signalComment created for $realAuthorId',
         );
       }
     } catch (e, stackTrace) {
       // Don't fail the response creation if activity creation fails
-      AppLogging.signals(
+      AppLogging.social(
         '📬 ACTIVITY_ERROR: Failed to create response activity\n'
         '  error: $e\n'
         '  stackTrace: $stackTrace',
@@ -3367,7 +3367,7 @@ class SignalService {
     required String signalId,
     required String commentId,
   }) async {
-    AppLogging.signals(
+    AppLogging.social(
       '📬 VOTE_ACTIVITY_START: Creating upvote activity\n'
       '  signalId: $signalId\n'
       '  commentId: $commentId\n'
@@ -3378,13 +3378,13 @@ class SignalService {
       // Get the comment to find its author
       final comment = await _getCommentById(signalId, commentId);
       if (comment == null) {
-        AppLogging.signals(
+        AppLogging.social(
           '📬 VOTE_ACTIVITY_SKIP: Comment $commentId not found',
         );
         return;
       }
 
-      AppLogging.signals(
+      AppLogging.social(
         '📬 VOTE_ACTIVITY_COMMENT: Found comment\n'
         '  authorId: ${comment.authorId}\n'
         '  authorName: ${comment.authorName}',
@@ -3392,7 +3392,7 @@ class SignalService {
 
       // Skip if comment author is a mesh node (no real user to notify)
       if (comment.authorId.startsWith('mesh_')) {
-        AppLogging.signals(
+        AppLogging.social(
           '📬 VOTE_ACTIVITY_SKIP: Comment author is mesh node, no real user to notify',
         );
         return;
@@ -3400,7 +3400,7 @@ class SignalService {
 
       // Don't notify self-votes
       if (comment.authorId == _currentUserId) {
-        AppLogging.signals(
+        AppLogging.social(
           '📬 VOTE_ACTIVITY_SKIP: Not notifying self (upvoting own comment)',
         );
         return;
@@ -3411,7 +3411,7 @@ class SignalService {
         auth: _auth,
       );
 
-      AppLogging.signals(
+      AppLogging.social(
         '📬 VOTE_ACTIVITY_CREATE: signalResponseVote -> ${comment.authorId}\n'
         '  targetCollection: users/${comment.authorId}/activities',
       );
@@ -3421,12 +3421,12 @@ class SignalService {
         responseAuthorId: comment.authorId,
       );
 
-      AppLogging.signals(
+      AppLogging.social(
         '📬 VOTE_ACTIVITY_SUCCESS: signalResponseVote created for ${comment.authorId}',
       );
     } catch (e, stackTrace) {
       // Don't fail the vote if activity creation fails
-      AppLogging.signals(
+      AppLogging.social(
         '📬 VOTE_ACTIVITY_ERROR: Failed to create vote activity\n'
         '  error: $e\n'
         '  stackTrace: $stackTrace',

@@ -2030,32 +2030,14 @@ class _ProfileDisplayNameLoader extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text('@$displayName')),
-      body: FutureBuilder<String?>(
-        future: profileSyncService.getUserIdByDisplayName(displayName),
-        builder: (context, snapshot) {
-          AppLogging.qr(
-            '🔗 ProfileLoader: FutureBuilder state=${snapshot.connectionState}, '
-            'hasError=${snapshot.hasError}, data=${snapshot.data}',
-          );
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            AppLogging.qr(
-              'QR - 🔗 ProfileLoader: Waiting for userId lookup...',
-            );
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            AppLogging.qr(
-              '🔗 ProfileLoader: ERROR looking up user: ${snapshot.error}',
-            );
-            return Center(
+      body: profileSyncService == null
+          ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const Icon(Icons.cloud_off_outlined, size: 48),
                   const SizedBox(height: 16),
-                  Text('Error looking up user: ${snapshot.error}'),
+                  const Text('Cloud services not available yet'),
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
@@ -2063,58 +2045,96 @@ class _ProfileDisplayNameLoader extends ConsumerWidget {
                   ),
                 ],
               ),
-            );
-          }
+            )
+          : FutureBuilder<String?>(
+              future: profileSyncService.getUserIdByDisplayName(displayName),
+              builder: (context, snapshot) {
+                AppLogging.qr(
+                  '🔗 ProfileLoader: FutureBuilder state=${snapshot.connectionState}, '
+                  'hasError=${snapshot.hasError}, data=${snapshot.data}',
+                );
 
-          final userId = snapshot.data;
-          if (userId == null) {
-            AppLogging.qr(
-              '🔗 ProfileLoader: User "@$displayName" NOT FOUND in Firestore',
-            );
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.person_off, size: 48),
-                  const SizedBox(height: 16),
-                  Text('User "@$displayName" not found'),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Go Back'),
-                  ),
-                ],
-              ),
-            );
-          }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  AppLogging.qr(
+                    'QR - 🔗 ProfileLoader: Waiting for userId lookup...',
+                  );
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          // Navigate to profile screen with the looked up userId
-          AppLogging.qr(
-            '🔗 ProfileLoader: Found userId=$userId for displayName=$displayName, '
-            'navigating to ProfileSocialScreen',
-          );
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            AppLogging.qr('🔗 ProfileLoader: Executing pushReplacement');
-            // Use global navigatorKey to avoid "Navigator.of() called with
-            // a context that does not contain a Navigator" crash when
-            // the widget is disposed before the callback runs
-            final navigator = navigatorKey.currentState;
-            if (navigator == null) {
-              AppLogging.qr(
-                '🔗 ProfileLoader: Navigator not available, skipping navigation',
-              );
-              return;
-            }
-            navigator.pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => ProfileSocialScreen(userId: userId),
-              ),
-            );
-          });
+                if (snapshot.hasError) {
+                  AppLogging.qr(
+                    '🔗 ProfileLoader: ERROR looking up user: ${snapshot.error}',
+                  );
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(height: 16),
+                        Text('Error looking up user: ${snapshot.error}'),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Go Back'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
-          return const Center(child: CircularProgressIndicator());
-        },
-      ),
+                final userId = snapshot.data;
+                if (userId == null) {
+                  AppLogging.qr(
+                    '🔗 ProfileLoader: User "@$displayName" NOT FOUND in Firestore',
+                  );
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.person_off, size: 48),
+                        const SizedBox(height: 16),
+                        Text('User "@$displayName" not found'),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Go Back'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                // Navigate to profile screen with the looked up userId
+                AppLogging.qr(
+                  '🔗 ProfileLoader: Found userId=$userId for displayName=$displayName, '
+                  'navigating to ProfileSocialScreen',
+                );
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  AppLogging.qr('🔗 ProfileLoader: Executing pushReplacement');
+                  // Use global navigatorKey to avoid "Navigator.of() called with
+                  // a context that does not contain a Navigator" crash when
+                  // the widget is disposed before the callback runs
+                  final navigator = navigatorKey.currentState;
+                  if (navigator == null) {
+                    AppLogging.qr(
+                      '🔗 ProfileLoader: Navigator not available, skipping navigation',
+                    );
+                    return;
+                  }
+                  navigator.pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => ProfileSocialScreen(userId: userId),
+                    ),
+                  );
+                });
+
+                return const Center(child: CircularProgressIndicator());
+              },
+            ),
     );
   }
 }

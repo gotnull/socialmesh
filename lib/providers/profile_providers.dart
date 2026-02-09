@@ -14,11 +14,11 @@ final profileServiceProvider = Provider<ProfileService>((ref) {
   return profileService;
 });
 
-/// Provider for cloud sync service
-final profileCloudSyncServiceProvider = Provider<ProfileCloudSyncService>((
+/// Provider for cloud sync service (nullable — Firebase may not be ready).
+final profileCloudSyncServiceProvider = Provider<ProfileCloudSyncService?>((
   ref,
 ) {
-  return profileCloudSyncService;
+  return profileCloudSyncServiceOrNull;
 });
 
 /// Notifier for managing user profile state using AsyncNotifier pattern
@@ -43,9 +43,24 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
 
     // CRITICAL: If auth is still loading, we should NOT return stale data
     // Poll Firebase Auth directly to get current user synchronously
-    // This avoids race conditions with the stream provider
-    final firebaseAuth = ref.read(firebaseAuthProvider);
-    final currentUser = firebaseAuth.currentUser;
+    // This avoids race conditions with the stream provider.
+    //
+    // Guard: firebaseAuthProvider throws StateError when Firebase hasn't
+    // finished initializing (common on Android where init is slower than
+    // iOS). Check firebaseReadyProvider first — if not ready, treat as
+    // signed-out. build() will be re-invoked automatically once
+    // firebaseReadyProvider resolves because we watch authStateProvider
+    // above which depends on the same chain.
+    final firebaseReady =
+        ref.read(firebaseReadyProvider).whenOrNull(data: (v) => v) ?? false;
+
+    final currentUser = firebaseReady
+        ? ref.read(firebaseAuthProvider).currentUser
+        : null;
+
+    if (!firebaseReady) {
+      AppLogging.auth('║ ⏳ Firebase not ready yet — treating as signed-out');
+    }
 
     AppLogging.auth(
       '║ 🔥 Firebase currentUser (direct): ${currentUser?.uid ?? "NULL"}',
@@ -72,49 +87,56 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       // Update sync status
       ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.syncing);
 
-      try {
-        // Perform full sync with cloud
+      final cloudSync = profileCloudSyncServiceOrNull;
+      if (cloudSync == null) {
         AppLogging.auth(
-          '║ ☁️ Calling profileCloudSyncService.fullSync(${user.uid})',
+          '║ ⚠️ profileCloudSyncService not initialized, skipping cloud sync',
         );
-        final synced = await profileCloudSyncService.fullSync(user.uid);
-        AppLogging.auth(
-          '║ ☁️ fullSync returned: ${synced?.displayName ?? "NULL"}',
-        );
-        if (synced != null) {
-          AppLogging.auth('║ ✅ Cloud sync SUCCESS:');
-          AppLogging.auth('║    - displayName: ${synced.displayName}');
-          AppLogging.auth('║    - id: ${synced.id}');
-          AppLogging.auth('║    - isSynced: ${synced.isSynced}');
+        ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.idle);
+      } else {
+        try {
           AppLogging.auth(
-            '╚══════════════════════════════════════════════════════════════',
+            '║ ☁️ Calling profileCloudSyncService.fullSync(${user.uid})',
           );
-          AppLogging.auth('');
-          ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
-          return synced;
-        }
-      } catch (e) {
-        AppLogging.auth('║ ❌ Cloud sync FAILED: $e');
-        final errorString = e.toString();
+          final synced = await cloudSync.fullSync(user.uid);
+          AppLogging.auth(
+            '║ ☁️ fullSync returned: ${synced?.displayName ?? "NULL"}',
+          );
+          if (synced != null) {
+            AppLogging.auth('║ ✅ Cloud sync SUCCESS:');
+            AppLogging.auth('║    - displayName: ${synced.displayName}');
+            AppLogging.auth('║    - id: ${synced.id}');
+            AppLogging.auth('║    - isSynced: ${synced.isSynced}');
+            AppLogging.auth(
+              '╚══════════════════════════════════════════════════════════════',
+            );
+            AppLogging.auth('');
+            ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
+            return synced;
+          }
+        } catch (e) {
+          AppLogging.auth('║ ❌ Cloud sync FAILED: $e');
+          final errorString = e.toString();
 
-        // Check if this is a transient network error
-        final isTransientError =
-            errorString.contains('unavailable') ||
-            errorString.contains('UNAVAILABLE') ||
-            errorString.contains('network') ||
-            errorString.contains('timeout');
+          // Check if this is a transient network error
+          final isTransientError =
+              errorString.contains('unavailable') ||
+              errorString.contains('UNAVAILABLE') ||
+              errorString.contains('network') ||
+              errorString.contains('timeout');
 
-        if (isTransientError) {
-          // For transient errors, treat as idle - user is logged in, just offline
-          AppLogging.auth('║ ⚠️ Transient network error, treating as idle');
-          ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.idle);
-        } else {
-          // For actual errors (permissions, etc), show error state
-          AppLogging.auth('║ ❌ Non-transient error, setting error status');
-          ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.error);
-          ref.read(syncErrorProvider.notifier).setError(errorString);
+          if (isTransientError) {
+            // For transient errors, treat as idle - user is logged in, just offline
+            AppLogging.auth('║ ⚠️ Transient network error, treating as idle');
+            ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.idle);
+          } else {
+            // For actual errors (permissions, etc), show error state
+            AppLogging.auth('║ ❌ Non-transient error, setting error status');
+            ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.error);
+            ref.read(syncErrorProvider.notifier).setError(errorString);
+          }
+          // Fall back to local profile on error
         }
-        // Fall back to local profile on error
       }
     } else {
       AppLogging.auth('║ 🚫 User is NULL - not signed in');
@@ -147,37 +169,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
     return localProfile;
   }
 
-  Future<UserProfile?> _loadProfile() async {
-    AppLogging.auth('');
-    AppLogging.auth(
-      '┌──────────────────────────────────────────────────────────────',
-    );
-    AppLogging.auth('│ 🔄 _loadProfile() entered');
-    AppLogging.auth(
-      '├──────────────────────────────────────────────────────────────',
-    );
-
-    await profileService.initialize();
-    final profile = await profileService.getOrCreateProfile();
-
-    AppLogging.auth('│ 💾 Loaded LOCAL profile:');
-    AppLogging.auth('│    - displayName: ${profile.displayName}');
-    AppLogging.auth('│    - id: ${profile.id}');
-    AppLogging.auth('│    - isSynced: ${profile.isSynced}');
-    AppLogging.auth(
-      '│ ⚠️  NOTE: _loadProfile() only reads from LOCAL storage.',
-    );
-    AppLogging.auth(
-      '│ ⚠️  It does NOT attempt cloud sync or clear sync errors.',
-    );
-    AppLogging.auth(
-      '└──────────────────────────────────────────────────────────────',
-    );
-    AppLogging.auth('');
-    return profile;
-  }
-
-  /// Refresh profile from storage
+  /// Refresh profile — clears sync errors and retries cloud sync if possible.
   Future<void> refresh() async {
     AppLogging.auth('');
     AppLogging.auth(
@@ -188,81 +180,20 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       '╠══════════════════════════════════════════════════════════════',
     );
 
-    // Log current state before doing anything
-    final currentSyncStatus = ref.read(syncStatusProvider);
-    final currentSyncError = ref.read(syncErrorProvider);
-    final firebaseAuth = ref.read(firebaseAuthProvider);
-    final currentUser = firebaseAuth.currentUser;
+    // Clear stale sync errors so the banner disappears immediately
+    ref.read(syncErrorProvider.notifier).setError(null);
+    ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.syncing);
 
-    AppLogging.auth('║ 📊 CURRENT STATE BEFORE REFRESH:');
-    AppLogging.auth('║    syncStatus:  $currentSyncStatus');
-    AppLogging.auth('║    syncError:   ${currentSyncError ?? "null"}');
-    AppLogging.auth(
-      '║    Firebase UID: ${currentUser?.uid ?? "NULL (not signed in)"}',
-    );
-    AppLogging.auth(
-      '║    provider state: ${state.isLoading
-          ? "loading"
-          : state.hasError
-          ? "error"
-          : state.hasValue
-          ? "data"
-          : "unknown"}',
-    );
+    AppLogging.auth('║ 🧹 Cleared syncError and set status to syncing');
 
-    AppLogging.auth('║');
+    // Invalidate self to re-run build() which does a full cloud sync
+    ref.invalidateSelf();
+
     AppLogging.auth(
-      '║ ⚠️  refresh() calls _loadProfile() which ONLY reads local storage.',
+      '║ 🔄 Invalidated self — build() will re-run with cloud sync',
     );
-    AppLogging.auth(
-      '║ ⚠️  It does NOT: clear syncError, clear syncStatus, or retry cloud sync.',
-    );
-    AppLogging.auth(
-      '║ ⚠️  The _SyncErrorBanner watches syncErrorProvider, which will remain',
-    );
-    AppLogging.auth(
-      '║ ⚠️  set to "$currentSyncError" after this call completes.',
-    );
-    AppLogging.auth(
-      '║ ⚠️  To actually retry cloud sync, build() must be re-triggered',
-    );
-    AppLogging.auth(
-      '║ ⚠️  (e.g. via ref.invalidateSelf()) or refresh() must do sync itself.',
-    );
-    AppLogging.auth('║');
-    AppLogging.auth('║ 🔄 Setting state = loading, calling _loadProfile()...');
     AppLogging.auth(
       '╚══════════════════════════════════════════════════════════════',
-    );
-
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(_loadProfile);
-
-    // Log state AFTER refresh completes
-    final postSyncStatus = ref.read(syncStatusProvider);
-    final postSyncError = ref.read(syncErrorProvider);
-    AppLogging.auth('');
-    AppLogging.auth(
-      '┌──────────────────────────────────────────────────────────────',
-    );
-    AppLogging.auth('│ 🔁 refresh() COMPLETED');
-    AppLogging.auth('│ 📊 STATE AFTER REFRESH:');
-    AppLogging.auth('│    syncStatus:  $postSyncStatus');
-    AppLogging.auth('│    syncError:   ${postSyncError ?? "null"}');
-    AppLogging.auth(
-      '│    provider state: ${state.isLoading
-          ? "loading"
-          : state.hasError
-          ? "error(${state.error})"
-          : state.hasValue
-          ? "data(${state.value?.displayName})"
-          : "unknown"}',
-    );
-    AppLogging.auth(
-      '│    banner visible? ${postSyncError != null ? "YES — error not cleared" : "NO"}',
-    );
-    AppLogging.auth(
-      '└──────────────────────────────────────────────────────────────',
     );
     AppLogging.auth('');
   }
@@ -303,8 +234,11 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       final user = ref.read(currentUserProvider);
       if (user != null) {
         try {
-          await profileCloudSyncService.syncToCloud(user.uid);
-          AppLogging.auth('UserProfile: Cloud sync completed successfully');
+          final cloudSync = profileCloudSyncServiceOrNull;
+          if (cloudSync != null) {
+            await cloudSync.syncToCloud(user.uid);
+            AppLogging.auth('UserProfile: Cloud sync completed successfully');
+          }
         } catch (syncError) {
           // Cloud sync failed but local save succeeded - don't crash UI
           AppLogging.auth('UserProfile: Cloud sync failed: $syncError');
@@ -339,8 +273,11 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       final user = ref.read(currentUserProvider);
       if (user != null) {
         try {
-          await profileCloudSyncService.syncToCloud(user.uid);
-          AppLogging.auth('UserProfile: Linked nodes synced to cloud');
+          final cloudSync = profileCloudSyncServiceOrNull;
+          if (cloudSync != null) {
+            await cloudSync.syncToCloud(user.uid);
+            AppLogging.auth('UserProfile: Linked nodes synced to cloud');
+          }
         } catch (syncError) {
           AppLogging.auth('UserProfile: Cloud sync failed: $syncError');
         }
@@ -454,8 +391,11 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       final user = ref.read(currentUserProvider);
       if (user != null) {
         try {
-          await profileCloudSyncService.syncToCloud(user.uid);
-          AppLogging.auth('UserProfile: Preferences cloud sync completed');
+          final cloudSync = profileCloudSyncServiceOrNull;
+          if (cloudSync != null) {
+            await cloudSync.syncToCloud(user.uid);
+            AppLogging.auth('UserProfile: Preferences cloud sync completed');
+          }
         } catch (syncError) {
           // Cloud sync failed but local save succeeded - don't crash UI
           AppLogging.auth(
@@ -492,38 +432,42 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         AppLogging.auth(
           'UserProfile: User signed in, uploading avatar to cloud',
         );
-        try {
-          final cloudUrl = await profileCloudSyncService.uploadAvatar(
-            user.uid,
-            imageFile,
-          );
-
-          // Update profile with cloud URL
-          final cloudUpdated = localUpdated.copyWith(
-            avatarUrl: cloudUrl,
-            isSynced: true,
-          );
-          await profileService.saveProfile(cloudUpdated);
-          state = AsyncValue.data(cloudUpdated);
-          AppLogging.auth('UserProfile: Avatar uploaded to cloud: $cloudUrl');
-        } catch (e) {
-          // Check if content violation
-          if (e.toString().contains('Content policy violation')) {
-            // Delete local avatar since it violates policy
-            await profileService.saveProfile(
-              localUpdated.copyWith(avatarUrl: null),
-            );
-            state = AsyncValue.error(
-              'Avatar violates content policy',
-              StackTrace.current,
-            );
-            rethrow;
-          }
-          // Cloud upload failed, but local save succeeded
+        final cloudSync = profileCloudSyncServiceOrNull;
+        if (cloudSync == null) {
           AppLogging.auth(
-            'UserProfile: Cloud upload failed (local save OK): $e',
+            'UserProfile: Cloud sync not available, keeping local avatar',
           );
-          // Keep using local path - don't throw error
+        } else {
+          try {
+            final cloudUrl = await cloudSync.uploadAvatar(user.uid, imageFile);
+
+            // Update profile with cloud URL
+            final cloudUpdated = localUpdated.copyWith(
+              avatarUrl: cloudUrl,
+              isSynced: true,
+            );
+            await profileService.saveProfile(cloudUpdated);
+            state = AsyncValue.data(cloudUpdated);
+            AppLogging.auth('UserProfile: Avatar uploaded to cloud: $cloudUrl');
+          } catch (e) {
+            // Check if content violation
+            if (e.toString().contains('Content policy violation')) {
+              // Delete local avatar since it violates policy
+              await profileService.saveProfile(
+                localUpdated.copyWith(avatarUrl: null),
+              );
+              state = AsyncValue.error(
+                'Avatar violates content policy',
+                StackTrace.current,
+              );
+              rethrow;
+            }
+            // Cloud upload failed, but local save succeeded
+            AppLogging.auth(
+              'UserProfile: Cloud upload failed (local save OK): $e',
+            );
+            // Keep using local path - don't throw error
+          }
         }
       }
     } catch (e, st) {
@@ -544,8 +488,11 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       // If signed in, also delete from cloud
       final user = ref.read(currentUserProvider);
       if (user != null) {
-        AppLogging.auth('UserProfile: Deleting avatar from cloud');
-        await profileCloudSyncService.deleteCloudAvatar(user.uid);
+        final cloudSync = profileCloudSyncServiceOrNull;
+        if (cloudSync != null) {
+          AppLogging.auth('UserProfile: Deleting avatar from cloud');
+          await cloudSync.deleteCloudAvatar(user.uid);
+        }
       }
 
       await refresh();
@@ -578,38 +525,42 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         AppLogging.auth(
           'UserProfile: User signed in, uploading banner to cloud',
         );
-        try {
-          final cloudUrl = await profileCloudSyncService.uploadBanner(
-            user.uid,
-            imageFile,
-          );
-
-          // Update profile with cloud URL
-          final cloudUpdated = localUpdated.copyWith(
-            bannerUrl: cloudUrl,
-            isSynced: true,
-          );
-          await profileService.saveProfile(cloudUpdated);
-          state = AsyncValue.data(cloudUpdated);
-          AppLogging.auth('UserProfile: Banner uploaded to cloud: $cloudUrl');
-        } catch (e) {
-          // Check if content violation
-          if (e.toString().contains('Content policy violation')) {
-            // Delete local banner since it violates policy
-            await profileService.saveProfile(
-              localUpdated.copyWith(bannerUrl: null),
-            );
-            state = AsyncValue.error(
-              'Banner violates content policy',
-              StackTrace.current,
-            );
-            rethrow;
-          }
-          // Cloud upload failed, but local save succeeded
+        final cloudSync = profileCloudSyncServiceOrNull;
+        if (cloudSync == null) {
           AppLogging.auth(
-            'UserProfile: Cloud banner upload failed (local save OK): $e',
+            'UserProfile: Cloud sync not available, keeping local banner',
           );
-          // Keep using local path - don't throw error
+        } else {
+          try {
+            final cloudUrl = await cloudSync.uploadBanner(user.uid, imageFile);
+
+            // Update profile with cloud URL
+            final cloudUpdated = localUpdated.copyWith(
+              bannerUrl: cloudUrl,
+              isSynced: true,
+            );
+            await profileService.saveProfile(cloudUpdated);
+            state = AsyncValue.data(cloudUpdated);
+            AppLogging.auth('UserProfile: Banner uploaded to cloud: $cloudUrl');
+          } catch (e) {
+            // Check if content violation
+            if (e.toString().contains('Content policy violation')) {
+              // Delete local banner since it violates policy
+              await profileService.saveProfile(
+                localUpdated.copyWith(bannerUrl: null),
+              );
+              state = AsyncValue.error(
+                'Banner violates content policy',
+                StackTrace.current,
+              );
+              rethrow;
+            }
+            // Cloud upload failed, but local save succeeded
+            AppLogging.auth(
+              'UserProfile: Cloud banner upload failed (local save OK): $e',
+            );
+            // Keep using local path - don't throw error
+          }
         }
       }
     } catch (e, st) {
@@ -630,8 +581,11 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       // If signed in, also delete from cloud
       final user = ref.read(currentUserProvider);
       if (user != null) {
-        AppLogging.auth('UserProfile: Deleting banner from cloud');
-        await profileCloudSyncService.deleteCloudBanner(user.uid);
+        final cloudSync = profileCloudSyncServiceOrNull;
+        if (cloudSync != null) {
+          AppLogging.auth('UserProfile: Deleting banner from cloud');
+          await cloudSync.deleteCloudBanner(user.uid);
+        }
       }
 
       await refresh();
@@ -684,7 +638,14 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
   /// Sync profile to cloud (requires authenticated user)
   Future<void> syncToCloud(String uid) async {
     try {
-      await profileCloudSyncService.syncToCloud(uid);
+      final cloudSync = profileCloudSyncServiceOrNull;
+      if (cloudSync == null) {
+        AppLogging.auth(
+          'UserProfile: Cloud sync not available for syncToCloud',
+        );
+        return;
+      }
+      await cloudSync.syncToCloud(uid);
       await refresh();
     } catch (e, st) {
       AppLogging.auth('UserProfile: Error syncing to cloud: $e');
@@ -695,7 +656,14 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
   /// Sync profile from cloud (requires authenticated user)
   Future<void> syncFromCloud(String uid) async {
     try {
-      final synced = await profileCloudSyncService.syncFromCloud(uid);
+      final cloudSync = profileCloudSyncServiceOrNull;
+      if (cloudSync == null) {
+        AppLogging.auth(
+          'UserProfile: Cloud sync not available for syncFromCloud',
+        );
+        return;
+      }
+      final synced = await cloudSync.syncFromCloud(uid);
       if (synced != null) {
         state = AsyncValue.data(synced);
       }
@@ -708,15 +676,20 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
   /// Full two-way sync with cloud (requires authenticated user)
   Future<void> fullSync(String uid) async {
     try {
+      final cloudSync = profileCloudSyncServiceOrNull;
+      if (cloudSync == null) {
+        AppLogging.auth('UserProfile: Cloud sync not available for fullSync');
+        return;
+      }
       // Sync profile data
-      final synced = await profileCloudSyncService.fullSync(uid);
+      final synced = await cloudSync.fullSync(uid);
       if (synced != null) {
         state = AsyncValue.data(synced);
 
         // Also sync avatar if it's a local file path
         if (synced.avatarUrl != null && !synced.avatarUrl!.startsWith('http')) {
           AppLogging.auth('UserProfile: Syncing local avatar to cloud');
-          await profileCloudSyncService.syncAvatarToCloud(uid);
+          await cloudSync.syncAvatarToCloud(uid);
           await refresh();
         }
       }
@@ -735,11 +708,16 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
 
       await profileService.saveAvatarFromFile(profile.id, imageFile);
 
+      final cloudSync = profileCloudSyncServiceOrNull;
+      if (cloudSync == null) {
+        AppLogging.auth(
+          'UserProfile: Cloud sync not available for uploadAvatarToCloud',
+        );
+        return;
+      }
+
       // Then upload to cloud
-      final cloudUrl = await profileCloudSyncService.uploadAvatar(
-        uid,
-        imageFile,
-      );
+      final cloudUrl = await cloudSync.uploadAvatar(uid, imageFile);
 
       // Update profile with cloud URL
       final updated = profile.copyWith(avatarUrl: cloudUrl, isSynced: true);
@@ -767,7 +745,10 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         // Sync to cloud if signed in
         final user = ref.read(currentUserProvider);
         if (user != null) {
-          await profileCloudSyncService.syncToCloud(user.uid);
+          final cloudSync = profileCloudSyncServiceOrNull;
+          if (cloudSync != null) {
+            await cloudSync.syncToCloud(user.uid);
+          }
         }
       }
     } catch (e, st) {
@@ -791,7 +772,10 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         // Sync to cloud if signed in
         final user = ref.read(currentUserProvider);
         if (user != null) {
-          await profileCloudSyncService.syncToCloud(user.uid);
+          final cloudSync = profileCloudSyncServiceOrNull;
+          if (cloudSync != null) {
+            await cloudSync.syncToCloud(user.uid);
+          }
         }
       }
     } catch (e, st) {

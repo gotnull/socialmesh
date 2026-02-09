@@ -858,31 +858,31 @@ class HelpContent {
       HelpStep(
         id: 'detail_intro',
         bubbleText:
-            "You are viewing a **signal in detail**. Here you can see the "
-            "full content, location, and all the responses from the mesh.",
+            "This is the **signal detail** screen. You can read the full "
+            "content, see where it was posted, and browse all responses.",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
         id: 'detail_ttl',
         bubbleText:
-            "The **TTL bar** at the bottom of the signal card shows how much "
-            "time is left before it fades. When it reaches zero, the signal "
-            "disappears and this screen closes automatically.",
+            "The **TTL bar** shows how much time the signal has left. When "
+            "it reaches zero the signal expires and this screen closes "
+            "automatically.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'detail_responses',
         bubbleText:
-            "Responses are **threaded** — you can reply to the signal itself "
-            "or to someone else's response. Nested replies indent to show "
-            "the conversation flow.",
+            "Responses are **threaded**. You can reply directly to the "
+            "signal or to another person's response. Nested replies indent "
+            "so you can follow the conversation.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'detail_voting',
         bubbleText:
-            "Use the **up and down arrows** to vote on responses. Votes help "
+            "Tap the **up or down arrow** on any response to vote. Votes "
             "surface the most useful replies. You can change your vote at "
             "any time.",
         icoMood: MeshBrainMood.approving,
@@ -890,17 +890,17 @@ class HelpContent {
       HelpStep(
         id: 'detail_reply',
         bubbleText:
-            "Type in the **reply bar** at the bottom to respond. Tap the "
-            "reply arrow on any response to start a threaded conversation "
-            "with that person.",
+            "Use the **reply bar** at the bottom to respond. Tap the reply "
+            "icon on any response to start a threaded conversation with "
+            "that person.",
         icoMood: MeshBrainMood.playful,
       ),
       HelpStep(
         id: 'detail_actions',
         bubbleText:
-            "The **overflow menu** (three dots) gives you extra options like "
-            "bookmarking, sharing, or reporting. Signal authors can also "
-            "delete their own signals from here.",
+            "The **overflow menu** (three dots) lets you **delete** your "
+            "own signal or **report** someone else's. Only one of those "
+            "options appears depending on whether you authored the signal.",
         icoMood: MeshBrainMood.speaking,
       ),
     ],

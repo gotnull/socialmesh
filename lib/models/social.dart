@@ -233,7 +233,9 @@ class PostAuthorSnapshot {
   final bool isVerified;
 
   /// The user's primary Meshtastic node number for correct sigil rendering.
-  /// When present, SigilAvatar uses this instead of actorId.hashCode.
+  /// When present, SigilAvatar is rendered with this real node number.
+  /// When absent, UserAvatar is used instead — a SigilAvatar must never be
+  /// rendered without a real node number.
   final int? nodeNum;
 
   const PostAuthorSnapshot({

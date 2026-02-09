@@ -10,6 +10,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../core/logging.dart';
+import '../main.dart' show firebaseReady;
 import '../services/notifications/push_notification_service.dart';
 
 /// Exception thrown when account linking is required
@@ -29,8 +30,29 @@ class AccountLinkingRequiredException implements Exception {
       'Account exists with different credential. Sign in with ${existingProviders.join(" or ")} to link GitHub.';
 }
 
-/// Provider for the Firebase Auth instance
+/// Reactive provider that completes when Firebase is initialized (or fails).
+///
+/// Wraps the global [firebaseReady] Future so that any provider watching it
+/// will automatically rebuild once Firebase finishes initializing. Without
+/// this, providers that check Firebase state at build time can get permanently
+/// stuck if Firebase initializes after the provider's first evaluation.
+final firebaseReadyProvider = FutureProvider<bool>((ref) async {
+  return firebaseReady;
+});
+
+/// Provider for the Firebase Auth instance.
+///
+/// Watches [firebaseReadyProvider] so it re-evaluates when Firebase finishes
+/// initializing. Before Firebase is ready, this provider throws (putting
+/// [authStateProvider] into error/loading state). Once Firebase is ready,
+/// the entire auth chain — authStateProvider -> currentUserProvider ->
+/// isSignedInProvider — re-evaluates automatically.
 final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
+  final isReady =
+      ref.watch(firebaseReadyProvider).whenOrNull(data: (v) => v) ?? false;
+  if (!isReady) {
+    throw StateError('Firebase not initialized yet');
+  }
   return FirebaseAuth.instance;
 });
 

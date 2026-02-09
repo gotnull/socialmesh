@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import 'package:firebase_core/firebase_core.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -10,16 +10,18 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
 import '../../../models/social_activity.dart';
 import '../../../providers/activity_providers.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../providers/profile_providers.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
-import '../../../providers/app_providers.dart';
+
 import '../../../utils/mesh_identity.dart';
-import '../../nodedex/providers/nodedex_providers.dart';
+
 import '../../nodedex/screens/nodedex_detail_screen.dart';
 import '../../nodedex/widgets/sigil_painter.dart';
 import '../../signals/screens/signal_detail_screen.dart';
@@ -162,7 +164,8 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
   Widget build(BuildContext context) {
     final feedState = ref.watch(activityFeedProvider);
     final isSignedIn = ref.watch(isSignedInProvider);
-    final firebaseReady = Firebase.apps.isNotEmpty;
+    final firebaseReady =
+        ref.watch(firebaseReadyProvider).whenOrNull(data: (v) => v) ?? false;
 
     AppLogging.social(
       '📬 [ActivityScreen] build() — '
@@ -689,27 +692,6 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
 // TIMELINE ACTIVITY TILE
 // ============================================================================
 
-/// Source of the resolved node number for telemetry tracking.
-enum _NodeNumSource {
-  /// From the baked-in actorSnapshot.nodeNum (ideal — fully offline).
-  bakedSnapshot,
-
-  /// From a live profile lookup via publicProfileProvider (requires cloud).
-  profileLookup,
-
-  /// No node number could be resolved from any source.
-  none,
-}
-
-/// Result of resolving a mesh node number, bundled with the source
-/// that produced it for telemetry logging.
-class _ResolvedNodeNum {
-  final int? nodeNum;
-  final _NodeNumSource source;
-
-  const _ResolvedNodeNum(this.nodeNum, this.source);
-}
-
 class _TimelineActivityTile extends ConsumerWidget {
   final SocialActivity activity;
   final bool showLine;
@@ -760,104 +742,49 @@ class _TimelineActivityTile extends ConsumerWidget {
 
   /// Resolve the actor's mesh node number from the best available source.
   ///
-  /// Returns a [_ResolvedNodeNum] containing both the node number (if found)
-  /// and the source that provided it, for telemetry tracking.
+  /// Identical pattern to signal card's `isMeshSignal` / `meshNodeId` check:
+  /// if a node number exists, use SigilAvatar + resolveMeshNodeName.
+  /// If not, use UserAvatar + snapshot displayName. Never hash anything.
   ///
-  /// Resolution chain:
-  /// 1. Baked-in snapshot nodeNum (new activities created after the fix)
-  /// 2. Live profile lookup via publicProfileProvider (old activities)
-  _ResolvedNodeNum _resolveMeshNodeNum(WidgetRef ref) {
-    // 1. From baked-in snapshot (new activities created after the fix).
-    // This is the ideal path — no network or async lookup needed.
+  /// Resolution chain for nodeNum:
+  /// 1. Baked-in snapshot nodeNum (activities created after the fix)
+  /// 2. Local user profile primaryNodeId (actor is current user)
+  /// 3. Cloud profile lookup (actor is another user)
+  int? _resolveActorNodeNum(WidgetRef ref) {
+    // 1. From baked-in snapshot — fully offline, no lookup needed.
     final snapshotNodeNum = activity.actorSnapshot?.nodeNum;
-    if (snapshotNodeNum != null) {
-      return _ResolvedNodeNum(snapshotNodeNum, _NodeNumSource.bakedSnapshot);
+    if (snapshotNodeNum != null) return snapshotNodeNum;
+
+    // 2. If the actor is the current user, use local profile.
+    final currentUser = ref.watch(currentUserProvider);
+    if (currentUser != null && activity.actorId == currentUser.uid) {
+      final localNodeId = ref.watch(userProfileProvider).value?.primaryNodeId;
+      if (localNodeId != null) return localNodeId;
     }
 
-    // 2. From live profile lookup (handles old activities without nodeNum).
-    // This requires Firebase auth + connectivity — it is a fallback, not
-    // the primary path. Offline users or non-signed-in users will get null
-    // here, which is acceptable: the display falls back to profile name
-    // or "Someone" without degrading the experience.
+    // 3. Cloud profile lookup for other users.
     final profileAsync = ref.watch(publicProfileProvider(activity.actorId));
     final profileNodeNum = profileAsync.whenOrNull(
       data: (p) => p?.primaryNodeId,
     );
-    if (profileNodeNum != null) {
-      return _ResolvedNodeNum(profileNodeNum, _NodeNumSource.profileLookup);
-    }
+    if (profileNodeNum != null) return profileNodeNum;
 
-    return const _ResolvedNodeNum(null, _NodeNumSource.none);
-  }
-
-  /// Resolve the display name for the actor — device-first, not profile-first.
-  ///
-  /// Resolution chain (all local except step 4):
-  /// 1. Live node name (longName/shortName from nodesProvider) — local mesh
-  /// 2. NodeDex cached name (lastKnownName in local SQLite) — local DB
-  /// 3. Hex ID (e.g. "!81C42D94") if we have nodeNum but no name — computed
-  /// 4. Profile displayName as final fallback (no mesh node at all)
-  ///
-  /// Steps 1-3 are fully offline. Step 4 uses the baked-in snapshot
-  /// (also offline) and only falls to "Someone" if nothing is available.
-  String _resolveDisplayName(
-    WidgetRef ref,
-    int? meshNodeNum,
-    _NodeNumSource nodeNumSource,
-  ) {
-    if (meshNodeNum != null) {
-      final name = resolveMeshNodeName(ref, meshNodeNum);
-
-      // Telemetry: log the complete resolution path for this activity.
-      // This breadcrumb shows nodeNum source + name source together,
-      // making it easy to grep logs and measure backfill effectiveness.
-      AppLogging.social(
-        'ActivityIdentity: activityId=${activity.id} '
-        'nodeNumSource=${nodeNumSource.name} '
-        'nameSource=${_describeNameSource(ref, meshNodeNum)} '
-        'resolvedName=$name',
-      );
-
-      return name;
-    }
-
-    // No mesh node — fall back to profile display name (from baked-in
-    // snapshot, so this works offline too).
-    final fallbackName = activity.actorSnapshot?.displayName ?? 'Someone';
-    AppLogging.social(
-      'ActivityIdentity: activityId=${activity.id} '
-      'nodeNumSource=none nameSource=profileFallback '
-      'resolvedName=$fallbackName',
-    );
-    return fallbackName;
-  }
-
-  /// Describe which name source was used, for telemetry logging.
-  String _describeNameSource(WidgetRef ref, int nodeNum) {
-    final nodes = ref.read(nodesProvider);
-    final node = nodes[nodeNum];
-    if (node != null) {
-      final long = node.longName;
-      final short = node.shortName;
-      if ((long != null && long.isNotEmpty) ||
-          (short != null && short.isNotEmpty)) {
-        return 'liveMesh';
-      }
-    }
-
-    final entry = ref.read(nodeDexEntryProvider(nodeNum));
-    if (entry?.lastKnownName != null) return 'nodeDexCached';
-
-    return 'hexFallback';
+    return null;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Resolve mesh identity for this actor.
-    final resolved = _resolveMeshNodeNum(ref);
-    final meshNodeNum = resolved.nodeNum;
-    final actorName = _resolveDisplayName(ref, meshNodeNum, resolved.source);
-    final sigilNodeNum = meshNodeNum ?? activity.actorId.hashCode;
+    // Resolve mesh identity — SAME pattern as signal card:
+    // isMeshSignal (has nodeNum) → SigilAvatar + resolveMeshNodeName
+    // !isMeshSignal             → UserAvatar  + snapshot displayName
+    // NEVER hash actorId to fake a sigil. NEVER show displayName when
+    // a mesh identity exists.
+    final meshNodeNum = _resolveActorNodeNum(ref);
+    final isMeshActor = meshNodeNum != null;
+
+    final actorName = isMeshActor
+        ? resolveMeshNodeName(ref, meshNodeNum)
+        : activity.actorSnapshot?.displayName ?? 'Someone';
 
     return Dismissible(
       key: Key(activity.id),
@@ -904,11 +831,13 @@ class _TimelineActivityTile extends ConsumerWidget {
 
               const SizedBox(width: 12),
 
-              // Sigil avatar with unread dot — taps through to NodeDex
+              // Avatar — mesh actors get SigilAvatar (tappable → NodeDex),
+              // non-mesh actors get UserAvatar (with profile photo if available).
+              // Mirrors signal card exactly.
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: GestureDetector(
-                  onTap: meshNodeNum != null
+                  onTap: isMeshActor
                       ? () {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
@@ -920,7 +849,15 @@ class _TimelineActivityTile extends ConsumerWidget {
                       : null,
                   child: Stack(
                     children: [
-                      SigilAvatar(nodeNum: sigilNodeNum, size: 40),
+                      if (isMeshActor)
+                        SigilAvatar(nodeNum: meshNodeNum, size: 40)
+                      else
+                        UserAvatar(
+                          imageUrl: activity.actorSnapshot?.avatarUrl,
+                          size: 40,
+                          foregroundColor: context.accentColor,
+                          fallbackIcon: Icons.person,
+                        ),
                       // Unread indicator
                       if (!activity.isRead)
                         Positioned(

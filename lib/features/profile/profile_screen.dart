@@ -706,7 +706,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
           // Sync error with retry option (only shown when there's an error)
           if (syncStatus == SyncStatus.error) ...[
             StatusBanner.error(
-              title: syncError ?? 'Sync failed',
+              title: _friendlySyncError(syncError),
               trailing: TextButton(
                 onPressed: () => _retrySyncNow(context),
                 child: const Text('Retry'),
@@ -876,6 +876,31 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
         }
       }
     }
+  }
+
+  /// Convert raw sync error strings into user-friendly messages.
+  /// Never expose internal error class names or field names to users.
+  String _friendlySyncError(String? error) {
+    if (error == null) return 'Sync failed';
+    if (error.contains('LateInitializationError') ||
+        error.contains('has not been initialized')) {
+      return 'Cloud services starting up — try again shortly';
+    }
+    if (error.contains('unavailable') || error.contains('UNAVAILABLE')) {
+      return 'Cloud sync temporarily unavailable';
+    }
+    if (error.contains('permission') || error.contains('PERMISSION')) {
+      return 'Sync permission denied';
+    }
+    if (error.contains('network') ||
+        error.contains('connection') ||
+        error.contains('SocketException')) {
+      return 'No internet connection';
+    }
+    if (error.contains('timeout') || error.contains('TimeoutException')) {
+      return 'Sync timed out — try again';
+    }
+    return 'Sync temporarily unavailable';
   }
 
   Future<void> _retrySyncNow(BuildContext context) async {
@@ -1252,43 +1277,10 @@ class _SyncErrorBanner extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () {
-              final syncStatus = ref.read(syncStatusProvider);
-              final syncError = ref.read(syncErrorProvider);
-              final user = ref.read(currentUserProvider);
-              AppLogging.auth('');
               AppLogging.auth(
-                '╔══════════════════════════════════════════════════════════════',
+                'SyncErrorBanner: Retry tapped — calling refresh() '
+                'which clears errors and re-runs cloud sync',
               );
-              AppLogging.auth('║ 👆 RETRY BUTTON TAPPED in _SyncErrorBanner');
-              AppLogging.auth(
-                '╠══════════════════════════════════════════════════════════════',
-              );
-              AppLogging.auth('║ 📊 Current syncStatus:  $syncStatus');
-              AppLogging.auth(
-                '║ 📊 Current syncError:   ${syncError ?? "null"}',
-              );
-              AppLogging.auth(
-                '║ 📊 Current user UID:    ${user?.uid ?? "NULL (not signed in)"}',
-              );
-              AppLogging.auth('║ 📊 Banner error text:   $error');
-              AppLogging.auth('║ 📊 Banner message shown: $message');
-              AppLogging.auth('║');
-              AppLogging.auth(
-                '║ ➡️  Calling ref.read(userProfileProvider.notifier).refresh()',
-              );
-              AppLogging.auth(
-                '║ ⚠️  refresh() only calls _loadProfile() (local storage).',
-              );
-              AppLogging.auth(
-                '║ ⚠️  It does NOT clear syncErrorProvider or retry cloud sync.',
-              );
-              AppLogging.auth(
-                '║ ⚠️  The banner will likely remain visible after this call.',
-              );
-              AppLogging.auth(
-                '╚══════════════════════════════════════════════════════════════',
-              );
-              AppLogging.auth('');
               ref.read(userProfileProvider.notifier).refresh();
             },
             style: TextButton.styleFrom(
@@ -1916,7 +1908,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
     // This prevents accessing ref after widget disposal
     final moderationService = ref.read(contentModerationServiceProvider);
     final currentUser = ref.read(currentUserProvider);
-    final cloudSyncService = ref.read(profileCloudSyncServiceProvider);
+    final cloudSyncService = ref.read(
+      profileCloudSyncServiceProvider,
+    ); // nullable
     final profileNotifier = ref.read(userProfileProvider.notifier);
 
     try {
@@ -1950,7 +1944,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
         }
 
         // 1b. Check display name uniqueness - using pre-captured cloudSyncService
-        if (currentUser != null) {
+        if (currentUser != null && cloudSyncService != null) {
           final isTaken = await cloudSyncService.isDisplayNameTaken(
             displayName,
             currentUser.uid,

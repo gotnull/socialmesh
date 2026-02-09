@@ -742,23 +742,8 @@ class _MainShellState extends ConsumerState<MainShell> {
               height: 56,
               child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
             ),
-            error: (e, st) => _DrawerMenuTile(
-              icon: Icons.person_outline,
-              label: 'Account',
-              isSelected: false,
-              onTap: () {
-                ref.haptics.tabChange();
-                final firstItem = _drawerMenuItems[0];
-                if (firstItem.tabIndex != null) {
-                  Navigator.of(context).pop();
-                  ref
-                      .read(mainShellIndexProvider.notifier)
-                      .setIndex(firstItem.tabIndex!);
-                } else if (firstItem.screen != null) {
-                  _navigateFromDrawer(context, firstItem.screen!);
-                }
-              },
-            ),
+            error: (e, st) =>
+                _buildProfileTile(context, theme, null, isSignedIn),
           ),
         ],
       ),

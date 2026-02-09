@@ -2,11 +2,10 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
-
 import '../models/social_activity.dart';
+import '../providers/auth_providers.dart';
 import '../services/social_activity_service.dart';
 
 // ===========================================================================
@@ -19,130 +18,86 @@ final socialActivityServiceProvider = Provider<SocialActivityService>((ref) {
 });
 
 // ===========================================================================
-// ACTIVITY FEED
+// ACTIVITY FEED NOTIFIER
 // ===========================================================================
 
 /// Notifier for the activity feed.
 ///
-/// Listens to auth state changes to restart the activity stream when the user
-/// signs in or out. Handles the not-signed-in and Firebase-not-initialized
-/// cases explicitly to avoid stuck loading states.
+/// Reactively watches [firebaseReadyProvider] and [currentUserProvider] so
+/// that [build] automatically re-runs when:
+///   - Firebase finishes initializing (was the root cause of activities never
+///     showing on some devices — if Firebase initialized after the first build,
+///     the notifier was stuck in empty state forever)
+///   - The user signs in or out
+///
+/// The previous implementation used raw `Firebase.apps.isEmpty` and
+/// `FirebaseAuth.instance.currentUser` checks with a manual auth stream
+/// subscription. Because those are not Riverpod-reactive, the notifier
+/// had no dependency that would trigger a rebuild when conditions changed.
 class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
   StreamSubscription<List<SocialActivity>>? _activitySubscription;
-  StreamSubscription<User?>? _authSubscription;
 
   @override
   ActivityFeedState build() {
+    // Cancel any existing subscription when rebuild occurs.
+    // Riverpod calls build() each time a watched dependency changes,
+    // so we must clean up the previous Firestore stream.
+    _activitySubscription?.cancel();
+    _activitySubscription = null;
+
     ref.onDispose(() {
       AppLogging.social(
-        '📬 [ActivityFeed] build() dispose callback — cancelling subscriptions',
-      );
-      _activitySubscription?.cancel();
-      _authSubscription?.cancel();
-    });
-
-    // Gate 1: Firebase not initialized — nothing to do
-    if (Firebase.apps.isEmpty) {
-      AppLogging.social(
-        '📬 [ActivityFeed] build() — Firebase.apps.isEmpty=true, '
-        'returning isLoading=false immediately',
-      );
-      return const ActivityFeedState(isLoading: false);
-    }
-
-    // Gate 2: User not signed in — no activities to fetch
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      AppLogging.social(
-        '📬 [ActivityFeed] build() — currentUser is null (not signed in), '
-        'returning isLoading=false, starting auth listener for future sign-in',
-      );
-      _listenToAuthChanges();
-      return const ActivityFeedState(isLoading: false);
-    }
-
-    // Gate 3: Signed in — start watching and return loading state
-    AppLogging.social(
-      '📬 [ActivityFeed] build() — signed in as uid=${currentUser.uid}, '
-      'starting auth listener and activity stream, returning isLoading=true',
-    );
-    _listenToAuthChanges();
-    _startWatching();
-    return const ActivityFeedState(isLoading: true);
-  }
-
-  void _listenToAuthChanges() {
-    _authSubscription?.cancel();
-
-    // Check if Firebase is initialized before accessing FirebaseAuth
-    if (Firebase.apps.isEmpty) {
-      AppLogging.social(
-        '📬 [ActivityFeed] _listenToAuthChanges() — Firebase not initialized, '
-        'skipping auth listener',
-      );
-      return;
-    }
-
-    AppLogging.social(
-      '📬 [ActivityFeed] _listenToAuthChanges() — subscribing to '
-      'authStateChanges()',
-    );
-
-    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
-      AppLogging.social(
-        '📬 [ActivityFeed] authStateChanges fired — '
-        'user=${user?.uid ?? 'null'}, restarting stream',
-      );
-      _startWatching();
-    });
-  }
-
-  void _startWatching() {
-    // Gate 1: Firebase not initialized
-    if (Firebase.apps.isEmpty) {
-      AppLogging.social(
-        '📬 [ActivityFeed] _startWatching() — Firebase not initialized, '
-        'setting isLoading=false',
-      );
-      state = const ActivityFeedState(isLoading: false);
-      return;
-    }
-
-    // Gate 2: Not signed in — cancel any existing subscription, show empty
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      AppLogging.social(
-        '📬 [ActivityFeed] _startWatching() — currentUser is null '
-        '(not signed in), cancelling activity subscription, '
-        'setting isLoading=false with empty activities',
+        '📬 [ActivityFeed] dispose — cancelling activity subscription',
       );
       _activitySubscription?.cancel();
       _activitySubscription = null;
-      state = const ActivityFeedState(isLoading: false);
-      return;
+    });
+
+    // ---- Gate 1: Firebase readiness (reactive) ----
+    // Watching this provider is the key fix. When Firebase initializes
+    // asynchronously (after runApp), this future completes and triggers
+    // a rebuild of this notifier automatically.
+    final firebaseAsync = ref.watch(firebaseReadyProvider);
+    final isFirebaseReady = firebaseAsync.whenOrNull(data: (v) => v) ?? false;
+
+    if (!isFirebaseReady) {
+      AppLogging.social(
+        '📬 [ActivityFeed] build() — Firebase not ready yet '
+        '(state: loading=${firebaseAsync.isLoading}, '
+        'error=${firebaseAsync.error}), returning empty state',
+      );
+      return const ActivityFeedState(isLoading: false);
     }
 
-    // Gate 3: Signed in — subscribe to activity stream
-    AppLogging.social(
-      '📬 [ActivityFeed] _startWatching() — signed in as '
-      'uid=${currentUser.uid}, setting up activity stream',
-    );
+    // ---- Gate 2: Auth state (reactive) ----
+    // Watching currentUserProvider means build() re-runs when the user
+    // signs in or out. No manual authStateChanges subscription needed.
+    final currentUser = ref.watch(currentUserProvider);
 
+    if (currentUser == null) {
+      AppLogging.social(
+        '📬 [ActivityFeed] build() — user not signed in, '
+        'returning empty state',
+      );
+      return const ActivityFeedState(isLoading: false);
+    }
+
+    // ---- Gate 3: Start watching activities ----
+    AppLogging.social(
+      '📬 [ActivityFeed] build() — signed in as uid=${currentUser.uid}, '
+      'starting activity stream',
+    );
+    _startWatching(currentUser);
+    return const ActivityFeedState(isLoading: true);
+  }
+
+  void _startWatching(User currentUser) {
     try {
       final service = ref.read(socialActivityServiceProvider);
 
-      // Cancel previous subscription before creating new one
-      if (_activitySubscription != null) {
-        AppLogging.social(
-          '📬 [ActivityFeed] _startWatching() — cancelling previous '
-          'activity subscription',
-        );
-      }
-      _activitySubscription?.cancel();
-
       AppLogging.social(
-        '📬 [ActivityFeed] _startWatching() — calling '
-        'service.watchActivities()',
+        '📬 [ActivityFeed] _startWatching() — creating Firestore stream '
+        'for uid=${currentUser.uid}',
       );
 
       _activitySubscription = service.watchActivities().listen(
@@ -150,8 +105,7 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
           final unreadCount = activities.where((a) => !a.isRead).length;
           AppLogging.social(
             '📬 [ActivityFeed] stream emitted — '
-            '${activities.length} activities, $unreadCount unread, '
-            'setting isLoading=false',
+            '${activities.length} activities, $unreadCount unread',
           );
           state = ActivityFeedState(
             activities: activities,
@@ -176,43 +130,39 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
       );
 
       AppLogging.social(
-        '📬 [ActivityFeed] _startWatching() — stream subscription created '
-        'successfully',
+        '📬 [ActivityFeed] _startWatching() — stream subscription created',
       );
     } catch (e, st) {
       AppLogging.social(
-        '📬 [ActivityFeed] _startWatching() — EXCEPTION creating stream: '
-        '$e\n  stackTrace: $st',
+        '📬 [ActivityFeed] _startWatching() — EXCEPTION: $e\n'
+        '  stackTrace: $st',
       );
       state = ActivityFeedState(error: e.toString());
     }
   }
 
-  /// Refresh the activity feed.
+  /// Refresh the activity feed by doing a one-shot fetch.
   Future<void> refresh() async {
-    // Check if Firebase is initialized
-    if (Firebase.apps.isEmpty) {
+    final firebaseAsync = ref.read(firebaseReadyProvider);
+    final isFirebaseReady = firebaseAsync.whenOrNull(data: (v) => v) ?? false;
+
+    if (!isFirebaseReady) {
       AppLogging.social(
-        '📬 [ActivityFeed] refresh() — Firebase not initialized, '
-        'setting isLoading=false',
+        '📬 [ActivityFeed] refresh() — Firebase not ready, skip',
       );
       state = state.copyWith(isLoading: false);
       return;
     }
 
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final currentUser = ref.read(currentUserProvider);
     if (currentUser == null) {
-      AppLogging.social(
-        '📬 [ActivityFeed] refresh() — not signed in, '
-        'setting isLoading=false',
-      );
+      AppLogging.social('📬 [ActivityFeed] refresh() — not signed in, skip');
       state = state.copyWith(isLoading: false);
       return;
     }
 
     AppLogging.social(
-      '📬 [ActivityFeed] refresh() — starting refresh for '
-      'uid=${currentUser.uid}',
+      '📬 [ActivityFeed] refresh() — starting for uid=${currentUser.uid}',
     );
     state = state.copyWith(isLoading: true);
 
@@ -239,9 +189,12 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
 
   /// Mark all activities as read.
   Future<void> markAllAsRead() async {
-    if (Firebase.apps.isEmpty) {
+    final firebaseAsync = ref.read(firebaseReadyProvider);
+    final isFirebaseReady = firebaseAsync.whenOrNull(data: (v) => v) ?? false;
+
+    if (!isFirebaseReady) {
       AppLogging.social(
-        '📬 [ActivityFeed] markAllAsRead() — Firebase not initialized, skip',
+        '📬 [ActivityFeed] markAllAsRead() — Firebase not ready, skip',
       );
       return;
     }
@@ -255,7 +208,6 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
       final service = ref.read(socialActivityServiceProvider);
       await service.markAllAsRead();
 
-      // Update local state
       final updatedActivities = state.activities
           .map((a) => a.copyWith(isRead: true))
           .toList();
@@ -268,10 +220,13 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
 
   /// Mark a single activity as read.
   Future<void> markAsRead(String activityId) async {
-    if (Firebase.apps.isEmpty) {
+    final firebaseAsync = ref.read(firebaseReadyProvider);
+    final isFirebaseReady = firebaseAsync.whenOrNull(data: (v) => v) ?? false;
+
+    if (!isFirebaseReady) {
       AppLogging.social(
         '📬 [ActivityFeed] markAsRead($activityId) — '
-        'Firebase not initialized, skip',
+        'Firebase not ready, skip',
       );
       return;
     }
@@ -284,7 +239,6 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
       final service = ref.read(socialActivityServiceProvider);
       await service.markAsRead(activityId);
 
-      // Update local state
       final updatedActivities = state.activities.map((a) {
         if (a.id == activityId) {
           return a.copyWith(isRead: true);
@@ -317,7 +271,6 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
       final service = ref.read(socialActivityServiceProvider);
       await service.deleteActivity(activityId);
 
-      // Update local state
       final updatedActivities = state.activities
           .where((a) => a.id != activityId)
           .toList();

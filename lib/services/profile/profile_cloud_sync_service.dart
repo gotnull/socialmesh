@@ -814,10 +814,28 @@ class DisplayNameTakenException implements Exception {
       'The display name "$displayName" is already taken. Please choose a different name.';
 }
 
-/// Singleton instance
-late ProfileCloudSyncService profileCloudSyncService;
+/// Singleton instance — nullable because Firebase init is async and may fail.
+/// All access must go through [profileCloudSyncServiceOrNull] or the provider.
+ProfileCloudSyncService? profileCloudSyncServiceOrNull;
+
+/// Whether the cloud sync service has been initialized.
+bool get isProfileCloudSyncServiceInitialized =>
+    profileCloudSyncServiceOrNull != null;
+
+/// Legacy accessor kept for call-sites that are already guarded by
+/// null-checks or try/catch. Prefer [profileCloudSyncServiceOrNull].
+ProfileCloudSyncService get profileCloudSyncService {
+  final svc = profileCloudSyncServiceOrNull;
+  if (svc == null) {
+    throw StateError(
+      'profileCloudSyncService accessed before Firebase initialization. '
+      'Use profileCloudSyncServiceOrNull for safe access.',
+    );
+  }
+  return svc;
+}
 
 /// Initialize the cloud sync service (call after profileService.initialize())
 void initProfileCloudSyncService() {
-  profileCloudSyncService = ProfileCloudSyncService(profileService);
+  profileCloudSyncServiceOrNull = ProfileCloudSyncService(profileService);
 }
