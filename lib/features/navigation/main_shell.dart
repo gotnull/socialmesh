@@ -54,6 +54,7 @@ import '../profile/profile_screen.dart';
 import '../debug/device_logs_screen.dart';
 import '../nodedex/screens/nodedex_screen.dart';
 import '../social/screens/activity_timeline_screen.dart';
+import '../global_layer/screens/global_layer_hub_screen.dart';
 import '../../providers/activity_providers.dart';
 import '../../providers/whats_new_providers.dart';
 import '../../core/whats_new/whats_new_sheet.dart';
@@ -433,6 +434,17 @@ class _MainShellState extends ConsumerState<MainShell> {
       screen: const DeviceLogsScreen(),
       iconColor: Colors.grey.shade500,
       requiresConnection: true,
+    ),
+
+    // Global Layer — between MESH and PREMIUM
+    _DrawerMenuItem(
+      icon: Icons.cloud_sync_outlined,
+      label: 'Global Layer',
+      screen: const GlobalLayerHubScreen(),
+      sectionHeader: 'GLOBAL',
+      iconColor: Colors.teal.shade300,
+      requiresConnection: false,
+      whatsNewBadgeKey: 'global_layer',
     ),
 
     // Shop - below MESH section

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -34,6 +35,7 @@ import '../../core/widgets/skeleton_config.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
+import '../telemetry/traceroute_log_screen.dart';
 import '../navigation/main_shell.dart';
 import '../nodedex/models/nodedex_entry.dart';
 import '../nodedex/providers/nodedex_providers.dart';
@@ -1707,6 +1709,18 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
     with LifecycleSafeMixin<NodeDetailsSheet> {
   bool _isTogglingFavorite = false;
   bool _isTogglingMute = false;
+  bool _isSendingTraceroute = false;
+  int _tracerouteCooldownRemaining = 0;
+  Timer? _tracerouteCooldownTimer;
+
+  /// Traceroute rate limit: 30 seconds between sends (matches Meshtastic iOS).
+  static const _tracerouteCooldownSeconds = 30;
+
+  @override
+  void dispose() {
+    _tracerouteCooldownTimer?.cancel();
+    super.dispose();
+  }
 
   MeshNode get _initialNode => widget.node;
   bool get isMyNode => widget.isMyNode;
@@ -1884,6 +1898,85 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
     } finally {
       safeSetState(() => _isTogglingMute = false);
     }
+  }
+
+  void _sendTraceroute(BuildContext context, MeshNode node) async {
+    if (_isSendingTraceroute || _tracerouteCooldownRemaining > 0) return;
+
+    // Check connection state
+    final connectionState = ref.read(connectionStateProvider);
+    final isConnected = connectionState.maybeWhen(
+      data: (state) => state == DeviceConnectionState.connected,
+      orElse: () => false,
+    );
+
+    if (!isConnected) {
+      showErrorSnackBar(
+        context,
+        'Cannot send traceroute: Device not connected',
+      );
+      return;
+    }
+
+    safeSetState(() => _isSendingTraceroute = true);
+
+    // Capture before await
+    final protocol = ref.read(protocolServiceProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    final displayName = node.displayName;
+
+    try {
+      await protocol.sendTraceroute(node.nodeNum);
+
+      if (!mounted) return;
+
+      // Start cooldown timer
+      safeSetState(() {
+        _isSendingTraceroute = false;
+        _tracerouteCooldownRemaining = _tracerouteCooldownSeconds;
+      });
+
+      _tracerouteCooldownTimer?.cancel();
+      _tracerouteCooldownTimer = Timer.periodic(const Duration(seconds: 1), (
+        timer,
+      ) {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+        safeSetState(() {
+          _tracerouteCooldownRemaining--;
+          if (_tracerouteCooldownRemaining <= 0) {
+            _tracerouteCooldownRemaining = 0;
+            timer.cancel();
+          }
+        });
+      });
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Traceroute sent to $displayName — check Traceroute History for results',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      safeSetState(() => _isSendingTraceroute = false);
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed to send traceroute: $e')),
+      );
+    }
+  }
+
+  void _showTracerouteHistory(BuildContext context, MeshNode node) {
+    Navigator.pop(context);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TraceRouteLogScreen(nodeNum: node.nodeNum),
+      ),
+    );
   }
 
   void _showRebootConfirmation(BuildContext context) {
@@ -2202,6 +2295,24 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          ListTile(
+            leading: Icon(Icons.timeline, color: context.accentColor),
+            title: Text(
+              'Traceroute History',
+              style: TextStyle(
+                color: context.textPrimary,
+                fontFamily: AppTheme.fontFamily,
+              ),
+            ),
+            subtitle: Text(
+              'View past traceroute results for this node',
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              _showTracerouteHistory(context, node);
+            },
+          ),
           ListTile(
             leading: Icon(Icons.refresh, color: context.accentColor),
             title: Text(
@@ -2636,6 +2747,69 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
                               tooltip: node.isIgnored
                                   ? 'Unmute node'
                                   : 'Mute node',
+                              padding: const EdgeInsets.all(12),
+                              constraints: const BoxConstraints(),
+                            ),
+                    ),
+                    SizedBox(width: 8),
+                    // Traceroute button
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: context.border),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: _isSendingTraceroute
+                          ? Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: context.accentColor,
+                                ),
+                              ),
+                            )
+                          : _tracerouteCooldownRemaining > 0
+                          ? Tooltip(
+                              message:
+                                  'Traceroute cooldown: ${_tracerouteCooldownRemaining}s',
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 46,
+                                    height: 46,
+                                    child: CircularProgressIndicator(
+                                      value:
+                                          _tracerouteCooldownRemaining /
+                                          _tracerouteCooldownSeconds,
+                                      strokeWidth: 2,
+                                      color: context.textTertiary.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                      backgroundColor: Colors.transparent,
+                                    ),
+                                  ),
+                                  Text(
+                                    '$_tracerouteCooldownRemaining',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: context.textTertiary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : IconButton(
+                              onPressed: () => _sendTraceroute(context, node),
+                              icon: Icon(
+                                Icons.route,
+                                color: context.textSecondary,
+                                size: 22,
+                              ),
+                              tooltip: 'Traceroute',
                               padding: const EdgeInsets.all(12),
                               constraints: const BoxConstraints(),
                             ),
