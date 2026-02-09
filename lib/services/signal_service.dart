@@ -1547,7 +1547,7 @@ class SignalService {
         '''
         DELETE FROM $_tableName WHERE id IN (
           SELECT id FROM $_tableName
-          ORDER BY 
+          ORDER BY
             CASE WHEN expiresAt < ? THEN 0 ELSE 1 END,
             createdAt ASC
           LIMIT ?
@@ -3541,6 +3541,8 @@ class SignalService {
               'displayName': post.authorSnapshot!.displayName,
               'avatarUrl': post.authorSnapshot!.avatarUrl,
               'isVerified': post.authorSnapshot!.isVerified,
+              if (post.authorSnapshot!.nodeNum != null)
+                'nodeNum': post.authorSnapshot!.nodeNum,
             })
           : null,
       'postMode': post.postMode.name,
@@ -3572,6 +3574,7 @@ class SignalService {
         displayName: snapshotMap['displayName'] as String,
         avatarUrl: snapshotMap['avatarUrl'] as String?,
         isVerified: snapshotMap['isVerified'] as bool? ?? false,
+        nodeNum: snapshotMap['nodeNum'] as int?,
       );
     }
 

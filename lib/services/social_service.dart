@@ -789,6 +789,7 @@ class SocialService {
             displayName: profile.displayName,
             avatarUrl: profile.avatarUrl,
             isVerified: profile.isVerified,
+            nodeNum: profile.primaryNodeId,
           )
         : null;
 
@@ -991,6 +992,7 @@ class SocialService {
           displayName: profile.displayName,
           avatarUrl: profile.avatarUrl,
           isVerified: profile.isVerified,
+          nodeNum: profile.primaryNodeId,
         ),
       );
     }).toList();

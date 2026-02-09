@@ -614,8 +614,14 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
                 displayName: profile!.displayName,
                 avatarUrl: profile.avatarUrl,
                 isVerified: profile.isVerified,
+                nodeNum: myNodeNum,
               )
-            : null,
+            : (myNodeNum != null
+                  ? PostAuthorSnapshot(
+                      displayName: 'Mesh Node',
+                      nodeNum: myNodeNum,
+                    )
+                  : null),
         useCloud: canUseCloud,
         presenceInfo: presenceInfo,
       );
