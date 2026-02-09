@@ -6,6 +6,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -38,8 +39,6 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
     with LifecycleSafeMixin<TraceRouteLogScreen> {
   String _searchQuery = '';
   _TracerouteFilter _activeFilter = _TracerouteFilter.all;
-  DateTime? _startDate;
-  DateTime? _endDate;
   bool _isExporting = false;
   final TextEditingController _searchController = TextEditingController();
 
@@ -48,8 +47,6 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
     _searchController.dispose();
     super.dispose();
   }
-
-  bool get _hasDateFilter => _startDate != null || _endDate != null;
 
   List<TraceRouteLog> _applyFilters(List<TraceRouteLog> logs) {
     var filtered = List<TraceRouteLog>.from(logs);
@@ -62,19 +59,6 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
         filtered = filtered.where((log) => log.response).toList();
       case _TracerouteFilter.noResponse:
         filtered = filtered.where((log) => !log.response).toList();
-    }
-
-    // Apply date range filter
-    if (_startDate != null) {
-      filtered = filtered
-          .where((log) => !log.timestamp.isBefore(_startDate!))
-          .toList();
-    }
-    if (_endDate != null) {
-      final endOfDay = _endDate!.add(const Duration(days: 1));
-      filtered = filtered
-          .where((log) => log.timestamp.isBefore(endOfDay))
-          .toList();
     }
 
     // Apply search filter
@@ -104,41 +88,6 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
     // Sort newest first
     filtered.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return filtered;
-  }
-
-  void _clearFilters() {
-    safeSetState(() {
-      _startDate = null;
-      _endDate = null;
-    });
-  }
-
-  Future<void> _selectDateRange() async {
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      initialDateRange: _startDate != null && _endDate != null
-          ? DateTimeRange(start: _startDate!, end: _endDate!)
-          : null,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null && mounted) {
-      safeSetState(() {
-        _startDate = picked.start;
-        _endDate = picked.end;
-      });
-    }
   }
 
   @override
@@ -180,20 +129,6 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
           ? 'Traceroute History'
           : null,
       actions: [
-        if (_hasDateFilter)
-          IconButton(
-            icon: const Icon(Icons.filter_alt_off),
-            tooltip: 'Clear date filter',
-            onPressed: _clearFilters,
-          ),
-        IconButton(
-          icon: Badge(
-            isLabelVisible: _hasDateFilter,
-            child: const Icon(Icons.date_range),
-          ),
-          tooltip: 'Date range',
-          onPressed: _selectDateRange,
-        ),
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert),
           tooltip: 'More actions',
@@ -273,12 +208,16 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
 
             if (filtered.isEmpty) {
               return SliverFillRemaining(
-                child: _buildEmptyState(
-                  context,
-                  logs.isEmpty
-                      ? 'No traceroutes recorded yet'
-                      : 'No traceroutes match filters',
-                  showClearFilters: logs.isNotEmpty,
+                hasScrollBody: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: _buildEmptyState(
+                    context,
+                    logs.isEmpty
+                        ? 'No traceroutes recorded yet'
+                        : 'No traceroutes match filters',
+                    showClearFilters: logs.isNotEmpty,
+                  ),
                 ),
               );
             }
@@ -331,13 +270,26 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.route_outlined, size: 64, color: context.textTertiary),
-          const SizedBox(height: 16),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: context.card,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              Icons.route_outlined,
+              size: 40,
+              color: context.textTertiary,
+            ),
+          ),
+          const SizedBox(height: 24),
           Text(
             message,
             style: context.titleSmallStyle?.copyWith(
               color: context.textSecondary,
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
@@ -355,8 +307,6 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
                   _activeFilter = _TracerouteFilter.all;
                   _searchQuery = '';
                   _searchController.clear();
-                  _startDate = null;
-                  _endDate = null;
                 });
               },
               icon: const Icon(Icons.filter_alt_off, size: 16),

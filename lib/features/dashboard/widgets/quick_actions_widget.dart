@@ -137,54 +137,37 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
   }
 
   void _showTracerouteSheet(BuildContext context) async {
-    final nodes = ref.read(nodesProvider);
-    final messenger = ScaffoldMessenger.of(context);
-
     final resultNodeNum = await AppBottomSheet.show<int>(
       context: context,
       padding: EdgeInsets.zero,
-      child: TracerouteSheetContent(ref: ref),
+      child: const TracerouteSheetContent(),
     );
 
-    if (!mounted) return;
+    if (!mounted || resultNodeNum == null) return;
 
-    if (resultNodeNum != null) {
-      final targetNode = nodes[resultNodeNum];
-      final displayName =
-          targetNode?.displayName ?? '!${resultNodeNum.toRadixString(16)}';
+    _lastTracerouteTargetNodeNum = resultNodeNum;
 
-      _lastTracerouteTargetNodeNum = resultNodeNum;
+    safeSetState(() {
+      _tracerouteCooldownRemaining = _tracerouteCooldownSeconds;
+    });
 
+    _tracerouteCooldownTimer?.cancel();
+    _tracerouteCooldownTimer = Timer.periodic(const Duration(seconds: 1), (
+      timer,
+    ) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       safeSetState(() {
-        _tracerouteCooldownRemaining = _tracerouteCooldownSeconds;
-      });
-
-      _tracerouteCooldownTimer?.cancel();
-      _tracerouteCooldownTimer = Timer.periodic(const Duration(seconds: 1), (
-        timer,
-      ) {
-        if (!mounted) {
+        _tracerouteCooldownRemaining--;
+        if (_tracerouteCooldownRemaining <= 0) {
+          _tracerouteCooldownRemaining = 0;
           timer.cancel();
-          return;
+          _showTracerouteReadySnackBar();
         }
-        safeSetState(() {
-          _tracerouteCooldownRemaining--;
-          if (_tracerouteCooldownRemaining <= 0) {
-            _tracerouteCooldownRemaining = 0;
-            timer.cancel();
-            _showTracerouteReadySnackBar();
-          }
-        });
       });
-
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            'Traceroute sent to $displayName — check Traceroute History for results',
-          ),
-        ),
-      );
-    }
+    });
   }
 
   void _showTracerouteReadySnackBar() {

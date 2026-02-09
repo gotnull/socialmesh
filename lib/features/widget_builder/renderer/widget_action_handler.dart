@@ -134,7 +134,7 @@ class WidgetActionHandler {
     AppBottomSheet.show(
       context: context,
       padding: EdgeInsets.zero,
-      child: TracerouteSheetContent(ref: ref),
+      child: const TracerouteSheetContent(),
     );
   }
 

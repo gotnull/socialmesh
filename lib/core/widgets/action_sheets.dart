@@ -806,22 +806,18 @@ class _SosSheetContentState extends State<SosSheetContent>
 
 /// Sheet content for traceroute to a node
 /// Used by both native Quick Actions widget and custom widget actions
-class TracerouteSheetContent extends StatefulWidget {
-  final WidgetRef ref;
+class TracerouteSheetContent extends ConsumerStatefulWidget {
   final int? preSelectedNodeNum;
 
-  const TracerouteSheetContent({
-    super.key,
-    required this.ref,
-    this.preSelectedNodeNum,
-  });
+  const TracerouteSheetContent({super.key, this.preSelectedNodeNum});
 
   @override
-  State<TracerouteSheetContent> createState() => _TracerouteSheetContentState();
+  ConsumerState<TracerouteSheetContent> createState() =>
+      _TracerouteSheetContentState();
 }
 
-class _TracerouteSheetContentState extends State<TracerouteSheetContent>
-    with StatefulLifecycleSafeMixin<TracerouteSheetContent> {
+class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
+    with LifecycleSafeMixin<TracerouteSheetContent> {
   bool _isSending = false;
   late int? _selectedNodeNum;
   String? _selectedNodeName;
@@ -836,7 +832,7 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent>
   }
 
   void _updateSelectedNodeName() {
-    final nodes = widget.ref.read(nodesProvider);
+    final nodes = ref.read(nodesProvider);
     final node = nodes[_selectedNodeNum];
     _selectedNodeName =
         node?.longName ??
@@ -865,14 +861,29 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent>
 
     safeSetState(() => _isSending = true);
 
-    // Capture provider ref before await
-    final protocol = widget.ref.read(protocolServiceProvider);
+    // Capture provider refs and navigator before await
+    final protocol = ref.read(protocolServiceProvider);
+    final nodes = ref.read(nodesProvider);
+    final navigator = Navigator.of(context);
+    final targetNode = nodes[_selectedNodeNum];
+    final displayName =
+        targetNode?.displayName ?? '!${_selectedNodeNum!.toRadixString(16)}';
 
     try {
       await protocol.sendTraceroute(_selectedNodeNum!);
 
-      if (!mounted) return;
-      Navigator.pop(context, _selectedNodeNum);
+      // Show global snackbar so the user always sees feedback, even if the
+      // parent widget (Quick Actions) was rebuilt while the sheet was open.
+      showGlobalSuccessSnackBar(
+        'Traceroute sent to $displayName — check Traceroute History for results',
+      );
+
+      if (!mounted) {
+        // Sheet was dismissed during the await — still pop with the result
+        // so the parent can pick it up if it's still alive.
+        return;
+      }
+      navigator.pop(_selectedNodeNum);
     } catch (e) {
       if (!mounted) return;
       safeSetState(() => _isSending = false);
