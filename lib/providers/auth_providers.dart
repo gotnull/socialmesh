@@ -56,8 +56,18 @@ final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
   return FirebaseAuth.instance;
 });
 
-/// Stream provider for auth state changes
+/// Stream provider for auth state changes.
+///
+/// Guards against [firebaseAuthProvider] throwing [StateError] when Firebase
+/// has not finished initializing (common on Android where init is slower).
+/// Returns a single-element stream of `null` (treated as signed-out) until
+/// Firebase is ready, then automatically rebuilds via [firebaseReadyProvider].
 final authStateProvider = StreamProvider<User?>((ref) {
+  final isReady =
+      ref.watch(firebaseReadyProvider).whenOrNull(data: (v) => v) ?? false;
+  if (!isReady) {
+    return Stream.value(null);
+  }
   final auth = ref.watch(firebaseAuthProvider);
   return auth.authStateChanges();
 });
