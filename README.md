@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/app_icons/socialmesh_icon_512.png" width="120" alt="Socialmesh">
+  <img src="assets/app_icons/socialmesh_icon_512_rounded.png" width="120" alt="Socialmesh">
 </p>
 
 <h1 align="center">Socialmesh</h1>
