@@ -16,27 +16,13 @@ class ContentModerationService {
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
     FirebaseFunctions? functions,
-  }) : _firestoreOverride = firestore,
-       _authOverride = auth,
-       _functionsOverride = functions;
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance,
+       _functions = functions ?? FirebaseFunctions.instance;
 
-  final FirebaseFirestore? _firestoreOverride;
-  final FirebaseAuth? _authOverride;
-  final FirebaseFunctions? _functionsOverride;
-
-  /// Lazy — avoids accessing FirebaseFirestore.instance before
-  /// Firebase.initializeApp() has completed.
-  FirebaseFirestore get _firestore =>
-      _firestoreOverride ?? FirebaseFirestore.instance;
-
-  /// Lazy — avoids accessing FirebaseAuth.instance before
-  /// Firebase.initializeApp() has completed.
-  FirebaseAuth get _auth => _authOverride ?? FirebaseAuth.instance;
-
-  /// Lazy — avoids accessing FirebaseFunctions.instance before
-  /// Firebase.initializeApp() has completed.
-  FirebaseFunctions get _functions =>
-      _functionsOverride ?? FirebaseFunctions.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+  final FirebaseFunctions _functions;
 
   String? get _currentUserId => _auth.currentUser?.uid;
 

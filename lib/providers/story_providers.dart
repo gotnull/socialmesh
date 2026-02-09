@@ -2,6 +2,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
 
@@ -74,14 +76,18 @@ class StoryGroupsNotifier extends Notifier<StoryGroupsState> {
       _subscription?.cancel();
     });
 
-    // Reactive dependency — rebuilds automatically when Firebase initializes
-    // and when user signs in or out, replacing the old point-in-time
-    // Firebase.apps.isEmpty / FirebaseAuth.instance.currentUser checks that
-    // could leave this notifier permanently stuck in empty state.
-    final currentUser = ref.watch(currentUserProvider);
+    if (Firebase.apps.isEmpty) {
+      AppLogging.social(
+        '📖 [StoryGroups] build() — Firebase not initialized, '
+        'returning isLoading=false',
+      );
+      return const StoryGroupsState(isLoading: false);
+    }
+
+    final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       AppLogging.social(
-        '📖 [StoryGroups] build() — not signed in or Firebase not ready, '
+        '📖 [StoryGroups] build() — not signed in, '
         'returning isLoading=false with empty groups',
       );
       return const StoryGroupsState(isLoading: false);
@@ -96,7 +102,16 @@ class StoryGroupsNotifier extends Notifier<StoryGroupsState> {
   }
 
   void _startWatching() {
-    final currentUser = ref.read(currentUserProvider);
+    if (Firebase.apps.isEmpty) {
+      AppLogging.social(
+        '📖 [StoryGroups] _startWatching() — Firebase not initialized, '
+        'setting isLoading=false',
+      );
+      state = const StoryGroupsState(isLoading: false);
+      return;
+    }
+
+    final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       AppLogging.social(
         '📖 [StoryGroups] _startWatching() — not signed in, '

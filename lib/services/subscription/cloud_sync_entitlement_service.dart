@@ -95,17 +95,8 @@ class CloudSyncEntitlementService {
   /// get permanent free access
   static final DateTime grandfatherCutoffDate = DateTime(2025, 2, 1);
 
-  final FirebaseFirestore? _firestoreOverride;
-  final FirebaseAuth? _authOverride;
-
-  /// Lazy — avoids accessing FirebaseFirestore.instance before
-  /// Firebase.initializeApp() has completed.
-  FirebaseFirestore get _firestore =>
-      _firestoreOverride ?? FirebaseFirestore.instance;
-
-  /// Lazy — avoids accessing FirebaseAuth.instance before
-  /// Firebase.initializeApp() has completed.
-  FirebaseAuth get _auth => _authOverride ?? FirebaseAuth.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
 
   CloudSyncEntitlement _cachedEntitlement = CloudSyncEntitlement.none;
   StreamSubscription<DocumentSnapshot>? _firestoreSubscription;
@@ -124,8 +115,8 @@ class CloudSyncEntitlementService {
   CloudSyncEntitlementService({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
-  }) : _firestoreOverride = firestore,
-       _authOverride = auth;
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance;
 
   /// Initialize the service and start listening for changes
   Future<void> initialize() async {

@@ -22,26 +22,13 @@ class StoryService {
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
     FirebaseStorage? storage,
-  }) : _firestoreOverride = firestore,
-       _authOverride = auth,
-       _storageOverride = storage;
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance,
+       _storage = storage ?? FirebaseStorage.instance;
 
-  final FirebaseFirestore? _firestoreOverride;
-  final FirebaseAuth? _authOverride;
-  final FirebaseStorage? _storageOverride;
-
-  /// Lazy — avoids accessing FirebaseFirestore.instance before
-  /// Firebase.initializeApp() has completed.
-  FirebaseFirestore get _firestore =>
-      _firestoreOverride ?? FirebaseFirestore.instance;
-
-  /// Lazy — avoids accessing FirebaseAuth.instance before
-  /// Firebase.initializeApp() has completed.
-  FirebaseAuth get _auth => _authOverride ?? FirebaseAuth.instance;
-
-  /// Lazy — avoids accessing FirebaseStorage.instance before
-  /// Firebase.initializeApp() has completed.
-  FirebaseStorage get _storage => _storageOverride ?? FirebaseStorage.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+  final FirebaseStorage _storage;
   final _uuid = const Uuid();
 
   String? get _currentUserId => _auth.currentUser?.uid;

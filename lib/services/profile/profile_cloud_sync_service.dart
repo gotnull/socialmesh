@@ -26,13 +26,8 @@ class ProfileCloudSyncService {
   /// Debounce window for fullSync to prevent redundant writes
   static const Duration _syncDebounceWindow = Duration(seconds: 2);
 
-  /// Lazy — avoids accessing FirebaseFirestore.instance before
-  /// Firebase.initializeApp() has completed.
-  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
-
-  /// Lazy — avoids accessing FirebaseStorage.instance before
-  /// Firebase.initializeApp() has completed.
-  FirebaseStorage get _storage => FirebaseStorage.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
   final ProfileService _localService;
 
   /// Track in-flight sync operations to avoid duplicates

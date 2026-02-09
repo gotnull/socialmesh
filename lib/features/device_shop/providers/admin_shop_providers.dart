@@ -17,15 +17,6 @@ final isShopAdminProvider = FutureProvider<bool>((ref) async {
 
 /// Provider for pending review count (for badge)
 final pendingReviewCountProvider = StreamProvider<int>((ref) {
-  // Only query reviews if user is admin — avoids evaluating
-  // deviceShopServiceProvider (which accesses FirebaseFirestore.instance
-  // in its constructor) before Firebase has finished initializing.
-  final isAdminAsync = ref.watch(isShopAdminProvider);
-  final isAdmin = isAdminAsync.value ?? false;
-  if (!isAdmin) {
-    return Stream.value(0);
-  }
-
   final service = ref.watch(deviceShopServiceProvider);
   return service.watchPendingReviews().map((reviews) => reviews.length);
 });

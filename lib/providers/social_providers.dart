@@ -2,6 +2,8 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
@@ -979,14 +981,18 @@ class FeedNotifier extends Notifier<FeedState> {
       _subscription?.cancel();
     });
 
-    // Reactive dependency — rebuilds automatically when Firebase initializes
-    // and when user signs in or out, replacing the old point-in-time
-    // Firebase.apps.isEmpty / FirebaseAuth.instance.currentUser checks that
-    // could leave this notifier permanently stuck in empty state.
-    final currentUser = ref.watch(currentUserProvider);
+    if (Firebase.apps.isEmpty) {
+      AppLogging.social(
+        '📰 [FeedNotifier] build() — Firebase not initialized, '
+        'returning isLoading=false',
+      );
+      return const FeedState(isLoading: false);
+    }
+
+    final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       AppLogging.social(
-        '📰 [FeedNotifier] build() — not signed in or Firebase not ready, '
+        '📰 [FeedNotifier] build() — not signed in, '
         'returning isLoading=false with empty feed',
       );
       return const FeedState(isLoading: false);
@@ -1001,7 +1007,16 @@ class FeedNotifier extends Notifier<FeedState> {
   }
 
   void _startWatching() {
-    final currentUser = ref.read(currentUserProvider);
+    if (Firebase.apps.isEmpty) {
+      AppLogging.social(
+        '📰 [FeedNotifier] _startWatching() — Firebase not initialized, '
+        'setting isLoading=false',
+      );
+      state = const FeedState(isLoading: false);
+      return;
+    }
+
+    final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       AppLogging.social(
         '📰 [FeedNotifier] _startWatching() — not signed in, '
@@ -1131,14 +1146,9 @@ class ExploreNotifier extends Notifier<ExploreState> {
       _subscription?.cancel();
     });
 
-    // Reactive dependency — rebuilds automatically when Firebase initializes,
-    // replacing the old point-in-time Firebase.apps.isEmpty check that could
-    // leave this notifier permanently stuck in empty state.
-    final isReady =
-        ref.watch(firebaseReadyProvider).whenOrNull(data: (v) => v) ?? false;
-    if (!isReady) {
+    if (Firebase.apps.isEmpty) {
       AppLogging.social(
-        '🔍 [ExploreNotifier] build() — Firebase not ready, '
+        '🔍 [ExploreNotifier] build() — Firebase not initialized, '
         'returning isLoading=false',
       );
       return const ExploreState(isLoading: false);
@@ -1155,6 +1165,15 @@ class ExploreNotifier extends Notifier<ExploreState> {
   }
 
   void _startWatching() {
+    if (Firebase.apps.isEmpty) {
+      AppLogging.social(
+        '🔍 [ExploreNotifier] _startWatching() — Firebase not initialized, '
+        'setting isLoading=false',
+      );
+      state = const ExploreState(isLoading: false);
+      return;
+    }
+
     AppLogging.social(
       '🔍 [ExploreNotifier] _startWatching() — subscribing to '
       'watchExplorePosts()',
