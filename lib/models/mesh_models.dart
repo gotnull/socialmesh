@@ -190,7 +190,7 @@ class Message {
     if (senderShortName != null && senderShortName!.isNotEmpty) {
       return senderShortName!;
     }
-    return 'Node ${from.toRadixString(16).toUpperCase()}';
+    return NodeDisplayNameResolver.defaultName(from);
   }
 
   /// Get the sender's avatar name from cached info or fallback to hex ID
@@ -201,9 +201,7 @@ class Message {
     if (senderLongName != null && senderLongName!.isNotEmpty) {
       return senderLongName!.substring(0, senderLongName!.length.clamp(0, 4));
     }
-    // Return last 4 hex digits of node number
-    final hex = from.toRadixString(16).toUpperCase();
-    return hex.length > 4 ? hex.substring(hex.length - 4) : hex;
+    return NodeDisplayNameResolver.shortHex(from);
   }
 
   bool get isBroadcast => to == 0xFFFFFFFF;
@@ -622,18 +620,17 @@ class MeshNode {
       nodeNum: nodeNum,
       longName: longName,
       shortName: shortName,
-      fallback: 'Node $nodeNum',
     );
   }
 
   /// Get a short display name suitable for avatars (max 4 chars)
-  /// Prefers shortName, falls back to longName prefix, then hex node ID
+  /// Prefers shortName, falls back to longName prefix, then last 4 hex digits
   String get avatarName {
     if (shortName != null && shortName!.isNotEmpty) return shortName!;
     if (longName != null && longName!.isNotEmpty) {
       return longName!.substring(0, longName!.length.clamp(0, 4));
     }
-    return nodeNum.toRadixString(16);
+    return NodeDisplayNameResolver.shortHex(nodeNum);
   }
 
   /// Check if node has valid position data

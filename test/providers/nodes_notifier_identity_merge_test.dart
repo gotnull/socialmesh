@@ -154,9 +154,9 @@ void main() {
 
     final node = container.read(nodesProvider)[0x5ed6];
     expect(node, isNotNull);
-    // BLE default name should be stripped (null), falling back to friendly "Node X" format
+    // BLE default name should be stripped (null), falling back to "Meshtastic XXXX"
     expect(node?.longName, isNull);
     expect(node?.shortName, isNull);
-    expect(node?.displayName, 'Node ${0x5ed6}'); // "Node 24278"
+    expect(node?.displayName, 'Meshtastic 5ED6');
   });
 }

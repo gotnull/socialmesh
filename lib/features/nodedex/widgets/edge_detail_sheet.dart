@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
+
 // Edge Detail Sheet — rich per-edge relationship info bottom sheet.
 //
 // Shows detailed information about a co-seen relationship between two
@@ -733,7 +735,7 @@ class EdgeDetailSheet extends ConsumerWidget {
   // ---------------------------------------------------------------------------
 
   String _hexName(int nodeNum) {
-    return 'Node ${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+    return NodeDisplayNameResolver.defaultName(nodeNum);
   }
 
   String _strengthLabel(int count) {

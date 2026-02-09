@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+
+import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -104,7 +106,9 @@ class _TraceRouteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final timeFormat = DateFormat('MMM d, h:mm a');
     final destNode = allNodes[log.targetNode];
-    final destName = destNode?.displayName ?? 'Node ${log.targetNode}';
+    final destName =
+        destNode?.displayName ??
+        NodeDisplayNameResolver.defaultName(log.targetNode);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -221,7 +225,9 @@ class _TraceRouteCard extends StatelessWidget {
               final index = entry.key;
               final hop = entry.value;
               final hopNode = allNodes[hop.nodeNum];
-              final hopName = hopNode?.displayName ?? 'Node ${hop.nodeNum}';
+              final hopName =
+                  hopNode?.displayName ??
+                  NodeDisplayNameResolver.defaultName(hop.nodeNum);
               final isLast = index == log.hops.length - 1;
 
               return _HopItem(

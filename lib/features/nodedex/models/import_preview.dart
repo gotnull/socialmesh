@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
+
 // Import Preview Model — conflict detection for NodeDex import/merge UX.
 //
 // When a user imports a NodeDex JSON file, entries may conflict with
@@ -195,7 +197,7 @@ class ImportPreview {
       final local = localEntries[imported.nodeNum];
       final displayName =
           displayNameResolver?.call(imported.nodeNum) ??
-          'Node ${imported.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+          NodeDisplayNameResolver.defaultName(imported.nodeNum);
 
       if (local == null) {
         // New entry — no conflicts possible.

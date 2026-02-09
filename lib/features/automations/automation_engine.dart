@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+
+import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
@@ -389,7 +391,8 @@ class AutomationEngine {
       AutomationEvent(
         type: TriggerType.detectionSensor,
         nodeNum: nodeNum,
-        nodeName: _nodeNames[nodeNum] ?? 'Node ${nodeNum.toRadixString(16)}',
+        nodeName:
+            _nodeNames[nodeNum] ?? NodeDisplayNameResolver.defaultName(nodeNum),
         sensorName: sensorName,
         sensorDetected: detected,
       ),

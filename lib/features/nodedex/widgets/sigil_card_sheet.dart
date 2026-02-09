@@ -30,6 +30,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/logging.dart';
+import '../../nodes/node_display_name_resolver.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -58,7 +59,9 @@ void showSigilCardSheet({
   MeshNode? node,
 }) {
   final displayName =
-      node?.displayName ?? entry.lastKnownName ?? 'Node ${entry.nodeNum}';
+      node?.displayName ??
+      entry.lastKnownName ??
+      NodeDisplayNameResolver.defaultName(entry.nodeNum);
   final hexId =
       '!${entry.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 

@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+
+import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
 import '../../core/logging.dart';
 import 'package:flutter/material.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -156,7 +158,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
           nodeNum: nodeNum,
           displayName:
               dmInfo.senderDisplayName ??
-              'Node ${nodeNum.toRadixString(16).toUpperCase()}',
+              NodeDisplayNameResolver.defaultName(nodeNum),
           shortName: dmInfo.senderShortName,
           avatarColor: dmInfo.senderAvatarColor,
           presence: PresenceConfidence.unknown,

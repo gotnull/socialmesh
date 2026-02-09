@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+
+import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
 import '../../core/logging.dart';
 import 'dart:io';
 
@@ -208,7 +210,7 @@ class AppIntentsService {
         : 'Never';
 
     return {
-      'name': node.longName ?? 'Node $nodeNum',
+      'name': node.longName ?? NodeDisplayNameResolver.defaultName(nodeNum),
       'nodeNum': nodeNum,
       'presenceConfidence': presenceConfidenceFor(presenceMap, node).name,
       'battery': node.batteryLevel,

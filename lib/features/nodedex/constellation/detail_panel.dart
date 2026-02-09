@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
+import '../../nodes/node_display_name_resolver.dart';
 import '../providers/nodedex_providers.dart';
 import '../services/sigil_generator.dart';
 import '../widgets/sigil_painter.dart';
@@ -263,7 +264,10 @@ class _SelectedContent extends ConsumerWidget {
     }
 
     final sigil = entry.sigil ?? SigilGenerator.generate(nodeNum);
-    final name = node?.displayName ?? entry.lastKnownName ?? 'Node $nodeNum';
+    final name =
+        node?.displayName ??
+        entry.lastKnownName ??
+        NodeDisplayNameResolver.defaultName(nodeNum);
     final primaryText = context.textPrimary;
     final tertiaryText = context.textTertiary;
 

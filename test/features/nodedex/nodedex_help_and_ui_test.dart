@@ -960,7 +960,7 @@ void main() {
         localEntries: {},
       );
 
-      expect(preview.entries.first.displayName, equals('Node ABCD'));
+      expect(preview.entries.first.displayName, equals('Meshtastic ABCD'));
     });
 
     test('pads short hex IDs to 4 characters', () {
@@ -976,7 +976,7 @@ void main() {
         localEntries: {},
       );
 
-      expect(preview.entries.first.displayName, equals('Node 000A'));
+      expect(preview.entries.first.displayName, equals('Meshtastic 000A'));
     });
   });
 

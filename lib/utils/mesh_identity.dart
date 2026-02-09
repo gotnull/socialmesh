@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
 import '../features/nodedex/providers/nodedex_providers.dart';
+import '../features/nodes/node_display_name_resolver.dart';
 import '../providers/app_providers.dart';
 
 /// The source that successfully resolved a mesh node's identity.
@@ -119,7 +120,7 @@ class IdentityResolutionTelemetry {
 /// Resolution chain (first non-null wins):
 /// 1. Live node from [nodesProvider] (longName or shortName)
 /// 2. Cached name from NodeDex [lastKnownName]
-/// 3. Hex ID fallback (e.g. "!81C42D94")
+/// 3. Default name fallback (e.g. "Meshtastic 5ED6")
 ///
 /// This function is fully offline — it never makes network requests.
 /// All data sources are local: live mesh telemetry and local SQLite.
@@ -129,24 +130,26 @@ class IdentityResolutionTelemetry {
 /// screen that shows node identities.
 String resolveMeshNodeName(WidgetRef ref, int nodeNum) {
   // 1. Live node — most accurate, real-time from the mesh.
+  // Use NodeDisplayNameResolver.sanitizeName to filter out placeholder
+  // names (hex IDs, firmware defaults, BLE advertising names).
   final nodes = ref.watch(nodesProvider);
   final node = nodes[nodeNum];
   if (node != null) {
-    final long = node.longName;
-    final short = node.shortName;
-    if (long != null && long.isNotEmpty) {
+    final sanitizedLong = NodeDisplayNameResolver.sanitizeName(node.longName);
+    if (sanitizedLong != null) {
       IdentityResolutionTelemetry.record(
         IdentityResolutionSource.liveMesh,
         nodeNum,
       );
-      return long;
+      return sanitizedLong;
     }
-    if (short != null && short.isNotEmpty) {
+    final sanitizedShort = NodeDisplayNameResolver.sanitizeName(node.shortName);
+    if (sanitizedShort != null) {
       IdentityResolutionTelemetry.record(
         IdentityResolutionSource.liveMesh,
         nodeNum,
       );
-      return short;
+      return sanitizedShort;
     }
   }
 
@@ -161,12 +164,12 @@ String resolveMeshNodeName(WidgetRef ref, int nodeNum) {
     return entry!.lastKnownName!;
   }
 
-  // 3. Hex ID fallback.
+  // 3. Default name fallback — matches official Meshtastic app convention.
   IdentityResolutionTelemetry.record(
     IdentityResolutionSource.hexFallback,
     nodeNum,
   );
-  return _hexName(nodeNum);
+  return NodeDisplayNameResolver.defaultName(nodeNum);
 }
 
 /// Resolves full mesh identity (name + nodeNum + liveness) for a node.
@@ -179,27 +182,27 @@ MeshIdentity resolveMeshIdentity(WidgetRef ref, int nodeNum) {
   final nodes = ref.watch(nodesProvider);
   final node = nodes[nodeNum];
   if (node != null) {
-    final long = node.longName;
-    final short = node.shortName;
-    if (long != null && long.isNotEmpty) {
+    final sanitizedLong = NodeDisplayNameResolver.sanitizeName(node.longName);
+    if (sanitizedLong != null) {
       IdentityResolutionTelemetry.record(
         IdentityResolutionSource.liveMesh,
         nodeNum,
       );
       return MeshIdentity(
-        displayName: long,
+        displayName: sanitizedLong,
         nodeNum: nodeNum,
         isLive: true,
         source: IdentityResolutionSource.liveMesh,
       );
     }
-    if (short != null && short.isNotEmpty) {
+    final sanitizedShort = NodeDisplayNameResolver.sanitizeName(node.shortName);
+    if (sanitizedShort != null) {
       IdentityResolutionTelemetry.record(
         IdentityResolutionSource.liveMesh,
         nodeNum,
       );
       return MeshIdentity(
-        displayName: short,
+        displayName: sanitizedShort,
         nodeNum: nodeNum,
         isLive: true,
         source: IdentityResolutionSource.liveMesh,
@@ -226,7 +229,7 @@ MeshIdentity resolveMeshIdentity(WidgetRef ref, int nodeNum) {
     nodeNum,
   );
   return MeshIdentity(
-    displayName: _hexName(nodeNum),
+    displayName: NodeDisplayNameResolver.defaultName(nodeNum),
     nodeNum: nodeNum,
     isLive: false,
     source: IdentityResolutionSource.hexFallback,
@@ -244,15 +247,9 @@ String resolveMeshShortName(WidgetRef ref, int nodeNum) {
   final nodes = ref.watch(nodesProvider);
   final node = nodes[nodeNum];
   if (node != null) {
-    final short = node.shortName;
-    if (short != null && short.isNotEmpty) return short;
+    final sanitized = NodeDisplayNameResolver.sanitizeName(node.shortName);
+    if (sanitized != null) return sanitized;
   }
 
-  final hexId = nodeNum.toRadixString(16).toUpperCase();
-  return hexId.length >= 4 ? hexId.substring(hexId.length - 4) : hexId;
-}
-
-/// Formats a node number as a hex ID string (e.g. "!81C42D94").
-String _hexName(int nodeNum) {
-  return '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+  return NodeDisplayNameResolver.shortHex(nodeNum);
 }

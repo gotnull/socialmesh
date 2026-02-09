@@ -33,6 +33,7 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
+import '../../nodes/node_display_name_resolver.dart';
 
 import '../models/nodedex_entry.dart';
 import '../models/sigil_evolution.dart';
@@ -131,7 +132,9 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     }
 
     final displayName =
-        node?.displayName ?? entry.lastKnownName ?? 'Node ${entry.nodeNum}';
+        node?.displayName ??
+        entry.lastKnownName ??
+        NodeDisplayNameResolver.defaultName(entry.nodeNum);
     final hexId =
         '!${entry.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 
@@ -2203,7 +2206,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
             final name =
                 coSeenNode?.displayName ??
                 coSeenEntry?.lastKnownName ??
-                'Node ${coSeen.key.toRadixString(16).toUpperCase()}';
+                NodeDisplayNameResolver.defaultName(coSeen.key);
 
             return Padding(
               padding: const EdgeInsets.only(top: 6),

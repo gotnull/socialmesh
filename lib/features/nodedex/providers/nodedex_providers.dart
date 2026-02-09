@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import '../../../features/nodes/node_display_name_resolver.dart';
 
 // NodeDex Providers — Riverpod 3.x state management for the mesh field journal.
 //
@@ -391,17 +392,18 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
 
   /// Resolve a cacheable display name from a live MeshNode.
   ///
-  /// Returns null if the node only has the fallback hex name (e.g.
-  /// "Meshtastic !AABBCCDD") which is already derivable from the
-  /// nodeNum and not worth caching. Returns the longName or shortName
-  /// when either is a real user-configured or firmware-assigned name.
+  /// Returns null if the node only has a placeholder name (hex ID,
+  /// firmware default like "Meshtastic 2d94", or BLE advertising
+  /// name) which is derivable from the nodeNum and not worth caching.
+  /// Returns the longName or shortName only when it is a genuine
+  /// user-configured or firmware-assigned name.
   String? _resolveCacheableName(MeshNode node) {
-    // displayName prefers longName, then shortName, then hex fallback.
-    // If longName or shortName is set, cache it.
-    final long = node.longName;
-    final short = node.shortName;
-    if (long != null && long.isNotEmpty) return long;
-    if (short != null && short.isNotEmpty) return short;
+    // Use the centralized resolver to filter out all placeholder
+    // patterns (hex IDs, firmware defaults, BLE names, etc.).
+    final sanitizedLong = NodeDisplayNameResolver.sanitizeName(node.longName);
+    if (sanitizedLong != null) return sanitizedLong;
+    final sanitizedShort = NodeDisplayNameResolver.sanitizeName(node.shortName);
+    if (sanitizedShort != null) return sanitizedShort;
     return null;
   }
 
@@ -759,7 +761,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       // Fall back to cached name from NodeDex entry.
       final entry = state[nodeNum];
       if (entry?.lastKnownName != null) return entry!.lastKnownName!;
-      return 'Node ${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+      return NodeDisplayNameResolver.defaultName(nodeNum);
     }
 
     return _store!.previewImport(entries, displayNameResolver: nameResolver);
@@ -1602,7 +1604,9 @@ final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
       ConstellationNode(
         nodeNum: entry.nodeNum,
         displayName:
-            node?.displayName ?? entry.lastKnownName ?? 'Node ${entry.nodeNum}',
+            node?.displayName ??
+            entry.lastKnownName ??
+            NodeDisplayNameResolver.defaultName(entry.nodeNum),
         sigil: entry.sigil,
         trait: trait.primary,
         connectionCount: entry.coSeenCount,

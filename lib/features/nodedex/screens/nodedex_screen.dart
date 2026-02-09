@@ -31,6 +31,7 @@ import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton_config.dart';
 import '../../../models/mesh_models.dart';
+import '../../nodes/node_display_name_resolver.dart';
 import '../models/nodedex_entry.dart';
 import '../models/sigil_evolution.dart';
 import '../providers/nodedex_providers.dart';
@@ -1021,7 +1022,9 @@ class _NodeDexListTile extends ConsumerWidget {
     final disclosure = ref.watch(nodeDexDisclosureProvider(entry.nodeNum));
     final patinaResult = ref.watch(nodeDexPatinaProvider(entry.nodeNum));
     final displayName =
-        node?.displayName ?? entry.lastKnownName ?? 'Node ${entry.nodeNum}';
+        node?.displayName ??
+        entry.lastKnownName ??
+        NodeDisplayNameResolver.defaultName(entry.nodeNum);
     final hexId =
         '!${entry.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 
@@ -1229,7 +1232,9 @@ class _NodeDexListTile extends ConsumerWidget {
       ),
       builder: (sheetContext) {
         final displayName =
-            node?.displayName ?? entry.lastKnownName ?? 'Node ${entry.nodeNum}';
+            node?.displayName ??
+            entry.lastKnownName ??
+            NodeDisplayNameResolver.defaultName(entry.nodeNum);
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),

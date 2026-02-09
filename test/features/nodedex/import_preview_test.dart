@@ -170,7 +170,7 @@ void main() {
         localEntries: {},
       );
 
-      expect(preview.entries.first.displayName, equals('Node 00FF'));
+      expect(preview.entries.first.displayName, equals('Meshtastic 00FF'));
     });
 
     test('hex ID is padded to 4 characters', () {
@@ -181,7 +181,7 @@ void main() {
         localEntries: {},
       );
 
-      expect(preview.entries.first.displayName, equals('Node 000A'));
+      expect(preview.entries.first.displayName, equals('Meshtastic 000A'));
     });
 
     test('large node numbers use full hex without extra padding', () {
@@ -192,7 +192,7 @@ void main() {
         localEntries: {},
       );
 
-      expect(preview.entries.first.displayName, equals('Node ABCDE'));
+      expect(preview.entries.first.displayName, equals('Meshtastic BCDE'));
     });
   });
 
@@ -2312,7 +2312,7 @@ void main() {
     test('isNew is true when localEntry is null', () {
       final preview = EntryMergePreview(
         nodeNum: 42,
-        displayName: 'Node 002A',
+        displayName: 'Meshtastic 002A',
         localEntry: null,
         importedEntry: makeEntry(nodeNum: 42),
       );
@@ -2324,7 +2324,7 @@ void main() {
       final local = makeEntry(nodeNum: 42);
       final preview = EntryMergePreview(
         nodeNum: 42,
-        displayName: 'Node 002A',
+        displayName: 'Meshtastic 002A',
         localEntry: local,
         importedEntry: makeEntry(nodeNum: 42),
       );
@@ -2335,7 +2335,7 @@ void main() {
     test('hasConflicts is true with socialTag conflict only', () {
       final preview = EntryMergePreview(
         nodeNum: 42,
-        displayName: 'Node 002A',
+        displayName: 'Meshtastic 002A',
         importedEntry: makeEntry(nodeNum: 42),
         socialTagConflict: const FieldConflict(
           localValue: NodeSocialTag.contact,
@@ -2349,7 +2349,7 @@ void main() {
     test('hasConflicts is true with userNote conflict only', () {
       final preview = EntryMergePreview(
         nodeNum: 42,
-        displayName: 'Node 002A',
+        displayName: 'Meshtastic 002A',
         importedEntry: makeEntry(nodeNum: 42),
         userNoteConflict: const FieldConflict(
           localValue: 'local',
@@ -2363,7 +2363,7 @@ void main() {
     test('hasConflicts is false with no conflicts', () {
       final preview = EntryMergePreview(
         nodeNum: 42,
-        displayName: 'Node 002A',
+        displayName: 'Meshtastic 002A',
         importedEntry: makeEntry(nodeNum: 42),
       );
 
@@ -2451,7 +2451,7 @@ void main() {
         entries: [
           EntryMergePreview(
             nodeNum: 42,
-            displayName: 'Node 002A',
+            displayName: 'Meshtastic 002A',
             importedEntry: makeEntry(nodeNum: 42),
           ),
         ],
@@ -2466,7 +2466,7 @@ void main() {
         entries: [
           EntryMergePreview(
             nodeNum: 42,
-            displayName: 'Node 002A',
+            displayName: 'Meshtastic 002A',
             importedEntry: makeEntry(nodeNum: 42),
           ),
         ],
@@ -2481,12 +2481,12 @@ void main() {
         entries: [
           EntryMergePreview(
             nodeNum: 42,
-            displayName: 'Node 002A',
+            displayName: 'Meshtastic 002A',
             importedEntry: makeEntry(nodeNum: 42),
           ),
           EntryMergePreview(
             nodeNum: 43,
-            displayName: 'Node 002B',
+            displayName: 'Meshtastic 002B',
             importedEntry: makeEntry(nodeNum: 43),
             socialTagConflict: const FieldConflict(
               localValue: NodeSocialTag.contact,

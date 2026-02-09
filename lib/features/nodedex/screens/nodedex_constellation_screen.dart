@@ -25,6 +25,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/app_providers.dart';
 
+import '../../nodes/node_display_name_resolver.dart';
 import '../providers/nodedex_providers.dart';
 import '../services/sigil_generator.dart';
 import '../widgets/sigil_painter.dart';
@@ -738,7 +739,9 @@ class _BottomInfoBar extends ConsumerWidget {
 
     final sigil = entry.sigil ?? SigilGenerator.generate(selectedNodeNum!);
     final name =
-        node?.displayName ?? entry.lastKnownName ?? 'Node $selectedNodeNum';
+        node?.displayName ??
+        entry.lastKnownName ??
+        NodeDisplayNameResolver.defaultName(selectedNodeNum!);
 
     return Row(
       children: [

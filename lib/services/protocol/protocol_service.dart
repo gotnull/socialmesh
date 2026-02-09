@@ -21,6 +21,7 @@ import '../../generated/meshtastic/telemetry.pb.dart' as telemetry;
 import 'packet_framer.dart';
 import '../mesh_packet_dedupe_store.dart';
 import '../../utils/text_sanitizer.dart';
+import '../../features/nodes/node_display_name_resolver.dart';
 
 /// Mesh signal packet received from PRIVATE_APP portnum.
 ///
@@ -2136,15 +2137,12 @@ class ProtocolService {
 
         final newNode = MeshNode(
           nodeNum: packet.from,
-          longName: '!${packet.from.toRadixString(16)}',
-          shortName: packet.from
-              .toRadixString(16)
-              .substring(
-                packet.from.toRadixString(16).length > 4
-                    ? packet.from.toRadixString(16).length - 4
-                    : 0,
-              )
-              .toUpperCase(),
+          // Leave longName/shortName null for placeholder nodes.
+          // Real names arrive via NodeInfo — baking hex IDs here
+          // pollutes the data model and prevents displayName from
+          // showing the correct fallback or the real name later.
+          longName: null,
+          shortName: null,
           latitude: position.latitudeI / 1e7,
           longitude: position.longitudeI / 1e7,
           altitude: position.hasAltitude() ? position.altitude : null,
@@ -2222,10 +2220,28 @@ class ProtocolService {
       final role = user.hasRole() ? user.role.name : 'CLIENT';
 
       final existingNode = _nodes[packet.from];
+
+      // Only update names if the incoming values are non-empty.
+      // Empty strings from NodeInfo packets should NOT overwrite
+      // genuine names already stored on the node. Also clean out
+      // hex placeholder names from older position-update code.
+      final resolvedLongName = longName.isNotEmpty
+          ? longName
+          : existingNode != null
+          ? NodeDisplayNameResolver.sanitizeName(existingNode.longName)
+          : null;
+      final resolvedShortName = shortName.isNotEmpty
+          ? shortName
+          : existingNode != null
+          ? NodeDisplayNameResolver.sanitizeName(existingNode.shortName)
+          : null;
+
       final updatedNode =
           existingNode?.copyWith(
-            longName: longName,
-            shortName: shortName,
+            longName: resolvedLongName,
+            clearLongName: resolvedLongName == null,
+            shortName: resolvedShortName,
+            clearShortName: resolvedShortName == null,
             userId: user.hasId() ? user.id : existingNode.userId,
             hardwareModel: hwModel ?? existingNode.hardwareModel,
             role: role,
@@ -2234,8 +2250,8 @@ class ProtocolService {
           ) ??
           MeshNode(
             nodeNum: packet.from,
-            longName: longName,
-            shortName: shortName,
+            longName: longName.isNotEmpty ? longName : null,
+            shortName: shortName.isNotEmpty ? shortName : null,
             userId: user.hasId() ? user.id : null,
             hardwareModel: hwModel,
             role: role,
@@ -2397,15 +2413,22 @@ class ProtocolService {
     }
 
     if (existingNode != null) {
-      // Preserve existing names if new ones are empty, sanitize to prevent UTF-16 crashes
+      // Preserve existing names if new ones are empty, sanitize to prevent UTF-16 crashes.
+      // BUT: don't preserve hex placeholder names (e.g. "!db2f10e0") that were
+      // baked in by position-update placeholder creation — those are not real names
+      // and should be replaced by null so displayName uses the proper fallback.
       final newLongName =
           nodeInfo.hasUser() && nodeInfo.user.longName.isNotEmpty
           ? sanitizeUtf16(nodeInfo.user.longName)
-          : existingNode.longName;
+          : NodeDisplayNameResolver.sanitizeName(existingNode.longName) != null
+          ? existingNode.longName
+          : null;
       final newShortName =
           nodeInfo.hasUser() && nodeInfo.user.shortName.isNotEmpty
           ? sanitizeUtf16(nodeInfo.user.shortName)
-          : existingNode.shortName;
+          : NodeDisplayNameResolver.sanitizeName(existingNode.shortName) != null
+          ? existingNode.shortName
+          : null;
 
       updatedNode = existingNode.copyWith(
         longName: newLongName,
