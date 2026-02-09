@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -31,6 +34,8 @@ class _AmbientLightingConfigScreenState
   bool _hasChanges = false;
   bool _isSaving = false;
   bool _isLoading = true;
+  StreamSubscription<module_pb.ModuleConfig_AmbientLightingConfig>?
+  _configSubscription;
 
   final List<int> _presetColors = [
     0xFFFF0000, // Red
@@ -49,27 +54,49 @@ class _AmbientLightingConfigScreenState
     _loadCurrentConfig();
   }
 
+  @override
+  void dispose() {
+    _configSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _applyConfig(module_pb.ModuleConfig_AmbientLightingConfig config) {
+    safeSetState(() {
+      _ledState = config.ledState;
+      _red = config.red;
+      _green = config.green;
+      _blue = config.blue;
+      _current = config.current > 0 ? config.current : 10;
+      _currentColor = (0xFF << 24) | (_red << 16) | (_green << 8) | _blue;
+      _isLoading = false;
+    });
+  }
+
   Future<void> _loadCurrentConfig() async {
-    final protocol = ref.read(protocolServiceProvider);
+    try {
+      final protocol = ref.read(protocolServiceProvider);
 
-    // Check if we're connected before trying to load config
-    if (!protocol.isConnected) {
-      safeSetState(() => _isLoading = false);
-      return;
-    }
+      // Apply cached config immediately if available
+      final cached = protocol.currentAmbientLightingConfig;
+      if (cached != null) {
+        _applyConfig(cached);
+      }
 
-    final config = await protocol.getAmbientLightingModuleConfig();
-    if (config != null && mounted) {
-      safeSetState(() {
-        _ledState = config.ledState;
-        _red = config.red;
-        _green = config.green;
-        _blue = config.blue;
-        _current = config.current > 0 ? config.current : 10;
-        _currentColor = (0xFF << 24) | (_red << 16) | (_green << 8) | _blue;
-        _isLoading = false;
-      });
-    } else {
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription = protocol.ambientLightingConfigStream.listen((
+          config,
+        ) {
+          if (mounted) _applyConfig(config);
+        });
+
+        // Request fresh config from device
+        await protocol.getModuleConfig(
+          admin_pbenum.AdminMessage_ModuleConfigType.AMBIENTLIGHTING_CONFIG,
+        );
+      }
+    } finally {
       safeSetState(() => _isLoading = false);
     }
   }

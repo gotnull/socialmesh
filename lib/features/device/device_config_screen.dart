@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
-import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -193,8 +193,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
   // Device Config fields
   config_pbenum.Config_DeviceConfig_RebroadcastMode? _rebroadcastMode;
   config_pbenum.Config_DeviceConfig_RebroadcastMode? _originalRebroadcastMode;
-  int _nodeInfoBroadcastSecs = 900;
-  int _originalNodeInfoBroadcastSecs = 900;
+  int _nodeInfoBroadcastSecs = 10800;
+  int _originalNodeInfoBroadcastSecs = 10800;
   bool _doubleTapAsButtonPress = false;
   bool _originalDoubleTapAsButtonPress = false;
   bool _disableTripleClick = false;
@@ -257,7 +257,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
       // Node info broadcast interval
       _nodeInfoBroadcastSecs = config.nodeInfoBroadcastSecs > 0
           ? config.nodeInfoBroadcastSecs
-          : 900;
+          : 10800;
       _originalNodeInfoBroadcastSecs = _nodeInfoBroadcastSecs;
 
       // Boolean settings
@@ -976,133 +976,152 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     );
   }
 
+  /// Broadcast interval options matching the official Meshtastic iOS app.
+  /// The minimum is 3 hours (10 800 s); "Never" disables broadcasts.
+  static const List<({int seconds, String label})> _broadcastIntervals = [
+    (seconds: 10800, label: 'Three Hours'),
+    (seconds: 14400, label: 'Four Hours'),
+    (seconds: 18000, label: 'Five Hours'),
+    (seconds: 21600, label: 'Six Hours'),
+    (seconds: 43200, label: 'Twelve Hours'),
+    (seconds: 64800, label: 'Eighteen Hours'),
+    (seconds: 86400, label: 'Twenty Four Hours'),
+    (seconds: 129600, label: 'Thirty Six Hours'),
+    (seconds: 172800, label: 'Forty Eight Hours'),
+    (seconds: 259200, label: 'Seventy Two Hours'),
+    (seconds: 0, label: 'Never'),
+  ];
+
   Widget _buildNodeInfoBroadcastSetting() {
+    // Snap any legacy/out-of-range value to the nearest valid option so the
+    // picker always has a selection.  This covers devices that were configured
+    // before the picker was introduced (e.g. 900 s → snaps to 10 800 s).
+    final effectiveValue = _snapToNearestInterval(_nodeInfoBroadcastSecs);
+
     return Container(
       decoration: BoxDecoration(
         color: context.card,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: context.border),
       ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.broadcast_on_personal,
-                color: context.accentColor,
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Broadcast Interval',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: context.textPrimary,
-                      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.broadcast_on_personal,
+                    color: context.accentColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Broadcast Interval',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'How often to broadcast node info to the mesh',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'How often to broadcast node info (default: 15 min)',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Builder(
-            builder: (context) {
-              // Dynamic max: at least 4 hours, but extends to accommodate
-              // any value the device reports (e.g. 10800 = 3h).
-              final sliderMax = math
-                  .max(14400, _nodeInfoBroadcastSecs)
-                  .toDouble();
-              final divisions = (sliderMax / 60).round();
-              final minutes = (_nodeInfoBroadcastSecs / 60).round();
-              final maxMinutes = (sliderMax / 60).round();
-
-              String formatInterval(int mins) {
-                if (mins == 0) return 'Disabled';
-                if (mins < 60) return '$mins minutes';
-                final h = mins ~/ 60;
-                final m = mins % 60;
-                if (m == 0) return '$h ${h == 1 ? 'hour' : 'hours'}';
-                return '${h}h ${m}m';
-              }
-
-              String formatMaxLabel(int mins) {
-                if (mins < 60) return '$mins min';
-                final h = mins ~/ 60;
-                final m = mins % 60;
-                if (m == 0) return '${h}h';
-                return '${h}h ${m}m';
-              }
+            ),
+            ..._broadcastIntervals.asMap().entries.map((entry) {
+              final index = entry.key;
+              final option = entry.value;
+              final isSelected = effectiveValue == option.seconds;
+              final isLast = index == _broadcastIntervals.length - 1;
 
               return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    formatInterval(minutes),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: context.accentColor,
-                      inactiveTrackColor: context.border,
-                      thumbColor: context.accentColor,
-                      overlayColor: context.accentColor.withValues(alpha: 0.2),
-                    ),
-                    child: Slider(
-                      value: _nodeInfoBroadcastSecs.toDouble(),
-                      min: 0,
-                      max: sliderMax,
-                      divisions: divisions,
-                      onChanged: (value) {
-                        setState(() => _nodeInfoBroadcastSecs = value.round());
-                        _checkForChanges();
-                      },
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Off',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: context.textTertiary,
-                        ),
+                  if (index == 0 || true)
+                    Divider(height: 1, color: context.border),
+                  InkWell(
+                    borderRadius: isLast
+                        ? const BorderRadius.vertical(
+                            bottom: Radius.circular(12),
+                          )
+                        : BorderRadius.zero,
+                    onTap: () {
+                      setState(() => _nodeInfoBroadcastSecs = option.seconds);
+                      _checkForChanges();
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
                       ),
-                      Text(
-                        formatMaxLabel(maxMinutes),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: context.textTertiary,
-                        ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              option.label,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                                color: isSelected
+                                    ? context.textPrimary
+                                    : context.textSecondary,
+                              ),
+                            ),
+                          ),
+                          if (isSelected)
+                            Icon(
+                              Icons.check,
+                              color: context.accentColor,
+                              size: 20,
+                            ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ],
               );
-            },
-          ),
-        ],
+            }),
+          ],
+        ),
       ),
     );
+  }
+
+  /// Snaps an arbitrary seconds value to the nearest valid broadcast interval.
+  /// Returns 0 for disabled, or the closest predefined option for any other
+  /// value (covers legacy configs that used the old slider).
+  int _snapToNearestInterval(int seconds) {
+    if (seconds == 0) return 0;
+    int closest = _broadcastIntervals.first.seconds;
+    int closestDiff = (seconds - closest).abs();
+    for (final option in _broadcastIntervals) {
+      if (option.seconds == 0) continue; // skip "Never"
+      final diff = (seconds - option.seconds).abs();
+      if (diff < closestDiff) {
+        closest = option.seconds;
+        closestDiff = diff;
+      }
+    }
+    return closest;
   }
 
   Widget _buildButtonInputSettings() {

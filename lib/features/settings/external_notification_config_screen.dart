@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
-import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/status_banner.dart';
 
@@ -47,6 +49,8 @@ class _ExternalNotificationConfigScreenState
 
   bool _isSaving = false;
   bool _isLoading = true;
+  StreamSubscription<module_pb.ModuleConfig_ExternalNotificationConfig>?
+  _configSubscription;
 
   @override
   void initState() {
@@ -54,55 +58,76 @@ class _ExternalNotificationConfigScreenState
     _loadCurrentConfig();
   }
 
+  @override
+  void dispose() {
+    _configSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _applyConfig(module_pb.ModuleConfig_ExternalNotificationConfig config) {
+    safeSetState(() {
+      _enabled = config.enabled;
+      _alertBell = config.alertBell;
+      _alertMessage = config.alertMessage;
+      _usePwm = config.usePwm;
+      _useI2sAsBuzzer = config.useI2sAsBuzzer;
+      _active = config.active;
+      _output = config.output;
+      _outputMs = config.outputMs;
+      _nagTimeout = config.nagTimeout;
+      _alertBellBuzzer = config.alertBellBuzzer;
+      _alertBellVibra = config.alertBellVibra;
+      _alertMessageBuzzer = config.alertMessageBuzzer;
+      _alertMessageVibra = config.alertMessageVibra;
+      _outputBuzzer = config.outputBuzzer;
+      _outputVibra = config.outputVibra;
+      _isLoading = false;
+    });
+  }
+
   Future<void> _loadCurrentConfig() async {
     AppLogging.settings('[ExternalNotification] Loading config...');
-    final protocol = ref.read(protocolServiceProvider);
-
-    // Only request from device if connected
-    if (!protocol.isConnected) {
-      AppLogging.settings(
-        '[ExternalNotification] Not connected, skipping load',
-      );
-      safeSetState(() => _isLoading = false);
-      return;
-    }
-
-    AppLogging.settings('[ExternalNotification] Requesting config from device');
     try {
-      final config = await protocol
-          .getExternalNotificationModuleConfig()
-          .timeout(const Duration(seconds: 10));
-      AppLogging.settings('[ExternalNotification] Config received: $config');
-      if (config != null && mounted) {
-        safeSetState(() {
-          _enabled = config.enabled;
-          _alertBell = config.alertBell;
-          _alertMessage = config.alertMessage;
-          _usePwm = config.usePwm;
-          _useI2sAsBuzzer = config.useI2sAsBuzzer;
-          _active = config.active;
-          _output = config.output;
-          _outputMs = config.outputMs;
-          _nagTimeout = config.nagTimeout;
-          _alertBellBuzzer = config.alertBellBuzzer;
-          _alertBellVibra = config.alertBellVibra;
-          _alertMessageBuzzer = config.alertMessageBuzzer;
-          _alertMessageVibra = config.alertMessageVibra;
-          _outputBuzzer = config.outputBuzzer;
-          _outputVibra = config.outputVibra;
-          _isLoading = false;
+      final protocol = ref.read(protocolServiceProvider);
+
+      // Apply cached config immediately if available
+      final cached = protocol.currentExternalNotificationConfig;
+      if (cached != null) {
+        AppLogging.settings('[ExternalNotification] Applying cached config');
+        _applyConfig(cached);
+      }
+
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription = protocol.externalNotificationConfigStream.listen((
+          config,
+        ) {
+          if (mounted) {
+            AppLogging.settings(
+              '[ExternalNotification] Config received via stream',
+            );
+            _applyConfig(config);
+          }
         });
+
+        // Request fresh config from device
         AppLogging.settings(
-          '[ExternalNotification] Config loaded successfully',
+          '[ExternalNotification] Requesting config from device',
+        );
+        await protocol.getModuleConfig(
+          admin_pbenum.AdminMessage_ModuleConfigType.EXTNOTIF_CONFIG,
         );
       } else {
-        AppLogging.settings('[ExternalNotification] Config was null');
-        safeSetState(() => _isLoading = false);
+        AppLogging.settings(
+          '[ExternalNotification] Not connected, skipping load',
+        );
       }
     } catch (e) {
       AppLogging.settings('[ExternalNotification] Error loading config: $e');
-      safeSetState(() => _isLoading = false);
       safeShowSnackBar('Failed to load config');
+    } finally {
+      safeSetState(() => _isLoading = false);
     }
   }
 

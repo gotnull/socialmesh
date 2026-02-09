@@ -291,9 +291,9 @@ void main() {
       expect(node.displayName, 'SHORT');
     });
 
-    test('displayName returns nodeNum when both names are null', () {
+    test('displayName returns Meshtastic XXXX when both names are null', () {
       final node = MeshNode(nodeNum: 123);
-      expect(node.displayName, 'Node 123');
+      expect(node.displayName, 'Meshtastic 007B');
     });
 
     test('hasPosition returns true for valid position', () {

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -7,6 +8,8 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
+import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 
 class SerialConfigScreen extends ConsumerStatefulWidget {
   const SerialConfigScreen({super.key});
@@ -27,6 +30,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
   bool _hasChanges = false;
   bool _isSaving = false;
   bool _isLoading = true;
+  StreamSubscription<module_pb.ModuleConfig_SerialConfig>? _configSubscription;
 
   final List<int> _baudRates = [
     9600,
@@ -63,30 +67,48 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
     _loadCurrentConfig();
   }
 
+  @override
+  void dispose() {
+    _configSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _applyConfig(module_pb.ModuleConfig_SerialConfig config) {
+    safeSetState(() {
+      _serialEnabled = config.enabled;
+      _rxdGpioEnabled = config.rxd > 0;
+      _txdGpioEnabled = config.txd > 0;
+      _overrideConsoleSerialPort = config.overrideConsoleSerialPort;
+      // baud is stored as index
+      if (config.baud.value >= 0 && config.baud.value < _baudRates.length) {
+        _baudRate = _baudRates[config.baud.value];
+      }
+      _timeout = config.timeout > 0 ? config.timeout : 5;
+      _mode = _modeNames[config.mode.value] ?? 'SIMPLE';
+      _isLoading = false;
+    });
+  }
+
   Future<void> _loadCurrentConfig() async {
     final protocol = ref.read(protocolServiceProvider);
 
-    // Check if we're connected before trying to load config
-    if (!protocol.isConnected) {
-      safeSetState(() => _isLoading = false);
-      return;
+    // Apply cached config immediately if available
+    final cached = protocol.currentSerialConfig;
+    if (cached != null) {
+      _applyConfig(cached);
     }
 
-    final config = await protocol.getSerialModuleConfig();
-    if (config != null && mounted) {
-      safeSetState(() {
-        _serialEnabled = config.enabled;
-        _rxdGpioEnabled = config.rxd > 0;
-        _txdGpioEnabled = config.txd > 0;
-        _overrideConsoleSerialPort = config.overrideConsoleSerialPort;
-        // baud is stored as index
-        if (config.baud.value >= 0 && config.baud.value < _baudRates.length) {
-          _baudRate = _baudRates[config.baud.value];
-        }
-        _timeout = config.timeout > 0 ? config.timeout : 5;
-        _mode = _modeNames[config.mode.value] ?? 'SIMPLE';
-        _isLoading = false;
+    // Only request from device if connected
+    if (protocol.isConnected) {
+      // Listen for config response
+      _configSubscription = protocol.serialConfigStream.listen((config) {
+        if (mounted) _applyConfig(config);
       });
+
+      // Request fresh config from device
+      await protocol.getModuleConfig(
+        admin_pbenum.AdminMessage_ModuleConfigType.SERIAL_CONFIG,
+      );
     } else {
       safeSetState(() => _isLoading = false);
     }

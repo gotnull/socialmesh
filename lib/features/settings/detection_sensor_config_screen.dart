@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +11,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../generated/meshtastic/module_config.pbenum.dart' as module_pbenum;
 import '../../core/widgets/loading_indicator.dart';
@@ -39,6 +41,8 @@ class _DetectionSensorConfigScreenState
   bool _isSaving = false;
   bool _isLoading = true;
   bool _notificationsEnabled = false; // App-side notification preference
+  StreamSubscription<module_pb.ModuleConfig_DetectionSensorConfig>?
+  _configSubscription;
 
   final _nameController = TextEditingController();
   final _pinController = TextEditingController();
@@ -51,9 +55,30 @@ class _DetectionSensorConfigScreenState
 
   @override
   void dispose() {
+    _configSubscription?.cancel();
     _nameController.dispose();
     _pinController.dispose();
     super.dispose();
+  }
+
+  void _applyConfig(module_pb.ModuleConfig_DetectionSensorConfig config) {
+    safeSetState(() {
+      _enabled = config.enabled;
+      _name = config.name;
+      _monitorPin = config.monitorPin;
+      _minimumBroadcastSecs = config.minimumBroadcastSecs > 0
+          ? config.minimumBroadcastSecs
+          : 45;
+      _stateBroadcastSecs = config.stateBroadcastSecs > 0
+          ? config.stateBroadcastSecs
+          : 300;
+      _sendBell = config.sendBell;
+      _usePullup = config.usePullup;
+      _triggerType = config.detectionTriggerType;
+      _nameController.text = _name;
+      _pinController.text = _monitorPin.toString();
+      _isLoading = false;
+    });
   }
 
   Future<void> _loadCurrentConfig() async {
@@ -62,49 +87,42 @@ class _DetectionSensorConfigScreenState
 
     // Load app-side notification preference
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     final notifEnabled = prefs.getBool('enableDetectionNotifications') ?? false;
     safeSetState(() => _notificationsEnabled = notifEnabled);
 
-    // Only request from device if connected
-    if (!protocol.isConnected) {
-      AppLogging.settings('[DetectionSensor] Not connected, skipping load');
-      safeSetState(() => _isLoading = false);
-      return;
+    // Apply cached config immediately if available
+    final cached = protocol.currentDetectionSensorConfig;
+    if (cached != null) {
+      AppLogging.settings('[DetectionSensor] Applying cached config');
+      _applyConfig(cached);
     }
 
-    AppLogging.settings('[DetectionSensor] Requesting config from device');
-    try {
-      final config = await protocol.getDetectionSensorModuleConfig().timeout(
-        const Duration(seconds: 10),
-      );
-      AppLogging.settings('[DetectionSensor] Config received: $config');
-      if (config != null && mounted) {
-        safeSetState(() {
-          _enabled = config.enabled;
-          _name = config.name;
-          _monitorPin = config.monitorPin;
-          _minimumBroadcastSecs = config.minimumBroadcastSecs > 0
-              ? config.minimumBroadcastSecs
-              : 45;
-          _stateBroadcastSecs = config.stateBroadcastSecs > 0
-              ? config.stateBroadcastSecs
-              : 300;
-          _sendBell = config.sendBell;
-          _usePullup = config.usePullup;
-          _triggerType = config.detectionTriggerType;
-          _nameController.text = _name;
-          _pinController.text = _monitorPin.toString();
-          _isLoading = false;
-        });
-        AppLogging.settings('[DetectionSensor] Config loaded successfully');
-      } else {
-        AppLogging.settings('[DetectionSensor] Config was null');
-        safeSetState(() => _isLoading = false);
+    // Only request from device if connected
+    if (protocol.isConnected) {
+      // Listen for config response
+      _configSubscription = protocol.detectionSensorConfigStream.listen((
+        config,
+      ) {
+        if (mounted) {
+          AppLogging.settings('[DetectionSensor] Config received via stream');
+          _applyConfig(config);
+        }
+      });
+
+      // Request fresh config from device
+      AppLogging.settings('[DetectionSensor] Requesting config from device');
+      try {
+        await protocol.getModuleConfig(
+          admin_pbenum.AdminMessage_ModuleConfigType.DETECTIONSENSOR_CONFIG,
+        );
+      } catch (e) {
+        AppLogging.settings('[DetectionSensor] Error requesting config: $e');
+        safeShowSnackBar('Failed to load config');
       }
-    } catch (e) {
-      AppLogging.settings('[DetectionSensor] Error loading config: $e');
+    } else {
+      AppLogging.settings('[DetectionSensor] Not connected, skipping load');
       safeSetState(() => _isLoading = false);
-      safeShowSnackBar('Failed to load config');
     }
   }
 

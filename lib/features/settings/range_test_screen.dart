@@ -9,6 +9,8 @@ import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
@@ -41,6 +43,8 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
 
   // Stream subscription for incoming range test messages
   StreamSubscription<MeshNode>? _nodeSubscription;
+  StreamSubscription<module_pb.ModuleConfig_RangeTestConfig>?
+  _configSubscription;
   Timer? _sendTimer;
 
   @override
@@ -51,29 +55,44 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
 
   @override
   void dispose() {
+    _configSubscription?.cancel();
     _nodeSubscription?.cancel();
     _sendTimer?.cancel();
     super.dispose();
   }
 
+  void _applyConfig(module_pb.ModuleConfig_RangeTestConfig config) {
+    safeSetState(() {
+      _enabled = config.enabled;
+      _senderInterval = config.sender > 0 ? config.sender : 60;
+      _saveResults = config.save;
+      _isLoading = false;
+    });
+  }
+
   Future<void> _loadCurrentConfig() async {
-    final protocol = ref.read(protocolServiceProvider);
+    try {
+      final protocol = ref.read(protocolServiceProvider);
 
-    // Only request from device if connected
-    if (!protocol.isConnected) {
-      safeSetState(() => _isLoading = false);
-      return;
-    }
+      // Apply cached config immediately if available
+      final cached = protocol.currentRangeTestConfig;
+      if (cached != null) {
+        _applyConfig(cached);
+      }
 
-    final config = await protocol.getRangeTestModuleConfig();
-    if (config != null && mounted) {
-      safeSetState(() {
-        _enabled = config.enabled;
-        _senderInterval = config.sender > 0 ? config.sender : 60;
-        _saveResults = config.save;
-        _isLoading = false;
-      });
-    } else {
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription = protocol.rangeTestConfigStream.listen((config) {
+          if (mounted) _applyConfig(config);
+        });
+
+        // Request fresh config from device
+        await protocol.getModuleConfig(
+          admin_pbenum.AdminMessage_ModuleConfigType.RANGETEST_CONFIG,
+        );
+      }
+    } finally {
       safeSetState(() => _isLoading = false);
     }
   }

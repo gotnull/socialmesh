@@ -31,7 +31,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
   config_pbenum.Config_DeviceConfig_RebroadcastMode? _rebroadcastMode;
   bool _serialEnabled = true;
   bool _ledHeartbeatDisabled = false;
-  int _nodeInfoBroadcastSecs = 900;
+  int _nodeInfoBroadcastSecs = 10800;
   // Additional settings matching iOS
   int _buttonGpio = 0;
   int _buzzerGpio = 0;
@@ -62,7 +62,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
       _ledHeartbeatDisabled = config.ledHeartbeatDisabled;
       _nodeInfoBroadcastSecs = config.nodeInfoBroadcastSecs > 0
           ? config.nodeInfoBroadcastSecs
-          : 900;
+          : 10800;
       // Additional settings
       _buttonGpio = config.buttonGpio;
       _buzzerGpio = config.buzzerGpio;
@@ -221,84 +221,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                         },
                       ),
                     ),
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 2,
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: context.card,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Node Info Broadcast',
-                                style: TextStyle(
-                                  color: context.textPrimary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: context.accentColor.withValues(
-                                    alpha: 0.15,
-                                  ),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  _formatDuration(_nodeInfoBroadcastSecs),
-                                  style: TextStyle(
-                                    color: context.accentColor,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'How often to broadcast device info',
-                            style: TextStyle(
-                              color: context.textSecondary,
-                              fontSize: 13,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          SliderTheme(
-                            data: SliderThemeData(
-                              inactiveTrackColor: context.border,
-                              thumbColor: context.accentColor,
-                              overlayColor: context.accentColor.withValues(
-                                alpha: 0.2,
-                              ),
-                              trackHeight: 4,
-                            ),
-                            child: Slider(
-                              value: _nodeInfoBroadcastSecs.toDouble(),
-                              min: 300,
-                              max: 86400,
-                              divisions: 20,
-                              onChanged: (value) {
-                                setState(
-                                  () => _nodeInfoBroadcastSecs = value.toInt(),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildNodeInfoBroadcastTile(),
                     SizedBox(height: 16),
                     const _SectionHeader(title: 'HARDWARE'),
                     _SettingsTile(
@@ -1168,11 +1091,148 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     );
   }
 
-  String _formatDuration(int seconds) {
-    if (seconds < 60) return '${seconds}s';
-    if (seconds < 3600) return '${seconds ~/ 60}m';
-    if (seconds < 86400) return '${seconds ~/ 3600}h';
-    return '${seconds ~/ 86400}d';
+  /// Broadcast interval options matching the official Meshtastic iOS app.
+  /// Minimum is 3 hours (10 800 s); "Never" disables broadcasts.
+  static const List<({int seconds, String label})> _broadcastIntervals = [
+    (seconds: 10800, label: 'Three Hours'),
+    (seconds: 14400, label: 'Four Hours'),
+    (seconds: 18000, label: 'Five Hours'),
+    (seconds: 21600, label: 'Six Hours'),
+    (seconds: 43200, label: 'Twelve Hours'),
+    (seconds: 64800, label: 'Eighteen Hours'),
+    (seconds: 86400, label: 'Twenty Four Hours'),
+    (seconds: 129600, label: 'Thirty Six Hours'),
+    (seconds: 172800, label: 'Forty Eight Hours'),
+    (seconds: 259200, label: 'Seventy Two Hours'),
+    (seconds: 0, label: 'Never'),
+  ];
+
+  /// Returns the display label for the current broadcast interval,
+  /// snapping legacy values to the nearest valid option.
+  String _broadcastIntervalLabel(int seconds) {
+    for (final option in _broadcastIntervals) {
+      if (option.seconds == seconds) return option.label;
+    }
+    // Legacy value — snap to nearest
+    final snapped = _snapToNearestInterval(seconds);
+    for (final option in _broadcastIntervals) {
+      if (option.seconds == snapped) return option.label;
+    }
+    return 'Three Hours';
+  }
+
+  int _snapToNearestInterval(int seconds) {
+    if (seconds == 0) return 0;
+    int closest = _broadcastIntervals.first.seconds;
+    int closestDiff = (seconds - closest).abs();
+    for (final option in _broadcastIntervals) {
+      if (option.seconds == 0) continue;
+      final diff = (seconds - option.seconds).abs();
+      if (diff < closestDiff) {
+        closest = option.seconds;
+        closestDiff = diff;
+      }
+    }
+    return closest;
+  }
+
+  Widget _buildNodeInfoBroadcastTile() {
+    return _SettingsTile(
+      icon: Icons.broadcast_on_personal,
+      iconColor: _nodeInfoBroadcastSecs > 0 ? context.accentColor : null,
+      title: 'Node Info Broadcast',
+      subtitle: 'How often to broadcast device info',
+      trailing: GestureDetector(
+        onTap: _showBroadcastIntervalPicker,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _broadcastIntervalLabel(_nodeInfoBroadcastSecs),
+              style: TextStyle(
+                color: context.accentColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.chevron_right, color: context.textTertiary, size: 20),
+          ],
+        ),
+      ),
+      onTap: _showBroadcastIntervalPicker,
+    );
+  }
+
+  void _showBroadcastIntervalPicker() {
+    final effectiveValue = _snapToNearestInterval(_nodeInfoBroadcastSecs);
+    showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: context.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: context.textTertiary.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Broadcast Interval',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'How often to broadcast node info to the mesh',
+                style: TextStyle(fontSize: 13, color: context.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              ..._broadcastIntervals.map((option) {
+                final isSelected = effectiveValue == option.seconds;
+                return ListTile(
+                  title: Text(
+                    option.label,
+                    style: TextStyle(
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      color: isSelected
+                          ? context.textPrimary
+                          : context.textSecondary,
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? Icon(Icons.check, color: context.accentColor, size: 20)
+                      : null,
+                  onTap: () {
+                    Navigator.pop(sheetContext, option.seconds);
+                  },
+                );
+              }),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    ).then((value) {
+      if (value != null && mounted) {
+        setState(() => _nodeInfoBroadcastSecs = value);
+      }
+    });
   }
 }
 
@@ -1204,6 +1264,7 @@ class _SettingsTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final Widget? trailing;
+  final VoidCallback? onTap;
 
   const _SettingsTile({
     required this.icon,
@@ -1211,48 +1272,61 @@ class _SettingsTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     this.trailing,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final content = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Icon(icon, color: iconColor ?? context.textSecondary),
+          SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: context.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (trailing != null) trailing!,
+        ],
+      ),
+    );
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Icon(icon, color: iconColor ?? context.textSecondary),
-            SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: context.bodySmallStyle?.copyWith(
-                      color: context.textTertiary,
-                    ),
-                  ),
-                ],
+      child: onTap != null
+          ? Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: onTap,
+                child: content,
               ),
-            ),
-            if (trailing != null) trailing!,
-          ],
-        ),
-      ),
+            )
+          : content,
     );
   }
 }

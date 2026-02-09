@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
@@ -6,6 +7,8 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -31,6 +34,8 @@ class _StoreForwardConfigScreenState
   int _historyReturnWindow = 240; // minutes
   bool _isSaving = false;
   bool _isLoading = true;
+  StreamSubscription<module_pb.ModuleConfig_StoreForwardConfig>?
+  _configSubscription;
 
   @override
   void initState() {
@@ -38,46 +43,65 @@ class _StoreForwardConfigScreenState
     _loadCurrentConfig();
   }
 
+  @override
+  void dispose() {
+    _configSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _applyConfig(module_pb.ModuleConfig_StoreForwardConfig config) {
+    safeSetState(() {
+      _enabled = config.enabled;
+      _isServer = config.isServer;
+      _heartbeat = config.heartbeat;
+      _records = config.records;
+      _historyReturnMax = config.historyReturnMax > 0
+          ? config.historyReturnMax
+          : 100;
+      _historyReturnWindow = config.historyReturnWindow > 0
+          ? config.historyReturnWindow
+          : 240;
+      _isLoading = false;
+    });
+  }
+
   Future<void> _loadCurrentConfig() async {
     AppLogging.settings('[StoreForward] Loading config...');
-    final protocol = ref.read(protocolServiceProvider);
-
-    // Only request from device if connected
-    if (!protocol.isConnected) {
-      AppLogging.settings('[StoreForward] Not connected, skipping load');
-      safeSetState(() => _isLoading = false);
-      return;
-    }
-
-    AppLogging.settings('[StoreForward] Requesting config from device');
     try {
-      final config = await protocol.getStoreForwardModuleConfig().timeout(
-        const Duration(seconds: 10),
-      );
-      AppLogging.settings('[StoreForward] Config received: $config');
-      if (config != null && mounted) {
-        safeSetState(() {
-          _enabled = config.enabled;
-          _isServer = config.isServer;
-          _heartbeat = config.heartbeat;
-          _records = config.records;
-          _historyReturnMax = config.historyReturnMax > 0
-              ? config.historyReturnMax
-              : 100;
-          _historyReturnWindow = config.historyReturnWindow > 0
-              ? config.historyReturnWindow
-              : 240;
-          _isLoading = false;
+      final protocol = ref.read(protocolServiceProvider);
+
+      // Apply cached config immediately if available
+      final cached = protocol.currentStoreForwardConfig;
+      if (cached != null) {
+        AppLogging.settings('[StoreForward] Applying cached config');
+        _applyConfig(cached);
+      }
+
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription = protocol.storeForwardConfigStream.listen((
+          config,
+        ) {
+          if (mounted) {
+            AppLogging.settings('[StoreForward] Config received via stream');
+            _applyConfig(config);
+          }
         });
-        AppLogging.settings('[StoreForward] Config loaded successfully');
+
+        // Request fresh config from device
+        AppLogging.settings('[StoreForward] Requesting config from device');
+        await protocol.getModuleConfig(
+          admin_pbenum.AdminMessage_ModuleConfigType.STOREFORWARD_CONFIG,
+        );
       } else {
-        AppLogging.settings('[StoreForward] Config was null');
-        safeSetState(() => _isLoading = false);
+        AppLogging.settings('[StoreForward] Not connected, skipping load');
       }
     } catch (e) {
       AppLogging.settings('[StoreForward] Error loading config: $e');
-      safeSetState(() => _isLoading = false);
       safeShowSnackBar('Failed to load config');
+    } finally {
+      safeSetState(() => _isLoading = false);
     }
   }
 

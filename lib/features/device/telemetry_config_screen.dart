@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -43,6 +46,8 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
   bool _hasChanges = false;
   bool _isSaving = false;
   bool _isLoading = true;
+  StreamSubscription<module_pb.ModuleConfig_TelemetryConfig>?
+  _configSubscription;
 
   @override
   void initState() {
@@ -50,48 +55,68 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
     _loadCurrentConfig();
   }
 
+  @override
+  void dispose() {
+    _configSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _applyConfig(module_pb.ModuleConfig_TelemetryConfig config) {
+    safeSetState(() {
+      // Device Metrics
+      _deviceMetricsEnabled = config.deviceTelemetryEnabled;
+      _deviceMetricsUpdateInterval = config.deviceUpdateInterval > 0
+          ? config.deviceUpdateInterval
+          : 1800;
+
+      // Environment Metrics
+      _environmentMetricsEnabled = config.environmentMeasurementEnabled;
+      _environmentMetricsUpdateInterval = config.environmentUpdateInterval > 0
+          ? config.environmentUpdateInterval
+          : 1800;
+      _environmentDisplayOnScreen = config.environmentScreenEnabled;
+      _environmentDisplayFahrenheit = config.environmentDisplayFahrenheit;
+
+      // Air Quality
+      _airQualityEnabled = config.airQualityEnabled;
+      _airQualityUpdateInterval = config.airQualityInterval > 0
+          ? config.airQualityInterval
+          : 1800;
+
+      // Power Metrics
+      _powerMetricsEnabled = config.powerMeasurementEnabled;
+      _powerMetricsUpdateInterval = config.powerUpdateInterval > 0
+          ? config.powerUpdateInterval
+          : 1800;
+      _powerScreenEnabled = config.powerScreenEnabled;
+
+      _isLoading = false;
+    });
+  }
+
   Future<void> _loadCurrentConfig() async {
-    final protocol = ref.read(protocolServiceProvider);
+    try {
+      final protocol = ref.read(protocolServiceProvider);
 
-    // Check if we're connected before trying to load config
-    if (!protocol.isConnected) {
-      safeSetState(() => _isLoading = false);
-      return;
-    }
+      // Apply cached config immediately if available
+      final cached = protocol.currentTelemetryConfig;
+      if (cached != null) {
+        _applyConfig(cached);
+      }
 
-    final config = await protocol.getTelemetryModuleConfig();
-    if (config != null && mounted) {
-      safeSetState(() {
-        // Device Metrics - use deviceTelemetryEnabled flag
-        _deviceMetricsEnabled = config.deviceTelemetryEnabled;
-        _deviceMetricsUpdateInterval = config.deviceUpdateInterval > 0
-            ? config.deviceUpdateInterval
-            : 1800;
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription = protocol.telemetryConfigStream.listen((config) {
+          if (mounted) _applyConfig(config);
+        });
 
-        // Environment Metrics - use environmentMeasurementEnabled flag
-        _environmentMetricsEnabled = config.environmentMeasurementEnabled;
-        _environmentMetricsUpdateInterval = config.environmentUpdateInterval > 0
-            ? config.environmentUpdateInterval
-            : 1800;
-        _environmentDisplayOnScreen = config.environmentScreenEnabled;
-        _environmentDisplayFahrenheit = config.environmentDisplayFahrenheit;
-
-        // Air Quality - use airQualityEnabled flag
-        _airQualityEnabled = config.airQualityEnabled;
-        _airQualityUpdateInterval = config.airQualityInterval > 0
-            ? config.airQualityInterval
-            : 1800;
-
-        // Power Metrics - use powerMeasurementEnabled flag
-        _powerMetricsEnabled = config.powerMeasurementEnabled;
-        _powerMetricsUpdateInterval = config.powerUpdateInterval > 0
-            ? config.powerUpdateInterval
-            : 1800;
-        _powerScreenEnabled = config.powerScreenEnabled;
-
-        _isLoading = false;
-      });
-    } else {
+        // Request fresh config from device
+        await protocol.getModuleConfig(
+          admin_pbenum.AdminMessage_ModuleConfigType.TELEMETRY_CONFIG,
+        );
+      }
+    } finally {
       safeSetState(() => _isLoading = false);
     }
   }

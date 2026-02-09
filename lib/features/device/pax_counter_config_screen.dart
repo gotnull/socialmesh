@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -10,6 +11,8 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/status_banner.dart';
+import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 
 /// PAX Counter module configuration screen
 class PaxCounterConfigScreen extends ConsumerStatefulWidget {
@@ -29,6 +32,8 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
   bool _hasChanges = false;
   bool _isSaving = false;
   bool _isLoading = true;
+  StreamSubscription<module_pb.ModuleConfig_PaxcounterConfig>?
+  _configSubscription;
 
   @override
   void initState() {
@@ -36,25 +41,47 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
     _loadCurrentConfig();
   }
 
+  @override
+  void dispose() {
+    _configSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _applyConfig(module_pb.ModuleConfig_PaxcounterConfig config) {
+    safeSetState(() {
+      _paxCounterEnabled = config.enabled;
+      _paxCounterUpdateInterval = config.paxcounterUpdateInterval > 0
+          ? config.paxcounterUpdateInterval
+          : 1800;
+      _isLoading = false;
+    });
+  }
+
   Future<void> _loadCurrentConfig() async {
-    final protocol = ref.read(protocolServiceProvider);
+    try {
+      final protocol = ref.read(protocolServiceProvider);
 
-    // Check if we're connected before trying to load config
-    if (!protocol.isConnected) {
-      safeSetState(() => _isLoading = false);
-      return;
-    }
+      // Apply cached config immediately if available
+      final cached = protocol.currentPaxCounterConfig;
+      if (cached != null) {
+        _applyConfig(cached);
+      }
 
-    final config = await protocol.getPaxCounterModuleConfig();
-    if (config != null && mounted) {
-      safeSetState(() {
-        _paxCounterEnabled = config.enabled;
-        _paxCounterUpdateInterval = config.paxcounterUpdateInterval > 0
-            ? config.paxcounterUpdateInterval
-            : 1800;
-        _isLoading = false;
-      });
-    } else {
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription = protocol.paxCounterConfigStream.listen((config) {
+          if (mounted) _applyConfig(config);
+        });
+
+        // Request fresh config from device
+        await protocol.getModuleConfig(
+          admin_pbenum.AdminMessage_ModuleConfigType.PAXCOUNTER_CONFIG,
+        );
+      } else {
+        safeSetState(() => _isLoading = false);
+      }
+    } catch (e) {
       safeSetState(() => _isLoading = false);
     }
   }

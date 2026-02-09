@@ -558,6 +558,23 @@ class ProtocolService {
   module_pb.ModuleConfig_DetectionSensorConfig?
   get currentDetectionSensorConfig => _currentDetectionSensorConfig;
 
+  /// Stream of range test config updates
+  Stream<module_pb.ModuleConfig_RangeTestConfig> get rangeTestConfigStream =>
+      _rangeTestConfigController.stream;
+
+  /// Current range test config
+  module_pb.ModuleConfig_RangeTestConfig? get currentRangeTestConfig =>
+      _currentRangeTestConfig;
+
+  /// Stream of external notification config updates
+  Stream<module_pb.ModuleConfig_ExternalNotificationConfig>
+  get externalNotificationConfigStream =>
+      _externalNotificationConfigController.stream;
+
+  /// Current external notification config
+  module_pb.ModuleConfig_ExternalNotificationConfig?
+  get currentExternalNotificationConfig => _currentExternalNotificationConfig;
+
   /// Stream of canned message config updates
   Stream<module_pb.ModuleConfig_CannedMessageConfig>
   get cannedMessageConfigStream => _cannedMessageConfigController.stream;
@@ -4320,6 +4337,55 @@ class ProtocolService {
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    // Optimistically update the local cache and emit to streams so config
+    // screens show the saved values immediately when navigating back.
+    // The device will reboot after config changes, dropping the BLE
+    // connection before it can send back a config response. Without this
+    // update the cache holds stale pre-save values.
+    // Only update for local node config — remote admin targets should not
+    // pollute the local cache.
+    if (!isRemote) {
+      _applySavedConfigToCache(config);
+    }
+  }
+
+  /// Applies a just-saved config to the local cache and emits to streams.
+  void _applySavedConfigToCache(config_pb.Config config) {
+    if (config.hasDevice()) {
+      _currentDeviceConfig = config.device;
+      _deviceConfigController.add(config.device);
+    }
+    if (config.hasPosition()) {
+      _currentPositionConfig = config.position;
+      _positionConfigController.add(config.position);
+    }
+    if (config.hasLora()) {
+      _currentRegion = config.lora.region;
+      _currentLoraConfig = config.lora;
+      _regionController.add(config.lora.region);
+      _loraConfigController.add(config.lora);
+    }
+    if (config.hasDisplay()) {
+      _currentDisplayConfig = config.display;
+      _displayConfigController.add(config.display);
+    }
+    if (config.hasPower()) {
+      _currentPowerConfig = config.power;
+      _powerConfigController.add(config.power);
+    }
+    if (config.hasNetwork()) {
+      _currentNetworkConfig = config.network;
+      _networkConfigController.add(config.network);
+    }
+    if (config.hasBluetooth()) {
+      _currentBluetoothConfig = config.bluetooth;
+      _bluetoothConfigController.add(config.bluetooth);
+    }
+    if (config.hasSecurity()) {
+      _currentSecurityConfig = config.security;
+      _securityConfigController.add(config.security);
+    }
   }
 
   /// Set LoRa configuration (region, modem preset, TX power, etc.)
@@ -4665,6 +4731,58 @@ class ProtocolService {
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    // Optimistically update the local cache (same rationale as setConfig —
+    // the device reboots before it can send back a config response).
+    if (!isRemote) {
+      _applySavedModuleConfigToCache(moduleConfig);
+    }
+  }
+
+  /// Applies a just-saved module config to the local cache and emits to streams.
+  void _applySavedModuleConfigToCache(module_pb.ModuleConfig moduleConfig) {
+    if (moduleConfig.hasMqtt()) {
+      _currentMqttConfig = moduleConfig.mqtt;
+      _mqttConfigController.add(moduleConfig.mqtt);
+    }
+    if (moduleConfig.hasTelemetry()) {
+      _currentTelemetryConfig = moduleConfig.telemetry;
+      _telemetryConfigController.add(moduleConfig.telemetry);
+    }
+    if (moduleConfig.hasPaxcounter()) {
+      _currentPaxCounterConfig = moduleConfig.paxcounter;
+      _paxCounterConfigController.add(moduleConfig.paxcounter);
+    }
+    if (moduleConfig.hasAmbientLighting()) {
+      _currentAmbientLightingConfig = moduleConfig.ambientLighting;
+      _ambientLightingConfigController.add(moduleConfig.ambientLighting);
+    }
+    if (moduleConfig.hasSerial()) {
+      _currentSerialConfig = moduleConfig.serial;
+      _serialConfigController.add(moduleConfig.serial);
+    }
+    if (moduleConfig.hasStoreForward()) {
+      _currentStoreForwardConfig = moduleConfig.storeForward;
+      _storeForwardConfigController.add(moduleConfig.storeForward);
+    }
+    if (moduleConfig.hasDetectionSensor()) {
+      _currentDetectionSensorConfig = moduleConfig.detectionSensor;
+      _detectionSensorConfigController.add(moduleConfig.detectionSensor);
+    }
+    if (moduleConfig.hasRangeTest()) {
+      _currentRangeTestConfig = moduleConfig.rangeTest;
+      _rangeTestConfigController.add(moduleConfig.rangeTest);
+    }
+    if (moduleConfig.hasExternalNotification()) {
+      _currentExternalNotificationConfig = moduleConfig.externalNotification;
+      _externalNotificationConfigController.add(
+        moduleConfig.externalNotification,
+      );
+    }
+    if (moduleConfig.hasCannedMessage()) {
+      _currentCannedMessageConfig = moduleConfig.cannedMessage;
+      _cannedMessageConfigController.add(moduleConfig.cannedMessage);
+    }
   }
 
   /// Set MQTT module configuration
