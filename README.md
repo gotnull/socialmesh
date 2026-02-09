@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="#features">Features</a> •
+  <a href="#nodedex">NodeDex</a> •
   <a href="#signals">Signals</a> •
   <a href="#getting-started">Getting Started</a> •
   <a href="#building-from-source">Build</a> •
@@ -35,11 +36,80 @@
 
 Connect to your mesh radio, exchange messages, track nearby nodes, and configure your device — **all without internet**.
 
+Socialmesh works fully offline over BLE and USB. Firebase is optional for cloud sync, widget marketplace, and profile sharing.
+
+---
+
+## NodeDex
+
+> _Your personal mesh field journal._
+
+Every node you discover on the mesh is automatically catalogued in the **NodeDex** — a living record of your mesh encounters. Each node receives a unique **procedural Sigil** (a geometric glyph derived deterministically from its identity) and a **personality Trait** inferred from real behavioral data. Accessible from the drawer menu.
+
+### Procedural Sigils
+
+Every node gets a unique constellation-style geometric identity generated from its node number. The same node always produces the same sigil — no randomness, no variation. Sigils are built from outer polygons (3-8 vertices), optional inner rings, radial lines, and a unique 3-color palette drawn from 16 curated colors.
+
+### Personality Traits
+
+Traits are never user-assigned — they are passively inferred from observable telemetry and behavior:
+
+| Trait | Description |
+|---|---|
+| **Relay** | Router role with high throughput — forwards traffic for the mesh |
+| **Wanderer** | Seen across multiple distinct positions or regions |
+| **Sentinel** | Fixed position, long-lived, high encounter count |
+| **Beacon** | Always active, very frequent encounters |
+| **Ghost** | Rarely seen relative to age — elusive presence |
+| **Courier** | High message volume relative to encounters |
+| **Anchor** | Persistent hub with many co-seen connections |
+| **Drifter** | Irregular timing, unpredictable appearance pattern |
+
+Each trait includes a confidence score and evidence lines explaining the classification.
+
+### Patina Score
+
+A numerical measure (0-100) of how much observable history a node has accumulated, computed across six axes: tenure, encounters, geographic reach, signal depth, social connections, and recency. Early gains are meaningful; diminishing returns prevent runaway scores.
+
+### Progressive Disclosure
+
+Information is revealed as observation accumulates — new nodes start sparse, detail unlocks over time:
+
+| Tier | Name | What appears |
+|---|---|---|
+| 0 | Trace | Sigil, name, hex ID only |
+| 1 | Noted | Primary trait badge |
+| 2 | Logged | Trait evidence and field note |
+| 3 | Inked | Full trait list and patina stamp |
+| 4 | Etched | Identity overlay at full density |
+
+### Sigil Evolution
+
+Sigils visually mature as patina accumulates — subtle line weight changes, color deepening, and micro-etch detail that progresses through five stages: **Seed**, **Marked**, **Inscribed**, **Heraldic**, and **Legacy**.
+
+### Sigil Cards
+
+Collectible trading-card-style renders of a node's full identity — rarity-tiered borders, dramatic sigil display, RPG-style stat grids, and shareable PNG export. Accessible from the NodeDex detail screen and the Nodes screen.
+
+### Field Notes
+
+Deterministic single-line observations that read like entries in a naturalist's field journal. The same node always gets the same note. Template families are selected by trait and filled with concrete values from the node's history.
+
+### Social Tags
+
+User-assigned labels for discovered nodes: **Contact**, **Trusted Node**, **Known Relay**, and **Frequent Peer**. Filter and sort the NodeDex by tag.
+
+### Co-Seen Tracking
+
+Records which nodes have been observed together on the mesh, building a social graph of node relationships over time.
+
+---
+
 ## Signals
 
 > _Leave short, ephemeral traces for people nearby._
 
-Signals is a new way to communicate on the mesh. Drop a message, and it appears to everyone in range. Signals expire automatically and never leave the mesh. No followers. No likes. No algorithms. **Just presence.**
+Signals is a mesh-first way to communicate. Drop a message, and it appears to everyone in range. Signals expire automatically with configurable TTL and never leave the mesh. Sorted by proximity and expiry. No followers. No likes. No algorithms. **Just presence.**
 
 Think of it as digital graffiti that fades with time.
 
@@ -49,35 +119,45 @@ Think of it as digital graffiti that fades with time.
 
 ### Messaging
 
-| Feature               | Description                                                        |
-| --------------------- | ------------------------------------------------------------------ |
-| **Channel Messaging** | Send and receive on multiple channels simultaneously               |
-| **Direct Messages**   | Private, encrypted node-to-node communication                      |
-| **Quick Responses**   | Pre-configured canned messages for fast replies                    |
-| **Message Search**    | Full-text search across all conversations                          |
-| **Offline Queue**     | Messages queued when disconnected, sent automatically on reconnect |
-| **Reactions**         | React to messages with emoji responses                             |
+| Feature | Description |
+|---|---|
+| **Channel Messaging** | Send and receive on multiple channels simultaneously |
+| **Direct Messages** | Private, encrypted node-to-node communication |
+| **Quick Responses** | Pre-configured canned messages for fast replies |
+| **Message Search** | Full-text search across all conversations |
+| **Offline Queue** | Messages queued when disconnected, sent automatically on reconnect |
+| **Reactions** | React to messages with emoji responses |
 
-### Network & Nodes
+### Network and Nodes
 
-| Feature              | Description                                                    |
-| -------------------- | -------------------------------------------------------------- |
-| **Node Discovery**   | See all nodes with signal strength, battery, and location      |
-| **Network Topology** | Visual graph showing mesh interconnections                     |
-| **Traceroute**       | Trace the exact path packets take through the mesh             |
-| **Signal History**   | SNR and RSSI charts over time                                  |
-| **Favorites**        | Pin important nodes for quick access                           |
-| **Node Profiles**    | Rich profiles with user info, social links, and custom avatars |
+| Feature | Description |
+|---|---|
+| **Node Discovery** | See all nodes with signal strength, battery, and location |
+| **NodeDex** | Personal mesh field journal with procedural sigils and trait inference |
+| **Network Topology** | Visual graph showing mesh interconnections |
+| **Traceroute** | Trace the exact path packets take through the mesh |
+| **Signal History** | SNR and RSSI charts over time |
+| **Favorites** | Pin important nodes for quick access |
+| **Node Profiles** | Rich profiles with user info, social links, and custom avatars |
+| **Presence** | Track when nodes are online, their activity patterns, and last seen times |
 
-### Maps & Location
+### Maps and Location
 
-| Feature              | Description                                 |
-| -------------------- | ------------------------------------------- |
-| **Node Map**         | Interactive map with all GPS-enabled nodes  |
-| **Waypoints**        | Drop, share, and navigate to waypoints      |
-| **Location Sharing** | Broadcast your position to the mesh         |
-| **Map Styles**       | Street, satellite, and terrain views        |
-| **Route Recording**  | Record and save your routes with GPS tracks |
+| Feature | Description |
+|---|---|
+| **Node Map** | Interactive map with all GPS-enabled nodes |
+| **Waypoints** | Drop, share, and navigate to waypoints |
+| **Location Sharing** | Broadcast your position to the mesh |
+| **Map Styles** | Street, satellite, and terrain views |
+| **Route Recording** | Record and save your routes with GPS tracks |
+
+### Social
+
+| Feature | Description |
+|---|---|
+| **Activity Timeline** | Chronological feed of mesh activity and events with identity resolution |
+| **Social Profiles** | View user profiles with posts, followers, and social links |
+| **Signals Feed** | Ephemeral mesh-first content sorted by proximity and expiry |
 
 ### Device Configuration
 
@@ -102,6 +182,7 @@ Full control over your Meshtastic device:
 - **IFTTT Webhooks** — Trigger automations on node events and geofence alerts
 - **MQTT Bridge** — Internet uplink configuration
 - **QR Codes** — Import/export channels and share node info instantly
+- **Nothing Phone Glyph** — LED pattern notifications for mesh events (Nothing Phone only)
 
 ### Safety
 
@@ -111,46 +192,48 @@ Full control over your Meshtastic device:
 
 ### Visualization
 
-| Feature          | Description                                                  |
-| ---------------- | ------------------------------------------------------------ |
-| **3D Mesh View** | Interactive 3D visualization of your mesh network topology   |
-| **World Map**    | Global view of Meshtastic nodes from the public MQTT network |
-| **Globe View**   | 3D rotating globe with node positions plotted worldwide      |
-| **Timeline**     | Chronological feed of all mesh activity and events           |
+| Feature | Description |
+|---|---|
+| **3D Mesh View** | Interactive 3D visualization of your mesh network topology |
+| **World Map** | Global view of Meshtastic nodes from the public MQTT network |
+| **Globe View** | 3D rotating globe with node positions plotted worldwide |
+| **Timeline** | Chronological feed of all mesh activity and events |
 
-### Analytics & Monitoring
+### Analytics and Monitoring
 
-| Feature            | Description                                                               |
-| ------------------ | ------------------------------------------------------------------------- |
-| **Mesh Health**    | Real-time network health metrics, utilization graphs, and issue detection |
-| **Reachability**   | Probabilistic assessment of node reachability based on observed data      |
-| **Presence**       | Track when nodes are online, their activity patterns, and last seen times |
-| **Route Analysis** | View discovered routes and packet paths through the mesh                  |
-| **Telemetry Logs** | Device metrics, environment sensors, air quality, position history        |
+| Feature | Description |
+|---|---|
+| **Mesh Health** | Real-time network health metrics, utilization graphs, and issue detection |
+| **Reachability** | Probabilistic assessment of node reachability based on observed data |
+| **Presence** | Track when nodes are online, their activity patterns, and last seen times |
+| **Route Analysis** | View discovered routes and packet paths through the mesh |
+| **Telemetry Logs** | Device metrics, environment sensors, air quality, position history |
 
 ### Premium Features
 
 These features are available via one-time in-app purchases:
 
-| Feature               | Description                                                          |
-| --------------------- | -------------------------------------------------------------------- |
-| **Theme Pack**        | 12 accent colors to personalize the entire app                       |
-| **Ringtone Pack**     | 7,000+ searchable RTTTL ringtones — classic tunes, TV themes, games  |
-| **Widgets**           | Build custom dashboard widgets with live data, charts, and gauges    |
-| **Automations**       | Create rules that trigger alerts, send messages, and react to events |
-| **IFTTT Integration** | Connect your mesh to 700+ apps and services via webhooks             |
+| Feature | Description |
+|---|---|
+| **Theme Pack** | 12 accent colors to personalize the entire app |
+| **Ringtone Pack** | 7,000+ searchable RTTTL ringtones — classic tunes, TV themes, games |
+| **Widgets** | Build custom dashboard widgets with live data, charts, and gauges |
+| **Automations** | Create rules that trigger alerts, send messages, and react to events |
+| **IFTTT Integration** | Connect your mesh to 700+ apps and services via webhooks |
 
 ---
 
 ## Tech Stack
 
-| Layer                | Technology           |
-| -------------------- | -------------------- |
-| **UI Framework**     | Flutter 3.10+        |
-| **State Management** | Riverpod 3.x         |
-| **Protocol**         | Meshtastic Protobufs |
-| **Local Storage**    | SQLite               |
-| **Analytics**        | Firebase (optional)  |
+| Layer | Technology |
+|---|---|
+| **UI Framework** | Flutter 3.10+ |
+| **State Management** | Riverpod 3.x |
+| **Protocol** | Meshtastic Protobufs |
+| **Local Storage** | SQLite |
+| **Analytics** | Firebase (optional) |
+| **Sigil Generation** | Deterministic geometric identity |
+| **Trait Inference** | Passive behavioral classification |
 
 ---
 
@@ -158,6 +241,8 @@ These features are available via one-time in-app purchases:
 
 - [Architecture Overview](docs/ARCHITECTURE.md) — How the app is structured
 - [Backend Boundary](docs/BACKEND.md) — What requires cloud services
+- [Hardening Plan](docs/HARDENING_PLAN.md) — Lifecycle safety and crash prevention
+- [Signals and Presence](docs/signals-presence-reference.md) — Ephemeral content system reference
 - [Releasing](docs/RELEASING.md) — How to cut a release
 
 ---
@@ -166,13 +251,13 @@ These features are available via one-time in-app purchases:
 
 ### Prerequisites
 
-| Requirement      | Version                            |
-| ---------------- | ---------------------------------- |
-| Flutter SDK      | 3.10+                              |
-| Xcode            | 15+ (iOS)                          |
-| Android Studio   | SDK 34+                            |
-| Protocol Buffers | `brew install protobuf`            |
-| CocoaPods        | `sudo gem install cocoapods` (iOS) |
+| Requirement | Version |
+|---|---|
+| Flutter SDK | 3.10+ |
+| Xcode | 15+ (iOS) |
+| Android Studio | SDK 34+ |
+| Protocol Buffers | `brew install protobuf` |
+| CocoaPods | `sudo gem install cocoapods` (iOS) |
 
 ### Quick Start (Demo Mode)
 
@@ -209,8 +294,25 @@ flutter run
 
 ```
 lib/
-├── core/           # Theme, shared widgets, constants
-├── features/       # Feature modules (32+ features)
+├── core/           # Theme, shared widgets, constants, safety utilities
+├── features/       # Feature modules
+│   ├── automations/# Rule-based event automation engine
+│   ├── channels/   # Channel messaging
+│   ├── dashboard/  # Custom widget dashboard
+│   ├── device/     # Device configuration
+│   ├── globe/      # 3D globe visualization
+│   ├── map/        # Interactive node map
+│   ├── mesh3d/     # 3D mesh topology view
+│   ├── mesh_health/# Network health analytics
+│   ├── messaging/  # Direct and channel messaging
+│   ├── nodedex/    # Mesh field journal (sigils, traits, patina)
+│   ├── presence/   # Node presence tracking
+│   ├── reachability/# Node reachability analysis
+│   ├── signals/    # Ephemeral mesh-first content
+│   ├── social/     # Activity timeline, profiles
+│   ├── widget_builder/ # Custom dashboard widget editor
+│   ├── world_mesh/ # Global MQTT node map
+│   └── ...         # Additional feature modules
 ├── generated/      # Meshtastic protobuf code
 ├── models/         # Data models
 ├── providers/      # Riverpod state management
@@ -224,20 +326,22 @@ lib/
 
 ### What works out of the box
 
-- BLE connection to Meshtastic devices
+- BLE and USB connection to Meshtastic devices
 - All mesh communication (messaging, node discovery, channels)
-- Local SQLite storage
+- Local SQLite storage (NodeDex, signals, routes, packet deduplication)
 - Protobuf encoding/decoding
+- NodeDex with procedural sigils and trait inference
 
 ### Optional: Firebase
 
 The app uses Firebase for optional cloud features. Without configuration:
 
-| Feature               | Behavior                 |
-| --------------------- | ------------------------ |
-| Analytics/Crashlytics | Disabled silently        |
-| Cloud sync            | Falls back to local-only |
-| Authentication        | Sign-in unavailable      |
+| Feature | Behavior |
+|---|---|
+| Analytics/Crashlytics | Disabled silently |
+| Cloud sync | Falls back to local-only |
+| Authentication | Sign-in unavailable |
+| Social features | Local-only mode |
 
 To enable, add your own `google-services.json` (Android) and `GoogleService-Info.plist` (iOS).
 
@@ -262,10 +366,10 @@ flutter build appbundle --release    # Play Store bundle
 
 ### Build Outputs
 
-| Platform       | Location                            |
-| -------------- | ----------------------------------- |
-| iOS            | `build/ios/ipa/`                    |
-| Android APK    | `build/app/outputs/flutter-apk/`    |
+| Platform | Location |
+|---|---|
+| iOS | `build/ios/ipa/` |
+| Android APK | `build/app/outputs/flutter-apk/` |
 | Android Bundle | `build/app/outputs/bundle/release/` |
 
 ---
@@ -320,10 +424,10 @@ You are free to use, modify, and distribute this software under the terms of the
 
 ### Scope
 
-| Component                        | License                             |
-| -------------------------------- | ----------------------------------- |
+| Component | License |
+|---|---|
 | **Mobile app** (this repository) | GPL-3.0 — source code provided here |
-| **Backend services**             | Proprietary — not included          |
+| **Backend services** | Proprietary — not included |
 
 ### Third-Party Notices
 
@@ -346,6 +450,8 @@ For repository maintainers:
 
 - [Architecture Overview](docs/ARCHITECTURE.md)
 - [Backend Boundary](docs/BACKEND.md)
+- [Hardening Plan](docs/HARDENING_PLAN.md)
+- [Signals and Presence Reference](docs/signals-presence-reference.md)
 - [Contributing Guide](CONTRIBUTING.md)
 - [Security Policy](SECURITY.md)
 
