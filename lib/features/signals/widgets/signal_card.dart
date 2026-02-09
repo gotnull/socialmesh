@@ -18,6 +18,7 @@ import '../../nodedex/screens/nodedex_detail_screen.dart';
 import '../../nodedex/widgets/sigil_painter.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
+import '../../../utils/mesh_identity.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/connectivity_providers.dart';
 import '../../../providers/presence_providers.dart';
@@ -157,18 +158,12 @@ class _SignalHeader extends ConsumerWidget {
     if (isMeshSignal) {
       // Always resolve from node info when meshNodeId is present — this
       // mirrors what the receiving device shows (Sigil + node long/short name).
-      final hexId = signal.meshNodeId!.toRadixString(16).toUpperCase();
-      final shortHex = hexId.length >= 4
-          ? hexId.substring(hexId.length - 4)
-          : hexId;
+      // Resolution chain: live node → NodeDex cached name → hex fallback.
+      authorName = resolveMeshNodeName(ref, signal.meshNodeId!);
+      authorShortName = resolveMeshShortName(ref, signal.meshNodeId!);
       final node = nodes[signal.meshNodeId!];
       if (node != null) {
-        authorName = node.longName ?? node.shortName ?? '!$hexId';
-        authorShortName = node.shortName ?? shortHex;
         avatarColor = Color((node.hardwareModel?.hashCode ?? 0) | 0xFF000000);
-      } else {
-        authorName = '!$hexId';
-        authorShortName = shortHex;
       }
     } else if (signal.authorSnapshot != null) {
       authorName = signal.authorSnapshot!.displayName;

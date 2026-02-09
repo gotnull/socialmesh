@@ -16,6 +16,9 @@ import '../../../models/social_activity.dart';
 import '../../../providers/activity_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/signal_providers.dart';
+import '../../../providers/social_providers.dart';
+import '../../../utils/mesh_identity.dart';
+import '../../nodedex/screens/nodedex_detail_screen.dart';
 import '../../nodedex/widgets/sigil_painter.dart';
 import '../../signals/screens/signal_detail_screen.dart';
 
@@ -684,7 +687,7 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
 // TIMELINE ACTIVITY TILE
 // ============================================================================
 
-class _TimelineActivityTile extends StatelessWidget {
+class _TimelineActivityTile extends ConsumerWidget {
   final SocialActivity activity;
   final bool showLine;
   final VoidCallback onTap;
@@ -732,8 +735,43 @@ class _TimelineActivityTile extends StatelessWidget {
     };
   }
 
+  /// Resolve the actor's mesh node number from the best available source.
+  ///
+  /// Resolution chain:
+  /// 1. Baked-in snapshot nodeNum (new activities created after the fix)
+  /// 2. Live profile lookup via publicProfileProvider (old activities)
+  int? _resolveMeshNodeNum(WidgetRef ref) {
+    // 1. From baked-in snapshot (new activities).
+    final snapshotNodeNum = activity.actorSnapshot?.nodeNum;
+    if (snapshotNodeNum != null) return snapshotNodeNum;
+
+    // 2. From live profile lookup (handles old activities without nodeNum).
+    final profileAsync = ref.watch(publicProfileProvider(activity.actorId));
+    return profileAsync.whenOrNull(data: (p) => p?.primaryNodeId);
+  }
+
+  /// Resolve the display name for the actor — device-first, not profile-first.
+  ///
+  /// Resolution chain:
+  /// 1. Live node name (longName/shortName from nodesProvider)
+  /// 2. NodeDex cached name (lastKnownName persisted across sessions)
+  /// 3. Hex ID (e.g. "!81C42D94") if we have nodeNum but no name
+  /// 4. Profile displayName as final fallback (no mesh node at all)
+  String _resolveDisplayName(WidgetRef ref, int? meshNodeNum) {
+    if (meshNodeNum != null) {
+      return resolveMeshNodeName(ref, meshNodeNum);
+    }
+    // No mesh node — fall back to profile display name.
+    return activity.actorSnapshot?.displayName ?? 'Someone';
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Resolve mesh identity for this actor.
+    final meshNodeNum = _resolveMeshNodeNum(ref);
+    final actorName = _resolveDisplayName(ref, meshNodeNum);
+    final sigilNodeNum = meshNodeNum ?? activity.actorId.hashCode;
+
     return Dismissible(
       key: Key(activity.id),
       direction: DismissDirection.endToStart,
@@ -752,6 +790,7 @@ class _TimelineActivityTile extends StatelessWidget {
             children: [
               // Left edge spacing
               const SizedBox(width: 12),
+
               // Timeline indicator with continuous line
               SizedBox(
                 width: 40,
@@ -778,42 +817,49 @@ class _TimelineActivityTile extends StatelessWidget {
 
               const SizedBox(width: 12),
 
-              // Sigil avatar with unread dot
+              // Sigil avatar with unread dot — taps through to NodeDex
               Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: Stack(
-                  children: [
-                    SigilAvatar(
-                      nodeNum:
-                          activity.actorSnapshot?.nodeNum ??
-                          activity.actorId.hashCode,
-                      size: 40,
-                    ),
-                    // Unread indicator
-                    if (!activity.isRead)
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: context.accentColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: context.background,
-                              width: 2,
+                child: GestureDetector(
+                  onTap: meshNodeNum != null
+                      ? () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) =>
+                                  NodeDexDetailScreen(nodeNum: meshNodeNum),
+                            ),
+                          );
+                        }
+                      : null,
+                  child: Stack(
+                    children: [
+                      SigilAvatar(nodeNum: sigilNodeNum, size: 40),
+                      // Unread indicator
+                      if (!activity.isRead)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: context.accentColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: context.background,
+                                width: 2,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 
               const SizedBox(width: 12),
 
-              // Content
+              // Content — device name + action text
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
@@ -824,9 +870,7 @@ class _TimelineActivityTile extends StatelessWidget {
                         text: TextSpan(
                           children: [
                             TextSpan(
-                              text:
-                                  activity.actorSnapshot?.displayName ??
-                                  'Someone',
+                              text: actorName,
                               style: TextStyle(
                                 color: context.textPrimary,
                                 fontWeight: FontWeight.w600,
