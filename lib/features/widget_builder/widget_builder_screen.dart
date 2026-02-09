@@ -800,7 +800,10 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
               final schemaId = schema.id;
               final schemaName = schema.name;
               safeSetState(() {
-                _myWidgets.removeWhere((w) => w.id == schemaId);
+                // Defensive copy — guards against an unmodifiable list
+                // reaching _myWidgets (e.g. via provider snapshot).
+                _myWidgets = List.of(_myWidgets)
+                  ..removeWhere((w) => w.id == schemaId);
               });
 
               // Remove from dashboard if needed (sync, no await)

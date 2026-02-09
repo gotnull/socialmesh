@@ -2,781 +2,658 @@
 //  SocialmeshWidgetsLiveActivity.swift
 //  SocialmeshWidgets
 //
+//  Socialmesh Live Activity — Lock Screen, Dynamic Island, CarPlay
+//  Clean layout, no blur/glow hacks, CarPlay-safe rendering
+//
 
 import ActivityKit
 import WidgetKit
 import SwiftUI
 
+// MARK: - Shared UserDefaults
+
 private var sharedDefault: UserDefaults {
     UserDefaults(suiteName: "group.com.gotnull.socialmesh") ?? UserDefaults.standard
 }
 
-// MARK: - Design System
-struct Design {
+// MARK: - Design Tokens
+
+struct SM {
+    // Brand
     static let accent = Color(red: 233/255, green: 30/255, blue: 140/255)
+
+    // Semantic
     static let green = Color(red: 52/255, green: 199/255, blue: 89/255)
     static let orange = Color(red: 255/255, green: 149/255, blue: 0/255)
     static let red = Color(red: 255/255, green: 59/255, blue: 48/255)
-    static let blue = Color(red: 0/255, green: 122/255, blue: 255/255)
     static let purple = Color(red: 175/255, green: 82/255, blue: 222/255)
     static let cyan = Color(red: 50/255, green: 173/255, blue: 230/255)
-    static let teal = Color(red: 90/255, green: 200/255, blue: 250/255)
-    static let dim = Color(white: 0.5)
-    static let dimmer = Color(white: 0.15)
-    
-    // Background colors for sci-fi aesthetic
-    static let backgroundDark = Color(red: 18/255, green: 18/255, blue: 22/255)
-    static let backgroundCard = Color(red: 28/255, green: 28/255, blue: 35/255)
-    static let glowAccent = accent.opacity(0.15)
-    
-    // Fonts - SF Mono matches JetBrains Mono style
+
+    // Neutral
+    static let textPrimary = Color.white
+    static let textSecondary = Color(white: 0.55)
+    static let textTertiary = Color(white: 0.35)
+    static let fill = Color(white: 0.12)
+    static let separator = Color(white: 0.18)
+
+    // Typography — monospaced for data, rounded for brand, default for labels
     static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
         .system(size: size, weight: weight, design: .monospaced)
     }
-    
-    static func text(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+
+    static func label(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
         .system(size: size, weight: weight, design: .default)
     }
-    
-    static func rounded(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+
+    static func brand(_ size: CGFloat, weight: Font.Weight = .bold) -> Font {
         .system(size: size, weight: weight, design: .rounded)
     }
+
+    // Signal quality
+    static func signalColor(_ rssi: Int) -> Color {
+        if rssi >= -70 { return green }
+        if rssi >= -90 { return orange }
+        return red
+    }
+
+    // SNR quality
+    static func snrColor(_ snr: Int) -> Color {
+        if snr >= 5 { return green }
+        if snr >= 0 { return orange }
+        return red
+    }
+
+    // Battery level
+    static func batteryColor(_ level: Int) -> Color {
+        if level <= 20 { return red }
+        if level <= 40 { return orange }
+        return green
+    }
 }
+
+// MARK: - UserDefaults Key Helper
+
+@available(iOS 16.2, *)
+struct LiveData {
+    let context: ActivityViewContext<LiveActivitiesAppAttributes>
+
+    private func key(_ name: String) -> String {
+        context.attributes.prefixedKey(name)
+    }
+
+    private func string(_ name: String) -> String {
+        sharedDefault.string(forKey: key(name)) ?? ""
+    }
+
+    private func int(_ name: String) -> Int {
+        sharedDefault.integer(forKey: key(name))
+    }
+
+    private func double(_ name: String) -> Double {
+        sharedDefault.double(forKey: key(name))
+    }
+
+    private func bool(_ name: String) -> Bool {
+        sharedDefault.bool(forKey: key(name))
+    }
+
+    // Device
+    var deviceName: String { string("deviceName").isEmpty ? shortName : string("deviceName") }
+    var shortName: String { let s = string("shortName"); return s.isEmpty ? "????" : s }
+    var isConnected: Bool { bool("isConnected") }
+
+    // Radio
+    var battery: Int { int("batteryLevel") }
+    var displayBattery: Int { min(battery, 100) }
+    var isCharging: Bool { battery > 100 }
+    var signal: Int { int("signalStrength") }
+    var snr: Int { int("snr") }
+    var channelUtil: Double { double("channelUtilization") }
+    var airtime: Double { double("airtime") }
+
+    // Network
+    var nodesOnline: Int { int("nodesOnline") }
+    var totalNodes: Int { int("totalNodes") }
+    var tx: Int { int("sentPackets") }
+    var rx: Int { int("receivedPackets") }
+
+    // Environment
+    var voltage: Double { double("voltage") }
+}
+
+// MARK: - Widget Entry Point
 
 @available(iOS 16.2, *)
 struct SocialmeshWidgetsLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: LiveActivitiesAppAttributes.self) { context in
-            LockScreenView(context: context)
+            LockScreenView(data: LiveData(context: context))
                 .activityBackgroundTint(Color.black)
-                .activitySystemActionForegroundColor(Design.accent)
+                .activitySystemActionForegroundColor(SM.accent)
         } dynamicIsland: { context in
-            DynamicIsland {
+            let data = LiveData(context: context)
+            return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading, priority: 1) {
-                    DILeading(context: context)
+                    ExpandedLeading(data: data)
                 }
                 DynamicIslandExpandedRegion(.trailing, priority: 1) {
-                    DITrailing(context: context)
+                    ExpandedTrailing(data: data)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    DIBottom(context: context)
+                    ExpandedBottom(data: data)
                 }
             } compactLeading: {
-                CompactLeading(context: context)
+                CompactLeadingView(data: data)
             } compactTrailing: {
-                CompactTrailing(context: context)
+                CompactTrailingView(data: data)
             } minimal: {
-                MinimalView(context: context)
+                MinimalView(data: data)
             }
         }
     }
 }
 
-// MARK: - Compact Dynamic Island
-
-@available(iOS 16.2, *)
-struct CompactLeading: View {
-    let context: ActivityViewContext<LiveActivitiesAppAttributes>
-    
-    var body: some View {
-        let isConnected = sharedDefault.bool(forKey: context.attributes.prefixedKey("isConnected"))
-        
-        HStack(spacing: 4) {
-            Circle()
-                .fill(isConnected ? Design.green : Design.red)
-                .frame(width: 8, height: 8)
-            Image(systemName: "antenna.radiowaves.left.and.right")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.white)
-        }
-    }
-}
-
-@available(iOS 16.2, *)
-struct CompactTrailing: View {
-    let context: ActivityViewContext<LiveActivitiesAppAttributes>
-    
-    var body: some View {
-        let nodes = sharedDefault.integer(forKey: context.attributes.prefixedKey("nodesOnline"))
-        
-        Text("\(nodes)")
-            .font(Design.mono(16, weight: .bold))
-            .foregroundColor(Design.green)
-    }
-}
-
-@available(iOS 16.2, *)
-struct MinimalView: View {
-    let context: ActivityViewContext<LiveActivitiesAppAttributes>
-    
-    var body: some View {
-        let nodes = sharedDefault.integer(forKey: context.attributes.prefixedKey("nodesOnline"))
-        
-        ZStack {
-            Circle()
-                .strokeBorder(Design.green.opacity(0.3), lineWidth: 2)
-            Text("\(nodes)")
-                .font(Design.mono(14, weight: .heavy))
-                .foregroundColor(Design.green)
-        }
-    }
-}
-
-// MARK: - Expanded Dynamic Island
-
-@available(iOS 16.2, *)
-struct DILeading: View {
-    let context: ActivityViewContext<LiveActivitiesAppAttributes>
-    
-    var shortName: String { sharedDefault.string(forKey: context.attributes.prefixedKey("shortName")) ?? "????" }
-    var deviceName: String { sharedDefault.string(forKey: context.attributes.prefixedKey("deviceName")) ?? "" }
-    var isConnected: Bool { sharedDefault.bool(forKey: context.attributes.prefixedKey("isConnected")) }
-    var signal: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("signalStrength")) }
-    var snr: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("snr")) }
-    
-    var body: some View {
-        HStack(spacing: 8) {
-            // Signal arc (mini version)
-            ZStack {
-                Circle()
-                    .trim(from: 0.25, to: 0.75)
-                    .stroke(Design.dimmer, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                    .frame(width: 36, height: 36)
-                    .rotationEffect(.degrees(90))
-                
-                Circle()
-                    .trim(from: 0.25, to: 0.25 + signalPercent * 0.5)
-                    .stroke(
-                        LinearGradient(colors: [signalColor(signal), signalColor(signal).opacity(0.5)], startPoint: .leading, endPoint: .trailing),
-                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
-                    )
-                    .frame(width: 36, height: 36)
-                    .rotationEffect(.degrees(90))
-                
-                Text("\(signal)")
-                    .font(Design.mono(10, weight: .black))
-                    .foregroundColor(.white)
-            }
-            
-            VStack(alignment: .leading, spacing: 1) {
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(isConnected ? Design.green : Design.red)
-                        .frame(width: 6, height: 6)
-                    Text(shortName)
-                        .font(Design.mono(13, weight: .heavy))
-                        .foregroundColor(.white)
-                }
-                if !deviceName.isEmpty {
-                    Text(deviceName)
-                        .font(Design.text(9, weight: .medium))
-                        .foregroundColor(Design.dim)
-                        .lineLimit(1)
-                }
-            }
-        }
-        .padding(.leading, 2)
-    }
-    
-    var signalPercent: CGFloat {
-        CGFloat(max(0, min(100, (signal + 120) * 100 / 90))) / 100
-    }
-    
-    func signalColor(_ rssi: Int) -> Color {
-        if rssi >= -70 { return Design.green }
-        if rssi >= -90 { return Design.orange }
-        return Design.red
-    }
-}
-
-@available(iOS 16.2, *)
-struct DITrailing: View {
-    let context: ActivityViewContext<LiveActivitiesAppAttributes>
-    
-    var battery: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("batteryLevel")) }
-    var nodes: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("nodesOnline")) }
-    var total: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("totalNodes")) }
-    
-    var isCharging: Bool { battery > 100 }
-    var level: Int { min(battery, 100) }
-    
-    var body: some View {
-        HStack(spacing: 10) {
-            // Node count
-            VStack(spacing: 0) {
-                HStack(spacing: 0) {
-                    Text("\(nodes)")
-                        .font(Design.mono(18, weight: .black))
-                        .foregroundColor(Design.green)
-                    Text("/\(total)")
-                        .font(Design.mono(12, weight: .medium))
-                        .foregroundColor(Design.dim)
-                }
-                Text("NODES")
-                    .font(Design.mono(6, weight: .bold))
-                    .foregroundColor(Design.dim)
-                    .tracking(1)
-            }
-            
-            // Battery
-            VStack(alignment: .trailing, spacing: 2) {
-                HStack(spacing: 3) {
-                    if isCharging {
-                        Image(systemName: "bolt.fill")
-                            .font(.system(size: 9))
-                            .foregroundColor(Design.green)
-                    }
-                    
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(Design.dimmer)
-                            .frame(width: 22, height: 10)
-                        
-                        RoundedRectangle(cornerRadius: 1.5)
-                            .fill(LinearGradient(colors: [batteryColor(level), batteryColor(level).opacity(0.6)], startPoint: .leading, endPoint: .trailing))
-                            .frame(width: max(2, CGFloat(level) / 100 * 18), height: 6)
-                            .padding(.leading, 2)
-                    }
-                    
-                    Rectangle()
-                        .fill(batteryColor(level).opacity(0.5))
-                        .frame(width: 1.5, height: 4)
-                        .cornerRadius(1)
-                }
-                
-                Text("\(level)%")
-                    .font(Design.mono(11, weight: .bold))
-                    .foregroundColor(batteryColor(level))
-            }
-        }
-        .padding(.trailing, 2)
-    }
-    
-    func batteryColor(_ level: Int) -> Color {
-        if level <= 20 { return Design.red }
-        if level <= 40 { return Design.orange }
-        return Design.green
-    }
-}
-
-@available(iOS 16.2, *)
-struct DIBottom: View {
-    let context: ActivityViewContext<LiveActivitiesAppAttributes>
-    
-    var channel: Double { sharedDefault.double(forKey: context.attributes.prefixedKey("channelUtilization")) }
-    var airtime: Double { sharedDefault.double(forKey: context.attributes.prefixedKey("airtime")) }
-    var snr: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("snr")) }
-    var tx: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("sentPackets")) }
-    var rx: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("receivedPackets")) }
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            // Utilization bars - styled like lock screen
-            HStack(spacing: 8) {
-                DIUtilBar(value: channel, label: "CH", color: Design.purple)
-                DIUtilBar(value: airtime, label: "AIR", color: Design.cyan)
-            }
-            
-            // Separator
-            Rectangle()
-                .fill(Design.dimmer)
-                .frame(width: 1, height: 20)
-            
-            // SNR
-            VStack(spacing: 0) {
-                Text("\(snr >= 0 ? "+" : "")\(snr)")
-                    .font(Design.mono(14, weight: .bold))
-                    .foregroundColor(snrColor(snr))
-                Text("SNR")
-                    .font(Design.mono(7, weight: .bold))
-                    .foregroundColor(Design.dim)
-            }
-            
-            // Separator
-            Rectangle()
-                .fill(Design.dimmer)
-                .frame(width: 1, height: 20)
-            
-            // TX/RX
-            HStack(spacing: 6) {
-                HStack(spacing: 2) {
-                    Image(systemName: "arrow.up")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundColor(Design.accent)
-                    Text("\(tx)")
-                        .font(Design.mono(10, weight: .bold))
-                        .foregroundColor(.white)
-                }
-                HStack(spacing: 2) {
-                    Image(systemName: "arrow.down")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundColor(Design.green)
-                    Text("\(rx)")
-                        .font(Design.mono(10, weight: .bold))
-                        .foregroundColor(.white)
-                }
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-    }
-    
-    func snrColor(_ snr: Int) -> Color {
-        if snr >= 5 { return Design.green }
-        if snr >= 0 { return Design.orange }
-        return Design.red
-    }
-}
-
-// DI-specific utilization bar - horizontal layout
-struct DIUtilBar: View {
-    let value: Double
-    let label: String
-    let color: Color
-    
-    var body: some View {
-        HStack(spacing: 4) {
-            Text(label)
-                .font(Design.mono(9, weight: .bold))
-                .foregroundColor(color)
-            
-            ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(Design.dimmer)
-                    .frame(width: 36, height: 5)
-                
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(LinearGradient(colors: [color, color.opacity(0.4)], startPoint: .leading, endPoint: .trailing))
-                    .frame(width: max(2, CGFloat(min(value, 100) / 100) * 36), height: 5)
-            }
-            
-            Text(String(format: "%.0f", value))
-                .font(Design.mono(9, weight: .bold))
-                .foregroundColor(.white)
-        }
-    }
-}
-
-// MARK: - Lock Screen View
+// MARK: - Lock Screen
 
 @available(iOS 16.2, *)
 struct LockScreenView: View {
-    let context: ActivityViewContext<LiveActivitiesAppAttributes>
-    
-    // Device info
-    var shortName: String { sharedDefault.string(forKey: context.attributes.prefixedKey("shortName")) ?? "????" }
-    var deviceName: String { sharedDefault.string(forKey: context.attributes.prefixedKey("deviceName")) ?? "Meshtastic" }
-    var isConnected: Bool { sharedDefault.bool(forKey: context.attributes.prefixedKey("isConnected")) }
-    var role: String { sharedDefault.string(forKey: context.attributes.prefixedKey("role")) ?? "" }
-    var firmware: String { sharedDefault.string(forKey: context.attributes.prefixedKey("firmwareVersion")) ?? "" }
-    var hardware: String { sharedDefault.string(forKey: context.attributes.prefixedKey("hardwareModel")) ?? "" }
-    
-    // Radio stats
-    var battery: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("batteryLevel")) }
-    var signal: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("signalStrength")) }
-    var snr: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("snr")) }
-    var channel: Double { sharedDefault.double(forKey: context.attributes.prefixedKey("channelUtilization")) }
-    var airtime: Double { sharedDefault.double(forKey: context.attributes.prefixedKey("airtime")) }
-    
-    // Network stats
-    var nodes: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("nodesOnline")) }
-    var totalNodes: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("totalNodes")) }
-    var tx: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("sentPackets")) }
-    var rx: Int { sharedDefault.integer(forKey: context.attributes.prefixedKey("receivedPackets")) }
-    
-    // Environment
-    var voltage: Double { sharedDefault.double(forKey: context.attributes.prefixedKey("voltage")) }
-    var temperature: Double { sharedDefault.double(forKey: context.attributes.prefixedKey("temperature")) }
-    var humidity: Double { sharedDefault.double(forKey: context.attributes.prefixedKey("humidity")) }
-    
-    // Nearest node
-    var nearestDistance: Double { sharedDefault.double(forKey: context.attributes.prefixedKey("nearestNodeDistance")) }
-    var nearestName: String { sharedDefault.string(forKey: context.attributes.prefixedKey("nearestNodeName")) ?? "" }
-    
-    var isCharging: Bool { battery > 100 }
-    var displayBattery: Int { min(battery, 100) }
-    
+    let data: LiveData
+
     var body: some View {
-        ZStack {
-            // Sci-fi gradient background
-            RoundedRectangle(cornerRadius: 20)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Design.backgroundCard,
-                            Design.backgroundDark,
-                            Design.backgroundDark.opacity(0.95)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-            
-            // Subtle glow border
-            RoundedRectangle(cornerRadius: 20)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            Design.accent.opacity(0.4),
-                            Design.accent.opacity(0.1),
-                            Design.cyan.opacity(0.2),
-                            Design.accent.opacity(0.3)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
-                )
-            
-            // Inner content
-            VStack(spacing: 0) {
-                // Top row - Device ID + Battery
-                HStack {
-                    // Status + Name
-                    HStack(spacing: 6) {
-                        ZStack {
-                            Circle()
-                                .fill(isConnected ? Design.green.opacity(0.2) : Design.red.opacity(0.2))
-                                .frame(width: 18, height: 18)
-                            Circle()
-                                .fill(isConnected ? Design.green : Design.red)
-                                .frame(width: 8, height: 8)
-                                .shadow(color: isConnected ? Design.green.opacity(0.6) : Design.red.opacity(0.6), radius: 4)
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 0) {
-                            HStack(spacing: 4) {
-                                Text("MESH")
-                                    .font(Design.mono(11, weight: .heavy))
-                                    .foregroundColor(.white)
-                                    .tracking(1)
-                            }
-                            
-                            Text(deviceName.isEmpty ? shortName : deviceName)
-                                .font(Design.text(11, weight: .medium))
-                                .foregroundColor(Design.dim)
-                                .lineLimit(1)
-                        }
-                    }
-                    
-                    Spacer()
-                    
-                    // Battery with glow
-                    HStack(spacing: 4) {
-                        if isCharging {
-                            Image(systemName: "bolt.fill")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(Design.green)
-                                .shadow(color: Design.green.opacity(0.6), radius: 3)
-                        }
-                        
-                        // Battery bar
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(Design.dimmer)
-                                .frame(width: 28, height: 12)
-                            
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(batteryGradient)
-                                .frame(width: max(3, CGFloat(displayBattery) / 100 * 24), height: 8)
-                                .padding(.leading, 2)
-                                .shadow(color: batteryColor.opacity(0.4), radius: 2)
-                            
-                            RoundedRectangle(cornerRadius: 3)
-                                .strokeBorder(batteryColor.opacity(0.3), lineWidth: 0.5)
-                                .frame(width: 28, height: 12)
-                        }
-                        
-                        Rectangle()
-                            .fill(batteryColor.opacity(0.5))
-                            .frame(width: 2, height: 5)
-                            .cornerRadius(1)
-                        
-                        Text("\(displayBattery)%")
-                            .font(Design.mono(12, weight: .bold))
-                            .foregroundColor(batteryColor)
-                    }
-                }
-                .padding(.horizontal, 14)
+        VStack(spacing: 0) {
+            // Header — brand + device + battery
+            headerRow
+                .padding(.horizontal, 16)
+                .padding(.top, 14)
+                .padding(.bottom, 10)
+
+            // Accent separator
+            Rectangle()
+                .fill(SM.accent.opacity(0.5))
+                .frame(height: 1)
+                .padding(.horizontal, 20)
+
+            // Stats — signal, nodes, packets
+            statsRow
+                .padding(.horizontal, 12)
                 .padding(.top, 12)
                 .padding(.bottom, 8)
-                
-                // Gradient separator with glow
-                ZStack {
-                    Rectangle()
-                        .fill(LinearGradient(colors: [Design.accent.opacity(0), Design.accent.opacity(0.5), Design.accent.opacity(0)], startPoint: .leading, endPoint: .trailing))
-                        .frame(height: 1)
-                        .blur(radius: 1)
-                    Rectangle()
-                        .fill(LinearGradient(colors: [Design.accent.opacity(0), Design.accent.opacity(0.8), Design.accent.opacity(0)], startPoint: .leading, endPoint: .trailing))
-                        .frame(height: 0.5)
-                }
+
+            // Footer — utilization bars
+            footerRow
                 .padding(.horizontal, 16)
-            
-                // Main content grid
-                HStack(spacing: 10) {
-                    // Left column - Signal meter with glow
-                    VStack(spacing: 4) {
-                        // Signal meter
-                        ZStack {
-                            // Glow effect
-                            Circle()
-                                .fill(signalColor.opacity(0.1))
-                                .frame(width: 60, height: 60)
-                                .blur(radius: 8)
-                            
-                            // Background arc
-                            Circle()
-                                .trim(from: 0.25, to: 0.75)
-                                .stroke(Design.dimmer, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                                .frame(width: 48, height: 48)
-                                .rotationEffect(.degrees(90))
-                            
-                            // Signal arc
-                            Circle()
-                                .trim(from: 0.25, to: 0.25 + signalPercent * 0.5)
-                                .stroke(
-                                    LinearGradient(colors: [signalColor, signalColor.opacity(0.4)], startPoint: .leading, endPoint: .trailing),
-                                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
-                                )
-                                .frame(width: 48, height: 48)
-                                .rotationEffect(.degrees(90))
-                                .shadow(color: signalColor.opacity(0.5), radius: 3)
-                            
-                            VStack(spacing: -2) {
-                                Text("\(signal)")
-                                    .font(Design.mono(14, weight: .black))
-                                    .foregroundColor(.white)
-                                Text("dBm")
-                                    .font(Design.mono(7, weight: .bold))
-                                    .foregroundColor(Design.dim)
-                            }
-                        }
-                        
-                        // SNR badge
-                        HStack(spacing: 2) {
-                            Text("SNR")
-                                .font(Design.mono(7, weight: .bold))
-                                .foregroundColor(Design.dim)
-                            Text("\(snr >= 0 ? "+" : "")\(snr)")
-                                .font(Design.mono(10, weight: .bold))
-                                .foregroundColor(snrColor)
-                        }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Design.dimmer)
-                        .cornerRadius(4)
-                    }
-                    .frame(width: 62)
-                    
-                    // Center column - Mesh + Utilization
-                    VStack(spacing: 6) {
-                        // Node count with glow
-                        ZStack {
-                            // Glow behind node count
-                            Text("\(nodes)")
-                                .font(Design.mono(32, weight: .black))
-                                .foregroundColor(Design.green)
-                                .blur(radius: 8)
-                                .opacity(0.4)
-                            
-                            HStack(alignment: .lastTextBaseline, spacing: 0) {
-                                Text("\(nodes)")
-                                    .font(Design.mono(32, weight: .black))
-                                    .foregroundColor(Design.green)
-                                Text("/\(totalNodes)")
-                                    .font(Design.mono(14, weight: .medium))
-                                    .foregroundColor(Design.dim)
-                            }
-                        }
-                        
-                        Text("NODES")
-                            .font(Design.mono(8, weight: .bold))
-                            .foregroundColor(Design.dim)
-                            .tracking(2)
-                        
-                        // Utilization bars - glass card style
-                        HStack(spacing: 8) {
-                            UtilBar(value: channel, label: "CH", color: Design.purple)
-                            UtilBar(value: airtime, label: "AIR", color: Design.cyan)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    
-                    // Right column - Stats grid
-                    VStack(spacing: 4) {
-                        // TX/RX
-                        HStack(spacing: 4) {
-                            StatPill(icon: "arrow.up", value: "\(tx)", color: Design.accent)
-                            StatPill(icon: "arrow.down", value: "\(rx)", color: Design.green)
-                        }
-                        
-                        // Voltage
-                        if voltage > 0 {
-                            StatPill(icon: "bolt.fill", value: String(format: "%.1fV", voltage), color: Design.teal)
-                        }
-                    }
-                    .frame(width: 88)
+                .padding(.bottom, 14)
+        }
+    }
+
+    // MARK: Header
+
+    private var headerRow: some View {
+        HStack(alignment: .center) {
+            // Connection indicator + branding
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(data.isConnected ? SM.green : SM.red)
+                    .frame(width: 10, height: 10)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Socialmesh")
+                        .font(SM.brand(13, weight: .bold))
+                        .foregroundColor(SM.textPrimary)
+
+                    Text(data.deviceName)
+                        .font(SM.label(11, weight: .medium))
+                        .foregroundColor(SM.textSecondary)
+                        .lineLimit(1)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
+            }
+
+            Spacer(minLength: 8)
+
+            // Battery
+            batteryView
+        }
+    }
+
+    private var batteryView: some View {
+        HStack(spacing: 5) {
+            if data.isCharging {
+                Image(systemName: "bolt.fill")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(SM.green)
+            }
+
+            // Battery bar
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 2.5)
+                    .fill(SM.fill)
+                    .frame(width: 26, height: 11)
+
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(SM.batteryColor(data.displayBattery))
+                    .frame(
+                        width: max(3, CGFloat(data.displayBattery) / 100.0 * 22),
+                        height: 7
+                    )
+                    .padding(.leading, 2)
+            }
+
+            // Terminal nub
+            RoundedRectangle(cornerRadius: 0.5)
+                .fill(SM.batteryColor(data.displayBattery).opacity(0.6))
+                .frame(width: 1.5, height: 5)
+
+            Text("\(data.displayBattery)%")
+                .font(SM.mono(12, weight: .bold))
+                .foregroundColor(SM.batteryColor(data.displayBattery))
+                .frame(minWidth: 32, alignment: .trailing)
+        }
+    }
+
+    // MARK: Stats Row
+
+    private var statsRow: some View {
+        HStack(spacing: 0) {
+            // Signal
+            signalCell
+                .frame(maxWidth: .infinity)
+
+            verticalDivider
+
+            // Nodes
+            nodesCell
+                .frame(maxWidth: .infinity)
+
+            verticalDivider
+
+            // Packets
+            packetsCell
+                .frame(maxWidth: .infinity)
+        }
+    }
+
+    private var signalCell: some View {
+        VStack(spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                SignalBars(rssi: data.signal)
+                Text("\(data.signal)")
+                    .font(SM.mono(18, weight: .heavy))
+                    .foregroundColor(SM.signalColor(data.signal))
+            }
+
+            Text("dBm")
+                .font(SM.mono(8, weight: .semibold))
+                .foregroundColor(SM.textTertiary)
+                .textCase(.uppercase)
+
+            snrBadge
+        }
+    }
+
+    private var snrBadge: some View {
+        HStack(spacing: 2) {
+            Text("SNR")
+                .font(SM.mono(7, weight: .bold))
+                .foregroundColor(SM.textTertiary)
+            Text("\(data.snr >= 0 ? "+" : "")\(data.snr)")
+                .font(SM.mono(9, weight: .bold))
+                .foregroundColor(SM.snrColor(data.snr))
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(SM.fill)
+        )
+    }
+
+    private var nodesCell: some View {
+        VStack(spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 1) {
+                Text("\(data.nodesOnline)")
+                    .font(SM.mono(28, weight: .black))
+                    .foregroundColor(SM.green)
+                Text("/\(data.totalNodes)")
+                    .font(SM.mono(13, weight: .medium))
+                    .foregroundColor(SM.textTertiary)
+            }
+
+            Text("NODES")
+                .font(SM.mono(8, weight: .bold))
+                .foregroundColor(SM.textTertiary)
+                .tracking(1.5)
+        }
+    }
+
+    private var packetsCell: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(SM.accent)
+                Text("\(data.tx)")
+                    .font(SM.mono(14, weight: .bold))
+                    .foregroundColor(SM.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.down")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(SM.green)
+                Text("\(data.rx)")
+                    .font(SM.mono(14, weight: .bold))
+                    .foregroundColor(SM.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
         }
     }
-    
-    // Computed properties
-    var signalPercent: CGFloat {
-        CGFloat(max(0, min(100, (signal + 120) * 100 / 90))) / 100
+
+    private var verticalDivider: some View {
+        Rectangle()
+            .fill(SM.separator)
+            .frame(width: 1, height: 40)
     }
-    
-    var signalColor: Color {
-        if signal >= -70 { return Design.green }
-        if signal >= -90 { return Design.orange }
-        return Design.red
-    }
-    
-    var snrColor: Color {
-        if snr >= 5 { return Design.green }
-        if snr >= 0 { return Design.orange }
-        return Design.red
-    }
-    
-    var batteryColor: Color {
-        if displayBattery <= 20 { return Design.red }
-        if displayBattery <= 40 { return Design.orange }
-        return Design.green
-    }
-    
-    var batteryGradient: LinearGradient {
-        LinearGradient(colors: [batteryColor, batteryColor.opacity(0.6)], startPoint: .leading, endPoint: .trailing)
-    }
-    
-    func formatDistance(_ meters: Double) -> String {
-        if meters >= 1000 {
-            return String(format: "%.1fkm", meters / 1000)
+
+    // MARK: Footer — Utilization
+
+    private var footerRow: some View {
+        HStack(spacing: 12) {
+            UtilizationBar(label: "CH", value: data.channelUtil, color: SM.purple)
+            UtilizationBar(label: "AIR", value: data.airtime, color: SM.cyan)
+
+            if data.voltage > 0 {
+                Spacer(minLength: 4)
+                voltagePill
+            }
         }
-        return String(format: "%.0fm", meters)
+    }
+
+    private var voltagePill: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "bolt.fill")
+                .font(.system(size: 9, weight: .bold))
+                .foregroundColor(SM.cyan)
+            Text(String(format: "%.1fV", data.voltage))
+                .font(SM.mono(10, weight: .bold))
+                .foregroundColor(SM.textPrimary)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(SM.fill)
+        )
     }
 }
 
-// MARK: - Compact Components
+// MARK: - Utilization Bar (shared between Lock Screen and DI)
 
-struct MiniSignalBars: View {
+struct UtilizationBar: View {
+    let label: String
+    let value: Double
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Text(label)
+                .font(SM.mono(9, weight: .bold))
+                .foregroundColor(color)
+                .frame(width: 24, alignment: .trailing)
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(SM.fill)
+
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(color)
+                        .frame(width: max(2, geo.size.width * CGFloat(min(value, 100) / 100)))
+                }
+            }
+            .frame(height: 6)
+
+            Text(String(format: "%.0f%%", value))
+                .font(SM.mono(9, weight: .bold))
+                .foregroundColor(SM.textPrimary)
+                .frame(width: 30, alignment: .leading)
+        }
+    }
+}
+
+// MARK: - Signal Bars
+
+struct SignalBars: View {
     let rssi: Int
-    
-    var filledBars: Int {
+
+    private var filled: Int {
         if rssi >= -60 { return 4 }
         if rssi >= -75 { return 3 }
         if rssi >= -90 { return 2 }
         if rssi >= -100 { return 1 }
         return 0
     }
-    
-    var color: Color {
-        if rssi >= -70 { return Design.green }
-        if rssi >= -90 { return Design.orange }
-        return Design.red
-    }
-    
+
+    private var color: Color { SM.signalColor(rssi) }
+
     var body: some View {
-        HStack(spacing: 1) {
+        HStack(alignment: .bottom, spacing: 1.5) {
             ForEach(0..<4, id: \.self) { i in
-                RoundedRectangle(cornerRadius: 0.5)
-                    .fill(i < filledBars ? color : Design.dimmer)
-                    .frame(width: 3, height: CGFloat(5 + i * 2))
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(i < filled ? color : SM.fill)
+                    .frame(width: 3, height: CGFloat(6 + i * 3))
             }
         }
     }
 }
 
-struct MiniBar: View {
-    let value: Double
-    let max: Double
+// MARK: - Dynamic Island: Compact
+
+@available(iOS 16.2, *)
+struct CompactLeadingView: View {
+    let data: LiveData
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(data.isConnected ? SM.green : SM.red)
+                .frame(width: 8, height: 8)
+            Image(systemName: "antenna.radiowaves.left.and.right")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(SM.textPrimary)
+        }
+    }
+}
+
+@available(iOS 16.2, *)
+struct CompactTrailingView: View {
+    let data: LiveData
+
+    var body: some View {
+        Text("\(data.nodesOnline)")
+            .font(SM.mono(15, weight: .bold))
+            .foregroundColor(SM.green)
+    }
+}
+
+// MARK: - Dynamic Island: Minimal
+
+@available(iOS 16.2, *)
+struct MinimalView: View {
+    let data: LiveData
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .strokeBorder(
+                    data.isConnected ? SM.green.opacity(0.4) : SM.red.opacity(0.4),
+                    lineWidth: 1.5
+                )
+            Text("\(data.nodesOnline)")
+                .font(SM.mono(13, weight: .heavy))
+                .foregroundColor(data.isConnected ? SM.green : SM.red)
+        }
+    }
+}
+
+// MARK: - Dynamic Island: Expanded
+
+@available(iOS 16.2, *)
+struct ExpandedLeading: View {
+    let data: LiveData
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(data.isConnected ? SM.green : SM.red)
+                .frame(width: 8, height: 8)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Socialmesh")
+                    .font(SM.brand(12, weight: .bold))
+                    .foregroundColor(SM.textPrimary)
+
+                Text(data.deviceName)
+                    .font(SM.label(10, weight: .medium))
+                    .foregroundColor(SM.textSecondary)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.leading, 2)
+    }
+}
+
+@available(iOS 16.2, *)
+struct ExpandedTrailing: View {
+    let data: LiveData
+
+    var body: some View {
+        HStack(spacing: 10) {
+            // Nodes
+            VStack(spacing: 0) {
+                HStack(alignment: .firstTextBaseline, spacing: 1) {
+                    Text("\(data.nodesOnline)")
+                        .font(SM.mono(17, weight: .black))
+                        .foregroundColor(SM.green)
+                    Text("/\(data.totalNodes)")
+                        .font(SM.mono(11, weight: .medium))
+                        .foregroundColor(SM.textTertiary)
+                }
+                Text("NODES")
+                    .font(SM.mono(6, weight: .bold))
+                    .foregroundColor(SM.textTertiary)
+                    .tracking(1)
+            }
+
+            // Battery
+            VStack(alignment: .trailing, spacing: 2) {
+                HStack(spacing: 3) {
+                    if data.isCharging {
+                        Image(systemName: "bolt.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(SM.green)
+                    }
+
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(SM.fill)
+                            .frame(width: 22, height: 10)
+
+                        RoundedRectangle(cornerRadius: 1.5)
+                            .fill(SM.batteryColor(data.displayBattery))
+                            .frame(
+                                width: max(2, CGFloat(data.displayBattery) / 100.0 * 18),
+                                height: 6
+                            )
+                            .padding(.leading, 2)
+                    }
+
+                    RoundedRectangle(cornerRadius: 0.5)
+                        .fill(SM.batteryColor(data.displayBattery).opacity(0.5))
+                        .frame(width: 1.5, height: 4)
+                }
+
+                Text("\(data.displayBattery)%")
+                    .font(SM.mono(11, weight: .bold))
+                    .foregroundColor(SM.batteryColor(data.displayBattery))
+            }
+        }
+        .padding(.trailing, 2)
+    }
+}
+
+@available(iOS 16.2, *)
+struct ExpandedBottom: View {
+    let data: LiveData
+
+    var body: some View {
+        HStack(spacing: 0) {
+            // Signal
+            HStack(spacing: 3) {
+                SignalBars(rssi: data.signal)
+                Text("\(data.signal)")
+                    .font(SM.mono(12, weight: .bold))
+                    .foregroundColor(SM.signalColor(data.signal))
+                Text("dBm")
+                    .font(SM.mono(7, weight: .semibold))
+                    .foregroundColor(SM.textTertiary)
+            }
+
+            Spacer(minLength: 4)
+
+            // SNR
+            HStack(spacing: 2) {
+                Text("SNR")
+                    .font(SM.mono(8, weight: .bold))
+                    .foregroundColor(SM.textTertiary)
+                Text("\(data.snr >= 0 ? "+" : "")\(data.snr)")
+                    .font(SM.mono(12, weight: .bold))
+                    .foregroundColor(SM.snrColor(data.snr))
+            }
+
+            Spacer(minLength: 4)
+
+            // Channel + Airtime
+            HStack(spacing: 8) {
+                DIUtilPill(label: "CH", value: data.channelUtil, color: SM.purple)
+                DIUtilPill(label: "AIR", value: data.airtime, color: SM.cyan)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+    }
+}
+
+// MARK: - DI Utilization Pill
+
+struct DIUtilPill: View {
     let label: String
+    let value: Double
     let color: Color
-    
+
     var body: some View {
         HStack(spacing: 3) {
             Text(label)
-                .font(Design.mono(9, weight: .semibold))
-                .foregroundColor(Design.dim)
-            
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Design.dimmer)
-                    
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(color)
-                        .frame(width: geo.size.width * CGFloat(min(value, max) / max))
-                }
-            }
-            .frame(width: 40, height: 6)
-            
-            Text(String(format: "%.0f", value))
-                .font(Design.mono(10, weight: .bold))
-                .foregroundColor(.white)
-                .frame(width: 20, alignment: .trailing)
-        }
-    }
-}
-
-struct UtilBar: View {
-    let value: Double
-    let label: String
-    let color: Color
-    
-    var body: some View {
-        VStack(spacing: 3) {
-            // Progress bar with glow
-            ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Design.dimmer)
-                    .frame(height: 6)
-                
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(LinearGradient(colors: [color, color.opacity(0.4)], startPoint: .leading, endPoint: .trailing))
-                    .frame(width: max(4, CGFloat(min(value, 100) / 100) * 44), height: 6)
-                    .shadow(color: color.opacity(0.5), radius: 2)
-            }
-            .frame(width: 44)
-            
-            HStack(spacing: 2) {
-                Text(label)
-                    .font(Design.mono(7, weight: .bold))
-                    .foregroundColor(Design.dim)
-                Text(String(format: "%.0f%%", value))
-                    .font(Design.mono(8, weight: .bold))
-                    .foregroundColor(color)
-            }
-        }
-    }
-}
-
-struct StatPill: View {
-    let icon: String
-    let value: String
-    let color: Color
-    
-    var body: some View {
-        HStack(spacing: 3) {
-            Image(systemName: icon)
-                .font(.system(size: 9, weight: .bold))
+                .font(SM.mono(8, weight: .bold))
                 .foregroundColor(color)
-                .shadow(color: color.opacity(0.5), radius: 2)
-            Text(value)
-                .font(Design.mono(10, weight: .bold))
-                .foregroundColor(.white)
+
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(SM.fill)
+                    .frame(width: 28, height: 4)
+
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(color)
+                    .frame(
+                        width: max(2, CGFloat(min(value, 100) / 100) * 28),
+                        height: 4
+                    )
+            }
+
+            Text(String(format: "%.0f", value))
+                .font(SM.mono(8, weight: .bold))
+                .foregroundColor(SM.textPrimary)
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 4)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(Design.dimmer)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .strokeBorder(color.opacity(0.2), lineWidth: 0.5)
-                )
-        )
     }
 }

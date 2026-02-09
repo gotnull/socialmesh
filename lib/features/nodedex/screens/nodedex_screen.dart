@@ -306,28 +306,37 @@ class _NodeDexStatsCard extends StatelessWidget {
               ),
             ),
 
-            // Compact stats
-            _CompactStat(
-              icon: Icons.hexagon_outlined,
-              value: stats.totalNodes.toString(),
-            ),
-            const SizedBox(width: 12),
-            _CompactStat(
-              icon: Icons.public_outlined,
-              value: stats.totalRegions.toString(),
-            ),
-            const SizedBox(width: 12),
-            _CompactStat(
-              icon: Icons.repeat,
-              value: _compactNumber(stats.totalEncounters),
-            ),
-            if (stats.longestDistance != null) ...[
-              const SizedBox(width: 12),
-              _CompactStat(
-                icon: Icons.straighten,
-                value: _formatDistance(stats.longestDistance),
+            // Compact stats — wrapped in Flexible to prevent overflow
+            // on narrow screens / large text scale
+            Flexible(
+              flex: 0,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _CompactStat(
+                    icon: Icons.hexagon_outlined,
+                    value: stats.totalNodes.toString(),
+                  ),
+                  const SizedBox(width: 8),
+                  _CompactStat(
+                    icon: Icons.public_outlined,
+                    value: stats.totalRegions.toString(),
+                  ),
+                  const SizedBox(width: 8),
+                  _CompactStat(
+                    icon: Icons.repeat,
+                    value: _compactNumber(stats.totalEncounters),
+                  ),
+                  if (stats.longestDistance != null) ...[
+                    const SizedBox(width: 8),
+                    _CompactStat(
+                      icon: Icons.straighten,
+                      value: _formatDistance(stats.longestDistance),
+                    ),
+                  ],
+                ],
               ),
-            ],
+            ),
           ],
         ),
       ),
@@ -1075,25 +1084,45 @@ class _NodeDexListTile extends ConsumerWidget {
                     // Metadata row: trait + stats + patina indicator
                     Row(
                       children: [
-                        if (disclosure.showPrimaryTrait)
-                          TraitBadge(
-                            trait: traitResult.primary,
-                            size: TraitBadgeSize.compact,
+                        // Left side badges — flexible to prevent overflow
+                        Flexible(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (disclosure.showPrimaryTrait)
+                                Flexible(
+                                  flex: 0,
+                                  child: TraitBadge(
+                                    trait: traitResult.primary,
+                                    size: TraitBadgeSize.compact,
+                                  ),
+                                ),
+                              if (entry.socialTag != null) ...[
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  flex: 0,
+                                  child: SocialTagBadge(
+                                    tag: entry.socialTag!,
+                                    compact: true,
+                                  ),
+                                ),
+                              ],
+                              if (disclosure.showPatinaStamp) ...[
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  flex: 0,
+                                  child: PatinaIndicator(
+                                    result: patinaResult,
+                                    accentColor:
+                                        entry.sigil?.primaryColor ??
+                                        context.accentColor,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
-                        if (entry.socialTag != null) ...[
-                          const SizedBox(width: 6),
-                          SocialTagBadge(tag: entry.socialTag!, compact: true),
-                        ],
-                        if (disclosure.showPatinaStamp) ...[
-                          const SizedBox(width: 6),
-                          PatinaIndicator(
-                            result: patinaResult,
-                            accentColor:
-                                entry.sigil?.primaryColor ??
-                                context.accentColor,
-                          ),
-                        ],
-                        const Spacer(),
+                        ),
+                        const SizedBox(width: 6),
                         // Encounter count
                         _MetricChip(
                           icon: Icons.repeat,
