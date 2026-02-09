@@ -104,8 +104,12 @@ class EdgeDetailSheet extends ConsumerWidget {
 
     final fromSigil = fromEntry?.sigil ?? SigilGenerator.generate(fromNodeNum);
     final toSigil = toEntry?.sigil ?? SigilGenerator.generate(toNodeNum);
-    final fromName = fromNode?.displayName ?? _hexName(fromNodeNum);
-    final toName = toNode?.displayName ?? _hexName(toNodeNum);
+    final fromName =
+        fromNode?.displayName ??
+        fromEntry?.lastKnownName ??
+        _hexName(fromNodeNum);
+    final toName =
+        toNode?.displayName ?? toEntry?.lastKnownName ?? _hexName(toNodeNum);
 
     final blendedColor =
         Color.lerp(fromSigil.primaryColor, toSigil.primaryColor, 0.5) ??

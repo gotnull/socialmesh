@@ -1395,7 +1395,7 @@ void main() {
               connectionSessionId: 1,
               reason: DisconnectReason.connectionFailed,
               errorMessage:
-                  'Connection failed - please try again and enter the PIN when prompted',
+                  'Insufficient authentication for BLE characteristic',
             ),
           );
       container
@@ -1479,75 +1479,88 @@ void main() {
         AutoReconnectState.connecting,
       );
 
-      // Verify a PIN-like error string would be detected
+      // Verify auth detection with the tightened patterns.
+      // Only actual BLE auth/encryption errors should match — NOT generic
+      // config timeouts (which can happen with slow BLE after app restart).
+      bool isAuthError(String msg) {
+        final lower = msg.toLowerCase();
+        return lower.contains('authentication') ||
+            lower.contains('encryption') ||
+            lower.contains('insufficient') ||
+            lower.contains('pin was cancelled') ||
+            lower.contains('enter the pin');
+      }
+
       const pinError =
           'Connection failed - please try again and enter the PIN when prompted';
-      const timeoutError = 'Timed out waiting for device response';
-
-      final isPinAuth =
-          pinError.toLowerCase().contains('pin') ||
-          pinError.toLowerCase().contains('authentication') ||
-          pinError.toLowerCase().contains(
-            'connection failed - please try again',
-          );
-      final isTimeoutAuth =
-          timeoutError.toLowerCase().contains('pin') ||
-          timeoutError.toLowerCase().contains('authentication') ||
-          timeoutError.toLowerCase().contains(
-            'connection failed - please try again',
-          );
+      const timeoutError =
+          'Configuration timed out waiting for device response';
+      const transportError = 'Transport disconnected during configuration';
 
       expect(
-        isPinAuth,
+        isAuthError(pinError),
         isTrue,
         reason: 'PIN error should be detected as auth error',
       );
       expect(
-        isTimeoutAuth,
+        isAuthError(timeoutError),
         isFalse,
-        reason: 'Timeout should NOT be detected as auth error',
+        reason: 'Generic config timeout should NOT be detected as auth error',
+      );
+      expect(
+        isAuthError(transportError),
+        isFalse,
+        reason:
+            'Transport disconnect during config should NOT be detected as auth error',
       );
     });
 
     test('auth error detection covers key error message patterns', () {
       // Verify all known auth error message patterns are detected
+      // using the TIGHTENED detection (no loose 'pin' or
+      // 'connection failed - please try again' matching).
+
+      bool isAuthError(String msg) {
+        final lower = msg.toLowerCase();
+        return lower.contains('authentication') ||
+            lower.contains('encryption') ||
+            lower.contains('insufficient') ||
+            lower.contains('pin was cancelled') ||
+            lower.contains('enter the pin');
+      }
 
       final authPatterns = [
         'Connection failed - please try again and enter the PIN when prompted',
-        'PIN entry was cancelled by the user',
+        'PIN was cancelled by the user',
         'Authentication failed during BLE handshake',
-        'Device requires PIN pairing',
+        'Insufficient authentication for BLE characteristic',
+        'BLE encryption required but not available',
       ];
 
       final nonAuthPatterns = [
+        'Configuration timed out waiting for device response',
+        'Transport disconnected during configuration',
         'Timed out waiting for device response',
         'Device is disconnected',
         'GATT_ERROR android-code: 133',
         'Discovery failed',
         'Bluetooth is disabled',
+        'Connection failed - some other reason',
+        'Protocol configuration failed: TimeoutException: Configuration timed out',
+        'Device requires PIN pairing', // 'PIN' alone no longer matches
       ];
 
       for (final msg in authPatterns) {
-        final lower = msg.toLowerCase();
-        final isAuth =
-            lower.contains('pin') ||
-            lower.contains('authentication') ||
-            lower.contains('connection failed - please try again');
         expect(
-          isAuth,
+          isAuthError(msg),
           isTrue,
           reason: '"$msg" should be detected as auth error',
         );
       }
 
       for (final msg in nonAuthPatterns) {
-        final lower = msg.toLowerCase();
-        final isAuth =
-            lower.contains('pin') ||
-            lower.contains('authentication') ||
-            lower.contains('connection failed - please try again');
         expect(
-          isAuth,
+          isAuthError(msg),
           isFalse,
           reason: '"$msg" should NOT be detected as auth error',
         );
@@ -1691,27 +1704,50 @@ void main() {
       );
     });
 
-    test('config timeout with PIN keywords is detected as auth error', () {
-      // The error message from the logs:
-      // "Protocol configuration failed: TimeoutException: Configuration
-      //  timed out - device may require pairing or PIN was cancelled"
-      // This must be detected as an auth error.
+    test('generic config timeout is NOT detected as auth error', () {
+      // After the fix, config timeouts no longer mention "PIN" in
+      // their message. Generic timeouts (slow BLE, device still
+      // booting after region change, etc.) must NOT route to Scanner.
 
-      const realErrorMessage =
+      bool isAuthError(String msg) {
+        final lower = msg.toLowerCase();
+        return lower.contains('authentication') ||
+            lower.contains('encryption') ||
+            lower.contains('insufficient') ||
+            lower.contains('pin was cancelled') ||
+            lower.contains('enter the pin');
+      }
+
+      // New timeout message (no PIN mention)
+      const newTimeoutMessage =
           'Exception: Protocol configuration failed: TimeoutException: '
-          'Configuration timed out - device may require pairing or PIN was cancelled';
-
-      final lower = realErrorMessage.toLowerCase();
-      final isAuth =
-          lower.contains('pin') ||
-          lower.contains('authentication') ||
-          lower.contains('connection failed - please try again');
-
+          'Configuration timed out waiting for device response';
       expect(
-        isAuth,
-        isTrue,
+        isAuthError(newTimeoutMessage),
+        isFalse,
         reason:
-            'Real config timeout message with "PIN" keyword should be detected as auth error',
+            'Generic config timeout should NOT be detected as auth error '
+            '(it can happen for many reasons, not just PIN)',
+      );
+
+      // New transport disconnect message (no PIN mention)
+      const newTransportMessage =
+          'Exception: Protocol configuration failed: '
+          'Transport disconnected during configuration';
+      expect(
+        isAuthError(newTransportMessage),
+        isFalse,
+        reason:
+            'Transport disconnect during config should NOT be detected as auth error',
+      );
+
+      // Actual BLE auth error SHOULD still be detected
+      const realAuthError =
+          'Connection failed - please try again and enter the PIN when prompted';
+      expect(
+        isAuthError(realAuthError),
+        isTrue,
+        reason: 'Real BLE auth error with "enter the PIN" should be detected',
       );
     });
   });

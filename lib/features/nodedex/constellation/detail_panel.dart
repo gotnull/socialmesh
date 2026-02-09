@@ -263,7 +263,7 @@ class _SelectedContent extends ConsumerWidget {
     }
 
     final sigil = entry.sigil ?? SigilGenerator.generate(nodeNum);
-    final name = node?.displayName ?? 'Node $nodeNum';
+    final name = node?.displayName ?? entry.lastKnownName ?? 'Node $nodeNum';
     final primaryText = context.textPrimary;
     final tertiaryText = context.textTertiary;
 

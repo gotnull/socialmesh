@@ -57,7 +57,8 @@ void showSigilCardSheet({
   required TraitResult traitResult,
   MeshNode? node,
 }) {
-  final displayName = node?.displayName ?? 'Node ${entry.nodeNum}';
+  final displayName =
+      node?.displayName ?? entry.lastKnownName ?? 'Node ${entry.nodeNum}';
   final hexId =
       '!${entry.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 

@@ -626,6 +626,14 @@ class NodeDexEntry {
   /// Cached sigil data for this node's procedural identity.
   final SigilData? sigil;
 
+  /// Last known display name for this node, cached from MeshNode.displayName.
+  ///
+  /// Persisted so that NodeDex can show meaningful names even when the node
+  /// is no longer in the live nodesProvider (e.g. after reconnecting to a
+  /// different device). Updated whenever the node is seen with a non-null
+  /// longName or shortName.
+  final String? lastKnownName;
+
   /// Maximum number of encounter records to retain.
   static const int maxEncounterRecords = 50;
 
@@ -656,6 +664,7 @@ class NodeDexEntry {
     this.seenRegions = const [],
     this.coSeenNodes = const {},
     this.sigil,
+    this.lastKnownName,
   });
 
   /// Create a new entry for a freshly discovered node.
@@ -668,6 +677,7 @@ class NodeDexEntry {
     double? latitude,
     double? longitude,
     SigilData? sigil,
+    String? lastKnownName,
   }) {
     final now = timestamp ?? DateTime.now();
     final encounter = EncounterRecord(
@@ -689,6 +699,7 @@ class NodeDexEntry {
       bestRssi: rssi,
       encounters: [encounter],
       sigil: sigil,
+      lastKnownName: lastKnownName,
     );
   }
 
@@ -757,6 +768,7 @@ class NodeDexEntry {
     List<SeenRegion>? seenRegions,
     Map<int, CoSeenRelationship>? coSeenNodes,
     SigilData? sigil,
+    String? lastKnownName,
   }) {
     // Auto-stamp when socialTag changes via copyWith.
     final effectiveStMs = clearSocialTag || socialTag != null
@@ -785,6 +797,7 @@ class NodeDexEntry {
       seenRegions: seenRegions ?? this.seenRegions,
       coSeenNodes: coSeenNodes ?? this.coSeenNodes,
       sigil: sigil ?? this.sigil,
+      lastKnownName: lastKnownName ?? this.lastKnownName,
     );
   }
 
@@ -957,6 +970,15 @@ class NodeDexEntry {
     final mergedLastSeen = lastSeen.isAfter(other.lastSeen)
         ? lastSeen
         : other.lastSeen;
+
+    // Prefer the name from whichever entry was seen most recently,
+    // falling back to either side's name if one is null.
+    final String? mergedName;
+    if (lastSeen.isAfter(other.lastSeen)) {
+      mergedName = lastKnownName ?? other.lastKnownName;
+    } else {
+      mergedName = other.lastKnownName ?? lastKnownName;
+    }
     final mergedEncounterCount = encounterCount > other.encounterCount
         ? encounterCount
         : other.encounterCount;
@@ -1065,6 +1087,7 @@ class NodeDexEntry {
       seenRegions: regionMap.values.toList(),
       coSeenNodes: mergedCoSeen,
       sigil: mergedSigil,
+      lastKnownName: mergedName,
     );
   }
 
@@ -1152,6 +1175,7 @@ class NodeDexEntry {
       // Schema v2: store CoSeenRelationship objects.
       'csn': coSeenNodes.map((k, v) => MapEntry(k.toString(), v.toJson())),
       if (sigil != null) 'sig': sigil!.toJson(),
+      if (lastKnownName != null) 'lkn': lastKnownName,
     };
   }
 
@@ -1207,6 +1231,7 @@ class NodeDexEntry {
       sigil: json['sig'] != null
           ? SigilData.fromJson(json['sig'] as Map<String, dynamic>)
           : null,
+      lastKnownName: json['lkn'] as String?,
     );
   }
 

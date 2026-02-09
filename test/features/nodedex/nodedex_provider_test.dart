@@ -273,19 +273,32 @@ void main() {
       expect(state[100]!.bestRssi, equals(-80));
     });
 
-    test('own node number is skipped during discovery', () async {
-      final ctx = _createTestContainer(preInitStore: preInitStore);
-      addTearDown(ctx.container.dispose);
+    test(
+      'own node is included in NodeDex but without encounter tracking',
+      () async {
+        final ctx = _createTestContainer(preInitStore: preInitStore);
+        addTearDown(ctx.container.dispose);
 
-      await _initProvider(ctx.container);
+        await _initProvider(ctx.container);
 
-      // Add our own node
-      ctx.nodesNotifier.addNode(_makeNode(_myNodeNum));
-      await _pumpEventQueue();
+        // Add our own node
+        ctx.nodesNotifier.addNode(_makeNode(_myNodeNum));
+        await _pumpEventQueue();
 
-      final state = ctx.container.read(nodeDexProvider);
-      expect(state.containsKey(_myNodeNum), isFalse);
-    });
+        final state = ctx.container.read(nodeDexProvider);
+        // Own node IS now included (so it appears in "Your Device" section)
+        expect(state.containsKey(_myNodeNum), isTrue);
+
+        final entry = state[_myNodeNum]!;
+        // Own node should have a sigil
+        expect(entry.sigil, isNotNull);
+        // Own node should NOT have SNR/RSSI/distance (metrics are meaningless
+        // for your own device)
+        expect(entry.bestSnr, isNull);
+        expect(entry.bestRssi, isNull);
+        expect(entry.maxDistanceSeen, isNull);
+      },
+    );
 
     test('node 0 is skipped during discovery', () async {
       final ctx = _createTestContainer(preInitStore: preInitStore);

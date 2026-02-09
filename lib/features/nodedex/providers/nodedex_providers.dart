@@ -242,14 +242,25 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       final nodeNum = entry.key;
       final node = entry.value;
 
-      // Skip our own node.
-      if (nodeNum == myNodeNum) continue;
-
       // Skip nodes with nodeNum 0 (invalid).
       if (nodeNum == 0) continue;
 
+      // Own node gets a NodeDex entry (so it appears in "Your Device"
+      // section and has a correct sigil), but we skip encounter counting
+      // and co-seen tracking — you're always with your own device so
+      // those metrics are meaningless and would pollute the graph.
+      // When the user switches to a different device, the previous
+      // device naturally moves to "Discovered Nodes" because
+      // myNodeNumProvider changes to the newly connected device.
+      final isOwnNode = nodeNum == myNodeNum;
+
       final existing = updated[nodeNum];
       final now = clock.now();
+
+      // Resolve a meaningful display name from the live node data.
+      // Only cache non-hex names (longName/shortName set by the user
+      // or firmware, not the fallback "!AABBCCDD" format).
+      final String? liveName = _resolveCacheableName(node);
 
       if (existing == null) {
         // New discovery: create a fresh NodeDex entry.
@@ -257,28 +268,57 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         final newEntry = NodeDexEntry.discovered(
           nodeNum: nodeNum,
           timestamp: node.firstHeard ?? now,
-          distance: node.distance,
-          snr: node.snr,
-          rssi: node.rssi,
+          distance: isOwnNode ? null : node.distance,
+          snr: isOwnNode ? null : node.snr,
+          rssi: isOwnNode ? null : node.rssi,
           latitude: node.hasPosition ? node.latitude : null,
           longitude: node.hasPosition ? node.longitude : null,
           sigil: sigil,
+          lastKnownName: liveName,
         );
 
         // Add region if we can determine one.
         final withRegion = _addRegionFromNode(newEntry, node);
         updated[nodeNum] = withRegion;
-        _lastEncounterTime[nodeNum] = now;
-        _sessionSeenNodes.add(nodeNum);
+
+        // Only track encounters and co-seen for other nodes.
+        if (!isOwnNode) {
+          _lastEncounterTime[nodeNum] = now;
+          _sessionSeenNodes.add(nodeNum);
+        }
         changed = true;
 
         final hexId =
             '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
         AppLogging.nodeDex(
-          'New discovery: $hexId (${node.displayName}), '
+          '${isOwnNode ? "Own device added" : "New discovery"}: '
+          '$hexId (${node.displayName}), '
           'SNR: ${node.snr ?? "n/a"}, '
           'distance: ${node.distance != null ? "${node.distance!.round()}m" : "n/a"}',
         );
+      } else if (isOwnNode) {
+        // Own node already exists — update position/region and name,
+        // skip encounter counting entirely.
+        var updatedEntry = existing;
+
+        // Ensure sigil is generated if missing (e.g., from older data).
+        if (updatedEntry.sigil == null) {
+          updatedEntry = updatedEntry.copyWith(
+            sigil: SigilGenerator.generate(nodeNum),
+          );
+        }
+
+        // Update cached name if the live node has a better one.
+        if (liveName != null && liveName != updatedEntry.lastKnownName) {
+          updatedEntry = updatedEntry.copyWith(lastKnownName: liveName);
+        }
+
+        // Update region data (own device can change location).
+        final withRegion = _addRegionFromNode(updatedEntry, node);
+        if (withRegion != existing) {
+          updated[nodeNum] = withRegion;
+          changed = true;
+        }
       } else {
         // Existing node: check if we should record a new encounter.
         final lastEncounter = _lastEncounterTime[nodeNum];
@@ -301,6 +341,11 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
             updatedEntry = updatedEntry.copyWith(
               sigil: SigilGenerator.generate(nodeNum),
             );
+          }
+
+          // Update cached name if the live node has a better one.
+          if (liveName != null && liveName != updatedEntry.lastKnownName) {
+            updatedEntry = updatedEntry.copyWith(lastKnownName: liveName);
           }
 
           // Update region data.
@@ -342,6 +387,22 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         );
       }
     }
+  }
+
+  /// Resolve a cacheable display name from a live MeshNode.
+  ///
+  /// Returns null if the node only has the fallback hex name (e.g.
+  /// "Meshtastic !AABBCCDD") which is already derivable from the
+  /// nodeNum and not worth caching. Returns the longName or shortName
+  /// when either is a real user-configured or firmware-assigned name.
+  String? _resolveCacheableName(MeshNode node) {
+    // displayName prefers longName, then shortName, then hex fallback.
+    // If longName or shortName is set, cache it.
+    final long = node.longName;
+    final short = node.shortName;
+    if (long != null && long.isNotEmpty) return long;
+    if (short != null && short.isNotEmpty) return short;
+    return null;
   }
 
   /// Add region information to an entry based on node data.
@@ -695,6 +756,9 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     String nameResolver(int nodeNum) {
       final node = nodes[nodeNum];
       if (node != null) return node.displayName;
+      // Fall back to cached name from NodeDex entry.
+      final entry = state[nodeNum];
+      if (entry?.lastKnownName != null) return entry!.lastKnownName!;
       return 'Node ${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
     }
 
@@ -1108,9 +1172,10 @@ final nodeDexSortedEntriesProvider = Provider<List<(NodeDexEntry, MeshNode?)>>((
         entryA.encounterCount,
       ),
       NodeDexSortOrder.distance => _compareDistance(entryA, entryB),
-      NodeDexSortOrder.name => (nodeA?.displayName ?? '').compareTo(
-        nodeB?.displayName ?? '',
-      ),
+      NodeDexSortOrder.name =>
+        (nodeA?.displayName ?? entryA.lastKnownName ?? '').compareTo(
+          nodeB?.displayName ?? entryB.lastKnownName ?? '',
+        ),
     };
   });
 
@@ -1536,7 +1601,8 @@ final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
     constellationNodes.add(
       ConstellationNode(
         nodeNum: entry.nodeNum,
-        displayName: node?.displayName ?? 'Node ${entry.nodeNum}',
+        displayName:
+            node?.displayName ?? entry.lastKnownName ?? 'Node ${entry.nodeNum}',
         sigil: entry.sigil,
         trait: trait.primary,
         connectionCount: entry.coSeenCount,

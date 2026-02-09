@@ -232,10 +232,15 @@ class PostAuthorSnapshot {
   final String? avatarUrl;
   final bool isVerified;
 
+  /// The user's primary Meshtastic node number for correct sigil rendering.
+  /// When present, SigilAvatar uses this instead of actorId.hashCode.
+  final int? nodeNum;
+
   const PostAuthorSnapshot({
     required this.displayName,
     this.avatarUrl,
     this.isVerified = false,
+    this.nodeNum,
   });
 
   factory PostAuthorSnapshot.fromMap(Map<String, dynamic> map) {
@@ -243,6 +248,7 @@ class PostAuthorSnapshot {
       displayName: map['displayName'] as String,
       avatarUrl: map['avatarUrl'] as String?,
       isVerified: map['isVerified'] as bool? ?? false,
+      nodeNum: map['nodeNum'] as int?,
     );
   }
 
@@ -251,6 +257,7 @@ class PostAuthorSnapshot {
       'displayName': displayName,
       if (avatarUrl != null) 'avatarUrl': avatarUrl,
       'isVerified': isVerified,
+      if (nodeNum != null) 'nodeNum': nodeNum,
     };
   }
 }

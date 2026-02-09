@@ -783,7 +783,12 @@ class _TimelineActivityTile extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 8),
                 child: Stack(
                   children: [
-                    SigilAvatar(nodeNum: activity.actorId.hashCode, size: 40),
+                    SigilAvatar(
+                      nodeNum:
+                          activity.actorSnapshot?.nodeNum ??
+                          activity.actorId.hashCode,
+                      size: 40,
+                    ),
                     // Unread indicator
                     if (!activity.isRead)
                       Positioned(

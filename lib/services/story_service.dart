@@ -171,6 +171,7 @@ class StoryService {
         displayName: data['displayName'] as String? ?? 'User',
         avatarUrl: data['avatarUrl'] as String?,
         isVerified: data['isVerified'] as bool? ?? false,
+        nodeNum: data['primaryNodeId'] as int?,
       );
     } catch (e) {
       AppLogging.social('Error getting author snapshot: $e');

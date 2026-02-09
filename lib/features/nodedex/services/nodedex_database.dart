@@ -21,7 +21,7 @@ import '../../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int nodedexSchemaVersion = 2;
+const int nodedexSchemaVersion = 3;
 
 /// Table and column name constants for NodeDex SQLite schema.
 abstract final class NodeDexTables {
@@ -40,6 +40,7 @@ abstract final class NodeDexTables {
   static const colUserNote = 'user_note';
   static const colUserNoteUpdatedAtMs = 'user_note_updated_at_ms';
   static const colSigilJson = 'sigil_json';
+  static const colLastKnownName = 'last_known_name';
   static const colSchemaVersion = 'schema_version';
   static const colUpdatedAtMs = 'updated_at_ms';
   static const colDeleted = 'deleted';
@@ -190,6 +191,7 @@ class NodeDexDatabase {
         ${NodeDexTables.colUserNote} TEXT,
         ${NodeDexTables.colUserNoteUpdatedAtMs} INTEGER,
         ${NodeDexTables.colSigilJson} TEXT NOT NULL,
+        ${NodeDexTables.colLastKnownName} TEXT,
         ${NodeDexTables.colSchemaVersion} INTEGER NOT NULL DEFAULT 1,
         ${NodeDexTables.colUpdatedAtMs} INTEGER NOT NULL,
         ${NodeDexTables.colDeleted} INTEGER NOT NULL DEFAULT 0
@@ -316,7 +318,19 @@ class NodeDexDatabase {
         'NodeDexDatabase: v2 migration — added socialTag/userNote timestamps',
       );
     }
-    // if (oldVersion < 3) { ... }
+    if (oldVersion < 3) {
+      // v3: Cache node display names so NodeDex can show meaningful names
+      // even after reconnecting to a different device (when the original
+      // nodes are no longer in the live nodesProvider).
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} '
+        'ADD COLUMN ${NodeDexTables.colLastKnownName} TEXT',
+      );
+      AppLogging.storage(
+        'NodeDexDatabase: v3 migration — added last_known_name column',
+      );
+    }
+    // if (oldVersion < 4) { ... }
   }
 
   /// Handle downgrades by recreating.

@@ -1011,7 +1011,8 @@ class _NodeDexListTile extends ConsumerWidget {
     final traitResult = ref.watch(nodeDexTraitProvider(entry.nodeNum));
     final disclosure = ref.watch(nodeDexDisclosureProvider(entry.nodeNum));
     final patinaResult = ref.watch(nodeDexPatinaProvider(entry.nodeNum));
-    final displayName = node?.displayName ?? 'Node ${entry.nodeNum}';
+    final displayName =
+        node?.displayName ?? entry.lastKnownName ?? 'Node ${entry.nodeNum}';
     final hexId =
         '!${entry.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 
@@ -1198,7 +1199,8 @@ class _NodeDexListTile extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetContext) {
-        final displayName = node?.displayName ?? 'Node ${entry.nodeNum}';
+        final displayName =
+            node?.displayName ?? entry.lastKnownName ?? 'Node ${entry.nodeNum}';
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),

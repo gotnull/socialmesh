@@ -410,6 +410,7 @@ class NodeDexSqliteStore {
       NodeDexTables.colSigilJson: entry.sigil != null
           ? jsonEncode(entry.sigil!.toJson())
           : jsonEncode(SigilGenerator.generate(entry.nodeNum).toJson()),
+      NodeDexTables.colLastKnownName: entry.lastKnownName,
       NodeDexTables.colSchemaVersion: 1,
       NodeDexTables.colUpdatedAtMs: updatedAtMs,
       NodeDexTables.colDeleted: 0,
@@ -505,6 +506,7 @@ class NodeDexSqliteStore {
       seenRegions: regions,
       coSeenNodes: coSeen,
       sigil: sigil,
+      lastKnownName: row[NodeDexTables.colLastKnownName] as String?,
     );
   }
 

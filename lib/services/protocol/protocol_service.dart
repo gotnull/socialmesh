@@ -653,9 +653,7 @@ class ProtocolService {
             _configCompleter != null &&
             !_configCompleter!.isCompleted) {
           _configCompleter!.completeError(
-            Exception(
-              'Connection failed - please try again and enter the PIN when prompted',
-            ),
+            Exception('Transport disconnected during configuration'),
           );
         }
       }
@@ -684,7 +682,7 @@ class ProtocolService {
         const Duration(seconds: 30),
         onTimeout: () {
           throw TimeoutException(
-            'Configuration timed out - device may require pairing or PIN was cancelled',
+            'Configuration timed out waiting for device response',
           );
         },
       );

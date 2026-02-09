@@ -130,7 +130,8 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
       );
     }
 
-    final displayName = node?.displayName ?? 'Node ${entry.nodeNum}';
+    final displayName =
+        node?.displayName ?? entry.lastKnownName ?? 'Node ${entry.nodeNum}';
     final hexId =
         '!${entry.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 
@@ -2201,6 +2202,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
             final coSeenEntry = ref.watch(nodeDexEntryProvider(coSeen.key));
             final name =
                 coSeenNode?.displayName ??
+                coSeenEntry?.lastKnownName ??
                 'Node ${coSeen.key.toRadixString(16).toUpperCase()}';
 
             return Padding(

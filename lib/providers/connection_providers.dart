@@ -550,11 +550,18 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       // re-pair via the Scanner (which shows the system PIN dialog). Without
       // this guard, the auto-reconnect manager keeps retrying indefinitely,
       // creating a loop of connect → PIN fail → disconnect → reconnect.
+      //
+      // CRITICAL: Only match ACTUAL BLE authentication/encryption errors,
+      // NOT generic config timeouts. Config timeouts can happen for many
+      // reasons (slow BLE after app restart, device still booting, etc.)
+      // and should be retried normally — not routed to Scanner.
       final errorStr = e.toString().toLowerCase();
       final isAuthError =
-          errorStr.contains('pin') ||
           errorStr.contains('authentication') ||
-          errorStr.contains('connection failed - please try again');
+          errorStr.contains('encryption') ||
+          errorStr.contains('insufficient') ||
+          errorStr.contains('pin was cancelled') ||
+          errorStr.contains('enter the pin');
 
       if (isAuthError) {
         AppLogging.connection(
@@ -596,6 +603,15 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
             'forcing Scanner navigation anyway',
           );
         }
+      } else {
+        // NOT an auth error — this is a generic config timeout or
+        // transport error. Let the normal retry logic handle it.
+        // Do NOT route to Scanner; the auto-reconnect manager will
+        // retry or the user can tap Retry on the banner.
+        AppLogging.connection(
+          '🔌 _initializeProtocolAfterAutoReconnect: Non-auth error — '
+          'NOT routing to Scanner (error: $e)',
+        );
       }
     }
   }

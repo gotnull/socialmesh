@@ -737,7 +737,8 @@ class _BottomInfoBar extends ConsumerWidget {
     if (entry == null) return _buildDefaultContent(context);
 
     final sigil = entry.sigil ?? SigilGenerator.generate(selectedNodeNum!);
-    final name = node?.displayName ?? 'Node $selectedNodeNum';
+    final name =
+        node?.displayName ?? entry.lastKnownName ?? 'Node $selectedNodeNum';
 
     return Row(
       children: [
