@@ -425,12 +425,12 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
     if (confirmed != true || !mounted) return;
 
     try {
-      final storage = await ref.read(telemetryStorageProvider.future);
+      final repo = await ref.read(tracerouteRepositoryProvider.future);
       if (widget.nodeNum != null) {
-        await storage.clearTraceRouteLogsForNode(widget.nodeNum!);
+        await repo.deleteRunsForNode(widget.nodeNum!);
         ref.invalidate(nodeTraceRouteLogsProvider(widget.nodeNum!));
       } else {
-        await storage.clearTraceRouteLogs();
+        await repo.deleteAllRuns();
         ref.invalidate(traceRouteLogsProvider);
       }
 
@@ -477,8 +477,8 @@ class _TracerouteControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get _searchFieldHeight =>
       math.max(kMinInteractiveDimension, textScaler.scale(48));
 
-  // Layout: outerPad (8+8) + searchField + chipsRow (44) + spacing (8) + divider (1)
-  double get _computedExtent => 16 + _searchFieldHeight + 44 + 8 + 1;
+  // Layout: outerPad (8+8) + searchField + chipsRow (44) + spacing (8) + divider (1) + bottomPad (12)
+  double get _computedExtent => 16 + _searchFieldHeight + 44 + 8 + 1 + 12;
 
   @override
   double get minExtent => _computedExtent;
@@ -590,6 +590,7 @@ class _TracerouteControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
                 ),
               ),
               const Divider(height: 1),
+              const SizedBox(height: 12),
             ],
           ),
         ),

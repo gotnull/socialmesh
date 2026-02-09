@@ -9,6 +9,8 @@ import '../models/telemetry_log.dart';
 import '../models/route.dart';
 import '../models/tapback.dart';
 import '../services/storage/telemetry_storage_service.dart';
+import '../services/storage/traceroute_database.dart';
+import '../services/storage/traceroute_repository.dart';
 import '../services/storage/route_storage_service.dart';
 import '../services/storage/tapback_storage_service.dart';
 import '../services/protocol/protocol_service.dart';
@@ -43,6 +45,32 @@ final tapbackStorageProvider = FutureProvider<TapbackStorageService>((
   final prefs = await ref.watch(sharedPreferencesProvider.future);
   return TapbackStorageService(prefs);
 });
+
+// Traceroute repository (SQLite-backed, persists across restarts)
+final tracerouteRepositoryProvider = FutureProvider<SqliteTracerouteRepository>(
+  (ref) async {
+    final db = TracerouteDatabase();
+    await db.open();
+
+    final repo = SqliteTracerouteRepository(db);
+
+    // One-time migration from SharedPreferences legacy storage
+    try {
+      final legacy = await ref.read(telemetryStorageProvider.future);
+      final migrated = await repo.migrateFromSharedPreferences(legacy);
+      if (migrated > 0) {
+        AppLogging.storage(
+          'Traceroute migration complete: $migrated runs imported to SQLite',
+        );
+      }
+    } catch (e) {
+      AppLogging.storage('Traceroute migration failed (non-fatal): $e');
+    }
+
+    ref.onDispose(() => db.close());
+    return repo;
+  },
+);
 
 // ============ Telemetry Log Providers ============
 
@@ -82,10 +110,10 @@ final positionLogsProvider = FutureProvider<List<PositionLog>>((ref) async {
   return storage.getAllPositionLogs();
 });
 
-/// All traceroute history
+/// All traceroute history (SQLite-backed, persists across restarts)
 final traceRouteLogsProvider = FutureProvider<List<TraceRouteLog>>((ref) async {
-  final storage = await ref.watch(telemetryStorageProvider.future);
-  return storage.getAllTraceRouteLogs();
+  final repo = await ref.watch(tracerouteRepositoryProvider.future);
+  return repo.listRuns();
 });
 
 /// All PAX counter history
@@ -145,11 +173,11 @@ final nodePositionLogsProvider = FutureProvider.family<List<PositionLog>, int>((
   return storage.getPositionLogs(nodeNum);
 });
 
-/// Traceroute logs for a specific node
+/// Traceroute logs for a specific node (SQLite-backed)
 final nodeTraceRouteLogsProvider =
     FutureProvider.family<List<TraceRouteLog>, int>((ref, nodeNum) async {
-      final storage = await ref.watch(telemetryStorageProvider.future);
-      return storage.getTraceRouteLogs(nodeNum);
+      final repo = await ref.watch(tracerouteRepositoryProvider.future);
+      return repo.listRuns(targetNodeId: nodeNum);
     });
 
 /// PAX counter logs for a specific node
@@ -513,14 +541,19 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
     _nodeSubscription?.cancel();
     _traceRouteSubscription?.cancel();
 
-    // Listen to traceroute events and persist them.
+    // Listen to traceroute events and persist them to SQLite.
     // Outbound requests arrive with response == false (placeholder).
     // Inbound responses arrive with response == true and replace the placeholder.
     _traceRouteSubscription = _protocol.traceRouteLogStream.listen((log) async {
-      if (log.response) {
-        await storage.replaceOrAddTraceRouteLog(log);
-      } else {
-        await storage.addTraceRouteLog(log);
+      try {
+        final repo = await ref.read(tracerouteRepositoryProvider.future);
+        if (log.response) {
+          await repo.replaceOrAddRun(log);
+        } else {
+          await repo.saveRun(log);
+        }
+      } catch (e) {
+        AppLogging.storage('TelemetryLogger: Traceroute DB write failed: $e');
       }
       ref.invalidate(traceRouteLogsProvider);
       ref.invalidate(nodeTraceRouteLogsProvider(log.nodeNum));

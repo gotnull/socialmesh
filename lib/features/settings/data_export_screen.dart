@@ -586,7 +586,10 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
           routesNotifier.refresh();
           break;
         case 'traceroutes':
-          await storage.clearTraceRouteLogs();
+          final trRepo = await ref.read(tracerouteRepositoryProvider.future);
+          if (!mounted) return;
+          await trRepo.deleteAllRuns();
+          ref.invalidate(traceRouteLogsProvider);
           break;
         case 'automations':
           for (final auto in automationRepo.automations.toList()) {
