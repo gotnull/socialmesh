@@ -46,6 +46,18 @@ Socialmesh works fully offline over BLE and USB. Firebase is optional for cloud 
 
 Every node you discover on the mesh is automatically catalogued in the **NodeDex** — a living record of your mesh encounters. Each node receives a unique **procedural Sigil** (a geometric glyph derived deterministically from its identity) and a **personality Trait** inferred from real behavioral data. Accessible from the drawer menu.
 
+<p align="center">
+  <img src="assets/screenshots/nodedex-screenshot-1.png" width="180" alt="NodeDex List">
+  <img src="assets/screenshots/nodedex-screenshot-2.png" width="180" alt="NodeDex Sigil Detail">
+  <img src="assets/screenshots/nodedex-screenshot-3.png" width="180" alt="NodeDex Node Detail">
+  <img src="assets/screenshots/nodedex-screenshot-4.png" width="180" alt="NodeDex Sigil Card">
+</p>
+<p align="center">
+  <img src="assets/screenshots/nodedex-screenshot-5.png" width="180" alt="NodeDex Traits and Patina">
+  <img src="assets/screenshots/nodedex-screenshot-6.png" width="180" alt="NodeDex Field Notes">
+  <img src="assets/screenshots/nodedex-screenshot-7.png" width="180" alt="NodeDex Constellation View">
+</p>
+
 ### Procedural Sigils
 
 Every node gets a unique constellation-style geometric identity generated from its node number. The same node always produces the same sigil — no randomness, no variation. Sigils are built from outer polygons (3-8 vertices), optional inner rings, radial lines, and a unique 3-color palette drawn from 16 curated colors.

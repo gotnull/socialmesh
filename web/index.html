@@ -1,1390 +1,2232 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Socialmesh — The Most Advanced Meshtastic Client for iOS & Android</title>
-  <meta name="description"
-    content="Transform your Meshtastic experience with the most powerful, feature-rich client available. Real-time mesh visualization, advanced automations, custom widgets, and enterprise-grade tools.">
-  <meta name="keywords"
-    content="meshtastic, mesh networking, off-grid communication, LoRa, radio, iOS, Android, emergency communication">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png">
-
-  <!-- Smart App Banner (iOS Safari) -->
-  <meta name="apple-itunes-app" content="app-id=6742694642">
-
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6HX9J47JRF"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-6HX9J47JRF');
-  </script>
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="landing.css?v=2">
-</head>
-
-<body>
-
-  <!-- Animated Background -->
-  <div class="mesh-bg"></div>
-  <div class="grid-overlay"></div>
-
-  <!-- Navigation -->
-  <nav>
-    <div class="container">
-      <a href="#" class="logo">
-        <img src="images/app-icon.png" alt="Socialmesh" class="logo-img">
-        <span class="logo-text">Socialmesh</span>
-      </a>
-
-      <ul class="nav-links">
-        <li><a href="#features">Features</a></li>
-        <li><a href="#presence">Social & Presence</a></li>
-        <li><a href="#premium">Extras</a></li>
-        <li><a href="#screenshots">Screenshots</a></li>
-        <li><a href="#comparison">Compare</a></li>
-        <li><a href="/docs">Docs</a></li>
-        <li><a href="/faq">FAQ</a></li>
-      </ul>
-
-      <div class="nav-cta">
-        <a href="#download" class="btn btn-primary">
-          <span class="material-icons btn-icon">download</span>
-          Download
-        </a>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="container">
-      <div class="hero-content reveal-blur">
-        <div class="hero-badge">Available on iOS & Android</div>
-
-        <h1>
-          Meshtastic<br>
-          <span class="gradient-text">Companion</span>
-        </h1>
-
-        <p class="hero-description">
-          A complete Meshtastic client for iOS and Android. Send messages, track nearby nodes,
-          configure your radio, and leave ephemeral signals for people in your area.
-          Built for off-grid communication without internet or accounts.
-        </p>
-
-        <div class="store-badges" style="justify-content: flex-start; margin: 32px 0;">
-          <a href="https://apps.apple.com/app/id6742694642" class="store-badge"
-            target="_blank" rel="noopener">
-            <img src="images/app-store-badge.svg" alt="Download on the App Store">
-          </a>
-          <a href="https://play.google.com/store/apps/details?id=com.gotnull.socialmesh" class="store-badge"
-            target="_blank" rel="noopener">
-            <img src="images/google-play-badge.svg" alt="Get it on Google Play">
-          </a>
-        </div>
-        <p class="store-status">
-          Available now on the App Store and Google Play.
-        </p>
-
-        <div class="hero-stats">
-          <div class="stat">
-            <div class="stat-value">iOS & Android</div>
-            <div class="stat-label">Native Apps</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">5,300+</div>
-            <div class="stat-label">Ringtones</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="hero-visual">
-        <div class="hero-screenshot">
-          <img src="screenshots/nodes.png" alt="Socialmesh Node List">
-        </div>
-
-        <!-- Floating Elements -->
-        <div class="floating-element floating-element-1">
-          <div class="floating-icon">
-            <span class="material-icons">public</span>
-          </div>
-          <div class="floating-label">Online Nodes</div>
-          <div class="floating-value">24 Active</div>
-        </div>
-
-        <div class="floating-element floating-element-2">
-          <div class="floating-icon">
-            <span class="material-icons">rss_feed</span>
-          </div>
-          <div class="floating-label">Signal</div>
-          <div class="floating-value">-67 dBm</div>
-        </div>
-
-        <div class="floating-element floating-element-3">
-          <div class="floating-icon">
-            <span class="material-icons">forum</span>
-          </div>
-          <div class="floating-label">Messages</div>
-          <div class="floating-value">142 Today</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Social & Presence Section -->
-  <section id="presence" class="presence-section">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-tag">Social & Presence</span>
-        <h2 class="section-title">Know Who's <span class="gradient-text">Active</span> Without Guesswork</h2>
-        <p class="section-description">
-          Socialmesh shows presence the way a LoRa mesh actually works. No fake "online" pings,
-          no instant offline. Everything is inferred from real radio activity and last-heard time.
-        </p>
-      </div>
-
-      <div class="premium-features">
-        <div class="premium-feature reveal">
-          <div class="premium-feature-content reveal-left">
-            <div class="premium-feature-badge">
-              <span class="material-icons">radar</span>
-              Social & Presence
-            </div>
-            <h3 class="premium-feature-title">Presence is the <span class="gradient-text">product</span></h3>
-            <p class="premium-feature-description">
-              Socialmesh is built around presence: who’s active, who’s nearby, and what the mesh is doing right now.
-              It’s not a chat app bolted onto LoRa — it’s a living map of activity that updates only when real packets arrive.
-            </p>
-            <p class="premium-feature-description">
-              Broadcast Signals, discover nearby nodes, and watch activity decay naturally when radios go quiet.
-              No fake pings, no “online” lies — just the mesh as it is.
-            </p>
-
-            <div class="presence-pill-grid">
-              <div class="presence-pill">
-                <span class="presence-dot active"></span>
-                Active — heard recently
-              </div>
-              <div class="presence-pill">
-                <span class="presence-dot fading"></span>
-                Fading — silence, still plausible
-              </div>
-              <div class="presence-pill">
-                <span class="presence-dot stale"></span>
-                Inactive — likely offline
-              </div>
-              <div class="presence-pill">
-                <span class="presence-dot unknown"></span>
-                Unknown — no recent data
-              </div>
-            </div>
-
-            <ul class="premium-feature-benefits">
-              <li>
-                <span class="material-icons">check</span>
-                Mesh‑first Signals with TTL decay and local visibility
-              </li>
-              <li>
-                <span class="material-icons">check</span>
-                Nearby discovery with geo‑context and proximity filters
-              </li>
-              <li>
-                <span class="material-icons">check</span>
-                Presence inferred from last‑heard time + packet cadence
-              </li>
-            </ul>
-
-            <div class="use-case-highlight">
-              <h4>Pro Tip</h4>
-              <p>
-                Use Signals like beacons for ops, meetups, or trailheads. TTL decay keeps the map honest—
-                stale posts disappear without manual cleanup.
-              </p>
-            </div>
-          </div>
-
-          <div class="premium-feature-visual presence-visual-grid reveal-right">
-            <div class="presence-visual-card">
-              <div class="presence-visual-img">
-                <img src="screenshots/signals-home.png" alt="Signals presence home">
-              </div>
-              <div class="presence-visual-caption">
-                Signal Feed — live mesh pulse, TTL decay, and near‑field activity in one view.
-              </div>
-            </div>
-            <div class="presence-visual-card">
-              <div class="presence-visual-img">
-                <img src="screenshots/signals-upload-screen.png" alt="Signal upload screen">
-              </div>
-              <div class="presence-visual-caption">
-                Broadcast Signal — mesh‑first publish with optional cloud sync and geo‑tagged context.
-              </div>
-            </div>
-            <div class="presence-visual-card">
-              <div class="presence-visual-img">
-                <img src="screenshots/presence-screen.png" alt="Presence screen">
-              </div>
-              <div class="presence-visual-caption">
-                Presence Decay — Active → Fading → Inactive based on last‑heard and packet cadence.
-              </div>
-            </div>
-            <div class="presence-visual-card">
-              <div class="presence-visual-img">
-                <img src="screenshots/signals-map-screen.png" alt="Signals map screen">
-              </div>
-              <div class="presence-visual-caption">
-                Mesh Map — spatial signal intelligence, proximity clusters, and on‑map activity.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Section -->
-  <section id="features">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-tag">Core Features</span>
-        <h2 class="section-title">Everything You Need, <span class="gradient-text">Nothing You Don't</span></h2>
-        <p class="section-description">
-          Every feature designed to enhance your mesh network experience. From intuitive node management to powerful
-          visualization tools.
-        </p>
-      </div>
-
-      <div class="features-grid reveal-stagger">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">bookmark</span>
-          </div>
-          <h3 class="feature-title">Node Management</h3>
-          <p class="feature-description">Star favorites, filter by status, search instantly. Keep track of every node in
-            your mesh with real-time status updates.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">forum</span>
-          </div>
-          <h3 class="feature-title">Intelligent Messaging</h3>
-          <p class="feature-description">Quick responses, message reactions, read receipts, and rich media support.
-            Communication that feels natural.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">place</span>
-          </div>
-          <h3 class="feature-title">Advanced Mapping</h3>
-          <p class="feature-description">See every node in your mesh on a beautiful map. Filter by distance, signal
-            strength, or online status.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">public</span>
-          </div>
-          <h3 class="feature-title">3D Globe View</h3>
-          <p class="feature-description">Visualize your entire mesh network on an interactive 3D globe. Perfect for
-            large-scale deployments.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">list</span>
-          </div>
-          <h3 class="feature-title">Channel Wizard</h3>
-          <p class="feature-description">Create encrypted channels in seconds. Set privacy levels, encryption keys, and
-            advanced options with guided setup.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">tune</span>
-          </div>
-          <h3 class="feature-title">Device Settings</h3>
-          <p class="feature-description">Full control over every device parameter. Configure radio settings, power
-            options, display preferences, and more.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">bar_chart</span>
-          </div>
-          <h3 class="feature-title">Analytics Dashboard</h3>
-          <p class="feature-description">Track network health, message volume, node activity, and more. Data-driven
-            insights for your mesh network.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">person</span>
-          </div>
-          <h3 class="feature-title">Presence System</h3>
-          <p class="feature-description">Set your status, see who's online, and know when nodes go active or inactive.
-            Real-time presence awareness.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">system_update</span>
-          </div>
-          <h3 class="feature-title">Firmware Updates</h3>
-          <p class="feature-description">Update device firmware directly from the app. One-tap updates keep your devices
-            running the latest software.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">public</span>
-          </div>
-          <h3 class="feature-title">World Mesh</h3>
-          <p class="feature-description">Explore a live map of Meshtastic nodes worldwide. Discover mesh networks,
-            view node analytics, and connect with the global community.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">history</span>
-          </div>
-          <h3 class="feature-title">Timeline</h3>
-          <p class="feature-description">A unified feed of all mesh activity—messages, node joins, signal changes,
-            and waypoints. Never miss what happened while you were away.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">qr_code_scanner</span>
-          </div>
-          <h3 class="feature-title">QR Code Scanning</h3>
-          <p class="feature-description">Instantly add nodes or join channels by scanning QR codes. Share your node
-            info or channel configs with a single scan.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">navigation</span>
-          </div>
-          <h3 class="feature-title">Route Recording</h3>
-          <p class="feature-description">Record your adventures, import GPX files, and share routes with your mesh.
-            Perfect for hiking, SAR operations, and event coordination.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">account_tree</span>
-          </div>
-          <h3 class="feature-title">Traceroute</h3>
-          <p class="feature-description">Visualize how messages travel through your mesh. See hop counts, latency,
-            and discover the path between any two nodes.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">assessment</span>
-          </div>
-          <h3 class="feature-title">Telemetry & Sensors</h3>
-          <p class="feature-description">Monitor device metrics, environment sensors, air quality, and power data.
-            Track battery voltage, temperature, humidity, and more with historical logs.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">groups</span>
-          </div>
-          <h3 class="feature-title">PAX Counter</h3>
-          <p class="feature-description">Count nearby WiFi and Bluetooth devices to estimate foot traffic.
-            Perfect for events, trail usage monitoring, and crowd analytics.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Premium Features Section -->
-  <section id="premium">
-    <div class="container">
-      <div class="premium-intro reveal">
-        <span class="section-tag">Power Packs</span>
-        <h2 class="section-title">Unlock <span class="gradient-text">More Power</span></h2>
-        <p>
-          Socialmesh comes fully loaded—messaging, maps, 3D visualization, firmware updates, and more.
-          Power packs add extra customization for those who want to take things further with themes,
-          sounds, automation, and smart home integration.
-        </p>
-      </div>
-
-      <div class="premium-features">
-        <!-- Theme Pack -->
-        <div class="premium-feature reveal">
-          <div class="premium-feature-content reveal-left">
-            <div class="premium-feature-badge">
-              <span class="material-icons">palette</span>
-              Power Pack
-            </div>
-            <h3 class="premium-feature-title"><span class="gradient-text">Theme Pack</span></h3>
-            <p class="premium-feature-description">
-              Personalize your experience with 12 carefully designed accent colors that flow through every screen.
-              Beyond aesthetics, themes provide instant visual context—use Ocean Blue for maritime operations,
-              Forest Green for hiking trips, or Emergency Red when coordinating response efforts. Each theme
-              transforms buttons, highlights, charts, and indicators throughout the entire app.
-            </p>
-            <ul class="premium-feature-benefits">
-              <li>
-                <span class="material-icons">check</span>
-                12 handcrafted accent colors with full app integration
-              </li>
-              <li>
-                <span class="material-icons">check</span>
-                Instant switching—no restart required
-              </li>
-              <li>
-                <span class="material-icons">check</span>
-                Visual context for different operational modes
-              </li>
-            </ul>
-            <div class="use-case-highlight">
-              <h4>Pro Tip</h4>
-              <p>Use Cyan for daily hiking, Magenta for emergency coordination. One glance at your screen tells you
-                which mode
-                you're operating in—critical when seconds matter.</p>
-            </div>
-          </div>
-          <div class="premium-feature-visual">
-            <img src="screenshots/themes.png" alt="Theme Pack - 12 Accent Colors">
-            <div class="floating-element floating-element-themes">
-              <div class="floating-icon">
-                <span class="material-icons">palette</span>
-              </div>
-              <div class="floating-label">Accent Colors</div>
-              <div class="floating-value">12 Themes</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Ringtone Pack -->
-        <div class="premium-feature reverse">
-          <div class="premium-feature-content">
-            <div class="premium-feature-badge">
-              <span class="material-icons">music_note</span>
-              Power Pack
-            </div>
-            <h3 class="premium-feature-title"><span class="gradient-text">Ringtone Library</span></h3>
-            <p class="premium-feature-description">
-              Audio differentiation is essential when your phone is in your pocket or you're wearing gloves.
-              With 5,300+ RTTTL ringtones—from iconic TV themes to video game classics—you can assign unique
-              sounds to each channel, node, or message type. Know instantly whether that notification is
-              a casual chat, an urgent alert, or a specific team member without looking at your screen.
-            </p>
-            <ul class="premium-feature-benefits">
-              <li>
-                <span class="material-icons">check</span>
-                5,300+ ringtones searchable by title, artist, or category
-              </li>
-              <li>
-                <span class="material-icons">check</span>
-                Per-channel and per-node audio assignments
-              </li>
-              <li>
-                <span class="material-icons">check</span>
-                Preview before applying—sends directly to device
-              </li>
-            </ul>
-            <div class="use-case-highlight">
-              <h4>Pro Tip</h4>
-              <p>Set your emergency channel to play a loud siren, family chat to the Mario coin sound. Even with your
-                phone in your
-                pack, you'll know exactly what needs attention.</p>
-            </div>
-          </div>
-          <div class="premium-feature-visual">
-            <img src="screenshots/ringtones.png" alt="Ringtone Pack - 5,300+ tones">
-            <div class="floating-element floating-element-ringtones">
-              <div class="floating-icon">
-                <span class="material-icons">music_note</span>
-              </div>
-              <div class="floating-label">Sound Library</div>
-              <div class="floating-value">7,000+ Tones</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Widget Pack -->
-        <div class="premium-feature">
-          <div class="premium-feature-content">
-            <div class="premium-feature-badge">
-              <span class="material-icons">widgets</span>
-              Power Pack
-            </div>
-            <h3 class="premium-feature-title"><span class="gradient-text">Widget Dashboard</span></h3>
-            <p class="premium-feature-description">
-              Build mission-specific dashboards that display exactly what your operation needs. A SAR team leader
-              monitors all member positions and battery levels on one screen. An event coordinator tracks
-              channel activity across multiple sectors. A repeater operator watches signal quality metrics
-              in real-time. The drag-and-drop builder lets you create, save, and switch between dashboard
-              configurations for different scenarios.
-            </p>
-            <ul class="premium-feature-benefits">
-              <li>
-                <span class="material-icons">check</span>
-                9 widget types: maps, graphs, lists, status panels, and more
-              </li>
-              <li>
-                <span class="material-icons">check</span>
-                Visual drag-and-drop layout builder
-              </li>
-              <li>
-                <span class="material-icons">check</span>
-                Save multiple configurations for different operations
-              </li>
-            </ul>
-            <div class="use-case-highlight">
-              <h4>Pro Tip</h4>
-              <p>An SAR incident commander tablet can show all team positions, battery levels, and last-heard times in
-                one view. No more switching between screens during active searches.</p>
-            </div>
-          </div>
-          <div class="premium-feature-visual">
-            <img src="screenshots/dashboard.png" alt="Widget Pack - Custom Dashboards">
-            <div class="floating-element floating-element-widgets">
-              <div class="floating-icon">
-                <span class="material-icons">widgets</span>
-              </div>
-              <div class="floating-label">Widget Types</div>
-              <div class="floating-value">9 Available</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Automation Pack -->
-        <div class="premium-feature reverse">
-          <div class="premium-feature-content">
-            <div class="premium-feature-badge">
-              <span class="material-icons">auto_awesome</span>
-              Power Pack
-            </div>
-            <h3 class="premium-feature-title"><span class="gradient-text">Automation Engine</span></h3>
-            <p class="premium-feature-description">
-              Set it and forget it. Automations run in the background, responding to network events automatically
-              so you can focus on what matters. Configure rules that trigger when battery drops below 20%,
-              when a node goes offline, when you enter or leave a geofenced area, or at scheduled times.
-              Actions include sending messages, broadcasting alerts, changing channels, and playing sounds.
-              Chain multiple conditions with AND/OR logic for sophisticated workflows.
-            </p>
-            <ul class="premium-feature-benefits">
-              <li>
-                <span class="material-icons">check</span>
-                Triggers: battery level, time, location, messages, node status
-              </li>
-              <li>
-                <span class="material-icons">check</span>
-                Actions: send messages, broadcast alerts, play sounds
-              </li>
-              <li>
-                <span class="material-icons">check</span>
-                Compound conditions with AND/OR logic
-              </li>
-            </ul>
-            <div class="use-case-highlight">
-              <h4>Pro Tip</h4>
-              <p>Configure your solar repeater to automatically broadcast a warning to the team and switch to low-power
-                mode
-                when battery drops below 20%. Keep your comms running through multi-day events.</p>
-            </div>
-          </div>
-          <div class="premium-feature-visual dual">
-            <img src="screenshots/automation-create.png" alt="Create Automation">
-            <img src="screenshots/automation-edit.png" alt="Edit Automation">
-            <div class="floating-element floating-element-automation">
-              <div class="floating-icon">
-                <span class="material-icons">settings</span>
-              </div>
-              <div class="floating-label">Trigger Types</div>
-              <div class="floating-value">5 Available</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- IFTTT Pack -->
-        <div class="premium-feature">
-          <div class="premium-feature-content">
-            <div class="premium-feature-badge">
-              <span class="material-icons">code</span>
-              Power Pack
-            </div>
-            <h3 class="premium-feature-title"><span class="gradient-text">IFTTT & Webhook Integration</span></h3>
-            <p class="premium-feature-description">
-              Bridge the gap between your offline mesh network and the connected world. IFTTT integration lets
-              you trigger external services when mesh events occur—log location data to Google Sheets,
-              send SMS through Twilio, flash smart home lights when messages arrive, or post to Slack channels.
-              Works bi-directionally: external events can also trigger mesh broadcasts. Custom webhook support
-              for enterprise systems and home automation platforms.
-            </p>
-            <ul class="premium-feature-benefits">
-              <li>
-                <span class="material-icons">check</span>
-                Native IFTTT integration with pre-built templates
-              </li>
-              <li>
-                <span class="material-icons">check</span>
-                Custom webhook support for any HTTP endpoint
-              </li>
-              <li>
-                <span class="material-icons">check</span>
-                Bi-directional: mesh → internet AND internet → mesh
-              </li>
-            </ul>
-            <div class="use-case-highlight">
-              <h4>Pro Tip</h4>
-              <p>Configure SOS broadcasts from the mesh to automatically trigger your home alarm, send SMS to emergency
-                contacts, and
-                log GPS coordinates to a shared spreadsheet. Peace of mind for your family.</p>
-            </div>
-          </div>
-          <div class="premium-feature-visual">
-            <img src="screenshots/ifttt-config.png" alt="IFTTT Integration">
-            <div class="floating-element floating-element-ifttt">
-              <div class="floating-icon">
-                <span class="material-icons">code</span>
-              </div>
-              <div class="floating-label">Integrations</div>
-              <div class="floating-value">Unlimited</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Siri Shortcuts Pack -->
-        <div class="premium-feature reverse">
-          <div class="premium-feature-content">
-            <div class="premium-feature-badge">
-              <span class="material-icons">compare_arrows</span>
-              Power Pack
-            </div>
-            <h3 class="premium-feature-title"><span class="gradient-text">Siri Shortcuts & App Intents</span></h3>
-            <p class="premium-feature-description">
-              Deep iOS integration through the Shortcuts app. Socialmesh exposes App Intents that let you
-              build powerful automations triggered by Siri voice commands, NFC tags, time of day, location,
-              or any Shortcuts trigger. Send messages, check node status, run mesh automations, open specific
-              screens—all hands-free or as part of complex multi-app workflows.
-            </p>
-            <ul class="premium-feature-benefits">
-              <li>
-                <span class="material-icons">check</span>
-                10+ App Intents: Send Messages, Get Node Status, Run Automations
-              </li>
-              <li>
-                <span class="material-icons">check</span>
-                Siri voice control: "Hey Siri, send SOS on my mesh"
-              </li>
-              <li>
-                <span class="material-icons">check</span>
-                Combine with Focus modes, NFC tags, and Apple Watch
-              </li>
-            </ul>
-            <div class="use-case-highlight">
-              <h4>Pro Tip</h4>
-              <p>Put an NFC tag on your radio bag. One tap and your phone sends 'Going hiking, back by 6pm'
-                to your family channel, enables Do Not Disturb, and opens the mesh map. Zero friction.</p>
-            </div>
-          </div>
-          <div class="premium-feature-visual dual">
-            <img src="screenshots/socialmesh-shortcut-list.png" alt="Siri Shortcuts List">
-            <img src="screenshots/socialmesh-shortcut.png" alt="Shortcut Actions">
-            <div class="floating-element floating-element-shortcuts">
-              <div class="floating-icon">
-                <span class="material-icons">compare_arrows</span>
-              </div>
-              <div class="floating-label">App Intents</div>
-              <div class="floating-value">10+ Actions</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Screenshots Section -->
-  <section id="screenshots">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-tag">Gallery</span>
-        <h2 class="section-title">App <span class="gradient-text">Screenshots</span></h2>
-        <p class="section-description">
-          Browse the interface. No mockups, no renders, actual app screens.
-        </p>
-      </div>
-
-      <div class="screenshots-category reveal">
-        <h3>Core Experience</h3>
-        <div class="screenshots-grid reveal-stagger">
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/nodes.png" alt="Node List">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Node List</div>
-              <div class="screenshot-description">View all nodes in your mesh with real-time status, signal strength,
-                and battery levels.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/mesh-map.png" alt="Mesh Map">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Mesh Map</div>
-              <div class="screenshot-description">Interactive map showing node positions, connections, and coverage
-                areas.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/channels.png" alt="Channels">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Channels</div>
-              <div class="screenshot-description">Manage encrypted channels with customizable names, colors, and
-                notification settings.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/presence.png" alt="Presence Status">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Presence Status</div>
-              <div class="screenshot-description">Set your availability status so others know when you're active or
-                away.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/timeline.png" alt="Timeline">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Timeline</div>
-              <div class="screenshot-description">Chronological feed of all mesh activity—messages, node events, and
-                alerts.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/dashboard.png" alt="Dashboard">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Dashboard</div>
-              <div class="screenshot-description">Customizable widget dashboard for at-a-glance network monitoring.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="screenshots-category reveal">
-        <h3>Maps & Location</h3>
-        <div class="screenshots-grid reveal-stagger">
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/mesh-map.png" alt="Mesh Map">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Mesh Map</div>
-              <div class="screenshot-description">Full-screen map view with satellite, terrain, and dark mode options.
-              </div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/node-info-sheet.png" alt="Node Info">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Node Info</div>
-              <div class="screenshot-description">Detailed node information including hardware, firmware, and location
-                history.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/routes.png" alt="Routes">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Routes</div>
-              <div class="screenshot-description">Record and visualize GPS tracks from your mesh adventures.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="screenshots-category reveal">
-        <h3>3D Visualization</h3>
-        <div class="screenshots-grid reveal-stagger">
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/mesh-globe.png" alt="Mesh Globe">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Mesh Globe</div>
-              <div class="screenshot-description">Interactive 3D globe showing worldwide node distribution and
-                connections.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/mesh3d-signal.png" alt="Signal Strength 3D">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Signal Strength</div>
-              <div class="screenshot-description">Visualize signal quality between nodes with color-coded 3D
-                connections.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/mesh3d-propagation.png" alt="Signal Propagation">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Signal Propagation</div>
-              <div class="screenshot-description">Watch message propagation animate through your mesh in real-time.
-              </div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/traceroute.png" alt="Traceroute">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Traceroute</div>
-              <div class="screenshot-description">Trace the exact path messages take through intermediate nodes.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="screenshots-category reveal">
-        <h3>Channel Management</h3>
-        <div class="screenshots-grid reveal-stagger">
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/channel-wizard-start.png" alt="Channel Creation Wizard">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Channel Wizard</div>
-              <div class="screenshot-description">Step-by-step guided channel creation with smart defaults.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/channel-wizard-privacy.png" alt="Privacy Settings">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Privacy Settings</div>
-              <div class="screenshot-description">Choose encryption levels from open broadcast to AES-256 private.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/channel-advanced.png" alt="Advanced Options">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Advanced Options</div>
-              <div class="screenshot-description">Fine-tune modem settings, hop limits, and transmission parameters.
-              </div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/channel-qr.png" alt="Channel QR Code">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Channel QR Code</div>
-              <div class="screenshot-description">Share channels instantly via QR code or deep link.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="screenshots-category reveal">
-        <h3>Customization & Extras</h3>
-        <div class="screenshots-grid reveal-stagger">
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/themes.png" alt="Theme Customization">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Themes</div>
-              <div class="screenshot-description">12 accent colors to personalize your app experience.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/ringtones.png" alt="Ringtone Library">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Ringtones</div>
-              <div class="screenshot-description">5,300+ RTTTL tones searchable by title, artist, or category.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/dashboard.png" alt="Dashboard Widgets">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Widget Dashboard</div>
-              <div class="screenshot-description">Drag-and-drop dashboard builder with 9 widget types.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/widget-graph-create.png" alt="Widget Builder">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Widget Builder</div>
-              <div class="screenshot-description">Create custom graphs, charts, and status displays.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/automation-create.png" alt="Automation Create">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Automations</div>
-              <div class="screenshot-description">Build rules that trigger actions based on mesh events.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/automation-edit.png" alt="Edit Automation">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Automation Editor</div>
-              <div class="screenshot-description">Visual editor for complex multi-condition workflows.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/ifttt-config.png" alt="IFTTT Integration">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">IFTTT Webhooks</div>
-              <div class="screenshot-description">Connect your mesh to thousands of internet services.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="screenshots-category reveal">
-        <h3>Device & Settings</h3>
-        <div class="screenshots-grid reveal-stagger">
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/side-menu.png" alt="Side Menu">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Navigation Menu</div>
-              <div class="screenshot-description">Quick access to all app sections and connected devices.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/widget-customize.png" alt="Widget Customize">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Widget Colors</div>
-              <div class="screenshot-description">Customize widget appearance with colors and styles.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/firmware.png" alt="Firmware Updates">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Firmware Updates</div>
-              <div class="screenshot-description">Update device firmware directly from the app with one tap.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/quick-responses.png" alt="Quick Responses">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Quick Responses</div>
-              <div class="screenshot-description">Pre-configured message templates for fast replies.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/node-dm.png" alt="Node Direct Message">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Node DM</div>
-              <div class="screenshot-description">Private encrypted messaging directly to specific nodes.</div>
-            </div>
-          </div>
-          <div class="screenshot-card">
-            <div class="screenshot-img-wrapper">
-              <img src="screenshots/channel-advanced.png" alt="Channel Advanced">
-            </div>
-            <div class="screenshot-content">
-              <div class="screenshot-label">Channel Settings</div>
-              <div class="screenshot-description">Full control over channel behavior and radio parameters.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Comparison Section -->
-  <section id="comparison">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-tag">Comparison</span>
-        <h2 class="section-title">Why <span class="gradient-text">Socialmesh?</span></h2>
-        <p class="section-description">
-          We built the app we wished existed. Here's how we compare.
-        </p>
-      </div>
-
-      <div class="comparison-table reveal-scale">
-        <div class="comparison-header">
-          <div class="comparison-header-cell">Feature</div>
-          <div class="comparison-header-cell highlight">Socialmesh</div>
-          <div class="comparison-header-cell">Others</div>
-        </div>
-
-        <div class="comparison-row">
-          <div class="comparison-cell">3D Network Visualization</div>
-          <div class="comparison-cell highlight"><span class="check-icon"><span
-                class="material-icons">check</span></span></div>
-          <div class="comparison-cell"><span class="x-icon"><span class="material-icons">close</span></span></div>
-        </div>
-
-        <div class="comparison-row">
-          <div class="comparison-cell">World Mesh Explorer</div>
-          <div class="comparison-cell highlight"><span class="check-icon"><span
-                class="material-icons">check</span></span></div>
-          <div class="comparison-cell"><span class="x-icon"><span class="material-icons">close</span></span></div>
-        </div>
-
-        <div class="comparison-row">
-          <div class="comparison-cell">Interactive Globe View</div>
-          <div class="comparison-cell highlight"><span class="check-icon"><span
-                class="material-icons">check</span></span></div>
-          <div class="comparison-cell"><span class="x-icon"><span class="material-icons">close</span></span></div>
-        </div>
-
-        <div class="comparison-row">
-          <div class="comparison-cell">Timeline & Activity Feed</div>
-          <div class="comparison-cell highlight"><span class="check-icon"><span
-                class="material-icons">check</span></span></div>
-          <div class="comparison-cell"><span class="x-icon"><span class="material-icons">close</span></span></div>
-        </div>
-
-        <div class="comparison-row">
-          <div class="comparison-cell">Route Recording & GPX</div>
-          <div class="comparison-cell highlight"><span class="check-icon"><span
-                class="material-icons">check</span></span></div>
-          <div class="comparison-cell"><span class="partial-icon">Basic</span></div>
-        </div>
-
-        <div class="comparison-row">
-          <div class="comparison-cell">QR Code Node/Channel Sharing</div>
-          <div class="comparison-cell highlight"><span class="check-icon"><span
-                class="material-icons">check</span></span></div>
-          <div class="comparison-cell"><span class="check-icon"><span class="material-icons">check</span></span></div>
-        </div>
-
-        <div class="comparison-row">
-          <div class="comparison-cell">Visual Traceroute</div>
-          <div class="comparison-cell highlight"><span class="check-icon"><span
-                class="material-icons">check</span></span></div>
-          <div class="comparison-cell"><span class="x-icon"><span class="material-icons">close</span></span></div>
-        </div>
-
-        <div class="comparison-row">
-          <div class="comparison-cell">Real-Time Analytics</div>
-          <div class="comparison-cell highlight"><span class="check-icon"><span
-                class="material-icons">check</span></span></div>
-          <div class="comparison-cell"><span class="partial-icon">Basic</span></div>
-        </div>
-
-        <div class="comparison-row">
-          <div class="comparison-cell">iOS & Android Native</div>
-          <div class="comparison-cell highlight"><span class="check-icon"><span
-                class="material-icons">check</span></span></div>
-          <div class="comparison-cell"><span class="check-icon"><span class="material-icons">check</span></span></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Tech Stack Section -->
-  <section id="tech">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-tag">Built Right</span>
-        <h2 class="section-title">Modern <span class="gradient-text">Foundation</span></h2>
-        <p class="section-description">
-          Built on proven technologies for reliability, performance, and security.
-        </p>
-      </div>
-
-      <div class="tech-grid reveal-stagger">
-        <div class="tech-card">
-          <div class="tech-icon">
-            <span class="material-icons">phone_android</span>
-          </div>
-          <div class="tech-name">Flutter</div>
-          <div class="tech-description">Single codebase, native performance on iOS & Android</div>
-        </div>
-
-        <div class="tech-card">
-          <div class="tech-icon">
-            <span class="material-icons">data_object</span>
-          </div>
-          <div class="tech-name">Protobuf</div>
-          <div class="tech-description">Efficient serialization for fast mesh communication</div>
-        </div>
-
-        <div class="tech-card">
-          <div class="tech-icon">
-            <span class="material-icons">lock</span>
-          </div>
-          <div class="tech-name">AES Encryption</div>
-          <div class="tech-description">Industry-standard security for your messages</div>
-        </div>
-
-        <div class="tech-card">
-          <div class="tech-icon">
-            <span class="material-icons">bluetooth</span>
-          </div>
-          <div class="tech-name">BLE 5.0</div>
-          <div class="tech-description">Reliable, low-energy device connectivity</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Download Section -->
-  <section id="download">
-    <div class="container">
-      <div class="prerelease-content reveal-blur">
-        <h2 class="prerelease-title">Get Socialmesh</h2>
-
-        <p class="prerelease-description">
-          The most advanced Meshtastic client available. 3D visualization, maps, messaging,
-          firmware updates, automations, and more.
-        </p>
-
-        <div class="store-badges">
-          <a href="https://apps.apple.com/app/id6742694642" class="store-badge"
-            target="_blank" rel="noopener">
-            <img src="images/app-store-badge.svg" alt="Download on the App Store">
-          </a>
-          <a href="https://play.google.com/store/apps/details?id=com.gotnull.socialmesh" class="store-badge"
-            target="_blank" rel="noopener">
-            <img src="images/google-play-badge.svg" alt="Get it on Google Play">
-          </a>
-        </div>
-        <p class="store-status">
-          Available now on the App Store and Google Play.
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer>
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-brand">
-          <a href="#" class="logo">
-            <img src="images/app-icon.png" alt="Socialmesh" class="logo-img">
-            <span class="logo-text">Socialmesh</span>
-          </a>
-          <p>
-            The most powerful Meshtastic client for iOS and Android.
-            Built for operators who demand professional-grade tools
-            for their mesh network communications.
-          </p>
-        </div>
-
-        <div class="footer-links">
-          <h4>Product</h4>
-          <ul>
-            <li><a href="#features">Core Features</a></li>
-            <li><a href="#premium">Upgrades</a></li>
-            <li><a href="#screenshots">Screenshots</a></li>
-            <li><a href="#comparison">Compare</a></li>
-          </ul>
-        </div>
-
-        <div class="footer-links">
-          <h4>Resources</h4>
-          <ul>
-            <li><a href="https://meshtastic.org" target="_blank">Meshtastic.org</a></li>
-            <li><a href="/support">Support</a></li>
-            <li><a href="/docs">Documentation</a></li>
-            <li><a href="/faq">FAQ</a></li>
-          </ul>
-        </div>
-
-        <div class="footer-links">
-          <h4>Legal</h4>
-          <ul>
-            <li><a href="/privacy">Privacy Policy</a></li>
-            <li><a href="/terms">Terms of Service</a></li>
-            <li><a href="/delete-account">Delete Account</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="footer-bottom">
-        <p>&copy; 2026 Socialmesh. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
-
-  <script>
-    // Apple-style scroll reveal animations using Intersection Observer
-    document.addEventListener('DOMContentLoaded', () => {
-      // Elements to animate on scroll
-      const revealElements = document.querySelectorAll('.reveal, .reveal-stagger, .reveal-scale, .reveal-left, .reveal-right, .reveal-blur');
-
-      const revealObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('active');
-          }
-        });
-      }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-      });
-
-      revealElements.forEach(el => revealObserver.observe(el));
-
-      // Parallax effect for hero screenshots
-      const heroVisual = document.querySelector('.hero-visual');
-      const parallaxElements = document.querySelectorAll('.hero-screenshot, .premium-feature-visual img');
-
-      window.addEventListener('scroll', () => {
-        const scrolled = window.pageYOffset;
-
-        // Subtle parallax on hero
-        if (heroVisual && scrolled < window.innerHeight) {
-          heroVisual.style.transform = `translateY(${scrolled * 0.15}px)`;
-        }
-
-        // Navbar background intensity on scroll
-        const nav = document.querySelector('nav');
-        if (nav) {
-          const opacity = Math.min(scrolled / 200, 1);
-          nav.style.background = `rgba(10, 10, 15, ${0.6 + opacity * 0.35})`;
-        }
-      });
-
-      // Smooth counter animation for stats
-      const animateCounter = (el, target, duration = 2000) => {
-        let start = 0;
-        const startTime = performance.now();
-
-        const update = (currentTime) => {
-          const elapsed = currentTime - startTime;
-          const progress = Math.min(elapsed / duration, 1);
-
-          // Ease out cubic
-          const eased = 1 - Math.pow(1 - progress, 3);
-          const current = Math.floor(eased * target);
-
-          el.textContent = current.toLocaleString() + (el.dataset.suffix || '');
-
-          if (progress < 1) {
-            requestAnimationFrame(update);
-          }
-        };
-
-        requestAnimationFrame(update);
-      };
-
-      // Animate counters when they come into view
-      const counters = document.querySelectorAll('[data-count]');
-      const counterObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
-            entry.target.classList.add('counted');
-            const target = parseInt(entry.target.dataset.count);
-            animateCounter(entry.target, target);
-          }
-        });
-      }, { threshold: 0.5 });
-
-      counters.forEach(counter => counterObserver.observe(counter));
-
-      // Mouse follow glow effect on cards
-      const cards = document.querySelectorAll('.feature-card, .screenshot-card, .premium-feature');
-      cards.forEach(card => {
-        card.addEventListener('mousemove', (e) => {
-          const rect = card.getBoundingClientRect();
-          const x = ((e.clientX - rect.left) / rect.width) * 100;
-          const y = ((e.clientY - rect.top) / rect.height) * 100;
-          card.style.setProperty('--mouse-x', `${x}%`);
-          card.style.setProperty('--mouse-y', `${y}%`);
-        });
-      });
-
-      // Typing effect for hero tagline
-      const typeElement = document.querySelector('.hero-tagline');
-      if (typeElement) {
-        const text = typeElement.textContent;
-        typeElement.textContent = '';
-        typeElement.style.opacity = '1';
-        let i = 0;
-        const typeWriter = () => {
-          if (i < text.length) {
-            typeElement.textContent += text.charAt(i);
-            i++;
-            setTimeout(typeWriter, 30);
-          }
-        };
-        setTimeout(typeWriter, 500);
-      }
-
-      // Smooth scroll for anchor links with offset
-      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-          e.preventDefault();
-          const target = document.querySelector(this.getAttribute('href'));
-          if (target) {
-            const offset = 80;
-            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
-            window.scrollTo({
-              top: targetPosition,
-              behavior: 'smooth'
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>
+            Socialmesh — The Most Advanced Meshtastic Client for iOS & Android
+        </title>
+        <meta
+            name="description"
+            content="Transform your Meshtastic experience with the most powerful, feature-rich client available. Real-time mesh visualization, advanced automations, custom widgets, and enterprise-grade tools."
+        />
+        <meta
+            name="keywords"
+            content="meshtastic, mesh networking, off-grid communication, LoRa, radio, iOS, Android, emergency communication"
+        />
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/png" href="favicon.png" />
+
+        <!-- Smart App Banner (iOS Safari) -->
+        <meta name="apple-itunes-app" content="app-id=6742694642" />
+
+        <!-- Google tag (gtag.js) -->
+        <script
+            async
+            src="https://www.googletagmanager.com/gtag/js?id=G-6HX9J47JRF"
+        ></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag("js", new Date());
+
+            gtag("config", "G-6HX9J47JRF");
+        </script>
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
+            rel="stylesheet"
+        />
+
+        <!-- Styles -->
+        <link rel="stylesheet" href="landing.css?v=2" />
+    </head>
+
+    <body>
+        <!-- Animated Background -->
+        <div class="mesh-bg"></div>
+        <div class="grid-overlay"></div>
+
+        <!-- Navigation -->
+        <nav>
+            <div class="container">
+                <a href="#" class="logo">
+                    <img
+                        src="images/app-icon.png"
+                        alt="Socialmesh"
+                        class="logo-img"
+                    />
+                    <span class="logo-text">Socialmesh</span>
+                </a>
+
+                <ul class="nav-links">
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#nodedex">NodeDex</a></li>
+                    <li><a href="#presence">Social & Presence</a></li>
+                    <li><a href="#premium">Extras</a></li>
+                    <li><a href="#screenshots">Screenshots</a></li>
+                    <li><a href="#comparison">Compare</a></li>
+                    <li><a href="/docs">Docs</a></li>
+                    <li><a href="/faq">FAQ</a></li>
+                </ul>
+
+                <div class="nav-cta">
+                    <a href="#download" class="btn btn-primary">
+                        <span class="material-icons btn-icon">download</span>
+                        Download
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content reveal-blur">
+                    <div class="hero-badge">Available on iOS & Android</div>
+
+                    <h1>
+                        Meshtastic<br />
+                        <span class="gradient-text">Companion</span>
+                    </h1>
+
+                    <p class="hero-description">
+                        A complete Meshtastic client for iOS and Android. Send
+                        messages, track nearby nodes, configure your radio, and
+                        leave ephemeral signals for people in your area. Built
+                        for off-grid communication without internet or accounts.
+                    </p>
+
+                    <div
+                        class="store-badges"
+                        style="justify-content: flex-start; margin: 32px 0"
+                    >
+                        <a
+                            href="https://apps.apple.com/app/id6742694642"
+                            class="store-badge"
+                            target="_blank"
+                            rel="noopener"
+                        >
+                            <img
+                                src="images/app-store-badge.svg"
+                                alt="Download on the App Store"
+                            />
+                        </a>
+                        <a
+                            href="https://play.google.com/store/apps/details?id=com.gotnull.socialmesh"
+                            class="store-badge"
+                            target="_blank"
+                            rel="noopener"
+                        >
+                            <img
+                                src="images/google-play-badge.svg"
+                                alt="Get it on Google Play"
+                            />
+                        </a>
+                    </div>
+                    <p class="store-status">
+                        Available now on the App Store and Google Play.
+                    </p>
+
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <div class="stat-value">iOS & Android</div>
+                            <div class="stat-label">Native Apps</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">5,300+</div>
+                            <div class="stat-label">Ringtones</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-visual">
+                    <div class="hero-screenshot">
+                        <img
+                            src="screenshots/nodes.png"
+                            alt="Socialmesh Node List"
+                        />
+                    </div>
+
+                    <!-- Floating Elements -->
+                    <div class="floating-element floating-element-1">
+                        <div class="floating-icon">
+                            <span class="material-icons">public</span>
+                        </div>
+                        <div class="floating-label">Online Nodes</div>
+                        <div class="floating-value">24 Active</div>
+                    </div>
+
+                    <div class="floating-element floating-element-2">
+                        <div class="floating-icon">
+                            <span class="material-icons">rss_feed</span>
+                        </div>
+                        <div class="floating-label">Signal</div>
+                        <div class="floating-value">-67 dBm</div>
+                    </div>
+
+                    <div class="floating-element floating-element-3">
+                        <div class="floating-icon">
+                            <span class="material-icons">forum</span>
+                        </div>
+                        <div class="floating-label">Messages</div>
+                        <div class="floating-value">142 Today</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Social & Presence Section -->
+        <section id="presence" class="presence-section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <span class="section-tag">Social & Presence</span>
+                    <h2 class="section-title">
+                        Know Who's
+                        <span class="gradient-text">Active</span> Without
+                        Guesswork
+                    </h2>
+                    <p class="section-description">
+                        Socialmesh shows presence the way a LoRa mesh actually
+                        works. No fake "online" pings, no instant offline.
+                        Everything is inferred from real radio activity and
+                        last-heard time.
+                    </p>
+                </div>
+
+                <div class="premium-features">
+                    <div class="premium-feature reveal">
+                        <div class="premium-feature-content reveal-left">
+                            <div class="premium-feature-badge">
+                                <span class="material-icons">radar</span>
+                                Social & Presence
+                            </div>
+                            <h3 class="premium-feature-title">
+                                Presence is the
+                                <span class="gradient-text">product</span>
+                            </h3>
+                            <p class="premium-feature-description">
+                                Socialmesh is built around presence: who’s
+                                active, who’s nearby, and what the mesh is doing
+                                right now. It’s not a chat app bolted onto LoRa
+                                — it’s a living map of activity that updates
+                                only when real packets arrive.
+                            </p>
+                            <p class="premium-feature-description">
+                                Broadcast Signals, discover nearby nodes, and
+                                watch activity decay naturally when radios go
+                                quiet. No fake pings, no “online” lies — just
+                                the mesh as it is.
+                            </p>
+
+                            <div class="presence-pill-grid">
+                                <div class="presence-pill">
+                                    <span class="presence-dot active"></span>
+                                    Active — heard recently
+                                </div>
+                                <div class="presence-pill">
+                                    <span class="presence-dot fading"></span>
+                                    Fading — silence, still plausible
+                                </div>
+                                <div class="presence-pill">
+                                    <span class="presence-dot stale"></span>
+                                    Inactive — likely offline
+                                </div>
+                                <div class="presence-pill">
+                                    <span class="presence-dot unknown"></span>
+                                    Unknown — no recent data
+                                </div>
+                            </div>
+
+                            <ul class="premium-feature-benefits">
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Mesh‑first Signals with TTL decay and local
+                                    visibility
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Nearby discovery with geo‑context and
+                                    proximity filters
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Presence inferred from last‑heard time +
+                                    packet cadence
+                                </li>
+                            </ul>
+
+                            <div class="use-case-highlight">
+                                <h4>Pro Tip</h4>
+                                <p>
+                                    Use Signals like beacons for ops, meetups,
+                                    or trailheads. TTL decay keeps the map
+                                    honest— stale posts disappear without manual
+                                    cleanup.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div
+                            class="premium-feature-visual presence-visual-grid reveal-right"
+                        >
+                            <div class="presence-visual-card">
+                                <div class="presence-visual-img">
+                                    <img
+                                        src="screenshots/signals-home.png"
+                                        alt="Signals presence home"
+                                    />
+                                </div>
+                                <div class="presence-visual-caption">
+                                    Signal Feed — live mesh pulse, TTL decay,
+                                    and near‑field activity in one view.
+                                </div>
+                            </div>
+                            <div class="presence-visual-card">
+                                <div class="presence-visual-img">
+                                    <img
+                                        src="screenshots/signals-upload-screen.png"
+                                        alt="Signal upload screen"
+                                    />
+                                </div>
+                                <div class="presence-visual-caption">
+                                    Broadcast Signal — mesh‑first publish with
+                                    optional cloud sync and geo‑tagged context.
+                                </div>
+                            </div>
+                            <div class="presence-visual-card">
+                                <div class="presence-visual-img">
+                                    <img
+                                        src="screenshots/presence-screen.png"
+                                        alt="Presence screen"
+                                    />
+                                </div>
+                                <div class="presence-visual-caption">
+                                    Presence Decay — Active → Fading → Inactive
+                                    based on last‑heard and packet cadence.
+                                </div>
+                            </div>
+                            <div class="presence-visual-card">
+                                <div class="presence-visual-img">
+                                    <img
+                                        src="screenshots/signals-map-screen.png"
+                                        alt="Signals map screen"
+                                    />
+                                </div>
+                                <div class="presence-visual-caption">
+                                    Mesh Map — spatial signal intelligence,
+                                    proximity clusters, and on‑map activity.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NodeDex Section -->
+        <section id="nodedex" class="presence-section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <span class="section-tag">Field Journal</span>
+                    <h2 class="section-title">
+                        Your Personal
+                        <span class="gradient-text">NodeDex</span>
+                    </h2>
+                    <p class="section-description">
+                        Every node you discover on the mesh is automatically
+                        catalogued in the NodeDex — a living record of your mesh
+                        encounters. Each node receives a unique procedural Sigil
+                        and a personality Trait inferred from real behavioral
+                        data. Think of it as a naturalist's field journal for
+                        radio networks.
+                    </p>
+                </div>
+
+                <div class="premium-features">
+                    <!-- Procedural Sigils -->
+                    <div class="premium-feature reveal">
+                        <div class="premium-feature-content reveal-left">
+                            <div class="premium-feature-badge">
+                                <span class="material-icons">hexagon</span>
+                                NodeDex
+                            </div>
+                            <h3 class="premium-feature-title">
+                                Procedural
+                                <span class="gradient-text">Sigils</span>
+                            </h3>
+                            <p class="premium-feature-description">
+                                Every node gets a unique constellation-style
+                                geometric identity generated deterministically
+                                from its node number. The same node always
+                                produces the same sigil — no randomness, no
+                                variation. Sigils are built from outer polygons
+                                with 3 to 8 vertices, optional inner rings,
+                                radial lines, and a unique 3-color palette drawn
+                                from 16 curated colors.
+                            </p>
+                            <p class="premium-feature-description">
+                                As a node accumulates history, its sigil
+                                visually matures through five evolution stages —
+                                Seed, Marked, Inscribed, Heraldic, and Legacy —
+                                with subtle line weight changes, color
+                                deepening, and micro-etch detail that reward
+                                long-term observation.
+                            </p>
+                            <ul class="premium-feature-benefits">
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Deterministic identity — same node, same
+                                    sigil, always
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Five visual evolution stages tied to
+                                    observation depth
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Collectible trading-card-style Sigil Cards
+                                    with rarity-tiered borders
+                                </li>
+                            </ul>
+                            <div class="use-case-highlight">
+                                <h4>How It Works</h4>
+                                <p>
+                                    Open the NodeDex from the drawer menu. Every
+                                    node you have ever encountered appears with
+                                    its sigil, trait badge, and patina score.
+                                    Tap any entry to see its full detail screen
+                                    with observation timeline, field notes, and
+                                    exportable Sigil Card.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div
+                            class="premium-feature-visual presence-visual-grid reveal-right"
+                        >
+                            <div class="presence-visual-card">
+                                <div class="presence-visual-img">
+                                    <img
+                                        src="screenshots/nodedex-screenshot-1.png"
+                                        alt="NodeDex main screen"
+                                    />
+                                </div>
+                                <div class="presence-visual-caption">
+                                    NodeDex List — your catalogued mesh
+                                    encounters with sigils, traits, and patina
+                                    scores at a glance.
+                                </div>
+                            </div>
+                            <div class="presence-visual-card">
+                                <div class="presence-visual-img">
+                                    <img
+                                        src="screenshots/nodedex-screenshot-2.png"
+                                        alt="NodeDex sigil detail"
+                                    />
+                                </div>
+                                <div class="presence-visual-caption">
+                                    Sigil Detail — procedural geometric identity
+                                    with evolution stage and color palette.
+                                </div>
+                            </div>
+                            <div class="presence-visual-card">
+                                <div class="presence-visual-img">
+                                    <img
+                                        src="screenshots/nodedex-screenshot-3.png"
+                                        alt="NodeDex node detail"
+                                    />
+                                </div>
+                                <div class="presence-visual-caption">
+                                    Node Detail — full observation history,
+                                    trait evidence, and field notes.
+                                </div>
+                            </div>
+                            <div class="presence-visual-card">
+                                <div class="presence-visual-img">
+                                    <img
+                                        src="screenshots/nodedex-screenshot-4.png"
+                                        alt="NodeDex sigil card"
+                                    />
+                                </div>
+                                <div class="presence-visual-caption">
+                                    Sigil Card — collectible trading-card render
+                                    with rarity border and stat grid.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personality Traits & Patina -->
+                    <div class="premium-feature reverse reveal">
+                        <div class="premium-feature-content">
+                            <div class="premium-feature-badge">
+                                <span class="material-icons">psychology</span>
+                                NodeDex
+                            </div>
+                            <h3 class="premium-feature-title">
+                                Personality
+                                <span class="gradient-text"
+                                    >Traits & Patina</span
+                                >
+                            </h3>
+                            <p class="premium-feature-description">
+                                Traits are never user-assigned — they are
+                                passively inferred from observable telemetry and
+                                behavior. A node that forwards heavy traffic
+                                earns the Relay trait. One seen across multiple
+                                positions becomes a Wanderer. A rarely-seen node
+                                relative to its age is classified as a Ghost.
+                                Each trait includes a confidence score and
+                                evidence lines explaining exactly why the
+                                classification was made.
+                            </p>
+                            <p class="premium-feature-description">
+                                The Patina Score (0-100) measures how much
+                                observable history a node has accumulated,
+                                computed across six axes: tenure, encounters,
+                                geographic reach, signal depth, social
+                                connections, and recency. Information is
+                                progressively disclosed as observation
+                                accumulates — new nodes start sparse, and detail
+                                unlocks over time through five tiers: Trace,
+                                Noted, Logged, Inked, and Etched.
+                            </p>
+                            <ul class="premium-feature-benefits">
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    8 personality traits: Relay, Wanderer,
+                                    Sentinel, Beacon, Ghost, Courier, Anchor,
+                                    Drifter
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Patina scoring across 6 behavioral axes with
+                                    diminishing returns
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Progressive disclosure — detail unlocks as
+                                    you observe more
+                                </li>
+                            </ul>
+                            <div class="use-case-highlight">
+                                <h4>Pro Tip</h4>
+                                <p>
+                                    Use Social Tags to label nodes as Contact,
+                                    Trusted Node, Known Relay, or Frequent Peer.
+                                    Filter and sort the entire NodeDex by tag.
+                                    Co-seen tracking records which nodes appear
+                                    together, building a social graph of mesh
+                                    relationships over time.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div
+                            class="premium-feature-visual presence-visual-grid"
+                        >
+                            <div class="presence-visual-card">
+                                <div class="presence-visual-img">
+                                    <img
+                                        src="screenshots/nodedex-screenshot-5.png"
+                                        alt="NodeDex traits and patina"
+                                    />
+                                </div>
+                                <div class="presence-visual-caption">
+                                    Trait Evidence — confidence scores and
+                                    behavioral reasoning behind each
+                                    classification.
+                                </div>
+                            </div>
+                            <div class="presence-visual-card">
+                                <div class="presence-visual-img">
+                                    <img
+                                        src="screenshots/nodedex-screenshot-6.png"
+                                        alt="NodeDex field notes"
+                                    />
+                                </div>
+                                <div class="presence-visual-caption">
+                                    Field Notes — deterministic observations
+                                    that read like a naturalist's journal.
+                                </div>
+                            </div>
+                            <div class="presence-visual-card">
+                                <div class="presence-visual-img">
+                                    <img
+                                        src="screenshots/nodedex-screenshot-7.png"
+                                        alt="NodeDex constellation view"
+                                    />
+                                </div>
+                                <div class="presence-visual-caption">
+                                    Constellation View — spatial visualization
+                                    of your discovered nodes and their
+                                    relationships.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features">
+            <div class="container">
+                <div class="section-header reveal">
+                    <span class="section-tag">Core Features</span>
+                    <h2 class="section-title">
+                        Everything You Need,
+                        <span class="gradient-text">Nothing You Don't</span>
+                    </h2>
+                    <p class="section-description">
+                        Every feature designed to enhance your mesh network
+                        experience. From intuitive node management to powerful
+                        visualization tools.
+                    </p>
+                </div>
+
+                <div class="features-grid reveal-stagger">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">bookmark</span>
+                        </div>
+                        <h3 class="feature-title">Node Management</h3>
+                        <p class="feature-description">
+                            Star favorites, filter by status, search instantly.
+                            Keep track of every node in your mesh with real-time
+                            status updates.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">forum</span>
+                        </div>
+                        <h3 class="feature-title">Intelligent Messaging</h3>
+                        <p class="feature-description">
+                            Quick responses, message reactions, read receipts,
+                            and rich media support. Communication that feels
+                            natural.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">place</span>
+                        </div>
+                        <h3 class="feature-title">Advanced Mapping</h3>
+                        <p class="feature-description">
+                            See every node in your mesh on a beautiful map.
+                            Filter by distance, signal strength, or online
+                            status.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">public</span>
+                        </div>
+                        <h3 class="feature-title">3D Globe View</h3>
+                        <p class="feature-description">
+                            Visualize your entire mesh network on an interactive
+                            3D globe. Perfect for large-scale deployments.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">list</span>
+                        </div>
+                        <h3 class="feature-title">Channel Wizard</h3>
+                        <p class="feature-description">
+                            Create encrypted channels in seconds. Set privacy
+                            levels, encryption keys, and advanced options with
+                            guided setup.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">tune</span>
+                        </div>
+                        <h3 class="feature-title">Device Settings</h3>
+                        <p class="feature-description">
+                            Full control over every device parameter. Configure
+                            radio settings, power options, display preferences,
+                            and more.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">bar_chart</span>
+                        </div>
+                        <h3 class="feature-title">Analytics Dashboard</h3>
+                        <p class="feature-description">
+                            Track network health, message volume, node activity,
+                            and more. Data-driven insights for your mesh
+                            network.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">person</span>
+                        </div>
+                        <h3 class="feature-title">Presence System</h3>
+                        <p class="feature-description">
+                            Set your status, see who's online, and know when
+                            nodes go active or inactive. Real-time presence
+                            awareness.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">system_update</span>
+                        </div>
+                        <h3 class="feature-title">Firmware Updates</h3>
+                        <p class="feature-description">
+                            Update device firmware directly from the app.
+                            One-tap updates keep your devices running the latest
+                            software.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">public</span>
+                        </div>
+                        <h3 class="feature-title">World Mesh</h3>
+                        <p class="feature-description">
+                            Explore a live map of Meshtastic nodes worldwide.
+                            Discover mesh networks, view node analytics, and
+                            connect with the global community.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">history</span>
+                        </div>
+                        <h3 class="feature-title">Timeline</h3>
+                        <p class="feature-description">
+                            A unified feed of all mesh activity—messages, node
+                            joins, signal changes, and waypoints. Never miss
+                            what happened while you were away.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">qr_code_scanner</span>
+                        </div>
+                        <h3 class="feature-title">QR Code Scanning</h3>
+                        <p class="feature-description">
+                            Instantly add nodes or join channels by scanning QR
+                            codes. Share your node info or channel configs with
+                            a single scan.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">navigation</span>
+                        </div>
+                        <h3 class="feature-title">Route Recording</h3>
+                        <p class="feature-description">
+                            Record your adventures, import GPX files, and share
+                            routes with your mesh. Perfect for hiking, SAR
+                            operations, and event coordination.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">account_tree</span>
+                        </div>
+                        <h3 class="feature-title">Traceroute</h3>
+                        <p class="feature-description">
+                            Visualize how messages travel through your mesh. See
+                            hop counts, latency, and discover the path between
+                            any two nodes.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">assessment</span>
+                        </div>
+                        <h3 class="feature-title">Telemetry & Sensors</h3>
+                        <p class="feature-description">
+                            Monitor device metrics, environment sensors, air
+                            quality, and power data. Track battery voltage,
+                            temperature, humidity, and more with historical
+                            logs.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">groups</span>
+                        </div>
+                        <h3 class="feature-title">PAX Counter</h3>
+                        <p class="feature-description">
+                            Count nearby WiFi and Bluetooth devices to estimate
+                            foot traffic. Perfect for events, trail usage
+                            monitoring, and crowd analytics.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Premium Features Section -->
+        <section id="premium">
+            <div class="container">
+                <div class="premium-intro reveal">
+                    <span class="section-tag">Power Packs</span>
+                    <h2 class="section-title">
+                        Unlock <span class="gradient-text">More Power</span>
+                    </h2>
+                    <p>
+                        Socialmesh comes fully loaded—messaging, maps, 3D
+                        visualization, firmware updates, and more. Power packs
+                        add extra customization for those who want to take
+                        things further with themes, sounds, automation, and
+                        smart home integration.
+                    </p>
+                </div>
+
+                <div class="premium-features">
+                    <!-- Theme Pack -->
+                    <div class="premium-feature reveal">
+                        <div class="premium-feature-content reveal-left">
+                            <div class="premium-feature-badge">
+                                <span class="material-icons">palette</span>
+                                Power Pack
+                            </div>
+                            <h3 class="premium-feature-title">
+                                <span class="gradient-text">Theme Pack</span>
+                            </h3>
+                            <p class="premium-feature-description">
+                                Personalize your experience with 12 carefully
+                                designed accent colors that flow through every
+                                screen. Beyond aesthetics, themes provide
+                                instant visual context—use Ocean Blue for
+                                maritime operations, Forest Green for hiking
+                                trips, or Emergency Red when coordinating
+                                response efforts. Each theme transforms buttons,
+                                highlights, charts, and indicators throughout
+                                the entire app.
+                            </p>
+                            <ul class="premium-feature-benefits">
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    12 handcrafted accent colors with full app
+                                    integration
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Instant switching—no restart required
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Visual context for different operational
+                                    modes
+                                </li>
+                            </ul>
+                            <div class="use-case-highlight">
+                                <h4>Pro Tip</h4>
+                                <p>
+                                    Use Cyan for daily hiking, Magenta for
+                                    emergency coordination. One glance at your
+                                    screen tells you which mode you're operating
+                                    in—critical when seconds matter.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="premium-feature-visual">
+                            <img
+                                src="screenshots/themes.png"
+                                alt="Theme Pack - 12 Accent Colors"
+                            />
+                            <div
+                                class="floating-element floating-element-themes"
+                            >
+                                <div class="floating-icon">
+                                    <span class="material-icons">palette</span>
+                                </div>
+                                <div class="floating-label">Accent Colors</div>
+                                <div class="floating-value">12 Themes</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ringtone Pack -->
+                    <div class="premium-feature reverse">
+                        <div class="premium-feature-content">
+                            <div class="premium-feature-badge">
+                                <span class="material-icons">music_note</span>
+                                Power Pack
+                            </div>
+                            <h3 class="premium-feature-title">
+                                <span class="gradient-text"
+                                    >Ringtone Library</span
+                                >
+                            </h3>
+                            <p class="premium-feature-description">
+                                Audio differentiation is essential when your
+                                phone is in your pocket or you're wearing
+                                gloves. With 5,300+ RTTTL ringtones—from iconic
+                                TV themes to video game classics—you can assign
+                                unique sounds to each channel, node, or message
+                                type. Know instantly whether that notification
+                                is a casual chat, an urgent alert, or a specific
+                                team member without looking at your screen.
+                            </p>
+                            <ul class="premium-feature-benefits">
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    5,300+ ringtones searchable by title,
+                                    artist, or category
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Per-channel and per-node audio assignments
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Preview before applying—sends directly to
+                                    device
+                                </li>
+                            </ul>
+                            <div class="use-case-highlight">
+                                <h4>Pro Tip</h4>
+                                <p>
+                                    Set your emergency channel to play a loud
+                                    siren, family chat to the Mario coin sound.
+                                    Even with your phone in your pack, you'll
+                                    know exactly what needs attention.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="premium-feature-visual">
+                            <img
+                                src="screenshots/ringtones.png"
+                                alt="Ringtone Pack - 5,300+ tones"
+                            />
+                            <div
+                                class="floating-element floating-element-ringtones"
+                            >
+                                <div class="floating-icon">
+                                    <span class="material-icons"
+                                        >music_note</span
+                                    >
+                                </div>
+                                <div class="floating-label">Sound Library</div>
+                                <div class="floating-value">7,000+ Tones</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Widget Pack -->
+                    <div class="premium-feature">
+                        <div class="premium-feature-content">
+                            <div class="premium-feature-badge">
+                                <span class="material-icons">widgets</span>
+                                Power Pack
+                            </div>
+                            <h3 class="premium-feature-title">
+                                <span class="gradient-text"
+                                    >Widget Dashboard</span
+                                >
+                            </h3>
+                            <p class="premium-feature-description">
+                                Build mission-specific dashboards that display
+                                exactly what your operation needs. A SAR team
+                                leader monitors all member positions and battery
+                                levels on one screen. An event coordinator
+                                tracks channel activity across multiple sectors.
+                                A repeater operator watches signal quality
+                                metrics in real-time. The drag-and-drop builder
+                                lets you create, save, and switch between
+                                dashboard configurations for different
+                                scenarios.
+                            </p>
+                            <ul class="premium-feature-benefits">
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    9 widget types: maps, graphs, lists, status
+                                    panels, and more
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Visual drag-and-drop layout builder
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Save multiple configurations for different
+                                    operations
+                                </li>
+                            </ul>
+                            <div class="use-case-highlight">
+                                <h4>Pro Tip</h4>
+                                <p>
+                                    An SAR incident commander tablet can show
+                                    all team positions, battery levels, and
+                                    last-heard times in one view. No more
+                                    switching between screens during active
+                                    searches.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="premium-feature-visual">
+                            <img
+                                src="screenshots/dashboard.png"
+                                alt="Widget Pack - Custom Dashboards"
+                            />
+                            <div
+                                class="floating-element floating-element-widgets"
+                            >
+                                <div class="floating-icon">
+                                    <span class="material-icons">widgets</span>
+                                </div>
+                                <div class="floating-label">Widget Types</div>
+                                <div class="floating-value">9 Available</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Automation Pack -->
+                    <div class="premium-feature reverse">
+                        <div class="premium-feature-content">
+                            <div class="premium-feature-badge">
+                                <span class="material-icons">auto_awesome</span>
+                                Power Pack
+                            </div>
+                            <h3 class="premium-feature-title">
+                                <span class="gradient-text"
+                                    >Automation Engine</span
+                                >
+                            </h3>
+                            <p class="premium-feature-description">
+                                Set it and forget it. Automations run in the
+                                background, responding to network events
+                                automatically so you can focus on what matters.
+                                Configure rules that trigger when battery drops
+                                below 20%, when a node goes offline, when you
+                                enter or leave a geofenced area, or at scheduled
+                                times. Actions include sending messages,
+                                broadcasting alerts, changing channels, and
+                                playing sounds. Chain multiple conditions with
+                                AND/OR logic for sophisticated workflows.
+                            </p>
+                            <ul class="premium-feature-benefits">
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Triggers: battery level, time, location,
+                                    messages, node status
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Actions: send messages, broadcast alerts,
+                                    play sounds
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Compound conditions with AND/OR logic
+                                </li>
+                            </ul>
+                            <div class="use-case-highlight">
+                                <h4>Pro Tip</h4>
+                                <p>
+                                    Configure your solar repeater to
+                                    automatically broadcast a warning to the
+                                    team and switch to low-power mode when
+                                    battery drops below 20%. Keep your comms
+                                    running through multi-day events.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="premium-feature-visual dual">
+                            <img
+                                src="screenshots/automation-create.png"
+                                alt="Create Automation"
+                            />
+                            <img
+                                src="screenshots/automation-edit.png"
+                                alt="Edit Automation"
+                            />
+                            <div
+                                class="floating-element floating-element-automation"
+                            >
+                                <div class="floating-icon">
+                                    <span class="material-icons">settings</span>
+                                </div>
+                                <div class="floating-label">Trigger Types</div>
+                                <div class="floating-value">5 Available</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- IFTTT Pack -->
+                    <div class="premium-feature">
+                        <div class="premium-feature-content">
+                            <div class="premium-feature-badge">
+                                <span class="material-icons">code</span>
+                                Power Pack
+                            </div>
+                            <h3 class="premium-feature-title">
+                                <span class="gradient-text"
+                                    >IFTTT & Webhook Integration</span
+                                >
+                            </h3>
+                            <p class="premium-feature-description">
+                                Bridge the gap between your offline mesh network
+                                and the connected world. IFTTT integration lets
+                                you trigger external services when mesh events
+                                occur—log location data to Google Sheets, send
+                                SMS through Twilio, flash smart home lights when
+                                messages arrive, or post to Slack channels.
+                                Works bi-directionally: external events can also
+                                trigger mesh broadcasts. Custom webhook support
+                                for enterprise systems and home automation
+                                platforms.
+                            </p>
+                            <ul class="premium-feature-benefits">
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Native IFTTT integration with pre-built
+                                    templates
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Custom webhook support for any HTTP endpoint
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Bi-directional: mesh → internet AND internet
+                                    → mesh
+                                </li>
+                            </ul>
+                            <div class="use-case-highlight">
+                                <h4>Pro Tip</h4>
+                                <p>
+                                    Configure SOS broadcasts from the mesh to
+                                    automatically trigger your home alarm, send
+                                    SMS to emergency contacts, and log GPS
+                                    coordinates to a shared spreadsheet. Peace
+                                    of mind for your family.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="premium-feature-visual">
+                            <img
+                                src="screenshots/ifttt-config.png"
+                                alt="IFTTT Integration"
+                            />
+                            <div
+                                class="floating-element floating-element-ifttt"
+                            >
+                                <div class="floating-icon">
+                                    <span class="material-icons">code</span>
+                                </div>
+                                <div class="floating-label">Integrations</div>
+                                <div class="floating-value">Unlimited</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Siri Shortcuts Pack -->
+                    <div class="premium-feature reverse">
+                        <div class="premium-feature-content">
+                            <div class="premium-feature-badge">
+                                <span class="material-icons"
+                                    >compare_arrows</span
+                                >
+                                Power Pack
+                            </div>
+                            <h3 class="premium-feature-title">
+                                <span class="gradient-text"
+                                    >Siri Shortcuts & App Intents</span
+                                >
+                            </h3>
+                            <p class="premium-feature-description">
+                                Deep iOS integration through the Shortcuts app.
+                                Socialmesh exposes App Intents that let you
+                                build powerful automations triggered by Siri
+                                voice commands, NFC tags, time of day, location,
+                                or any Shortcuts trigger. Send messages, check
+                                node status, run mesh automations, open specific
+                                screens—all hands-free or as part of complex
+                                multi-app workflows.
+                            </p>
+                            <ul class="premium-feature-benefits">
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    10+ App Intents: Send Messages, Get Node
+                                    Status, Run Automations
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Siri voice control: "Hey Siri, send SOS on
+                                    my mesh"
+                                </li>
+                                <li>
+                                    <span class="material-icons">check</span>
+                                    Combine with Focus modes, NFC tags, and
+                                    Apple Watch
+                                </li>
+                            </ul>
+                            <div class="use-case-highlight">
+                                <h4>Pro Tip</h4>
+                                <p>
+                                    Put an NFC tag on your radio bag. One tap
+                                    and your phone sends 'Going hiking, back by
+                                    6pm' to your family channel, enables Do Not
+                                    Disturb, and opens the mesh map. Zero
+                                    friction.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="premium-feature-visual dual">
+                            <img
+                                src="screenshots/socialmesh-shortcut-list.png"
+                                alt="Siri Shortcuts List"
+                            />
+                            <img
+                                src="screenshots/socialmesh-shortcut.png"
+                                alt="Shortcut Actions"
+                            />
+                            <div
+                                class="floating-element floating-element-shortcuts"
+                            >
+                                <div class="floating-icon">
+                                    <span class="material-icons"
+                                        >compare_arrows</span
+                                    >
+                                </div>
+                                <div class="floating-label">App Intents</div>
+                                <div class="floating-value">10+ Actions</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Screenshots Section -->
+        <section id="screenshots">
+            <div class="container">
+                <div class="section-header reveal">
+                    <span class="section-tag">Gallery</span>
+                    <h2 class="section-title">
+                        App <span class="gradient-text">Screenshots</span>
+                    </h2>
+                    <p class="section-description">
+                        Browse the interface. No mockups, no renders, actual app
+                        screens.
+                    </p>
+                </div>
+
+                <div class="screenshots-category reveal">
+                    <h3>Core Experience</h3>
+                    <div class="screenshots-grid reveal-stagger">
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/nodes.png"
+                                    alt="Node List"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">Node List</div>
+                                <div class="screenshot-description">
+                                    View all nodes in your mesh with real-time
+                                    status, signal strength, and battery levels.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/mesh-map.png"
+                                    alt="Mesh Map"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">Mesh Map</div>
+                                <div class="screenshot-description">
+                                    Interactive map showing node positions,
+                                    connections, and coverage areas.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/channels.png"
+                                    alt="Channels"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">Channels</div>
+                                <div class="screenshot-description">
+                                    Manage encrypted channels with customizable
+                                    names, colors, and notification settings.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/presence.png"
+                                    alt="Presence Status"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Presence Status
+                                </div>
+                                <div class="screenshot-description">
+                                    Set your availability status so others know
+                                    when you're active or away.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/timeline.png"
+                                    alt="Timeline"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">Timeline</div>
+                                <div class="screenshot-description">
+                                    Chronological feed of all mesh
+                                    activity—messages, node events, and alerts.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/dashboard.png"
+                                    alt="Dashboard"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">Dashboard</div>
+                                <div class="screenshot-description">
+                                    Customizable widget dashboard for
+                                    at-a-glance network monitoring.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="screenshots-category reveal">
+                    <h3>Maps & Location</h3>
+                    <div class="screenshots-grid reveal-stagger">
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/mesh-map.png"
+                                    alt="Mesh Map"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">Mesh Map</div>
+                                <div class="screenshot-description">
+                                    Full-screen map view with satellite,
+                                    terrain, and dark mode options.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/node-info-sheet.png"
+                                    alt="Node Info"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">Node Info</div>
+                                <div class="screenshot-description">
+                                    Detailed node information including
+                                    hardware, firmware, and location history.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/routes.png"
+                                    alt="Routes"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">Routes</div>
+                                <div class="screenshot-description">
+                                    Record and visualize GPS tracks from your
+                                    mesh adventures.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="screenshots-category reveal">
+                    <h3>3D Visualization</h3>
+                    <div class="screenshots-grid reveal-stagger">
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/mesh-globe.png"
+                                    alt="Mesh Globe"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">Mesh Globe</div>
+                                <div class="screenshot-description">
+                                    Interactive 3D globe showing worldwide node
+                                    distribution and connections.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/mesh3d-signal.png"
+                                    alt="Signal Strength 3D"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Signal Strength
+                                </div>
+                                <div class="screenshot-description">
+                                    Visualize signal quality between nodes with
+                                    color-coded 3D connections.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/mesh3d-propagation.png"
+                                    alt="Signal Propagation"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Signal Propagation
+                                </div>
+                                <div class="screenshot-description">
+                                    Watch message propagation animate through
+                                    your mesh in real-time.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/traceroute.png"
+                                    alt="Traceroute"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">Traceroute</div>
+                                <div class="screenshot-description">
+                                    Trace the exact path messages take through
+                                    intermediate nodes.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="screenshots-category reveal">
+                    <h3>Channel Management</h3>
+                    <div class="screenshots-grid reveal-stagger">
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/channel-wizard-start.png"
+                                    alt="Channel Creation Wizard"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Channel Wizard
+                                </div>
+                                <div class="screenshot-description">
+                                    Step-by-step guided channel creation with
+                                    smart defaults.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/channel-wizard-privacy.png"
+                                    alt="Privacy Settings"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Privacy Settings
+                                </div>
+                                <div class="screenshot-description">
+                                    Choose encryption levels from open broadcast
+                                    to AES-256 private.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/channel-advanced.png"
+                                    alt="Advanced Options"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Advanced Options
+                                </div>
+                                <div class="screenshot-description">
+                                    Fine-tune modem settings, hop limits, and
+                                    transmission parameters.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/channel-qr.png"
+                                    alt="Channel QR Code"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Channel QR Code
+                                </div>
+                                <div class="screenshot-description">
+                                    Share channels instantly via QR code or deep
+                                    link.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="screenshots-category reveal">
+                    <h3>Customization & Extras</h3>
+                    <div class="screenshots-grid reveal-stagger">
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/themes.png"
+                                    alt="Theme Customization"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">Themes</div>
+                                <div class="screenshot-description">
+                                    12 accent colors to personalize your app
+                                    experience.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/ringtones.png"
+                                    alt="Ringtone Library"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">Ringtones</div>
+                                <div class="screenshot-description">
+                                    5,300+ RTTTL tones searchable by title,
+                                    artist, or category.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/dashboard.png"
+                                    alt="Dashboard Widgets"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Widget Dashboard
+                                </div>
+                                <div class="screenshot-description">
+                                    Drag-and-drop dashboard builder with 9
+                                    widget types.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/widget-graph-create.png"
+                                    alt="Widget Builder"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Widget Builder
+                                </div>
+                                <div class="screenshot-description">
+                                    Create custom graphs, charts, and status
+                                    displays.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/automation-create.png"
+                                    alt="Automation Create"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">Automations</div>
+                                <div class="screenshot-description">
+                                    Build rules that trigger actions based on
+                                    mesh events.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/automation-edit.png"
+                                    alt="Edit Automation"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Automation Editor
+                                </div>
+                                <div class="screenshot-description">
+                                    Visual editor for complex multi-condition
+                                    workflows.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/ifttt-config.png"
+                                    alt="IFTTT Integration"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    IFTTT Webhooks
+                                </div>
+                                <div class="screenshot-description">
+                                    Connect your mesh to thousands of internet
+                                    services.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="screenshots-category reveal">
+                    <h3>Device & Settings</h3>
+                    <div class="screenshots-grid reveal-stagger">
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/side-menu.png"
+                                    alt="Side Menu"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Navigation Menu
+                                </div>
+                                <div class="screenshot-description">
+                                    Quick access to all app sections and
+                                    connected devices.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/widget-customize.png"
+                                    alt="Widget Customize"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Widget Colors
+                                </div>
+                                <div class="screenshot-description">
+                                    Customize widget appearance with colors and
+                                    styles.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/firmware.png"
+                                    alt="Firmware Updates"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Firmware Updates
+                                </div>
+                                <div class="screenshot-description">
+                                    Update device firmware directly from the app
+                                    with one tap.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/quick-responses.png"
+                                    alt="Quick Responses"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Quick Responses
+                                </div>
+                                <div class="screenshot-description">
+                                    Pre-configured message templates for fast
+                                    replies.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/node-dm.png"
+                                    alt="Node Direct Message"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">Node DM</div>
+                                <div class="screenshot-description">
+                                    Private encrypted messaging directly to
+                                    specific nodes.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-card">
+                            <div class="screenshot-img-wrapper">
+                                <img
+                                    src="screenshots/channel-advanced.png"
+                                    alt="Channel Advanced"
+                                />
+                            </div>
+                            <div class="screenshot-content">
+                                <div class="screenshot-label">
+                                    Channel Settings
+                                </div>
+                                <div class="screenshot-description">
+                                    Full control over channel behavior and radio
+                                    parameters.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Section -->
+        <section id="comparison">
+            <div class="container">
+                <div class="section-header reveal">
+                    <span class="section-tag">Comparison</span>
+                    <h2 class="section-title">
+                        Why <span class="gradient-text">Socialmesh?</span>
+                    </h2>
+                    <p class="section-description">
+                        We built the app we wished existed. Here's how we
+                        compare.
+                    </p>
+                </div>
+
+                <div class="comparison-table reveal-scale">
+                    <div class="comparison-header">
+                        <div class="comparison-header-cell">Feature</div>
+                        <div class="comparison-header-cell highlight">
+                            Socialmesh
+                        </div>
+                        <div class="comparison-header-cell">Others</div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="comparison-cell">
+                            3D Network Visualization
+                        </div>
+                        <div class="comparison-cell highlight">
+                            <span class="check-icon"
+                                ><span class="material-icons">check</span></span
+                            >
+                        </div>
+                        <div class="comparison-cell">
+                            <span class="x-icon"
+                                ><span class="material-icons">close</span></span
+                            >
+                        </div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="comparison-cell">World Mesh Explorer</div>
+                        <div class="comparison-cell highlight">
+                            <span class="check-icon"
+                                ><span class="material-icons">check</span></span
+                            >
+                        </div>
+                        <div class="comparison-cell">
+                            <span class="x-icon"
+                                ><span class="material-icons">close</span></span
+                            >
+                        </div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="comparison-cell">
+                            Interactive Globe View
+                        </div>
+                        <div class="comparison-cell highlight">
+                            <span class="check-icon"
+                                ><span class="material-icons">check</span></span
+                            >
+                        </div>
+                        <div class="comparison-cell">
+                            <span class="x-icon"
+                                ><span class="material-icons">close</span></span
+                            >
+                        </div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="comparison-cell">
+                            Timeline & Activity Feed
+                        </div>
+                        <div class="comparison-cell highlight">
+                            <span class="check-icon"
+                                ><span class="material-icons">check</span></span
+                            >
+                        </div>
+                        <div class="comparison-cell">
+                            <span class="x-icon"
+                                ><span class="material-icons">close</span></span
+                            >
+                        </div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="comparison-cell">Route Recording & GPX</div>
+                        <div class="comparison-cell highlight">
+                            <span class="check-icon"
+                                ><span class="material-icons">check</span></span
+                            >
+                        </div>
+                        <div class="comparison-cell">
+                            <span class="partial-icon">Basic</span>
+                        </div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="comparison-cell">
+                            QR Code Node/Channel Sharing
+                        </div>
+                        <div class="comparison-cell highlight">
+                            <span class="check-icon"
+                                ><span class="material-icons">check</span></span
+                            >
+                        </div>
+                        <div class="comparison-cell">
+                            <span class="check-icon"
+                                ><span class="material-icons">check</span></span
+                            >
+                        </div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="comparison-cell">Visual Traceroute</div>
+                        <div class="comparison-cell highlight">
+                            <span class="check-icon"
+                                ><span class="material-icons">check</span></span
+                            >
+                        </div>
+                        <div class="comparison-cell">
+                            <span class="x-icon"
+                                ><span class="material-icons">close</span></span
+                            >
+                        </div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="comparison-cell">Real-Time Analytics</div>
+                        <div class="comparison-cell highlight">
+                            <span class="check-icon"
+                                ><span class="material-icons">check</span></span
+                            >
+                        </div>
+                        <div class="comparison-cell">
+                            <span class="partial-icon">Basic</span>
+                        </div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="comparison-cell">iOS & Android Native</div>
+                        <div class="comparison-cell highlight">
+                            <span class="check-icon"
+                                ><span class="material-icons">check</span></span
+                            >
+                        </div>
+                        <div class="comparison-cell">
+                            <span class="check-icon"
+                                ><span class="material-icons">check</span></span
+                            >
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tech Stack Section -->
+        <section id="tech">
+            <div class="container">
+                <div class="section-header reveal">
+                    <span class="section-tag">Built Right</span>
+                    <h2 class="section-title">
+                        Modern <span class="gradient-text">Foundation</span>
+                    </h2>
+                    <p class="section-description">
+                        Built on proven technologies for reliability,
+                        performance, and security.
+                    </p>
+                </div>
+
+                <div class="tech-grid reveal-stagger">
+                    <div class="tech-card">
+                        <div class="tech-icon">
+                            <span class="material-icons">phone_android</span>
+                        </div>
+                        <div class="tech-name">Flutter</div>
+                        <div class="tech-description">
+                            Single codebase, native performance on iOS & Android
+                        </div>
+                    </div>
+
+                    <div class="tech-card">
+                        <div class="tech-icon">
+                            <span class="material-icons">data_object</span>
+                        </div>
+                        <div class="tech-name">Protobuf</div>
+                        <div class="tech-description">
+                            Efficient serialization for fast mesh communication
+                        </div>
+                    </div>
+
+                    <div class="tech-card">
+                        <div class="tech-icon">
+                            <span class="material-icons">lock</span>
+                        </div>
+                        <div class="tech-name">AES Encryption</div>
+                        <div class="tech-description">
+                            Industry-standard security for your messages
+                        </div>
+                    </div>
+
+                    <div class="tech-card">
+                        <div class="tech-icon">
+                            <span class="material-icons">bluetooth</span>
+                        </div>
+                        <div class="tech-name">BLE 5.0</div>
+                        <div class="tech-description">
+                            Reliable, low-energy device connectivity
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Download Section -->
+        <section id="download">
+            <div class="container">
+                <div class="prerelease-content reveal-blur">
+                    <h2 class="prerelease-title">Get Socialmesh</h2>
+
+                    <p class="prerelease-description">
+                        The most advanced Meshtastic client available. 3D
+                        visualization, maps, messaging, firmware updates,
+                        automations, and more.
+                    </p>
+
+                    <div class="store-badges">
+                        <a
+                            href="https://apps.apple.com/app/id6742694642"
+                            class="store-badge"
+                            target="_blank"
+                            rel="noopener"
+                        >
+                            <img
+                                src="images/app-store-badge.svg"
+                                alt="Download on the App Store"
+                            />
+                        </a>
+                        <a
+                            href="https://play.google.com/store/apps/details?id=com.gotnull.socialmesh"
+                            class="store-badge"
+                            target="_blank"
+                            rel="noopener"
+                        >
+                            <img
+                                src="images/google-play-badge.svg"
+                                alt="Get it on Google Play"
+                            />
+                        </a>
+                    </div>
+                    <p class="store-status">
+                        Available now on the App Store and Google Play.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-brand">
+                        <a href="#" class="logo">
+                            <img
+                                src="images/app-icon.png"
+                                alt="Socialmesh"
+                                class="logo-img"
+                            />
+                            <span class="logo-text">Socialmesh</span>
+                        </a>
+                        <p>
+                            The most powerful Meshtastic client for iOS and
+                            Android. Built for operators who demand
+                            professional-grade tools for their mesh network
+                            communications.
+                        </p>
+                    </div>
+
+                    <div class="footer-links">
+                        <h4>Product</h4>
+                        <ul>
+                            <li><a href="#features">Core Features</a></li>
+                            <li><a href="#premium">Upgrades</a></li>
+                            <li><a href="#screenshots">Screenshots</a></li>
+                            <li><a href="#comparison">Compare</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-links">
+                        <h4>Resources</h4>
+                        <ul>
+                            <li>
+                                <a href="https://meshtastic.org" target="_blank"
+                                    >Meshtastic.org</a
+                                >
+                            </li>
+                            <li><a href="/support">Support</a></li>
+                            <li><a href="/docs">Documentation</a></li>
+                            <li><a href="/faq">FAQ</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-links">
+                        <h4>Legal</h4>
+                        <ul>
+                            <li><a href="/privacy">Privacy Policy</a></li>
+                            <li><a href="/terms">Terms of Service</a></li>
+                            <li>
+                                <a href="/delete-account">Delete Account</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="footer-bottom">
+                    <p>&copy; 2026 Socialmesh. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+
+        <script>
+            // Apple-style scroll reveal animations using Intersection Observer
+            document.addEventListener("DOMContentLoaded", () => {
+                // Elements to animate on scroll
+                const revealElements = document.querySelectorAll(
+                    ".reveal, .reveal-stagger, .reveal-scale, .reveal-left, .reveal-right, .reveal-blur",
+                );
+
+                const revealObserver = new IntersectionObserver(
+                    (entries) => {
+                        entries.forEach((entry) => {
+                            if (entry.isIntersecting) {
+                                entry.target.classList.add("active");
+                            }
+                        });
+                    },
+                    {
+                        threshold: 0.1,
+                        rootMargin: "0px 0px -50px 0px",
+                    },
+                );
+
+                revealElements.forEach((el) => revealObserver.observe(el));
+
+                // Parallax effect for hero screenshots
+                const heroVisual = document.querySelector(".hero-visual");
+                const parallaxElements = document.querySelectorAll(
+                    ".hero-screenshot, .premium-feature-visual img",
+                );
+
+                window.addEventListener("scroll", () => {
+                    const scrolled = window.pageYOffset;
+
+                    // Subtle parallax on hero
+                    if (heroVisual && scrolled < window.innerHeight) {
+                        heroVisual.style.transform = `translateY(${scrolled * 0.15}px)`;
+                    }
+
+                    // Navbar background intensity on scroll
+                    const nav = document.querySelector("nav");
+                    if (nav) {
+                        const opacity = Math.min(scrolled / 200, 1);
+                        nav.style.background = `rgba(10, 10, 15, ${0.6 + opacity * 0.35})`;
+                    }
+                });
+
+                // Smooth counter animation for stats
+                const animateCounter = (el, target, duration = 2000) => {
+                    let start = 0;
+                    const startTime = performance.now();
+
+                    const update = (currentTime) => {
+                        const elapsed = currentTime - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+
+                        // Ease out cubic
+                        const eased = 1 - Math.pow(1 - progress, 3);
+                        const current = Math.floor(eased * target);
+
+                        el.textContent =
+                            current.toLocaleString() +
+                            (el.dataset.suffix || "");
+
+                        if (progress < 1) {
+                            requestAnimationFrame(update);
+                        }
+                    };
+
+                    requestAnimationFrame(update);
+                };
+
+                // Animate counters when they come into view
+                const counters = document.querySelectorAll("[data-count]");
+                const counterObserver = new IntersectionObserver(
+                    (entries) => {
+                        entries.forEach((entry) => {
+                            if (
+                                entry.isIntersecting &&
+                                !entry.target.classList.contains("counted")
+                            ) {
+                                entry.target.classList.add("counted");
+                                const target = parseInt(
+                                    entry.target.dataset.count,
+                                );
+                                animateCounter(entry.target, target);
+                            }
+                        });
+                    },
+                    { threshold: 0.5 },
+                );
+
+                counters.forEach((counter) => counterObserver.observe(counter));
+
+                // Mouse follow glow effect on cards
+                const cards = document.querySelectorAll(
+                    ".feature-card, .screenshot-card, .premium-feature",
+                );
+                cards.forEach((card) => {
+                    card.addEventListener("mousemove", (e) => {
+                        const rect = card.getBoundingClientRect();
+                        const x = ((e.clientX - rect.left) / rect.width) * 100;
+                        const y = ((e.clientY - rect.top) / rect.height) * 100;
+                        card.style.setProperty("--mouse-x", `${x}%`);
+                        card.style.setProperty("--mouse-y", `${y}%`);
+                    });
+                });
+
+                // Typing effect for hero tagline
+                const typeElement = document.querySelector(".hero-tagline");
+                if (typeElement) {
+                    const text = typeElement.textContent;
+                    typeElement.textContent = "";
+                    typeElement.style.opacity = "1";
+                    let i = 0;
+                    const typeWriter = () => {
+                        if (i < text.length) {
+                            typeElement.textContent += text.charAt(i);
+                            i++;
+                            setTimeout(typeWriter, 30);
+                        }
+                    };
+                    setTimeout(typeWriter, 500);
+                }
+
+                // Smooth scroll for anchor links with offset
+                document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+                    anchor.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        const target = document.querySelector(
+                            this.getAttribute("href"),
+                        );
+                        if (target) {
+                            const offset = 80;
+                            const targetPosition =
+                                target.getBoundingClientRect().top +
+                                window.pageYOffset -
+                                offset;
+                            window.scrollTo({
+                                top: targetPosition,
+                                behavior: "smooth",
+                            });
+                        }
+                    });
+                });
             });
-          }
-        });
-      });
-    });
-  </script>
-
-</body>
-
+        </script>
+    </body>
 </html>
