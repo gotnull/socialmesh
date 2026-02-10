@@ -34,6 +34,8 @@ class _FullscreenGalleryState extends State<FullscreenGallery> {
   late PageController _controller;
   late int _currentIndex;
 
+  bool get _isSingleImage => widget.images.length == 1;
+
   @override
   void initState() {
     super.initState();
@@ -51,20 +53,31 @@ class _FullscreenGalleryState extends State<FullscreenGallery> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.black54, Colors.transparent],
+            ),
+          ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(
-          '${_currentIndex + 1} / ${widget.images.length}',
-          style: const TextStyle(color: Colors.white),
-        ),
+        title: _isSingleImage
+            ? null
+            : Text(
+                '${_currentIndex + 1} / ${widget.images.length}',
+                style: const TextStyle(color: Colors.white),
+              ),
         centerTitle: true,
       ),
-      extendBodyBehindAppBar: true,
       body: GestureDetector(
         onTap: () => Navigator.of(context).pop(),
         child: PageView.builder(

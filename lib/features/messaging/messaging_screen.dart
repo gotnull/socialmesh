@@ -1350,6 +1350,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           .toList();
     }
 
+    // Mark any new unread messages as read while this chat is open.
+    // _markAsRead() is only called once in initState, so messages arriving
+    // after that are never marked — causing a persistent badge.
+    final hasUnreadInView = filteredMessages.any(
+      (m) => m.received && m.from != myNodeNum && !m.read,
+    );
+    if (hasUnreadInView) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _markAsRead();
+      });
+    }
+
     // Apply search filter if searching
     if (_isSearching && _searchQuery.isNotEmpty) {
       filteredMessages = filteredMessages

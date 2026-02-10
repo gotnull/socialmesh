@@ -1191,7 +1191,6 @@ class _MainShellState extends ConsumerState<MainShell> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: List.generate(_navItems.length, (index) {
                     final item = _navItems[index];
                     final isSelected =
@@ -1213,23 +1212,25 @@ class _MainShellState extends ConsumerState<MainShell> {
                       badgeCount = 0;
                     }
 
-                    return _NavBarItem(
-                      icon: isSelected ? item.activeIcon : item.icon,
-                      label: item.label,
-                      isSelected: isSelected,
-                      badgeCount: badgeCount,
-                      showWarningBadge: false,
-                      showReconnectingBadge: false,
-                      onTap: () {
-                        ref.haptics.tabChange();
-                        // Clear new nodes badge when navigating to Nodes tab
-                        if (index == 3) {
-                          ref.read(newNodesCountProvider.notifier).reset();
-                        }
-                        ref
-                            .read(mainShellIndexProvider.notifier)
-                            .setIndex(index);
-                      },
+                    return Expanded(
+                      child: _NavBarItem(
+                        icon: isSelected ? item.activeIcon : item.icon,
+                        label: item.label,
+                        isSelected: isSelected,
+                        badgeCount: badgeCount,
+                        showWarningBadge: false,
+                        showReconnectingBadge: false,
+                        onTap: () {
+                          ref.haptics.tabChange();
+                          // Clear new nodes badge when navigating to Nodes tab
+                          if (index == 3) {
+                            ref.read(newNodesCountProvider.notifier).reset();
+                          }
+                          ref
+                              .read(mainShellIndexProvider.notifier)
+                              .setIndex(index);
+                        },
+                      ),
                     );
                   }),
                 ),
@@ -1308,7 +1309,7 @@ class _NavBarItem extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: AppCurves.overshoot,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
               ? accentColor.withValues(alpha: 0.15)
