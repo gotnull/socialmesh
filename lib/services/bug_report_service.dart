@@ -11,6 +11,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -233,6 +234,21 @@ class BugReportService with WidgetsBindingObserver {
     final functions = FirebaseFunctions.instance;
     final callable = functions.httpsCallable('reportBug');
 
+    // Collect device model and OS version
+    final deviceInfoPlugin = DeviceInfoPlugin();
+    String? deviceModel;
+    String? osVersion;
+    if (Platform.isIOS) {
+      final iosInfo = await deviceInfoPlugin.iosInfo;
+      deviceModel = iosInfo.utsname.machine; // e.g. "iPhone16,1"
+      osVersion = '${iosInfo.systemName} ${iosInfo.systemVersion}';
+    } else if (Platform.isAndroid) {
+      final androidInfo = await deviceInfoPlugin.androidInfo;
+      deviceModel = '${androidInfo.manufacturer} ${androidInfo.model}';
+      osVersion =
+          'Android ${androidInfo.version.release} (SDK ${androidInfo.version.sdkInt})';
+    }
+
     // Collect comprehensive app state for better bug context
     final appContext = await _collectAppContext();
 
@@ -244,6 +260,8 @@ class BugReportService with WidgetsBindingObserver {
       'buildNumber': package.buildNumber,
       'platform': Platform.operatingSystem,
       'platformVersion': Platform.operatingSystemVersion,
+      'deviceModel': deviceModel,
+      'osVersion': osVersion,
       'uid': user?.uid,
       'email': user?.email,
       'displayName': user?.displayName,

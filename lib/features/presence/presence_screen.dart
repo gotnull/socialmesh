@@ -277,30 +277,31 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(
-                  _statusIcon(presence.confidence),
-                  size: 12,
-                  color: _statusColor(presence.confidence),
-                ),
-                const SizedBox(width: 4),
-                Tooltip(
-                  message: kPresenceInferenceTooltip,
-                  child: Text(
-                    presence.lastSeenBucket.label,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: _statusColor(presence.confidence),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
             Wrap(
               spacing: 6,
               runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _statusIcon(presence.confidence),
+                      size: 12,
+                      color: _statusColor(presence.confidence),
+                    ),
+                    const SizedBox(width: 4),
+                    Tooltip(
+                      message: kPresenceInferenceTooltip,
+                      child: Text(
+                        presence.lastSeenBucket.label,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: _statusColor(presence.confidence),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 _ConfidenceTierBadge(tier: presence.confidenceTier),
                 // Back nearby badge
                 if (presence.isBackNearby) _BackNearbyBadge(),

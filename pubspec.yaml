@@ -66,6 +66,7 @@ dependencies:
   just_audio: ^0.10.5
   live_activities: ^2.4.3
   package_info_plus: ^9.0.0
+  device_info_plus: ^11.2.0
 
   # In-App Purchases (RevenueCat)
   purchases_flutter: ^9.9.10
