@@ -108,6 +108,10 @@
         "destination": "/delete-account.html"
       },
       {
+        "source": "/bugs",
+        "destination": "/bugs.html"
+      },
+      {
         "source": "/sigil",
         "destination": "/sigil.html"
       },

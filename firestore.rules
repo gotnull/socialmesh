@@ -908,6 +908,9 @@ service cloud.firestore {
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'lastResponseAt']) &&
         request.resource.data.status == 'user_replied';
 
+      // Admins can update any report (status changes, lastResponseAt)
+      allow update: if isAdmin();
+
       // Responses subcollection (threaded conversation)
       match /responses/{responseId} {
         // Users can read responses on their own bug reports
@@ -922,6 +925,9 @@ service cloud.firestore {
           get(/databases/$(database)/documents/bugReports/$(reportId)).data.uid == request.auth.uid &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readByUser']) &&
           request.resource.data.readByUser == true;
+
+        // Admins can update any response (e.g. mark readByAdmin)
+        allow update: if isAdmin();
 
         // Users can create responses on their own bug reports
         allow create: if isAuthenticated() &&
