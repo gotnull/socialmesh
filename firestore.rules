@@ -884,5 +884,42 @@ service cloud.firestore {
         allow update: if false;
       }
     }
+
+    // =========================================================================
+    // BUG REPORTS
+    // =========================================================================
+
+    // Bug reports are created via Cloud Functions (reportBug callable).
+    // Users can read their own reports. Admins can read all reports.
+    match /bugReports/{reportId} {
+      // Users can read their own bug reports
+      allow read: if isAuthenticated() &&
+        resource.data.uid == request.auth.uid;
+
+      // Admins can read all bug reports
+      allow read: if isAdmin();
+
+      // Creation and updates happen via Cloud Functions only
+      allow create, update, delete: if false;
+
+      // Responses subcollection (threaded conversation)
+      match /responses/{responseId} {
+        // Users can read responses on their own bug reports
+        allow read: if isAuthenticated() &&
+          get(/databases/$(database)/documents/bugReports/$(reportId)).data.uid == request.auth.uid;
+
+        // Admins can read all responses
+        allow read: if isAdmin();
+
+        // Users can mark responses as read on their own reports
+        allow update: if isAuthenticated() &&
+          get(/databases/$(database)/documents/bugReports/$(reportId)).data.uid == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readByUser']) &&
+          request.resource.data.readByUser == true;
+
+        // Creation and deletion happen via Cloud Functions only
+        allow create, delete: if false;
+      }
+    }
   }
 }

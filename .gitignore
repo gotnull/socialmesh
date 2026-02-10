@@ -23,6 +23,7 @@ android/.kotlin/sessions/
 mesh-observer/
 functions/
 sigil-api/
+deploy/
 
 # Environment files (keep .env.example and .env.ci for CI)
 .env

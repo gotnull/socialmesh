@@ -81,6 +81,7 @@ import 'features/discovery/node_discovery_overlay.dart';
 import 'features/routes/route_detail_screen.dart';
 import 'features/globe/globe_screen.dart';
 import 'features/reachability/mesh_reachability_screen.dart';
+import 'features/feedback/my_bug_reports_screen.dart';
 import 'features/social/screens/post_detail_screen.dart';
 import 'features/social/screens/profile_social_screen.dart';
 import 'features/signals/screens/signal_detail_screen.dart';
@@ -956,6 +957,14 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           }
           break;
 
+        case 'bug_report_response':
+          // Navigate to My Bug Reports screen
+          navigator.pushNamed(
+            '/my-bug-reports',
+            arguments: nav.targetId != null ? {'reportId': nav.targetId} : null,
+          );
+          break;
+
         default:
           AppLogging.notifications('🔔 Unknown notification type: ${nav.type}');
       }
@@ -1303,6 +1312,14 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           '/reachability': (context) => const MeshReachabilityScreen(),
         },
         onGenerateRoute: (settings) {
+          if (settings.name == '/my-bug-reports') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            final reportId = args?['reportId'] as String?;
+            return MaterialPageRoute(
+              builder: (context) =>
+                  MyBugReportsScreen(initialReportId: reportId),
+            );
+          }
           // Check route requirements before building
           if (RouteRegistry.isDeviceRequired(settings.name)) {
             // This route requires device - it will be checked by the builder

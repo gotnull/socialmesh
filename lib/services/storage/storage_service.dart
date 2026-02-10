@@ -905,6 +905,7 @@ class MessageStorageService {
       'received': message.received,
       'acked': message.acked,
       'source': message.source.name,
+      'read': message.read,
       // Sender info cache
       'senderLongName': message.senderLongName,
       'senderShortName': message.senderShortName,
@@ -924,6 +925,7 @@ class MessageStorageService {
       received: json['received'] as bool? ?? false,
       acked: json['acked'] as bool? ?? false,
       source: _parseMessageSource(json['source'] as String?),
+      read: json['read'] as bool? ?? false,
       // Sender info cache
       senderLongName: json['senderLongName'] != null
           ? sanitizeUtf16(json['senderLongName'] as String)

@@ -115,6 +115,10 @@ class Message {
   final int? packetId; // Meshtastic packet ID for tracking delivery
   final MessageSource source; // Where the message originated from
 
+  /// Whether the user has read this message (opened the conversation).
+  /// Only meaningful for incoming messages (received == true).
+  final bool read;
+
   // Cached sender info - populated when message is received/created
   // This ensures sender info is always available even if node hasn't loaded yet
   final String? senderLongName;
@@ -136,6 +140,7 @@ class Message {
     this.routingError,
     this.packetId,
     this.source = MessageSource.unknown,
+    this.read = false,
     this.senderLongName,
     this.senderShortName,
     this.senderAvatarColor,
@@ -157,6 +162,7 @@ class Message {
     RoutingError? routingError,
     int? packetId,
     MessageSource? source,
+    bool? read,
     String? senderLongName,
     String? senderShortName,
     int? senderAvatarColor,
@@ -176,6 +182,7 @@ class Message {
       routingError: routingError ?? this.routingError,
       packetId: packetId ?? this.packetId,
       source: source ?? this.source,
+      read: read ?? this.read,
       senderLongName: senderLongName ?? this.senderLongName,
       senderShortName: senderShortName ?? this.senderShortName,
       senderAvatarColor: senderAvatarColor ?? this.senderAvatarColor,

@@ -2897,6 +2897,40 @@ class MessagesNotifier extends Notifier<List<Message>> {
     _storage?.saveMessage(updatedMessage);
   }
 
+  /// Mark all incoming messages from a specific node as read (for DM conversations).
+  void markConversationAsRead(int nodeNum) {
+    var changed = false;
+    state = state.map((m) {
+      if (m.received && m.from == nodeNum && !m.read) {
+        changed = true;
+        final updated = m.copyWith(read: true);
+        _storage?.saveMessage(updated);
+        return updated;
+      }
+      return m;
+    }).toList();
+    if (changed) {
+      AppLogging.messages('📨 Marked conversation with node $nodeNum as read');
+    }
+  }
+
+  /// Mark all incoming broadcast messages on a specific channel as read.
+  void markChannelAsRead(int channelIndex) {
+    var changed = false;
+    state = state.map((m) {
+      if (m.received && m.isBroadcast && m.channel == channelIndex && !m.read) {
+        changed = true;
+        final updated = m.copyWith(read: true);
+        _storage?.saveMessage(updated);
+        return updated;
+      }
+      return m;
+    }).toList();
+    if (changed) {
+      AppLogging.messages('📨 Marked channel $channelIndex messages as read');
+    }
+  }
+
   void deleteMessage(String messageId) {
     state = state.where((m) => m.id != messageId).toList();
     _storage?.deleteMessage(messageId);
@@ -3514,7 +3548,9 @@ final unreadMessagesCountProvider = Provider<int>((ref) {
 
   if (myNodeNum == null) return 0;
 
-  return messages.where((m) => m.received && m.from != myNodeNum).length;
+  return messages
+      .where((m) => m.received && m.from != myNodeNum && !m.read)
+      .length;
 });
 
 /// Has unread messages provider - simple boolean check

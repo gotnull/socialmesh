@@ -191,129 +191,154 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    return SafeArea(
-      top: true,
-      child: Padding(
-        padding: EdgeInsets.only(bottom: bottomInset),
-        child: DraggableScrollableSheet(
-          initialChildSize: 0.82,
-          minChildSize: 0.55,
-          maxChildSize: 0.95,
-          expand: false,
-          builder: (context, scrollController) {
-            return GestureDetector(
-              onTap: () => FocusScope.of(context).unfocus(),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.card,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    return DraggableScrollableSheet(
+      initialChildSize: 0.82,
+      minChildSize: 0.55,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) {
+        return GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Container(
+            decoration: BoxDecoration(
+              color: context.card,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              children: [
+                // Scrollable content
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Report bug',
+                                style: TextStyle(
+                                  color: context.textPrimary,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.close,
+                                color: context.textSecondary,
+                              ),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'What happened?',
+                            style: TextStyle(
+                              color: context.textSecondary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _controller,
+                          focusNode: _descriptionFocusNode,
+                          maxLines: 6,
+                          maxLength: 2000,
+                          decoration: InputDecoration(
+                            hintText: 'Tell us about the issue you encountered',
+                            filled: true,
+                            fillColor: context.background,
+                            errorText: _showDescriptionError
+                                ? 'Please describe the issue.'
+                                : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          style: TextStyle(color: context.textPrimary),
+                          onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                          onChanged: (_) {
+                            if (_showDescriptionError) {
+                              setState(() => _showDescriptionError = false);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        if (widget.initialScreenshot != null) ...[
+                          ListTile(
+                            dense: true,
+                            visualDensity: VisualDensity.compact,
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Include screenshot in report'),
+                            subtitle: const Text('Helps us debug faster'),
+                            trailing: ThemedSwitch(
+                              value: _includeScreenshot,
+                              onChanged: _isSending
+                                  ? null
+                                  : (value) {
+                                      setState(
+                                        () => _includeScreenshot = value,
+                                      );
+                                    },
+                            ),
+                          ),
+                          if (_includeScreenshot)
+                            Container(
+                              margin: const EdgeInsets.only(top: 8),
+                              decoration: BoxDecoration(
+                                color: context.background,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: context.border.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.memory(
+                                  widget.initialScreenshot!,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                // Fixed bottom section: shake toggle + send button
+                Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    border: Border(
+                      top: BorderSide(
+                        color: context.border.withValues(alpha: 0.2),
+                      ),
+                    ),
+                  ),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    12,
+                    20,
+                    bottomInset > 0 ? bottomInset + 12 : bottomPadding + 12,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Report bug',
-                              style: TextStyle(
-                                color: context.textPrimary,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.close,
-                              color: context.textSecondary,
-                            ),
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'What happened?',
-                          style: TextStyle(
-                            color: context.textSecondary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _controller,
-                        focusNode: _descriptionFocusNode,
-                        maxLines: 6,
-                        maxLength: 2000,
-                        decoration: InputDecoration(
-                          hintText: 'Tell us about the issue you encountered',
-                          filled: true,
-                          fillColor: context.background,
-                          errorText: _showDescriptionError
-                              ? 'Please describe the issue.'
-                              : null,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        style: TextStyle(color: context.textPrimary),
-                        onTapOutside: (_) => FocusScope.of(context).unfocus(),
-                        onChanged: (_) {
-                          if (_showDescriptionError) {
-                            setState(() => _showDescriptionError = false);
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      if (widget.initialScreenshot != null) ...[
-                        ListTile(
-                          dense: true,
-                          visualDensity: VisualDensity.compact,
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Include screenshot in report'),
-                          subtitle: const Text('Helps us debug faster'),
-                          trailing: ThemedSwitch(
-                            value: _includeScreenshot,
-                            onChanged: _isSending
-                                ? null
-                                : (value) {
-                                    setState(() => _includeScreenshot = value);
-                                  },
-                          ),
-                        ),
-                        if (_includeScreenshot)
-                          Container(
-                            margin: const EdgeInsets.only(top: 8),
-                            decoration: BoxDecoration(
-                              color: context.background,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: context.border.withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.memory(
-                                widget.initialScreenshot!,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                      ],
-                      const SizedBox(height: 16),
                       ListTile(
                         dense: true,
                         visualDensity: VisualDensity.compact,
@@ -359,11 +384,11 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                     ],
                   ),
                 ),
-              ),
-            );
-          },
-        ),
-      ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

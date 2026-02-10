@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import '../feedback/bug_report_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -171,6 +172,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               safeSetState(() {});
             },
           ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.forum_outlined,
+          title: 'My bug reports',
+          subtitle: 'View your reports and responses',
+          keywords: ['bug', 'report', 'feedback', 'support', 'response'],
+          section: 'FEEDBACK',
         ),
         _SearchableSettingItem(
           icon: Icons.palette,
@@ -2529,6 +2537,58 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 safeSetState(() {});
                               },
                             ),
+                          ),
+                          _SettingsTile(
+                            icon: Icons.forum_outlined,
+                            title: 'My bug reports',
+                            subtitle: 'View your reports and responses',
+                            trailing: Consumer(
+                              builder: (context, ref, _) {
+                                final countAsync = ref.watch(
+                                  bugReportUnreadCountProvider,
+                                );
+                                final count = countAsync.when(
+                                  data: (c) => c,
+                                  loading: () => 0,
+                                  error: (_, _) => 0,
+                                );
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (count > 0)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 3,
+                                        ),
+                                        margin: const EdgeInsets.only(right: 8),
+                                        decoration: BoxDecoration(
+                                          color: context.accentColor,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '$count',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      color: context.textTertiary,
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              Navigator.pushNamed(context, '/my-bug-reports');
+                            },
                           ),
 
                           const SizedBox(height: 16),

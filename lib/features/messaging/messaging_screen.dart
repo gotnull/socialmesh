@@ -88,7 +88,8 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
       if (message.isDirect) {
         final otherNode = message.from == myNodeNum ? message.to : message.from;
         final existing = dmInfoByNode[otherNode];
-        final isUnread = message.received && message.from == otherNode;
+        final isUnread =
+            message.received && message.from == otherNode && !message.read;
 
         if (existing == null) {
           dmInfoByNode[otherNode] = _DmInfo(
@@ -781,9 +782,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _messageFocusNode.requestFocus();
+        _markAsRead();
       }
     });
     _searchController.addListener(_onSearchChanged);
+  }
+
+  /// Mark all messages in this conversation as read.
+  void _markAsRead() {
+    final messagesNotifier = ref.read(messagesProvider.notifier);
+    if (widget.type == ConversationType.directMessage &&
+        widget.nodeNum != null) {
+      messagesNotifier.markConversationAsRead(widget.nodeNum!);
+    } else if (widget.type == ConversationType.channel &&
+        widget.channelIndex != null) {
+      messagesNotifier.markChannelAsRead(widget.channelIndex!);
+    }
   }
 
   void _onSearchChanged() {

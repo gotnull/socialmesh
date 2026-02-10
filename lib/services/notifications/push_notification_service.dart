@@ -335,6 +335,18 @@ class PushNotificationService {
           '🔔 Emitted $type refresh with payload keys: ${message.data.keys.toList()}',
         );
         break;
+      case 'bug_report_response':
+        // When the founder responds to a bug report
+        _contentRefreshController.add(
+          ContentRefreshEvent(
+            contentType: 'bug_report_response',
+            targetId: targetId,
+          ),
+        );
+        AppLogging.notifications(
+          '🔔 Emitted bug_report_response refresh for report: $targetId',
+        );
+        break;
     }
   }
 
