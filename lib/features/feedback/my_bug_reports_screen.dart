@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/fullscreen_gallery.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../utils/snackbar.dart';
 import 'bug_report_repository.dart';
@@ -380,41 +381,69 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
             if (report.screenshotUrl != null) ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    constraints: const BoxConstraints(maxHeight: 200),
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: context.background,
-                      border: Border.all(
-                        color: context.border.withValues(alpha: 0.3),
+                child: GestureDetector(
+                  onTap: () => FullscreenGallery.show(
+                    context,
+                    images: [report.screenshotUrl!],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      constraints: const BoxConstraints(maxHeight: 200),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: context.background,
+                        border: Border.all(
+                          color: context.border.withValues(alpha: 0.3),
+                        ),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Image.network(
-                      report.screenshotUrl!,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.broken_image_outlined,
-                              size: 20,
-                              color: context.textTertiary,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Screenshot unavailable',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: context.textTertiary,
+                      child: Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          Image.network(
+                            report.screenshotUrl!,
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.broken_image_outlined,
+                                        size: 20,
+                                        color: context.textTertiary,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Screenshot unavailable',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: context.textTertiary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                Icons.fullscreen_rounded,
+                                color: Colors.white70,
+                                size: 18,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -463,14 +492,17 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                         hintStyle: TextStyle(color: context.textTertiary),
                         filled: true,
                         fillColor: context.background,
-                        counterText: '',
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 14,
                           vertical: 10,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
+                        ),
+                        counterStyle: TextStyle(
+                          fontSize: 11,
+                          color: context.textTertiary,
                         ),
                       ),
                       style: TextStyle(

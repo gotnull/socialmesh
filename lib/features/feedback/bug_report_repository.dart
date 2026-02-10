@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -128,7 +127,6 @@ class BugReport {
 /// Repository for accessing bug reports and their responses from Firestore.
 class BugReportRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
   /// Fetch all bug reports for the current user, including responses.
   Future<List<BugReport>> fetchMyReports() async {
@@ -227,16 +225,26 @@ class BugReportRepository {
     required String reportId,
     required String message,
   }) async {
-    final callable = _functions.httpsCallable('replyToBugReport');
-    final result = await callable.call({
-      'reportId': reportId,
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('You must be signed in to reply');
+    }
+
+    final reportRef = _firestore.collection('bugReports').doc(reportId);
+
+    // Write the reply to the responses subcollection
+    await reportRef.collection('responses').add({
+      'from': 'user',
       'message': message,
+      'createdAt': FieldValue.serverTimestamp(),
+      'responderId': user.uid,
     });
 
-    final data = result.data as Map<String, dynamic>?;
-    if (data == null || data['success'] != true) {
-      throw Exception(data?['error'] ?? 'Failed to send reply');
-    }
+    // Update report status
+    await reportRef.update({
+      'status': 'user_replied',
+      'lastResponseAt': FieldValue.serverTimestamp(),
+    });
 
     AppLogging.bugReport('Reply sent to report $reportId');
   }

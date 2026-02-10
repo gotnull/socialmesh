@@ -899,8 +899,14 @@ service cloud.firestore {
       // Admins can read all bug reports
       allow read: if isAdmin();
 
-      // Creation and updates happen via Cloud Functions only
-      allow create, update, delete: if false;
+      // Creation happens via Cloud Functions only
+      allow create, delete: if false;
+
+      // Users can update their own report's status and lastResponseAt when replying
+      allow update: if isAuthenticated() &&
+        resource.data.uid == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'lastResponseAt']) &&
+        request.resource.data.status == 'user_replied';
 
       // Responses subcollection (threaded conversation)
       match /responses/{responseId} {
@@ -917,8 +923,18 @@ service cloud.firestore {
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readByUser']) &&
           request.resource.data.readByUser == true;
 
-        // Creation and deletion happen via Cloud Functions only
-        allow create, delete: if false;
+        // Users can create responses on their own bug reports
+        allow create: if isAuthenticated() &&
+          get(/databases/$(database)/documents/bugReports/$(reportId)).data.uid == request.auth.uid &&
+          request.resource.data.keys().hasAll(['from', 'message', 'createdAt', 'responderId']) &&
+          request.resource.data.from == 'user' &&
+          request.resource.data.responderId == request.auth.uid &&
+          request.resource.data.message is string &&
+          request.resource.data.message.size() > 0 &&
+          request.resource.data.message.size() <= 2000;
+
+        // Deletion happens via Cloud Functions only
+        allow delete: if false;
       }
     }
   }
