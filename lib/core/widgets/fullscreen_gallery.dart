@@ -122,14 +122,9 @@ class _FullscreenGalleryState extends State<FullscreenGallery> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Row(
                   children: [
-                    // Close button
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                    const Spacer(),
                     // Counter pill — only shown for multiple images
-                    if (_isMultiImage)
+                    if (_isMultiImage) ...[
+                      const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -148,9 +143,20 @@ class _FullscreenGalleryState extends State<FullscreenGallery> {
                           ),
                         ),
                       ),
+                    ],
                     const Spacer(),
-                    // Placeholder for visual symmetry with the close button
-                    const SizedBox(width: 48),
+                    // Close button — top-right to avoid overlapping
+                    // navigation elements visible in screenshot content
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
                   ],
                 ),
               ),

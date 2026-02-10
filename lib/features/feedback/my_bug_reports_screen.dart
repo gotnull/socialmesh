@@ -389,7 +389,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      constraints: const BoxConstraints(maxHeight: 200),
+                      height: 200,
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: context.background,
@@ -399,15 +399,21 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Stack(
-                        alignment: Alignment.bottomRight,
+                        fit: StackFit.expand,
                         children: [
                           Image.network(
                             report.screenshotUrl!,
-                            fit: BoxFit.contain,
+                            fit: BoxFit.cover,
                             width: double.infinity,
+                            height: 200,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return _ScreenshotSkeleton(
+                                borderColor: context.border,
+                              );
+                            },
                             errorBuilder: (context, error, stackTrace) =>
-                                Padding(
-                                  padding: const EdgeInsets.all(16),
+                                Center(
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -428,8 +434,9 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                                   ),
                                 ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(8),
+                          Positioned(
+                            right: 8,
+                            bottom: 8,
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
@@ -578,6 +585,97 @@ class _StatusChip extends StatelessWidget {
           color: color,
         ),
       ),
+    );
+  }
+}
+
+/// Shimmer skeleton shown while a screenshot is loading.
+class _ScreenshotSkeleton extends StatefulWidget {
+  const _ScreenshotSkeleton({required this.borderColor});
+
+  final Color borderColor;
+
+  @override
+  State<_ScreenshotSkeleton> createState() => _ScreenshotSkeletonState();
+}
+
+class _ScreenshotSkeletonState extends State<_ScreenshotSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final shimmerOpacity = 0.04 + (_animation.value * 0.08);
+        return Container(
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Stack(
+            children: [
+              // Shimmer gradient overlay
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    gradient: LinearGradient(
+                      begin: Alignment(-1.0 + (_animation.value * 3), -0.3),
+                      end: Alignment(-0.5 + (_animation.value * 3), 0.3),
+                      colors: [
+                        Colors.transparent,
+                        Colors.white.withValues(alpha: shimmerOpacity),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+              // Placeholder content
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.image_outlined,
+                      size: 32,
+                      color: context.textTertiary.withValues(alpha: 0.4),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Loading screenshot...',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
