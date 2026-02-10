@@ -1087,63 +1087,73 @@ class _AddAutomationSheet extends ConsumerWidget {
 
   /// Primary CTA to create from scratch - matches empty state style
   Widget _buildCreateFromScratchCard(BuildContext context) {
-    return BouncyTap(
-      onTap: onCreateNew,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
-              Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(
-                Icons.add,
-                size: 28,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Create from Scratch',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Build a custom automation with full control over triggers and actions',
-                    style: TextStyle(
-                      color: context.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
+    return Column(
+      children: [
+        // Form-based editor card.
+        BouncyTap(
+          onTap: onCreateNew,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
                 ],
               ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.3),
+              ),
             ),
-            Icon(Icons.chevron_right, color: context.textTertiary),
-          ],
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    Icons.add,
+                    size: 28,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Create from Scratch',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Build a custom automation with full control over triggers and actions',
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: context.textTertiary),
+              ],
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
