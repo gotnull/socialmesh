@@ -375,6 +375,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
         ),
 
+        // What's New
+        _SearchableSettingItem(
+          icon: Icons.auto_awesome_outlined,
+          title: "What's New",
+          subtitle: 'Browse recent features and updates',
+          keywords: [
+            'new',
+            'update',
+            'feature',
+            'changelog',
+            'release',
+            'whats',
+          ],
+          section: "WHAT'S NEW",
+          onTap: () => WhatsNewSheet.showHistory(context),
+        ),
+
         // Animations
         _SearchableSettingItem(
           icon: Icons.animation,
@@ -445,12 +462,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 
         // Messaging
         _SearchableSettingItem(
-          icon: Icons.flash_on_outlined,
+          icon: Icons.bolt,
           title: 'Quick responses',
-          subtitle: 'Show quick response bar',
-          keywords: ['quick', 'response', 'reply', 'fast'],
+          subtitle: 'Manage canned responses for fast messaging',
+          keywords: ['quick', 'response', 'reply', 'fast', 'canned'],
           section: 'MESSAGING',
-          hasSwitch: true,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CannedResponsesScreen()),
+          ),
         ),
         _SearchableSettingItem(
           icon: Icons.message_outlined,
@@ -472,6 +492,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           title: 'Message history limit',
           subtitle: 'Maximum messages to keep',
           keywords: ['history', 'limit', 'storage', 'message', 'keep'],
+          section: 'DATA & STORAGE',
+        ),
+        _SearchableSettingItem(
+          icon: Icons.download,
+          title: 'Export Messages',
+          subtitle: 'Export messages to PDF or CSV',
+          keywords: ['export', 'message', 'pdf', 'csv', 'download'],
           section: 'DATA & STORAGE',
         ),
         _SearchableSettingItem(
@@ -498,6 +525,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: 'Clear all local app data',
           keywords: ['reset', 'clear', 'local', 'data', 'factory'],
           section: 'DATA & STORAGE',
+        ),
+        _SearchableSettingItem(
+          icon: Icons.delete_forever,
+          title: 'Clear all data',
+          subtitle: 'Delete messages, settings, and keys',
+          keywords: [
+            'clear',
+            'delete',
+            'all',
+            'data',
+            'keys',
+            'factory',
+            'wipe',
+          ],
+          section: 'DATA & STORAGE',
+        ),
+
+        // Remote Administration
+        _SearchableSettingItem(
+          icon: Icons.settings_remote,
+          title: 'Remote Administration',
+          subtitle: 'Configure remote nodes via PKI admin',
+          keywords: [
+            'remote',
+            'admin',
+            'administration',
+            'node',
+            'pki',
+            'configure',
+          ],
+          section: 'REMOTE ADMINISTRATION',
         ),
 
         // Device
@@ -1708,6 +1766,79 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           // const _SocialNotificationsSection(),
                           const SizedBox(height: 16),
 
+                          // Feedback Section
+                          const _SectionHeader(title: 'FEEDBACK'),
+                          _SettingsTile(
+                            icon: Icons.bug_report_outlined,
+                            title: 'Shake to report a bug',
+                            subtitle:
+                                'Shake your device to open the bug report flow',
+                            trailing: ThemedSwitch(
+                              value: settingsService.shakeToReportEnabled,
+                              onChanged: (value) async {
+                                HapticFeedback.selectionClick();
+                                await ref
+                                    .read(bugReportServiceProvider)
+                                    .setEnabled(value);
+                                safeSetState(() {});
+                              },
+                            ),
+                          ),
+                          _SettingsTile(
+                            icon: Icons.forum_outlined,
+                            title: 'My bug reports',
+                            subtitle: 'View your reports and responses',
+                            trailing: Consumer(
+                              builder: (context, ref, _) {
+                                final countAsync = ref.watch(
+                                  bugReportUnreadCountProvider,
+                                );
+                                final count = countAsync.when(
+                                  data: (c) => c,
+                                  loading: () => 0,
+                                  error: (_, _) => 0,
+                                );
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (count > 0)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 3,
+                                        ),
+                                        margin: const EdgeInsets.only(right: 8),
+                                        decoration: BoxDecoration(
+                                          color: context.accentColor,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '$count',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      color: context.textTertiary,
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              Navigator.pushNamed(context, '/my-bug-reports');
+                            },
+                          ),
+
+                          const SizedBox(height: 16),
+
                           // Connection Section
                           _SectionHeader(title: 'CONNECTION'),
                           _SettingsTile(
@@ -2515,79 +2646,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                   ),
                                 ),
                               );
-                            },
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Feedback Section
-                          const _SectionHeader(title: 'FEEDBACK'),
-                          _SettingsTile(
-                            icon: Icons.bug_report_outlined,
-                            title: 'Shake to report a bug',
-                            subtitle:
-                                'Shake your device to open the bug report flow',
-                            trailing: ThemedSwitch(
-                              value: settingsService.shakeToReportEnabled,
-                              onChanged: (value) async {
-                                HapticFeedback.selectionClick();
-                                await ref
-                                    .read(bugReportServiceProvider)
-                                    .setEnabled(value);
-                                safeSetState(() {});
-                              },
-                            ),
-                          ),
-                          _SettingsTile(
-                            icon: Icons.forum_outlined,
-                            title: 'My bug reports',
-                            subtitle: 'View your reports and responses',
-                            trailing: Consumer(
-                              builder: (context, ref, _) {
-                                final countAsync = ref.watch(
-                                  bugReportUnreadCountProvider,
-                                );
-                                final count = countAsync.when(
-                                  data: (c) => c,
-                                  loading: () => 0,
-                                  error: (_, _) => 0,
-                                );
-                                return Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (count > 0)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 3,
-                                        ),
-                                        margin: const EdgeInsets.only(right: 8),
-                                        decoration: BoxDecoration(
-                                          color: context.accentColor,
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          '$count',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ),
-                                    Icon(
-                                      Icons.chevron_right,
-                                      color: context.textTertiary,
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              Navigator.pushNamed(context, '/my-bug-reports');
                             },
                           ),
 
