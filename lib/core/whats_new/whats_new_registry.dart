@@ -56,7 +56,7 @@ class WhatsNewItem {
 /// A versioned collection of [WhatsNewItem]s shown together when the
 /// user updates to (or installs) the given version.
 class WhatsNewPayload {
-  /// The semantic version this payload is associated with (e.g. "1.2.0").
+  /// The semantic version this payload is associated with.
   final String version;
 
   /// Headline shown at the top of the popup.
@@ -98,11 +98,11 @@ class WhatsNewRegistry {
   // ===========================================================================
 
   static const List<WhatsNewPayload> _payloads = [
-    // v0.9.0 — Reachability introduction
+    // v1.9.0 — Reachability introduction
     WhatsNewPayload(
-      version: '0.9.0',
+      version: '1.9.0',
       headline: "What's New in Socialmesh",
-      subtitle: 'Version 0.9.0',
+      subtitle: 'Version 1.9.0',
       items: [
         WhatsNewItem(
           id: 'reachability_intro',
@@ -122,11 +122,11 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.0.0 — World Map introduction
+    // v1.10.0 — World Map introduction
     WhatsNewPayload(
-      version: '1.0.0',
+      version: '1.10.0',
       headline: "What's New in Socialmesh",
-      subtitle: 'Version 1.0.0',
+      subtitle: 'Version 1.10.0',
       items: [
         WhatsNewItem(
           id: 'world_map_intro',
@@ -147,11 +147,11 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.1.0 — Signals / Presence Feed introduction
+    // v1.10.0 — Signals / Presence Feed introduction
     WhatsNewPayload(
-      version: '1.1.0',
+      version: '1.10.0',
       headline: "What's New in Socialmesh",
-      subtitle: 'Version 1.1.0',
+      subtitle: 'Version 1.10.0',
       items: [
         WhatsNewItem(
           id: 'signals_intro',
@@ -172,11 +172,11 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.2.0 — NodeDex introduction
+    // v1.13.0 — NodeDex introduction
     WhatsNewPayload(
-      version: '1.2.0',
+      version: '1.13.0',
       headline: "What's New in Socialmesh",
-      subtitle: 'Version 1.2.0',
+      subtitle: 'Version 1.13.0',
       items: [
         WhatsNewItem(
           id: 'nodedex_intro',
@@ -198,11 +198,11 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.3.0 — Collector Album for NodeDex
+    // v1.14.1 — Collector Album for NodeDex
     WhatsNewPayload(
-      version: '1.3.0',
+      version: '1.14.1',
       headline: "What's New in Socialmesh",
-      subtitle: 'Version 1.3.0',
+      subtitle: 'Version 1.14.1',
       items: [
         WhatsNewItem(
           id: 'collector_album',

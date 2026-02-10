@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/search_filter_header.dart';
 import '../../../utils/snackbar.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/user_avatar.dart';
@@ -156,170 +156,174 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
           );
         }
 
-        return Scaffold(
-          backgroundColor: context.background,
-          body: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              // App Bar with seller header
-              _buildHeader(context, seller),
+        return GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Scaffold(
+            backgroundColor: context.background,
+            body: CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                // App Bar with seller header
+                _buildHeader(context, seller),
 
-              // Search bar - pinned below app bar
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _SearchBarDelegate(
-                  searchController: _searchController,
-                  searchQuery: _searchQuery,
-                  onChanged: (value) => setState(() => _searchQuery = value),
-                  onClear: () {
-                    _searchController.clear();
-                    setState(() => _searchQuery = '');
-                  },
-                  hintText: 'Search products...',
-                  backgroundColor: context.background,
-                  cardColor: context.card,
-                  textPrimary: context.textPrimary,
-                  textTertiary: context.textTertiary,
+                // Search bar - pinned below app bar
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: SearchFilterHeaderDelegate(
+                    searchController: _searchController,
+                    searchQuery: _searchQuery,
+                    onSearchChanged: (value) =>
+                        setState(() => _searchQuery = value),
+                    hintText: 'Search products...',
+                    textScaler: MediaQuery.textScalerOf(context),
+                    rebuildKey: _searchQuery,
+                  ),
                 ),
-              ),
 
-              // Seller stats
-              SliverToBoxAdapter(child: _SellerStats(seller: seller)),
+                // Seller stats
+                SliverToBoxAdapter(child: _SellerStats(seller: seller)),
 
-              // Seller description
-              if (seller.description != null)
+                // Seller description
+                if (seller.description != null)
+                  SliverToBoxAdapter(
+                    child: _SellerDescription(description: seller.description!),
+                  ),
+
+                // Contact section
+                SliverToBoxAdapter(child: _ContactSection(seller: seller)),
+
+                // Discount code section (LILYGO only)
+                if (seller.discountCode != null &&
+                    seller.discountCode!.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: _DiscountCodeSection(seller: seller),
+                  ),
+
+                // Products section header
                 SliverToBoxAdapter(
-                  child: _SellerDescription(description: seller.description!),
-                ),
-
-              // Contact section
-              SliverToBoxAdapter(child: _ContactSection(seller: seller)),
-
-              // Discount code section (LILYGO only)
-              if (seller.discountCode != null &&
-                  seller.discountCode!.isNotEmpty)
-                SliverToBoxAdapter(child: _DiscountCodeSection(seller: seller)),
-
-              // Products section header
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                  child: Text(
-                    'Products (${seller.productCount})',
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Products grid
-              productsAsync.when(
-                loading: () => const SliverToBoxAdapter(
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(32),
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
-                ),
-                error: (error, stack) => SliverToBoxAdapter(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Text(
-                        'Unable to load products',
-                        style: TextStyle(color: context.textSecondary),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                    child: Text(
+                      'Products (${seller.productCount})',
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
-                data: (products) {
-                  if (products.isEmpty) {
-                    return SliverToBoxAdapter(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.inventory_2_outlined,
-                                color: context.textTertiary,
-                                size: 48,
-                              ),
-                              SizedBox(height: 12),
-                              Text(
-                                'No products listed yet',
-                                style: TextStyle(color: context.textSecondary),
-                              ),
-                            ],
-                          ),
+
+                // Products grid
+                productsAsync.when(
+                  loading: () => const SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32),
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  ),
+                  error: (error, stack) => SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Text(
+                          'Unable to load products',
+                          style: TextStyle(color: context.textSecondary),
                         ),
                       ),
-                    );
-                  }
-
-                  // Filter products by search query
-                  final filteredProducts = _searchQuery.isEmpty
-                      ? products
-                      : products.where((p) {
-                          final query = _searchQuery.toLowerCase();
-                          return p.name.toLowerCase().contains(query) ||
-                              (p.description.toLowerCase().contains(query)) ||
-                              (p.shortDescription?.toLowerCase().contains(
-                                    query,
-                                  ) ??
-                                  false) ||
-                              p.category.label.toLowerCase().contains(query);
-                        }).toList();
-
-                  if (filteredProducts.isEmpty) {
-                    return SliverToBoxAdapter(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.search_off,
-                                color: context.textTertiary,
-                                size: 48,
-                              ),
-                              SizedBox(height: 12),
-                              Text(
-                                'No products match "$_searchQuery"',
-                                style: TextStyle(color: context.textSecondary),
-                              ),
-                            ],
+                    ),
+                  ),
+                  data: (products) {
+                    if (products.isEmpty) {
+                      return SliverToBoxAdapter(
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.inventory_2_outlined,
+                                  color: context.textTertiary,
+                                  size: 48,
+                                ),
+                                SizedBox(height: 12),
+                                Text(
+                                  'No products listed yet',
+                                  style: TextStyle(
+                                    color: context.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
+                      );
+                    }
+
+                    // Filter products by search query
+                    final filteredProducts = _searchQuery.isEmpty
+                        ? products
+                        : products.where((p) {
+                            final query = _searchQuery.toLowerCase();
+                            return p.name.toLowerCase().contains(query) ||
+                                (p.description.toLowerCase().contains(query)) ||
+                                (p.shortDescription?.toLowerCase().contains(
+                                      query,
+                                    ) ??
+                                    false) ||
+                                p.category.label.toLowerCase().contains(query);
+                          }).toList();
+
+                    if (filteredProducts.isEmpty) {
+                      return SliverToBoxAdapter(
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.search_off,
+                                  color: context.textTertiary,
+                                  size: 48,
+                                ),
+                                SizedBox(height: 12),
+                                Text(
+                                  'No products match "$_searchQuery"',
+                                  style: TextStyle(
+                                    color: context.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    return SliverPadding(
+                      padding: const EdgeInsets.all(12),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.7,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                            ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          return ProductCard(product: filteredProducts[index]);
+                        }, childCount: filteredProducts.length),
                       ),
                     );
-                  }
+                  },
+                ),
 
-                  return SliverPadding(
-                    padding: const EdgeInsets.all(12),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.7,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                          ),
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        return ProductCard(product: filteredProducts[index]);
-                      }, childCount: filteredProducts.length),
-                    ),
-                  );
-                },
-              ),
-
-              // Bottom padding
-              const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
-            ],
+                // Bottom padding
+                const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
+              ],
+            ),
           ),
         );
       },
@@ -851,85 +855,5 @@ class _DiscountCodeSectionState extends ConsumerState<_DiscountCodeSection>
         ),
       ),
     );
-  }
-}
-
-/// Search bar persistent header delegate
-class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
-  final TextEditingController searchController;
-  final String searchQuery;
-  final Function(String) onChanged;
-  final VoidCallback onClear;
-  final String hintText;
-  final Color backgroundColor;
-  final Color cardColor;
-  final Color textPrimary;
-  final Color textTertiary;
-
-  _SearchBarDelegate({
-    required this.searchController,
-    required this.searchQuery,
-    required this.onChanged,
-    required this.onClear,
-    required this.hintText,
-    required this.backgroundColor,
-    required this.cardColor,
-    required this.textPrimary,
-    required this.textTertiary,
-  });
-
-  @override
-  double get minExtent => 72.0;
-
-  @override
-  double get maxExtent => 72.0;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          color: backgroundColor.withValues(alpha: 0.8),
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: TextField(
-              controller: searchController,
-              onChanged: onChanged,
-              style: TextStyle(color: textPrimary),
-              decoration: InputDecoration(
-                hintText: hintText,
-                hintStyle: TextStyle(color: textTertiary),
-                prefixIcon: Icon(Icons.search, color: textTertiary),
-                suffixIcon: searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(Icons.clear, color: textTertiary),
-                        onPressed: onClear,
-                      )
-                    : null,
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(_SearchBarDelegate oldDelegate) {
-    return searchQuery != oldDelegate.searchQuery;
   }
 }

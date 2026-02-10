@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'dart:math' as math;
-import 'dart:ui';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
-import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/section_header.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -99,146 +100,179 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
     final node = widget.nodeNum != null ? nodes[widget.nodeNum] : null;
     final nodeName = node?.displayName;
 
-    return GlassScaffold(
-      titleWidget: widget.nodeNum != null && nodeName != null
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Traceroute History',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: context.textPrimary,
-                    fontFamily: AppTheme.fontFamily,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: GlassScaffold(
+        titleWidget: widget.nodeNum != null && nodeName != null
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Traceroute History',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
+                      fontFamily: AppTheme.fontFamily,
+                    ),
+                  ),
+                  Text(
+                    nodeName,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: context.textTertiary,
+                      fontFamily: AppTheme.fontFamily,
+                    ),
+                  ),
+                ],
+              )
+            : null,
+        title: widget.nodeNum == null || nodeName == null
+            ? 'Traceroute History'
+            : null,
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            tooltip: 'More actions',
+            onSelected: (value) {
+              switch (value) {
+                case 'export':
+                  _exportCsv();
+                case 'clear':
+                  _confirmClearData();
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'export',
+                enabled: !_isExporting,
+                child: Row(
+                  children: [
+                    Icon(
+                      _isExporting ? Icons.hourglass_top : Icons.ios_share,
+                      size: 20,
+                      color: context.textSecondary,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(_isExporting ? 'Exporting...' : 'Export CSV'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'clear',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.delete_outline,
+                      size: 20,
+                      color: AppTheme.errorRed,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Clear Data',
+                      style: TextStyle(color: AppTheme.errorRed),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+        slivers: [
+          // Top padding to push content below the glass app bar
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          // Pinned search and filter controls
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: SearchFilterHeaderDelegate(
+              searchController: _searchController,
+              searchQuery: _searchQuery,
+              onSearchChanged: (value) =>
+                  safeSetState(() => _searchQuery = value),
+              hintText: 'Search by node name',
+              textScaler: MediaQuery.textScalerOf(context),
+              rebuildKey: Object.hashAll([
+                _activeFilter,
+                _countForFilter(logsAsync, _TracerouteFilter.all),
+                _countForFilter(logsAsync, _TracerouteFilter.responded),
+                _countForFilter(logsAsync, _TracerouteFilter.noResponse),
+              ]),
+              filterChips: [
+                SectionFilterChip(
+                  label: 'All',
+                  count: _countForFilter(logsAsync, _TracerouteFilter.all),
+                  isSelected: _activeFilter == _TracerouteFilter.all,
+                  onTap: () =>
+                      safeSetState(() => _activeFilter = _TracerouteFilter.all),
+                ),
+                SectionFilterChip(
+                  label: 'Response',
+                  count: _countForFilter(
+                    logsAsync,
+                    _TracerouteFilter.responded,
+                  ),
+                  isSelected: _activeFilter == _TracerouteFilter.responded,
+                  color: AccentColors.green,
+                  icon: Icons.check_circle_outline,
+                  onTap: () => safeSetState(
+                    () => _activeFilter = _TracerouteFilter.responded,
                   ),
                 ),
-                Text(
-                  nodeName,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: context.textTertiary,
-                    fontFamily: AppTheme.fontFamily,
+                SectionFilterChip(
+                  label: 'No Response',
+                  count: _countForFilter(
+                    logsAsync,
+                    _TracerouteFilter.noResponse,
+                  ),
+                  isSelected: _activeFilter == _TracerouteFilter.noResponse,
+                  color: AppTheme.errorRed,
+                  icon: Icons.cancel_outlined,
+                  onTap: () => safeSetState(
+                    () => _activeFilter = _TracerouteFilter.noResponse,
                   ),
                 ),
               ],
-            )
-          : null,
-      title: widget.nodeNum == null || nodeName == null
-          ? 'Traceroute History'
-          : null,
-      actions: [
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert),
-          tooltip: 'More actions',
-          onSelected: (value) {
-            switch (value) {
-              case 'export':
-                _exportCsv();
-              case 'clear':
-                _confirmClearData();
-            }
-          },
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'export',
-              enabled: !_isExporting,
-              child: Row(
-                children: [
-                  Icon(
-                    _isExporting ? Icons.hourglass_top : Icons.ios_share,
-                    size: 20,
-                    color: context.textSecondary,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(_isExporting ? 'Exporting...' : 'Export CSV'),
-                ],
-              ),
             ),
-            PopupMenuItem(
-              value: 'clear',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.delete_outline,
-                    size: 20,
-                    color: AppTheme.errorRed,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Clear Data',
-                    style: TextStyle(color: AppTheme.errorRed),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-      slivers: [
-        // Top padding to push content below the glass app bar
-        const SliverToBoxAdapter(child: SizedBox(height: 8)),
-        // Pinned search and filter controls
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: _TracerouteControlsHeaderDelegate(
-            searchController: _searchController,
-            searchQuery: _searchQuery,
-            onSearchChanged: (value) =>
-                safeSetState(() => _searchQuery = value),
-            activeFilter: _activeFilter,
-            onFilterChanged: (filter) =>
-                safeSetState(() => _activeFilter = filter),
-            allCount: _countForFilter(logsAsync, _TracerouteFilter.all),
-            respondedCount: _countForFilter(
-              logsAsync,
-              _TracerouteFilter.responded,
-            ),
-            noResponseCount: _countForFilter(
-              logsAsync,
-              _TracerouteFilter.noResponse,
-            ),
-            textScaler: MediaQuery.textScalerOf(context),
           ),
-        ),
-        logsAsync.when(
-          data: (logs) {
-            final filtered = _applyFilters(logs);
+          logsAsync.when(
+            data: (logs) {
+              final filtered = _applyFilters(logs);
 
-            if (filtered.isEmpty) {
-              return SliverFillRemaining(
-                hasScrollBody: false,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: _buildEmptyState(
-                    context,
-                    logs.isEmpty
-                        ? 'No traceroutes recorded yet'
-                        : 'No traceroutes match filters',
-                    showClearFilters: logs.isNotEmpty,
+              if (filtered.isEmpty) {
+                return SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: _buildEmptyState(
+                      context,
+                      logs.isEmpty
+                          ? 'No traceroutes recorded yet'
+                          : 'No traceroutes match filters',
+                      showClearFilters: logs.isNotEmpty,
+                    ),
+                  ),
+                );
+              }
+
+              return SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) =>
+                        _TraceRouteCard(log: filtered[index], allNodes: nodes),
+                    childCount: filtered.length,
                   ),
                 ),
               );
-            }
-
-            return SliverPadding(
-              padding: const EdgeInsets.all(16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) =>
-                      _TraceRouteCard(log: filtered[index], allNodes: nodes),
-                  childCount: filtered.length,
-                ),
-              ),
-            );
-          },
-          loading: () =>
-              const SliverFillRemaining(child: ScreenLoadingIndicator()),
-          error: (e, _) =>
-              SliverFillRemaining(child: Center(child: Text('Error: $e'))),
-        ),
-      ],
+            },
+            loading: () =>
+                const SliverFillRemaining(child: ScreenLoadingIndicator()),
+            error: (e, _) =>
+                SliverFillRemaining(child: Center(child: Text('Error: $e'))),
+          ),
+        ],
+      ),
     );
   }
 
@@ -391,8 +425,21 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
       if (!mounted) return;
 
       final scope = widget.nodeNum != null ? 'Node' : 'All';
-      await shareText(
-        buffer.toString(),
+      final timestamp = DateTime.now()
+          .toIso8601String()
+          .replaceAll(':', '-')
+          .split('.')
+          .first;
+      final fileName = 'traceroute_export_$timestamp.csv';
+
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsString(buffer.toString());
+
+      if (!mounted) return;
+
+      await shareFiles(
+        [XFile(file.path)],
         subject: 'Socialmesh Traceroute Export ($scope)',
         context: context,
       );
@@ -442,169 +489,6 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
       if (!mounted) return;
       showErrorSnackBar(context, 'Failed to clear data: $e');
     }
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Controls header (search bar + filter chips) — pinned via SliverPersistentHeader
-// ---------------------------------------------------------------------------
-
-class _TracerouteControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final TextEditingController searchController;
-  final String searchQuery;
-  final ValueChanged<String> onSearchChanged;
-  final _TracerouteFilter activeFilter;
-  final ValueChanged<_TracerouteFilter> onFilterChanged;
-  final int allCount;
-  final int respondedCount;
-  final int noResponseCount;
-  final TextScaler textScaler;
-
-  _TracerouteControlsHeaderDelegate({
-    required this.searchController,
-    required this.searchQuery,
-    required this.onSearchChanged,
-    required this.activeFilter,
-    required this.onFilterChanged,
-    required this.allCount,
-    required this.respondedCount,
-    required this.noResponseCount,
-    required this.textScaler,
-  });
-
-  // Match Nodes screen: search field height constrained explicitly via
-  // SizedBox + InputDecoration.constraints so extent is deterministic.
-  double get _searchFieldHeight =>
-      math.max(kMinInteractiveDimension, textScaler.scale(48));
-
-  // Layout: outerPad (8+8) + searchField + chipsRow (44) + spacing (8) + divider (1) + bottomPad (12)
-  double get _computedExtent => 16 + _searchFieldHeight + 44 + 8 + 1 + 12;
-
-  @override
-  double get minExtent => _computedExtent;
-
-  @override
-  double get maxExtent => _computedExtent;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return ClipRect(
-      clipBehavior: Clip.hardEdge,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          color: context.background.withValues(alpha: 0.8),
-          child: Column(
-            children: [
-              // Search bar
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: SizedBox(
-                  height: _searchFieldHeight,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: context.card,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextField(
-                      controller: searchController,
-                      onChanged: onSearchChanged,
-                      style: TextStyle(color: context.textPrimary),
-                      decoration: InputDecoration(
-                        hintText: 'Search by node name',
-                        hintStyle: TextStyle(color: context.textTertiary),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: context.textTertiary,
-                        ),
-                        suffixIcon: searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: Icon(
-                                  Icons.clear,
-                                  color: context.textTertiary,
-                                ),
-                                onPressed: () {
-                                  searchController.clear();
-                                  onSearchChanged('');
-                                },
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        isDense: true,
-                        constraints: BoxConstraints.tightFor(
-                          height: _searchFieldHeight,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // Filter chips
-              SizedBox(
-                height: 44,
-                child: EdgeFade.end(
-                  fadeSize: 32,
-                  fadeColor: context.background,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.only(left: 16),
-                    children: [
-                      SectionFilterChip(
-                        label: 'All',
-                        count: allCount,
-                        isSelected: activeFilter == _TracerouteFilter.all,
-                        onTap: () => onFilterChanged(_TracerouteFilter.all),
-                      ),
-                      const SizedBox(width: 8),
-                      SectionFilterChip(
-                        label: 'Response',
-                        count: respondedCount,
-                        isSelected: activeFilter == _TracerouteFilter.responded,
-                        color: AccentColors.green,
-                        icon: Icons.check_circle_outline,
-                        onTap: () =>
-                            onFilterChanged(_TracerouteFilter.responded),
-                      ),
-                      const SizedBox(width: 8),
-                      SectionFilterChip(
-                        label: 'No Response',
-                        count: noResponseCount,
-                        isSelected:
-                            activeFilter == _TracerouteFilter.noResponse,
-                        color: AppTheme.errorRed,
-                        icon: Icons.cancel_outlined,
-                        onTap: () =>
-                            onFilterChanged(_TracerouteFilter.noResponse),
-                      ),
-                      const SizedBox(width: 16),
-                    ],
-                  ),
-                ),
-              ),
-              const Divider(height: 1),
-              const SizedBox(height: 12),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _TracerouteControlsHeaderDelegate oldDelegate) {
-    return searchQuery != oldDelegate.searchQuery ||
-        activeFilter != oldDelegate.activeFilter ||
-        allCount != oldDelegate.allCount ||
-        respondedCount != oldDelegate.respondedCount ||
-        noResponseCount != oldDelegate.noResponseCount;
   }
 }
 

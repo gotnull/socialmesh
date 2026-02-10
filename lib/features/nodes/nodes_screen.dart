@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
-import 'dart:math' as math;
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,7 +26,7 @@ import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/node_avatar.dart';
-import '../../core/widgets/edge_fade.dart';
+import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/skeleton_config.dart';
@@ -241,26 +239,88 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
             // Pinned search and filter controls
             SliverPersistentHeader(
               pinned: true,
-              delegate: _NodesControlsHeaderDelegate(
+              delegate: SearchFilterHeaderDelegate(
                 searchController: _searchController,
                 searchQuery: _searchQuery,
                 onSearchChanged: (value) =>
                     setState(() => _searchQuery = value),
-                activeFilter: _activeFilter,
-                onFilterChanged: (filter) =>
-                    setState(() => _activeFilter = filter),
-                sortOrder: _sortOrder,
-                onSortChanged: (order) => setState(() => _sortOrder = order),
-                showSectionHeaders: _showSectionHeaders,
-                onToggleSectionHeaders: () =>
-                    setState(() => _showSectionHeaders = !_showSectionHeaders),
-                nodeCount: nodes.length,
-                activeCount: activeCount,
-                inactiveCount: inactiveCount,
-                favoritesCount: favoritesCount,
-                withPositionCount: withPositionCount,
-                recentlyDiscoveredCount: recentlyDiscoveredCount,
+                hintText: 'Find a node',
                 textScaler: MediaQuery.textScalerOf(context),
+                rebuildKey: Object.hashAll([
+                  _activeFilter,
+                  _sortOrder,
+                  _showSectionHeaders,
+                  nodes.length,
+                  activeCount,
+                  inactiveCount,
+                  favoritesCount,
+                  withPositionCount,
+                  recentlyDiscoveredCount,
+                ]),
+                filterChips: [
+                  SectionFilterChip(
+                    label: 'All',
+                    count: nodes.length,
+                    isSelected: _activeFilter == NodeFilter.all,
+                    onTap: () => setState(() => _activeFilter = NodeFilter.all),
+                  ),
+                  SectionFilterChip(
+                    label: 'Active',
+                    count: activeCount,
+                    isSelected: _activeFilter == NodeFilter.active,
+                    color: AccentColors.green,
+                    onTap: () =>
+                        setState(() => _activeFilter = NodeFilter.active),
+                  ),
+                  SectionFilterChip(
+                    label: 'Favorites',
+                    count: favoritesCount,
+                    isSelected: _activeFilter == NodeFilter.favorites,
+                    color: AppTheme.warningYellow,
+                    icon: Icons.star,
+                    onTap: () =>
+                        setState(() => _activeFilter = NodeFilter.favorites),
+                  ),
+                  SectionFilterChip(
+                    label: 'With Position',
+                    count: withPositionCount,
+                    isSelected: _activeFilter == NodeFilter.withPosition,
+                    color: AccentColors.cyan,
+                    icon: Icons.location_on,
+                    onTap: () =>
+                        setState(() => _activeFilter = NodeFilter.withPosition),
+                  ),
+                  SectionFilterChip(
+                    label: 'Inactive',
+                    count: inactiveCount,
+                    isSelected: _activeFilter == NodeFilter.inactive,
+                    color: context.textTertiary,
+                    onTap: () =>
+                        setState(() => _activeFilter = NodeFilter.inactive),
+                  ),
+                  SectionFilterChip(
+                    label: 'New',
+                    count: recentlyDiscoveredCount,
+                    isSelected: _activeFilter == NodeFilter.recentlyDiscovered,
+                    color: AccentColors.purple,
+                    icon: Icons.fiber_new,
+                    onTap: () => setState(
+                      () => _activeFilter = NodeFilter.recentlyDiscovered,
+                    ),
+                  ),
+                  _SortButton(
+                    sortOrder: _sortOrder,
+                    onChanged: (order) => setState(() => _sortOrder = order),
+                  ),
+                ],
+                trailingControls: [
+                  SectionHeadersToggle(
+                    enabled: _showSectionHeaders,
+                    onToggle: () => setState(
+                      () => _showSectionHeaders = !_showSectionHeaders,
+                    ),
+                  ),
+                ],
               ),
             ),
             // Node list content
@@ -851,237 +911,6 @@ enum NodeFilter {
 
 /// Sort order options for the nodes list
 enum NodeSortOrder { lastHeard, name, signalStrength, batteryLevel }
-
-/// Delegate for the pinned search bar and filter controls header
-class _NodesControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final TextEditingController searchController;
-  final String searchQuery;
-  final ValueChanged<String> onSearchChanged;
-  final NodeFilter activeFilter;
-  final ValueChanged<NodeFilter> onFilterChanged;
-  final NodeSortOrder sortOrder;
-  final ValueChanged<NodeSortOrder> onSortChanged;
-  final bool showSectionHeaders;
-  final VoidCallback onToggleSectionHeaders;
-  final int nodeCount;
-  final int activeCount;
-  final int inactiveCount;
-  final int favoritesCount;
-  final int withPositionCount;
-  final int recentlyDiscoveredCount;
-  final TextScaler textScaler;
-
-  _NodesControlsHeaderDelegate({
-    required this.searchController,
-    required this.searchQuery,
-    required this.onSearchChanged,
-    required this.activeFilter,
-    required this.onFilterChanged,
-    required this.sortOrder,
-    required this.onSortChanged,
-    required this.showSectionHeaders,
-    required this.onToggleSectionHeaders,
-    required this.nodeCount,
-    required this.activeCount,
-    required this.inactiveCount,
-    required this.favoritesCount,
-    required this.withPositionCount,
-    required this.recentlyDiscoveredCount,
-    required this.textScaler,
-  });
-
-  // The search field height is constrained explicitly via
-  // SizedBox + InputDecoration.constraints in build(), so the extent is
-  // deterministic across devices and font-scale settings.
-  // Layout: outerPad (8+8) + searchField + chipsRow (44) + spacing (8) + divider (1).
-  double get _searchFieldHeight =>
-      math.max(kMinInteractiveDimension, textScaler.scale(48));
-
-  double get _computedExtent => 16 + _searchFieldHeight + 44 + 8 + 1;
-
-  @override
-  double get minExtent => _computedExtent;
-
-  @override
-  double get maxExtent => _computedExtent;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return ClipRect(
-      clipBehavior: Clip.hardEdge,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          color: context.background.withValues(alpha: 0.8),
-          child: Column(
-            children: [
-              // Search bar — height constrained to match _computedExtent
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: SizedBox(
-                  height: _searchFieldHeight,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: context.card,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextField(
-                      controller: searchController,
-                      onChanged: onSearchChanged,
-                      style: TextStyle(color: context.textPrimary),
-                      decoration: InputDecoration(
-                        hintText: 'Find a node',
-                        hintStyle: TextStyle(color: context.textTertiary),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: context.textTertiary,
-                        ),
-                        suffixIcon: searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: Icon(
-                                  Icons.clear,
-                                  color: context.textTertiary,
-                                ),
-                                onPressed: () {
-                                  searchController.clear();
-                                  onSearchChanged('');
-                                },
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        isDense: true,
-                        constraints: BoxConstraints.tightFor(
-                          height: _searchFieldHeight,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // Filter chips row with static controls at end
-              SizedBox(
-                height: 44,
-                child: Row(
-                  children: [
-                    // Scrollable filter chips and sort button with edge fade
-                    Expanded(
-                      child: EdgeFade.end(
-                        fadeSize: 32,
-                        fadeColor: context.background,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.only(left: 16),
-                          children: [
-                            SectionFilterChip(
-                              label: 'All',
-                              count: nodeCount,
-                              isSelected: activeFilter == NodeFilter.all,
-                              onTap: () => onFilterChanged(NodeFilter.all),
-                            ),
-                            const SizedBox(width: 8),
-                            SectionFilterChip(
-                              label: 'Active',
-                              count: activeCount,
-                              isSelected: activeFilter == NodeFilter.active,
-                              color: AccentColors.green,
-                              onTap: () => onFilterChanged(NodeFilter.active),
-                            ),
-                            const SizedBox(width: 8),
-                            SectionFilterChip(
-                              label: 'Favorites',
-                              count: favoritesCount,
-                              isSelected: activeFilter == NodeFilter.favorites,
-                              color: AppTheme.warningYellow,
-                              icon: Icons.star,
-                              onTap: () =>
-                                  onFilterChanged(NodeFilter.favorites),
-                            ),
-                            const SizedBox(width: 8),
-                            SectionFilterChip(
-                              label: 'With Position',
-                              count: withPositionCount,
-                              isSelected:
-                                  activeFilter == NodeFilter.withPosition,
-                              color: AccentColors.cyan,
-                              icon: Icons.location_on,
-                              onTap: () =>
-                                  onFilterChanged(NodeFilter.withPosition),
-                            ),
-                            const SizedBox(width: 8),
-                            SectionFilterChip(
-                              label: 'Inactive',
-                              count: inactiveCount,
-                              isSelected: activeFilter == NodeFilter.inactive,
-                              color: context.textTertiary,
-                              onTap: () => onFilterChanged(NodeFilter.inactive),
-                            ),
-                            const SizedBox(width: 8),
-                            SectionFilterChip(
-                              label: 'New',
-                              count: recentlyDiscoveredCount,
-                              isSelected:
-                                  activeFilter == NodeFilter.recentlyDiscovered,
-                              color: AccentColors.purple,
-                              icon: Icons.fiber_new,
-                              onTap: () => onFilterChanged(
-                                NodeFilter.recentlyDiscovered,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            _SortButton(
-                              sortOrder: sortOrder,
-                              onChanged: onSortChanged,
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // Static toggle at end
-                    const SizedBox(width: 8),
-                    SectionHeadersToggle(
-                      enabled: showSectionHeaders,
-                      onToggle: onToggleSectionHeaders,
-                    ),
-                    const SizedBox(width: 12),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8), // Spacing before divider
-              // Divider
-              Container(
-                height: 1,
-                color: context.border.withValues(alpha: 0.3),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _NodesControlsHeaderDelegate oldDelegate) {
-    return searchQuery != oldDelegate.searchQuery ||
-        activeFilter != oldDelegate.activeFilter ||
-        sortOrder != oldDelegate.sortOrder ||
-        showSectionHeaders != oldDelegate.showSectionHeaders ||
-        nodeCount != oldDelegate.nodeCount ||
-        activeCount != oldDelegate.activeCount ||
-        inactiveCount != oldDelegate.inactiveCount ||
-        favoritesCount != oldDelegate.favoritesCount ||
-        withPositionCount != oldDelegate.withPositionCount ||
-        recentlyDiscoveredCount != oldDelegate.recentlyDiscoveredCount;
-  }
-}
 
 /// Sort button with dropdown
 class _SortButton extends StatelessWidget {

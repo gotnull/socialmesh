@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +9,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/ico_help_system.dart';
+import '../../../core/widgets/search_filter_header.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/help_providers.dart';
 import '../../../utils/snackbar.dart';
@@ -156,20 +156,14 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
               // Search bar - pinned below app bar
               SliverPersistentHeader(
                 pinned: true,
-                delegate: _SearchBarDelegate(
+                delegate: SearchFilterHeaderDelegate(
                   searchController: _searchController,
                   searchQuery: _searchQuery,
                   focusNode: _searchFocusNode,
-                  onChanged: _onSearchChanged,
-                  onClear: () {
-                    _searchController.clear();
-                    setState(() => _searchQuery = '');
-                  },
+                  onSearchChanged: _onSearchChanged,
                   hintText: 'Search devices, modules, antennas...',
-                  backgroundColor: context.background,
-                  cardColor: context.card,
-                  textPrimary: context.textPrimary,
-                  textTertiary: context.textTertiary,
+                  textScaler: MediaQuery.textScalerOf(context),
+                  rebuildKey: _searchQuery,
                 ),
               ),
 
@@ -1480,89 +1474,6 @@ class _SectionLoading extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-/// Search bar persistent header delegate
-class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
-  final TextEditingController searchController;
-  final String searchQuery;
-  final FocusNode focusNode;
-  final Function(String) onChanged;
-  final VoidCallback onClear;
-  final String hintText;
-  final Color backgroundColor;
-  final Color cardColor;
-  final Color textPrimary;
-  final Color textTertiary;
-
-  _SearchBarDelegate({
-    required this.searchController,
-    required this.searchQuery,
-    required this.focusNode,
-    required this.onChanged,
-    required this.onClear,
-    required this.hintText,
-    required this.backgroundColor,
-    required this.cardColor,
-    required this.textPrimary,
-    required this.textTertiary,
-  });
-
-  @override
-  double get minExtent => 72.0;
-
-  @override
-  double get maxExtent => 72.0;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          color: backgroundColor.withValues(alpha: 0.8),
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: TextField(
-              controller: searchController,
-              focusNode: focusNode,
-              onChanged: onChanged,
-              style: TextStyle(color: textPrimary),
-              decoration: InputDecoration(
-                hintText: hintText,
-                hintStyle: TextStyle(color: textTertiary),
-                prefixIcon: Icon(Icons.search, color: textTertiary),
-                suffixIcon: searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(Icons.clear, color: textTertiary),
-                        onPressed: onClear,
-                      )
-                    : null,
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(_SearchBarDelegate oldDelegate) {
-    return searchQuery != oldDelegate.searchQuery;
   }
 }
 

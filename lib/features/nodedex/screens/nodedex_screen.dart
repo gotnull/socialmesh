@@ -15,7 +15,6 @@
 // and nodesProvider without modifying any existing functionality.
 
 import 'dart:math' as math;
-import 'dart:ui' hide TextStyle;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,9 +25,9 @@ import '../../../core/logging.dart';
 import '../../../providers/accessibility_providers.dart';
 import '../../../providers/app_providers.dart';
 import '../../../core/theme.dart';
-import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
+import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton_config.dart';
 import '../../../models/mesh_models.dart';
@@ -231,10 +230,11 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
       // Pinned search + filter controls
       SliverPersistentHeader(
         pinned: true,
-        delegate: _NodeDexControlsHeaderDelegate(
+        delegate: SearchFilterHeaderDelegate(
           textScaler: MediaQuery.textScalerOf(context),
           searchController: _searchController,
           searchQuery: _searchQuery,
+          hintText: 'Find a node',
           onSearchChanged: (value) {
             setState(() => _searchQuery = value);
             ref.read(nodeDexSearchProvider.notifier).setQuery(value);
@@ -242,21 +242,135 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
               AppLogging.nodeDex('Search query changed: "$value"');
             }
           },
-          currentFilter: currentFilter,
-          onFilterChanged: (filter) {
-            AppLogging.nodeDex(
-              'Filter changed: ${currentFilter.name} → ${filter.name}',
-            );
-            ref.read(nodeDexFilterProvider.notifier).setFilter(filter);
-          },
-          currentSort: currentSort,
-          onSortChanged: (order) {
-            AppLogging.nodeDex(
-              'Sort order changed: ${currentSort.name} → ${order.name}',
-            );
-            ref.read(nodeDexSortProvider.notifier).setOrder(order);
-          },
-          stats: stats,
+          rebuildKey: Object.hashAll([
+            currentFilter,
+            currentSort,
+            stats.totalNodes,
+            stats.traitDistribution,
+            stats.socialTagDistribution,
+          ]),
+          filterChips: [
+            SectionFilterChip(
+              label: 'All',
+              count: stats.totalNodes,
+              isSelected: currentFilter == NodeDexFilter.all,
+              onTap: () => ref
+                  .read(nodeDexFilterProvider.notifier)
+                  .setFilter(NodeDexFilter.all),
+            ),
+            SectionFilterChip(
+              label: 'Tagged',
+              count: _taggedCount(stats),
+              isSelected: currentFilter == NodeDexFilter.tagged,
+              color: AccentColors.yellow,
+              icon: Icons.label,
+              onTap: () => ref
+                  .read(nodeDexFilterProvider.notifier)
+                  .setFilter(NodeDexFilter.tagged),
+            ),
+            _SocialTagFilterChip(
+              filter: NodeDexFilter.tagContact,
+              tag: NodeSocialTag.contact,
+              isSelected: currentFilter == NodeDexFilter.tagContact,
+              count: stats.socialTagDistribution[NodeSocialTag.contact] ?? 0,
+              onTap: () => ref
+                  .read(nodeDexFilterProvider.notifier)
+                  .setFilter(NodeDexFilter.tagContact),
+            ),
+            _SocialTagFilterChip(
+              filter: NodeDexFilter.tagTrustedNode,
+              tag: NodeSocialTag.trustedNode,
+              isSelected: currentFilter == NodeDexFilter.tagTrustedNode,
+              count:
+                  stats.socialTagDistribution[NodeSocialTag.trustedNode] ?? 0,
+              onTap: () => ref
+                  .read(nodeDexFilterProvider.notifier)
+                  .setFilter(NodeDexFilter.tagTrustedNode),
+            ),
+            _SocialTagFilterChip(
+              filter: NodeDexFilter.tagKnownRelay,
+              tag: NodeSocialTag.knownRelay,
+              isSelected: currentFilter == NodeDexFilter.tagKnownRelay,
+              count: stats.socialTagDistribution[NodeSocialTag.knownRelay] ?? 0,
+              onTap: () => ref
+                  .read(nodeDexFilterProvider.notifier)
+                  .setFilter(NodeDexFilter.tagKnownRelay),
+            ),
+            _SocialTagFilterChip(
+              filter: NodeDexFilter.tagFrequentPeer,
+              tag: NodeSocialTag.frequentPeer,
+              isSelected: currentFilter == NodeDexFilter.tagFrequentPeer,
+              count:
+                  stats.socialTagDistribution[NodeSocialTag.frequentPeer] ?? 0,
+              onTap: () => ref
+                  .read(nodeDexFilterProvider.notifier)
+                  .setFilter(NodeDexFilter.tagFrequentPeer),
+            ),
+            SectionFilterChip(
+              label: 'Recent',
+              count: 0,
+              isSelected: currentFilter == NodeDexFilter.recent,
+              color: AccentColors.cyan,
+              icon: Icons.schedule,
+              onTap: () => ref
+                  .read(nodeDexFilterProvider.notifier)
+                  .setFilter(NodeDexFilter.recent),
+            ),
+            _TraitFilterChip(
+              filter: NodeDexFilter.wanderers,
+              trait: NodeTrait.wanderer,
+              isSelected: currentFilter == NodeDexFilter.wanderers,
+              count: stats.traitDistribution[NodeTrait.wanderer] ?? 0,
+              onTap: () => ref
+                  .read(nodeDexFilterProvider.notifier)
+                  .setFilter(NodeDexFilter.wanderers),
+            ),
+            _TraitFilterChip(
+              filter: NodeDexFilter.beacons,
+              trait: NodeTrait.beacon,
+              isSelected: currentFilter == NodeDexFilter.beacons,
+              count: stats.traitDistribution[NodeTrait.beacon] ?? 0,
+              onTap: () => ref
+                  .read(nodeDexFilterProvider.notifier)
+                  .setFilter(NodeDexFilter.beacons),
+            ),
+            _TraitFilterChip(
+              filter: NodeDexFilter.ghosts,
+              trait: NodeTrait.ghost,
+              isSelected: currentFilter == NodeDexFilter.ghosts,
+              count: stats.traitDistribution[NodeTrait.ghost] ?? 0,
+              onTap: () => ref
+                  .read(nodeDexFilterProvider.notifier)
+                  .setFilter(NodeDexFilter.ghosts),
+            ),
+            _TraitFilterChip(
+              filter: NodeDexFilter.sentinels,
+              trait: NodeTrait.sentinel,
+              isSelected: currentFilter == NodeDexFilter.sentinels,
+              count: stats.traitDistribution[NodeTrait.sentinel] ?? 0,
+              onTap: () => ref
+                  .read(nodeDexFilterProvider.notifier)
+                  .setFilter(NodeDexFilter.sentinels),
+            ),
+            _TraitFilterChip(
+              filter: NodeDexFilter.relays,
+              trait: NodeTrait.relay,
+              isSelected: currentFilter == NodeDexFilter.relays,
+              count: stats.traitDistribution[NodeTrait.relay] ?? 0,
+              onTap: () => ref
+                  .read(nodeDexFilterProvider.notifier)
+                  .setFilter(NodeDexFilter.relays),
+            ),
+            _NodeDexSortButton(
+              sortOrder: currentSort,
+              onChanged: (order) {
+                AppLogging.nodeDex(
+                  'Sort order changed: ${currentSort.name} → ${order.name}',
+                );
+                ref.read(nodeDexSortProvider.notifier).setOrder(order);
+              },
+            ),
+          ],
         ),
       ),
 
@@ -540,301 +654,16 @@ class _CompactStat extends StatelessWidget {
 }
 
 // =============================================================================
-// Pinned Search + Filter Controls Delegate
+// Filter Helpers
 // =============================================================================
 
-class _NodeDexControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final TextEditingController searchController;
-  final String searchQuery;
-  final ValueChanged<String> onSearchChanged;
-  final NodeDexFilter currentFilter;
-  final ValueChanged<NodeDexFilter> onFilterChanged;
-  final NodeDexSortOrder currentSort;
-  final ValueChanged<NodeDexSortOrder> onSortChanged;
-  final NodeDexStats stats;
-  final TextScaler textScaler;
-
-  _NodeDexControlsHeaderDelegate({
-    required this.searchController,
-    required this.searchQuery,
-    required this.onSearchChanged,
-    required this.currentFilter,
-    required this.onFilterChanged,
-    required this.currentSort,
-    required this.onSortChanged,
-    required this.stats,
-    required this.textScaler,
-  });
-
-  // The search field height is constrained explicitly via
-  // InputDecoration.constraints in build(), so the extent is deterministic.
-  // Layout: outerPad (6+6) + searchField + chipsRow (44) + divider (1).
-  double get _searchFieldHeight =>
-      math.max(kMinInteractiveDimension, textScaler.scale(48));
-
-  double get _computedExtent => 12 + _searchFieldHeight + 44 + 8 + 1;
-
-  @override
-  double get minExtent => _computedExtent;
-
-  @override
-  double get maxExtent => _computedExtent;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          color: context.background.withValues(alpha: 0.8),
-          child: Column(
-            children: [
-              // Search bar — height constrained to match _computedExtent
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-                child: SizedBox(
-                  height: _searchFieldHeight,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: context.card,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextField(
-                      controller: searchController,
-                      onChanged: onSearchChanged,
-                      style: TextStyle(color: context.textPrimary),
-                      decoration: InputDecoration(
-                        hintText: 'Find a node',
-                        hintStyle: TextStyle(color: context.textTertiary),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: context.textTertiary,
-                        ),
-                        suffixIcon: searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: Icon(
-                                  Icons.clear,
-                                  color: context.textTertiary,
-                                ),
-                                onPressed: () {
-                                  searchController.clear();
-                                  onSearchChanged('');
-                                },
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        isDense: true,
-                        constraints: BoxConstraints.tightFor(
-                          height: _searchFieldHeight,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Filter chips row with sort button
-              SizedBox(
-                height: 44,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: EdgeFade.end(
-                        fadeSize: 32,
-                        fadeColor: context.background,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.only(left: 16),
-                          children: [
-                            SectionFilterChip(
-                              label: 'All',
-                              count: stats.totalNodes,
-                              isSelected: currentFilter == NodeDexFilter.all,
-                              onTap: () => onFilterChanged(NodeDexFilter.all),
-                            ),
-                            const SizedBox(width: 12),
-                            SectionFilterChip(
-                              label: 'Tagged',
-                              count: _taggedCount(),
-                              isSelected: currentFilter == NodeDexFilter.tagged,
-                              color: AccentColors.yellow,
-                              icon: Icons.label,
-                              onTap: () =>
-                                  onFilterChanged(NodeDexFilter.tagged),
-                            ),
-                            const SizedBox(width: 12),
-                            _SocialTagFilterChip(
-                              filter: NodeDexFilter.tagContact,
-                              tag: NodeSocialTag.contact,
-                              isSelected:
-                                  currentFilter == NodeDexFilter.tagContact,
-                              count:
-                                  stats.socialTagDistribution[NodeSocialTag
-                                      .contact] ??
-                                  0,
-                              onTap: () =>
-                                  onFilterChanged(NodeDexFilter.tagContact),
-                            ),
-                            const SizedBox(width: 12),
-                            _SocialTagFilterChip(
-                              filter: NodeDexFilter.tagTrustedNode,
-                              tag: NodeSocialTag.trustedNode,
-                              isSelected:
-                                  currentFilter == NodeDexFilter.tagTrustedNode,
-                              count:
-                                  stats.socialTagDistribution[NodeSocialTag
-                                      .trustedNode] ??
-                                  0,
-                              onTap: () =>
-                                  onFilterChanged(NodeDexFilter.tagTrustedNode),
-                            ),
-                            const SizedBox(width: 12),
-                            _SocialTagFilterChip(
-                              filter: NodeDexFilter.tagKnownRelay,
-                              tag: NodeSocialTag.knownRelay,
-                              isSelected:
-                                  currentFilter == NodeDexFilter.tagKnownRelay,
-                              count:
-                                  stats.socialTagDistribution[NodeSocialTag
-                                      .knownRelay] ??
-                                  0,
-                              onTap: () =>
-                                  onFilterChanged(NodeDexFilter.tagKnownRelay),
-                            ),
-                            const SizedBox(width: 12),
-                            _SocialTagFilterChip(
-                              filter: NodeDexFilter.tagFrequentPeer,
-                              tag: NodeSocialTag.frequentPeer,
-                              isSelected:
-                                  currentFilter ==
-                                  NodeDexFilter.tagFrequentPeer,
-                              count:
-                                  stats.socialTagDistribution[NodeSocialTag
-                                      .frequentPeer] ??
-                                  0,
-                              onTap: () => onFilterChanged(
-                                NodeDexFilter.tagFrequentPeer,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            SectionFilterChip(
-                              label: 'Recent',
-                              count: 0,
-                              isSelected: currentFilter == NodeDexFilter.recent,
-                              color: AccentColors.cyan,
-                              icon: Icons.schedule,
-                              onTap: () =>
-                                  onFilterChanged(NodeDexFilter.recent),
-                            ),
-                            const SizedBox(width: 12),
-                            _TraitFilterChip(
-                              filter: NodeDexFilter.wanderers,
-                              trait: NodeTrait.wanderer,
-                              isSelected:
-                                  currentFilter == NodeDexFilter.wanderers,
-                              count:
-                                  stats.traitDistribution[NodeTrait.wanderer] ??
-                                  0,
-                              onTap: () =>
-                                  onFilterChanged(NodeDexFilter.wanderers),
-                            ),
-                            const SizedBox(width: 12),
-                            _TraitFilterChip(
-                              filter: NodeDexFilter.beacons,
-                              trait: NodeTrait.beacon,
-                              isSelected:
-                                  currentFilter == NodeDexFilter.beacons,
-                              count:
-                                  stats.traitDistribution[NodeTrait.beacon] ??
-                                  0,
-                              onTap: () =>
-                                  onFilterChanged(NodeDexFilter.beacons),
-                            ),
-                            const SizedBox(width: 12),
-                            _TraitFilterChip(
-                              filter: NodeDexFilter.ghosts,
-                              trait: NodeTrait.ghost,
-                              isSelected: currentFilter == NodeDexFilter.ghosts,
-                              count:
-                                  stats.traitDistribution[NodeTrait.ghost] ?? 0,
-                              onTap: () =>
-                                  onFilterChanged(NodeDexFilter.ghosts),
-                            ),
-                            const SizedBox(width: 12),
-                            _TraitFilterChip(
-                              filter: NodeDexFilter.sentinels,
-                              trait: NodeTrait.sentinel,
-                              isSelected:
-                                  currentFilter == NodeDexFilter.sentinels,
-                              count:
-                                  stats.traitDistribution[NodeTrait.sentinel] ??
-                                  0,
-                              onTap: () =>
-                                  onFilterChanged(NodeDexFilter.sentinels),
-                            ),
-                            const SizedBox(width: 12),
-                            _TraitFilterChip(
-                              filter: NodeDexFilter.relays,
-                              trait: NodeTrait.relay,
-                              isSelected: currentFilter == NodeDexFilter.relays,
-                              count:
-                                  stats.traitDistribution[NodeTrait.relay] ?? 0,
-                              onTap: () =>
-                                  onFilterChanged(NodeDexFilter.relays),
-                            ),
-                            const SizedBox(width: 12),
-                            _NodeDexSortButton(
-                              sortOrder: currentSort,
-                              onChanged: onSortChanged,
-                            ),
-                            const SizedBox(width: 16),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // Divider
-              Container(
-                height: 1,
-                color: context.border.withValues(alpha: 0.3),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+/// Computes the total tagged count from stats social tag distribution.
+int _taggedCount(NodeDexStats stats) {
+  int count = 0;
+  for (final entry in stats.socialTagDistribution.values) {
+    count += entry;
   }
-
-  int _taggedCount() {
-    int count = 0;
-    for (final entry in stats.socialTagDistribution.values) {
-      count += entry;
-    }
-    return count;
-  }
-
-  @override
-  bool shouldRebuild(covariant _NodeDexControlsHeaderDelegate oldDelegate) {
-    return searchQuery != oldDelegate.searchQuery ||
-        currentFilter != oldDelegate.currentFilter ||
-        currentSort != oldDelegate.currentSort ||
-        stats.totalNodes != oldDelegate.stats.totalNodes ||
-        stats.traitDistribution != oldDelegate.stats.traitDistribution ||
-        stats.socialTagDistribution != oldDelegate.stats.socialTagDistribution;
-  }
+  return count;
 }
 
 // =============================================================================
