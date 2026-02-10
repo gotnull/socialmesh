@@ -12,12 +12,14 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/section_header.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/help_providers.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import '../nodes/node_display_name_resolver.dart';
@@ -102,176 +104,195 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: GlassScaffold(
-        titleWidget: widget.nodeNum != null && nodeName != null
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Traceroute History',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: context.textPrimary,
-                      fontFamily: AppTheme.fontFamily,
-                    ),
-                  ),
-                  Text(
-                    nodeName,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: context.textTertiary,
-                      fontFamily: AppTheme.fontFamily,
-                    ),
-                  ),
-                ],
-              )
-            : null,
-        title: widget.nodeNum == null || nodeName == null
-            ? 'Traceroute History'
-            : null,
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            tooltip: 'More actions',
-            onSelected: (value) {
-              switch (value) {
-                case 'export':
-                  _exportCsv();
-                case 'clear':
-                  _confirmClearData();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'export',
-                enabled: !_isExporting,
-                child: Row(
+      child: HelpTourController(
+        topicId: 'traceroute_overview',
+        stepKeys: const {},
+        child: GlassScaffold(
+          titleWidget: widget.nodeNum != null && nodeName != null
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      _isExporting ? Icons.hourglass_top : Icons.ios_share,
-                      size: 20,
-                      color: context.textSecondary,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(_isExporting ? 'Exporting...' : 'Export CSV'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'clear',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.delete_outline,
-                      size: 20,
-                      color: AppTheme.errorRed,
-                    ),
-                    const SizedBox(width: 12),
                     Text(
-                      'Clear Data',
-                      style: TextStyle(color: AppTheme.errorRed),
+                      'Traceroute History',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                        fontFamily: AppTheme.fontFamily,
+                      ),
+                    ),
+                    Text(
+                      nodeName,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: context.textTertiary,
+                        fontFamily: AppTheme.fontFamily,
+                      ),
                     ),
                   ],
-                ),
-              ),
-            ],
-          ),
-        ],
-        slivers: [
-          // Top padding to push content below the glass app bar
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
-          // Pinned search and filter controls
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: SearchFilterHeaderDelegate(
-              searchController: _searchController,
-              searchQuery: _searchQuery,
-              onSearchChanged: (value) =>
-                  safeSetState(() => _searchQuery = value),
-              hintText: 'Search by node name',
-              textScaler: MediaQuery.textScalerOf(context),
-              rebuildKey: Object.hashAll([
-                _activeFilter,
-                _countForFilter(logsAsync, _TracerouteFilter.all),
-                _countForFilter(logsAsync, _TracerouteFilter.responded),
-                _countForFilter(logsAsync, _TracerouteFilter.noResponse),
-              ]),
-              filterChips: [
-                SectionFilterChip(
-                  label: 'All',
-                  count: _countForFilter(logsAsync, _TracerouteFilter.all),
-                  isSelected: _activeFilter == _TracerouteFilter.all,
-                  onTap: () =>
-                      safeSetState(() => _activeFilter = _TracerouteFilter.all),
-                ),
-                SectionFilterChip(
-                  label: 'Response',
-                  count: _countForFilter(
-                    logsAsync,
-                    _TracerouteFilter.responded,
-                  ),
-                  isSelected: _activeFilter == _TracerouteFilter.responded,
-                  color: AccentColors.green,
-                  icon: Icons.check_circle_outline,
-                  onTap: () => safeSetState(
-                    () => _activeFilter = _TracerouteFilter.responded,
+                )
+              : null,
+          title: widget.nodeNum == null || nodeName == null
+              ? 'Traceroute History'
+              : null,
+          actions: [
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              tooltip: 'More actions',
+              onSelected: (value) {
+                switch (value) {
+                  case 'export':
+                    _exportCsv();
+                  case 'clear':
+                    _confirmClearData();
+                  case 'help':
+                    ref
+                        .read(helpProvider.notifier)
+                        .startTour('traceroute_overview');
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'export',
+                  enabled: !_isExporting,
+                  child: Row(
+                    children: [
+                      Icon(
+                        _isExporting ? Icons.hourglass_top : Icons.ios_share,
+                        size: 20,
+                        color: context.textSecondary,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(_isExporting ? 'Exporting...' : 'Export CSV'),
+                    ],
                   ),
                 ),
-                SectionFilterChip(
-                  label: 'No Response',
-                  count: _countForFilter(
-                    logsAsync,
-                    _TracerouteFilter.noResponse,
+                PopupMenuItem(
+                  value: 'clear',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.delete_outline,
+                        size: 20,
+                        color: AppTheme.errorRed,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Clear Data',
+                        style: TextStyle(color: AppTheme.errorRed),
+                      ),
+                    ],
                   ),
-                  isSelected: _activeFilter == _TracerouteFilter.noResponse,
-                  color: AppTheme.errorRed,
-                  icon: Icons.cancel_outlined,
-                  onTap: () => safeSetState(
-                    () => _activeFilter = _TracerouteFilter.noResponse,
+                ),
+                const PopupMenuItem(
+                  value: 'help',
+                  child: ListTile(
+                    leading: Icon(Icons.help_outline),
+                    title: Text('Help'),
+                    contentPadding: EdgeInsets.zero,
                   ),
                 ),
               ],
             ),
-          ),
-          logsAsync.when(
-            data: (logs) {
-              final filtered = _applyFilters(logs);
+          ],
+          slivers: [
+            // Top padding to push content below the glass app bar
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+            // Pinned search and filter controls
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: SearchFilterHeaderDelegate(
+                searchController: _searchController,
+                searchQuery: _searchQuery,
+                onSearchChanged: (value) =>
+                    safeSetState(() => _searchQuery = value),
+                hintText: 'Search by node name',
+                textScaler: MediaQuery.textScalerOf(context),
+                rebuildKey: Object.hashAll([
+                  _activeFilter,
+                  _countForFilter(logsAsync, _TracerouteFilter.all),
+                  _countForFilter(logsAsync, _TracerouteFilter.responded),
+                  _countForFilter(logsAsync, _TracerouteFilter.noResponse),
+                ]),
+                filterChips: [
+                  SectionFilterChip(
+                    label: 'All',
+                    count: _countForFilter(logsAsync, _TracerouteFilter.all),
+                    isSelected: _activeFilter == _TracerouteFilter.all,
+                    onTap: () => safeSetState(
+                      () => _activeFilter = _TracerouteFilter.all,
+                    ),
+                  ),
+                  SectionFilterChip(
+                    label: 'Response',
+                    count: _countForFilter(
+                      logsAsync,
+                      _TracerouteFilter.responded,
+                    ),
+                    isSelected: _activeFilter == _TracerouteFilter.responded,
+                    color: AccentColors.green,
+                    icon: Icons.check_circle_outline,
+                    onTap: () => safeSetState(
+                      () => _activeFilter = _TracerouteFilter.responded,
+                    ),
+                  ),
+                  SectionFilterChip(
+                    label: 'No Response',
+                    count: _countForFilter(
+                      logsAsync,
+                      _TracerouteFilter.noResponse,
+                    ),
+                    isSelected: _activeFilter == _TracerouteFilter.noResponse,
+                    color: AppTheme.errorRed,
+                    icon: Icons.cancel_outlined,
+                    onTap: () => safeSetState(
+                      () => _activeFilter = _TracerouteFilter.noResponse,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            logsAsync.when(
+              data: (logs) {
+                final filtered = _applyFilters(logs);
 
-              if (filtered.isEmpty) {
-                return SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: _buildEmptyState(
-                      context,
-                      logs.isEmpty
-                          ? 'No traceroutes recorded yet'
-                          : 'No traceroutes match filters',
-                      showClearFilters: logs.isNotEmpty,
+                if (filtered.isEmpty) {
+                  return SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: _buildEmptyState(
+                        context,
+                        logs.isEmpty
+                            ? 'No traceroutes recorded yet'
+                            : 'No traceroutes match filters',
+                        showClearFilters: logs.isNotEmpty,
+                      ),
+                    ),
+                  );
+                }
+
+                return SliverPadding(
+                  padding: const EdgeInsets.all(16),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => _TraceRouteCard(
+                        log: filtered[index],
+                        allNodes: nodes,
+                      ),
+                      childCount: filtered.length,
                     ),
                   ),
                 );
-              }
-
-              return SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) =>
-                        _TraceRouteCard(log: filtered[index], allNodes: nodes),
-                    childCount: filtered.length,
-                  ),
-                ),
-              );
-            },
-            loading: () =>
-                const SliverFillRemaining(child: ScreenLoadingIndicator()),
-            error: (e, _) =>
-                SliverFillRemaining(child: Center(child: Text('Error: $e'))),
-          ),
-        ],
+              },
+              loading: () =>
+                  const SliverFillRemaining(child: ScreenLoadingIndicator()),
+              error: (e, _) =>
+                  SliverFillRemaining(child: Center(child: Text('Error: $e'))),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -595,14 +616,15 @@ class _TraceRouteCard extends StatelessWidget {
             ),
 
           // Hop counts
-          Row(
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
             children: [
               _HopCountChip(
                 label: 'Hops \u2192',
                 count: log.hopsTowards,
                 color: AccentColors.teal,
               ),
-              const SizedBox(width: 12),
               _HopCountChip(
                 label: 'Hops \u2190',
                 count: log.hopsBack,
@@ -650,12 +672,14 @@ class _TraceRouteCard extends StatelessWidget {
               children: [
                 Icon(Icons.link, size: 14, color: context.textTertiary),
                 const SizedBox(width: 6),
-                Text(
-                  'Direct connection — no intermediate hops',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                    color: context.textTertiary,
+                Expanded(
+                  child: Text(
+                    'Direct connection — no intermediate hops',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: context.textTertiary,
+                    ),
                   ),
                 ),
               ],

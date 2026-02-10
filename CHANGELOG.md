@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Accessibility-aware animated widgets (AccessibleAnimatedContainer, AccessibleAnimatedOpacity)
 - AccessibleTapTarget widget for minimum tap target enforcement
 - Comprehensive unit and widget tests for accessibility layer
+- Traceroute help topic with guided tour (8 steps covering sending, cooldowns, results, history, and export)
+- Help menu integration on the Traceroute History screen
 
 ### Changed
 

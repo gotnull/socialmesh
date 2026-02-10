@@ -14,6 +14,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/status_banner.dart';
+import '../../providers/countdown_providers.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
@@ -579,6 +580,13 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
       if (mounted) {
         showSuccessSnackBar(context, 'Configuration saved - device rebooting');
       }
+
+      // Start global reboot countdown — banner persists across navigation
+      // and auto-cancels when the device reconnects.
+      ref
+          .read(countdownProvider.notifier)
+          .startDeviceRebootCountdown(reason: 'config saved');
+
       // Pop the screen after a brief delay to let the snackbar appear
       Future.delayed(const Duration(milliseconds: 500), () {
         safeNavigatorPop();

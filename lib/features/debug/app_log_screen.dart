@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../services/debug/debug_export_service.dart';
 import '../../utils/share_utils.dart';
@@ -178,18 +179,23 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
     final filters = ref.read(filteredLogsProvider);
     final selected = Set<LogLevel>.from(filters);
 
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: context.card,
-          title: Text(
-            'Filter Log Levels',
-            style: TextStyle(color: context.textPrimary),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: LogLevel.values.map((level) {
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 24),
+      child: StatefulBuilder(
+        builder: (context, setSheetState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: BottomSheetHeader(
+                icon: Icons.filter_list,
+                title: 'Filter Log Levels',
+                subtitle: 'Select which levels to display',
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...LogLevel.values.map((level) {
               return CheckboxListTile(
                 title: Text(
                   level.label,
@@ -198,7 +204,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
                 value: selected.contains(level),
                 activeColor: context.accentColor,
                 onChanged: (value) {
-                  setDialogState(() {
+                  setSheetState(() {
                     if (value == true) {
                       selected.add(level);
                     } else {
@@ -207,23 +213,18 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
                   });
                 },
               );
-            }).toList(),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                ref
-                    .read(filteredLogsProvider.notifier)
-                    .setFilters(selected.toList());
-                Navigator.pop(context);
-              },
-              child: Text(
-                'Apply',
-                style: TextStyle(color: context.accentColor),
+            }),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: BottomSheetButtons(
+                confirmLabel: 'Apply',
+                onConfirm: () {
+                  ref
+                      .read(filteredLogsProvider.notifier)
+                      .setFilters(selected.toList());
+                  Navigator.pop(context);
+                },
               ),
             ),
           ],

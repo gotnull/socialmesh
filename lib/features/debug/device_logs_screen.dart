@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart';
@@ -168,46 +169,25 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
   @override
   void initState() {
     super.initState();
-    _subscribeToLogs();
   }
 
-  void _subscribeToLogs() {
-    // Subscribe to device log stream
-    final deviceLogStream = ref.read(deviceLogStreamProvider.future);
-    deviceLogStream
-        .then((stream) {
-          // Stream is available from the provider
-        })
-        .catchError((e) {
-          // Ignore - transport might not support device logs
-        });
+  void _handleNewLogRecord(pb.LogRecord logRecord) {
+    final logger = ref.read(deviceLoggerProvider);
+    logger.addFromLogRecord(logRecord);
+    if (mounted) setState(() {});
 
-    // Use listen on the provider
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-
-      // Listen to the stream provider
-      ref.listen(deviceLogStreamProvider, (previous, next) {
-        next.whenData((logRecord) {
-          final logger = ref.read(deviceLoggerProvider);
-          logger.addFromLogRecord(logRecord);
-          if (mounted) setState(() {});
-
-          // Auto-scroll if enabled
-          if (_autoScroll && _scrollController.hasClients) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (_scrollController.hasClients) {
-                _scrollController.animateTo(
-                  _scrollController.position.maxScrollExtent,
-                  duration: const Duration(milliseconds: 100),
-                  curve: Curves.easeOut,
-                );
-              }
-            });
-          }
-        });
+    // Auto-scroll if enabled
+    if (_autoScroll && _scrollController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 100),
+            curve: Curves.easeOut,
+          );
+        }
       });
-    });
+    }
   }
 
   @override
@@ -250,18 +230,23 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
       LogRecord_Level.CRITICAL,
     ];
 
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: context.card,
-          title: Text(
-            'Filter Log Levels',
-            style: TextStyle(color: context.textPrimary),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: allLevels.map((level) {
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 24),
+      child: StatefulBuilder(
+        builder: (context, setSheetState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: BottomSheetHeader(
+                icon: Icons.filter_list,
+                title: 'Filter Log Levels',
+                subtitle: 'Select which levels to display',
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...allLevels.map((level) {
               return CheckboxListTile(
                 title: Text(
                   level.label,
@@ -270,7 +255,7 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
                 value: selected.contains(level),
                 activeColor: context.accentColor,
                 onChanged: (value) {
-                  setDialogState(() {
+                  setSheetState(() {
                     if (value == true) {
                       selected.add(level);
                     } else {
@@ -279,23 +264,18 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
                   });
                 },
               );
-            }).toList(),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                ref
-                    .read(deviceLogFilterProvider.notifier)
-                    .setFilters(selected.toList());
-                Navigator.pop(context);
-              },
-              child: Text(
-                'Apply',
-                style: TextStyle(color: context.accentColor),
+            }),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: BottomSheetButtons(
+                confirmLabel: 'Apply',
+                onConfirm: () {
+                  ref
+                      .read(deviceLogFilterProvider.notifier)
+                      .setFilters(selected.toList());
+                  Navigator.pop(context);
+                },
               ),
             ),
           ],
@@ -350,6 +330,13 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen to device log stream — must be in build() for Riverpod 3.x
+    ref.listen(deviceLogStreamProvider, (previous, next) {
+      next.whenData((logRecord) {
+        _handleNewLogRecord(logRecord);
+      });
+    });
+
     return _buildContent(context);
   }
 

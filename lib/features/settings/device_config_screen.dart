@@ -11,6 +11,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/countdown_providers.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
@@ -143,6 +144,16 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
             ? 'Configuration sent to remote node'
             : 'Device configuration saved',
       );
+
+      // Start global reboot countdown for local saves — banner persists
+      // across navigation and auto-cancels when the device reconnects.
+      // Remote admin saves don't reboot the local device.
+      if (!isRemote) {
+        ref
+            .read(countdownProvider.notifier)
+            .startDeviceRebootCountdown(reason: 'config saved');
+      }
+
       navigator.pop();
     } catch (e) {
       if (mounted) {

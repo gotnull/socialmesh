@@ -126,6 +126,12 @@ class _CountdownRow extends StatelessWidget {
     switch (type) {
       case CountdownType.traceroute:
         return Icons.route;
+      case CountdownType.deviceReboot:
+        return Icons.restart_alt;
+      case CountdownType.positionRequest:
+        return Icons.radar;
+      case CountdownType.positionBroadcast:
+        return Icons.location_on;
     }
   }
 

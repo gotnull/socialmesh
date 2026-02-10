@@ -1427,6 +1427,70 @@ class HelpContent {
   );
 
   // ============================================================================
+  // TRACEROUTE HELP
+  // ============================================================================
+
+  static final HelpTopic tracerouteOverview = HelpTopic(
+    id: 'traceroute_overview',
+    title: 'Traceroute',
+    description: 'Discover the route packets take across your mesh',
+    icon: Icons.route,
+    category: catNetwork,
+    priority: 8,
+    steps: [
+      HelpStep(
+        id: 'traceroute_intro',
+        bubbleText:
+            "**Traceroute** discovers the actual path your packets take to reach another node. It reveals which relays are forwarding your data.",
+        icoMood: MeshBrainMood.speaking,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'traceroute_how',
+        bubbleText:
+            "When you send a traceroute, each relay along the route adds itself to the packet. The destination sends it back so you can see **both directions**.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'traceroute_send',
+        bubbleText:
+            "Send a traceroute from a **node's detail sheet** (tap the route icon) or from **Dashboard Quick Actions** where you can pick any known node.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'traceroute_cooldown',
+        bubbleText:
+            "There is a **30-second cooldown** between traceroutes to respect airtime fairness. A visible countdown shows the remaining time.",
+        icoMood: MeshBrainMood.alert,
+      ),
+      HelpStep(
+        id: 'traceroute_results',
+        bubbleText:
+            "Results show **forward** and **return** hop paths with per-hop **SNR** (signal-to-noise ratio). This lets you correlate route quality with link performance.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'traceroute_history',
+        bubbleText:
+            "All traceroutes are saved to **Traceroute History** (Settings > Telemetry Logs). Filter by response status, search by node name, and compare runs over time.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'traceroute_export',
+        bubbleText:
+            "Export your traceroute history as **CSV** for trend analysis or documentation. Use the overflow menu on the history screen.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'traceroute_tips',
+        bubbleText:
+            "**Pro tip:** Run traceroutes after repositioning nodes, changing antennas, or adjusting channels to validate your changes with real route data!",
+        icoMood: MeshBrainMood.excited,
+      ),
+    ],
+  );
+
+  // ============================================================================
   // NODEDEX OVERVIEW
   // ============================================================================
 
@@ -2006,6 +2070,7 @@ class HelpContent {
     nodeDexAlbum,
     nodeDexConstellation,
     cloudSyncOverview,
+    tracerouteOverview,
   ];
 
   /// Get a topic by ID

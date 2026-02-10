@@ -54,28 +54,27 @@ Only Riverpod 3.x APIs are used. StateNotifier, StateNotifierProvider, StateProv
 
 Each feature in `lib/features/` is self-contained:
 
-| Module           | Purpose                                              |
-| ---------------- | ---------------------------------------------------- |
-| `automations/`   | Rule-based event automation engine                   |
-| `channels/`      | Channel management                                   |
-| `dashboard/`     | Custom widget dashboard                              |
-| `device/`        | Device configuration screens                         |
-| `globe/`         | 3D globe visualization                               |
-| `map/`           | Interactive node map with waypoints                  |
-| `mesh3d/`        | 3D mesh network topology view                        |
-| `mesh_health/`   | Network health analytics dashboard                   |
-| `messaging/`     | Channel and direct messages                          |
-| `nodedex/`       | Mesh field journal (sigils, traits, patina, co-seen) |
-| `nodes/`         | Node discovery and details                           |
-| `presence/`      | Node presence tracking                               |
-| `profile/`       | User profile management                              |
-| `reachability/`  | Node reachability analysis                           |
-| `routes/`        | Packet route analysis                                |
-| `signals/`       | Ephemeral mesh-first content                         |
-| `social/`        | Activity timeline and social profiles                |
-| `settings/`      | App, account, and theme settings                     |
-| `widget_builder/`| Custom dashboard widget editor and marketplace       |
-| `world_mesh/`    | Global MQTT node map                                 |
+| Module            | Purpose                                              |
+| ----------------- | ---------------------------------------------------- | --- | ------------ | ---------------------------------------- | --- | ----------- | -------------------------------- |
+| `automations/`    | Rule-based event automation engine                   |
+| `channels/`       | Channel management                                   |
+| `dashboard/`      | Custom widget dashboard                              |
+| `device/`         | Device configuration screens                         |
+| `globe/`          | 3D globe visualization                               |
+| `map/`            | Interactive node map with waypoints                  |
+| `mesh3d/`         | 3D mesh network topology view                        |
+| `mesh_health/`    | Network health analytics dashboard                   |
+| `messaging/`      | Channel and direct messages                          |
+| `nodedex/`        | Mesh field journal (sigils, traits, patina, co-seen) |
+| `nodes/`          | Node discovery and details                           |
+| `presence/`       | Node presence tracking                               |
+| `profile/`        | User profile management                              |
+| `reachability/`   | Node reachability analysis                           |
+| `routes/`         | Packet route analysis                                |
+| `signals/`        | Ephemeral mesh-first content                         |
+| `social/`         | Activity timeline and social profiles                |     | `telemetry/` | Traceroute history and route diagnostics |     | `settings/` | App, account, and theme settings |
+| `widget_builder/` | Custom dashboard widget editor and marketplace       |
+| `world_mesh/`     | Global MQTT node map                                 |
 
 ## NodeDex Architecture
 
@@ -87,16 +86,16 @@ The NodeDex (`lib/features/nodedex/`) is the mesh field journal system. It is in
 
 ### Services
 
-| Service                    | Purpose                                                      |
-| -------------------------- | ------------------------------------------------------------ |
-| `sigil_generator.dart`     | Deterministic geometric identity from node number            |
-| `trait_engine.dart`        | Passive personality trait inference from telemetry            |
-| `patina_score.dart`        | Digital history score (0-100) across six weighted axes       |
-| `field_note_generator.dart`| Deterministic field-journal-style observations               |
-| `progressive_disclosure.dart` | Threshold-based visibility tiers for journal elements     |
-| `nodedex_database.dart`    | SQLite persistence layer                                     |
-| `nodedex_sqlite_store.dart`| Low-level SQLite operations                                  |
-| `nodedex_sync_service.dart`| Cloud sync for NodeDex data                                  |
+| Service                       | Purpose                                                |
+| ----------------------------- | ------------------------------------------------------ |
+| `sigil_generator.dart`        | Deterministic geometric identity from node number      |
+| `trait_engine.dart`           | Passive personality trait inference from telemetry     |
+| `patina_score.dart`           | Digital history score (0-100) across six weighted axes |
+| `field_note_generator.dart`   | Deterministic field-journal-style observations         |
+| `progressive_disclosure.dart` | Threshold-based visibility tiers for journal elements  |
+| `nodedex_database.dart`       | SQLite persistence layer                               |
+| `nodedex_sqlite_store.dart`   | Low-level SQLite operations                            |
+| `nodedex_sync_service.dart`   | Cloud sync for NodeDex data                            |
 
 ### Sigil Generation
 
@@ -154,6 +153,7 @@ SQLite databases handle offline persistence:
 - **NodeDex** — Discovered nodes, encounter history, social tags
 - **Signals** — Ephemeral mesh content with TTL
 - **Routes** — Discovered packet routes
+- **Traceroute** — Route discovery history with per-hop SNR (500 global / 100 per-node retention)
 - **Packet Dedup** — Prevents duplicate packet processing
 
 ## Cloud Services (Optional)

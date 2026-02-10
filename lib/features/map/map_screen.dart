@@ -8,6 +8,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/safety/lifecycle_mixin.dart';
+import '../../providers/countdown_providers.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
@@ -369,15 +370,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Future<void> _refreshPositions() async {
     if (_isRefreshing) return;
 
+    // Prevent duplicate requests while a countdown is active
+    final notifier = ref.read(countdownProvider.notifier);
+    if (notifier.isPositionRequestActive) return;
+
     setState(() => _isRefreshing = true);
 
     try {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.requestAllPositions();
 
-      if (mounted) {
-        showInfoSnackBar(context, 'Requesting positions from nodes...');
-      }
+      if (!mounted) return;
+
+      // Start global position request countdown — banner persists
+      // across navigation and sets expectations for trickle-in time.
+      notifier.startPositionRequestCountdown();
     } finally {
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) {

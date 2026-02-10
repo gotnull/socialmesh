@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
 import '../core/navigation.dart';
+import '../core/transport.dart';
 import '../features/telemetry/traceroute_log_screen.dart';
 import '../providers/app_providers.dart';
 import '../features/nodes/node_display_name_resolver.dart';
@@ -17,6 +18,16 @@ import 'package:flutter/material.dart';
 enum CountdownType {
   /// A traceroute request waiting for mesh response.
   traceroute,
+
+  /// Device is rebooting after a config or region change.
+  /// Auto-cancelled when the device reconnects.
+  deviceReboot,
+
+  /// Waiting for mesh nodes to report their positions.
+  positionRequest,
+
+  /// Broadcasting local position to the mesh.
+  positionBroadcast,
 }
 
 /// Immutable snapshot of a single active countdown.
@@ -79,9 +90,44 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   /// Standard traceroute cooldown duration matching Meshtastic iOS.
   static const tracerouteCooldownSeconds = 30;
 
+  /// Expected device reboot cycle duration (BLE disconnect + firmware
+  /// boot + auto-reconnect). Most devices complete within 15-25 seconds.
+  static const deviceRebootSeconds = 25;
+
+  /// Duration to wait while mesh nodes report positions. Positions
+  /// trickle in over 30-90 seconds depending on hop count.
+  static const positionRequestSeconds = 45;
+
+  /// Brief duration for local position broadcast propagation.
+  static const positionBroadcastSeconds = 10;
+
+  /// Canonical countdown id for the device reboot operation.
+  static const deviceRebootId = 'device_reboot';
+
+  /// Canonical countdown id for the position request operation.
+  static const positionRequestId = 'position_request';
+
+  /// Canonical countdown id for the position broadcast operation.
+  static const positionBroadcastId = 'position_broadcast';
+
   @override
   Map<String, CountdownTask> build() {
     ref.onDispose(_disposeTimer);
+
+    // Listen for device reconnection to auto-complete reboot countdowns.
+    // When the device comes back online the banner disappears immediately
+    // and a success snackbar confirms the reconnection.
+    ref.listen<AsyncValue<DeviceConnectionState>>(connectionStateProvider, (
+      previous,
+      next,
+    ) {
+      next.whenData((connState) {
+        if (connState == DeviceConnectionState.connected) {
+          _onDeviceReconnected();
+        }
+      });
+    });
+
     return const {};
   }
 
@@ -133,6 +179,52 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
     );
   }
 
+  /// Convenience: start a device reboot countdown.
+  ///
+  /// Shown after config saves or region changes that trigger a device
+  /// reboot. Automatically cancelled if the device reconnects before
+  /// the timer expires (see [_onDeviceReconnected]).
+  ///
+  /// [reason] is a human-readable label suffix, e.g. "config saved" or
+  /// "region changed".
+  void startDeviceRebootCountdown({String? reason}) {
+    final label = reason != null
+        ? 'Device rebooting — $reason'
+        : 'Device rebooting';
+
+    startCountdown(
+      id: deviceRebootId,
+      label: label,
+      totalSeconds: deviceRebootSeconds,
+      type: CountdownType.deviceReboot,
+    );
+  }
+
+  /// Convenience: start a position request countdown.
+  ///
+  /// Shown after requesting positions from all mesh nodes. The countdown
+  /// sets user expectations for how long positions take to trickle in.
+  void startPositionRequestCountdown() {
+    startCountdown(
+      id: positionRequestId,
+      label: 'Requesting mesh positions',
+      totalSeconds: positionRequestSeconds,
+      type: CountdownType.positionRequest,
+    );
+  }
+
+  /// Convenience: start a position broadcast countdown.
+  ///
+  /// Shown after sharing the local device position to the mesh.
+  void startPositionBroadcastCountdown() {
+    startCountdown(
+      id: positionBroadcastId,
+      label: 'Broadcasting position to mesh',
+      totalSeconds: positionBroadcastSeconds,
+      type: CountdownType.positionBroadcast,
+    );
+  }
+
   /// Cancel and remove a countdown by [id].
   void cancelCountdown(String id) {
     if (!state.containsKey(id)) return;
@@ -155,6 +247,15 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   /// Remaining seconds for a traceroute to [nodeNum], or 0 if none active.
   int tracerouteRemaining(int nodeNum) =>
       state[tracerouteId(nodeNum)]?.remainingSeconds ?? 0;
+
+  /// Whether a position request countdown is currently active.
+  bool get isPositionRequestActive => state.containsKey(positionRequestId);
+
+  /// Whether a position broadcast countdown is currently active.
+  bool get isPositionBroadcastActive => state.containsKey(positionBroadcastId);
+
+  /// Whether a device reboot countdown is currently active.
+  bool get isDeviceRebootActive => state.containsKey(deviceRebootId);
 
   /// Whether ANY countdown is currently active (used by the banner).
   bool get hasActiveCountdowns => state.isNotEmpty;
@@ -205,6 +306,12 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
     switch (task.type) {
       case CountdownType.traceroute:
         _onTracerouteComplete(task);
+      case CountdownType.deviceReboot:
+        _onDeviceRebootComplete(task);
+      case CountdownType.positionRequest:
+        _onPositionRequestComplete(task);
+      case CountdownType.positionBroadcast:
+        _onPositionBroadcastComplete(task);
     }
   }
 
@@ -227,6 +334,57 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
       },
       type: SnackBarType.success,
       duration: const Duration(seconds: 6),
+    );
+  }
+
+  void _onDeviceRebootComplete(CountdownTask task) {
+    // Timer expired but the device hasn't reconnected yet. Show a
+    // "still reconnecting" message so the user knows the app is
+    // still trying. The auto-reconnect system handles the actual
+    // reconnection independently.
+    showGlobalInfoSnackBar(
+      'Device may still be rebooting — reconnecting automatically',
+      duration: const Duration(seconds: 4),
+    );
+  }
+
+  void _onPositionRequestComplete(CountdownTask task) {
+    showGlobalSuccessSnackBar(
+      'Mesh position updates received',
+      duration: const Duration(seconds: 3),
+    );
+  }
+
+  void _onPositionBroadcastComplete(CountdownTask task) {
+    showGlobalSuccessSnackBar(
+      'Position broadcast complete',
+      duration: const Duration(seconds: 3),
+    );
+  }
+
+  /// Called when the device transitions to [DeviceConnectionState.connected].
+  ///
+  /// If a device reboot countdown is active, it means the reboot cycle
+  /// completed successfully — cancel the countdown (banner disappears)
+  /// and show a success snackbar.
+  void _onDeviceReconnected() {
+    final rebootTasks = state.entries
+        .where((e) => e.value.type == CountdownType.deviceReboot)
+        .toList();
+
+    if (rebootTasks.isEmpty) return;
+
+    for (final entry in rebootTasks) {
+      AppLogging.app(
+        'COUNTDOWN_AUTO_CANCEL id=${entry.key} reason=device_reconnected '
+        'remaining=${entry.value.remainingSeconds}s',
+      );
+      cancelCountdown(entry.key);
+    }
+
+    showGlobalSuccessSnackBar(
+      'Device reconnected',
+      duration: const Duration(seconds: 3),
     );
   }
 

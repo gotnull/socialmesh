@@ -7,6 +7,7 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/action_sheets.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/countdown_providers.dart';
 import '../../../utils/snackbar.dart';
 
 /// Handles action execution for custom widgets
@@ -139,12 +140,17 @@ class WidgetActionHandler {
   }
 
   Future<void> _handleRequestPositions() async {
+    // Prevent duplicate requests while a countdown is active
+    final notifier = ref.read(countdownProvider.notifier);
+    if (notifier.isPositionRequestActive) return;
+
     try {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.requestAllPositions();
-      if (context.mounted) {
-        showSuccessSnackBar(context, 'Position requests sent to all nodes');
-      }
+
+      // Start global position request countdown — banner persists
+      // across navigation and sets expectations for trickle-in time.
+      notifier.startPositionRequestCountdown();
     } catch (e) {
       if (context.mounted) {
         showErrorSnackBar(context, 'Failed to request positions: $e');

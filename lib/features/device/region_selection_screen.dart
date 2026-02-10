@@ -16,6 +16,7 @@ import '../../generated/meshtastic/config.pbenum.dart';
 import '../../utils/permissions.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/status_banner.dart';
+import '../../providers/countdown_providers.dart';
 
 /// Typedef for shorter reference to the enum
 typedef RegionCode = Config_LoRaConfig_RegionCode;
@@ -535,6 +536,12 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       // managed object; its ref stays valid regardless of widget
       // lifecycle. Errors surface via connection state banners.
       if (!shouldSkipApply) {
+        // Start global reboot countdown — banner persists across
+        // navigation and auto-cancels when the device reconnects.
+        ref
+            .read(countdownProvider.notifier)
+            .startDeviceRebootCountdown(reason: 'region changed');
+
         unawaited(
           regionNotifier
               .applyRegion(_selectedRegion!, reason: 'settings_change')

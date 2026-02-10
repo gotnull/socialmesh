@@ -83,10 +83,8 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _ActionButton(
-                  icon: Icons.refresh,
-                  label: 'Request\nPositions',
-                  enabled: isConnected,
+                child: _PositionRequestButton(
+                  isConnected: isConnected,
                   onTap: () => _requestPositions(context),
                 ),
               ),
@@ -122,9 +120,10 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
       final locationService = ref.read(locationServiceProvider);
       await locationService.sendPositionOnce();
       if (!mounted) return;
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Location shared with mesh')),
-      );
+
+      // Start global broadcast countdown — banner persists across
+      // navigation and confirms propagation to the mesh.
+      ref.read(countdownProvider.notifier).startPositionBroadcastCountdown();
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(
@@ -149,14 +148,19 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
   }
 
   void _requestPositions(BuildContext context) async {
+    // Prevent duplicate requests while a countdown is active
+    final notifier = ref.read(countdownProvider.notifier);
+    if (notifier.isPositionRequestActive) return;
+
     final messenger = ScaffoldMessenger.of(context);
     try {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.requestAllPositions();
       if (!mounted) return;
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Position requests sent to all nodes')),
-      );
+
+      // Start global position request countdown — banner persists
+      // across navigation and sets expectations for trickle-in time.
+      notifier.startPositionRequestCountdown();
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(
@@ -288,6 +292,93 @@ class _TracerouteCooldownButton extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Request Positions button that shows cooldown state from the global
+/// countdown provider when a position request is active.
+class _PositionRequestButton extends ConsumerWidget {
+  final bool isConnected;
+  final VoidCallback onTap;
+
+  const _PositionRequestButton({
+    required this.isConnected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final countdowns = ref.watch(countdownProvider);
+    final positionTask = countdowns[CountdownNotifier.positionRequestId];
+    final hasCooldown = positionTask != null;
+    final enabled = isConnected && !hasCooldown;
+
+    if (hasCooldown) {
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        height: 48,
+        decoration: BoxDecoration(
+          color: context.background,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.border),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      value: positionTask.totalSeconds > 0
+                          ? positionTask.remainingSeconds /
+                                positionTask.totalSeconds
+                          : 0,
+                      strokeWidth: 1.5,
+                      color: context.accentColor.withValues(alpha: 0.4),
+                      backgroundColor: context.textTertiary.withValues(
+                        alpha: 0.15,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${positionTask.remainingSeconds}',
+                    style: TextStyle(
+                      fontSize: 7,
+                      fontWeight: FontWeight.w600,
+                      color: context.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Positions',
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w600,
+                color: context.textTertiary,
+                height: 1.1,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return _ActionButton(
+      icon: Icons.refresh,
+      label: 'Request\nPositions',
+      enabled: enabled,
+      onTap: onTap,
     );
   }
 }

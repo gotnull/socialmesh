@@ -1373,11 +1373,14 @@ class _NodeCard extends StatelessWidget {
                       color: context.textTertiary,
                     ),
                     SizedBox(width: 6),
-                    Text(
-                      node.role!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.textTertiary,
+                    Flexible(
+                      child: Text(
+                        node.role!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textTertiary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     SizedBox(width: 12),
