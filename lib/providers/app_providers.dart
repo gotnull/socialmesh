@@ -2450,56 +2450,92 @@ class MessagesNotifier extends Notifier<List<Message>> {
   // Reconciliation guard per-node for this app session
   final Set<int> _reconciledNodesThisSession = {};
 
+  StreamSubscription<ContentRefreshEvent>? _pushSubscription;
+  bool _storageLoaded = false;
+
   @override
   List<Message> build() {
-    final protocol = ref.watch(protocolServiceProvider);
     final storageAsync = ref.watch(messageStorageProvider);
     _storage = storageAsync.value;
+
+    // Use ref.listen for protocol changes instead of ref.watch.
+    // ref.watch would cause build() to re-run on every reconnect,
+    // resetting state to [] and wiping all in-memory messages.
+    // ref.listen re-subscribes streams without touching message state.
+    ref.listen(protocolServiceProvider, (previous, next) {
+      AppLogging.messages(
+        '📨 Protocol service changed — re-subscribing message streams',
+      );
+      _subscribeToStreams(next);
+    });
 
     // Set up disposal for stream subscriptions
     ref.onDispose(() {
       _messageSubscription?.cancel();
       _deliverySubscription?.cancel();
+      _pushSubscription?.cancel();
     });
 
-    // Initialize asynchronously
-    _init(protocol);
+    // Subscribe to current protocol streams
+    final protocol = ref.read(protocolServiceProvider);
+    _subscribeToStreams(protocol);
+
+    // Load persisted messages asynchronously
+    _loadFromStorage();
 
     return [];
   }
 
-  Future<void> _init(ProtocolService protocol) async {
+  /// Load messages from persistent storage into state.
+  /// Only runs once per provider lifetime; subsequent protocol changes
+  /// do not reload (messages remain in memory).
+  Future<void> _loadFromStorage() async {
+    if (_storageLoaded) return;
+    if (_storage == null) return;
+
     // Demo mode: seed sample messages if enabled and storage is empty
-    if (DemoConfig.isEnabled && _storage != null) {
+    if (DemoConfig.isEnabled) {
       final existing = await _storage!.loadMessages();
       if (existing.isEmpty) {
         AppLogging.debug('${DemoConfig.modeLabel} Seeding demo messages');
+        if (!ref.mounted) return;
         state = DemoData.sampleMessages;
+        _storageLoaded = true;
         return;
       }
     }
 
-    // Load persisted messages
-    if (_storage != null) {
-      final savedMessages = await _storage!.loadMessages();
-      if (savedMessages.isNotEmpty) {
-        if (!ref.mounted) return;
-        state = savedMessages;
+    final savedMessages = await _storage!.loadMessages();
+    if (!ref.mounted) return;
+    _storageLoaded = true;
+
+    if (savedMessages.isNotEmpty) {
+      state = savedMessages;
+      AppLogging.messages(
+        'Loaded ${savedMessages.length} messages from storage',
+      );
+      for (final msg in savedMessages) {
+        _recordMessageSignature(msg);
+      }
+      // Debug: Log channel messages details
+      for (final m in savedMessages.where((m) => m.isBroadcast)) {
         AppLogging.messages(
-          'Loaded ${savedMessages.length} messages from storage',
+          '📨 Stored broadcast: from=${m.from}, to=${m.to.toRadixString(16)}, '
+          'channel=${m.channel}, text="${m.text.substring(0, m.text.length.clamp(0, 20))}"',
         );
-        for (final msg in savedMessages) {
-          _recordMessageSignature(msg);
-        }
-        // Debug: Log channel messages details
-        for (final m in savedMessages.where((m) => m.isBroadcast)) {
-          AppLogging.messages(
-            '📨 Stored broadcast: from=${m.from}, to=${m.to.toRadixString(16)}, '
-            'channel=${m.channel}, text="${m.text.substring(0, m.text.length.clamp(0, 20))}"',
-          );
-        }
       }
     }
+  }
+
+  /// Subscribe to protocol message and delivery streams.
+  /// Cancels any previous subscriptions before creating new ones
+  /// so that protocol changes (reconnect) simply re-wire streams
+  /// without resetting in-memory message state.
+  void _subscribeToStreams(ProtocolService protocol) {
+    // Cancel previous subscriptions
+    _messageSubscription?.cancel();
+    _deliverySubscription?.cancel();
+    _pushSubscription?.cancel();
 
     // Listen for new messages
     _messageSubscription = protocol.messageStream.listen((message) {
@@ -2551,8 +2587,8 @@ class MessagesNotifier extends Notifier<List<Message>> {
     });
 
     // Listen for message push events from PushNotificationService and persist them
-    final push = ref.watch(pushNotificationServiceProvider);
-    final pushSub = push.onContentRefresh.listen((event) {
+    final push = ref.read(pushNotificationServiceProvider);
+    _pushSubscription = push.onContentRefresh.listen((event) {
       if (!ref.mounted) return;
       final type = event.contentType;
       final payload = event.payload;
@@ -2576,20 +2612,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
       }
     });
 
-    ref.onDispose(() {
-      _messageSubscription?.cancel();
-      _deliverySubscription?.cancel();
-      pushSub.cancel();
-    });
-
     // Listen for delivery status updates
     _deliverySubscription = protocol.deliveryStream.listen((update) {
       if (!ref.mounted) return;
       _handleDeliveryUpdate(update);
     });
-
-    // Ensure we can be explicitly asked to rehydrate from storage (for debug or reconnect canary)
-    // Adds two helper functions on the notifier: reconcileFromStorageForNode and forceRehydrateAllFromStorage
   }
 
   void _notifyNewMessage(Message message) {
@@ -3541,7 +3568,8 @@ final remoteAdminTargetProvider = Provider<int?>((ref) {
 
 /// Unread messages count provider
 /// Returns the count of messages that were received from other nodes
-/// and not yet read (messages where received=true and from != myNodeNum)
+/// and not yet read (messages where received=true and from != myNodeNum).
+/// Includes both DM and channel/broadcast messages.
 final unreadMessagesCountProvider = Provider<int>((ref) {
   final messages = ref.watch(messagesProvider);
   final myNodeNum = ref.watch(myNodeNumProvider);
@@ -3556,6 +3584,62 @@ final unreadMessagesCountProvider = Provider<int>((ref) {
 /// Has unread messages provider - simple boolean check
 final hasUnreadMessagesProvider = Provider<bool>((ref) {
   return ref.watch(unreadMessagesCountProvider) > 0;
+});
+
+/// Unread DM count — only direct messages, excludes broadcasts/channels.
+/// Used by the Contacts tab badge so it only lights up for DM unreads.
+final unreadDmCountProvider = Provider<int>((ref) {
+  final messages = ref.watch(messagesProvider);
+  final myNodeNum = ref.watch(myNodeNumProvider);
+
+  if (myNodeNum == null) return 0;
+
+  return messages
+      .where((m) => m.received && m.from != myNodeNum && !m.read && m.isDirect)
+      .length;
+});
+
+/// Whether there are unread DMs specifically.
+final hasUnreadDmProvider = Provider<bool>((ref) {
+  return ref.watch(unreadDmCountProvider) > 0;
+});
+
+/// Unread channel/broadcast message count — excludes DMs.
+/// Used by the Channels tab badge.
+final unreadChannelCountProvider = Provider<int>((ref) {
+  final messages = ref.watch(messagesProvider);
+  final myNodeNum = ref.watch(myNodeNumProvider);
+
+  if (myNodeNum == null) return 0;
+
+  return messages
+      .where(
+        (m) => m.received && m.from != myNodeNum && !m.read && m.isBroadcast,
+      )
+      .length;
+});
+
+/// Whether there are unread channel messages specifically.
+final hasUnreadChannelProvider = Provider<bool>((ref) {
+  return ref.watch(unreadChannelCountProvider) > 0;
+});
+
+/// Per-channel unread counts keyed by channel index.
+/// Used by channel tiles to show individual unread badges.
+final channelUnreadCountsProvider = Provider<Map<int, int>>((ref) {
+  final messages = ref.watch(messagesProvider);
+  final myNodeNum = ref.watch(myNodeNumProvider);
+
+  if (myNodeNum == null) return {};
+
+  final counts = <int, int>{};
+  for (final m in messages) {
+    if (m.received && m.from != myNodeNum && !m.read && m.isBroadcast) {
+      final ch = m.channel ?? 0;
+      counts[ch] = (counts[ch] ?? 0) + 1;
+    }
+  }
+  return counts;
 });
 
 /// New nodes count - tracks number of newly discovered nodes since last check

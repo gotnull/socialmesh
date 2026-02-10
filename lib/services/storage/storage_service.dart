@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -755,7 +756,12 @@ class DeviceFavoritesService {
 class MessageStorageService {
   SharedPreferences? _prefs;
   static const String _messagesKey = 'messages';
-  static const int _maxMessages = 500;
+  static const String _historyLimitKey = 'message_history_limit';
+  static const int _defaultMaxMessages = 100;
+
+  /// Serialises writes so that concurrent saveMessage calls do not
+  /// read-modify-write over each other (classic lost-update race).
+  Future<void>? _writeLock;
 
   MessageStorageService();
 
@@ -770,8 +776,19 @@ class MessageStorageService {
     return _prefs!;
   }
 
+  /// Returns the user-configured message history limit,
+  /// falling back to [_defaultMaxMessages] if not set.
+  int get _maxMessages =>
+      _preferences.getInt(_historyLimitKey) ?? _defaultMaxMessages;
+
   /// Save a message to local storage
   Future<void> saveMessage(Message message) async {
+    // Queue behind any in-flight write to prevent lost updates
+    while (_writeLock != null) {
+      await _writeLock;
+    }
+    final completer = Completer<void>();
+    _writeLock = completer.future;
     try {
       final messages = await loadMessages();
 
@@ -790,15 +807,19 @@ class MessageStorageService {
         );
       }
 
-      // Trim to max messages
-      if (messages.length > _maxMessages) {
-        messages.removeRange(0, messages.length - _maxMessages);
+      // Trim to user-configured max messages
+      final maxMessages = _maxMessages;
+      if (messages.length > maxMessages) {
+        messages.removeRange(0, messages.length - maxMessages);
       }
 
       final jsonList = messages.map((m) => _messageToJson(m)).toList();
       await _preferences.setString(_messagesKey, jsonEncode(jsonList));
     } catch (e) {
       AppLogging.storage('⚠️ Error saving message: $e');
+    } finally {
+      _writeLock = null;
+      completer.complete();
     }
   }
 

@@ -329,6 +329,8 @@ class _ChannelTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isPrimary = channel.index == 0;
     final hasKey = channel.hasSecureKey;
+    final channelUnreads = ref.watch(channelUnreadCountsProvider);
+    final unreadCount = channelUnreads[channel.index] ?? 0;
 
     return BouncyTap(
       onTap: () => _openChannelChat(context),
@@ -426,6 +428,33 @@ class _ChannelTile extends ConsumerWidget {
                   ],
                 ),
               ),
+              if (unreadCount > 0) ...[
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: unreadCount > 9 ? 6 : 0,
+                    vertical: 2,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 22,
+                    minHeight: 22,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.accentColor,
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: Center(
+                    child: Text(
+                      unreadCount > 99 ? '99+' : '$unreadCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+              ],
               Icon(Icons.chevron_right, color: context.textTertiary),
             ],
           ),

@@ -75,7 +75,8 @@ class _MessagesContainerScreenState
     final channels = ref.watch(channelsProvider);
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
-    final hasUnread = ref.watch(hasUnreadMessagesProvider);
+    final hasUnreadDm = ref.watch(hasUnreadDmProvider);
+    final hasUnreadChannel = ref.watch(hasUnreadChannelProvider);
     final connectionStateAsync = ref.watch(connectionStateProvider);
     final currentConnectionState = connectionStateAsync.when(
       data: (state) => state,
@@ -146,7 +147,7 @@ class _MessagesContainerScreenState
                       children: [
                         const Text('Contacts'),
                         const SizedBox(width: 6),
-                        _TabBadge(count: contactsCount, showDot: hasUnread),
+                        _TabBadge(count: contactsCount, showDot: hasUnreadDm),
                       ],
                     ),
                   ),
@@ -156,7 +157,10 @@ class _MessagesContainerScreenState
                       children: [
                         const Text('Channels'),
                         const SizedBox(width: 6),
-                        _TabBadge(count: channels.length),
+                        _TabBadge(
+                          count: channels.length,
+                          showDot: hasUnreadChannel,
+                        ),
                       ],
                     ),
                   ),

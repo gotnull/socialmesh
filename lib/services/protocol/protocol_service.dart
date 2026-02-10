@@ -2441,6 +2441,27 @@ class ProtocolService {
       AppLogging.protocol('NodeInfo has no deviceMetrics');
     }
 
+    // Use the device's lastHeard timestamp when available.
+    // NodeInfo.lastHeard is a uint32 Unix timestamp (seconds) recording
+    // when the DEVICE last received a packet from this node.  Using
+    // DateTime.now() here would reset every node's "Last Heard" to the
+    // reconnection time, which is misleading.
+    final DateTime deviceLastHeard;
+    if (nodeInfo.hasLastHeard() && nodeInfo.lastHeard > 0) {
+      deviceLastHeard = DateTime.fromMillisecondsSinceEpoch(
+        nodeInfo.lastHeard * 1000,
+      );
+      AppLogging.protocol(
+        'NodeInfo ${nodeInfo.num}: using device lastHeard=${nodeInfo.lastHeard} '
+        '(${deviceLastHeard.toIso8601String()})',
+      );
+    } else {
+      deviceLastHeard = DateTime.now();
+      AppLogging.protocol(
+        'NodeInfo ${nodeInfo.num}: no device lastHeard, falling back to now',
+      );
+    }
+
     final existingNode = _nodes[nodeInfo.num];
 
     // Generate consistent color from node number
@@ -2546,7 +2567,7 @@ class ProtocolService {
         batteryLevel: nodeInfo.hasDeviceMetrics()
             ? nodeInfo.deviceMetrics.batteryLevel
             : existingNode.batteryLevel,
-        lastHeard: DateTime.now(),
+        lastHeard: deviceLastHeard,
         role: role,
         avatarColor: existingNode.avatarColor,
         hasPublicKey: hasPublicKey,
@@ -2580,7 +2601,7 @@ class ProtocolService {
         batteryLevel: nodeInfo.hasDeviceMetrics()
             ? nodeInfo.deviceMetrics.batteryLevel
             : null,
-        lastHeard: DateTime.now(),
+        lastHeard: deviceLastHeard,
         role: role,
         avatarColor: avatarColor,
         isFavorite: false,
