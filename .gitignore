@@ -25,6 +25,9 @@ functions/
 sigil-api/
 deploy/
 
+# Firebase Hosting content (landing page, legal docs, admin tools)
+web/
+
 # Environment files (keep .env.example and .env.ci for CI)
 .env
 .env.local
