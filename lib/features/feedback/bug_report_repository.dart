@@ -169,6 +169,46 @@ class BugReportRepository {
     }
   }
 
+  /// Watch all bug reports for the current user with live Firestore updates.
+  ///
+  /// Streams the parent collection and re-fetches responses on each change.
+  /// Admin responses update the parent doc (status/lastResponseAt), which
+  /// triggers the stream and pulls fresh response subcollections.
+  Stream<List<BugReport>> watchMyReports() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      AppLogging.bugReport('Cannot watch reports: no user signed in');
+      return Stream.value([]);
+    }
+
+    return _firestore
+        .collection('bugReports')
+        .where('uid', isEqualTo: user.uid)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .asyncMap((snapshot) async {
+          final reports = <BugReport>[];
+
+          for (final doc in snapshot.docs) {
+            final responsesSnapshot = await doc.reference
+                .collection('responses')
+                .orderBy('createdAt', descending: false)
+                .get();
+
+            final responses = responsesSnapshot.docs
+                .map(BugReportResponse.fromFirestore)
+                .toList();
+
+            reports.add(BugReport.fromFirestore(doc, responses: responses));
+          }
+
+          AppLogging.bugReport(
+            'Streamed ${reports.length} bug reports for user ${user.uid}',
+          );
+          return reports;
+        });
+  }
+
   /// Fetch a single bug report by ID, including responses.
   Future<BugReport?> fetchReport(String reportId) async {
     try {
@@ -262,10 +302,11 @@ final bugReportRepositoryProvider = Provider<BugReportRepository>((ref) {
 });
 
 /// Provider for the user's bug reports list.
-/// Invalidate this provider to refresh the list.
-final myBugReportsProvider = FutureProvider<List<BugReport>>((ref) async {
+/// Uses Firestore snapshots for live updates when admin responds.
+/// Invalidate this provider to restart the stream.
+final myBugReportsProvider = StreamProvider<List<BugReport>>((ref) {
   final repository = ref.watch(bugReportRepositoryProvider);
-  return repository.fetchMyReports();
+  return repository.watchMyReports();
 });
 
 /// Provider for total unread bug report response count.
