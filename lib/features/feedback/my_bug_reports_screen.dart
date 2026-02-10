@@ -10,8 +10,13 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/fullscreen_gallery.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/search_filter_header.dart';
+import '../../core/widgets/section_header.dart';
 import '../../utils/snackbar.dart';
 import 'bug_report_repository.dart';
+
+/// Filter options for the bug reports list.
+enum _BugReportFilter { all, open, responded, awaiting, resolved }
 
 /// Screen showing the user's submitted bug reports and threaded responses.
 class MyBugReportsScreen extends ConsumerStatefulWidget {
@@ -26,15 +31,53 @@ class MyBugReportsScreen extends ConsumerStatefulWidget {
 
 class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
     with LifecycleSafeMixin<MyBugReportsScreen> {
+  _BugReportFilter _activeFilter = _BugReportFilter.all;
+
   @override
   void initState() {
     super.initState();
-    // Force a fresh fetch when the screen opens
+    // Force a fresh stream when the screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.invalidate(myBugReportsProvider);
       }
     });
+  }
+
+  List<BugReport> _applyFilter(List<BugReport> reports) {
+    switch (_activeFilter) {
+      case _BugReportFilter.all:
+        return reports;
+      case _BugReportFilter.open:
+        return reports.where((r) => r.status == BugReportStatus.open).toList();
+      case _BugReportFilter.responded:
+        return reports
+            .where((r) => r.status == BugReportStatus.responded)
+            .toList();
+      case _BugReportFilter.awaiting:
+        return reports
+            .where((r) => r.status == BugReportStatus.userReplied)
+            .toList();
+      case _BugReportFilter.resolved:
+        return reports
+            .where((r) => r.status == BugReportStatus.resolved)
+            .toList();
+    }
+  }
+
+  Color _filterColor(BuildContext context, _BugReportFilter filter) {
+    switch (filter) {
+      case _BugReportFilter.all:
+        return AppTheme.primaryBlue;
+      case _BugReportFilter.open:
+        return context.textTertiary;
+      case _BugReportFilter.responded:
+        return context.accentColor;
+      case _BugReportFilter.awaiting:
+        return AccentColors.yellow;
+      case _BugReportFilter.resolved:
+        return AppTheme.successGreen;
+    }
   }
 
   @override
@@ -82,26 +125,133 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
             );
           }
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(myBugReportsProvider);
-              // Wait for the new data to load
-              await ref.read(myBugReportsProvider.future);
-            },
-            color: context.accentColor,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              itemCount: reports.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final report = reports[index];
-                final isInitialReport = widget.initialReportId == report.id;
-                return _BugReportCard(
-                  report: report,
-                  initiallyExpanded: isInitialReport,
-                );
-              },
-            ),
+          // Compute counts per status for filter badges
+          final openCount = reports
+              .where((r) => r.status == BugReportStatus.open)
+              .length;
+          final respondedCount = reports
+              .where((r) => r.status == BugReportStatus.responded)
+              .length;
+          final awaitingCount = reports
+              .where((r) => r.status == BugReportStatus.userReplied)
+              .length;
+          final resolvedCount = reports
+              .where((r) => r.status == BugReportStatus.resolved)
+              .length;
+
+          final filtered = _applyFilter(reports);
+
+          return Column(
+            children: [
+              // Filter chips row
+              SizedBox(
+                height: SearchFilterLayout.chipRowHeight,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: SearchFilterLayout.horizontalPadding,
+                  ),
+                  children: [
+                    SectionFilterChip(
+                      label: 'All',
+                      count: reports.length,
+                      isSelected: _activeFilter == _BugReportFilter.all,
+                      color: _filterColor(context, _BugReportFilter.all),
+                      onTap: () => safeSetState(
+                        () => _activeFilter = _BugReportFilter.all,
+                      ),
+                    ),
+                    SizedBox(width: SearchFilterLayout.chipSpacing),
+                    SectionFilterChip(
+                      label: 'Open',
+                      count: openCount,
+                      isSelected: _activeFilter == _BugReportFilter.open,
+                      color: _filterColor(context, _BugReportFilter.open),
+                      onTap: () => safeSetState(
+                        () => _activeFilter = _BugReportFilter.open,
+                      ),
+                    ),
+                    SizedBox(width: SearchFilterLayout.chipSpacing),
+                    SectionFilterChip(
+                      label: 'Responded',
+                      count: respondedCount,
+                      isSelected: _activeFilter == _BugReportFilter.responded,
+                      color: _filterColor(context, _BugReportFilter.responded),
+                      onTap: () => safeSetState(
+                        () => _activeFilter = _BugReportFilter.responded,
+                      ),
+                    ),
+                    SizedBox(width: SearchFilterLayout.chipSpacing),
+                    SectionFilterChip(
+                      label: 'Awaiting',
+                      count: awaitingCount,
+                      isSelected: _activeFilter == _BugReportFilter.awaiting,
+                      color: _filterColor(context, _BugReportFilter.awaiting),
+                      onTap: () => safeSetState(
+                        () => _activeFilter = _BugReportFilter.awaiting,
+                      ),
+                    ),
+                    SizedBox(width: SearchFilterLayout.chipSpacing),
+                    SectionFilterChip(
+                      label: 'Resolved',
+                      count: resolvedCount,
+                      isSelected: _activeFilter == _BugReportFilter.resolved,
+                      color: _filterColor(context, _BugReportFilter.resolved),
+                      icon: Icons.check_circle_outline,
+                      onTap: () => safeSetState(
+                        () => _activeFilter = _BugReportFilter.resolved,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4),
+              // Filtered reports list
+              Expanded(
+                child: filtered.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.filter_list_off,
+                              size: 48,
+                              color: context.textTertiary,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No reports match this filter',
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: context.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          ref.invalidate(myBugReportsProvider);
+                          await ref.read(myBugReportsProvider.future);
+                        },
+                        color: context.accentColor,
+                        child: ListView.separated(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          itemCount: filtered.length,
+                          separatorBuilder: (_, _) => const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final report = filtered[index];
+                            final isInitialReport =
+                                widget.initialReportId == report.id;
+                            return _BugReportCard(
+                              report: report,
+                              initiallyExpanded: isInitialReport,
+                            );
+                          },
+                        ),
+                      ),
+              ),
+            ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -159,6 +309,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
   final _replyController = TextEditingController();
   final _replyFocusNode = FocusNode();
   bool _isSending = false;
+  bool _wasReplyFocusedOnTapDown = false;
 
   @override
   void initState() {
@@ -382,11 +533,15 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 child: GestureDetector(
+                  onTapDown: (_) {
+                    // Capture focus state before onTapOutside clears it
+                    _wasReplyFocusedOnTapDown = _replyFocusNode.hasFocus;
+                  },
                   onTap: () {
-                    if (_replyFocusNode.hasFocus) {
-                      _replyFocusNode.unfocus();
-                      return;
-                    }
+                    // If the reply field was focused when the tap started,
+                    // swallow the tap — onTapOutside already dismissed the
+                    // keyboard so no further action is needed.
+                    if (_wasReplyFocusedOnTapDown) return;
                     FullscreenGallery.show(
                       context,
                       images: [report.screenshotUrl!],
