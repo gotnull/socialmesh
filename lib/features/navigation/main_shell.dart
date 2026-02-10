@@ -1140,17 +1140,6 @@ class _MainShellState extends ConsumerState<MainShell> {
             ),
           ),
 
-          // Global countdown banner — sits just below the glass app bar
-          // so it is visible regardless of which tab/screen is active.
-          // Non-interactive; purely informational progress display.
-          if (ref.watch(hasActiveCountdownsProvider))
-            Positioned(
-              top: MediaQuery.of(context).padding.top + kToolbarHeight,
-              left: 0,
-              right: 0,
-              child: const CountdownBanner(),
-            ),
-
           // Reconnection status banner - overlays content when disconnected after having paired before
           if (showReconnectionBanner)
             Positioned(
@@ -1172,70 +1161,82 @@ class _MainShellState extends ConsumerState<MainShell> {
             ),
         ],
       ),
-      bottomNavigationBar: Container(
-        key: mainShellBottomNavKey,
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-          border: Border(
-            top: BorderSide(
-              color: theme.dividerColor.withValues(
-                alpha: theme.brightness == Brightness.dark ? 0.1 : 0.2,
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Global countdown banner — sits just above the bottom nav bar
+          // so it is visible regardless of which tab/screen is active
+          // without obstructing app bar content (search fields, filters, etc.).
+          if (ref.watch(hasActiveCountdownsProvider)) const CountdownBanner(),
+          Container(
+            key: mainShellBottomNavKey,
+            decoration: BoxDecoration(
+              color: theme.scaffoldBackgroundColor,
+              border: Border(
+                top: BorderSide(
+                  color: theme.dividerColor.withValues(
+                    alpha: theme.brightness == Brightness.dark ? 0.1 : 0.2,
+                  ),
+                ),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: List.generate(_navItems.length, (index) {
+                    final item = _navItems[index];
+                    final isSelected =
+                        ref.watch(mainShellIndexProvider) == index;
+
+                    // Calculate badge count for each tab
+                    int badgeCount = 0;
+                    if (index == 0) {
+                      // Messages tab - show unread count
+                      badgeCount = ref.watch(unreadMessagesCountProvider);
+                    } else if (index == 2) {
+                      // Signals tab - show active signal count
+                      badgeCount = ref.watch(activeSignalCountProvider);
+                    } else if (index == 3) {
+                      // Nodes tab - show new nodes count
+                      badgeCount = ref.watch(newNodesCountProvider);
+                    } else if (index == 4) {
+                      // Dashboard tab - no badge needed
+                      badgeCount = 0;
+                    }
+
+                    return _NavBarItem(
+                      icon: isSelected ? item.activeIcon : item.icon,
+                      label: item.label,
+                      isSelected: isSelected,
+                      badgeCount: badgeCount,
+                      showWarningBadge: false,
+                      showReconnectingBadge: false,
+                      onTap: () {
+                        ref.haptics.tabChange();
+                        // Clear new nodes badge when navigating to Nodes tab
+                        if (index == 3) {
+                          ref.read(newNodesCountProvider.notifier).reset();
+                        }
+                        ref
+                            .read(mainShellIndexProvider.notifier)
+                            .setIndex(index);
+                      },
+                    );
+                  }),
+                ),
               ),
             ),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: List.generate(_navItems.length, (index) {
-                final item = _navItems[index];
-                final isSelected = ref.watch(mainShellIndexProvider) == index;
-
-                // Calculate badge count for each tab
-                int badgeCount = 0;
-                if (index == 0) {
-                  // Messages tab - show unread count
-                  badgeCount = ref.watch(unreadMessagesCountProvider);
-                } else if (index == 2) {
-                  // Signals tab - show active signal count
-                  badgeCount = ref.watch(activeSignalCountProvider);
-                } else if (index == 3) {
-                  // Nodes tab - show new nodes count
-                  badgeCount = ref.watch(newNodesCountProvider);
-                } else if (index == 4) {
-                  // Dashboard tab - no badge needed
-                  badgeCount = 0;
-                }
-
-                return _NavBarItem(
-                  icon: isSelected ? item.activeIcon : item.icon,
-                  label: item.label,
-                  isSelected: isSelected,
-                  badgeCount: badgeCount,
-                  showWarningBadge: false,
-                  showReconnectingBadge: false,
-                  onTap: () {
-                    ref.haptics.tabChange();
-                    // Clear new nodes badge when navigating to Nodes tab
-                    if (index == 3) {
-                      ref.read(newNodesCountProvider.notifier).reset();
-                    }
-                    ref.read(mainShellIndexProvider.notifier).setIndex(index);
-                  },
-                );
-              }),
-            ),
-          ),
-        ),
+        ],
       ),
     );
   }
