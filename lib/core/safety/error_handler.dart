@@ -60,8 +60,22 @@ class AppErrorHandler {
       // Let the default handler show the red error screen in debug
       FlutterError.presentError(details);
     } else if (kDebugMode) {
-      // In debug, log but don't show red screen for recoverable errors
+      // In debug, log full details so layout overflows are diagnosable.
+      // FlutterErrorDetails.context contains the widget path (e.g.
+      // "The relevant error-causing widget was: Row file:///…:123").
       debugPrint('Recovered from error: ${details.exception}');
+      if (details.context != null) {
+        debugPrint('  Context: ${details.context}');
+      }
+      if (details.informationCollector != null) {
+        final info = details.informationCollector!()
+            .map((d) => d.toString())
+            .join('\n  ');
+        debugPrint('  Info:\n  $info');
+      }
+      if (details.stack != null) {
+        debugPrint('  Stack: ${details.stack}');
+      }
     }
   }
 
