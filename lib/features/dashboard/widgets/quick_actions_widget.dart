@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
-import '../../../utils/snackbar.dart';
-import '../../../core/navigation.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/action_sheets.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/countdown_providers.dart';
 import '../../../core/transport.dart';
-import '../../telemetry/traceroute_log_screen.dart';
 
 /// Quick Actions Widget - Common mesh actions at a glance
 class QuickActionsContent extends ConsumerStatefulWidget {
@@ -24,18 +21,6 @@ class QuickActionsContent extends ConsumerStatefulWidget {
 
 class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
     with LifecycleSafeMixin<QuickActionsContent> {
-  int _tracerouteCooldownRemaining = 0;
-  Timer? _tracerouteCooldownTimer;
-  int? _lastTracerouteTargetNodeNum;
-
-  static const _tracerouteCooldownSeconds = 30;
-
-  @override
-  void dispose() {
-    _tracerouteCooldownTimer?.cancel();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final connectionStateAsync = ref.watch(connectionStateProvider);
@@ -44,7 +29,19 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
       orElse: () => false,
     );
 
-    final tracerouteEnabled = isConnected && _tracerouteCooldownRemaining <= 0;
+    // Watch global countdown state for traceroute cooldown.
+    // Any active traceroute countdown (regardless of which node) disables the button.
+    final countdowns = ref.watch(countdownProvider);
+    final activeTraceroute = countdowns.values
+        .where((t) => t.type == CountdownType.traceroute)
+        .toList();
+    final hasTracerouteCooldown = activeTraceroute.isNotEmpty;
+    final tracerouteEnabled = isConnected && !hasTracerouteCooldown;
+
+    // Pick the first active traceroute for the cooldown button display
+    final tracerouteTask = hasTracerouteCooldown
+        ? activeTraceroute.first
+        : null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -72,10 +69,10 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _tracerouteCooldownRemaining > 0
+                child: hasTracerouteCooldown && tracerouteTask != null
                     ? _TracerouteCooldownButton(
-                        remaining: _tracerouteCooldownRemaining,
-                        total: _tracerouteCooldownSeconds,
+                        remaining: tracerouteTask.remainingSeconds,
+                        total: tracerouteTask.totalSeconds,
                       )
                     : _ActionButton(
                         icon: Icons.route,
@@ -145,54 +142,10 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
 
     if (!mounted || resultNodeNum == null) return;
 
-    _lastTracerouteTargetNodeNum = resultNodeNum;
-
-    safeSetState(() {
-      _tracerouteCooldownRemaining = _tracerouteCooldownSeconds;
-    });
-
-    _tracerouteCooldownTimer?.cancel();
-    _tracerouteCooldownTimer = Timer.periodic(const Duration(seconds: 1), (
-      timer,
-    ) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      safeSetState(() {
-        _tracerouteCooldownRemaining--;
-        if (_tracerouteCooldownRemaining <= 0) {
-          _tracerouteCooldownRemaining = 0;
-          timer.cancel();
-          _showTracerouteReadySnackBar();
-        }
-      });
-    });
-  }
-
-  void _showTracerouteReadySnackBar() {
-    if (!mounted) return;
-    final targetNodeNum = _lastTracerouteTargetNodeNum;
-    if (targetNodeNum == null) return;
-
-    // Use global variant so the snackbar and its "View" action are safe even
-    // if this widget is removed from the tree before the user taps.
-    showGlobalActionSnackBar(
-      'Traceroute results may be ready',
-      actionLabel: 'View',
-      onAction: () {
-        final ctx = navigatorKey.currentContext;
-        if (ctx == null) return;
-        Navigator.push(
-          ctx,
-          MaterialPageRoute(
-            builder: (_) => TraceRouteLogScreen(nodeNum: targetNodeNum),
-          ),
-        );
-      },
-      type: SnackBarType.success,
-      duration: const Duration(seconds: 6),
-    );
+    // Start the global countdown — survives navigation and screen disposal.
+    ref
+        .read(countdownProvider.notifier)
+        .startTracerouteCountdown(resultNodeNum);
   }
 
   void _requestPositions(BuildContext context) async {
@@ -303,7 +256,7 @@ class _TracerouteCooldownButton extends StatelessWidget {
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
-                    value: remaining / total,
+                    value: total > 0 ? remaining / total : 0,
                     strokeWidth: 1.5,
                     color: context.accentColor.withValues(alpha: 0.4),
                     backgroundColor: context.textTertiary.withValues(

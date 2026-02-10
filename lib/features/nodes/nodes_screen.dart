@@ -9,13 +9,14 @@ import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'dart:convert';
 import '../../providers/app_providers.dart';
+import '../../providers/countdown_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
-import '../../core/navigation.dart';
+
 import '../../utils/snackbar.dart';
 import '../../utils/presence_utils.dart';
 import '../../core/widgets/qr_share_sheet.dart';
@@ -1540,18 +1541,6 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
   bool _isTogglingFavorite = false;
   bool _isTogglingMute = false;
   bool _isSendingTraceroute = false;
-  int _tracerouteCooldownRemaining = 0;
-  Timer? _tracerouteCooldownTimer;
-  int? _lastTracerouteTargetNodeNum;
-
-  /// Traceroute rate limit: 30 seconds between sends (matches Meshtastic iOS).
-  static const _tracerouteCooldownSeconds = 30;
-
-  @override
-  void dispose() {
-    _tracerouteCooldownTimer?.cancel();
-    super.dispose();
-  }
 
   MeshNode get _initialNode => widget.node;
   bool get isMyNode => widget.isMyNode;
@@ -1732,7 +1721,10 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
   }
 
   void _sendTraceroute(BuildContext context, MeshNode node) async {
-    if (_isSendingTraceroute || _tracerouteCooldownRemaining > 0) return;
+    final cooldownRemaining = ref
+        .read(countdownProvider.notifier)
+        .tracerouteRemaining(node.nodeNum);
+    if (_isSendingTraceroute || cooldownRemaining > 0) return;
 
     // Check connection state
     final connectionState = ref.read(connectionStateProvider);
@@ -1761,31 +1753,12 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
 
       if (!mounted) return;
 
-      // Start cooldown timer
-      safeSetState(() {
-        _isSendingTraceroute = false;
-        _tracerouteCooldownRemaining = _tracerouteCooldownSeconds;
-      });
+      safeSetState(() => _isSendingTraceroute = false);
 
-      _lastTracerouteTargetNodeNum = node.nodeNum;
-
-      _tracerouteCooldownTimer?.cancel();
-      _tracerouteCooldownTimer = Timer.periodic(const Duration(seconds: 1), (
-        timer,
-      ) {
-        if (!mounted) {
-          timer.cancel();
-          return;
-        }
-        safeSetState(() {
-          _tracerouteCooldownRemaining--;
-          if (_tracerouteCooldownRemaining <= 0) {
-            _tracerouteCooldownRemaining = 0;
-            timer.cancel();
-            _showTracerouteReadySnackBar();
-          }
-        });
-      });
+      // Start the global countdown — survives navigation and screen disposal.
+      ref
+          .read(countdownProvider.notifier)
+          .startTracerouteCountdown(node.nodeNum);
 
       messenger.showSnackBar(
         SnackBar(
@@ -1801,35 +1774,6 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
         SnackBar(content: Text('Failed to send traceroute: $e')),
       );
     }
-  }
-
-  void _showTracerouteReadySnackBar() {
-    if (!mounted) return;
-    final targetNodeNum = _lastTracerouteTargetNodeNum;
-    if (targetNodeNum == null) return;
-
-    // Pop the sheet first so the snackbar is visible (not hidden behind it)
-    // and so we don't hold a reference to this disposed State's context.
-    Navigator.of(context).pop();
-
-    // Use global variant — by the time the user taps "View", this State is
-    // already disposed because we just popped the sheet.
-    showGlobalActionSnackBar(
-      'Traceroute results may be ready',
-      actionLabel: 'View',
-      onAction: () {
-        final ctx = navigatorKey.currentContext;
-        if (ctx == null) return;
-        Navigator.push(
-          ctx,
-          MaterialPageRoute(
-            builder: (_) => TraceRouteLogScreen(nodeNum: targetNodeNum),
-          ),
-        );
-      },
-      type: SnackBarType.success,
-      duration: const Duration(seconds: 6),
-    );
   }
 
   void _showTracerouteHistory(BuildContext context, MeshNode node) {
@@ -2615,75 +2559,92 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet>
                             ),
                     ),
                     SizedBox(width: 8),
-                    // Traceroute button
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: context.border),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: _isSendingTraceroute
-                          ? Padding(
-                              padding: EdgeInsets.all(12),
-                              child: SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: context.accentColor,
-                                ),
-                              ),
-                            )
-                          : _tracerouteCooldownRemaining > 0
-                          ? Tooltip(
-                              message:
-                                  'Traceroute cooldown: ${_tracerouteCooldownRemaining}s',
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      SizedBox(
-                                        width: 22,
-                                        height: 22,
-                                        child: CircularProgressIndicator(
-                                          value:
-                                              _tracerouteCooldownRemaining /
-                                              _tracerouteCooldownSeconds,
-                                          strokeWidth: 2,
-                                          color: context.accentColor.withValues(
-                                            alpha: 0.4,
-                                          ),
-                                          backgroundColor: context.textTertiary
-                                              .withValues(alpha: 0.15),
-                                        ),
-                                      ),
-                                      Text(
-                                        '$_tracerouteCooldownRemaining',
-                                        style: TextStyle(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w600,
-                                          color: context.textTertiary,
-                                        ),
-                                      ),
-                                    ],
+                    // Traceroute button — watches global countdown provider
+                    Builder(
+                      builder: (context) {
+                        final countdowns = ref.watch(countdownProvider);
+                        final traceId = CountdownNotifier.tracerouteId(
+                          node.nodeNum,
+                        );
+                        final cooldownTask = countdowns[traceId];
+                        final cooldownRemaining =
+                            cooldownTask?.remainingSeconds ?? 0;
+                        final cooldownTotal =
+                            cooldownTask?.totalSeconds ??
+                            CountdownNotifier.tracerouteCooldownSeconds;
+
+                        return Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: context.border),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: _isSendingTraceroute
+                              ? Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: context.accentColor,
+                                    ),
                                   ),
+                                )
+                              : cooldownRemaining > 0
+                              ? Tooltip(
+                                  message:
+                                      'Traceroute cooldown: ${cooldownRemaining}s',
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12),
+                                    child: SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 22,
+                                            height: 22,
+                                            child: CircularProgressIndicator(
+                                              value: cooldownTotal > 0
+                                                  ? cooldownRemaining /
+                                                        cooldownTotal
+                                                  : 0,
+                                              strokeWidth: 2,
+                                              color: context.accentColor
+                                                  .withValues(alpha: 0.4),
+                                              backgroundColor: context
+                                                  .textTertiary
+                                                  .withValues(alpha: 0.15),
+                                            ),
+                                          ),
+                                          Text(
+                                            '$cooldownRemaining',
+                                            style: TextStyle(
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.w600,
+                                              color: context.textTertiary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : IconButton(
+                                  onPressed: () =>
+                                      _sendTraceroute(context, node),
+                                  icon: Icon(
+                                    Icons.route,
+                                    color: context.textSecondary,
+                                    size: 22,
+                                  ),
+                                  tooltip: 'Traceroute',
+                                  padding: const EdgeInsets.all(12),
+                                  constraints: const BoxConstraints(),
                                 ),
-                              ),
-                            )
-                          : IconButton(
-                              onPressed: () => _sendTraceroute(context, node),
-                              icon: Icon(
-                                Icons.route,
-                                color: context.textSecondary,
-                                size: 22,
-                              ),
-                              tooltip: 'Traceroute',
-                              padding: const EdgeInsets.all(12),
-                              constraints: const BoxConstraints(),
-                            ),
+                        );
+                      },
                     ),
                     SizedBox(width: 8),
                     // More options button

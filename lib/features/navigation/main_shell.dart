@@ -9,6 +9,7 @@ import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/admin_pin_dialog.dart';
 import '../../core/widgets/node_avatar.dart';
+import '../../core/widgets/countdown_banner.dart';
 import '../../core/widgets/top_status_banner.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../core/widgets/animations.dart';
@@ -16,6 +17,7 @@ import '../../core/widgets/legal_document_sheet.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/countdown_providers.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/connection_providers.dart';
 import '../../providers/connectivity_providers.dart';
@@ -1137,6 +1139,17 @@ class _MainShellState extends ConsumerState<MainShell> {
               ),
             ),
           ),
+
+          // Global countdown banner — sits just below the glass app bar
+          // so it is visible regardless of which tab/screen is active.
+          // Non-interactive; purely informational progress display.
+          if (ref.watch(hasActiveCountdownsProvider))
+            Positioned(
+              top: MediaQuery.of(context).padding.top + kToolbarHeight,
+              left: 0,
+              right: 0,
+              child: const CountdownBanner(),
+            ),
 
           // Reconnection status banner - overlays content when disconnected after having paired before
           if (showReconnectionBanner)
