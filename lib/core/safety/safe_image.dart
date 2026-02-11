@@ -289,7 +289,9 @@ class SafeImage extends StatelessWidget {
   /// Calculate cache size based on display size for memory efficiency.
   /// Uses 2x for retina displays.
   static int? _calculateCacheSize(double? displaySize) {
-    if (displaySize == null) return null;
+    if (displaySize == null || displaySize.isInfinite || displaySize.isNaN) {
+      return null;
+    }
     // 2x for retina, capped at reasonable max
     return (displaySize * 2).toInt().clamp(1, 2048);
   }
