@@ -122,7 +122,9 @@ class ChannelInviteService {
         uplink: channelMap['uplink'] as bool? ?? false,
         downlink: channelMap['downlink'] as bool? ?? false,
         role: channelMap['role'] as String? ?? 'SECONDARY',
-        positionPrecision: channelMap['positionPrecision'] as int? ?? 0,
+        // Always 0 — positionPrecision is a per-device preference and must
+        // not propagate from the sharer to the recipient.
+        positionPrecision: 0,
       ),
       alreadyMember: data['alreadyMember'] as bool? ?? false,
     );

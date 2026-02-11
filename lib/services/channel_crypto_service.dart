@@ -281,7 +281,9 @@ class ChannelCryptoService {
         uplink: channelData['uplink'] as bool? ?? false,
         downlink: channelData['downlink'] as bool? ?? false,
         role: channelData['role'] as String? ?? 'SECONDARY',
-        positionPrecision: channelData['positionPrecision'] as int? ?? 0,
+        // Always 0 — positionPrecision is a per-device preference and must
+        // not propagate from the sharer to the recipient.
+        positionPrecision: 0,
       );
     } catch (e) {
       AppLogging.channels('[ChannelCrypto] Error fetching channel: $e');
