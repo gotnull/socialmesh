@@ -761,9 +761,11 @@ packages:
   flutter_blue_plus_darwin:
     dependency: "direct overridden"
     description:
-      path: "packages/flutter_blue_plus_darwin_patched"
-      relative: true
-    source: path
+      path: "packages/flutter_blue_plus_darwin"
+      ref: "fix/nil-rssi-crash-didReadRSSI"
+      resolved-ref: "5f4299ece2583d4f84856808e62253d6c0fc7c76"
+      url: "https://github.com/gotnull/flutter_blue_plus.git"
+    source: git
     version: "8.1.0"
   flutter_blue_plus_linux:
     dependency: transitive
