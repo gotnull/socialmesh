@@ -329,14 +329,17 @@ class SafeImage extends StatelessWidget {
   }
 
   Widget _buildDefaultPlaceholder(BuildContext context) {
+    final finiteW = (width != null && width!.isFinite) ? width! : 40.0;
+    final finiteH = (height != null && height!.isFinite) ? height! : 40.0;
+    final spinnerSize = finiteW < finiteH ? finiteW * 0.3 : finiteH * 0.3;
     return Container(
       width: width,
       height: height,
       color: context.card.withValues(alpha: 0.3),
       child: Center(
         child: SizedBox(
-          width: (width ?? 40) * 0.3,
-          height: (height ?? 40) * 0.3,
+          width: spinnerSize,
+          height: spinnerSize,
           child: CircularProgressIndicator(
             strokeWidth: 2,
             color: context.textSecondary.withValues(alpha: 0.5),
@@ -347,6 +350,9 @@ class SafeImage extends StatelessWidget {
   }
 
   Widget _buildDefaultError(BuildContext context) {
+    final finiteW = (width != null && width!.isFinite) ? width! : 40.0;
+    final finiteH = (height != null && height!.isFinite) ? height! : 40.0;
+    final iconSize = finiteW < finiteH ? finiteW * 0.4 : finiteH * 0.4;
     return Container(
       width: width,
       height: height,
@@ -354,7 +360,7 @@ class SafeImage extends StatelessWidget {
       child: Center(
         child: Icon(
           Icons.broken_image_outlined,
-          size: (width ?? 40) * 0.4,
+          size: iconSize,
           color: context.textSecondary.withValues(alpha: 0.5),
         ),
       ),
