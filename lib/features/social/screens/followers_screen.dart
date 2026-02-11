@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../providers/social_providers.dart';
 import '../../../services/social_service.dart';
@@ -200,16 +201,10 @@ class _UserTile extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      leading: CircleAvatar(
-        backgroundImage: profile?.avatarUrl != null
-            ? NetworkImage(profile!.avatarUrl!)
-            : null,
-        child: profile?.avatarUrl == null
-            ? Text(
-                (profile?.displayName ?? 'U')[0].toUpperCase(),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              )
-            : null,
+      leading: UserAvatar(
+        imageUrl: profile?.avatarUrl,
+        initials: (profile?.displayName ?? 'U')[0],
+        size: 40,
       ),
       title: Row(
         children: [

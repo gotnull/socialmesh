@@ -7,6 +7,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/fullscreen_gallery.dart';
@@ -781,21 +782,10 @@ class _CommentTileState extends ConsumerState<_CommentTile>
             // Avatar - smaller for replies
             GestureDetector(
               onTap: widget.onAuthorTap,
-              child: CircleAvatar(
-                radius: isReply ? 12 : 16,
-                backgroundImage: widget.comment.author?.avatarUrl != null
-                    ? NetworkImage(widget.comment.author!.avatarUrl!)
-                    : null,
-                child: widget.comment.author?.avatarUrl == null
-                    ? Text(
-                        (widget.comment.author?.displayName ?? 'U')[0]
-                            .toUpperCase(),
-                        style: TextStyle(
-                          fontSize: isReply ? 10 : 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    : null,
+              child: UserAvatar(
+                imageUrl: widget.comment.author?.avatarUrl,
+                initials: (widget.comment.author?.displayName ?? 'U')[0],
+                size: isReply ? 24 : 32,
               ),
             ),
             const SizedBox(width: 10),
@@ -1073,17 +1063,10 @@ class _PostContent extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: onAuthorTap,
-                child: CircleAvatar(
-                  radius: 24,
-                  backgroundImage: snapshot?.avatarUrl != null
-                      ? NetworkImage(snapshot!.avatarUrl!)
-                      : null,
-                  child: snapshot?.avatarUrl == null
-                      ? Text(
-                          (snapshot?.displayName ?? 'U')[0].toUpperCase(),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        )
-                      : null,
+                child: UserAvatar(
+                  imageUrl: snapshot?.avatarUrl,
+                  initials: (snapshot?.displayName ?? 'U')[0],
+                  size: 48,
                 ),
               ),
               const SizedBox(width: 12),

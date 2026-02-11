@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/widgets/fullscreen_gallery.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
 import '../../../providers/auth_providers.dart';
@@ -140,17 +141,10 @@ class _AuthorHeader extends StatelessWidget {
         // Avatar
         GestureDetector(
           onTap: onAuthorTap,
-          child: CircleAvatar(
-            radius: 20,
-            backgroundImage: snapshot?.avatarUrl != null
-                ? NetworkImage(snapshot!.avatarUrl!)
-                : null,
-            child: snapshot?.avatarUrl == null
-                ? Text(
-                    (snapshot?.displayName ?? 'U')[0].toUpperCase(),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  )
-                : null,
+          child: UserAvatar(
+            imageUrl: snapshot?.avatarUrl,
+            initials: (snapshot?.displayName ?? 'U')[0],
+            size: 40,
           ),
         ),
         const SizedBox(width: 12),

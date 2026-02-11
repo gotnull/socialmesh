@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/safety/lifecycle_mixin.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
@@ -59,20 +60,10 @@ class CommentTile extends ConsumerWidget {
               // Avatar
               GestureDetector(
                 onTap: () => onAuthorTap?.call(comment.comment.authorId),
-                child: CircleAvatar(
-                  radius: depth == 0 ? 18 : 14,
-                  backgroundImage: comment.author?.avatarUrl != null
-                      ? NetworkImage(comment.author!.avatarUrl!)
-                      : null,
-                  child: comment.author?.avatarUrl == null
-                      ? Text(
-                          (comment.author?.displayName ?? 'U')[0].toUpperCase(),
-                          style: TextStyle(
-                            fontSize: depth == 0 ? 14 : 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        )
-                      : null,
+                child: UserAvatar(
+                  imageUrl: comment.author?.avatarUrl,
+                  initials: (comment.author?.displayName ?? 'U')[0],
+                  size: depth == 0 ? 36 : 28,
                 ),
               ),
               const SizedBox(width: 12),

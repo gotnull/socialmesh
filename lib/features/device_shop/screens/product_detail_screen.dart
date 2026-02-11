@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/glass_scaffold.dart';
@@ -1544,15 +1545,11 @@ class _ReviewCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 18,
+              UserAvatar(
+                imageUrl: review.userPhotoUrl,
+                size: 36,
                 backgroundColor: context.background,
-                backgroundImage: review.userPhotoUrl != null
-                    ? NetworkImage(review.userPhotoUrl!)
-                    : null,
-                child: review.userPhotoUrl == null
-                    ? Icon(Icons.person, size: 20, color: context.textTertiary)
-                    : null,
+                foregroundColor: context.textTertiary,
               ),
               SizedBox(width: 12),
               Expanded(

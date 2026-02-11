@@ -9,6 +9,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/story.dart';
 import '../../../providers/auth_providers.dart';
@@ -773,21 +774,11 @@ class _StoryHeader extends StatelessWidget {
           onTap: onProfileTap,
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundImage: story.authorSnapshot?.avatarUrl != null
-                    ? NetworkImage(story.authorSnapshot!.avatarUrl!)
-                    : null,
-                child: story.authorSnapshot?.avatarUrl == null
-                    ? Text(
-                        (story.authorSnapshot?.displayName ?? 'U')[0]
-                            .toUpperCase(),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      )
-                    : null,
+              UserAvatar(
+                imageUrl: story.authorSnapshot?.avatarUrl,
+                initials: (story.authorSnapshot?.displayName ?? 'U')[0],
+                size: 36,
+                foregroundColor: Colors.white,
               ),
               const SizedBox(width: 8),
               Column(
@@ -1089,17 +1080,10 @@ class _ViewerTile extends ConsumerWidget {
         final profile = snapshot.data;
 
         return ListTile(
-          leading: CircleAvatar(
-            radius: 20,
-            backgroundImage: profile?.avatarUrl != null
-                ? NetworkImage(profile!.avatarUrl!)
-                : null,
-            child: profile?.avatarUrl == null
-                ? Text(
-                    (profile?.displayName ?? 'U')[0].toUpperCase(),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  )
-                : null,
+          leading: UserAvatar(
+            imageUrl: profile?.avatarUrl,
+            initials: (profile?.displayName ?? 'U')[0],
+            size: 40,
           ),
           title: Text(
             profile?.displayName ?? 'User',

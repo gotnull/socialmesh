@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
 import '../../../providers/social_providers.dart';
@@ -317,18 +318,10 @@ class _UserTile extends StatelessWidget {
 
     return ListTile(
       onTap: () => _navigateToProfile(context, user.id),
-      leading: CircleAvatar(
-        backgroundImage: user.avatarUrl != null
-            ? NetworkImage(user.avatarUrl!)
-            : null,
-        child: user.avatarUrl == null
-            ? Text(
-                user.displayName.isNotEmpty
-                    ? user.displayName[0].toUpperCase()
-                    : '?',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              )
-            : null,
+      leading: UserAvatar(
+        imageUrl: user.avatarUrl,
+        initials: user.displayName.isNotEmpty ? user.displayName[0] : '?',
+        size: 40,
       ),
       title: Row(
         children: [

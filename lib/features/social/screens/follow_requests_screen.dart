@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
 import '../../../providers/social_providers.dart';
@@ -208,18 +209,12 @@ class _RequestTileState extends ConsumerState<_RequestTile>
 
     return ListTile(
       onTap: widget.onTap,
-      leading: CircleAvatar(
-        backgroundImage: profile?.avatarUrl != null
-            ? NetworkImage(profile!.avatarUrl!)
-            : null,
-        child: profile?.avatarUrl == null
-            ? Text(
-                (profile?.displayName ?? 'U').isNotEmpty
-                    ? (profile?.displayName ?? 'U')[0].toUpperCase()
-                    : '?',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              )
-            : null,
+      leading: UserAvatar(
+        imageUrl: profile?.avatarUrl,
+        initials: (profile?.displayName ?? 'U').isNotEmpty
+            ? (profile?.displayName ?? 'U')[0]
+            : '?',
+        size: 40,
       ),
       title: Row(
         children: [

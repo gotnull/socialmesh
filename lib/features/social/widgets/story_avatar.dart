@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../models/story.dart';
@@ -200,25 +201,11 @@ class _StoryAvatarState extends State<StoryAvatar>
                   ),
 
                   // Actual avatar
-                  SizedBox(
-                    width: widget.size,
-                    height: widget.size,
-                    child: CircleAvatar(
-                      radius: widget.size / 2,
-                      backgroundImage: widget.avatarUrl != null
-                          ? NetworkImage(widget.avatarUrl!)
-                          : null,
-                      backgroundColor: context.cardAlt,
-                      child: widget.avatarUrl == null
-                          ? Text(
-                              (widget.displayName ?? 'U')[0].toUpperCase(),
-                              style: TextStyle(
-                                fontSize: widget.size * 0.4,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            )
-                          : null,
-                    ),
+                  UserAvatar(
+                    imageUrl: widget.avatarUrl,
+                    initials: (widget.displayName ?? 'U')[0],
+                    size: widget.size,
+                    backgroundColor: context.cardAlt,
                   ),
 
                   // Add button overlay
@@ -296,21 +283,11 @@ class SmallStoryAvatar extends StatelessWidget {
       onTap: onTap,
       child: Row(
         children: [
-          CircleAvatar(
-            radius: size / 2,
-            backgroundImage: avatarUrl != null
-                ? NetworkImage(avatarUrl!)
-                : null,
+          UserAvatar(
+            imageUrl: avatarUrl,
+            initials: (displayName ?? 'U')[0],
+            size: size,
             backgroundColor: context.cardAlt,
-            child: avatarUrl == null
-                ? Text(
-                    (displayName ?? 'U')[0].toUpperCase(),
-                    style: TextStyle(
-                      fontSize: size * 0.4,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  )
-                : null,
           ),
           const SizedBox(width: 12),
           Expanded(

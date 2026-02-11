@@ -15,6 +15,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/edge_fade.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../models/social.dart';
@@ -220,25 +221,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                     // User info row
                     Row(
                       children: [
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor: context.accentColor.withValues(
-                            alpha: 0.2,
-                          ),
-                          backgroundImage: profile?.avatarUrl != null
-                              ? NetworkImage(profile!.avatarUrl!)
-                              : null,
-                          child: profile?.avatarUrl == null
-                              ? Text(
-                                  (profile?.displayName ?? 'U')[0]
-                                      .toUpperCase(),
-                                  style: TextStyle(
-                                    color: context.accentColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                )
-                              : null,
+                        UserAvatar(
+                          imageUrl: profile?.avatarUrl,
+                          initials: (profile?.displayName ?? 'U')[0],
+                          size: 44,
+                          foregroundColor: context.accentColor,
                         ),
                         const SizedBox(width: 12),
                         Expanded(

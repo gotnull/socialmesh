@@ -112,6 +112,10 @@
         "destination": "/bugs.html"
       },
       {
+        "source": "/nodedex",
+        "destination": "/nodedex.html"
+      },
+      {
         "source": "/sigil",
         "destination": "/sigil.html"
       },

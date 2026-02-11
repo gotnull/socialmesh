@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../../../utils/snackbar.dart';
 
@@ -797,23 +798,15 @@ class _UserTile extends StatelessWidget {
               child: Row(
                 children: [
                   // Avatar
-                  CircleAvatar(
-                    radius: 22,
+                  UserAvatar(
+                    imageUrl: user.avatarUrl,
+                    size: 44,
                     backgroundColor: hasPurchases
                         ? Colors.green.shade800
                         : context.card,
-                    backgroundImage: user.avatarUrl != null
-                        ? NetworkImage(user.avatarUrl!)
-                        : null,
-                    child: user.avatarUrl == null
-                        ? Icon(
-                            Icons.person,
-                            size: 22,
-                            color: hasPurchases
-                                ? Colors.white
-                                : context.textSecondary,
-                          )
-                        : null,
+                    foregroundColor: hasPurchases
+                        ? Colors.white
+                        : context.textSecondary,
                   ),
                   const SizedBox(width: 12),
                   // User info
@@ -1023,19 +1016,11 @@ class _UserDetailSheet extends StatelessWidget {
                       // User header
                       Row(
                         children: [
-                          CircleAvatar(
-                            radius: 32,
+                          UserAvatar(
+                            imageUrl: user.avatarUrl,
+                            size: 64,
                             backgroundColor: context.surface,
-                            backgroundImage: user.avatarUrl != null
-                                ? NetworkImage(user.avatarUrl!)
-                                : null,
-                            child: user.avatarUrl == null
-                                ? Icon(
-                                    Icons.person,
-                                    size: 32,
-                                    color: context.textSecondary,
-                                  )
-                                : null,
+                            foregroundColor: context.textSecondary,
                           ),
                           const SizedBox(width: 16),
                           Expanded(

@@ -6,6 +6,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../models/shop_models.dart';
@@ -336,14 +337,10 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
             // Review header
             Row(
               children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundImage: widget.review.userPhotoUrl != null
-                      ? NetworkImage(widget.review.userPhotoUrl!)
-                      : null,
-                  child: widget.review.userPhotoUrl == null
-                      ? Icon(Icons.person, color: context.textSecondary)
-                      : null,
+                UserAvatar(
+                  imageUrl: widget.review.userPhotoUrl,
+                  size: 40,
+                  foregroundColor: context.textSecondary,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
