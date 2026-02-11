@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
-import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
-import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/ico_help_system.dart';
-import '../../providers/help_providers.dart';
+import '../../core/widgets/search_filter_header.dart';
+import '../../core/widgets/section_header.dart';
+
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
@@ -240,7 +240,7 @@ String _formatSignalInfo(MeshNode node) {
   final parts = <String>[];
   if (node.rssi != null) parts.add('RSSI: ${node.rssi} dBm');
   if (node.snr != null) parts.add('SNR: ${node.snr} dB');
-  return parts.join(' • ');
+  return parts.join(' · ');
 }
 
 String _formatTimeAgo(DateTime time) {
@@ -306,6 +306,21 @@ extension TimelineFilterExt on TimelineFilter {
         return type == TimelineEventType.waypoint;
     }
   }
+
+  Color color(BuildContext context) {
+    switch (this) {
+      case TimelineFilter.all:
+        return AppTheme.primaryBlue;
+      case TimelineFilter.messages:
+        return AccentColors.blue;
+      case TimelineFilter.nodes:
+        return AccentColors.green;
+      case TimelineFilter.signals:
+        return AppTheme.primaryPurple;
+      case TimelineFilter.waypoints:
+        return AppTheme.accentOrange;
+    }
+  }
 }
 
 class TimelineScreen extends ConsumerStatefulWidget {
@@ -317,85 +332,141 @@ class TimelineScreen extends ConsumerStatefulWidget {
 
 class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   TimelineFilter _filter = TimelineFilter.all;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
+  List<TimelineEvent> _applyFilter(List<TimelineEvent> events) {
+    return events.where((e) => _filter.matches(e.type)).toList();
+  }
+
+  List<TimelineEvent> _applySearch(List<TimelineEvent> events) {
+    if (_searchQuery.isEmpty) return events;
+    final query = _searchQuery.toLowerCase();
+    return events.where((e) {
+      return e.title.toLowerCase().contains(query) ||
+          (e.subtitle?.toLowerCase().contains(query) ?? false) ||
+          (e.nodeName?.toLowerCase().contains(query) ?? false) ||
+          e.type.name.toLowerCase().contains(query);
+    }).toList();
+  }
+
+  int _countForFilter(TimelineFilter filter, List<TimelineEvent> allEvents) {
+    if (filter == TimelineFilter.all) return allEvents.length;
+    return allEvents.where((e) => filter.matches(e.type)).length;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final allEvents = ref.watch(timelineEventsProvider);
-    final events = allEvents.where((e) => _filter.matches(e.type)).toList();
+    final filtered = _applySearch(_applyFilter(allEvents));
 
-    return HelpTourController(
-      topicId: 'timeline_overview',
-      stepKeys: const {},
-      child: GlassScaffold(
-        title: 'Timeline',
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: _showFilterDialog,
-          ),
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            onPressed: () =>
-                ref.read(helpProvider.notifier).startTour('timeline_overview'),
-            tooltip: 'Help',
-          ),
-        ],
-        slivers: [
-          SliverToBoxAdapter(child: _buildFilterChips(theme)),
-          SliverFillRemaining(
-            hasScrollBody: true,
-            child: events.isEmpty
-                ? _buildEmptyState(theme)
-                : _buildTimeline(theme, events),
-          ),
-        ],
-      ),
-    );
-  }
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: HelpTourController(
+        topicId: 'timeline_overview',
+        stepKeys: const {},
+        child: GlassScaffold(
+          title: 'Timeline',
+          centerTitle: true,
+          actions: [IcoHelpAppBarButton(topicId: 'timeline_overview')],
+          slivers: [
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-  Widget _buildFilterChips(ThemeData theme) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: EdgeFade.end(
-        fadeSize: 32,
-        fadeColor: context.background,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: TimelineFilter.values.length,
-          separatorBuilder: (context, index) => const SizedBox(width: 8),
-          itemBuilder: (context, index) {
-            final filter = TimelineFilter.values[index];
-            final isSelected = _filter == filter;
-            return FilterChip(
-              selected: isSelected,
-              showCheckmark: false,
-              label: Text(filter.label),
-              avatar: Icon(
-                filter.icon,
-                size: 18,
-                color: isSelected ? Colors.white : context.textSecondary,
+            // Pinned search + filter chips (consistent with Nodes, NodeDex,
+            // Bug Reports)
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: SearchFilterHeaderDelegate(
+                searchController: _searchController,
+                searchQuery: _searchQuery,
+                onSearchChanged: (value) =>
+                    setState(() => _searchQuery = value),
+                hintText: 'Search events',
+                textScaler: MediaQuery.textScalerOf(context),
+                rebuildKey: Object.hashAll([
+                  _filter,
+                  allEvents.length,
+                  _countForFilter(TimelineFilter.messages, allEvents),
+                  _countForFilter(TimelineFilter.nodes, allEvents),
+                  _countForFilter(TimelineFilter.signals, allEvents),
+                  _countForFilter(TimelineFilter.waypoints, allEvents),
+                ]),
+                filterChips: [
+                  SectionFilterChip(
+                    label: 'All',
+                    count: _countForFilter(TimelineFilter.all, allEvents),
+                    isSelected: _filter == TimelineFilter.all,
+                    color: TimelineFilter.all.color(context),
+                    onTap: () => setState(() => _filter = TimelineFilter.all),
+                  ),
+                  SectionFilterChip(
+                    label: 'Messages',
+                    count: _countForFilter(TimelineFilter.messages, allEvents),
+                    isSelected: _filter == TimelineFilter.messages,
+                    color: TimelineFilter.messages.color(context),
+                    icon: Icons.message,
+                    onTap: () =>
+                        setState(() => _filter = TimelineFilter.messages),
+                  ),
+                  SectionFilterChip(
+                    label: 'Nodes',
+                    count: _countForFilter(TimelineFilter.nodes, allEvents),
+                    isSelected: _filter == TimelineFilter.nodes,
+                    color: TimelineFilter.nodes.color(context),
+                    icon: Icons.people,
+                    onTap: () => setState(() => _filter = TimelineFilter.nodes),
+                  ),
+                  SectionFilterChip(
+                    label: 'Signals',
+                    count: _countForFilter(TimelineFilter.signals, allEvents),
+                    isSelected: _filter == TimelineFilter.signals,
+                    color: TimelineFilter.signals.color(context),
+                    icon: Icons.signal_cellular_alt,
+                    onTap: () =>
+                        setState(() => _filter = TimelineFilter.signals),
+                  ),
+                  SectionFilterChip(
+                    label: 'Waypoints',
+                    count: _countForFilter(TimelineFilter.waypoints, allEvents),
+                    isSelected: _filter == TimelineFilter.waypoints,
+                    color: TimelineFilter.waypoints.color(context),
+                    icon: Icons.place,
+                    onTap: () =>
+                        setState(() => _filter = TimelineFilter.waypoints),
+                  ),
+                ],
               ),
-              onSelected: (selected) {
-                setState(() {
-                  _filter = filter;
-                });
-              },
-              selectedColor: context.accentColor,
-              backgroundColor: context.surface,
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.white : context.textSecondary,
-              ),
-            );
-          },
+            ),
+
+            // Content
+            if (filtered.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _buildEmptyState(context),
+              )
+            else
+              ..._buildTimelineSlivers(context, filtered),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildEmptyState(ThemeData theme) {
+  Widget _buildEmptyState(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasActiveSearch = _searchQuery.isNotEmpty;
+    final hasActiveFilter = _filter != TimelineFilter.all;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -407,28 +478,55 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               color: context.card,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(Icons.timeline, size: 40, color: context.textTertiary),
+            child: Icon(
+              hasActiveSearch
+                  ? Icons.search_off
+                  : hasActiveFilter
+                  ? Icons.filter_list_off
+                  : Icons.timeline,
+              size: 40,
+              color: context.textTertiary,
+            ),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           Text(
-            'No events yet',
+            hasActiveSearch
+                ? 'No events match your search'
+                : hasActiveFilter
+                ? 'No events match this filter'
+                : 'No events yet',
             style: theme.textTheme.titleMedium?.copyWith(
               color: context.textSecondary,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
-            'Activity will appear here as it happens',
+            hasActiveSearch || hasActiveFilter
+                ? 'Try a different search or filter'
+                : 'Activity will appear here as it happens',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: context.textTertiary,
             ),
           ),
+          if (hasActiveFilter && !hasActiveSearch) ...[
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => setState(() => _filter = TimelineFilter.all),
+              child: const Text('Show all events'),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildTimeline(ThemeData theme, List<TimelineEvent> events) {
+  List<Widget> _buildTimelineSlivers(
+    BuildContext context,
+    List<TimelineEvent> events,
+  ) {
+    final theme = Theme.of(context);
+    final animationsEnabled = ref.watch(animationsEnabledProvider);
+
     // Group events by date
     final groupedEvents = <String, List<TimelineEvent>>{};
     for (final event in events) {
@@ -436,50 +534,57 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       groupedEvents.putIfAbsent(dateKey, () => []).add(event);
     }
 
-    return Consumer(
-      builder: (context, ref, _) {
-        final animationsEnabled = ref.watch(animationsEnabledProvider);
+    // Build slivers per date group
+    final slivers = <Widget>[];
+    var itemIndex = 0;
 
-        // Flatten into a list of widgets with date headers
-        final widgets = <Widget>[];
-        var itemIndex = 0;
-
-        for (final dateKey in groupedEvents.keys) {
-          final dateEvents = groupedEvents[dateKey]!;
-
-          // Date header (no animation)
-          widgets.add(
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                dateKey,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: context.textSecondary,
-                  fontWeight: FontWeight.w600,
-                ),
+    for (final entry in groupedEvents.entries) {
+      // Date header
+      slivers.add(
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Text(
+              entry.key,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: context.textSecondary,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          );
+          ),
+        ),
+      );
 
-          // Individual event cards with staggered animation
-          for (final event in dateEvents) {
-            widgets.add(
-              Perspective3DSlide(
-                index: itemIndex++,
+      // Event cards for this date
+      slivers.add(
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final event = entry.value[index];
+              final cardIndex = itemIndex + index;
+              return Perspective3DSlide(
+                index: cardIndex,
                 direction: SlideDirection.left,
                 enabled: animationsEnabled,
                 child: _buildEventCard(theme, event),
-              ),
-            );
-          }
-        }
+              );
+            }, childCount: entry.value.length),
+          ),
+        ),
+      );
 
-        return ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          children: widgets,
-        );
-      },
+      itemIndex += entry.value.length;
+    }
+
+    // Bottom safe area padding
+    slivers.add(
+      SliverToBoxAdapter(
+        child: SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+      ),
     );
+
+    return slivers;
   }
 
   Widget _buildEventCard(ThemeData theme, TimelineEvent event) {
@@ -507,7 +612,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               ),
             ],
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           // Event content
           Expanded(
             child: Container(
@@ -539,7 +644,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     ],
                   ),
                   if (event.subtitle != null) ...[
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       event.subtitle!,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -589,48 +694,5 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
   String _formatTime(DateTime timestamp) {
     return '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
-  }
-
-  void _showFilterDialog() {
-    AppBottomSheet.show(
-      context: context,
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: EdgeInsets.only(bottom: 16),
-            child: Text(
-              'Filter Events',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
-            ),
-          ),
-          ...TimelineFilter.values.map((filter) {
-            return ListTile(
-              leading: Icon(
-                filter.icon,
-                color: _filter == filter
-                    ? context.accentColor
-                    : context.textSecondary,
-              ),
-              title: Text(filter.label),
-              trailing: _filter == filter
-                  ? Icon(Icons.check, color: context.accentColor)
-                  : null,
-              onTap: () {
-                setState(() {
-                  _filter = filter;
-                });
-                Navigator.pop(context);
-              },
-            );
-          }),
-        ],
-      ),
-    );
   }
 }
