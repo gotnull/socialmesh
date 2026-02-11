@@ -534,9 +534,12 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       groupedEvents.putIfAbsent(dateKey, () => []).add(event);
     }
 
-    // Build slivers per date group
+    // Build slivers per date group.
+    // Reset stagger index per group so each section animates independently,
+    // and cap at 8 to avoid cards deep in the list staying invisible for
+    // seconds (60ms * 46 = 2.7s with a global counter).
+    const maxStaggerIndex = 8;
     final slivers = <Widget>[];
-    var itemIndex = 0;
 
     for (final entry in groupedEvents.entries) {
       // Date header
@@ -555,16 +558,16 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         ),
       );
 
-      // Event cards for this date
+      // Event cards for this date — index resets per group
       slivers.add(
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               final event = entry.value[index];
-              final cardIndex = itemIndex + index;
+              final clampedIndex = index.clamp(0, maxStaggerIndex);
               return Perspective3DSlide(
-                index: cardIndex,
+                index: clampedIndex,
                 direction: SlideDirection.left,
                 enabled: animationsEnabled,
                 child: _buildEventCard(theme, event),
@@ -573,8 +576,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           ),
         ),
       );
-
-      itemIndex += entry.value.length;
     }
 
     // Bottom safe area padding
