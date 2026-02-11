@@ -777,7 +777,7 @@ class AuthService {
     final user = currentUser;
     if (user == null) {
       AppLogging.auth('enrollMFA - ❌ No user signed in');
-      onError('No user signed in');
+      onError('no-current-user');
       return false;
     }
 
@@ -881,7 +881,14 @@ class AuthService {
 
     try {
       await user.multiFactor.unenroll(factorUid: factorUid);
-      AppLogging.auth('unenrollMFA - ✅ SUCCESS');
+
+      // Reload user to sync local cache with server-side MFA state
+      await user.reload();
+
+      // Force token refresh so subsequent sign-ins reflect the change
+      await _auth.currentUser?.getIdToken(true);
+
+      AppLogging.auth('unenrollMFA - ✅ SUCCESS (reloaded + token refreshed)');
     } on FirebaseAuthException catch (e) {
       AppLogging.auth('unenrollMFA - ❌ AUTH ERROR: code=${e.code}');
       rethrow;
@@ -892,10 +899,27 @@ class AuthService {
   }
 
   /// Get list of enrolled MFA factors
+  ///
+  /// Reloads the user first to ensure we read server-side state,
+  /// not stale local cache. [getEnrolledFactors] is a local-only
+  /// read — without reload it can return empty after MFA sign-in
+  /// or stale data after unenroll.
   Future<List<MultiFactorInfo>> getEnrolledMFAFactors() async {
     final user = currentUser;
     if (user == null) return [];
-    return user.multiFactor.getEnrolledFactors();
+
+    try {
+      await user.reload();
+    } catch (e) {
+      AppLogging.auth(
+        'getEnrolledMFAFactors - reload failed (using cached): $e',
+      );
+    }
+
+    // Read from the refreshed user reference
+    final refreshedUser = _auth.currentUser;
+    if (refreshedUser == null) return [];
+    return refreshedUser.multiFactor.getEnrolledFactors();
   }
 
   /// Check if user has MFA enabled

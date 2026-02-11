@@ -58,7 +58,8 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
     );
 
     if (result == true && mounted) {
-      // Refresh the screen
+      // Refresh both local screen state and global provider
+      ref.invalidate(enrolledMFAFactorsProvider);
       await _loadFactors();
     }
   }
@@ -109,7 +110,8 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
       if (!mounted) return;
       safeShowSnackBar('Two-factor authentication removed');
 
-      // Refresh the screen
+      // Refresh both local screen state and global provider
+      ref.invalidate(enrolledMFAFactorsProvider);
       await _loadFactors();
     } catch (e) {
       if (!mounted) return;
