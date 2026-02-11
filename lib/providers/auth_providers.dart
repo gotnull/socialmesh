@@ -344,8 +344,23 @@ class AuthService {
   /// If the user already signed in with a "trusted" provider (Google, Apple)
   /// using the same email, this will throw 'account-exists-with-different-credential'.
   /// In that case, we need to link the GitHub credential to the existing account.
+  ///
+  /// KNOWN PLATFORM ISSUES:
+  /// - Android: `signInWithProvider` requires SHA-1/SHA-256 fingerprints to be
+  ///   registered in Firebase console. Missing fingerprints produce
+  ///   `invalid-cert-hash`. See [_handleProviderAuthError].
+  /// - iOS: `signInWithProvider` fatally crashes when MFA is required because
+  ///   the native `FIRMultiFactorResolver` cannot be serialized through
+  ///   Flutter's standard method channel codec (firebase_auth plugin bug).
+  ///   [_guardSignInWithProviderOnIOS] blocks the attempt when MFA is enrolled.
   Future<UserCredential> signInWithGitHub() async {
     AppLogging.auth('signInWithGitHub - START');
+
+    // iOS + MFA guard: signInWithProvider fatally crashes on iOS when MFA
+    // is required (FIRMultiFactorResolver cannot be serialized through the
+    // platform channel). Block the attempt and surface a helpful message.
+    await _guardSignInWithProviderOnIOS('GitHub');
+
     final githubProvider = GithubAuthProvider();
     githubProvider.addScope('read:user');
     githubProvider.addScope('user:email');
@@ -364,25 +379,7 @@ class AuthService {
       return userCredential;
     } on FirebaseAuthException catch (e) {
       AppLogging.auth('signInWithGitHub - ❌ AUTH ERROR: code=${e.code}');
-      if (e.code == 'account-exists-with-different-credential' &&
-          e.credential != null) {
-        final email = e.email;
-        if (email != null) {
-          AppLogging.auth(
-            'signInWithGitHub - Account linking required for email: $email',
-          );
-          // Store credential for linking after user signs in with existing provider
-          // We infer the providers from the error - typically google.com or apple.com
-          throw AccountLinkingRequiredException(
-            email: email,
-            pendingCredential: e.credential!,
-            existingProviders: [
-              'google.com',
-              'apple.com',
-            ], // Most likely providers
-          );
-        }
-      }
+      _handleProviderAuthError(e, 'GitHub');
       rethrow;
     } catch (e) {
       AppLogging.auth('signInWithGitHub - ❌ ERROR: $e');
@@ -394,8 +391,14 @@ class AuthService {
   /// Uses Firebase's built-in TwitterAuthProvider with signInWithProvider.
   /// Like GitHub, Twitter is an "untrusted" provider - if the same email
   /// exists with a trusted provider, account linking may be required.
+  ///
+  /// See [signInWithGitHub] for known platform issues.
   Future<UserCredential> signInWithTwitter() async {
     AppLogging.auth('signInWithTwitter - START');
+
+    // iOS + MFA guard (see signInWithGitHub doc comment for details).
+    await _guardSignInWithProviderOnIOS('Twitter/X');
+
     final twitterProvider = TwitterAuthProvider();
 
     try {
@@ -413,24 +416,86 @@ class AuthService {
       return userCredential;
     } on FirebaseAuthException catch (e) {
       AppLogging.auth('signInWithTwitter - ❌ AUTH ERROR: code=${e.code}');
-      if (e.code == 'account-exists-with-different-credential' &&
-          e.credential != null) {
-        final email = e.email;
-        if (email != null) {
-          AppLogging.auth(
-            'signInWithTwitter - Account linking required for email: $email',
-          );
-          throw AccountLinkingRequiredException(
-            email: email,
-            pendingCredential: e.credential!,
-            existingProviders: ['google.com', 'apple.com'],
-          );
-        }
-      }
+      _handleProviderAuthError(e, 'Twitter/X');
       rethrow;
     } catch (e) {
       AppLogging.auth('signInWithTwitter - ❌ ERROR: $e');
       rethrow;
+    }
+  }
+
+  /// Guards against a fatal iOS crash when `signInWithProvider` encounters
+  /// an MFA-enabled account.
+  ///
+  /// The firebase_auth iOS plugin cannot serialize `FIRMultiFactorResolver`
+  /// through Flutter's standard method channel codec, causing an
+  /// `NSInternalInconsistencyException` that terminates the app. This guard
+  /// checks whether the currently signed-in user (if any) has MFA enrolled
+  /// and throws a descriptive [FirebaseAuthException] instead of letting
+  /// the native crash occur.
+  ///
+  /// Limitation: This only protects users who are re-authenticating (already
+  /// signed in with MFA). It cannot protect the cold-sign-in case where a
+  /// signed-out user tries to sign in with GitHub/Twitter and their account
+  /// happens to have MFA — that scenario will still crash on iOS until
+  /// the firebase_auth plugin is fixed upstream.
+  Future<void> _guardSignInWithProviderOnIOS(String providerLabel) async {
+    if (!Platform.isIOS) return;
+
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final factors = await user.multiFactor.getEnrolledFactors();
+    final hasMFA = factors.isNotEmpty;
+    if (hasMFA) {
+      AppLogging.auth(
+        '$providerLabel sign-in blocked on iOS — MFA enrolled, '
+        'signInWithProvider would crash (FIRMultiFactorResolver '
+        'serialization bug)',
+      );
+      throw FirebaseAuthException(
+        code: 'provider-signin-mfa-unsupported',
+        message:
+            '$providerLabel sign-in with two-factor authentication is not '
+            'supported on iOS. Please sign in with Google or Apple instead.',
+      );
+    }
+  }
+
+  /// Handles common [FirebaseAuthException] errors from `signInWithProvider`,
+  /// re-throwing a more specific exception when appropriate.
+  ///
+  /// - `account-exists-with-different-credential` → [AccountLinkingRequiredException]
+  /// - `invalid-cert-hash` → [FirebaseAuthException] with a user-friendly message
+  ///   explaining the SHA fingerprint configuration issue.
+  void _handleProviderAuthError(FirebaseAuthException e, String provider) {
+    if (e.code == 'account-exists-with-different-credential' &&
+        e.credential != null) {
+      final email = e.email;
+      if (email != null) {
+        AppLogging.auth(
+          '$provider - Account linking required for email: $email',
+        );
+        throw AccountLinkingRequiredException(
+          email: email,
+          pendingCredential: e.credential!,
+          existingProviders: ['google.com', 'apple.com'],
+        );
+      }
+    }
+
+    if (e.code == 'invalid-cert-hash') {
+      AppLogging.auth(
+        '$provider - INVALID_CERT_HASH: SHA fingerprints not registered '
+        'in Firebase console for this Android build',
+      );
+      throw FirebaseAuthException(
+        code: 'invalid-cert-hash',
+        message:
+            '$provider sign-in is not available on this device. '
+            'The app signing certificate is not registered with Firebase. '
+            'Please sign in with Google or Apple instead.',
+      );
     }
   }
 

@@ -736,11 +736,28 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     );
   }
 
+  /// Returns the [AuthService] if Firebase is ready, or `null` (with a
+  /// user-facing snackbar) when Firebase has not finished initializing.
+  AuthService? _guardedAuthService(BuildContext context) {
+    final isReady =
+        ref.read(firebaseReadyProvider).whenOrNull(data: (v) => v) ?? false;
+    if (!isReady) {
+      AppLogging.auth('Firebase not ready — sign-in blocked');
+      showWarningSnackBar(
+        context,
+        'Still loading — please wait a moment and try again.',
+      );
+      return null;
+    }
+    return ref.read(authServiceProvider);
+  }
+
   Future<void> _signInWithGoogle(BuildContext context) async {
     if (_isSigningIn) return;
     setState(() => _isSigningIn = true);
     try {
-      final authService = ref.read(authServiceProvider);
+      final authService = _guardedAuthService(context);
+      if (authService == null) return;
       final credential = await authService.signInWithGoogle();
       if (context.mounted && credential.user != null) {
         showSuccessSnackBar(context, 'Signed in with Google');
@@ -766,7 +783,8 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     if (_isSigningIn) return;
     setState(() => _isSigningIn = true);
     try {
-      final authService = ref.read(authServiceProvider);
+      final authService = _guardedAuthService(context);
+      if (authService == null) return;
       final credential = await authService.signInWithApple();
       if (context.mounted && credential.user != null) {
         showSuccessSnackBar(context, 'Signed in with Apple');
@@ -791,7 +809,8 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     if (_isSigningIn) return;
     setState(() => _isSigningIn = true);
     try {
-      final authService = ref.read(authServiceProvider);
+      final authService = _guardedAuthService(context);
+      if (authService == null) return;
       final credential = await authService.signInWithGitHub();
       if (context.mounted && credential.user != null) {
         showSuccessSnackBar(context, 'Signed in with GitHub');

@@ -966,6 +966,22 @@ class _AccountSubscriptionsScreenState
   // ACTIONS
   // ═══════════════════════════════════════════════════════════════════════════
 
+  /// Returns the [AuthService] if Firebase is ready, or `null` (with a
+  /// user-facing snackbar) when Firebase has not finished initializing.
+  AuthService? _guardedAuthService() {
+    final isReady =
+        ref.read(firebaseReadyProvider).whenOrNull(data: (v) => v) ?? false;
+    if (!isReady) {
+      AppLogging.subscriptions('║ ⚠️ Firebase not ready — sign-in blocked');
+      showWarningSnackBar(
+        context,
+        'Still loading — please wait a moment and try again.',
+      );
+      return null;
+    }
+    return ref.read(authServiceProvider);
+  }
+
   Future<void> _signInWithGoogle(BuildContext _) async {
     if (_isSigningIn) return;
     safeSetState(() => _isSigningIn = true);
@@ -978,8 +994,12 @@ class _AccountSubscriptionsScreenState
       '╚══════════════════════════════════════════════════════════════',
     );
 
-    // Capture provider ref before awaits
-    final authService = ref.read(authServiceProvider);
+    // Guard: Firebase must be initialized before accessing authServiceProvider
+    final authService = _guardedAuthService();
+    if (authService == null) {
+      safeSetState(() => _isSigningIn = false);
+      return;
+    }
 
     try {
       await authService.signInWithGoogle();
@@ -1048,8 +1068,12 @@ class _AccountSubscriptionsScreenState
       '╚══════════════════════════════════════════════════════════════',
     );
 
-    // Capture provider ref before awaits
-    final authService = ref.read(authServiceProvider);
+    // Guard: Firebase must be initialized before accessing authServiceProvider
+    final authService = _guardedAuthService();
+    if (authService == null) {
+      safeSetState(() => _isSigningIn = false);
+      return;
+    }
 
     try {
       await authService.signInWithApple();
@@ -1118,8 +1142,14 @@ class _AccountSubscriptionsScreenState
       '╚══════════════════════════════════════════════════════════════',
     );
 
+    // Guard: Firebase must be initialized before accessing authServiceProvider
+    final authService = _guardedAuthService();
+    if (authService == null) {
+      safeSetState(() => _isSigningIn = false);
+      return;
+    }
+
     try {
-      final authService = ref.read(authServiceProvider);
       await authService.signInWithGitHub();
       AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
@@ -1200,8 +1230,14 @@ class _AccountSubscriptionsScreenState
       '╚══════════════════════════════════════════════════════════════',
     );
 
+    // Guard: Firebase must be initialized before accessing authServiceProvider
+    final authService = _guardedAuthService();
+    if (authService == null) {
+      safeSetState(() => _isSigningIn = false);
+      return;
+    }
+
     try {
-      final authService = ref.read(authServiceProvider);
       await authService.signInWithTwitter();
       AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
