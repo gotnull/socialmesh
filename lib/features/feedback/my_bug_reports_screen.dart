@@ -348,19 +348,31 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
   final _replyController = TextEditingController();
   final _replyFocusNode = FocusNode();
   bool _isSending = false;
-  bool _wasReplyFocusedOnTapDown = false;
+
+  /// Timestamp of the most recent reply-field unfocus event.
+  /// Used to debounce screenshot taps so the first tap after keyboard
+  /// dismiss only closes the keyboard and does not open the gallery.
+  DateTime? _lastReplyUnfocusTime;
 
   @override
   void initState() {
     super.initState();
     _isExpanded = widget.initiallyExpanded;
+    _replyFocusNode.addListener(_onReplyFocusChanged);
     if (_isExpanded && widget.report.hasUnreadResponses) {
       _markAsRead();
     }
   }
 
+  void _onReplyFocusChanged() {
+    if (!_replyFocusNode.hasFocus) {
+      _lastReplyUnfocusTime = DateTime.now();
+    }
+  }
+
   @override
   void dispose() {
+    _replyFocusNode.removeListener(_onReplyFocusChanged);
     _replyController.dispose();
     _replyFocusNode.dispose();
     super.dispose();
@@ -411,12 +423,26 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
     }
   }
 
+  /// Whether the user is allowed to reply.
+  /// Users can reply if:
+  /// - There are no responses yet (initial reply to their own report)
+  /// - The last response is from the founder/admin
+  /// They cannot reply if the last response is already from the user
+  /// (must wait for admin to respond first).
+  bool _canReply(BugReport report) {
+    if (report.status == BugReportStatus.resolved) return false;
+    if (report.responses.isEmpty) return true;
+    final lastResponse = report.responses.last;
+    return lastResponse.isFromFounder;
+  }
+
   @override
   Widget build(BuildContext context) {
     final report = widget.report;
     final dateFormat = DateFormat('d MMM yyyy, HH:mm');
     final hasResponses = report.responses.isNotEmpty;
     final hasUnread = report.hasUnreadResponses;
+    final canReply = _canReply(report);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -572,15 +598,16 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 child: GestureDetector(
-                  onTapDown: (_) {
-                    // Capture focus state before onTapOutside clears it
-                    _wasReplyFocusedOnTapDown = _replyFocusNode.hasFocus;
-                  },
                   onTap: () {
-                    // If the reply field was focused when the tap started,
-                    // swallow the tap — onTapOutside already dismissed the
-                    // keyboard so no further action is needed.
-                    if (_wasReplyFocusedOnTapDown) return;
+                    // If the reply field just lost focus (keyboard dismissed),
+                    // swallow this tap so the gallery does not open.
+                    // Uses a time-based debounce to avoid race conditions
+                    // between onTapOutside and GestureDetector ordering.
+                    if (_lastReplyUnfocusTime != null &&
+                        DateTime.now().difference(_lastReplyUnfocusTime!) <
+                            const Duration(milliseconds: 300)) {
+                      return;
+                    }
                     FullscreenGallery.show(
                       context,
                       images: [report.screenshotUrl!],
@@ -679,88 +706,138 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
               const SizedBox(height: 8),
             ],
 
-            // Reply input
+            // Reply input (or waiting message)
             Divider(height: 1, color: context.border.withValues(alpha: 0.5)),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextField(
-                    controller: _replyController,
-                    focusNode: _replyFocusNode,
-                    maxLines: 6,
-                    minLines: 3,
-                    maxLength: 2000,
-                    enabled: !_isSending,
-                    decoration: InputDecoration(
-                      hintText: 'Write a reply...',
-                      hintStyle: TextStyle(color: context.textTertiary),
-                      filled: true,
-                      fillColor: context.background,
-                      contentPadding: const EdgeInsets.all(14),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: context.border.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: context.border.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: context.accentColor.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      counterText: '',
+            if (report.status == BugReportStatus.resolved)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.check_circle_outline,
+                      size: 16,
+                      color: context.textTertiary,
                     ),
-                    style: TextStyle(fontSize: 14, color: context.textPrimary),
-                    onTapOutside: (_) => FocusScope.of(context).unfocus(),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      ValueListenableBuilder<TextEditingValue>(
-                        valueListenable: _replyController,
-                        builder: (context, value, _) => Text(
-                          '${value.text.length}/2000',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: context.textTertiary,
+                    const SizedBox(width: 8),
+                    Text(
+                      'This report has been resolved',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: context.textTertiary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else if (!canReply)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.hourglass_top_rounded,
+                      size: 16,
+                      color: context.textTertiary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Waiting for admin response',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: context.textTertiary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: _replyController,
+                      focusNode: _replyFocusNode,
+                      maxLines: 6,
+                      minLines: 3,
+                      maxLength: 2000,
+                      enabled: !_isSending,
+                      decoration: InputDecoration(
+                        hintText: 'Write a reply...',
+                        hintStyle: TextStyle(color: context.textTertiary),
+                        filled: true,
+                        fillColor: context.background,
+                        contentPadding: const EdgeInsets.all(14),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: context.border.withValues(alpha: 0.5),
                           ),
                         ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: context.border.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: context.accentColor.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        counterText: '',
                       ),
-                      const Spacer(),
-                      SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: _isSending
-                            ? const Padding(
-                                padding: EdgeInsets.all(10),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : IconButton(
-                                onPressed: _sendReply,
-                                icon: Icon(
-                                  Icons.send_rounded,
-                                  color: context.accentColor,
-                                  size: 22,
-                                ),
-                                padding: EdgeInsets.zero,
-                              ),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: context.textPrimary,
                       ),
-                    ],
-                  ),
-                ],
+                      onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _replyController,
+                          builder: (context, value, _) => Text(
+                            '${value.text.length}/2000',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.textTertiary,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: _isSending
+                              ? const Padding(
+                                  padding: EdgeInsets.all(10),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : IconButton(
+                                  onPressed: _sendReply,
+                                  icon: Icon(
+                                    Icons.send_rounded,
+                                    color: context.accentColor,
+                                    size: 22,
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
           ],
         ],
       ),
