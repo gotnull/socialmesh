@@ -43,7 +43,7 @@ SYNC_FILES=(
   android/upload-keystore.jks
 )
 
-# Patterns to exclude from rsync (node_modules, build artifacts, etc.)
+# Patterns to exclude from rsync (node_modules, build artifacts, CI workflows, etc.)
 EXCLUDE_PATTERNS=(
   "node_modules"
   ".dart_tool"
@@ -52,6 +52,7 @@ EXCLUDE_PATTERNS=(
   "__pycache__"
   "*.pyc"
   ".DS_Store"
+  "workflows"
 )
 
 # ---------------------------------------------------------------------------
