@@ -736,16 +736,17 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     );
   }
 
-  /// Returns the [AuthService] if Firebase is ready, or `null` (with a
-  /// user-facing snackbar) when Firebase has not finished initializing.
+  /// Returns the [AuthService] if Firebase is ready, or `null` when
+  /// Firebase has not finished initializing or failed.
   AuthService? _guardedAuthService(BuildContext context) {
     final isReady =
         ref.read(firebaseReadyProvider).whenOrNull(data: (v) => v) ?? false;
     if (!isReady) {
       AppLogging.auth('Firebase not ready — sign-in blocked');
-      showWarningSnackBar(
+      showErrorSnackBar(
         context,
-        'Still loading — please wait a moment and try again.',
+        'Unable to connect to sign-in services. '
+        'Check your internet connection and try again.',
       );
       return null;
     }

@@ -121,75 +121,76 @@ Future<void> main() async {
   // This ensures text scaling and density are applied from first frame
   await AccessibilityPreferencesService().initialize();
 
-  // Initialize Firebase in background - don't block app startup
-  // This ensures the app works fully offline
-  _initializeFirebaseInBackground();
+  // Initialize Firebase core BEFORE runApp — per Google's official docs.
+  // This is a local operation (reads google-services.json), no network needed.
+  // Auth is available immediately once this completes.
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    AppLogging.debug('🔥 Firebase core initialized');
+    firebaseReadyCompleter.complete(true);
+  } catch (e) {
+    AppLogging.debug('Firebase unavailable: $e - app running in offline mode');
+    firebaseReadyCompleter.complete(false);
+  }
+
+  // Ancillary services (Firestore settings, Analytics, Push, etc.)
+  // run in background — they must never block app startup or sign-in.
+  _initializeFirebaseServices();
 
   runApp(const ProviderScope(child: SocialmeshApp()));
 }
 
-/// Initialize Firebase without blocking the main app.
-/// Firebase/Crashlytics are nice-to-have for error reporting but
-/// should never prevent the app from working offline.
-Future<void> _initializeFirebaseInBackground() async {
+/// Initialize ancillary Firebase services in background.
+/// Firebase core is already initialized in main(). These are best-effort
+/// and must never block the app, sign-in, or crash on failure.
+Future<void> _initializeFirebaseServices() async {
+  if (!firebaseReadyCompleter.isCompleted ||
+      !(await firebaseReadyCompleter.future)) {
+    return;
+  }
+
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    ).timeout(
-      const Duration(seconds: 5),
-      onTimeout: () {
-        AppLogging.debug('Firebase init timed out - continuing offline');
-        throw TimeoutException('Firebase initialization timed out');
-      },
-    );
-
-    // Suppress verbose Firestore SDK logs in the console
     await FirebaseFirestore.setLoggingEnabled(false);
+  } catch (e) {
+    AppLogging.debug('Firestore logging config failed: $e');
+  }
 
-    // Configure Firestore settings to prevent cache corruption crashes
-    // See: https://github.com/firebase/flutterfire/issues/9661
-    // The crash occurs when Firestore's local cache gets corrupted on iOS.
-    // This must be set BEFORE any Firestore access to take effect.
+  // Configure Firestore settings to prevent cache corruption crashes
+  // See: https://github.com/firebase/flutterfire/issues/9661
+  try {
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+  } catch (e) {
+    AppLogging.debug('Firestore settings failed, trying without cache: $e');
     try {
       FirebaseFirestore.instance.settings = const Settings(
-        persistenceEnabled: true,
-        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+        persistenceEnabled: false,
       );
-    } catch (e) {
-      // Firestore cache may be corrupted - try disabling persistence
-      // This allows the app to continue working, losing local cache only
-      AppLogging.debug('Firestore settings failed, trying without cache: $e');
-      try {
-        FirebaseFirestore.instance.settings = const Settings(
-          persistenceEnabled: false,
-        );
-      } catch (e2) {
-        // Firestore completely broken - continue without it
-        AppLogging.debug('Firestore unavailable: $e2');
-      }
+    } catch (e2) {
+      AppLogging.debug('Firestore unavailable: $e2');
     }
+  }
 
-    // Note: FlutterError.onError and PlatformDispatcher.onError are now
-    // configured by AppErrorHandler.initialize() which provides better
-    // error classification (fatal vs non-fatal) and prevents image/lifecycle
-    // errors from crashing the app.
-
-    // Initialize Firebase Analytics
+  try {
     await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
-
-    // Initialize profile cloud sync service (requires Firebase)
-    initProfileCloudSyncService();
-
-    // Initialize push notifications for social features
-    await PushNotificationService().initialize();
-
-    // Signal that Firebase is ready
-    AppLogging.debug('🔥 Firebase initialized successfully');
-    firebaseReadyCompleter.complete(true);
   } catch (e) {
-    // Firebase failed to initialize (no internet, timeout, etc.)
-    // App continues working fully offline - this is expected behavior
-    AppLogging.debug('Firebase unavailable: $e - app running in offline mode');
+    AppLogging.debug('Firebase Analytics init failed: $e');
+  }
+
+  try {
+    initProfileCloudSyncService();
+  } catch (e) {
+    AppLogging.debug('Profile cloud sync init failed: $e');
+  }
+
+  try {
+    await PushNotificationService().initialize();
+  } catch (e) {
+    AppLogging.debug('Push notification init failed: $e');
   }
 
   // Listen for connectivity changes and attempt to resolve pending images
@@ -221,7 +222,6 @@ Future<void> _initializeFirebaseInBackground() async {
     });
   } catch (e) {
     AppLogging.social('Connectivity listener not available: $e');
-    firebaseReadyCompleter.complete(false);
   }
 }
 
