@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 
+import '../safety/safe_image.dart';
+
 /// A fullscreen image gallery with swipe navigation and pinch-to-zoom.
 ///
 /// Uses a Stack with SafeArea-wrapped overlays (matching the signal gallery
@@ -81,16 +83,13 @@ class _FullscreenGalleryState extends State<FullscreenGallery> {
                   minScale: 0.5,
                   maxScale: 4.0,
                   child: Center(
-                    child: Image.network(
+                    child: SafeImage.network(
                       widget.images[index],
                       fit: BoxFit.contain,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) => const Icon(
+                      placeholder: const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      ),
+                      errorWidget: const Icon(
                         Icons.broken_image,
                         color: Colors.white54,
                         size: 64,

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/safety/safe_image.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/user_avatar.dart';
@@ -357,19 +358,11 @@ class SignalGridCard extends ConsumerWidget {
     // SizedBox.expand ensures the image takes full space of parent
     if (hasCloudImage) {
       return SizedBox.expand(
-        child: Image.network(
-          signal.mediaUrls.first,
-          fit: BoxFit.cover,
-          errorBuilder: (ctx, error, stack) => _buildPlaceholder(ctx),
-        ),
+        child: SafeImage.network(signal.mediaUrls.first, fit: BoxFit.cover),
       );
     } else if (signal.imageLocalPath != null) {
       return SizedBox.expand(
-        child: Image.file(
-          File(signal.imageLocalPath!),
-          fit: BoxFit.cover,
-          errorBuilder: (ctx, error, stack) => _buildPlaceholder(ctx),
-        ),
+        child: SafeImage.file(File(signal.imageLocalPath!), fit: BoxFit.cover),
       );
     }
     return _buildPlaceholder(null);

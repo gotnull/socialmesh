@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../core/widgets/search_filter_header.dart';
+import '../../core/widgets/section_header.dart';
 import '../../dev/demo/demo_config.dart';
 
 import '../../models/node_encounter.dart';
@@ -14,6 +16,79 @@ import '../../utils/presence_utils.dart';
 import '../nodedex/screens/nodedex_detail_screen.dart';
 import '../nodedex/widgets/sigil_painter.dart';
 
+/// Filter options for the Presence screen.
+enum PresenceFilter { all, active, fading, inactive, unknown, familiar }
+
+extension PresenceFilterExt on PresenceFilter {
+  String get label {
+    switch (this) {
+      case PresenceFilter.all:
+        return 'All';
+      case PresenceFilter.active:
+        return 'Active';
+      case PresenceFilter.fading:
+        return 'Seen recently';
+      case PresenceFilter.inactive:
+        return 'Inactive';
+      case PresenceFilter.unknown:
+        return 'Unknown';
+      case PresenceFilter.familiar:
+        return 'Familiar';
+    }
+  }
+
+  Color color(BuildContext context) {
+    switch (this) {
+      case PresenceFilter.all:
+        return AppTheme.primaryBlue;
+      case PresenceFilter.active:
+        return AppTheme.successGreen;
+      case PresenceFilter.fading:
+        return AppTheme.warningYellow;
+      case PresenceFilter.inactive:
+        return context.textSecondary;
+      case PresenceFilter.unknown:
+        return context.textTertiary;
+      case PresenceFilter.familiar:
+        return AppTheme.primaryPurple;
+    }
+  }
+
+  IconData? get icon {
+    switch (this) {
+      case PresenceFilter.all:
+        return null;
+      case PresenceFilter.active:
+        return null; // Uses status dot via SectionFilterChip
+      case PresenceFilter.fading:
+        return Icons.circle_outlined;
+      case PresenceFilter.inactive:
+        return Icons.radio_button_unchecked;
+      case PresenceFilter.unknown:
+        return Icons.help_outline;
+      case PresenceFilter.familiar:
+        return Icons.people;
+    }
+  }
+
+  bool matches(NodePresence presence) {
+    switch (this) {
+      case PresenceFilter.all:
+        return true;
+      case PresenceFilter.active:
+        return presence.confidence == PresenceConfidence.active;
+      case PresenceFilter.fading:
+        return presence.confidence == PresenceConfidence.fading;
+      case PresenceFilter.inactive:
+        return presence.confidence == PresenceConfidence.stale;
+      case PresenceFilter.unknown:
+        return presence.confidence == PresenceConfidence.unknown;
+      case PresenceFilter.familiar:
+        return presence.encounter != null && presence.encounter!.isFamiliar;
+    }
+  }
+}
+
 class PresenceScreen extends ConsumerStatefulWidget {
   const PresenceScreen({super.key});
 
@@ -22,64 +97,207 @@ class PresenceScreen extends ConsumerStatefulWidget {
 }
 
 class _PresenceScreenState extends ConsumerState<PresenceScreen> {
+  PresenceFilter _filter = PresenceFilter.all;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
+  List<NodePresence> _applyFilter(List<NodePresence> presences) {
+    return presences.where((p) => _filter.matches(p)).toList();
+  }
+
+  List<NodePresence> _applySearch(List<NodePresence> presences) {
+    if (_searchQuery.isEmpty) return presences;
+    final query = _searchQuery.toLowerCase();
+    return presences.where((p) {
+      return p.node.displayName.toLowerCase().contains(query) ||
+          (p.node.userId?.toLowerCase().contains(query) ?? false) ||
+          p.node.nodeNum.toString().contains(query) ||
+          p.confidence.label.toLowerCase().contains(query) ||
+          (p.node.role?.toLowerCase().contains(query) ?? false);
+    }).toList();
+  }
+
+  int _countForFilter(PresenceFilter filter, List<NodePresence> allPresences) {
+    if (filter == PresenceFilter.all) return allPresences.length;
+    return allPresences.where((p) => filter.matches(p)).length;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final presences = ref.watch(presenceListProvider);
+    final allPresences = ref.watch(presenceListProvider);
     final summary = ref.watch(presenceSummaryProvider);
-    final showQuietMeshHint = presences.length < 3 || DemoConfig.isEnabled;
+    final showQuietMeshHint = allPresences.length < 3 || DemoConfig.isEnabled;
+    final filtered = _applySearch(_applyFilter(allPresences));
 
-    return HelpTourController(
-      topicId: 'presence_overview',
-      stepKeys: const {},
-      child: GlassScaffold(
-        title: 'Presence',
-        actions: [IcoHelpAppBarButton(topicId: 'presence_overview')],
-        slivers: presences.isEmpty
-            ? [
-                // Quiet mesh hint
-                if (showQuietMeshHint)
-                  const SliverToBoxAdapter(child: _QuietMeshHint()),
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: _buildEmptyState(theme),
-                ),
-              ]
-            : [
-                // Quiet mesh hint for small meshes
-                if (showQuietMeshHint)
-                  const SliverToBoxAdapter(child: _QuietMeshHint()),
-                // Summary section
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: HelpTourController(
+        topicId: 'presence_overview',
+        stepKeys: const {},
+        child: GlassScaffold(
+          title: 'Presence',
+          actions: [IcoHelpAppBarButton(topicId: 'presence_overview')],
+          slivers: [
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+            // Pinned search + filter chips (consistent with Nodes, NodeDex,
+            // Timeline, Bug Reports)
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: SearchFilterHeaderDelegate(
+                searchController: _searchController,
+                searchQuery: _searchQuery,
+                onSearchChanged: (value) =>
+                    setState(() => _searchQuery = value),
+                hintText: 'Search nodes',
+                textScaler: MediaQuery.textScalerOf(context),
+                rebuildKey: Object.hashAll([
+                  _filter,
+                  allPresences.length,
+                  _countForFilter(PresenceFilter.active, allPresences),
+                  _countForFilter(PresenceFilter.fading, allPresences),
+                  _countForFilter(PresenceFilter.inactive, allPresences),
+                  _countForFilter(PresenceFilter.unknown, allPresences),
+                  _countForFilter(PresenceFilter.familiar, allPresences),
+                ]),
+                filterChips: [
+                  SectionFilterChip(
+                    label: 'All',
+                    count: _countForFilter(PresenceFilter.all, allPresences),
+                    isSelected: _filter == PresenceFilter.all,
+                    color: PresenceFilter.all.color(context),
+                    onTap: () => setState(() => _filter = PresenceFilter.all),
+                  ),
+                  SectionFilterChip(
+                    label: 'Active',
+                    count: _countForFilter(PresenceFilter.active, allPresences),
+                    isSelected: _filter == PresenceFilter.active,
+                    color: PresenceFilter.active.color(context),
+                    onTap: () =>
+                        setState(() => _filter = PresenceFilter.active),
+                  ),
+                  SectionFilterChip(
+                    label: 'Seen recently',
+                    count: _countForFilter(PresenceFilter.fading, allPresences),
+                    isSelected: _filter == PresenceFilter.fading,
+                    color: PresenceFilter.fading.color(context),
+                    icon: PresenceFilter.fading.icon,
+                    onTap: () =>
+                        setState(() => _filter = PresenceFilter.fading),
+                  ),
+                  SectionFilterChip(
+                    label: 'Inactive',
+                    count: _countForFilter(
+                      PresenceFilter.inactive,
+                      allPresences,
+                    ),
+                    isSelected: _filter == PresenceFilter.inactive,
+                    color: PresenceFilter.inactive.color(context),
+                    icon: PresenceFilter.inactive.icon,
+                    onTap: () =>
+                        setState(() => _filter = PresenceFilter.inactive),
+                  ),
+                  SectionFilterChip(
+                    label: 'Unknown',
+                    count: _countForFilter(
+                      PresenceFilter.unknown,
+                      allPresences,
+                    ),
+                    isSelected: _filter == PresenceFilter.unknown,
+                    color: PresenceFilter.unknown.color(context),
+                    icon: PresenceFilter.unknown.icon,
+                    onTap: () =>
+                        setState(() => _filter = PresenceFilter.unknown),
+                  ),
+                  SectionFilterChip(
+                    label: 'Familiar',
+                    count: _countForFilter(
+                      PresenceFilter.familiar,
+                      allPresences,
+                    ),
+                    isSelected: _filter == PresenceFilter.familiar,
+                    color: PresenceFilter.familiar.color(context),
+                    icon: PresenceFilter.familiar.icon,
+                    onTap: () =>
+                        setState(() => _filter = PresenceFilter.familiar),
+                  ),
+                ],
+              ),
+            ),
+
+            // Quiet mesh hint
+            if (showQuietMeshHint)
+              const SliverToBoxAdapter(child: _QuietMeshHint()),
+
+            // Content
+            if (allPresences.isEmpty) ...[
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _buildEmptyState(theme),
+              ),
+            ] else if (filtered.isEmpty) ...[
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _buildNoResultsState(theme),
+              ),
+            ] else ...[
+              // Summary section (only when showing all, no search)
+              if (_filter == PresenceFilter.all && _searchQuery.isEmpty)
                 SliverToBoxAdapter(
                   child: _buildSummarySection(context, theme, summary),
                 ),
-                // Activity chart
+
+              // Activity chart (only when showing all, no search)
+              if (_filter == PresenceFilter.all && _searchQuery.isEmpty)
                 SliverToBoxAdapter(
-                  child: _buildActivityChart(theme, presences),
+                  child: _buildActivityChart(theme, allPresences),
                 ),
-                // Node list header
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                    child: Text(
-                      'All Nodes',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: context.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
+
+              // Node list header
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                  child: Text(
+                    _filter == PresenceFilter.all && _searchQuery.isEmpty
+                        ? 'All Nodes'
+                        : '${filtered.length} ${filtered.length == 1 ? 'node' : 'nodes'}',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: context.textSecondary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                // Node list
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) =>
-                        _buildPresenceCard(theme, presences[index]),
-                    childCount: presences.length,
-                  ),
+              ),
+
+              // Node list
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) =>
+                      _buildPresenceCard(theme, filtered[index]),
+                  childCount: filtered.length,
                 ),
-                const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-              ],
+              ),
+
+              // Bottom safe area padding
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: MediaQuery.of(context).padding.bottom + 24,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -102,20 +320,71 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
               color: context.textTertiary,
             ),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           Text(
             'No nodes discovered',
             style: theme.textTheme.titleMedium?.copyWith(
               color: context.textSecondary,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Nodes will appear here as they are discovered',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: context.textTertiary,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoResultsState(ThemeData theme) {
+    final hasActiveSearch = _searchQuery.isNotEmpty;
+    final hasActiveFilter = _filter != PresenceFilter.all;
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: context.card,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              hasActiveSearch ? Icons.search_off : Icons.filter_list_off,
+              size: 40,
+              color: context.textTertiary,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            hasActiveSearch
+                ? 'No nodes match your search'
+                : 'No nodes match this filter',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: context.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hasActiveSearch || hasActiveFilter
+                ? 'Try a different search or filter'
+                : 'Nodes will appear here as they are discovered',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: context.textTertiary,
+            ),
+          ),
+          if (hasActiveFilter && !hasActiveSearch) ...[
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => setState(() => _filter = PresenceFilter.all),
+              child: const Text('Show all nodes'),
+            ),
+          ],
         ],
       ),
     );
@@ -199,7 +468,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
             Row(
               children: [
                 Icon(Icons.show_chart, color: context.textSecondary, size: 20),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Text(
                   'Recent Activity',
                   style: theme.textTheme.titleSmall?.copyWith(
@@ -276,7 +545,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Wrap(
               spacing: 6,
               runSpacing: 4,
@@ -304,12 +573,12 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                 ),
                 _ConfidenceTierBadge(tier: presence.confidenceTier),
                 // Back nearby badge
-                if (presence.isBackNearby) _BackNearbyBadge(),
+                if (presence.isBackNearby) const _BackNearbyBadge(),
                 // Familiar badge
                 if (presence.encounter != null &&
                     presence.encounter!.isFamiliar &&
                     !presence.isBackNearby)
-                  _FamiliarBadge(),
+                  const _FamiliarBadge(),
                 // Role badge
                 if (presence.node.role != null)
                   _RoleBadge(role: presence.node.role!),
@@ -382,7 +651,7 @@ class _LegendItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(3),
           ),
         ),
-        SizedBox(width: 6),
+        const SizedBox(width: 6),
         Text(
           label,
           style: Theme.of(
@@ -404,7 +673,7 @@ class _SignalQualityBar extends StatelessWidget {
     return Row(
       children: [
         Icon(Icons.signal_cellular_alt, size: 12, color: context.textTertiary),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Expanded(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(2),
@@ -422,7 +691,7 @@ class _SignalQualityBar extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Text(
           '${(quality * 100).toInt()}%',
           style: Theme.of(
@@ -552,7 +821,7 @@ class _ExtendedPresenceRow extends StatelessWidget {
           if (info.intent != PresenceIntent.unknown) ...[
             const SizedBox(width: 6),
             Text(
-              '•',
+              '·',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: context.textTertiary,
               ),
@@ -641,7 +910,7 @@ class _EncounterRow extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Text(
-          '•',
+          '·',
           style: theme.textTheme.bodySmall?.copyWith(
             color: context.textTertiary,
           ),

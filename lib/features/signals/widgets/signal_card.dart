@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:socialmesh/features/settings/account_subscriptions_screen.dart';
 
+import '../../../core/safety/safe_image.dart';
 import '../../../core/theme.dart';
 import '../../../core/logging.dart';
 import '../../../core/widgets/animations.dart';
@@ -717,47 +718,21 @@ class _SignalImage extends ConsumerWidget {
   }
 
   Widget _buildCloudImage(String url, bool isOnline) {
-    return Image.network(
+    return SafeImage.network(
       url,
       key: ValueKey('${signal.id}_image_$isOnline'),
       width: double.infinity,
       height: 200,
       fit: BoxFit.cover,
-      loadingBuilder: (ctx, child, progress) {
-        if (progress == null) return child;
-        return Container(
-          width: double.infinity,
-          height: 200,
-          color: ctx.card,
-          child: Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: ctx.accentColor,
-            ),
-          ),
-        );
-      },
-      errorBuilder: (ctx, error, stack) => Container(
-        width: double.infinity,
-        height: 200,
-        color: ctx.card,
-        child: Icon(Icons.broken_image, color: ctx.textTertiary),
-      ),
     );
   }
 
   Widget _buildLocalImage(String path) {
-    return Image.file(
+    return SafeImage.file(
       File(path),
       width: double.infinity,
       height: 200,
       fit: BoxFit.cover,
-      errorBuilder: (ctx, error, stack) => Container(
-        width: double.infinity,
-        height: 200,
-        color: ctx.card,
-        child: Icon(Icons.broken_image, color: ctx.textTertiary),
-      ),
     );
   }
 

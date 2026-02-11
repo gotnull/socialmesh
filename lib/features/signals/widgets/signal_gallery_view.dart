@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
+import '../../../core/safety/safe_image.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -609,22 +610,19 @@ class _AnimatedImagePageState extends State<_AnimatedImagePage>
   Widget _buildImageWidget(String path) {
     // Check if it's a cloud URL or local path
     if (path.startsWith('http://') || path.startsWith('https://')) {
-      return Image.network(
+      return SafeImage.network(
         path,
         fit: BoxFit.contain,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return const Center(
-            child: CircularProgressIndicator(color: Colors.white),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) => _buildErrorWidget(),
+        placeholder: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+        errorWidget: _buildErrorWidget(),
       );
     } else {
-      return Image.file(
+      return SafeImage.file(
         File(path),
         fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => _buildErrorWidget(),
+        errorWidget: _buildErrorWidget(),
       );
     }
   }

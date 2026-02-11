@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/safety/safe_image.dart';
 import '../../../core/theme.dart';
 import '../../../models/social.dart';
 import '../utils/signal_utils.dart';
@@ -77,42 +78,35 @@ class SignalThumbnail extends StatelessWidget {
   Widget _buildImage(BuildContext context, Color iconColor) {
     // Prioritize cloud image (same as _SignalImage in signal_card.dart)
     if (_hasCloudImage) {
-      return Image.network(
+      return SafeImage.network(
         signal.mediaUrls.first,
         width: size,
         height: size,
         fit: BoxFit.cover,
-        loadingBuilder: showLoadingIndicator
-            ? (ctx, child, progress) {
-                if (progress == null) return child;
-                return Container(
-                  color: Colors.grey.shade800,
-                  child: Center(
-                    child: SizedBox(
-                      width: size * 0.4,
-                      height: size * 0.4,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: iconColor,
-                        value: progress.expectedTotalBytes != null
-                            ? progress.cumulativeBytesLoaded /
-                                  progress.expectedTotalBytes!
-                            : null,
-                      ),
+        placeholder: showLoadingIndicator
+            ? Container(
+                color: Colors.grey.shade800,
+                child: Center(
+                  child: SizedBox(
+                    width: size * 0.4,
+                    height: size * 0.4,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: iconColor,
                     ),
                   ),
-                );
-              }
+                ),
+              )
             : null,
-        errorBuilder: (_, _, _) => _buildFallback(iconColor),
+        errorWidget: _buildFallback(iconColor),
       );
     } else if (_hasLocalImage) {
-      return Image.file(
+      return SafeImage.file(
         File(signal.imageLocalPath!),
         width: size,
         height: size,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => _buildFallback(iconColor),
+        errorWidget: _buildFallback(iconColor),
       );
     }
     return _buildFallback(iconColor);
