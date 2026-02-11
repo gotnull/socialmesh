@@ -1442,7 +1442,9 @@ class SignalService {
     );
 
     try {
-      final response = await http.get(Uri.parse(imageUrl));
+      final response = await http
+          .get(Uri.parse(imageUrl))
+          .timeout(const Duration(seconds: 15));
       if (response.statusCode != 200) {
         AppLogging.social(
           '📷 Image download failed: HTTP ${response.statusCode}',

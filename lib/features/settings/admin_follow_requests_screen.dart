@@ -1403,14 +1403,16 @@ class _SeedDataTabState extends State<_SeedDataTab>
         final user = FirebaseAuth.instance.currentUser;
         final token = await user?.getIdToken();
 
-        final response = await http.post(
-          Uri.parse('${AppUrls.cloudFunctionsUrl}/recalculateAllCounts'),
-          headers: {
-            'Content-Type': 'application/json',
-            if (token != null) 'Authorization': 'Bearer $token',
-          },
-          body: jsonEncode({'data': {}}),
-        );
+        final response = await http
+            .post(
+              Uri.parse('${AppUrls.cloudFunctionsUrl}/recalculateAllCounts'),
+              headers: {
+                'Content-Type': 'application/json',
+                if (token != null) 'Authorization': 'Bearer $token',
+              },
+              body: jsonEncode({'data': {}}),
+            )
+            .timeout(const Duration(seconds: 30));
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);

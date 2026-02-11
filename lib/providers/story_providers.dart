@@ -12,6 +12,7 @@ import '../models/story.dart';
 import '../services/story_service.dart';
 import 'app_providers.dart';
 import 'auth_providers.dart';
+import 'connectivity_providers.dart';
 
 // ===========================================================================
 // SERVICE PROVIDER
@@ -257,6 +258,17 @@ class CreateStoryNotifier extends Notifier<CreateStoryState> {
     state = const CreateStoryState(isUploading: true, uploadProgress: 0);
 
     try {
+      // Stories require media upload + cloud validation — block when offline
+      final isOnline = ref.read(isOnlineProvider);
+      if (!isOnline) {
+        state = const CreateStoryState(
+          error:
+              'Stories require an internet connection. '
+              'Please try again when you are online.',
+        );
+        return null;
+      }
+
       final service = ref.read(storyServiceProvider);
       final story = await service.createStory(
         mediaFile: mediaFile,

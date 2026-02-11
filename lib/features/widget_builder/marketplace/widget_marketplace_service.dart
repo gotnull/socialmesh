@@ -324,10 +324,12 @@ class WidgetMarketplaceService {
   /// Get pending widgets for review (admin only)
   Future<List<MarketplaceWidget>> getPendingWidgets(String authToken) async {
     try {
-      final response = await _client.get(
-        Uri.parse('$baseUrl/widgetsAdminPending'),
-        headers: {'Authorization': 'Bearer $authToken'},
-      );
+      final response = await _client
+          .get(
+            Uri.parse('$baseUrl/widgetsAdminPending'),
+            headers: {'Authorization': 'Bearer $authToken'},
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as List<dynamic>;
@@ -354,10 +356,12 @@ class WidgetMarketplaceService {
   /// Approve a widget (admin only)
   Future<void> approveWidget(String id, String authToken) async {
     try {
-      final response = await _client.post(
-        Uri.parse('$baseUrl/widgetsApprove?id=$id'),
-        headers: {'Authorization': 'Bearer $authToken'},
-      );
+      final response = await _client
+          .post(
+            Uri.parse('$baseUrl/widgetsApprove?id=$id'),
+            headers: {'Authorization': 'Bearer $authToken'},
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 200) {
         if (response.statusCode == 401) {
@@ -378,14 +382,16 @@ class WidgetMarketplaceService {
   /// Reject a widget (admin only)
   Future<void> rejectWidget(String id, String reason, String authToken) async {
     try {
-      final response = await _client.post(
-        Uri.parse('$baseUrl/widgetsReject?id=$id'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
-        },
-        body: jsonEncode({'reason': reason}),
-      );
+      final response = await _client
+          .post(
+            Uri.parse('$baseUrl/widgetsReject?id=$id'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $authToken',
+            },
+            body: jsonEncode({'reason': reason}),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 200) {
         if (response.statusCode == 401) {
@@ -406,10 +412,12 @@ class WidgetMarketplaceService {
   /// Get user's own widgets (My Submissions)
   Future<List<MarketplaceWidget>> getMyWidgets(String authToken) async {
     try {
-      final response = await _client.get(
-        Uri.parse('$baseUrl/widgetsUserMine'),
-        headers: {'Authorization': 'Bearer $authToken'},
-      );
+      final response = await _client
+          .get(
+            Uri.parse('$baseUrl/widgetsUserMine'),
+            headers: {'Authorization': 'Bearer $authToken'},
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as List<dynamic>;
@@ -595,10 +603,12 @@ class WidgetMarketplaceService {
   /// Get pending widgets for admin review
   Future<List<MarketplaceWidget>> getPendingForAdmin(String authToken) async {
     try {
-      final response = await _client.get(
-        Uri.parse('$baseUrl/widgetsAdminPending'),
-        headers: {'Authorization': 'Bearer $authToken'},
-      );
+      final response = await _client
+          .get(
+            Uri.parse('$baseUrl/widgetsAdminPending'),
+            headers: {'Authorization': 'Bearer $authToken'},
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as List<dynamic>;

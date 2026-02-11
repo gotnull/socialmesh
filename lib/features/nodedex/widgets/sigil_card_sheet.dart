@@ -522,7 +522,11 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
       final response = await http
           .post(
             uri,
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              if (AppUrls.sigilApiKey.isNotEmpty)
+                'X-API-Key': AppUrls.sigilApiKey,
+            },
             body: jsonEncode(payload),
           )
           .timeout(const Duration(seconds: 10));

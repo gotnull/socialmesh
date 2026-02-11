@@ -16,6 +16,7 @@ import '../../../models/social.dart';
 import '../../../models/social_activity.dart';
 import '../../../providers/activity_providers.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../providers/connectivity_providers.dart';
 import '../../../providers/profile_providers.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
@@ -90,6 +91,7 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
     final feedState = ref.read(activityFeedProvider);
     final signalService = ref.read(signalServiceProvider);
     final feedNotifier = ref.read(activityFeedProvider.notifier);
+    final isOnline = ref.read(isOnlineProvider);
 
     final signalActivities = feedState.activities
         .where((a) => _signalActivityTypes.contains(a.type))
@@ -129,6 +131,16 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
         return;
       }
       if (localSignal != null) continue;
+
+      // Skip cloud validation when offline to prevent data loss —
+      // a null cloud response offline does NOT mean the signal was deleted
+      if (!isOnline) {
+        AppLogging.social(
+          '📬 [ActivityScreen] _validateActivities() — '
+          'offline, skipping cloud check for ${activity.contentId}',
+        );
+        continue;
+      }
 
       // Check if signal exists in cloud
       final cloudSignal = await signalService.getSignalFromCloudById(

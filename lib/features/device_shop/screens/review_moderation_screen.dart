@@ -294,6 +294,14 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
                               width: 50,
                               height: 50,
                               fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => Container(
+                                width: 50,
+                                height: 50,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest,
+                                child: const Icon(Icons.image, size: 24),
+                              ),
                             ),
                           ),
                         const SizedBox(width: 12),

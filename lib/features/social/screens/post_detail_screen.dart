@@ -1217,6 +1217,11 @@ class _PostContent extends StatelessWidget {
                 child: const Center(child: CircularProgressIndicator()),
               );
             },
+            errorBuilder: (_, _, _) => Container(
+              height: 200,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: const Center(child: Icon(Icons.broken_image, size: 40)),
+            ),
           ),
         ),
       );
@@ -1249,7 +1254,18 @@ class _PostContent extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(url, fit: BoxFit.cover),
+                  Image.network(
+                    url,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => Container(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      child: const Center(
+                        child: Icon(Icons.broken_image, size: 24),
+                      ),
+                    ),
+                  ),
                   if (showOverlay)
                     Container(
                       color: Colors.black54,

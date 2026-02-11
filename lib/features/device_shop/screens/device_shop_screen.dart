@@ -11,6 +11,7 @@ import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/search_filter_header.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../providers/connectivity_providers.dart';
 import '../../../providers/help_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../models/shop_models.dart';
@@ -405,7 +406,11 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                       ),
                     ),
                   ),
-                  error: (e, _) => const SizedBox.shrink(),
+                  error: (e, _) => _SectionOffline(
+                    ref: ref,
+                    onRetry: () =>
+                        ref.invalidate(lilygoTrendingProductsProvider),
+                  ),
                 ),
             const SizedBox(height: 24),
 
@@ -683,7 +688,10 @@ class _FeaturedSection extends ConsumerWidget {
 
     return productsAsync.when(
       loading: () => _SectionLoading(title: 'Featured'),
-      error: (error, stack) => const SizedBox.shrink(),
+      error: (error, stack) => _SectionOffline(
+        ref: ref,
+        onRetry: () => ref.invalidate(lilygoFeaturedProductsProvider),
+      ),
       data: (products) {
         if (products.isEmpty) return const SizedBox.shrink();
 
@@ -827,7 +835,10 @@ class _NewArrivalsSection extends ConsumerWidget {
 
     return productsAsync.when(
       loading: () => _SectionLoading(title: 'New Arrivals'),
-      error: (error, stack) => const SizedBox.shrink(),
+      error: (error, stack) => _SectionOffline(
+        ref: ref,
+        onRetry: () => ref.invalidate(lilygoProductsProvider),
+      ),
       data: (products) {
         if (products.isEmpty) return const SizedBox.shrink();
 
@@ -857,7 +868,10 @@ class _BestSellersSection extends ConsumerWidget {
 
     return productsAsync.when(
       loading: () => _SectionLoading(title: 'Popular Devices'),
-      error: (error, stack) => const SizedBox.shrink(),
+      error: (error, stack) => _SectionOffline(
+        ref: ref,
+        onRetry: () => ref.invalidate(lilygoProductsProvider),
+      ),
       data: (products) {
         final tapCounts = tapCountsAsync.value ?? {};
         final hasUserData = tapCounts.isNotEmpty;
@@ -1015,7 +1029,10 @@ class _OnSaleSection extends ConsumerWidget {
 
     return productsAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (error, stack) => const SizedBox.shrink(),
+      error: (error, stack) => _SectionOffline(
+        ref: ref,
+        onRetry: () => ref.invalidate(lilygoProductsProvider),
+      ),
       data: (products) {
         // Find products with a compare-at price (on sale)
         final onSale = products
@@ -1473,6 +1490,60 @@ class _SectionLoading extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Offline fallback for product sections that depend on external API
+class _SectionOffline extends StatelessWidget {
+  final WidgetRef ref;
+  final VoidCallback onRetry;
+
+  const _SectionOffline({required this.ref, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final isOnline = ref.watch(isOnlineProvider);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.border),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isOnline ? Icons.cloud_off : Icons.wifi_off,
+              color: context.textTertiary,
+              size: 32,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              isOnline ? 'Unable to load products' : 'No internet connection',
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              isOnline ? 'Try again in a moment' : 'Connect to browse devices',
+              style: TextStyle(color: context.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

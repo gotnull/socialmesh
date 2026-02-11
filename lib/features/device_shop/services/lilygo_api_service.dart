@@ -16,6 +16,7 @@ class LilygoApiService {
   static const String _tag = '[LilygoApi]';
   static const String _baseUrl = 'https://lilygo.cc';
   static const String _productsEndpoint = '/products.json';
+  static const Duration _httpTimeout = Duration(seconds: 15);
 
   /// Meshtastic-related tags to filter products
   static const Set<String> _meshtasticTags = {
@@ -105,7 +106,7 @@ class LilygoApiService {
       final uri = Uri.parse('$_baseUrl/products/$handle.json');
       AppLogging.shop('$_tag Fetching from: $uri');
 
-      final response = await _client.get(uri);
+      final response = await _client.get(uri).timeout(_httpTimeout);
       AppLogging.shop('$_tag Response status: ${response.statusCode}');
       AppLogging.shop(
         '$_tag Response body length: ${response.body.length} chars',
@@ -159,7 +160,7 @@ class LilygoApiService {
       );
       AppLogging.shop('$_tag Fetching page $page from: $uri');
 
-      final response = await _client.get(uri);
+      final response = await _client.get(uri).timeout(_httpTimeout);
       AppLogging.shop('$_tag Page $page response: HTTP ${response.statusCode}');
       AppLogging.shop(
         '$_tag Page $page body length: ${response.body.length} chars',

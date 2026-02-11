@@ -26,6 +26,9 @@ class AppUrls {
   static String get sigilApiUrl =>
       dotenv.env['SIGIL_API_URL'] ?? 'https://sigil.socialmesh.app';
 
+  /// Sigil API key (authenticates POST requests)
+  static String get sigilApiKey => dotenv.env['SIGIL_API_KEY'] ?? '';
+
   // Legal & Documentation URLs
   static String get termsUrl => '$baseUrl/terms';
   static String get privacyUrl => '$baseUrl/privacy';

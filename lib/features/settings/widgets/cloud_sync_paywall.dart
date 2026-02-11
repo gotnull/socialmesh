@@ -6,6 +6,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../providers/cloud_sync_entitlement_providers.dart';
+import '../../../providers/connectivity_providers.dart';
 import '../../../providers/subscription_providers.dart';
 import '../../../services/subscription/cloud_sync_entitlement_service.dart';
 import '../../../utils/snackbar.dart';
@@ -60,6 +61,12 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
   }
 
   Future<void> _purchase(StoreProduct product) async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      showErrorSnackBar(context, 'Purchases require an internet connection.');
+      return;
+    }
+
     safeSetState(() => _isLoading = true);
 
     try {
@@ -76,6 +83,15 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
   }
 
   Future<void> _restore() async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      showErrorSnackBar(
+        context,
+        'Restoring purchases requires an internet connection.',
+      );
+      return;
+    }
+
     safeSetState(() => _isLoading = true);
 
     try {

@@ -228,11 +228,13 @@ class IftttService {
 
       AppLogging.ifttt('IFTTT: Triggering $eventName');
 
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
-      );
+      final response = await http
+          .post(
+            Uri.parse(url),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         AppLogging.ifttt('IFTTT: Webhook triggered successfully');

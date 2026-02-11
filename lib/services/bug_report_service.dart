@@ -21,6 +21,7 @@ import '../core/navigation.dart';
 import '../features/feedback/report_bug_sheet.dart';
 import '../providers/app_providers.dart';
 import '../providers/connection_providers.dart';
+import '../providers/connectivity_providers.dart';
 import '../utils/snackbar.dart';
 
 class BugReportService with WidgetsBindingObserver {
@@ -237,6 +238,15 @@ class BugReportService with WidgetsBindingObserver {
     required bool includeScreenshot,
     Uint8List? screenshotBytes,
   }) async {
+    // Bug reports require network for Storage upload + Cloud Function call
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      throw Exception(
+        'Bug reports require an internet connection. '
+        'Please try again when you are online.',
+      );
+    }
+
     String? screenshotUrl;
     if (includeScreenshot && screenshotBytes != null) {
       screenshotUrl = await _uploadScreenshot(screenshotBytes);
