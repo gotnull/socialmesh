@@ -113,6 +113,14 @@ dependencies:
   in_app_review: ^2.0.10
   pretty_qr_code: ^3.6.0
 
+dependency_overrides:
+  # Patched flutter_blue_plus_darwin 8.1.0 — fixes NSInvalidArgumentException
+  # crash in didReadRSSI:error: when CoreBluetooth returns nil rssi on error.
+  # Upstream PR: https://github.com/chipweinberger/flutter_blue_plus/pull/1318
+  # Remove this override when upstream publishes a fix.
+  flutter_blue_plus_darwin:
+    path: packages/flutter_blue_plus_darwin_patched
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
