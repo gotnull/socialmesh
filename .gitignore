@@ -42,6 +42,10 @@ web/
 *.pem
 !*.pem.example
 
+# Firebase app config files (contain API keys and OAuth client IDs)
+**/google-services.json
+**/GoogleService-Info.plist
+
 # Firebase/GCP service account keys (NEVER commit these!)
 *-firebase-adminsdk-*.json
 firebase-service-account.json
