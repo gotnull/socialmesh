@@ -32,6 +32,8 @@ class MyBugReportsScreen extends ConsumerStatefulWidget {
 class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
     with LifecycleSafeMixin<MyBugReportsScreen> {
   _BugReportFilter _activeFilter = _BugReportFilter.all;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -42,6 +44,12 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
         ref.invalidate(myBugReportsProvider);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   List<BugReport> _applyFilter(List<BugReport> reports) {
@@ -65,6 +73,19 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
     }
   }
 
+  List<BugReport> _applySearch(List<BugReport> reports) {
+    if (_searchQuery.isEmpty) return reports;
+    final query = _searchQuery.toLowerCase();
+    return reports.where((r) {
+      return r.description.toLowerCase().contains(query) ||
+          r.id.toLowerCase().contains(query) ||
+          (r.appVersion?.toLowerCase().contains(query) ?? false) ||
+          (r.platform?.toLowerCase().contains(query) ?? false) ||
+          r.status.label.toLowerCase().contains(query) ||
+          r.responses.any((resp) => resp.message.toLowerCase().contains(query));
+    }).toList();
+  }
+
   Color _filterColor(BuildContext context, _BugReportFilter filter) {
     switch (filter) {
       case _BugReportFilter.all:
@@ -80,214 +101,232 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
     }
   }
 
+  List<Widget> _buildFilterChips(
+    BuildContext context,
+    List<BugReport> reports,
+  ) {
+    final openCount = reports
+        .where((r) => r.status == BugReportStatus.open)
+        .length;
+    final respondedCount = reports
+        .where((r) => r.status == BugReportStatus.responded)
+        .length;
+    final awaitingCount = reports
+        .where((r) => r.status == BugReportStatus.userReplied)
+        .length;
+    final resolvedCount = reports
+        .where((r) => r.status == BugReportStatus.resolved)
+        .length;
+
+    return [
+      SectionFilterChip(
+        label: 'All',
+        count: reports.length,
+        isSelected: _activeFilter == _BugReportFilter.all,
+        color: _filterColor(context, _BugReportFilter.all),
+        onTap: () => safeSetState(() => _activeFilter = _BugReportFilter.all),
+      ),
+      SectionFilterChip(
+        label: 'Open',
+        count: openCount,
+        isSelected: _activeFilter == _BugReportFilter.open,
+        color: _filterColor(context, _BugReportFilter.open),
+        onTap: () => safeSetState(() => _activeFilter = _BugReportFilter.open),
+      ),
+      SectionFilterChip(
+        label: 'Responded',
+        count: respondedCount,
+        isSelected: _activeFilter == _BugReportFilter.responded,
+        color: _filterColor(context, _BugReportFilter.responded),
+        onTap: () =>
+            safeSetState(() => _activeFilter = _BugReportFilter.responded),
+      ),
+      SectionFilterChip(
+        label: 'Awaiting',
+        count: awaitingCount,
+        isSelected: _activeFilter == _BugReportFilter.awaiting,
+        color: _filterColor(context, _BugReportFilter.awaiting),
+        onTap: () =>
+            safeSetState(() => _activeFilter = _BugReportFilter.awaiting),
+      ),
+      SectionFilterChip(
+        label: 'Resolved',
+        count: resolvedCount,
+        isSelected: _activeFilter == _BugReportFilter.resolved,
+        color: _filterColor(context, _BugReportFilter.resolved),
+        icon: Icons.check_circle_outline,
+        onTap: () =>
+            safeSetState(() => _activeFilter = _BugReportFilter.resolved),
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final reportsAsync = ref.watch(myBugReportsProvider);
 
-    return GlassScaffold.body(
+    return GlassScaffold(
       title: 'My Bug Reports',
-      body: reportsAsync.when(
-        data: (reports) {
-          if (reports.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.bug_report_outlined,
-                      size: 64,
-                      color: context.textTertiary,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No bug reports yet',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: context.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Shake your device to report a bug.\n'
-                      'Your reports and any responses will appear here.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: context.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          // Compute counts per status for filter badges
-          final openCount = reports
-              .where((r) => r.status == BugReportStatus.open)
-              .length;
-          final respondedCount = reports
-              .where((r) => r.status == BugReportStatus.responded)
-              .length;
-          final awaitingCount = reports
-              .where((r) => r.status == BugReportStatus.userReplied)
-              .length;
-          final resolvedCount = reports
-              .where((r) => r.status == BugReportStatus.resolved)
-              .length;
-
-          final filtered = _applyFilter(reports);
-
-          return Column(
-            children: [
-              // Filter chips row
-              SizedBox(
-                height: SearchFilterLayout.chipRowHeight,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: SearchFilterLayout.horizontalPadding,
-                  ),
-                  children: [
-                    SectionFilterChip(
-                      label: 'All',
-                      count: reports.length,
-                      isSelected: _activeFilter == _BugReportFilter.all,
-                      color: _filterColor(context, _BugReportFilter.all),
-                      onTap: () => safeSetState(
-                        () => _activeFilter = _BugReportFilter.all,
-                      ),
-                    ),
-                    SizedBox(width: SearchFilterLayout.chipSpacing),
-                    SectionFilterChip(
-                      label: 'Open',
-                      count: openCount,
-                      isSelected: _activeFilter == _BugReportFilter.open,
-                      color: _filterColor(context, _BugReportFilter.open),
-                      onTap: () => safeSetState(
-                        () => _activeFilter = _BugReportFilter.open,
-                      ),
-                    ),
-                    SizedBox(width: SearchFilterLayout.chipSpacing),
-                    SectionFilterChip(
-                      label: 'Responded',
-                      count: respondedCount,
-                      isSelected: _activeFilter == _BugReportFilter.responded,
-                      color: _filterColor(context, _BugReportFilter.responded),
-                      onTap: () => safeSetState(
-                        () => _activeFilter = _BugReportFilter.responded,
-                      ),
-                    ),
-                    SizedBox(width: SearchFilterLayout.chipSpacing),
-                    SectionFilterChip(
-                      label: 'Awaiting',
-                      count: awaitingCount,
-                      isSelected: _activeFilter == _BugReportFilter.awaiting,
-                      color: _filterColor(context, _BugReportFilter.awaiting),
-                      onTap: () => safeSetState(
-                        () => _activeFilter = _BugReportFilter.awaiting,
-                      ),
-                    ),
-                    SizedBox(width: SearchFilterLayout.chipSpacing),
-                    SectionFilterChip(
-                      label: 'Resolved',
-                      count: resolvedCount,
-                      isSelected: _activeFilter == _BugReportFilter.resolved,
-                      color: _filterColor(context, _BugReportFilter.resolved),
-                      icon: Icons.check_circle_outline,
-                      onTap: () => safeSetState(
-                        () => _activeFilter = _BugReportFilter.resolved,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-              // Filtered reports list
-              Expanded(
-                child: filtered.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.filter_list_off,
-                              size: 48,
-                              color: context.textTertiary,
+      slivers: [
+        ...reportsAsync.when(
+          data: (reports) {
+            if (reports.isEmpty) {
+              return [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.bug_report_outlined,
+                            size: 64,
+                            color: context.textTertiary,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No bug reports yet',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: context.textPrimary,
                             ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'No reports match this filter',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: context.textSecondary,
-                              ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Shake your device to report a bug.\n'
+                            'Your reports and any responses will appear here.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: context.textSecondary,
                             ),
-                          ],
-                        ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: () async {
-                          ref.invalidate(myBugReportsProvider);
-                          await ref.read(myBugReportsProvider.future);
-                        },
-                        color: context.accentColor,
-                        child: ListView.separated(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          itemCount: filtered.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final report = filtered[index];
-                            final isInitialReport =
-                                widget.initialReportId == report.id;
-                            return _BugReportCard(
-                              report: report,
-                              initiallyExpanded: isInitialReport,
-                            );
-                          },
-                        ),
+                          ),
+                        ],
                       ),
-              ),
-            ],
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 48, color: AppTheme.errorRed),
-                const SizedBox(height: 16),
-                Text(
-                  'Failed to load reports',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: context.textPrimary,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  '$error',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: context.textSecondary),
+              ];
+            }
+
+            final filtered = _applySearch(_applyFilter(reports));
+
+            return [
+              // Pinned search + filter chips
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: SearchFilterHeaderDelegate(
+                  searchController: _searchController,
+                  searchQuery: _searchQuery,
+                  onSearchChanged: (value) =>
+                      safeSetState(() => _searchQuery = value),
+                  hintText: 'Search reports',
+                  textScaler: MediaQuery.textScalerOf(context),
+                  rebuildKey: Object.hashAll([_activeFilter, reports.length]),
+                  filterChips: _buildFilterChips(context, reports),
                 ),
-                const SizedBox(height: 16),
-                TextButton.icon(
-                  onPressed: () => ref.invalidate(myBugReportsProvider),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
+              ),
+              // Results
+              if (filtered.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.filter_list_off,
+                          size: 48,
+                          color: context.textTertiary,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          _searchQuery.isNotEmpty
+                              ? 'No reports match your search'
+                              : 'No reports match this filter',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  sliver: SliverList.separated(
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final report = filtered[index];
+                      final isInitialReport =
+                          widget.initialReportId == report.id;
+                      return _BugReportCard(
+                        report: report,
+                        initiallyExpanded: isInitialReport,
+                      );
+                    },
+                  ),
                 ),
-              ],
+            ];
+          },
+          loading: () => [
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: CircularProgressIndicator()),
             ),
-          ),
+          ],
+          error: (error, _) => [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: AppTheme.errorRed,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Failed to load reports',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '$error',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton.icon(
+                        onPressed: () => ref.invalidate(myBugReportsProvider),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-      ),
+      ],
     );
   }
 }

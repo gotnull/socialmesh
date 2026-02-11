@@ -21,6 +21,7 @@ import '../core/navigation.dart';
 import '../features/feedback/report_bug_sheet.dart';
 import '../providers/app_providers.dart';
 import '../providers/connection_providers.dart';
+import '../utils/snackbar.dart';
 
 class BugReportService with WidgetsBindingObserver {
   BugReportService(this.ref);
@@ -102,6 +103,18 @@ class BugReportService with WidgetsBindingObserver {
     final context = navigatorKey.currentContext;
     if (context == null) return;
     _isShowing = true;
+
+    // Require authentication — anonymous reports can never receive replies
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (context.mounted) {
+        showGlobalErrorSnackBar(
+          'Sign in to report bugs. Anonymous reports cannot receive replies.',
+        );
+      }
+      _isShowing = false;
+      return;
+    }
 
     Uint8List? screenshotBytes;
     try {

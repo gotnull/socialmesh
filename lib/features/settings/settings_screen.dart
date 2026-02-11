@@ -1784,58 +1784,85 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               },
                             ),
                           ),
-                          _SettingsTile(
-                            icon: Icons.forum_outlined,
-                            title: 'My bug reports',
-                            subtitle: 'View your reports and responses',
-                            trailing: Consumer(
-                              builder: (context, ref, _) {
-                                final countAsync = ref.watch(
-                                  bugReportUnreadCountProvider,
-                                );
-                                final count = countAsync.when(
-                                  data: (c) => c,
-                                  loading: () => 0,
-                                  error: (_, _) => 0,
-                                );
-                                return Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (count > 0)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 3,
-                                        ),
-                                        margin: const EdgeInsets.only(right: 8),
-                                        decoration: BoxDecoration(
-                                          color: context.accentColor,
-                                          borderRadius: BorderRadius.circular(
-                                            10,
+                          if (ref.watch(currentUserProvider) != null)
+                            _SettingsTile(
+                              icon: Icons.forum_outlined,
+                              title: 'My bug reports',
+                              subtitle: 'View your reports and responses',
+                              trailing: Consumer(
+                                builder: (context, ref, _) {
+                                  final countAsync = ref.watch(
+                                    bugReportUnreadCountProvider,
+                                  );
+                                  final count = countAsync.when(
+                                    data: (c) => c,
+                                    loading: () => 0,
+                                    error: (_, _) => 0,
+                                  );
+                                  return Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (count > 0)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 3,
+                                          ),
+                                          margin: const EdgeInsets.only(
+                                            right: 8,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: context.accentColor,
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            '$count',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700,
+                                            ),
                                           ),
                                         ),
-                                        child: Text(
-                                          '$count',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
+                                      Icon(
+                                        Icons.chevron_right,
+                                        color: context.textTertiary,
                                       ),
-                                    Icon(
-                                      Icons.chevron_right,
-                                      color: context.textTertiary,
-                                    ),
-                                  ],
-                                );
+                                    ],
+                                  );
+                                },
+                              ),
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                Navigator.pushNamed(context, '/my-bug-reports');
                               },
+                            )
+                          else
+                            Opacity(
+                              opacity: 0.5,
+                              child: _SettingsTile(
+                                icon: Icons.forum_outlined,
+                                title: 'My bug reports',
+                                subtitle:
+                                    'Sign in to track your reports and receive replies',
+                                trailing: Icon(
+                                  Icons.chevron_right,
+                                  color: context.textTertiary,
+                                ),
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const AccountSubscriptionsScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              Navigator.pushNamed(context, '/my-bug-reports');
-                            },
-                          ),
 
                           const SizedBox(height: 16),
 
