@@ -176,8 +176,17 @@ def build_bug_report_email_html(report_id, data):
             <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;border-collapse:collapse;">
               <tr>
                 <td style="padding:0 0 16px 0;">
-                  <div style="font-size:20px;font-weight:700;letter-spacing:0.2px;">Socialmesh</div>
-                  <div style="color:#98a2b3;font-size:13px;margin-top:4px;">Bug report</div>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                    <tr>
+                      <td>
+                        <div style="font-size:20px;font-weight:700;letter-spacing:0.2px;">Socialmesh</div>
+                        <div style="color:#98a2b3;font-size:13px;margin-top:4px;">Bug report</div>
+                      </td>
+                      <td style="text-align:right;vertical-align:middle;">
+                        <a href="https://socialmesh.app/bugs" style="display:inline-block;padding:8px 14px;border-radius:8px;background:linear-gradient(90deg,#ff2d95,#ff6a3d);color:#ffffff;text-decoration:none;font-weight:600;font-size:12px;letter-spacing:0.2px;">View in Admin &rarr;</a>
+                      </td>
+                    </tr>
+                  </table>
                 </td>
               </tr>
               <tr>
@@ -219,13 +228,8 @@ def build_bug_report_email_html(report_id, data):
                 </td>
               </tr>
               <tr>
-                <td style="padding:16px 0 0 0;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-                    <tr>
-                      <td style="color:#6c7487;font-size:11px;">Socialmesh bug report &middot; support@socialmesh.app</td>
-                      <td style="text-align:right;"><a href="https://socialmesh.app/bugs" style="color:#ff2d95;font-size:11px;font-weight:600;text-decoration:none;">View in Admin &rarr;</a></td>
-                    </tr>
-                  </table>
+                <td style="padding:16px 0 0 0;color:#6c7487;font-size:11px;text-align:center;">
+                  Socialmesh bug report &middot; support@socialmesh.app
                 </td>
               </tr>
             </table>
