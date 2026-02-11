@@ -33,7 +33,7 @@ jobs:
         run: flutter pub get
 
       - name: Check formatting
-        run: dart format --set-exit-if-changed .
+        run: dart format --set-exit-if-changed --exclude=packages/flutter_blue_plus_darwin_patched .
 
       - name: Analyze
         run: flutter analyze
@@ -46,7 +46,7 @@ jobs:
             echo "::group::First Run Failure Details"
             tail -100 test_output.log
             echo "::endgroup::"
-            
+
             # Retry once
             if ! flutter test --reporter expanded 2>&1 | tee test_output_retry.log; then
               echo "::error::Tests failed on retry - this is a real failure"
