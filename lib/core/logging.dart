@@ -53,6 +53,7 @@ class AppLogging {
   static bool? _shopLoggingEnabled;
   static bool? _nodeDexLoggingEnabled;
   static bool? _syncLoggingEnabled;
+  static bool? _mfaLoggingEnabled;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
   static Logger? _noOpLogger;
@@ -231,6 +232,12 @@ class AppLogging {
     return _nodeDexLoggingEnabled!;
   }
 
+  static bool get mfaLoggingEnabled {
+    _mfaLoggingEnabled ??=
+        _safeGetEnv('MFA_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _mfaLoggingEnabled!;
+  }
+
   /// Cloud Sync logging — always enabled by default for debugging sync issues.
   /// Disable with SYNC_LOGGING_ENABLED=false if needed.
   static bool get syncLoggingEnabled {
@@ -388,6 +395,10 @@ class AppLogging {
     if (syncLoggingEnabled) debugPrint('SYNC: $message');
   }
 
+  static void mfa(String message) {
+    if (mfaLoggingEnabled) debugPrint('MFA: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -418,6 +429,7 @@ class AppLogging {
     _shopLoggingEnabled = null;
     _nodeDexLoggingEnabled = null;
     _syncLoggingEnabled = null;
+    _mfaLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

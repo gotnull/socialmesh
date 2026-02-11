@@ -1745,55 +1745,112 @@ class _MFAStatusButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mfaAsync = ref.watch(enrolledMFAFactorsProvider);
-    final hasMFA = mfaAsync.when(
-      data: (factors) => factors.isNotEmpty,
-      loading: () => false,
-      error: (_, _) => false,
-    );
+    final isLoading = mfaAsync is AsyncLoading;
 
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton(
-        onPressed: onTap,
+        onPressed: isLoading ? null : onTap,
         style: OutlinedButton.styleFrom(
+          alignment: Alignment.centerLeft,
           side: BorderSide(
-            color: hasMFA
-                ? AccentColors.green.withValues(alpha: 0.5)
-                : context.border,
+            color:
+                mfaAsync.whenOrNull(
+                  data: (factors) => factors.isNotEmpty
+                      ? AccentColors.green.withValues(alpha: 0.5)
+                      : null,
+                ) ??
+                context.border,
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              hasMFA ? Icons.verified_user : Icons.security,
-              size: 18,
-              color: hasMFA ? AccentColors.green : null,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Two-Factor Authentication',
-              style: TextStyle(color: hasMFA ? AccentColors.green : null),
-            ),
-            if (hasMFA) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AccentColors.green.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'ON',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: AccentColors.green,
-                  ),
+        child: mfaAsync.when(
+          loading: () => Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: context.textSecondary,
                 ),
               ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Two-Factor Authentication',
+                  style: TextStyle(color: context.textSecondary),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
             ],
-          ],
+          ),
+          error: (_, _) => Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.security, size: 18),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Two-Factor Authentication',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
+            ],
+          ),
+          data: (factors) {
+            final hasMFA = factors.isNotEmpty;
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  hasMFA ? Icons.verified_user : Icons.security,
+                  size: 18,
+                  color: hasMFA ? AccentColors.green : null,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Two-Factor Authentication',
+                    style: TextStyle(color: hasMFA ? AccentColors.green : null),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (hasMFA) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AccentColors.green.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'ON',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AccentColors.green,
+                      ),
+                    ),
+                  ),
+                ],
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: hasMFA
+                      ? AccentColors.green.withValues(alpha: 0.7)
+                      : context.textTertiary,
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

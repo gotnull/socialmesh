@@ -3,13 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/auth_providers.dart';
 import '../../services/haptic_service.dart';
+import '../../utils/snackbar.dart';
 import 'mfa_enrollment_screen.dart';
 import 'mfa_error_messages.dart';
+import 'mfa_verification_dialog.dart';
 
 /// Screen for managing multi-factor authentication settings
 class MFAManagementScreen extends ConsumerStatefulWidget {
@@ -28,49 +31,83 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
   @override
   void initState() {
     super.initState();
+    AppLogging.mfa('MFAManagementScreen initState — starting initial load');
     _loadFactors();
   }
 
   Future<void> _loadFactors() async {
+    AppLogging.mfa('_loadFactors — begin');
     safeSetState(() => _isLoadingFactors = true);
     try {
       final authService = ref.read(authServiceProvider);
+      AppLogging.mfa('_loadFactors — calling getEnrolledMFAFactors()');
       final factors = await authService.getEnrolledMFAFactors();
-      if (!mounted) return;
+      AppLogging.mfa(
+        '_loadFactors — received ${factors.length} factor(s): '
+        '${factors.map((f) => 'uid=${f.uid}, name=${f.displayName}, type=${f.factorId}').join('; ')}',
+      );
+      if (!mounted) {
+        AppLogging.mfa('_loadFactors — widget disposed after fetch, aborting');
+        return;
+      }
       safeSetState(() {
         _enrolledFactors = factors;
         _isLoadingFactors = false;
       });
-    } catch (_) {
-      if (!mounted) return;
+      AppLogging.mfa('_loadFactors — state updated, isLoading=false');
+    } catch (e, st) {
+      AppLogging.mfa('_loadFactors — ERROR: $e\n$st');
+      if (!mounted) {
+        AppLogging.mfa('_loadFactors — widget disposed after error, aborting');
+        return;
+      }
       safeSetState(() => _isLoadingFactors = false);
     }
   }
 
   Future<void> _enrollMFA() async {
+    AppLogging.mfa('_enrollMFA — user tapped Enable Two-Factor Auth');
     final haptics = ref.read(hapticServiceProvider);
     final navigator = Navigator.of(context);
 
     await haptics.trigger(HapticType.medium);
 
+    AppLogging.mfa('_enrollMFA — pushing MFAEnrollmentScreen');
     final result = await navigator.push<bool>(
       MaterialPageRoute(builder: (context) => const MFAEnrollmentScreen()),
     );
+    AppLogging.mfa('_enrollMFA — MFAEnrollmentScreen returned: $result');
 
     if (result == true && mounted) {
+      AppLogging.mfa(
+        '_enrollMFA — enrollment succeeded, invalidating provider and reloading',
+      );
       // Refresh both local screen state and global provider
       ref.invalidate(enrolledMFAFactorsProvider);
       await _loadFactors();
+    } else {
+      AppLogging.mfa(
+        '_enrollMFA — enrollment not confirmed or widget disposed '
+        '(result=$result, mounted=$mounted)',
+      );
     }
   }
 
   Future<void> _removeFactor(MultiFactorInfo factor) async {
+    AppLogging.mfa(
+      '_removeFactor — user tapped remove for factor '
+      'uid=${factor.uid}, name=${factor.displayName}, type=${factor.factorId}',
+    );
     final haptics = ref.read(hapticServiceProvider);
 
     await haptics.trigger(HapticType.warning);
 
-    if (!mounted) return;
+    if (!mounted) {
+      AppLogging.mfa('_removeFactor — widget disposed after haptic, aborting');
+      return;
+    }
 
+    AppLogging.mfa('_removeFactor — showing confirmation dialog');
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -98,26 +135,180 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
       ),
     );
 
-    if (confirmed != true || !mounted) return;
+    AppLogging.mfa(
+      '_removeFactor — dialog result: confirmed=$confirmed, mounted=$mounted',
+    );
+
+    if (confirmed != true || !mounted) {
+      AppLogging.mfa(
+        '_removeFactor — aborting: '
+        '${confirmed != true ? 'user cancelled' : 'widget disposed'}',
+      );
+      return;
+    }
+
+    AppLogging.mfa(
+      '_removeFactor — proceeding with unenroll for uid=${factor.uid}',
+    );
 
     try {
       final authService = ref.read(authServiceProvider);
+      AppLogging.mfa(
+        '_removeFactor — calling authService.unenrollMFA(${factor.uid})',
+      );
       await authService.unenrollMFA(factor.uid);
+      AppLogging.mfa('_removeFactor — unenrollMFA returned successfully');
 
-      if (!mounted) return;
+      if (!mounted) {
+        AppLogging.mfa(
+          '_removeFactor — widget disposed after unenroll, aborting UI update',
+        );
+        return;
+      }
 
       await haptics.trigger(HapticType.success);
-      if (!mounted) return;
+      if (!mounted) {
+        AppLogging.mfa(
+          '_removeFactor — widget disposed after success haptic, aborting',
+        );
+        return;
+      }
       safeShowSnackBar('Two-factor authentication removed');
+      AppLogging.mfa(
+        '_removeFactor — success snackbar shown, '
+        'invalidating provider and reloading factors',
+      );
 
       // Refresh both local screen state and global provider
       ref.invalidate(enrolledMFAFactorsProvider);
       await _loadFactors();
-    } catch (e) {
+      AppLogging.mfa('_removeFactor — reload complete after removal');
+    } on FirebaseAuthMultiFactorException catch (e) {
+      // Re-auth triggered an MFA challenge for the SAME account.
+      // The account has MFA enabled, so re-authentication also requires
+      // the second factor. Show the MFA verification dialog, then retry.
+      AppLogging.mfa(
+        '_removeFactor — re-auth requires MFA verification, '
+        'showing MFA dialog (hints=${e.resolver.hints.length})',
+      );
+
+      if (!mounted) return;
+
+      final credential = await MFAVerificationDialog.show(context, e.resolver);
+
+      if (credential == null) {
+        AppLogging.mfa(
+          '_removeFactor — user cancelled MFA verification during re-auth',
+        );
+        return;
+      }
+
+      AppLogging.mfa(
+        '_removeFactor — MFA re-auth succeeded, retrying unenroll',
+      );
+
+      if (!mounted) return;
+
+      // Re-auth is now complete with MFA — retry the unenroll
+      try {
+        final authService = ref.read(authServiceProvider);
+        await authService.unenrollMFA(factor.uid);
+        AppLogging.mfa(
+          '_removeFactor — unenrollMFA succeeded after MFA re-auth',
+        );
+
+        if (!mounted) return;
+
+        await haptics.trigger(HapticType.success);
+        if (!mounted) return;
+        safeShowSnackBar('Two-factor authentication removed');
+
+        ref.invalidate(enrolledMFAFactorsProvider);
+        await _loadFactors();
+        AppLogging.mfa(
+          '_removeFactor — reload complete after MFA re-auth removal',
+        );
+      } on FirebaseAuthException catch (retryErr) {
+        AppLogging.mfa(
+          '_removeFactor — retry after MFA re-auth failed: '
+          'code=${retryErr.code}, message=${retryErr.message}',
+        );
+        if (!mounted) return;
+        await haptics.trigger(HapticType.error);
+        if (!mounted) return;
+        final friendlyMsg = friendlyMFAError(retryErr);
+        AppLogging.mfa('_removeFactor — showing error snackbar: $friendlyMsg');
+        safeShowSnackBar(friendlyMsg);
+      } catch (retryErr) {
+        AppLogging.mfa(
+          '_removeFactor — unexpected retry error: '
+          'type=${retryErr.runtimeType}, error=$retryErr',
+        );
+        if (!mounted) return;
+        await haptics.trigger(HapticType.error);
+        if (!mounted) return;
+        safeShowSnackBar(friendlyMFAError(retryErr));
+      }
+    } on FirebaseAuthException catch (e, st) {
+      AppLogging.mfa(
+        '_removeFactor — FirebaseAuthException: '
+        'code=${e.code}, message=${e.message}, '
+        'credential=${e.credential}, email=${e.email}, '
+        'tenantId=${e.tenantId}\n$st',
+      );
+
+      if (e.code == 'reauthentication-cancelled') {
+        AppLogging.mfa(
+          '_removeFactor — user cancelled re-authentication, '
+          'no error shown',
+        );
+        return;
+      }
+
+      if (e.code == 'wrong-account-selected') {
+        AppLogging.mfa(
+          '_removeFactor — wrong account selected during re-auth, '
+          'showing warning so user can retry',
+        );
+        if (!mounted) return;
+        await haptics.trigger(HapticType.warning);
+        if (!mounted) return;
+        final friendlyMsg = friendlyMFAError(e);
+        AppLogging.mfa(
+          '_removeFactor — showing warning snackbar: $friendlyMsg',
+        );
+        safeShowSnackBar(friendlyMsg, type: SnackBarType.warning);
+        return;
+      }
+
       if (!mounted) return;
       await haptics.trigger(HapticType.error);
       if (!mounted) return;
-      safeShowSnackBar(friendlyMFAError(e));
+      final friendlyMsg = friendlyMFAError(e);
+      AppLogging.mfa('_removeFactor — showing error snackbar: $friendlyMsg');
+      safeShowSnackBar(friendlyMsg);
+    } on FirebaseException catch (e, st) {
+      AppLogging.mfa(
+        '_removeFactor — FirebaseException: '
+        'code=${e.code}, message=${e.message}, plugin=${e.plugin}\n$st',
+      );
+      if (!mounted) return;
+      await haptics.trigger(HapticType.error);
+      if (!mounted) return;
+      final friendlyMsg = friendlyMFAError(e);
+      AppLogging.mfa('_removeFactor — showing error snackbar: $friendlyMsg');
+      safeShowSnackBar(friendlyMsg);
+    } catch (e, st) {
+      AppLogging.mfa(
+        '_removeFactor — unexpected error: '
+        'type=${e.runtimeType}, error=$e\n$st',
+      );
+      if (!mounted) return;
+      await haptics.trigger(HapticType.error);
+      if (!mounted) return;
+      final friendlyMsg = friendlyMFAError(e);
+      AppLogging.mfa('_removeFactor — showing error snackbar: $friendlyMsg');
+      safeShowSnackBar(friendlyMsg);
     }
   }
 
@@ -126,7 +317,13 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
     final enrolledFactors = _enrolledFactors;
     final hasMFA = enrolledFactors.isNotEmpty;
 
+    AppLogging.mfa(
+      'build — isLoading=$_isLoadingFactors, '
+      'factorCount=${enrolledFactors.length}, hasMFA=$hasMFA',
+    );
+
     if (_isLoadingFactors) {
+      AppLogging.mfa('build — rendering loading state');
       return GlassScaffold.body(
         title: 'Two-Factor Authentication',
         body: const Center(child: CircularProgressIndicator()),

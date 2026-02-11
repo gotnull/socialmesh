@@ -625,7 +625,34 @@ class AuthService {
       }
       rethrow;
     }
-    AppLogging.auth('reauthenticateWithGoogle - Google user obtained');
+    AppLogging.auth(
+      'reauthenticateWithGoogle - Google user obtained: ${googleUser.email}',
+    );
+
+    // Step 2b: Verify the selected Google account matches the signed-in user.
+    // This MUST happen before reauthenticateWithCredential because Firebase
+    // checks MFA before user-mismatch — if the wrong account also has MFA,
+    // we'd get second-factor-required instead of user-mismatch, leading to
+    // the user completing MFA for the wrong account and corrupting the session.
+    final linkedGoogleEmail = user.providerData
+        .where((p) => p.providerId == 'google.com')
+        .firstOrNull
+        ?.email
+        ?.toLowerCase();
+    final selectedEmail = googleUser.email.toLowerCase();
+
+    if (linkedGoogleEmail != null && linkedGoogleEmail != selectedEmail) {
+      AppLogging.auth(
+        'reauthenticateWithGoogle - ❌ WRONG ACCOUNT: '
+        'signed-in=$linkedGoogleEmail, selected=$selectedEmail',
+      );
+      throw FirebaseAuthException(
+        code: 'wrong-account-selected',
+        message:
+            'You selected $selectedEmail but you are signed in as '
+            '$linkedGoogleEmail. Please select the correct account.',
+      );
+    }
 
     // Step 3: Get idToken from authentication
     // idToken is sufficient for Firebase - no accessToken needed
@@ -890,8 +917,76 @@ class AuthService {
 
       AppLogging.auth('unenrollMFA - ✅ SUCCESS (reloaded + token refreshed)');
     } on FirebaseAuthException catch (e) {
-      AppLogging.auth('unenrollMFA - ❌ AUTH ERROR: code=${e.code}');
-      rethrow;
+      if (e.code == 'unenroll-failed' || e.code == 'requires-recent-login') {
+        AppLogging.auth(
+          'unenrollMFA - Requires recent login (code=${e.code}), '
+          're-authenticating...',
+        );
+
+        try {
+          await reauthenticate();
+        } on FirebaseAuthMultiFactorException catch (_) {
+          // Re-auth itself requires MFA verification (the account has
+          // MFA enabled). Rethrow so the UI layer can show the MFA
+          // verification dialog with the resolver, then retry unenroll.
+          AppLogging.auth(
+            'unenrollMFA - Re-auth requires MFA verification, '
+            'propagating to UI for resolver handling',
+          );
+          rethrow;
+        } on FirebaseAuthException catch (reauthErr) {
+          AppLogging.auth(
+            'unenrollMFA - ❌ Re-auth failed: code=${reauthErr.code}',
+          );
+
+          // user-mismatch is the standard code when the credential belongs
+          // to a different user (surfaces when the other account has no MFA).
+          if (reauthErr.code == 'user-mismatch') {
+            AppLogging.auth(
+              'unenrollMFA - Wrong account selected during re-auth '
+              '(code=${reauthErr.code}), throwing wrong-account-selected',
+            );
+            throw FirebaseAuthException(
+              code: 'wrong-account-selected',
+              message:
+                  'The account you selected does not match the account '
+                  'you are signed into. Please try again and select the '
+                  'correct account.',
+            );
+          }
+
+          rethrow;
+        }
+
+        AppLogging.auth('unenrollMFA - Re-authenticated, retrying unenroll...');
+
+        // Retry after fresh authentication
+        try {
+          // Re-fetch user after re-auth to get a fresh session
+          final freshUser = _auth.currentUser;
+          if (freshUser == null) {
+            AppLogging.auth('unenrollMFA - ❌ No user after re-auth');
+            throw FirebaseAuthException(
+              code: 'no-current-user',
+              message: 'User session lost during re-authentication',
+            );
+          }
+
+          await freshUser.multiFactor.unenroll(factorUid: factorUid);
+          await freshUser.reload();
+          await _auth.currentUser?.getIdToken(true);
+
+          AppLogging.auth('unenrollMFA - ✅ SUCCESS (after re-authentication)');
+        } on FirebaseAuthException catch (retryErr) {
+          AppLogging.auth(
+            'unenrollMFA - ❌ Retry failed: code=${retryErr.code}',
+          );
+          rethrow;
+        }
+      } else {
+        AppLogging.auth('unenrollMFA - ❌ AUTH ERROR: code=${e.code}');
+        rethrow;
+      }
     } catch (e) {
       AppLogging.auth('unenrollMFA - ❌ ERROR: $e');
       rethrow;

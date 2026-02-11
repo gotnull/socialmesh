@@ -65,9 +65,18 @@ String friendlyMFAErrorCode(String code) {
       'This phone number is already used by another account.',
 
     // ── Re-authentication required ────────────────────────────────────
-    'requires-recent-login' =>
+    'requires-recent-login' || 'unenroll-failed' =>
       'For security, please sign out and sign in again before '
           'changing 2FA settings.',
+
+    // ── User cancelled re-authentication ──────────────────────────────
+    'reauthentication-cancelled' =>
+      'Re-authentication was cancelled. Please try again.',
+
+    // ── Wrong account selected during re-authentication ───────────────
+    'wrong-account-selected' || 'user-mismatch' =>
+      'That account doesn\'t match the one you\'re signed into. '
+          'Please try again and select the correct account.',
 
     // ── Network issues ────────────────────────────────────────────────
     'network-request-failed' =>
