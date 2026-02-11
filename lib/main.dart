@@ -1648,15 +1648,19 @@ class _ChannelImportLoader extends ConsumerWidget {
             );
           }
 
-          // Navigate to channel form for import
+          // Navigate to channel form for import.
+          // Zero out positionPrecision — it is a per-device preference and
+          // must not propagate from the sharer to the recipient.
+          final importChannel = channel.copyWith(positionPrecision: 0);
+
           WidgetsBinding.instance.addPostFrameCallback((_) {
             final navigator = navigatorKey.currentState;
             if (navigator == null) return;
             navigator.pushReplacement(
               MaterialPageRoute(
                 builder: (context) => ChannelFormScreen(
-                  existingChannel: channel,
-                  channelIndex: channel.index,
+                  existingChannel: importChannel,
+                  channelIndex: importChannel.index,
                 ),
               ),
             );
@@ -1747,15 +1751,19 @@ class _ChannelInviteRedeemerState
         return;
       }
 
-      // Navigate to channel form
+      // Navigate to channel form.
+      // Zero out positionPrecision — it is a per-device preference and must
+      // not propagate from the sharer to the recipient.
+      final importChannel = channel.copyWith(positionPrecision: 0);
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final navigator = navigatorKey.currentState;
         if (navigator == null) return;
         navigator.pushReplacement(
           MaterialPageRoute(
             builder: (context) => ChannelFormScreen(
-              existingChannel: channel,
-              channelIndex: channel.index,
+              existingChannel: importChannel,
+              channelIndex: importChannel.index,
             ),
           ),
         );

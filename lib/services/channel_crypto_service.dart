@@ -124,9 +124,23 @@ class ChannelCryptoService {
 
     if (existingId != null) {
       docId = existingId;
+
+      // Update metadata to reflect current channel settings so invite
+      // recipients always get the latest values (uplink, downlink, role, etc.).
+      // positionPrecision is deliberately set to 0 because it is a per-device
+      // preference — the sharer's position-sharing choice must not propagate
+      // to recipients.
+      await firestore.collection('shared_channels').doc(docId).update({
+        'index': channel.index,
+        'role': channel.role,
+        'uplink': channel.uplink,
+        'downlink': channel.downlink,
+        'positionPrecision': 0,
+      });
+
       AppLogging.channels(
         '[ChannelCrypto] Reusing existing channel "${channel.name}" '
-        'with ID $docId',
+        'with ID $docId (metadata updated)',
       );
     } else {
       // Create channel metadata document (NO PSK)
@@ -136,7 +150,9 @@ class ChannelCryptoService {
         'role': channel.role,
         'uplink': channel.uplink,
         'downlink': channel.downlink,
-        'positionPrecision': channel.positionPrecision,
+        // Always store 0 — positionPrecision is a per-device preference and
+        // must not propagate to invite recipients.
+        'positionPrecision': 0,
         'createdBy': ownerUid,
         'createdAt': FieldValue.serverTimestamp(),
         'keyVersion': _currentKeyVersion,
