@@ -803,54 +803,165 @@ class AuthService {
   }) async {
     final user = currentUser;
     if (user == null) {
-      AppLogging.auth('enrollMFA - ❌ No user signed in');
+      AppLogging.mfa('enrollMFA - ❌ No user signed in');
       onError('no-current-user');
       return false;
     }
 
-    AppLogging.auth('enrollMFA - START for phone=$phoneNumber');
+    AppLogging.mfa('enrollMFA - START for phone=$phoneNumber');
 
     try {
-      // Start phone verification session
-      final session = await user.multiFactor.getSession();
+      // Start phone verification session — may require recent auth
+      MultiFactorSession session;
+      try {
+        session = await user.multiFactor.getSession();
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'requires-recent-login') {
+          AppLogging.mfa(
+            'enrollMFA - getSession requires recent login, '
+            're-authenticating...',
+          );
 
-      await _auth.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
-        multiFactorSession: session,
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          AppLogging.auth('enrollMFA - Auto-verification completed');
           try {
-            // Auto-verification succeeded, enroll immediately
-            await _enrollWithCredential(credential);
-            AppLogging.auth('enrollMFA - ✅ Auto-enrollment SUCCESS');
-          } catch (e) {
-            AppLogging.auth('enrollMFA - ❌ Auto-enrollment ERROR: $e');
-            onError('unknown');
+            await reauthenticate();
+          } on FirebaseAuthMultiFactorException {
+            // Re-auth itself needs MFA — propagate to UI
+            AppLogging.mfa(
+              'enrollMFA - Re-auth requires MFA verification, '
+              'propagating to UI',
+            );
+            rethrow;
           }
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          AppLogging.auth('enrollMFA - ❌ Verification FAILED: ${e.code}');
-          onError(e.code);
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          AppLogging.auth('enrollMFA - Code sent to $phoneNumber');
-          onCodeSent(verificationId, resendToken);
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          AppLogging.auth('enrollMFA - Auto-retrieval timeout');
-        },
+
+          AppLogging.mfa(
+            'enrollMFA - Re-authenticated, retrying getSession...',
+          );
+
+          final freshUser = currentUser;
+          if (freshUser == null) {
+            AppLogging.mfa('enrollMFA - ❌ No user after re-auth');
+            onError('no-current-user');
+            return false;
+          }
+
+          session = await freshUser.multiFactor.getSession();
+          AppLogging.mfa('enrollMFA - ✅ getSession succeeded after re-auth');
+        } else {
+          rethrow;
+        }
+      }
+
+      await _verifyPhoneForEnrollment(
+        phoneNumber: phoneNumber,
+        session: session,
+        onCodeSent: onCodeSent,
+        onError: onError,
+        allowReauthRetry: true,
       );
 
       return true;
+    } on FirebaseAuthMultiFactorException {
+      // Re-auth required MFA — let the UI layer handle it
+      rethrow;
     } on FirebaseAuthException catch (e) {
-      AppLogging.auth('enrollMFA - ❌ AUTH ERROR: code=${e.code}');
+      AppLogging.mfa('enrollMFA - ❌ AUTH ERROR: code=${e.code}');
       onError(e.code);
       return false;
     } catch (e) {
-      AppLogging.auth('enrollMFA - ❌ ERROR: $e');
+      AppLogging.mfa('enrollMFA - ❌ ERROR: $e');
       onError('unknown');
       return false;
     }
+  }
+
+  /// Internal: Run verifyPhoneNumber for MFA enrollment, with automatic
+  /// re-auth retry when Firebase returns requires-recent-login via the
+  /// verificationFailed callback.
+  Future<void> _verifyPhoneForEnrollment({
+    required String phoneNumber,
+    required MultiFactorSession session,
+    required void Function(String verificationId, int? resendToken) onCodeSent,
+    required void Function(String error) onError,
+    required bool allowReauthRetry,
+  }) async {
+    await _auth.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      multiFactorSession: session,
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        AppLogging.mfa('enrollMFA - Auto-verification completed');
+        try {
+          await _enrollWithCredential(credential);
+          AppLogging.mfa('enrollMFA - ✅ Auto-enrollment SUCCESS');
+        } catch (e) {
+          AppLogging.mfa('enrollMFA - ❌ Auto-enrollment ERROR: $e');
+          onError('unknown');
+        }
+      },
+      verificationFailed: (FirebaseAuthException e) async {
+        if (e.code == 'requires-recent-login' && allowReauthRetry) {
+          AppLogging.mfa(
+            'enrollMFA - verificationFailed requires-recent-login, '
+            're-authenticating and retrying...',
+          );
+          try {
+            await reauthenticate();
+            AppLogging.mfa(
+              'enrollMFA - Re-authenticated, getting fresh session...',
+            );
+
+            final freshUser = currentUser;
+            if (freshUser == null) {
+              AppLogging.mfa(
+                'enrollMFA - ❌ No user after re-auth (verificationFailed path)',
+              );
+              onError('no-current-user');
+              return;
+            }
+
+            final freshSession = await freshUser.multiFactor.getSession();
+            AppLogging.mfa(
+              'enrollMFA - ✅ Fresh session obtained, retrying verifyPhoneNumber',
+            );
+
+            await _verifyPhoneForEnrollment(
+              phoneNumber: phoneNumber,
+              session: freshSession,
+              onCodeSent: onCodeSent,
+              onError: onError,
+              allowReauthRetry: false, // prevent infinite retry loop
+            );
+          } on FirebaseAuthMultiFactorException catch (mfaEx) {
+            AppLogging.mfa(
+              'enrollMFA - Re-auth requires MFA verification '
+              '(verificationFailed path, hints=${mfaEx.resolver.hints.length})',
+            );
+            // Cannot propagate via throw from async callback — call onError
+            // with a special code so the UI knows MFA re-auth is needed.
+            onError('second-factor-required');
+          } catch (retryErr) {
+            AppLogging.mfa(
+              'enrollMFA - ❌ Re-auth retry failed '
+              '(verificationFailed path): $retryErr',
+            );
+            if (retryErr is FirebaseAuthException) {
+              onError(retryErr.code);
+            } else {
+              onError('unknown');
+            }
+          }
+        } else {
+          AppLogging.mfa('enrollMFA - ❌ Verification FAILED: ${e.code}');
+          onError(e.code);
+        }
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        AppLogging.mfa('enrollMFA - Code sent to $phoneNumber');
+        onCodeSent(verificationId, resendToken);
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {
+        AppLogging.mfa('enrollMFA - Auto-retrieval timeout');
+      },
+    );
   }
 
   /// Complete MFA enrollment with SMS code
@@ -859,7 +970,7 @@ class AuthService {
     required String smsCode,
     String? displayName,
   }) async {
-    AppLogging.auth('completeMFAEnrollment - START');
+    AppLogging.mfa('completeMFAEnrollment - START');
 
     final credential = PhoneAuthProvider.credential(
       verificationId: verificationId,
@@ -867,7 +978,7 @@ class AuthService {
     );
 
     await _enrollWithCredential(credential, displayName: displayName);
-    AppLogging.auth('completeMFAEnrollment - ✅ SUCCESS');
+    AppLogging.mfa('completeMFAEnrollment - ✅ SUCCESS');
   }
 
   /// Internal: Enroll with phone credential
@@ -897,14 +1008,14 @@ class AuthService {
   Future<void> unenrollMFA(String factorUid) async {
     final user = currentUser;
     if (user == null) {
-      AppLogging.auth('unenrollMFA - ❌ No user signed in');
+      AppLogging.mfa('unenrollMFA - ❌ No user signed in');
       throw FirebaseAuthException(
         code: 'no-current-user',
         message: 'No user signed in',
       );
     }
 
-    AppLogging.auth('unenrollMFA - Removing factor $factorUid');
+    AppLogging.mfa('unenrollMFA - Removing factor $factorUid');
 
     try {
       await user.multiFactor.unenroll(factorUid: factorUid);
@@ -915,10 +1026,10 @@ class AuthService {
       // Force token refresh so subsequent sign-ins reflect the change
       await _auth.currentUser?.getIdToken(true);
 
-      AppLogging.auth('unenrollMFA - ✅ SUCCESS (reloaded + token refreshed)');
+      AppLogging.mfa('unenrollMFA - ✅ SUCCESS (reloaded + token refreshed)');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'unenroll-failed' || e.code == 'requires-recent-login') {
-        AppLogging.auth(
+        AppLogging.mfa(
           'unenrollMFA - Requires recent login (code=${e.code}), '
           're-authenticating...',
         );
@@ -929,20 +1040,20 @@ class AuthService {
           // Re-auth itself requires MFA verification (the account has
           // MFA enabled). Rethrow so the UI layer can show the MFA
           // verification dialog with the resolver, then retry unenroll.
-          AppLogging.auth(
+          AppLogging.mfa(
             'unenrollMFA - Re-auth requires MFA verification, '
             'propagating to UI for resolver handling',
           );
           rethrow;
         } on FirebaseAuthException catch (reauthErr) {
-          AppLogging.auth(
+          AppLogging.mfa(
             'unenrollMFA - ❌ Re-auth failed: code=${reauthErr.code}',
           );
 
           // user-mismatch is the standard code when the credential belongs
           // to a different user (surfaces when the other account has no MFA).
           if (reauthErr.code == 'user-mismatch') {
-            AppLogging.auth(
+            AppLogging.mfa(
               'unenrollMFA - Wrong account selected during re-auth '
               '(code=${reauthErr.code}), throwing wrong-account-selected',
             );
@@ -958,14 +1069,14 @@ class AuthService {
           rethrow;
         }
 
-        AppLogging.auth('unenrollMFA - Re-authenticated, retrying unenroll...');
+        AppLogging.mfa('unenrollMFA - Re-authenticated, retrying unenroll...');
 
         // Retry after fresh authentication
         try {
           // Re-fetch user after re-auth to get a fresh session
           final freshUser = _auth.currentUser;
           if (freshUser == null) {
-            AppLogging.auth('unenrollMFA - ❌ No user after re-auth');
+            AppLogging.mfa('unenrollMFA - ❌ No user after re-auth');
             throw FirebaseAuthException(
               code: 'no-current-user',
               message: 'User session lost during re-authentication',
@@ -976,19 +1087,17 @@ class AuthService {
           await freshUser.reload();
           await _auth.currentUser?.getIdToken(true);
 
-          AppLogging.auth('unenrollMFA - ✅ SUCCESS (after re-authentication)');
+          AppLogging.mfa('unenrollMFA - ✅ SUCCESS (after re-authentication)');
         } on FirebaseAuthException catch (retryErr) {
-          AppLogging.auth(
-            'unenrollMFA - ❌ Retry failed: code=${retryErr.code}',
-          );
+          AppLogging.mfa('unenrollMFA - ❌ Retry failed: code=${retryErr.code}');
           rethrow;
         }
       } else {
-        AppLogging.auth('unenrollMFA - ❌ AUTH ERROR: code=${e.code}');
+        AppLogging.mfa('unenrollMFA - ❌ AUTH ERROR: code=${e.code}');
         rethrow;
       }
     } catch (e) {
-      AppLogging.auth('unenrollMFA - ❌ ERROR: $e');
+      AppLogging.mfa('unenrollMFA - ❌ ERROR: $e');
       rethrow;
     }
   }
@@ -1006,7 +1115,7 @@ class AuthService {
     try {
       await user.reload();
     } catch (e) {
-      AppLogging.auth(
+      AppLogging.mfa(
         'getEnrolledMFAFactors - reload failed (using cached): $e',
       );
     }
@@ -1029,7 +1138,7 @@ class AuthService {
     required MultiFactorResolver resolver,
     required String smsCode,
   }) async {
-    AppLogging.auth('verifyMFASignIn - START');
+    AppLogging.mfa('verifyMFASignIn - START');
 
     try {
       // Get the phone factor from available hints
@@ -1043,10 +1152,10 @@ class AuthService {
         multiFactorInfo: phoneHint,
         verificationCompleted: (_) {},
         verificationFailed: (e) {
-          AppLogging.auth('verifyMFASignIn - ❌ Verification FAILED: ${e.code}');
+          AppLogging.mfa('verifyMFASignIn - ❌ Verification FAILED: ${e.code}');
         },
         codeSent: (String id, int? resendToken) {
-          AppLogging.auth('verifyMFASignIn - Code sent');
+          AppLogging.mfa('verifyMFASignIn - Code sent');
           resolvedVerificationId = id;
         },
         codeAutoRetrievalTimeout: (_) {},
@@ -1072,14 +1181,14 @@ class AuthService {
 
       // Complete sign-in with MFA
       final userCredential = await resolver.resolveSignIn(multiFactorAssertion);
-      AppLogging.auth('verifyMFASignIn - ✅ SUCCESS');
+      AppLogging.mfa('verifyMFASignIn - ✅ SUCCESS');
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      AppLogging.auth('verifyMFASignIn - ❌ AUTH ERROR: code=${e.code}');
+      AppLogging.mfa('verifyMFASignIn - ❌ AUTH ERROR: code=${e.code}');
       rethrow;
     } catch (e) {
-      AppLogging.auth('verifyMFASignIn - ❌ ERROR: $e');
+      AppLogging.mfa('verifyMFASignIn - ❌ ERROR: $e');
       rethrow;
     }
   }

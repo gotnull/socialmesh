@@ -65,9 +65,10 @@ String friendlyMFAErrorCode(String code) {
       'This phone number is already used by another account.',
 
     // ── Re-authentication required ────────────────────────────────────
+    // Auto-re-auth is attempted first; this message is a fallback if it fails.
     'requires-recent-login' || 'unenroll-failed' =>
-      'For security, please sign out and sign in again before '
-          'changing 2FA settings.',
+      'Re-authentication failed. Please sign out, sign back in, '
+          'and try again.',
 
     // ── User cancelled re-authentication ──────────────────────────────
     'reauthentication-cancelled' =>
@@ -176,7 +177,7 @@ String friendlyMFAErrorCode(String code) {
 /// and [PlatformException].
 String friendlyMFAError(Object error) {
   if (error is FirebaseAuthException) {
-    AppLogging.auth(
+    AppLogging.mfa(
       'MFA error: FirebaseAuthException code=${error.code}, '
       'message=${error.message}',
     );
@@ -184,7 +185,7 @@ String friendlyMFAError(Object error) {
   }
 
   if (error is FirebaseException) {
-    AppLogging.auth(
+    AppLogging.mfa(
       'MFA error: FirebaseException code=${error.code}, '
       'message=${error.message}',
     );
@@ -196,7 +197,7 @@ String friendlyMFAError(Object error) {
         .replaceAll('ERROR_', '')
         .toLowerCase()
         .replaceAll('_', '-');
-    AppLogging.auth(
+    AppLogging.mfa(
       'MFA error: PlatformException code=${error.code} (normalized=$code), '
       'message=${error.message}',
     );
@@ -204,10 +205,10 @@ String friendlyMFAError(Object error) {
   }
 
   if (error is ArgumentError) {
-    AppLogging.auth('MFA error: ArgumentError message=${error.message}');
+    AppLogging.mfa('MFA error: ArgumentError message=${error.message}');
     return 'Invalid verification data. Please request a new code.';
   }
 
-  AppLogging.auth('MFA error: ${error.runtimeType} — $error');
+  AppLogging.mfa('MFA error: ${error.runtimeType} — $error');
   return 'Verification failed. Please try again.';
 }
