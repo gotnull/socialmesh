@@ -54,16 +54,16 @@ Every node gets a unique constellation-style geometric identity generated from i
 
 Traits are never user-assigned — they are passively inferred from observable telemetry and behavior:
 
-| Trait | Description |
-|---|---|
-| **Relay** | Router role with high throughput — forwards traffic for the mesh |
-| **Wanderer** | Seen across multiple distinct positions or regions |
-| **Sentinel** | Fixed position, long-lived, high encounter count |
-| **Beacon** | Always active, very frequent encounters |
-| **Ghost** | Rarely seen relative to age — elusive presence |
-| **Courier** | High message volume relative to encounters |
-| **Anchor** | Persistent hub with many co-seen connections |
-| **Drifter** | Irregular timing, unpredictable appearance pattern |
+| Trait        | Description                                                      |
+| ------------ | ---------------------------------------------------------------- |
+| **Relay**    | Router role with high throughput — forwards traffic for the mesh |
+| **Wanderer** | Seen across multiple distinct positions or regions               |
+| **Sentinel** | Fixed position, long-lived, high encounter count                 |
+| **Beacon**   | Always active, very frequent encounters                          |
+| **Ghost**    | Rarely seen relative to age — elusive presence                   |
+| **Courier**  | High message volume relative to encounters                       |
+| **Anchor**   | Persistent hub with many co-seen connections                     |
+| **Drifter**  | Irregular timing, unpredictable appearance pattern               |
 
 Each trait includes a confidence score and evidence lines explaining the classification.
 
@@ -75,13 +75,13 @@ A numerical measure (0-100) of how much observable history a node has accumulate
 
 Information is revealed as observation accumulates — new nodes start sparse, detail unlocks over time:
 
-| Tier | Name | What appears |
-|---|---|---|
-| 0 | Trace | Sigil, name, hex ID only |
-| 1 | Noted | Primary trait badge |
-| 2 | Logged | Trait evidence and field note |
-| 3 | Inked | Full trait list and patina stamp |
-| 4 | Etched | Identity overlay at full density |
+| Tier | Name   | What appears                     |
+| ---- | ------ | -------------------------------- |
+| 0    | Trace  | Sigil, name, hex ID only         |
+| 1    | Noted  | Primary trait badge              |
+| 2    | Logged | Trait evidence and field note    |
+| 3    | Inked  | Full trait list and patina stamp |
+| 4    | Etched | Identity overlay at full density |
 
 ### Sigil Evolution
 
@@ -119,45 +119,45 @@ Think of it as digital graffiti that fades with time.
 
 ### Messaging
 
-| Feature | Description |
-|---|---|
-| **Channel Messaging** | Send and receive on multiple channels simultaneously |
-| **Direct Messages** | Private, encrypted node-to-node communication |
-| **Quick Responses** | Pre-configured canned messages for fast replies |
-| **Message Search** | Full-text search across all conversations |
-| **Offline Queue** | Messages queued when disconnected, sent automatically on reconnect |
-| **Reactions** | React to messages with emoji responses |
+| Feature               | Description                                                        |
+| --------------------- | ------------------------------------------------------------------ |
+| **Channel Messaging** | Send and receive on multiple channels simultaneously               |
+| **Direct Messages**   | Private, encrypted node-to-node communication                      |
+| **Quick Responses**   | Pre-configured canned messages for fast replies                    |
+| **Message Search**    | Full-text search across all conversations                          |
+| **Offline Queue**     | Messages queued when disconnected, sent automatically on reconnect |
+| **Reactions**         | React to messages with emoji responses                             |
 
 ### Network and Nodes
 
-| Feature | Description |
-|---|---|
-| **Node Discovery** | See all nodes with signal strength, battery, and location |
-| **NodeDex** | Personal mesh field journal with procedural sigils and trait inference |
-| **Network Topology** | Visual graph showing mesh interconnections |
-| **Traceroute** | Trace the exact path packets take through the mesh |
-| **Signal History** | SNR and RSSI charts over time |
-| **Favorites** | Pin important nodes for quick access |
-| **Node Profiles** | Rich profiles with user info, social links, and custom avatars |
-| **Presence** | Track when nodes are online, their activity patterns, and last seen times |
+| Feature              | Description                                                               |
+| -------------------- | ------------------------------------------------------------------------- |
+| **Node Discovery**   | See all nodes with signal strength, battery, and location                 |
+| **NodeDex**          | Personal mesh field journal with procedural sigils and trait inference    |
+| **Network Topology** | Visual graph showing mesh interconnections                                |
+| **Traceroute**       | Trace the exact path packets take through the mesh                        |
+| **Signal History**   | SNR and RSSI charts over time                                             |
+| **Favorites**        | Pin important nodes for quick access                                      |
+| **Node Profiles**    | Rich profiles with user info, social links, and custom avatars            |
+| **Presence**         | Track when nodes are online, their activity patterns, and last seen times |
 
 ### Maps and Location
 
-| Feature | Description |
-|---|---|
-| **Node Map** | Interactive map with all GPS-enabled nodes |
-| **Waypoints** | Drop, share, and navigate to waypoints |
-| **Location Sharing** | Broadcast your position to the mesh |
-| **Map Styles** | Street, satellite, and terrain views |
-| **Route Recording** | Record and save your routes with GPS tracks |
+| Feature              | Description                                 |
+| -------------------- | ------------------------------------------- |
+| **Node Map**         | Interactive map with all GPS-enabled nodes  |
+| **Waypoints**        | Drop, share, and navigate to waypoints      |
+| **Location Sharing** | Broadcast your position to the mesh         |
+| **Map Styles**       | Street, satellite, and terrain views        |
+| **Route Recording**  | Record and save your routes with GPS tracks |
 
 ### Social
 
-| Feature | Description |
-|---|---|
+| Feature               | Description                                                             |
+| --------------------- | ----------------------------------------------------------------------- |
 | **Activity Timeline** | Chronological feed of mesh activity and events with identity resolution |
-| **Social Profiles** | View user profiles with posts, followers, and social links |
-| **Signals Feed** | Ephemeral mesh-first content sorted by proximity and expiry |
+| **Social Profiles**   | View user profiles with posts, followers, and social links              |
+| **Signals Feed**      | Ephemeral mesh-first content sorted by proximity and expiry             |
 
 ### Device Configuration
 
@@ -192,48 +192,48 @@ Full control over your Meshtastic device:
 
 ### Visualization
 
-| Feature | Description |
-|---|---|
-| **3D Mesh View** | Interactive 3D visualization of your mesh network topology |
-| **World Map** | Global view of Meshtastic nodes from the public MQTT network |
-| **Globe View** | 3D rotating globe with node positions plotted worldwide |
-| **Timeline** | Chronological feed of all mesh activity and events |
+| Feature          | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| **3D Mesh View** | Interactive 3D visualization of your mesh network topology   |
+| **World Map**    | Global view of Meshtastic nodes from the public MQTT network |
+| **Globe View**   | 3D rotating globe with node positions plotted worldwide      |
+| **Timeline**     | Chronological feed of all mesh activity and events           |
 
 ### Analytics and Monitoring
 
-| Feature | Description |
-|---|---|
-| **Mesh Health** | Real-time network health metrics, utilization graphs, and issue detection |
-| **Reachability** | Probabilistic assessment of node reachability based on observed data |
-| **Presence** | Track when nodes are online, their activity patterns, and last seen times |
-| **Route Analysis** | View discovered routes and packet paths through the mesh |
-| **Telemetry Logs** | Device metrics, environment sensors, air quality, position history |
+| Feature            | Description                                                               |
+| ------------------ | ------------------------------------------------------------------------- |
+| **Mesh Health**    | Real-time network health metrics, utilization graphs, and issue detection |
+| **Reachability**   | Probabilistic assessment of node reachability based on observed data      |
+| **Presence**       | Track when nodes are online, their activity patterns, and last seen times |
+| **Route Analysis** | View discovered routes and packet paths through the mesh                  |
+| **Telemetry Logs** | Device metrics, environment sensors, air quality, position history        |
 
 ### Premium Features
 
 These features are available via one-time in-app purchases:
 
-| Feature | Description |
-|---|---|
-| **Theme Pack** | 12 accent colors to personalize the entire app |
-| **Ringtone Pack** | 7,000+ searchable RTTTL ringtones — classic tunes, TV themes, games |
-| **Widgets** | Build custom dashboard widgets with live data, charts, and gauges |
-| **Automations** | Create rules that trigger alerts, send messages, and react to events |
-| **IFTTT Integration** | Connect your mesh to 700+ apps and services via webhooks |
+| Feature               | Description                                                          |
+| --------------------- | -------------------------------------------------------------------- |
+| **Theme Pack**        | 12 accent colors to personalize the entire app                       |
+| **Ringtone Pack**     | 7,000+ searchable RTTTL ringtones — classic tunes, TV themes, games  |
+| **Widgets**           | Build custom dashboard widgets with live data, charts, and gauges    |
+| **Automations**       | Create rules that trigger alerts, send messages, and react to events |
+| **IFTTT Integration** | Connect your mesh to 700+ apps and services via webhooks             |
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **UI Framework** | Flutter 3.10+ |
-| **State Management** | Riverpod 3.x |
-| **Protocol** | Meshtastic Protobufs |
-| **Local Storage** | SQLite |
-| **Analytics** | Firebase (optional) |
-| **Sigil Generation** | Deterministic geometric identity |
-| **Trait Inference** | Passive behavioral classification |
+| Layer                | Technology                        |
+| -------------------- | --------------------------------- |
+| **UI Framework**     | Flutter 3.10+                     |
+| **State Management** | Riverpod 3.x                      |
+| **Protocol**         | Meshtastic Protobufs              |
+| **Local Storage**    | SQLite                            |
+| **Analytics**        | Firebase (optional)               |
+| **Sigil Generation** | Deterministic geometric identity  |
+| **Trait Inference**  | Passive behavioral classification |
 
 ---
 
@@ -249,13 +249,13 @@ These features are available via one-time in-app purchases:
 
 ### Prerequisites
 
-| Requirement | Version |
-|---|---|
-| Flutter SDK | 3.10+ |
-| Xcode | 15+ (iOS) |
-| Android Studio | SDK 34+ |
-| Protocol Buffers | `brew install protobuf` |
-| CocoaPods | `sudo gem install cocoapods` (iOS) |
+| Requirement      | Version                            |
+| ---------------- | ---------------------------------- |
+| Flutter SDK      | 3.10+                              |
+| Xcode            | 15+ (iOS)                          |
+| Android Studio   | SDK 34+                            |
+| Protocol Buffers | `brew install protobuf`            |
+| CocoaPods        | `sudo gem install cocoapods` (iOS) |
 
 ### Quick Start (Demo Mode)
 
@@ -334,12 +334,12 @@ lib/
 
 The app uses Firebase for optional cloud features. Without configuration:
 
-| Feature | Behavior |
-|---|---|
-| Analytics/Crashlytics | Disabled silently |
-| Cloud sync | Falls back to local-only |
-| Authentication | Sign-in unavailable |
-| Social features | Local-only mode |
+| Feature               | Behavior                 |
+| --------------------- | ------------------------ |
+| Analytics/Crashlytics | Disabled silently        |
+| Cloud sync            | Falls back to local-only |
+| Authentication        | Sign-in unavailable      |
+| Social features       | Local-only mode          |
 
 To enable, add your own `google-services.json` (Android) and `GoogleService-Info.plist` (iOS).
 
@@ -364,10 +364,10 @@ flutter build appbundle --release    # Play Store bundle
 
 ### Build Outputs
 
-| Platform | Location |
-|---|---|
-| iOS | `build/ios/ipa/` |
-| Android APK | `build/app/outputs/flutter-apk/` |
+| Platform       | Location                            |
+| -------------- | ----------------------------------- |
+| iOS            | `build/ios/ipa/`                    |
+| Android APK    | `build/app/outputs/flutter-apk/`    |
 | Android Bundle | `build/app/outputs/bundle/release/` |
 
 ---
@@ -422,10 +422,10 @@ You are free to use, modify, and distribute this software under the terms of the
 
 ### Scope
 
-| Component | License |
-|---|---|
+| Component                        | License                             |
+| -------------------------------- | ----------------------------------- |
 | **Mobile app** (this repository) | GPL-3.0 — source code provided here |
-| **Backend services** | Proprietary — not included |
+| **Backend services**             | Proprietary — not included          |
 
 ### Third-Party Notices
 
