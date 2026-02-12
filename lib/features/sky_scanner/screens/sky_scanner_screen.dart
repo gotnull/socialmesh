@@ -16,6 +16,7 @@
 // for live flight position tracking.
 
 import 'dart:math' as math;
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,10 +29,11 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/ico_help_system.dart';
+import '../../../core/widgets/search_filter_header.dart';
+import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton_config.dart';
 import '../../../providers/accessibility_providers.dart';
 import '../../../providers/auth_providers.dart';
-
 import '../models/sky_node.dart';
 import '../providers/sky_scanner_providers.dart';
 import 'schedule_flight_screen.dart';
@@ -265,28 +267,85 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
               ),
             ),
 
-            // Filter chips row
-            SliverToBoxAdapter(
-              child: _FilterChipRow(
-                currentFilter: _currentFilter,
-                stats: stats,
-                onFilterChanged: (filter) {
-                  HapticFeedback.selectionClick();
-                  safeSetState(() => _currentFilter = filter);
+            // Pinned search + filter controls (following app-wide pattern)
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: SearchFilterHeaderDelegate(
+                textScaler: MediaQuery.textScalerOf(context),
+                searchController: _searchController,
+                searchQuery: _searchQuery,
+                hintText: 'Search flights, airports, nodes...',
+                onSearchChanged: (value) {
+                  safeSetState(() => _searchQuery = value);
                 },
-              ),
-            ),
-
-            // Search bar
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: _SearchField(
-                  controller: _searchController,
-                  query: _searchQuery,
-                  onChanged: (value) =>
-                      safeSetState(() => _searchQuery = value),
-                ),
+                rebuildKey: Object.hashAll([
+                  _currentFilter,
+                  stats.totalScheduled,
+                  stats.activeFlights,
+                  stats.totalReports,
+                ]),
+                filterChips: [
+                  SectionFilterChip(
+                    label: 'All',
+                    count: stats.totalScheduled,
+                    isSelected: _currentFilter == SkyScannerFilter.all,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      safeSetState(() => _currentFilter = SkyScannerFilter.all);
+                    },
+                  ),
+                  SectionFilterChip(
+                    label: 'Active',
+                    count: stats.activeFlights,
+                    isSelected: _currentFilter == SkyScannerFilter.active,
+                    color: Colors.green,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      safeSetState(
+                        () => _currentFilter = SkyScannerFilter.active,
+                      );
+                    },
+                  ),
+                  SectionFilterChip(
+                    label: 'Upcoming',
+                    count: 0,
+                    isSelected: _currentFilter == SkyScannerFilter.upcoming,
+                    color: AccentColors.cyan,
+                    icon: Icons.schedule,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      safeSetState(
+                        () => _currentFilter = SkyScannerFilter.upcoming,
+                      );
+                    },
+                  ),
+                  SectionFilterChip(
+                    label: 'My Flights',
+                    count: 0,
+                    isSelected: _currentFilter == SkyScannerFilter.myFlights,
+                    color: AccentColors.purple,
+                    icon: Icons.person_outline,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      safeSetState(
+                        () => _currentFilter = SkyScannerFilter.myFlights,
+                      );
+                    },
+                  ),
+                  SectionFilterChip(
+                    label: 'Reports',
+                    count: stats.totalReports,
+                    isSelected: _currentFilter == SkyScannerFilter.reports,
+                    color: AccentColors.yellow,
+                    icon: Icons.leaderboard,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      safeSetState(
+                        () => _currentFilter = SkyScannerFilter.reports,
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
 
@@ -629,194 +688,6 @@ class _VerticalDivider extends StatelessWidget {
       height: 40,
       margin: const EdgeInsets.symmetric(horizontal: 8),
       color: context.border.withValues(alpha: 0.3),
-    );
-  }
-}
-
-// =============================================================================
-// Filter Chips
-// =============================================================================
-
-class _FilterChipRow extends StatelessWidget {
-  final SkyScannerFilter currentFilter;
-  final SkyScannerStats stats;
-  final ValueChanged<SkyScannerFilter> onFilterChanged;
-
-  const _FilterChipRow({
-    required this.currentFilter,
-    required this.stats,
-    required this.onFilterChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 48,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: [
-          _FilterChip(
-            filter: SkyScannerFilter.all,
-            isSelected: currentFilter == SkyScannerFilter.all,
-            count: stats.totalScheduled,
-            onTap: () => onFilterChanged(SkyScannerFilter.all),
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            filter: SkyScannerFilter.active,
-            isSelected: currentFilter == SkyScannerFilter.active,
-            count: stats.activeFlights,
-            onTap: () => onFilterChanged(SkyScannerFilter.active),
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            filter: SkyScannerFilter.upcoming,
-            isSelected: currentFilter == SkyScannerFilter.upcoming,
-            onTap: () => onFilterChanged(SkyScannerFilter.upcoming),
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            filter: SkyScannerFilter.myFlights,
-            isSelected: currentFilter == SkyScannerFilter.myFlights,
-            onTap: () => onFilterChanged(SkyScannerFilter.myFlights),
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            filter: SkyScannerFilter.reports,
-            isSelected: currentFilter == SkyScannerFilter.reports,
-            count: stats.totalReports,
-            onTap: () => onFilterChanged(SkyScannerFilter.reports),
-          ),
-          const SizedBox(width: 16),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final SkyScannerFilter filter;
-  final bool isSelected;
-  final int? count;
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.filter,
-    required this.isSelected,
-    this.count,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final accentColor = context.accentColor;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? accentColor.withValues(alpha: 0.2) : context.card,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? accentColor.withValues(alpha: 0.5)
-                : context.border,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              filter.icon,
-              size: 16,
-              color: isSelected ? accentColor : context.textSecondary,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              filter.label,
-              style: TextStyle(
-                color: isSelected ? accentColor : context.textSecondary,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                fontSize: 13,
-              ),
-            ),
-            if (count != null && count! > 0) ...[
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? accentColor.withValues(alpha: 0.3)
-                      : context.border.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  count.toString(),
-                  style: TextStyle(
-                    color: isSelected ? accentColor : context.textTertiary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// Search Field
-// =============================================================================
-
-class _SearchField extends StatelessWidget {
-  final TextEditingController controller;
-  final String query;
-  final ValueChanged<String> onChanged;
-
-  const _SearchField({
-    required this.controller,
-    required this.query,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        style: TextStyle(color: context.textPrimary),
-        decoration: InputDecoration(
-          hintText: 'Search flights, airports, nodes...',
-          hintStyle: TextStyle(color: context.textTertiary),
-          prefixIcon: Icon(Icons.search, color: context.textTertiary),
-          suffixIcon: query.isNotEmpty
-              ? IconButton(
-                  icon: Icon(Icons.clear, color: context.textTertiary),
-                  onPressed: () {
-                    controller.clear();
-                    onChanged('');
-                  },
-                )
-              : null,
-          border: InputBorder.none,
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
-        ),
-      ),
     );
   }
 }
