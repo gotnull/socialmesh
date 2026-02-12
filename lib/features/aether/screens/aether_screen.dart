@@ -24,6 +24,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
@@ -219,8 +220,8 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
 
   /// Builds the gradient-animated action button for scheduling flights.
   /// Matches the Signals "Go Active" button pattern for consistency.
-  Widget _buildScheduleFlightButton() {
-    final gradientColors = AccentColors.gradientFor(AccentColors.cyan);
+  Widget _buildScheduleFlightButton(BuildContext context) {
+    final gradientColors = AccentColors.gradientFor(context.accentColor);
     final gradient = LinearGradient(
       colors: [gradientColors[0], gradientColors[1]],
     );
@@ -285,7 +286,7 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
               ),
             ),
             actions: [
-              _buildScheduleFlightButton(),
+              _buildScheduleFlightButton(context),
               const SizedBox(width: 4),
               AppBarOverflowMenu<String>(
                 onSelected: (value) {
@@ -633,14 +634,44 @@ class _FlightsTabContent extends StatelessWidget {
     }
 
     if (filteredFlights.isEmpty) {
+      // For the main "all" view with no search, show animated empty state
+      if (currentFilter == AetherFilter.all && searchQuery.isEmpty) {
+        return SliverFillRemaining(
+          child: AnimatedEmptyState(
+            config: AnimatedEmptyStateConfig(
+              icons: const [
+                Icons.flight_takeoff_outlined,
+                Icons.flight_land_outlined,
+                Icons.airplanemode_active,
+                Icons.radar,
+                Icons.public,
+                Icons.leaderboard_outlined,
+              ],
+              taglines: const [
+                'No flights scheduled yet.\nBe the first to share your airborne journey!',
+                'Track Meshtastic nodes at altitude.\nSee how far your signal reaches from the sky.',
+                'Compete on the leaderboard.\nLongest range contacts earn top spots.',
+                'Schedule your next flight.\nShare your departure and arrival airports.',
+              ],
+              titlePrefix: 'No ',
+              titleKeyword: 'flights',
+              titleSuffix: ' in the air',
+              actionLabel: 'Schedule Flight',
+              actionIcon: Icons.add,
+              onAction: onScheduleFlight,
+              actionEnabled: true,
+            ),
+          ),
+        );
+      }
+
+      // For filtered/search results, show simpler contextual empty state
       return SliverFillRemaining(
         child: _EmptyState(
           icon: currentFilter.icon,
           title: _getEmptyTitle(),
           subtitle: _getEmptySubtitle(),
-          showAction:
-              currentFilter == AetherFilter.all ||
-              currentFilter == AetherFilter.myFlights,
+          showAction: currentFilter == AetherFilter.myFlights,
           actionLabel: 'Schedule Flight',
           onAction: onScheduleFlight,
         ),

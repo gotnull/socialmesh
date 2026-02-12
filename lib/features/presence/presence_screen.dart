@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/animated_empty_state.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/search_filter_header.dart';
@@ -359,38 +360,25 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
   }
 
   Widget _buildEmptyState(ThemeData theme) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(
-              Icons.people_outline,
-              size: 40,
-              color: context.textTertiary,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'No nodes discovered',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: context.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Nodes will appear here as they are discovered',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: context.textTertiary,
-            ),
-          ),
+    return AnimatedEmptyState(
+      config: AnimatedEmptyStateConfig(
+        icons: const [
+          Icons.people_alt_outlined,
+          Icons.person_search,
+          Icons.sensors,
+          Icons.cell_tower,
+          Icons.wifi_tethering,
+          Icons.hub_outlined,
         ],
+        taglines: const [
+          'No nodes discovered yet.\nConnect to a mesh device to see nearby presence.',
+          'Presence shows who is active on your mesh.\nNodes appear as they broadcast.',
+          'Watch nodes come and go in real time.\nActive, fading, and offline states.',
+          'Familiar faces are highlighted.\nBuild your mesh community over time.',
+        ],
+        titlePrefix: 'No ',
+        titleKeyword: 'presence',
+        titleSuffix: ' detected',
       ),
     );
   }

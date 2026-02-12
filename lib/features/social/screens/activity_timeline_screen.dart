@@ -7,6 +7,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/section_header.dart';
@@ -315,83 +316,46 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
   }
 
   Widget _buildNotSignedIn() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: context.surface,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                Icons.notifications_none_outlined,
-                size: 40,
-                color: context.textTertiary,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Sign in to see activity',
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Sign in to see when people like\nor comment on your signals',
-              style: TextStyle(color: context.textTertiary, fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+    return AnimatedEmptyState(
+      config: AnimatedEmptyStateConfig(
+        icons: const [
+          Icons.favorite_border,
+          Icons.chat_bubble_outline,
+          Icons.notifications_none_outlined,
+          Icons.person_outline,
+          Icons.thumb_up_outlined,
+        ],
+        taglines: const [
+          'Sign in to track your activity.\nSee when people interact with your signals.',
+          'Likes, comments, and replies.\nAll your signal interactions in one place.',
+          'Stay connected with your mesh community.\nSign in to get started.',
+        ],
+        titlePrefix: 'Sign in to see ',
+        titleKeyword: 'activity',
+        titleSuffix: '',
       ),
     );
   }
 
   Widget _buildEmpty() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: context.surface,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                Icons.notifications_none_outlined,
-                size: 40,
-                color: context.textTertiary,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'No activity yet',
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'When people like your signals,\nyou\'ll see it here',
-              style: TextStyle(color: context.textTertiary, fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+    return AnimatedEmptyState(
+      config: AnimatedEmptyStateConfig(
+        icons: const [
+          Icons.favorite_border,
+          Icons.chat_bubble_outline,
+          Icons.notifications_none_outlined,
+          Icons.thumb_up_outlined,
+          Icons.reply_outlined,
+        ],
+        taglines: const [
+          'No activity yet.\nWhen people interact with your signals, you\'ll see it here.',
+          'Likes, comments, and replies.\nYour signal engagement all in one place.',
+          'Go active and broadcast a signal.\nActivity appears as others respond.',
+          'Build your mesh presence.\nEngagement grows with every signal.',
+        ],
+        titlePrefix: 'No ',
+        titleKeyword: 'activity',
+        titleSuffix: ' yet',
       ),
     );
   }

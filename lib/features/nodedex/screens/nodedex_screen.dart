@@ -22,6 +22,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/widgets/animated_empty_state.dart';
 import '../../../providers/accessibility_providers.dart';
 import '../../../providers/app_providers.dart';
 import '../../../core/theme.dart';
@@ -1461,6 +1462,32 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // For the main "all" filter, show the full animated empty state
+    if (filter == NodeDexFilter.all) {
+      return AnimatedEmptyState(
+        config: AnimatedEmptyStateConfig(
+          icons: const [
+            Icons.auto_stories_outlined,
+            Icons.hexagon_outlined,
+            Icons.explore_outlined,
+            Icons.cell_tower,
+            Icons.hub_outlined,
+            Icons.person_search,
+          ],
+          taglines: const [
+            'No nodes discovered yet.\nConnect to a mesh device to start building your field journal.',
+            'NodeDex catalogs every node you encounter.\nEach one gets a unique procedural identity.',
+            'Discover wanderers, sentinels, and ghosts.\nPersonality traits emerge from behavior patterns.',
+            'Tag nodes as contacts or trusted relays.\nBuild your mesh community over time.',
+          ],
+          titlePrefix: 'Your ',
+          titleKeyword: 'NodeDex',
+          titleSuffix: ' is empty',
+        ),
+      );
+    }
+
+    // For filtered views, show a simpler contextual empty state
     final (icon, title, subtitle) = switch (filter) {
       NodeDexFilter.all => (
         Icons.hexagon_outlined,

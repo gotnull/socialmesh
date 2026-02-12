@@ -770,7 +770,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
     );
 
     return Tooltip(
-      message: blockedReason ?? 'Broadcast your presence',
+      message: blockedReason ?? 'Broadcast your signal',
       child: BouncyTap(
         onTap: _openCreateSignal,
         child: AnimatedGradientBackground(
