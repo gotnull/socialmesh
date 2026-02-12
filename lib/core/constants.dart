@@ -29,6 +29,13 @@ class AppUrls {
   /// Sigil API key (authenticates POST requests)
   static String get sigilApiKey => dotenv.env['SIGIL_API_KEY'] ?? '';
 
+  /// Aether API URL (Railway-hosted, custom domain)
+  static String get aetherApiUrl =>
+      dotenv.env['AETHER_API_URL'] ?? 'https://aether.socialmesh.app';
+
+  /// Aether API key (authenticates POST requests)
+  static String get aetherApiKey => dotenv.env['AETHER_API_KEY'] ?? '';
+
   // Legal & Documentation URLs
   static String get termsUrl => '$baseUrl/terms';
   static String get privacyUrl => '$baseUrl/privacy';
@@ -54,6 +61,8 @@ class AppUrls {
 
   // Share link URLs
   static String shareSigilUrl(String id) => '$baseUrl/sigil/$id';
+  static String shareFlightUrl(String id) =>
+      'https://aether.socialmesh.app/flight/$id';
   static String shareNodeUrl(String id) => '$baseUrl/share/node/$id';
   static String shareProfileUrl(String id) => '$baseUrl/share/profile/$id';
   static String shareWidgetUrl(String id) => '$baseUrl/share/widget/$id';

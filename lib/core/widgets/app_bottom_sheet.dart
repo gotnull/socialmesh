@@ -57,12 +57,31 @@ class AppBottomSheet extends StatelessWidget {
     bool isScrollControlled = true,
     bool showDragPill = true,
     bool useSafeArea = true,
+    bool isDismissible = true,
+    double? maxHeightFraction,
   }) {
     HapticFeedback.lightImpact();
+
+    Widget content = useSafeArea ? SafeArea(top: false, child: child) : child;
+
+    // Constrain height if maxHeightFraction is specified
+    if (maxHeightFraction != null) {
+      content = Builder(
+        builder: (context) => ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * maxHeightFraction,
+          ),
+          child: content,
+        ),
+      );
+    }
+
     return showModalBottomSheet<T>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: isScrollControlled,
+      isDismissible: isDismissible,
+      enableDrag: isDismissible,
       transitionAnimationController: AnimationController(
         vsync: Navigator.of(context),
         duration: const Duration(milliseconds: 350),
@@ -71,7 +90,7 @@ class AppBottomSheet extends StatelessWidget {
       builder: (context) => AppBottomSheet(
         padding: padding,
         showDragPill: showDragPill,
-        child: useSafeArea ? SafeArea(top: false, child: child) : child,
+        child: content,
       ),
     );
   }

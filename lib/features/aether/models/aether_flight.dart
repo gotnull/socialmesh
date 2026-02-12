@@ -61,6 +61,32 @@ class AetherFlight {
     );
   }
 
+  /// Create an [AetherFlight] from the Aether REST API response.
+  ///
+  /// The API uses snake_case keys and ISO 8601 date strings instead of
+  /// Firestore camelCase keys and [Timestamp] objects.
+  factory AetherFlight.fromApiJson(Map<String, dynamic> json) {
+    return AetherFlight(
+      id: json['id'] as String,
+      nodeId: (json['node_id'] as String?) ?? '',
+      nodeName: json['node_name'] as String?,
+      flightNumber: json['flight_number'] as String,
+      airline: json['airline'] as String?,
+      departure: json['departure'] as String,
+      arrival: json['arrival'] as String,
+      scheduledDeparture: DateTime.parse(json['scheduled_departure'] as String),
+      scheduledArrival: json['scheduled_arrival'] != null
+          ? DateTime.parse(json['scheduled_arrival'] as String)
+          : null,
+      userId: '', // API flights have no userId — community-shared
+      userName: json['user_name'] as String?,
+      notes: json['notes'] as String?,
+      isActive: json['is_active'] == 1 || json['is_active'] == true,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      receptionCount: json['reception_count'] as int? ?? 0,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'nodeId': nodeId,

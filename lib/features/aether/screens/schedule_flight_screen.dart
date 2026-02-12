@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/logging.dart';
+import '../models/aether_flight.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_gradient_background.dart';
@@ -391,7 +393,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
 
     try {
       final service = ref.read(aetherServiceProvider);
-      await service.createFlight(
+      final flight = await service.createFlight(
         nodeId: myNode.userId ?? '!${myNode.nodeNum.toRadixString(16)}',
         nodeName: myNode.displayName,
         flightNumber: _flightNumberController.text.trim().toUpperCase(),
@@ -406,11 +408,15 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
             : _notesController.text.trim(),
       );
 
-      if (mounted) {
-        HapticFeedback.mediumImpact();
-        Navigator.pop(context, true);
-        showSuccessSnackBar(context, 'Flight scheduled!');
-      }
+      if (!mounted) return;
+
+      HapticFeedback.mediumImpact();
+
+      // Share to Aether API in background (non-blocking)
+      _shareFlightInBackground(flight);
+
+      Navigator.pop(context, true);
+      showSuccessSnackBar(context, 'Flight scheduled!');
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Error: $e');
@@ -423,6 +429,23 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   // ===========================================================================
   // Build
   // ===========================================================================
+
+  /// Share the flight to aether.socialmesh.app in the background.
+  ///
+  /// This is fire-and-forget: if the share fails, the flight is still
+  /// saved to Firestore. The user can always share later from the detail
+  /// screen.
+  void _shareFlightInBackground(AetherFlight flight) {
+    final shareService = ref.read(aetherShareServiceProvider);
+    shareService
+        .shareFlight(flight)
+        .then((result) {
+          AppLogging.app('[Aether] Flight shared to Aether API: ${result.url}');
+        })
+        .catchError((Object e) {
+          AppLogging.app('[Aether] Background share failed (non-fatal): $e');
+        });
+  }
 
   void _dismissKeyboard() {
     FocusScope.of(context).unfocus();
@@ -473,7 +496,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                     // Info card
                     StatusBanner.accent(
                       title:
-                          'Share your flight so others can try to receive your Meshtastic signal!',
+                          'Schedule your flight and share it on aether.socialmesh.app so the community can try to receive your signal!',
                       icon: Icons.flight,
                       margin: EdgeInsets.zero,
                     ),
@@ -850,10 +873,39 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     if (result != null && mounted) {
       safeSetState(() {
         _flightNumberController.text = result.callsign;
-        _clearValidation();
+
+        // Convert ActiveFlightInfo to FlightValidationResult to avoid
+        // redundant API call. User already selected an active flight.
+        _validationResult = FlightValidationResult(
+          status: FlightValidationStatus.active,
+          message: 'Active flight selected from search',
+          position: FlightPositionData(
+            callsign: result.callsign,
+            icao24: result.icao24,
+            originCountry: result.originCountry,
+            latitude: result.latitude,
+            longitude: result.longitude,
+            altitude: result.altitude,
+            onGround: result.onGround,
+            velocity: result.velocity,
+            lastContact: DateTime.now(),
+          ),
+          icao24: result.icao24,
+          originCountry: result.originCountry,
+        );
       });
-      // Auto-validate the selected flight
-      _validateFlight();
+
+      // Show feedback with the selected flight's altitude
+      if (result.altitudeFeet != null && !result.onGround) {
+        final altFmt = NumberFormat(
+          '#,##0',
+        ).format(result.altitudeFeet!.round());
+        showSuccessSnackBar(context, 'Flight selected! $altFmt ft');
+        HapticFeedback.mediumImpact();
+      } else if (result.onGround) {
+        showInfoSnackBar(context, 'Flight is currently on the ground');
+        HapticFeedback.lightImpact();
+      }
     }
   }
 
@@ -902,8 +954,13 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                   _buildInlineAction(
                     icon: Icons.verified_outlined,
                     isLoading: _isValidating,
-                    onTap: _isValidating ? null : _validateFlight,
-                    tooltip: 'Validate flight',
+                    onTap:
+                        (_isValidating || (_validationResult?.isValid ?? false))
+                        ? null
+                        : _validateFlight,
+                    tooltip: _validationResult?.isValid ?? false
+                        ? 'Already validated'
+                        : 'Validate flight',
                   ),
                 // Search button — gradient pill, always visible
                 _buildSearchPill(),

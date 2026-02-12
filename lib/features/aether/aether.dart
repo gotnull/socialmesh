@@ -18,3 +18,4 @@ export 'screens/schedule_flight_screen.dart';
 export 'screens/aether_flight_detail_screen.dart';
 export 'screens/aether_screen.dart';
 export 'services/aether_service.dart';
+export 'services/aether_share_service.dart';

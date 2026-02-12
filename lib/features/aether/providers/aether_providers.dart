@@ -1,15 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
 
 import '../models/aether_flight.dart';
 import '../services/aether_service.dart';
+import '../services/aether_share_service.dart';
 
 /// Provider for AetherService
 final aetherServiceProvider = Provider<AetherService>((ref) {
   return AetherService();
+});
+
+/// Provider for AetherShareService (sharing flights to aether.socialmesh.app)
+final aetherShareServiceProvider = Provider<AetherShareService>((ref) {
+  return AetherShareService();
 });
 
 /// Provider for all flights (upcoming and active)
@@ -193,3 +200,241 @@ class AetherStats {
     required this.longestDistance,
   });
 }
+
+// =============================================================================
+// Discovery Providers (Aether API)
+// =============================================================================
+
+/// Immutable state for the discovery feed.
+@immutable
+class DiscoveryState {
+  final List<AetherFlight> flights;
+  final int currentPage;
+  final int totalPages;
+  final int total;
+  final bool isLoadingMore;
+  final String? error;
+  final String searchQuery;
+  final String? departureFilter;
+  final String? arrivalFilter;
+  final bool? activeOnly;
+  final AetherSortOption sort;
+
+  const DiscoveryState({
+    this.flights = const [],
+    this.currentPage = 0,
+    this.totalPages = 0,
+    this.total = 0,
+    this.isLoadingMore = false,
+    this.error,
+    this.searchQuery = '',
+    this.departureFilter,
+    this.arrivalFilter,
+    this.activeOnly,
+    this.sort = AetherSortOption.newest,
+  });
+
+  bool get hasMore => currentPage < totalPages;
+
+  DiscoveryState copyWith({
+    List<AetherFlight>? flights,
+    int? currentPage,
+    int? totalPages,
+    int? total,
+    bool? isLoadingMore,
+    String? error,
+    String? searchQuery,
+    String? departureFilter,
+    String? arrivalFilter,
+    bool? activeOnly,
+    AetherSortOption? sort,
+  }) {
+    return DiscoveryState(
+      flights: flights ?? this.flights,
+      currentPage: currentPage ?? this.currentPage,
+      totalPages: totalPages ?? this.totalPages,
+      total: total ?? this.total,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      error: error,
+      searchQuery: searchQuery ?? this.searchQuery,
+      departureFilter: departureFilter ?? this.departureFilter,
+      arrivalFilter: arrivalFilter ?? this.arrivalFilter,
+      activeOnly: activeOnly ?? this.activeOnly,
+      sort: sort ?? this.sort,
+    );
+  }
+}
+
+/// Notifier that manages paginated discovery state from the Aether API.
+class DiscoveryNotifier extends AsyncNotifier<DiscoveryState> {
+  static const int _pageSize = 20;
+
+  @override
+  Future<DiscoveryState> build() async {
+    return _fetchPage(1, const DiscoveryState());
+  }
+
+  Future<DiscoveryState> _fetchPage(int page, DiscoveryState current) async {
+    final service = ref.read(aetherShareServiceProvider);
+
+    try {
+      final result = await service.fetchFlights(
+        query: current.searchQuery.isNotEmpty ? current.searchQuery : null,
+        departure: current.departureFilter,
+        arrival: current.arrivalFilter,
+        activeOnly: current.activeOnly,
+        sort: current.sort,
+        page: page,
+        limit: _pageSize,
+      );
+
+      final updatedFlights = page == 1
+          ? result.flights
+          : [...current.flights, ...result.flights];
+
+      return current.copyWith(
+        flights: updatedFlights,
+        currentPage: result.page,
+        totalPages: result.totalPages,
+        total: result.total,
+        isLoadingMore: false,
+        error: null,
+      );
+    } catch (e) {
+      AppLogging.app('[Aether] Discovery fetch error: $e');
+      return current.copyWith(isLoadingMore: false, error: e.toString());
+    }
+  }
+
+  /// Load the next page of results (append).
+  Future<void> loadMore() async {
+    final current = state.value;
+    if (current == null || !current.hasMore || current.isLoadingMore) return;
+
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+    final updated = await _fetchPage(current.currentPage + 1, current);
+    state = AsyncData(updated);
+  }
+
+  /// Apply new search query and reload from page 1.
+  Future<void> search(String query) async {
+    final current = state.value ?? const DiscoveryState();
+    if (current.searchQuery == query) return;
+
+    state = const AsyncLoading();
+    final updated = await _fetchPage(1, current.copyWith(searchQuery: query));
+    state = AsyncData(updated);
+  }
+
+  /// Apply airport departure filter and reload.
+  Future<void> filterByDeparture(String? airport) async {
+    final current = state.value ?? const DiscoveryState();
+    state = const AsyncLoading();
+    final updated = await _fetchPage(
+      1,
+      DiscoveryState(
+        searchQuery: current.searchQuery,
+        departureFilter: airport,
+        arrivalFilter: current.arrivalFilter,
+        activeOnly: current.activeOnly,
+        sort: current.sort,
+      ),
+    );
+    state = AsyncData(updated);
+  }
+
+  /// Apply airport arrival filter and reload.
+  Future<void> filterByArrival(String? airport) async {
+    final current = state.value ?? const DiscoveryState();
+    state = const AsyncLoading();
+    final updated = await _fetchPage(
+      1,
+      DiscoveryState(
+        searchQuery: current.searchQuery,
+        departureFilter: current.departureFilter,
+        arrivalFilter: airport,
+        activeOnly: current.activeOnly,
+        sort: current.sort,
+      ),
+    );
+    state = AsyncData(updated);
+  }
+
+  /// Filter by active status (null = all, true = active, false = inactive).
+  Future<void> filterByActive(bool? active) async {
+    final current = state.value ?? const DiscoveryState();
+    state = const AsyncLoading();
+    final updated = await _fetchPage(
+      1,
+      DiscoveryState(
+        searchQuery: current.searchQuery,
+        departureFilter: current.departureFilter,
+        arrivalFilter: current.arrivalFilter,
+        activeOnly: active,
+        sort: current.sort,
+      ),
+    );
+    state = AsyncData(updated);
+  }
+
+  /// Change sort order and reload.
+  Future<void> setSort(AetherSortOption sort) async {
+    final current = state.value ?? const DiscoveryState();
+    if (current.sort == sort) return;
+
+    state = const AsyncLoading();
+    final updated = await _fetchPage(
+      1,
+      DiscoveryState(
+        searchQuery: current.searchQuery,
+        departureFilter: current.departureFilter,
+        arrivalFilter: current.arrivalFilter,
+        activeOnly: current.activeOnly,
+        sort: sort,
+      ),
+    );
+    state = AsyncData(updated);
+  }
+
+  /// Refresh from page 1, preserving current filters.
+  Future<void> refresh() async {
+    final current = state.value ?? const DiscoveryState();
+    state = const AsyncLoading();
+    final updated = await _fetchPage(
+      1,
+      DiscoveryState(
+        searchQuery: current.searchQuery,
+        departureFilter: current.departureFilter,
+        arrivalFilter: current.arrivalFilter,
+        activeOnly: current.activeOnly,
+        sort: current.sort,
+      ),
+    );
+    state = AsyncData(updated);
+  }
+
+  /// Clear all filters and reload.
+  Future<void> clearFilters() async {
+    state = const AsyncLoading();
+    final updated = await _fetchPage(1, const DiscoveryState());
+    state = AsyncData(updated);
+  }
+}
+
+/// Provider for the discovery feed (community-shared flights from the API).
+final aetherDiscoveryProvider =
+    AsyncNotifierProvider<DiscoveryNotifier, DiscoveryState>(
+      DiscoveryNotifier.new,
+    );
+
+/// Provider for aggregate stats from the Aether API.
+final aetherApiStatsProvider = FutureProvider<AetherApiStats>((ref) async {
+  final service = ref.watch(aetherShareServiceProvider);
+  return service.fetchStats();
+});
+
+/// Provider for available airport codes (for filter dropdowns).
+final aetherApiAirportsProvider = FutureProvider<AetherAirports>((ref) async {
+  final service = ref.watch(aetherShareServiceProvider);
+  return service.fetchAirports();
+});

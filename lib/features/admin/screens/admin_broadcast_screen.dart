@@ -223,6 +223,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
     ref.read(hapticServiceProvider).trigger(HapticType.selection);
     AppBottomSheet.show(
       context: context,
+      maxHeightFraction: 0.9,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

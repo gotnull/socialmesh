@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
+import '../../../core/constants.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
@@ -30,6 +32,8 @@ class _AetherFlightDetailScreenState
     with LifecycleSafeMixin {
   final _dateFormat = DateFormat('EEEE, MMM d, yyyy');
   final _timeFormat = DateFormat('h:mm a');
+  bool _isSharing = false;
+  String? _shareId;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +57,23 @@ class _AetherFlightDetailScreenState
             ),
             tooltip: 'Refresh position',
           ),
+        _isSharing
+            ? Padding(
+                padding: const EdgeInsets.all(12),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: context.accentColor,
+                  ),
+                ),
+              )
+            : IconButton(
+                icon: Icon(Icons.share, color: context.accentColor),
+                onPressed: () => _shareFlight(context),
+                tooltip: 'Share flight',
+              ),
       ],
       slivers: [
         // Content
@@ -596,6 +617,56 @@ class _AetherFlightDetailScreenState
       ),
       builder: (context) => _ReportBottomSheet(flight: widget.flight),
     );
+  }
+
+  Future<void> _shareFlight(BuildContext _) async {
+    HapticFeedback.mediumImpact();
+
+    // If already shared, just copy / share the existing URL
+    if (_shareId != null) {
+      final url = AppUrls.shareFlightUrl(_shareId!);
+      await _showShareOptions(url);
+      return;
+    }
+
+    safeSetState(() => _isSharing = true);
+
+    try {
+      final shareService = ref.read(aetherShareServiceProvider);
+      final result = await shareService.shareFlight(widget.flight);
+
+      if (!mounted) return;
+
+      safeSetState(() {
+        _shareId = result.id;
+        _isSharing = false;
+      });
+
+      await _showShareOptions(result.url);
+    } catch (e) {
+      safeSetState(() => _isSharing = false);
+      if (mounted) {
+        showErrorSnackBar(context, 'Could not share flight: $e');
+      }
+    }
+  }
+
+  Future<void> _showShareOptions(String url) async {
+    final flight = widget.flight;
+    final text =
+        '${flight.flightNumber} '
+        '${flight.departure} -> ${flight.arrival}\n'
+        'Track this Meshtastic flight on Aether:\n$url';
+
+    try {
+      await SharePlus.instance.share(ShareParams(text: text));
+    } catch (_) {
+      // Fallback: copy to clipboard
+      await Clipboard.setData(ClipboardData(text: url));
+      if (mounted) {
+        showSuccessSnackBar(context, 'Flight link copied to clipboard');
+      }
+    }
   }
 
   String _getRelativeTime(DateTime time) {

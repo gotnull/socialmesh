@@ -18,12 +18,17 @@ class FlightSearchSheet extends StatefulWidget {
   final double topPadding;
 
   /// Show the flight search sheet and return the selected flight.
-  static Future<ActiveFlightInfo?> show(BuildContext context) {
+  static Future<ActiveFlightInfo?> show(
+    BuildContext context, {
+    bool isDismissible = true,
+  }) {
     // Capture top padding from the caller context — inside the modal
     // bottom sheet the top padding may report 0.
     final topPadding = MediaQuery.of(context).padding.top;
     return AppBottomSheet.show<ActiveFlightInfo>(
       context: context,
+      maxHeightFraction: 0.9,
+      isDismissible: isDismissible,
       child: FlightSearchSheet(topPadding: topPadding),
     );
   }
@@ -40,6 +45,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
   bool _isLoading = false;
   String? _error;
   Timer? _debounce;
+  bool _hasSearched = false;
 
   @override
   void dispose() {
@@ -53,6 +59,13 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
     _debounce = Timer(const Duration(milliseconds: 500), () {
       _performSearch(query);
     });
+
+    // Mark that user has started searching
+    if (!_hasSearched && query.trim().length >= 2) {
+      setState(() {
+        _hasSearched = true;
+      });
+    }
   }
 
   Future<void> _performSearch(String query) async {
@@ -97,96 +110,100 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Top safe area padding (Dynamic Island)
-        SizedBox(height: widget.topPadding),
+    // Prevent dismissal during active search to avoid wasted API calls
+    return WillPopScope(
+      onWillPop: () async => !_isLoading,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Top safe area padding (Dynamic Island)
+          SizedBox(height: widget.topPadding),
 
-        // Header
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-          child: Text(
-            'Search Active Flights',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Text(
+              'Search Active Flights',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
             ),
           ),
-        ),
 
-        // Search field
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: TextField(
-            controller: _searchController,
-            autofocus: true,
-            textCapitalization: TextCapitalization.characters,
-            decoration: InputDecoration(
-              hintText: 'Enter flight number (e.g. UA123, BA456)',
-              hintStyle: TextStyle(color: context.textTertiary),
-              prefixIcon: Icon(
-                Icons.flight_takeoff,
-                color: context.textSecondary,
-              ),
-              suffixIcon: _isLoading
-                  ? Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: context.accentColor,
+          // Search field
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: TextField(
+              controller: _searchController,
+              autofocus: true,
+              textCapitalization: TextCapitalization.characters,
+              decoration: InputDecoration(
+                hintText: 'Enter flight number (e.g. UA123, BA456)',
+                hintStyle: TextStyle(color: context.textTertiary),
+                prefixIcon: Icon(
+                  Icons.flight_takeoff,
+                  color: context.textSecondary,
+                ),
+                suffixIcon: _isLoading
+                    ? Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: context.accentColor,
+                          ),
                         ),
-                      ),
-                    )
-                  : _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: Icon(Icons.clear, color: context.textTertiary),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {
-                          _results = [];
-                          _error = null;
-                        });
-                      },
-                    )
-                  : null,
-              filled: true,
-              fillColor: context.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: context.border),
+                      )
+                    : _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, color: context.textTertiary),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            _results = [];
+                            _error = null;
+                          });
+                        },
+                      )
+                    : null,
+                filled: true,
+                fillColor: context.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: context.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: context.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: context.accentColor, width: 2),
+                ),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: context.border),
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: context.accentColor, width: 2),
-              ),
+              onChanged: _onSearchChanged,
             ),
-            style: TextStyle(
-              color: context.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-            onChanged: _onSearchChanged,
           ),
-        ),
 
-        const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-        // Results
-        Flexible(child: _buildResults()),
+          // Results
+          Flexible(child: _buildResults()),
 
-        // Bottom padding
-        SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-      ],
+          // Bottom padding
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+        ],
+      ),
     );
   }
 

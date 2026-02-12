@@ -91,7 +91,7 @@ class _CountdownBannerContent extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: context.surface.withValues(alpha: 0.92),
+        color: context.surface.withValues(alpha: 0.85),
         border: Border(
           bottom: BorderSide(
             color: context.border.withValues(alpha: 0.3),

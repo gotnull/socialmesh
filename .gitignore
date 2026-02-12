@@ -24,6 +24,7 @@ mesh-observer/
 functions/
 sigil-api/
 deploy/
+aether-api/
 
 # Firebase Hosting content (landing page, legal docs, admin tools)
 web/
