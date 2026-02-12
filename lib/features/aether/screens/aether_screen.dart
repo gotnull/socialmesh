@@ -1107,7 +1107,7 @@ class _LeaderboardTabContent extends StatelessWidget {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: AccentColors.gradientFor(AccentColors.yellow),
+                      colors: AccentColors.gradientFor(context.accentColor),
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
