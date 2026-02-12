@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import '../../config/revenuecat_config.dart';
+import '../../core/logging.dart';
+import '../../providers/connectivity_providers.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -577,6 +579,19 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
     // If already owned, short-circuit and celebrate
     final purchaseState = ref.read(purchaseStateProvider);
     final bundleId = RevenueCatConfig.completePackProductId;
+
+    // Allow viewing owned state offline, but block new purchases
+    if (!purchaseState.hasPurchased(bundleId)) {
+      final isOnline = ref.read(isOnlineProvider);
+      if (!isOnline) {
+        AppLogging.subscriptions(
+          '[SubscriptionScreen] Purchase blocked — offline',
+        );
+        if (!mounted) return;
+        showErrorSnackBar(context, 'Purchases require an internet connection.');
+        return;
+      }
+    }
     if (purchaseState.hasPurchased(bundleId)) {
       haptics.success();
       _showAllUnlockedCelebration();
@@ -778,6 +793,18 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
     // Capture haptics before any await
     final haptics = ref.haptics;
     haptics.buttonTap();
+
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      AppLogging.subscriptions(
+        '[SubscriptionScreen] Purchase item blocked — offline '
+        '(${purchase.productId})',
+      );
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Purchases require an internet connection.');
+      return;
+    }
+
     final result = await purchaseProduct(ref, purchase.productId);
     if (!mounted) return;
     switch (result) {

@@ -2,8 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../providers/connectivity_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../../providers/subscription_providers.dart';
 
@@ -27,6 +29,16 @@ class _RestorePurchasesButtonState extends ConsumerState<RestorePurchasesButton>
   bool _isLocalLoading = false;
 
   Future<void> _onPressed(BuildContext context) async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      AppLogging.subscriptions('[RestorePurchases] Blocked — offline');
+      showErrorSnackBar(
+        context,
+        'Restoring purchases requires an internet connection.',
+      );
+      return;
+    }
+
     safeSetState(() => _isLocalLoading = true);
     bool success = false;
 

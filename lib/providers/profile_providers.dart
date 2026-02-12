@@ -129,6 +129,39 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
             // For transient errors, treat as idle - user is logged in, just offline
             AppLogging.auth('║ ⚠️ Transient network error, treating as idle');
             ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.idle);
+
+            // If the local profile is stale ("Guest"), try Firestore's offline
+            // cache before giving up. Firestore persists docs locally after the
+            // first successful read, so the real profile may still be available.
+            final isStaleLocal =
+                localProfile.displayName == 'Guest' ||
+                localProfile.displayName == 'New User' ||
+                localProfile.displayName.isEmpty;
+            if (isStaleLocal) {
+              AppLogging.auth(
+                '║ 🔄 Local profile is stale ("${localProfile.displayName}"), '
+                'trying Firestore offline cache...',
+              );
+              final cached = await cloudSync.getProfileFromCache(user.uid);
+              if (cached != null) {
+                AppLogging.auth(
+                  '║ ✅ Firestore cache HIT: "${cached.displayName}"',
+                );
+                await profileService.saveProfile(cached);
+                ref
+                    .read(syncStatusProvider.notifier)
+                    .setStatus(SyncStatus.idle);
+                AppLogging.auth(
+                  '╚══════════════════════════════════════════════════════════════',
+                );
+                AppLogging.auth('');
+                return cached;
+              } else {
+                AppLogging.auth(
+                  '║ ❌ Firestore cache MISS — no cached doc available',
+                );
+              }
+            }
           } else {
             // For actual errors (permissions, etc), show error state
             AppLogging.auth('║ ❌ Non-transient error, setting error status');

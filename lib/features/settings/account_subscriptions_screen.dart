@@ -370,6 +370,18 @@ class _AccountSubscriptionsScreenState
                   const SizedBox(height: 8),
                   _MFAStatusButton(
                     onTap: () async {
+                      final online = ref.read(isOnlineProvider);
+                      if (!online) {
+                        AppLogging.mfa(
+                          '[AccountScreen] MFA tap blocked — offline',
+                        );
+                        if (!mounted) return;
+                        showErrorSnackBar(
+                          context,
+                          'Two-factor authentication requires an internet connection.',
+                        );
+                        return;
+                      }
                       await Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -703,7 +715,17 @@ class _AccountSubscriptionsScreenState
                       : FilledButton.icon(
                           onPressed: _isPurchasing
                               ? null
-                              : _showCloudSyncPaywall,
+                              : () {
+                                  final online = ref.read(isOnlineProvider);
+                                  if (!online) {
+                                    showErrorSnackBar(
+                                      context,
+                                      'Subscriptions require an internet connection.',
+                                    );
+                                    return;
+                                  }
+                                  _showCloudSyncPaywall();
+                                },
                           icon: _isPurchasing
                               ? const SizedBox(
                                   width: 16,
@@ -868,12 +890,22 @@ class _AccountSubscriptionsScreenState
                       child: const Text('View Features'),
                     )
                   : FilledButton.icon(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SubscriptionScreen(),
-                        ),
-                      ),
+                      onPressed: () {
+                        final online = ref.read(isOnlineProvider);
+                        if (!online) {
+                          showErrorSnackBar(
+                            context,
+                            'Premium features require an internet connection to purchase.',
+                          );
+                          return;
+                        }
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SubscriptionScreen(),
+                          ),
+                        );
+                      },
                       icon: const Icon(Icons.shopping_bag_outlined, size: 18),
                       label: const Text('View & Purchase'),
                     ),
@@ -1549,6 +1581,14 @@ class _AccountSubscriptionsScreenState
   }
 
   void _showCloudSyncPaywall() {
+    final online = ref.read(isOnlineProvider);
+    if (!online) {
+      showErrorSnackBar(
+        context,
+        'Subscriptions require an internet connection.',
+      );
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -2553,6 +2593,18 @@ class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
   }
 
   Future<void> _loadProducts() async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      AppLogging.subscriptions(
+        '[CloudSyncPaywall] _loadProducts blocked — offline',
+      );
+      safeSetState(() {
+        _error = 'Subscriptions require an internet connection.';
+        _isLoading = false;
+      });
+      return;
+    }
+
     try {
       final products = await Purchases.getProducts([
         'cloud_monthly',
@@ -2573,6 +2625,16 @@ class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
 
   Future<void> _purchase(StoreProduct product) async {
     if (!mounted) return;
+
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      AppLogging.subscriptions(
+        '[CloudSyncPaywall] _purchase blocked — offline',
+      );
+      showErrorSnackBar(context, 'Purchases require an internet connection.');
+      return;
+    }
+
     widget.onPurchaseStart();
     try {
       await Purchases.purchase(PurchaseParams.storeProduct(product));

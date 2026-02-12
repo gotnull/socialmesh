@@ -801,6 +801,44 @@ class ProfileCloudSyncService {
     );
     return cloud;
   }
+
+  /// Attempt to read the user profile from Firestore's offline cache.
+  ///
+  /// Used as a fallback when fullSync fails due to network errors and the
+  /// local SharedPreferences profile is stale (e.g. displayName is "Guest").
+  /// Firestore persists documents locally after the first successful read,
+  /// so this can return the real profile even in airplane mode.
+  Future<UserProfile?> getProfileFromCache(String uid) async {
+    AppLogging.auth(
+      '[ProfileCloudSync] getProfileFromCache() — '
+      'attempting Firestore cache read for uid: $uid',
+    );
+    try {
+      final doc = await _userDoc(
+        uid,
+      ).get(const GetOptions(source: Source.cache));
+      if (!doc.exists || doc.data() == null) {
+        AppLogging.auth(
+          '[ProfileCloudSync] getProfileFromCache() — '
+          'no cached doc found',
+        );
+        return null;
+      }
+      final profile = _profileFromFirestore(uid, doc.data()!);
+      AppLogging.auth(
+        '[ProfileCloudSync] getProfileFromCache() — '
+        'SUCCESS: displayName="${profile.displayName}", '
+        'id=${profile.id}',
+      );
+      return profile;
+    } catch (e) {
+      AppLogging.auth(
+        '[ProfileCloudSync] getProfileFromCache() — '
+        'FAILED: $e',
+      );
+      return null;
+    }
+  }
 }
 
 /// Exception thrown when a display name is already taken.
