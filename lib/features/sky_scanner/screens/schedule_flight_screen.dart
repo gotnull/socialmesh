@@ -251,218 +251,226 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   // Build
   // ===========================================================================
 
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM d, yyyy');
     final timeFormat = DateFormat('h:mm a');
 
-    return GlassScaffold(
-      title: 'Schedule Flight',
-      actions: [
-        TextButton(
-          onPressed: _isSaving ? null : _save,
-          child: _isSaving
-              ? SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: context.accentColor,
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      behavior: HitTestBehavior.opaque,
+      child: GlassScaffold(
+        title: 'Schedule Flight',
+        actions: [
+          TextButton(
+            onPressed: _isSaving ? null : _save,
+            child: _isSaving
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: context.accentColor,
+                    ),
+                  )
+                : Text(
+                    'Save',
+                    style: TextStyle(
+                      color: context.accentColor,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                )
-              : Text(
-                  'Save',
-                  style: TextStyle(
-                    color: context.accentColor,
-                    fontWeight: FontWeight.w600,
-                  ),
+          ),
+        ],
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverToBoxAdapter(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Info card
+                    StatusBanner.accent(
+                      title:
+                          'Share your flight so others can try to receive your Meshtastic signal!',
+                      icon: Icons.flight,
+                      margin: EdgeInsets.zero,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Node Selection Section
+                    _buildSectionHeader('Meshtastic Node'),
+                    const SizedBox(height: 12),
+                    _buildNodeSelector(),
+                    const SizedBox(height: 16),
+
+                    // Optional node name override
+                    _buildTextField(
+                      controller: _nodeNameController,
+                      label: 'Display Name (Optional)',
+                      hint: 'Override node name for this flight',
+                      icon: Icons.label,
+                      maxLength: _maxNodeNameLength,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Flight Info Section
+                    _buildSectionHeader('Flight Information'),
+                    const SizedBox(height: 12),
+
+                    // Flight Number
+                    _buildTextField(
+                      controller: _flightNumberController,
+                      label: 'Flight Number',
+                      hint: 'e.g., UA123, DL456',
+                      icon: Icons.confirmation_number,
+                      maxLength: _maxFlightNumberLength,
+                      textCapitalization: TextCapitalization.characters,
+                      validator: (v) =>
+                          v?.isEmpty == true ? 'Enter flight number' : null,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Airports row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildTextField(
+                            controller: _departureController,
+                            label: 'From',
+                            hint: 'LAX',
+                            icon: Icons.flight_takeoff,
+                            maxLength: _maxAirportCodeLength,
+                            textCapitalization: TextCapitalization.characters,
+                            validator: (v) =>
+                                v?.isEmpty == true ? 'Required' : null,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildTextField(
+                            controller: _arrivalController,
+                            label: 'To',
+                            hint: 'JFK',
+                            icon: Icons.flight_land,
+                            maxLength: _maxAirportCodeLength,
+                            textCapitalization: TextCapitalization.characters,
+                            validator: (v) =>
+                                v?.isEmpty == true ? 'Required' : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Departure Time Section
+                    _buildSectionHeader('Departure Time'),
+                    const SizedBox(height: 12),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDateButton(
+                            label: 'Date',
+                            value: _departureDate != null
+                                ? dateFormat.format(_departureDate!)
+                                : 'Select',
+                            icon: Icons.calendar_today,
+                            onTap: _selectDepartureDate,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildDateButton(
+                            label: 'Time',
+                            value: _departureTime != null
+                                ? timeFormat.format(
+                                    DateTime(
+                                      2000,
+                                      1,
+                                      1,
+                                      _departureTime!.hour,
+                                      _departureTime!.minute,
+                                    ),
+                                  )
+                                : 'Select',
+                            icon: Icons.access_time,
+                            onTap: _selectDepartureTime,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Arrival Time Section (optional)
+                    _buildSectionHeader('Arrival Time (Optional)'),
+                    const SizedBox(height: 12),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDateButton(
+                            label: 'Date',
+                            value: _arrivalDate != null
+                                ? dateFormat.format(_arrivalDate!)
+                                : 'Select',
+                            icon: Icons.calendar_today,
+                            onTap: _selectArrivalDate,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildDateButton(
+                            label: 'Time',
+                            value: _arrivalTime != null
+                                ? timeFormat.format(
+                                    DateTime(
+                                      2000,
+                                      1,
+                                      1,
+                                      _arrivalTime!.hour,
+                                      _arrivalTime!.minute,
+                                    ),
+                                  )
+                                : 'Select',
+                            icon: Icons.access_time,
+                            onTap: _selectArrivalTime,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Notes Section
+                    _buildSectionHeader('Additional Notes (Optional)'),
+                    const SizedBox(height: 12),
+
+                    _buildTextField(
+                      controller: _notesController,
+                      label: 'Notes',
+                      hint: 'Window seat, left side. Running at 20dBm.',
+                      icon: Icons.notes,
+                      maxLines: 3,
+                      maxLength: _maxNotesLength,
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Tips
+                    _buildTipsCard(),
+                    const SizedBox(height: 32),
+                  ],
                 ),
-        ),
-      ],
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.all(16),
-          sliver: SliverToBoxAdapter(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Info card
-                  StatusBanner.accent(
-                    title:
-                        'Share your flight so others can try to receive your Meshtastic signal!',
-                    icon: Icons.flight,
-                    margin: EdgeInsets.zero,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Node Selection Section
-                  _buildSectionHeader('Meshtastic Node'),
-                  const SizedBox(height: 12),
-                  _buildNodeSelector(),
-                  const SizedBox(height: 16),
-
-                  // Optional node name override
-                  _buildTextField(
-                    controller: _nodeNameController,
-                    label: 'Display Name (Optional)',
-                    hint: 'Override node name for this flight',
-                    icon: Icons.label,
-                    maxLength: _maxNodeNameLength,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Flight Info Section
-                  _buildSectionHeader('Flight Information'),
-                  const SizedBox(height: 12),
-
-                  // Flight Number
-                  _buildTextField(
-                    controller: _flightNumberController,
-                    label: 'Flight Number',
-                    hint: 'e.g., UA123, DL456',
-                    icon: Icons.confirmation_number,
-                    maxLength: _maxFlightNumberLength,
-                    textCapitalization: TextCapitalization.characters,
-                    validator: (v) =>
-                        v?.isEmpty == true ? 'Enter flight number' : null,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Airports row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField(
-                          controller: _departureController,
-                          label: 'From',
-                          hint: 'LAX',
-                          icon: Icons.flight_takeoff,
-                          maxLength: _maxAirportCodeLength,
-                          textCapitalization: TextCapitalization.characters,
-                          validator: (v) =>
-                              v?.isEmpty == true ? 'Required' : null,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildTextField(
-                          controller: _arrivalController,
-                          label: 'To',
-                          hint: 'JFK',
-                          icon: Icons.flight_land,
-                          maxLength: _maxAirportCodeLength,
-                          textCapitalization: TextCapitalization.characters,
-                          validator: (v) =>
-                              v?.isEmpty == true ? 'Required' : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Departure Time Section
-                  _buildSectionHeader('Departure Time'),
-                  const SizedBox(height: 12),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildDateButton(
-                          label: 'Date',
-                          value: _departureDate != null
-                              ? dateFormat.format(_departureDate!)
-                              : 'Select',
-                          icon: Icons.calendar_today,
-                          onTap: _selectDepartureDate,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildDateButton(
-                          label: 'Time',
-                          value: _departureTime != null
-                              ? timeFormat.format(
-                                  DateTime(
-                                    2000,
-                                    1,
-                                    1,
-                                    _departureTime!.hour,
-                                    _departureTime!.minute,
-                                  ),
-                                )
-                              : 'Select',
-                          icon: Icons.access_time,
-                          onTap: _selectDepartureTime,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Arrival Time Section (optional)
-                  _buildSectionHeader('Arrival Time (Optional)'),
-                  const SizedBox(height: 12),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildDateButton(
-                          label: 'Date',
-                          value: _arrivalDate != null
-                              ? dateFormat.format(_arrivalDate!)
-                              : 'Select',
-                          icon: Icons.calendar_today,
-                          onTap: _selectArrivalDate,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildDateButton(
-                          label: 'Time',
-                          value: _arrivalTime != null
-                              ? timeFormat.format(
-                                  DateTime(
-                                    2000,
-                                    1,
-                                    1,
-                                    _arrivalTime!.hour,
-                                    _arrivalTime!.minute,
-                                  ),
-                                )
-                              : 'Select',
-                          icon: Icons.access_time,
-                          onTap: _selectArrivalTime,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Notes Section
-                  _buildSectionHeader('Additional Notes (Optional)'),
-                  const SizedBox(height: 12),
-
-                  _buildTextField(
-                    controller: _notesController,
-                    label: 'Notes',
-                    hint: 'Window seat, left side. Running at 20dBm.',
-                    icon: Icons.notes,
-                    maxLines: 3,
-                    maxLength: _maxNotesLength,
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Tips
-                  _buildTipsCard(),
-                  const SizedBox(height: 32),
-                ],
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
