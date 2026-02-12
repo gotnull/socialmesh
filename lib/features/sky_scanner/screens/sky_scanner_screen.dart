@@ -16,7 +16,6 @@
 // for live flight position tracking.
 
 import 'dart:math' as math;
-// SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
