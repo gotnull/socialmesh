@@ -3,10 +3,12 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/logging.dart';
 import '../features/world_mesh/services/node_cache_service.dart';
 import '../features/world_mesh/world_mesh_filters.dart';
 import '../models/world_mesh_node.dart';
 import '../models/presence_confidence.dart';
+import '../providers/connectivity_providers.dart';
 import '../services/world_mesh_map_service.dart';
 
 /// Provider for the WorldMeshMapService
@@ -67,6 +69,9 @@ class WorldMeshMapNotifier extends Notifier<AsyncValue<WorldMeshMapState>> {
   Timer? _refreshTimer;
   static const _refreshInterval = Duration(minutes: 2);
 
+  /// Shorter timeout for the initial fetch so we fall back to cache quickly
+  static const _initialFetchTimeout = Duration(seconds: 10);
+
   @override
   AsyncValue<WorldMeshMapState> build() {
     // Cancel timer on dispose
@@ -78,7 +83,7 @@ class WorldMeshMapNotifier extends Notifier<AsyncValue<WorldMeshMapState>> {
     _startPeriodicRefresh();
 
     // Initial fetch
-    _fetchNodes();
+    _fetchNodes(isInitial: true);
     return const AsyncValue.loading();
   }
 
@@ -89,12 +94,43 @@ class WorldMeshMapNotifier extends Notifier<AsyncValue<WorldMeshMapState>> {
     });
   }
 
-  Future<void> _fetchNodes() async {
+  Future<void> _fetchNodes({bool isInitial = false}) async {
     final service = ref.read(worldMeshMapServiceProvider);
     final cacheService = ref.read(nodeCacheServiceProvider);
+    final isOnline = ref.read(isOnlineProvider);
+
+    // Offline-first: if device is offline, go straight to cache
+    if (!isOnline) {
+      AppLogging.maps(
+        'WorldMeshMapNotifier: device offline, loading from cache',
+      );
+      await _loadFromCache(cacheService, reason: 'Device is offline');
+      return;
+    }
 
     try {
-      final nodes = await service.fetchNodes();
+      // Use a shorter timeout for the initial fetch so the user sees
+      // cached data quickly instead of staring at a spinner for 30s.
+      final Future<Map<int, WorldMeshNode>> fetchFuture = service.fetchNodes();
+      final Map<int, WorldMeshNode> nodes;
+
+      if (isInitial) {
+        nodes = await fetchFuture.timeout(
+          _initialFetchTimeout,
+          onTimeout: () {
+            AppLogging.maps(
+              'WorldMeshMapNotifier: initial fetch timed out after '
+              '${_initialFetchTimeout.inSeconds}s, falling back to cache',
+            );
+            throw TimeoutException(
+              'Initial fetch timed out',
+              _initialFetchTimeout,
+            );
+          },
+        );
+      } else {
+        nodes = await fetchFuture;
+      }
 
       // Cache the fetched nodes for offline use
       await cacheService.cacheNodes(nodes.values.toList());
@@ -108,28 +144,19 @@ class WorldMeshMapNotifier extends Notifier<AsyncValue<WorldMeshMapState>> {
         ),
       );
     } catch (e, st) {
+      AppLogging.maps('WorldMeshMapNotifier: fetch failed — $e');
+
       final currentData = state.whenOrNull(data: (d) => d);
       final currentNodes = currentData?.nodes ?? {};
 
       if (currentNodes.isEmpty) {
-        // Try to load from cache
-        final cachedNodes = await cacheService.getCachedNodes();
-        final cacheTimestamp = await cacheService.getCacheTimestamp();
-
-        if (cachedNodes != null && cachedNodes.isNotEmpty) {
-          final nodesMap = {for (final n in cachedNodes) n.nodeNum: n};
-          state = AsyncValue.data(
-            WorldMeshMapState(
-              nodes: nodesMap,
-              isLoading: false,
-              error: 'Offline mode - using cached data',
-              lastUpdated: cacheTimestamp,
-              isFromCache: true,
-            ),
-          );
-        } else {
-          state = AsyncValue.error(e, st);
-        }
+        // No data in state yet — try to load from cache
+        await _loadFromCache(
+          cacheService,
+          reason: 'Fetch failed',
+          fallbackError: e,
+          fallbackSt: st,
+        );
       } else {
         // Keep existing data but mark error
         state = AsyncValue.data(
@@ -140,6 +167,55 @@ class WorldMeshMapNotifier extends Notifier<AsyncValue<WorldMeshMapState>> {
             lastUpdated: currentData?.lastUpdated,
             isFromCache: currentData?.isFromCache ?? false,
           ),
+        );
+      }
+    }
+  }
+
+  /// Loads nodes from the local cache and updates state accordingly.
+  ///
+  /// If the cache is empty or corrupt and [fallbackError]/[fallbackSt] are
+  /// provided, the state is set to [AsyncValue.error]. Otherwise a friendly
+  /// error message is shown.
+  Future<void> _loadFromCache(
+    NodeCacheService cacheService, {
+    required String reason,
+    Object? fallbackError,
+    StackTrace? fallbackSt,
+  }) async {
+    final cachedNodes = await cacheService.getCachedNodes();
+    final cacheTimestamp = await cacheService.getCacheTimestamp();
+
+    if (cachedNodes != null && cachedNodes.isNotEmpty) {
+      AppLogging.maps(
+        'WorldMeshMapNotifier: loaded ${cachedNodes.length} nodes from cache '
+        '(reason: $reason)',
+      );
+      final nodesMap = {for (final n in cachedNodes) n.nodeNum: n};
+      state = AsyncValue.data(
+        WorldMeshMapState(
+          nodes: nodesMap,
+          isLoading: false,
+          error: 'Offline mode \u2014 using cached data',
+          lastUpdated: cacheTimestamp,
+          isFromCache: true,
+        ),
+      );
+    } else {
+      AppLogging.maps(
+        'WorldMeshMapNotifier: no cached nodes available (reason: $reason)',
+      );
+      if (fallbackError != null) {
+        state = AsyncValue.error(
+          fallbackError,
+          fallbackSt ?? StackTrace.current,
+        );
+      } else {
+        state = AsyncValue.error(
+          WorldMeshMapException(
+            'No internet connection and no cached data available.',
+          ),
+          StackTrace.current,
         );
       }
     }

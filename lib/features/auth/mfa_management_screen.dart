@@ -8,6 +8,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/auth_providers.dart';
+import '../../providers/connectivity_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../utils/snackbar.dart';
 import 'mfa_enrollment_screen.dart';
@@ -32,6 +33,14 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
   void initState() {
     super.initState();
     AppLogging.mfa('MFAManagementScreen initState — starting initial load');
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      AppLogging.mfa(
+        'MFAManagementScreen initState — offline, skipping network load',
+      );
+      safeSetState(() => _isLoadingFactors = false);
+      return;
+    }
     _loadFactors();
   }
 
@@ -67,6 +76,17 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
 
   Future<void> _enrollMFA() async {
     AppLogging.mfa('_enrollMFA — user tapped Enable Two-Factor Auth');
+
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      AppLogging.mfa('_enrollMFA — blocked, device is offline');
+      showErrorSnackBar(
+        context,
+        'Two-factor authentication requires an internet connection.',
+      );
+      return;
+    }
+
     final haptics = ref.read(hapticServiceProvider);
     final navigator = Navigator.of(context);
 
@@ -98,6 +118,17 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
       '_removeFactor — user tapped remove for factor '
       'uid=${factor.uid}, name=${factor.displayName}, type=${factor.factorId}',
     );
+
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      AppLogging.mfa('_removeFactor — blocked, device is offline');
+      showErrorSnackBar(
+        context,
+        'Removing two-factor authentication requires an internet connection.',
+      );
+      return;
+    }
+
     final haptics = ref.read(hapticServiceProvider);
 
     await haptics.trigger(HapticType.warning);
@@ -314,13 +345,82 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isOnline = ref.watch(isOnlineProvider);
     final enrolledFactors = _enrolledFactors;
     final hasMFA = enrolledFactors.isNotEmpty;
 
     AppLogging.mfa(
-      'build — isLoading=$_isLoadingFactors, '
+      'build — isLoading=$_isLoadingFactors, isOnline=$isOnline, '
       'factorCount=${enrolledFactors.length}, hasMFA=$hasMFA',
     );
+
+    // Offline guard: show static unavailable state instead of loading/hanging
+    if (!isOnline && _isLoadingFactors) {
+      AppLogging.mfa('build — rendering offline state (no cached factors)');
+      return GlassScaffold.body(
+        title: 'Two-Factor Authentication',
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.wifi_off,
+                  size: 48,
+                  color: context.textSecondary.withOpacity(0.7),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No Internet Connection',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: context.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Two-factor authentication management requires an internet connection. '
+                  'Please connect and try again.',
+                  style: TextStyle(fontSize: 14, color: context.textSecondary),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    final online = ref.read(isOnlineProvider);
+                    if (online) {
+                      _loadFactors();
+                    } else {
+                      showErrorSnackBar(
+                        context,
+                        'Still offline. Please check your connection.',
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Show offline banner but allow viewing cached factors if we have them
+    if (!isOnline && !_isLoadingFactors && enrolledFactors.isNotEmpty) {
+      AppLogging.mfa(
+        'build — offline but have cached factors, showing with banner',
+      );
+      return _buildMainContent(
+        context,
+        enrolledFactors: enrolledFactors,
+        hasMFA: hasMFA,
+        offlineBanner: true,
+      );
+    }
 
     if (_isLoadingFactors) {
       AppLogging.mfa('build — rendering loading state');
@@ -330,6 +430,20 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
       );
     }
 
+    return _buildMainContent(
+      context,
+      enrolledFactors: enrolledFactors,
+      hasMFA: hasMFA,
+      offlineBanner: !isOnline,
+    );
+  }
+
+  Widget _buildMainContent(
+    BuildContext context, {
+    required List<MultiFactorInfo> enrolledFactors,
+    required bool hasMFA,
+    required bool offlineBanner,
+  }) {
     return GlassScaffold(
       title: 'Two-Factor Authentication',
       slivers: [
@@ -337,6 +451,38 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
           padding: const EdgeInsets.all(16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
+              // Offline banner
+              if (offlineBanner) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.wifi_off,
+                        size: 20,
+                        color: Colors.orange,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'You are offline. Changes cannot be made until you reconnect.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // Info Card
               Container(
                 padding: const EdgeInsets.all(16),
