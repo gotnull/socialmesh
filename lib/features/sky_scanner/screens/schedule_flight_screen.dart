@@ -8,7 +8,6 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/datetime_picker_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
-import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
@@ -25,9 +24,6 @@ const int _maxFlightNumberLength = 10;
 
 /// Maximum length for airport codes (ICAO is 4, IATA is 3)
 const int _maxAirportCodeLength = 4;
-
-/// Maximum length for node name override
-const int _maxNodeNameLength = 39;
 
 /// Maximum length for notes field
 const int _maxNotesLength = 500;
@@ -49,13 +45,9 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     with LifecycleSafeMixin<ScheduleFlightScreen> {
   final _formKey = GlobalKey<FormState>();
   final _flightNumberController = TextEditingController();
-  final _nodeNameController = TextEditingController();
   final _departureController = TextEditingController();
   final _arrivalController = TextEditingController();
   final _notesController = TextEditingController();
-
-  /// Selected node from NodeSelectorSheet
-  MeshNode? _selectedNode;
 
   DateTime? _departureDate;
   TimeOfDay? _departureTime;
@@ -66,7 +58,6 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   @override
   void dispose() {
     _flightNumberController.dispose();
-    _nodeNameController.dispose();
     _departureController.dispose();
     _arrivalController.dispose();
     _notesController.dispose();
@@ -74,30 +65,14 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   }
 
   // ===========================================================================
-  // Node Selection
+  // My Node Helper
   // ===========================================================================
 
-  Future<void> _showNodeSelector() async {
-    final selection = await NodeSelectorSheet.show(
-      context,
-      title: 'Select Your Node',
-      allowBroadcast: false,
-      initialSelection: _selectedNode?.nodeNum,
-    );
-
-    if (selection != null && selection.nodeNum != null && mounted) {
-      final nodes = ref.read(nodesProvider);
-      final node = nodes[selection.nodeNum];
-      if (node != null) {
-        safeSetState(() {
-          _selectedNode = node;
-          // Pre-fill node name if empty
-          if (_nodeNameController.text.isEmpty) {
-            _nodeNameController.text = node.displayName;
-          }
-        });
-      }
-    }
+  MeshNode? _getMyNode() {
+    final myNodeNum = ref.read(myNodeNumProvider);
+    if (myNodeNum == null) return null;
+    final nodes = ref.read(nodesProvider);
+    return nodes[myNodeNum];
   }
 
   // ===========================================================================
@@ -193,8 +168,9 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_selectedNode == null) {
-      showWarningSnackBar(context, 'Please select your Meshtastic node');
+    final myNode = _getMyNode();
+    if (myNode == null) {
+      showWarningSnackBar(context, 'Connect your Meshtastic device first');
       return;
     }
 
@@ -215,12 +191,8 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     try {
       final service = ref.read(skyScannerServiceProvider);
       await service.createSkyNode(
-        nodeId:
-            _selectedNode!.userId ??
-            '!${_selectedNode!.nodeNum.toRadixString(16)}',
-        nodeName: _nodeNameController.text.trim().isEmpty
-            ? _selectedNode!.displayName
-            : _nodeNameController.text.trim(),
+        nodeId: myNode.userId ?? '!${myNode.nodeNum.toRadixString(16)}',
+        nodeName: myNode.displayName,
         flightNumber: _flightNumberController.text.trim().toUpperCase(),
         departure: _departureController.text.trim().toUpperCase(),
         arrival: _arrivalController.text.trim().toUpperCase(),
@@ -259,6 +231,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM d, yyyy');
     final timeFormat = DateFormat('h:mm a');
+    final myNode = _getMyNode();
 
     return GestureDetector(
       onTap: _dismissKeyboard,
@@ -304,20 +277,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                     ),
                     const SizedBox(height: 24),
 
-                    // Node Selection Section
-                    _buildSectionHeader('Meshtastic Node'),
+                    // My Node Section
+                    _buildSectionHeader('Your Meshtastic Node'),
                     const SizedBox(height: 12),
-                    _buildNodeSelector(),
-                    const SizedBox(height: 16),
-
-                    // Optional node name override
-                    _buildTextField(
-                      controller: _nodeNameController,
-                      label: 'Display Name (Optional)',
-                      hint: 'Override node name for this flight',
-                      icon: Icons.label,
-                      maxLength: _maxNodeNameLength,
-                    ),
+                    _buildMyNodeCard(myNode),
                     const SizedBox(height: 24),
 
                     // Flight Info Section
@@ -490,74 +453,63 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     );
   }
 
-  Widget _buildNodeSelector() {
-    final hasNode = _selectedNode != null;
+  Widget _buildMyNodeCard(MeshNode? myNode) {
+    final isConnected = myNode != null;
 
-    return GestureDetector(
-      onTap: _showNodeSelector,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: context.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: hasNode ? context.accentColor : context.border,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isConnected ? context.accentColor : AppTheme.warningYellow,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color:
+                  (isConnected ? context.accentColor : AppTheme.warningYellow)
+                      .withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              isConnected ? Icons.memory : Icons.bluetooth_disabled,
+              color: isConnected ? context.accentColor : AppTheme.warningYellow,
+              size: 22,
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: (hasNode ? context.accentColor : context.textTertiary)
-                    .withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.memory,
-                color: hasNode ? context.accentColor : context.textTertiary,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    hasNode ? _selectedNode!.displayName : 'Select Node',
-                    style: TextStyle(
-                      color: hasNode
-                          ? context.textPrimary
-                          : context.textTertiary,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isConnected ? myNode.displayName : 'No Device Connected',
+                  style: TextStyle(
+                    color: isConnected
+                        ? context.textPrimary
+                        : AppTheme.warningYellow,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
                   ),
-                  if (hasNode)
-                    Text(
-                      _selectedNode!.userId ??
-                          '!${_selectedNode!.nodeNum.toRadixString(16)}',
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 12,
-                      ),
-                    )
-                  else
-                    Text(
-                      'Tap to choose from your known nodes',
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 12,
-                      ),
-                    ),
-                ],
-              ),
+                ),
+                Text(
+                  isConnected
+                      ? (myNode.userId ??
+                            '!${myNode.nodeNum.toRadixString(16)}')
+                      : 'Connect your device to schedule a flight',
+                  style: TextStyle(color: context.textTertiary, fontSize: 12),
+                ),
+              ],
             ),
-            Icon(Icons.chevron_right, color: context.textTertiary, size: 24),
-          ],
-        ),
+          ),
+          if (isConnected)
+            Icon(Icons.check_circle, color: context.accentColor, size: 24),
+        ],
       ),
     );
   }
