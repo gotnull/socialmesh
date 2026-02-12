@@ -6,11 +6,35 @@ import 'package:intl/intl.dart';
 
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/node_selector_sheet.dart';
+import '../../../core/widgets/status_banner.dart';
+import '../../../models/mesh_models.dart';
+import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
-import '../../../core/widgets/status_banner.dart';
 import '../providers/sky_scanner_providers.dart';
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+/// Maximum length for flight number (e.g., "UA1234" = 6 chars, allow up to 10)
+const int _maxFlightNumberLength = 10;
+
+/// Maximum length for airport codes (ICAO is 4, IATA is 3)
+const int _maxAirportCodeLength = 4;
+
+/// Maximum length for node name override
+const int _maxNodeNameLength = 39;
+
+/// Maximum length for notes field
+const int _maxNotesLength = 500;
+
+// =============================================================================
+// Screen
+// =============================================================================
 
 /// Screen to schedule a new sky node flight
 class ScheduleFlightScreen extends ConsumerStatefulWidget {
@@ -25,11 +49,13 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     with LifecycleSafeMixin<ScheduleFlightScreen> {
   final _formKey = GlobalKey<FormState>();
   final _flightNumberController = TextEditingController();
-  final _nodeIdController = TextEditingController();
   final _nodeNameController = TextEditingController();
   final _departureController = TextEditingController();
   final _arrivalController = TextEditingController();
   final _notesController = TextEditingController();
+
+  /// Selected node from NodeSelectorSheet
+  MeshNode? _selectedNode;
 
   DateTime? _departureDate;
   TimeOfDay? _departureTime;
@@ -40,13 +66,43 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   @override
   void dispose() {
     _flightNumberController.dispose();
-    _nodeIdController.dispose();
     _nodeNameController.dispose();
     _departureController.dispose();
     _arrivalController.dispose();
     _notesController.dispose();
     super.dispose();
   }
+
+  // ===========================================================================
+  // Node Selection
+  // ===========================================================================
+
+  Future<void> _showNodeSelector() async {
+    final selection = await NodeSelectorSheet.show(
+      context,
+      title: 'Select Your Node',
+      allowBroadcast: false,
+      initialSelection: _selectedNode?.nodeNum,
+    );
+
+    if (selection != null && selection.nodeNum != null && mounted) {
+      final nodes = ref.read(nodesProvider);
+      final node = nodes[selection.nodeNum];
+      if (node != null) {
+        safeSetState(() {
+          _selectedNode = node;
+          // Pre-fill node name if empty
+          if (_nodeNameController.text.isEmpty) {
+            _nodeNameController.text = node.displayName;
+          }
+        });
+      }
+    }
+  }
+
+  // ===========================================================================
+  // Date/Time Selection
+  // ===========================================================================
 
   Future<void> _selectDepartureDate() async {
     final now = DateTime.now();
@@ -162,8 +218,17 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     );
   }
 
+  // ===========================================================================
+  // Save
+  // ===========================================================================
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_selectedNode == null) {
+      showWarningSnackBar(context, 'Please select your Meshtastic node');
+      return;
+    }
 
     final departureDateTime = _buildDepartureDateTime();
     if (departureDateTime == null) {
@@ -182,13 +247,15 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     try {
       final service = ref.read(skyScannerServiceProvider);
       await service.createSkyNode(
-        nodeId: _nodeIdController.text.trim(),
+        nodeId:
+            _selectedNode!.userId ??
+            '!${_selectedNode!.nodeNum.toRadixString(16)}',
         nodeName: _nodeNameController.text.trim().isEmpty
-            ? null
+            ? _selectedNode!.displayName
             : _nodeNameController.text.trim(),
-        flightNumber: _flightNumberController.text.trim(),
-        departure: _departureController.text.trim(),
-        arrival: _arrivalController.text.trim(),
+        flightNumber: _flightNumberController.text.trim().toUpperCase(),
+        departure: _departureController.text.trim().toUpperCase(),
+        arrival: _arrivalController.text.trim().toUpperCase(),
         scheduledDeparture: departureDateTime,
         scheduledArrival: _buildArrivalDateTime(),
         userId: user.uid,
@@ -201,7 +268,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       if (mounted) {
         HapticFeedback.mediumImpact();
         Navigator.pop(context, true);
-        showSuccessSnackBar(context, 'Flight scheduled! ✈️');
+        showSuccessSnackBar(context, 'Flight scheduled!');
       }
     } catch (e) {
       if (mounted) {
@@ -211,6 +278,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       safeSetState(() => _isSaving = false);
     }
   }
+
+  // ===========================================================================
+  // Build
+  // ===========================================================================
 
   @override
   Widget build(BuildContext context) {
@@ -256,7 +327,23 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                     icon: Icons.flight,
                     margin: EdgeInsets.zero,
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
+
+                  // Node Selection Section
+                  _buildSectionHeader('Meshtastic Node'),
+                  const SizedBox(height: 12),
+                  _buildNodeSelector(),
+                  const SizedBox(height: 16),
+
+                  // Optional node name override
+                  _buildTextField(
+                    controller: _nodeNameController,
+                    label: 'Display Name (Optional)',
+                    hint: 'Override node name for this flight',
+                    icon: Icons.label,
+                    maxLength: _maxNodeNameLength,
+                  ),
+                  const SizedBox(height: 24),
 
                   // Flight Info Section
                   _buildSectionHeader('Flight Information'),
@@ -268,6 +355,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                     label: 'Flight Number',
                     hint: 'e.g., UA123, DL456',
                     icon: Icons.confirmation_number,
+                    maxLength: _maxFlightNumberLength,
                     textCapitalization: TextCapitalization.characters,
                     validator: (v) =>
                         v?.isEmpty == true ? 'Enter flight number' : null,
@@ -283,7 +371,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                           label: 'From',
                           hint: 'LAX',
                           icon: Icons.flight_takeoff,
-                          maxLength: 4,
+                          maxLength: _maxAirportCodeLength,
                           textCapitalization: TextCapitalization.characters,
                           validator: (v) =>
                               v?.isEmpty == true ? 'Required' : null,
@@ -296,7 +384,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                           label: 'To',
                           hint: 'JFK',
                           icon: Icons.flight_land,
-                          maxLength: 4,
+                          maxLength: _maxAirportCodeLength,
                           textCapitalization: TextCapitalization.characters,
                           validator: (v) =>
                               v?.isEmpty == true ? 'Required' : null,
@@ -384,28 +472,6 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                   ),
                   const SizedBox(height: 24),
 
-                  // Node Info Section
-                  _buildSectionHeader('Meshtastic Node'),
-                  const SizedBox(height: 12),
-
-                  _buildTextField(
-                    controller: _nodeIdController,
-                    label: 'Node ID',
-                    hint: '!abcd1234',
-                    icon: Icons.memory,
-                    validator: (v) =>
-                        v?.isEmpty == true ? 'Enter node ID' : null,
-                  ),
-                  const SizedBox(height: 16),
-
-                  _buildTextField(
-                    controller: _nodeNameController,
-                    label: 'Node Name (Optional)',
-                    hint: 'My Travel Node',
-                    icon: Icons.label,
-                  ),
-                  const SizedBox(height: 24),
-
                   // Notes Section
                   _buildSectionHeader('Additional Notes (Optional)'),
                   const SizedBox(height: 12),
@@ -416,45 +482,12 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                     hint: 'Window seat, left side. Running at 20dBm.',
                     icon: Icons.notes,
                     maxLines: 3,
+                    maxLength: _maxNotesLength,
                   ),
                   const SizedBox(height: 32),
 
                   // Tips
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: context.card,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: context.border),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.tips_and_updates,
-                              color: AppTheme.warningYellow,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Tips for best reception',
-                              style: TextStyle(
-                                color: context.textPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTip('Get a window seat if possible'),
-                        _buildTip('Keep node near the window during flight'),
-                        _buildTip('Higher TX power = longer range'),
-                        _buildTip('Let others know your frequency/region'),
-                      ],
-                    ),
-                  ),
+                  _buildTipsCard(),
                   const SizedBox(height: 32),
                 ],
               ),
@@ -465,6 +498,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     );
   }
 
+  // ===========================================================================
+  // UI Components
+  // ===========================================================================
+
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
@@ -473,6 +510,78 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
         fontSize: 13,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.5,
+      ),
+    );
+  }
+
+  Widget _buildNodeSelector() {
+    final hasNode = _selectedNode != null;
+
+    return GestureDetector(
+      onTap: _showNodeSelector,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasNode ? context.accentColor : context.border,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: (hasNode ? context.accentColor : context.textTertiary)
+                    .withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.memory,
+                color: hasNode ? context.accentColor : context.textTertiary,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    hasNode ? _selectedNode!.displayName : 'Select Node',
+                    style: TextStyle(
+                      color: hasNode
+                          ? context.textPrimary
+                          : context.textTertiary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (hasNode)
+                    Text(
+                      _selectedNode!.userId ??
+                          '!${_selectedNode!.nodeNum.toRadixString(16)}',
+                      style: TextStyle(
+                        color: context.textTertiary,
+                        fontSize: 12,
+                      ),
+                    )
+                  else
+                    Text(
+                      'Tap to choose from your known nodes',
+                      style: TextStyle(
+                        color: context.textTertiary,
+                        fontSize: 12,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: context.textTertiary, size: 24),
+          ],
+        ),
       ),
     );
   }
@@ -504,7 +613,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
             : null,
         filled: true,
         fillColor: context.card,
-        counterText: '',
+        counterStyle: TextStyle(color: context.textTertiary),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: context.border),
@@ -543,7 +652,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
         child: Row(
           children: [
             Icon(icon, color: context.textTertiary, size: 20),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -552,7 +661,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                     label,
                     style: TextStyle(color: context.textTertiary, fontSize: 12),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
                     value,
                     style: TextStyle(
@@ -568,6 +677,44 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTipsCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.tips_and_updates,
+                color: AppTheme.warningYellow,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Tips for best reception',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildTip('Get a window seat if possible'),
+          _buildTip('Keep node near the window during flight'),
+          _buildTip('Higher TX power = longer range'),
+          _buildTip('Let others know your frequency/region'),
+        ],
       ),
     );
   }

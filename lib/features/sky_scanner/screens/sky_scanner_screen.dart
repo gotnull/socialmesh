@@ -25,9 +25,11 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/ico_help_system.dart';
+import '../../../providers/help_providers.dart';
 import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton_config.dart';
@@ -237,24 +239,59 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
             ],
           ),
           actions: [
-            // Schedule Flight action button
-            TextButton.icon(
-              onPressed: _scheduleFlight,
-              icon: Icon(Icons.add_circle_outline, color: context.accentColor),
-              label: Text(
-                'Schedule',
-                style: TextStyle(
-                  color: context.accentColor,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
             IconButton(
-              icon: Icon(Icons.info_outline, color: context.textSecondary),
-              onPressed: _showInfo,
-              tooltip: 'About Sky Scanner',
+              icon: Icon(Icons.add, color: context.accentColor),
+              onPressed: _scheduleFlight,
+              tooltip: 'Schedule Flight',
             ),
-            const IcoHelpAppBarButton(topicId: 'sky_scanner_overview'),
+            AppBarOverflowMenu<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'info':
+                    _showInfo();
+                  case 'help':
+                    ref
+                        .read(helpProvider.notifier)
+                        .startTour('sky_scanner_overview');
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'info',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: context.textSecondary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'About Sky Scanner',
+                        style: TextStyle(color: context.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'help',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.help_outline,
+                        color: context.textSecondary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Help',
+                        style: TextStyle(color: context.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
           slivers: [
             // Stats summary card
@@ -454,6 +491,11 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
           icon: _currentFilter.icon,
           title: _getEmptyTitle(),
           subtitle: _getEmptySubtitle(),
+          showAction:
+              _currentFilter == SkyScannerFilter.all ||
+              _currentFilter == SkyScannerFilter.myFlights,
+          actionLabel: 'Schedule Flight',
+          onAction: _scheduleFlight,
         ),
       );
     }
@@ -1246,11 +1288,17 @@ class _EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final bool showAction;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   const _EmptyState({
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.showAction = false,
+    this.actionLabel,
+    this.onAction,
   });
 
   @override
@@ -1288,6 +1336,14 @@ class _EmptyState extends StatelessWidget {
                 height: 1.4,
               ),
             ),
+            if (showAction && actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: onAction,
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(actionLabel!),
+              ),
+            ],
           ],
         ),
       ),
