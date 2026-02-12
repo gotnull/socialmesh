@@ -44,10 +44,6 @@ class _AetherFlightDetailScreenState
 
     return GlassScaffold(
       title: widget.flight.flightNumber,
-      expandedHeight: 200,
-      flexibleSpace: FlexibleSpaceBar(
-        background: _buildHeader(context, positionAsync),
-      ),
       actions: [
         if (widget.flight.isActive)
           IconButton(
@@ -76,15 +72,18 @@ class _AetherFlightDetailScreenState
               ),
       ],
       slivers: [
+        // Route header - always visible, no collapse
+        SliverToBoxAdapter(child: _buildRouteHeader(context, positionAsync)),
         // Content
         SliverToBoxAdapter(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 16),
               // Live position card
               if (widget.flight.isActive)
-                _buildLivePositionCard(context, positionAsync),
+                _buildLivePositionCard(context, positionAsync)
+              else
+                const SizedBox(height: 16),
 
               // Flight details
               _buildDetailsCard(context),
@@ -128,55 +127,49 @@ class _AetherFlightDetailScreenState
     );
   }
 
-  Widget _buildHeader(
+  Widget _buildRouteHeader(
     BuildContext context,
     AsyncValue<FlightPositionState> positionAsync,
   ) {
     final positionState = positionAsync.value;
     return Container(
-      color: context.card,
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              // Route visualization
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildAirportDisplay(widget.flight.departure, 'Departure'),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.flight,
-                          color: widget.flight.isActive
-                              ? context.accentColor
-                              : context.textTertiary,
-                          size: 32,
-                        ),
-                        if (positionState?.position != null) ...[
-                          SizedBox(height: 4),
-                          Text(
-                            'FL${(positionState!.position!.altitudeFeet / 100).round()}',
-                            style: TextStyle(
-                              color: context.accentColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ],
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      decoration: BoxDecoration(
+        color: context.card,
+        border: Border(bottom: BorderSide(color: context.border, width: 1)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildAirportDisplay(widget.flight.departure, 'Departure'),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.flight,
+                  color: widget.flight.isActive
+                      ? context.accentColor
+                      : context.textTertiary,
+                  size: 32,
+                ),
+                if (positionState?.position != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'FL${(positionState!.position!.altitudeFeet / 100).round()}',
+                    style: TextStyle(
+                      color: context.accentColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: AppTheme.fontFamily,
                     ),
                   ),
-                  _buildAirportDisplay(widget.flight.arrival, 'Arrival'),
                 ],
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+          _buildAirportDisplay(widget.flight.arrival, 'Arrival'),
+        ],
       ),
     );
   }
@@ -367,7 +360,7 @@ class _AetherFlightDetailScreenState
 
   Widget _buildDetailsCard(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.card,

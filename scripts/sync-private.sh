@@ -24,6 +24,8 @@ PRIVATE_REMOTE="https://github.com/gotnull/socialmesh-private.git"
 # Directories to sync (relative to repo root)
 SYNC_DIRS=(
   .github
+  aether-api
+  api-gateway
   deploy
   docs
   functions

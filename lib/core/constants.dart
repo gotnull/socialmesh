@@ -70,7 +70,7 @@ class AppUrls {
   // See docs/DOMAIN_ARCHITECTURE.md for the portal vs API distinction.
   static String shareSigilUrl(String id) => 'https://socialmesh.app/sigil/$id';
   static String shareFlightUrl(String id) =>
-      'https://aether.socialmesh.app/flight/$id';
+      'https://socialmesh.app/aether/flight/$id';
   static String shareNodeUrl(String id) => '$baseUrl/share/node/$id';
   static String shareProfileUrl(String id) => '$baseUrl/share/profile/$id';
   static String shareWidgetUrl(String id) => '$baseUrl/share/widget/$id';
