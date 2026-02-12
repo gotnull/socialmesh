@@ -9,7 +9,7 @@
 library;
 
 // Screens
-export 'screens/presence_feed_screen.dart';
+export 'screens/signal_feed_screen.dart';
 export 'screens/create_signal_screen.dart';
 export 'screens/signal_detail_screen.dart';
 

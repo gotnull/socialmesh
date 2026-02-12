@@ -298,10 +298,10 @@ void _navigateFromDrawer(BuildContext context, Widget screen) {
 }
 
 /// Main navigation shell with bottom navigation bar
-// Global key to reference the existing PresenceFeedScreen instance when it's
-// part of the MainShell. This allows other widgets to instruct the presence
-// screen to focus a specific signal without pushing additional routes.
-final GlobalKey presenceFeedScreenKey = GlobalKey();
+// Global key to reference the existing SignalFeedScreen instance when it's
+// part of the MainShell. This allows other widgets to instruct the signal
+// feed screen to focus a specific signal without pushing additional routes.
+final GlobalKey signalFeedScreenKey = GlobalKey();
 
 /// Global key for the bottom navigation bar so utilities (e.g., snackbars)
 /// can measure its runtime height instead of hardcoding offsets.
@@ -542,7 +542,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       case 1:
         return const MapScreen();
       case 2:
-        return PresenceFeedScreen(key: presenceFeedScreenKey);
+        return SignalFeedScreen(key: signalFeedScreenKey);
       case 3:
         return const NodesScreen();
       case 4:

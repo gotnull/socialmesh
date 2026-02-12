@@ -71,8 +71,8 @@ enum SignalSortOrder {
 /// - Filtered to only show active (non-expired) signals
 /// - Updated in real-time as signals expire
 /// - Viewable in list or compact grid mode
-class PresenceFeedScreen extends ConsumerStatefulWidget {
-  const PresenceFeedScreen({
+class SignalFeedScreen extends ConsumerStatefulWidget {
+  const SignalFeedScreen({
     super.key,
     this.initialViewMode = SignalViewMode.list,
     this.initialCenter,
@@ -84,11 +84,11 @@ class PresenceFeedScreen extends ConsumerStatefulWidget {
   final String? initialSelectedSignalId;
 
   @override
-  ConsumerState<PresenceFeedScreen> createState() => _PresenceFeedScreenState();
+  ConsumerState<SignalFeedScreen> createState() => _SignalFeedScreenState();
 }
 
-class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen>
-    with LifecycleSafeMixin<PresenceFeedScreen> {
+class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
+    with LifecycleSafeMixin<SignalFeedScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
 
@@ -1197,7 +1197,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen>
   }
 
   /// Programmatic helper to show a specific signal on the map without
-  /// pushing a new PresenceFeedScreen if we're already on it.
+  /// pushing a new SignalFeedScreen if we're already on it.
   void showSignalOnMap(Post signal) {
     // Set view mode to map first so the map is visible
     ref.read(signalViewModeProvider.notifier).setMode(SignalViewMode.map);

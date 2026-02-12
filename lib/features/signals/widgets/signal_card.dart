@@ -25,7 +25,7 @@ import '../../../providers/connectivity_providers.dart';
 import '../../../providers/presence_providers.dart';
 import '../../navigation/main_shell.dart';
 import '../../../providers/signal_bookmark_provider.dart';
-import '../screens/presence_feed_screen.dart';
+import '../screens/signal_feed_screen.dart';
 import '../utils/signal_utils.dart';
 import 'proximity_indicator.dart';
 import 'signal_gallery_view.dart';
@@ -865,10 +865,10 @@ class _SignalLocation extends StatelessWidget {
   final Post signal;
 
   void _openMap(BuildContext context) {
-    // If we're already inside a PresenceFeedScreen, update it in-place instead
-    // of pushing a new screen to avoid stacking multiple presence screens.
+    // If we're already inside a SignalFeedScreen, update it in-place instead
+    // of pushing a new screen to avoid stacking multiple signal feed screens.
     final presenceState = context
-        .findAncestorStateOfType<State<PresenceFeedScreen>>();
+        .findAncestorStateOfType<State<SignalFeedScreen>>();
     if (presenceState != null) {
       try {
         (presenceState as dynamic).showSignalOnMap(signal);
@@ -879,8 +879,8 @@ class _SignalLocation extends StatelessWidget {
     }
 
     // If not in-place, navigate back to the app root (MainShell), switch to the
-    // Signals tab, then focus the signal on the existing PresenceFeedScreen.
-    // This avoids pushing duplicate PresenceFeedScreen instances and keeps the
+    // Signals tab, then focus the signal on the existing SignalFeedScreen.
+    // This avoids pushing duplicate SignalFeedScreen instances and keeps the
     // hamburger menu/drawer behavior intact.
     Navigator.of(context).popUntil((route) => route.isFirst);
 
@@ -893,9 +893,9 @@ class _SignalLocation extends StatelessWidget {
       AppLogging.social('Failed to set main shell index: $e');
     }
 
-    // After the frame, focus the signal on the in-place PresenceFeedScreen
+    // After the frame, focus the signal on the in-place SignalFeedScreen
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final presenceState = presenceFeedScreenKey.currentState;
+      final presenceState = signalFeedScreenKey.currentState;
       if (presenceState != null) {
         try {
           (presenceState as dynamic).showSignalOnMap(signal);
@@ -905,11 +905,11 @@ class _SignalLocation extends StatelessWidget {
         }
       }
 
-      // As a last resort, push a new PresenceFeedScreen focused on this signal
+      // As a last resort, push a new SignalFeedScreen focused on this signal
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => PresenceFeedScreen(
+          builder: (_) => SignalFeedScreen(
             initialViewMode: SignalViewMode.map,
             initialCenter: LatLng(
               signal.location!.latitude,
