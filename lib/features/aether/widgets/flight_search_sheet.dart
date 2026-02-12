@@ -21,7 +21,7 @@ class FlightSearchSheet extends StatefulWidget {
   }) {
     return AppBottomSheet.show<ActiveFlightInfo>(
       context: context,
-      maxHeightFraction: 0.85,
+      padding: EdgeInsets.zero,
       isDismissible: isDismissible,
       child: const FlightSearchSheet(),
     );
@@ -107,94 +107,98 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
     // Prevent dismissal during active search to avoid wasted API calls
     return PopScope(
       canPop: !_isLoading,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-            child: Text(
-              'Search Active Flights',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              child: Text(
+                'Search Active Flights',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
+                ),
               ),
             ),
-          ),
 
-          // Search field
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: TextField(
-              controller: _searchController,
-              autofocus: true,
-              textCapitalization: TextCapitalization.characters,
-              decoration: InputDecoration(
-                hintText: 'Flight number (e.g. UA123)',
-                hintStyle: TextStyle(color: context.textTertiary),
-                prefixIcon: Icon(
-                  Icons.flight_takeoff,
-                  color: context.textSecondary,
+            // Search field
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                textCapitalization: TextCapitalization.characters,
+                maxLength: 11,
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
                 ),
-                suffixIcon: _isLoading
-                    ? Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: context.accentColor,
+                decoration: InputDecoration(
+                  hintText: 'Flight number (e.g. UA123)',
+                  hintStyle: TextStyle(
+                    color: context.textTertiary,
+                    fontSize: 14,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.flight_takeoff,
+                    color: context.textTertiary,
+                    size: 20,
+                  ),
+                  suffixIcon: _isLoading
+                      ? Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: context.accentColor,
+                            ),
                           ),
-                        ),
-                      )
-                    : _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(Icons.clear, color: context.textTertiary),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {
-                            _results = [];
-                            _error = null;
-                          });
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: context.surface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: context.border),
+                        )
+                      : _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear, color: context.textTertiary),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {
+                              _results = [];
+                              _error = null;
+                            });
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: context.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  isDense: true,
+                  counterStyle: TextStyle(color: context.textTertiary),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: context.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: context.accentColor, width: 2),
-                ),
+                onChanged: _onSearchChanged,
               ),
-              maxLength: 11,
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-              onChanged: _onSearchChanged,
             ),
-          ),
 
-          const SizedBox(height: 16),
+            Divider(height: 1, color: context.border),
 
-          // Results
-          Flexible(child: _buildResults()),
-
-          // Bottom padding
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-        ],
+            // Results
+            Flexible(child: _buildResults()),
+          ],
+        ),
       ),
     );
   }
@@ -213,8 +217,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
     }
 
     return ListView.builder(
-      shrinkWrap: true,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       itemCount: _results.length,
       itemBuilder: (context, index) {
         final flight = _results[index];
@@ -330,7 +333,7 @@ class _FlightResultTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      color: context.card,
+      color: context.background,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
