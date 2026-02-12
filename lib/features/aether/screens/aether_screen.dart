@@ -32,7 +32,7 @@ import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../providers/help_providers.dart';
 import '../../../core/widgets/search_filter_header.dart';
-import '../../navigation/main_shell.dart';
+
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton_config.dart';
 import '../../../providers/accessibility_providers.dart';
@@ -275,7 +275,7 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
             backgroundColor: context.background,
             elevation: 0,
             scrolledUnderElevation: 0,
-            leading: const HamburgerMenuButton(),
+            leading: const BackButton(),
             centerTitle: true,
             title: Text(
               'Aether',
@@ -609,7 +609,11 @@ class _FlightsTabContent extends StatelessWidget {
       }).toList();
     }
 
-    if (isLoading && filteredFlights.isEmpty) {
+    // Only show skeletons if we're loading AND we had data before (not first visit)
+    // This prevents a skeleton flash on first visit when there's no data
+    final hasExistingData =
+        flightsAsync.hasValue && flightsAsync.value!.isNotEmpty;
+    if (isLoading && hasExistingData && filteredFlights.isEmpty) {
       return SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) => Skeletonizer(
@@ -657,7 +661,7 @@ class _FlightsTabContent extends StatelessWidget {
               titleKeyword: 'flights',
               titleSuffix: ' in the air',
               actionLabel: 'Schedule Flight',
-              actionIcon: Icons.add,
+              actionIcon: Icons.flight_takeoff,
               onAction: onScheduleFlight,
               actionEnabled: true,
             ),

@@ -1399,34 +1399,36 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     final hasCustomIcons =
         widget.particleIcons != null && widget.particleIcons!.isNotEmpty;
 
-    // Inner particles - custom icons close to the brain (replacing default stars)
+    // Inner particles - custom icons close to the brain (one per icon, smooth orbit)
     if (hasCustomIcons) {
       final iconCount = widget.particleIcons!.length;
-      for (int i = 0; i < _particles.length; i++) {
-        final particle = _particles[i];
-        final progress = (_particleController.value + particle.phase) % 1.0;
-        final angle = particle.angle + progress * 2 * math.pi * particle.speed;
+
+      // Each icon gets its own smooth orbit - no repeating
+      for (int i = 0; i < iconCount; i++) {
+        final iconData = widget.particleIcons![i];
+        // Evenly distribute icons around the circle
+        final baseAngle = (i / iconCount) * 2 * math.pi;
+        // Slow continuous rotation
+        final angle = baseAngle + _particleController.value * 2 * math.pi * 0.4;
+        // Gentle radius pulsing
         final radius =
-            widget.size *
-            0.5 *
-            particle.radius *
-            (0.8 + 0.2 * math.sin(progress * math.pi * 2));
+            widget.size * 0.42 +
+            math.sin(_particleController.value * 2 * math.pi + baseAngle) * 6;
 
         final x = math.cos(angle) * radius;
         final y = math.sin(angle) * radius * 0.6;
-        final opacity = math.sin(progress * math.pi) * 0.8;
+        // Constant opacity - no blinking
+        const opacity = 0.85;
 
         final particleColor = _colors[i % _colors.length];
-        final iconData = widget.particleIcons![i % iconCount];
-        final iconSize = particle.size * 2.5;
-        final clampedOpacity = opacity.clamp(0.0, 1.0);
+        const iconSize = 12.0;
 
         particles.add(
           Positioned(
             left: widget.size * 0.8 + x - iconSize / 2,
             top: widget.size * 0.8 + y - iconSize / 2,
             child: Opacity(
-              opacity: clampedOpacity,
+              opacity: opacity,
               child: Icon(iconData, size: iconSize, color: particleColor),
             ),
           ),
@@ -1434,23 +1436,28 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
       }
 
       // Outer particles - stars orbiting far outside the brain
-      for (int i = 0; i < iconCount; i++) {
-        final phase = (i / iconCount) * 2 * math.pi;
-        final progress =
-            (_particleController.value + phase / (2 * math.pi)) % 1.0;
-        final angle = phase + _particleController.value * 2 * math.pi * 0.25;
+      for (int i = 0; i < 8; i++) {
+        final phase = (i / 8) * 2 * math.pi;
+        // Smooth continuous rotation
+        final angle = phase + _particleController.value * 2 * math.pi * 0.2;
+        // Gentle radius variation
         final radius =
-            widget.size * 1.3 + math.sin(progress * math.pi * 2) * 10;
+            widget.size * 1.2 +
+            math.sin(_particleController.value * 2 * math.pi + phase) * 8;
 
         final x = math.cos(angle) * radius;
         final y = math.sin(angle) * radius * 0.7;
-        final opacity = (0.5 + 0.5 * math.sin(progress * math.pi * 2)).clamp(
-          0.0,
-          1.0,
-        );
+        // Subtle opacity variation
+        final opacity =
+            (0.6 +
+                    0.3 *
+                        math.sin(
+                          _particleController.value * 2 * math.pi + phase,
+                        ))
+                .clamp(0.0, 1.0);
 
         final particleColor = _colors[i % _colors.length];
-        const starSize = 6.0;
+        const starSize = 5.0;
 
         particles.add(
           Positioned(
