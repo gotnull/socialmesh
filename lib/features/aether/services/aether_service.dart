@@ -13,9 +13,8 @@ class AetherService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Collection references
-  // Note: Firestore collection names kept as 'skyNodes' for backward compatibility
   CollectionReference<Map<String, dynamic>> get _flightsCollection =>
-      _firestore.collection('skyNodes');
+      _firestore.collection('aetherFlights');
 
   CollectionReference<Map<String, dynamic>> get _reportsCollection =>
       _firestore.collection('receptionReports');
@@ -115,9 +114,8 @@ class AetherService {
 
   /// Watch reception reports for a flight
   Stream<List<ReceptionReport>> watchReports(String flightId) {
-    // Query both old and new field names for backward compatibility
     return _reportsCollection
-        .where('skyNodeId', isEqualTo: flightId)
+        .where('aetherFlightId', isEqualTo: flightId)
         .orderBy('receivedAt', descending: true)
         .snapshots()
         .map(
@@ -250,9 +248,7 @@ class AetherService {
     required DateTime receivedAt,
   }) async {
     final data = {
-      // Store both field names for backward compatibility
       'aetherFlightId': flightId,
-      'skyNodeId': flightId,
       'flightNumber': flightNumber,
       'reporterId': reporterId,
       'reporterName': reporterName,
