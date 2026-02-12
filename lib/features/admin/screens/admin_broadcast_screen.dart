@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -121,6 +122,21 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
     });
 
     try {
+      // Force-refresh the auth token to avoid stale token errors
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        if (!mounted) return;
+        ref.read(hapticServiceProvider).trigger(HapticType.error);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('You must be signed in to send notifications'),
+            backgroundColor: Colors.red.shade400,
+          ),
+        );
+        return;
+      }
+      await user.getIdToken(true);
+
       final callable = FirebaseFunctions.instance.httpsCallable(
         'broadcastPushNotification',
       );
@@ -223,30 +239,39 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
     ref.read(hapticServiceProvider).trigger(HapticType.selection);
     AppBottomSheet.show(
       context: context,
-      maxHeightFraction: 0.9,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Text(
-              'Select Icon',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
+      padding: EdgeInsets.zero,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              child: Text(
+                'Select Icon',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
+                ),
               ),
             ),
-          ),
-          _IconPickerContent(
-            selectedIcon: _selectedIcon,
-            onIconSelected: (icon) {
-              safeSetState(() => _selectedIcon = icon);
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
+            Flexible(
+              child: SingleChildScrollView(
+                child: _IconPickerContent(
+                  selectedIcon: _selectedIcon,
+                  onIconSelected: (icon) {
+                    safeSetState(() => _selectedIcon = icon);
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
