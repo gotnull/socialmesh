@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
-
+import '../../../core/widgets/datetime_picker_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../core/widgets/status_banner.dart';
@@ -106,20 +106,12 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
 
   Future<void> _selectDepartureDate() async {
     final now = DateTime.now();
-    final date = await showDatePicker(
-      context: context,
+    final date = await DatePickerSheet.show(
+      context,
       initialDate: _departureDate ?? now,
       firstDate: now,
       lastDate: now.add(const Duration(days: 365)),
-      builder: (context, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: ColorScheme.dark(
-            primary: context.accentColor,
-            surface: context.card,
-          ),
-        ),
-        child: child!,
-      ),
+      title: 'Departure Date',
     );
 
     if (date != null && mounted) {
@@ -131,18 +123,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   }
 
   Future<void> _selectDepartureTime() async {
-    final time = await showTimePicker(
-      context: context,
+    final time = await TimePickerSheet.show(
+      context,
       initialTime: _departureTime ?? TimeOfDay.now(),
-      builder: (context, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: ColorScheme.dark(
-            primary: context.accentColor,
-            surface: context.card,
-          ),
-        ),
-        child: child!,
-      ),
+      title: 'Departure Time',
     );
 
     if (time != null && mounted) {
@@ -152,20 +136,12 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
 
   Future<void> _selectArrivalDate() async {
     final now = DateTime.now();
-    final date = await showDatePicker(
-      context: context,
+    final date = await DatePickerSheet.show(
+      context,
       initialDate: _arrivalDate ?? _departureDate ?? now,
       firstDate: now,
       lastDate: now.add(const Duration(days: 365)),
-      builder: (context, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: ColorScheme.dark(
-            primary: context.accentColor,
-            surface: context.card,
-          ),
-        ),
-        child: child!,
-      ),
+      title: 'Arrival Date',
     );
 
     if (date != null && mounted) {
@@ -177,18 +153,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   }
 
   Future<void> _selectArrivalTime() async {
-    final time = await showTimePicker(
-      context: context,
+    final time = await TimePickerSheet.show(
+      context,
       initialTime: _arrivalTime ?? TimeOfDay.now(),
-      builder: (context, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: ColorScheme.dark(
-            primary: context.accentColor,
-            surface: context.card,
-          ),
-        ),
-        child: child!,
-      ),
+      title: 'Arrival Time',
     );
 
     if (time != null && mounted) {
