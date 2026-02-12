@@ -8,8 +8,8 @@ import 'package:socialmesh/core/logging.dart';
 
 import '../models/sky_node.dart';
 
-/// Service for Sky Tracker functionality
-class SkyTrackerService {
+/// Service for Sky Scanner functionality
+class SkyScannerService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Collection references
@@ -125,7 +125,7 @@ class SkyTrackerService {
         );
   }
 
-  /// Get recent reception reports (leaderboard)
+  /// Get recent reception reports
   Stream<List<ReceptionReport>> watchRecentReports({int limit = 50}) {
     return _reportsCollection
         .orderBy('createdAt', descending: true)
@@ -136,6 +136,99 @@ class SkyTrackerService {
               .map((doc) => ReceptionReport.fromJson(doc.data(), doc.id))
               .toList(),
         );
+  }
+
+  /// Get global leaderboard — all-time top distances
+  ///
+  /// This is the primary leaderboard query. Results are sorted by
+  /// estimatedDistance descending so the longest range contacts appear first.
+  /// Data is persisted in Firestore and survives app deletion.
+  Stream<List<ReceptionReport>> watchLeaderboard({int limit = 100}) {
+    return _reportsCollection
+        .where('estimatedDistance', isGreaterThan: 0)
+        .orderBy('estimatedDistance', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ReceptionReport.fromJson(doc.data(), doc.id))
+              .toList(),
+        );
+  }
+
+  /// Get top distance record (all-time best)
+  Future<ReceptionReport?> getTopDistanceRecord() async {
+    final snapshot = await _reportsCollection
+        .where('estimatedDistance', isGreaterThan: 0)
+        .orderBy('estimatedDistance', descending: true)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) return null;
+    final doc = snapshot.docs.first;
+    return ReceptionReport.fromJson(doc.data(), doc.id);
+  }
+
+  /// Get leaderboard filtered by time period
+  Stream<List<ReceptionReport>> watchLeaderboardByPeriod({
+    required DateTime since,
+    int limit = 50,
+  }) {
+    return _reportsCollection
+        .where('estimatedDistance', isGreaterThan: 0)
+        .where('createdAt', isGreaterThan: Timestamp.fromDate(since))
+        .orderBy('estimatedDistance', descending: true)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ReceptionReport.fromJson(doc.data(), doc.id))
+              .toList(),
+        );
+  }
+
+  /// Get a user's personal best distance
+  Future<ReceptionReport?> getUserPersonalBest(String userId) async {
+    final snapshot = await _reportsCollection
+        .where('reporterId', isEqualTo: userId)
+        .where('estimatedDistance', isGreaterThan: 0)
+        .orderBy('estimatedDistance', descending: true)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) return null;
+    final doc = snapshot.docs.first;
+    return ReceptionReport.fromJson(doc.data(), doc.id);
+  }
+
+  /// Get user's rank on the leaderboard
+  Future<int?> getUserLeaderboardRank(String userId) async {
+    // Get all reports sorted by distance
+    final snapshot = await _reportsCollection
+        .where('estimatedDistance', isGreaterThan: 0)
+        .orderBy('estimatedDistance', descending: true)
+        .get();
+
+    if (snapshot.docs.isEmpty) return null;
+
+    // Find user's best report position
+    int rank = 1;
+    double? userBestDistance;
+
+    for (final doc in snapshot.docs) {
+      final report = ReceptionReport.fromJson(doc.data(), doc.id);
+      if (report.reporterId == userId) {
+        if (userBestDistance == null ||
+            (report.estimatedDistance ?? 0) > userBestDistance) {
+          userBestDistance = report.estimatedDistance;
+          return rank;
+        }
+      }
+      rank++;
+    }
+
+    return null; // User has no reports
   }
 
   /// Create a reception report
@@ -226,7 +319,7 @@ class SkyTrackerService {
 
       return null;
     } catch (e) {
-      AppLogging.app('[SkyTracker] Error fetching flight position: $e');
+      AppLogging.app('[SkyScanner] Error fetching flight position: $e');
       return null;
     }
   }

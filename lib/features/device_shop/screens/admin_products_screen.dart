@@ -156,12 +156,6 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen>
               SliverFillRemaining(child: Center(child: Text('Error: $e'))),
         ),
       ],
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navigateToEdit(null),
-        icon: const Icon(Icons.add),
-        label: const Text('Add Product'),
-        backgroundColor: context.accentColor,
-      ),
     );
   }
 

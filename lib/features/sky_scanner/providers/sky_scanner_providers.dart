@@ -5,22 +5,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
 
 import '../models/sky_node.dart';
-import '../services/sky_tracker_service.dart';
+import '../services/sky_scanner_service.dart';
 
-/// Provider for SkyTrackerService
-final skyTrackerServiceProvider = Provider<SkyTrackerService>((ref) {
-  return SkyTrackerService();
+/// Provider for SkyScannerService
+final skyScannerServiceProvider = Provider<SkyScannerService>((ref) {
+  return SkyScannerService();
 });
 
 /// Provider for all sky nodes (upcoming and active)
 final skyNodesProvider = StreamProvider<List<SkyNode>>((ref) {
-  final service = ref.watch(skyTrackerServiceProvider);
+  final service = ref.watch(skyScannerServiceProvider);
   return service.watchSkyNodes();
 });
 
 /// Provider for active flights only
 final activeFlightsProvider = StreamProvider<List<SkyNode>>((ref) {
-  final service = ref.watch(skyTrackerServiceProvider);
+  final service = ref.watch(skyScannerServiceProvider);
   return service.watchActiveFlights();
 });
 
@@ -29,22 +29,59 @@ final userSkyNodesProvider = StreamProvider.family<List<SkyNode>, String>((
   ref,
   userId,
 ) {
-  final service = ref.watch(skyTrackerServiceProvider);
+  final service = ref.watch(skyScannerServiceProvider);
   return service.watchUserSkyNodes(userId);
 });
 
 /// Provider for reception reports for a specific sky node
 final skyNodeReportsProvider =
     StreamProvider.family<List<ReceptionReport>, String>((ref, skyNodeId) {
-      final service = ref.watch(skyTrackerServiceProvider);
+      final service = ref.watch(skyScannerServiceProvider);
       return service.watchReports(skyNodeId);
     });
 
-/// Provider for recent reception reports (leaderboard)
+/// Provider for recent reception reports
 final recentReportsProvider = StreamProvider<List<ReceptionReport>>((ref) {
-  final service = ref.watch(skyTrackerServiceProvider);
+  final service = ref.watch(skyScannerServiceProvider);
   return service.watchRecentReports();
 });
+
+/// Provider for global leaderboard — all-time top distances
+///
+/// This is the primary leaderboard, sorted by distance descending.
+/// Data is persisted in Firestore and survives app deletion.
+/// Accessible to all users globally.
+final globalLeaderboardProvider = StreamProvider<List<ReceptionReport>>((ref) {
+  final service = ref.watch(skyScannerServiceProvider);
+  return service.watchLeaderboard();
+});
+
+/// Provider for this week's leaderboard
+final weeklyLeaderboardProvider = StreamProvider<List<ReceptionReport>>((ref) {
+  final service = ref.watch(skyScannerServiceProvider);
+  final oneWeekAgo = DateTime.now().subtract(const Duration(days: 7));
+  return service.watchLeaderboardByPeriod(since: oneWeekAgo);
+});
+
+/// Provider for this month's leaderboard
+final monthlyLeaderboardProvider = StreamProvider<List<ReceptionReport>>((ref) {
+  final service = ref.watch(skyScannerServiceProvider);
+  final oneMonthAgo = DateTime.now().subtract(const Duration(days: 30));
+  return service.watchLeaderboardByPeriod(since: oneMonthAgo);
+});
+
+/// Provider for the all-time distance record
+final topDistanceRecordProvider = FutureProvider<ReceptionReport?>((ref) {
+  final service = ref.watch(skyScannerServiceProvider);
+  return service.getTopDistanceRecord();
+});
+
+/// Provider for a user's personal best distance
+final userPersonalBestProvider =
+    FutureProvider.family<ReceptionReport?, String>((ref, userId) {
+      final service = ref.watch(skyScannerServiceProvider);
+      return service.getUserPersonalBest(userId);
+    });
 
 /// State for flight position tracking
 class FlightPositionState {
@@ -79,7 +116,7 @@ class FlightPositionState {
 /// Auto-refreshes periodically while watched
 final flightPositionProvider = FutureProvider.autoDispose
     .family<FlightPositionState, String>((ref, callsign) async {
-      final service = ref.watch(skyTrackerServiceProvider);
+      final service = ref.watch(skyScannerServiceProvider);
 
       // Set up periodic refresh every 30 seconds
       final timer = Timer.periodic(const Duration(seconds: 30), (_) {
@@ -95,7 +132,7 @@ final flightPositionProvider = FutureProvider.autoDispose
           lastFetch: DateTime.now(),
         );
       } catch (e) {
-        AppLogging.app('[SkyTracker] Error fetching position: $e');
+        AppLogging.app('[SkyScanner] Error fetching position: $e');
         return FlightPositionState(isLoading: false, error: e.toString());
       }
     });
@@ -104,7 +141,7 @@ final flightPositionProvider = FutureProvider.autoDispose
 final distanceToFlightProvider =
     Provider.family<double?, ({FlightPosition flight, double lat, double lon})>(
       (ref, params) {
-        return SkyTrackerService.calculateDistance(
+        return SkyScannerService.calculateDistance(
           params.lat,
           params.lon,
           params.flight.latitude,
@@ -113,33 +150,37 @@ final distanceToFlightProvider =
       },
     );
 
-/// Stats provider for sky tracker
-final skyTrackerStatsProvider = Provider<SkyTrackerStats>((ref) {
+/// Stats provider for sky scanner
+///
+/// Uses the global leaderboard for accurate stats that persist
+/// across app reinstalls and are consistent for all users.
+final skyScannerStatsProvider = Provider<SkyScannerStats>((ref) {
   final skyNodes = ref.watch(skyNodesProvider);
   final activeFlights = ref.watch(activeFlightsProvider);
-  final reports = ref.watch(recentReportsProvider);
+  final leaderboard = ref.watch(globalLeaderboardProvider);
 
-  return SkyTrackerStats(
+  // Get total report count from leaderboard (all reports with distance)
+  final reports = leaderboard.value ?? [];
+  final longestDistance = reports.isNotEmpty
+      ? reports.first.estimatedDistance ?? 0
+      : 0.0;
+
+  return SkyScannerStats(
     totalScheduled: skyNodes.value?.length ?? 0,
     activeFlights: activeFlights.value?.length ?? 0,
-    totalReports: reports.value?.length ?? 0,
-    longestDistance:
-        reports.value
-            ?.where((r) => r.estimatedDistance != null)
-            .map((r) => r.estimatedDistance!)
-            .fold<double>(0, (max, d) => d > max ? d : max) ??
-        0,
+    totalReports: reports.length,
+    longestDistance: longestDistance,
   );
 });
 
-/// Stats summary for sky tracker
-class SkyTrackerStats {
+/// Stats summary for sky scanner
+class SkyScannerStats {
   final int totalScheduled;
   final int activeFlights;
   final int totalReports;
   final double longestDistance;
 
-  const SkyTrackerStats({
+  const SkyScannerStats({
     required this.totalScheduled,
     required this.activeFlights,
     required this.totalReports,

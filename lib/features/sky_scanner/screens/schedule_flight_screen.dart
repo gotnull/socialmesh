@@ -10,7 +10,7 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../../core/widgets/status_banner.dart';
-import '../providers/sky_tracker_providers.dart';
+import '../providers/sky_scanner_providers.dart';
 
 /// Screen to schedule a new sky node flight
 class ScheduleFlightScreen extends ConsumerStatefulWidget {
@@ -180,7 +180,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     safeSetState(() => _isSaving = true);
 
     try {
-      final service = ref.read(skyTrackerServiceProvider);
+      final service = ref.read(skyScannerServiceProvider);
       await service.createSkyNode(
         nodeId: _nodeIdController.text.trim(),
         nodeName: _nodeNameController.text.trim().isEmpty

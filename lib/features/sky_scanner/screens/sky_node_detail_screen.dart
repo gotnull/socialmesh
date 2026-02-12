@@ -11,8 +11,8 @@ import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../models/sky_node.dart';
-import '../providers/sky_tracker_providers.dart';
-import '../services/sky_tracker_service.dart';
+import '../providers/sky_scanner_providers.dart';
+import '../services/sky_scanner_service.dart';
 
 /// Detail screen for a sky node with live tracking and report submission
 class SkyNodeDetailScreen extends ConsumerStatefulWidget {
@@ -728,7 +728,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
     safeSetState(() => _isSaving = true);
 
     try {
-      final service = ref.read(skyTrackerServiceProvider);
+      final service = ref.read(skyScannerServiceProvider);
 
       // Get user's location if available
       final myNode = ref.read(myNodeNumProvider);
@@ -751,7 +751,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
         if (positionState?.position != null &&
             latitude != null &&
             longitude != null) {
-          estimatedDistance = SkyTrackerService.calculateSlantRange(
+          estimatedDistance = SkyScannerService.calculateSlantRange(
             latitude,
             longitude,
             node.altitude?.toDouble() ?? 0,

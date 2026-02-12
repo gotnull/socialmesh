@@ -149,6 +149,11 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen>
       title: 'Quick Responses',
       actions: [
         IconButton(
+          icon: Icon(Icons.add, color: context.accentColor),
+          tooltip: 'Add response',
+          onPressed: _addResponse,
+        ),
+        IconButton(
           icon: Icon(
             _isReordering ? Icons.check : Icons.reorder,
             color: _isReordering ? context.accentColor : null,
@@ -179,11 +184,6 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen>
           ],
         ),
       ],
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addResponse,
-        backgroundColor: context.accentColor,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
