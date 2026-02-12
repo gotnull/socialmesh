@@ -8,6 +8,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/auth_providers.dart';
+import '../../providers/connectivity_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../utils/snackbar.dart';
 import 'mfa_error_messages.dart';
@@ -47,6 +48,16 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
   }
 
   Future<void> _sendCode() async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      AppLogging.mfa('_sendCode — blocked, device is offline');
+      showErrorSnackBar(
+        context,
+        'Sending verification codes requires an internet connection.',
+      );
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) {
       AppLogging.mfa('_sendCode — form validation failed');
       return;
@@ -186,6 +197,16 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
   }
 
   Future<void> _verifyCode() async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      AppLogging.mfa('_verifyCode — blocked, device is offline');
+      showErrorSnackBar(
+        context,
+        'Verifying codes requires an internet connection.',
+      );
+      return;
+    }
+
     if (_verificationId == null) {
       AppLogging.mfa('_verifyCode — no verificationId, aborting');
       return;

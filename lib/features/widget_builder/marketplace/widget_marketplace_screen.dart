@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../providers/connectivity_providers.dart';
 import '../../../services/share_link_service.dart';
 import '../../../utils/share_utils.dart';
 import '../../../core/widgets/ico_help_system.dart';
@@ -809,6 +810,15 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
   }
 
   Future<void> _installWidget() async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      showErrorSnackBar(
+        context,
+        'Installing widgets requires an internet connection.',
+      );
+      return;
+    }
+
     // Check premium before allowing widget install
     final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.homeWidgets));
     if (!hasPremium) {
@@ -866,6 +876,15 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
   }
 
   Future<void> _shareWidget(BuildContext context) async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      showErrorSnackBar(
+        context,
+        'Sharing widgets requires an internet connection.',
+      );
+      return;
+    }
+
     final shareService = ref.read(shareLinkServiceProvider);
     final sharePosition = getSafeSharePosition(context);
 

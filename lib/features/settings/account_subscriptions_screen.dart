@@ -47,6 +47,7 @@ class _AccountSubscriptionsScreenState
     with LifecycleSafeMixin<AccountSubscriptionsScreen> {
   bool _isSigningIn = false;
   bool _isPurchasing = false;
+  bool _isRestoringPurchases = false;
 
   @override
   Widget build(BuildContext context) {
@@ -934,26 +935,48 @@ class _AccountSubscriptionsScreenState
             icon: Icons.restore,
             title: 'Restore Purchases',
             subtitle: 'Restore previously purchased items',
+            enabled: !_isRestoringPurchases,
+            loading: _isRestoringPurchases,
             onTap: () async {
-              // Use canonical restore flow (includes RevenueCat + Firebase sync)
-              AppLogging.subscriptions(
-                '🔄 User tapped restore from Manage Card',
-              );
+              if (_isRestoringPurchases) return;
 
-              // Capture state before restore to detect new purchases
-              final stateBefore = ref.read(purchaseStateProvider);
-              final countBefore = stateBefore.purchasedProductIds.length;
+              final online = ref.read(isOnlineProvider);
+              if (!online) {
+                AppLogging.subscriptions(
+                  '[ManageCard] Restore blocked — offline',
+                );
+                showErrorSnackBar(
+                  context,
+                  'Restoring purchases requires an internet connection.',
+                );
+                return;
+              }
 
-              final success = await restorePurchases(ref);
+              safeSetState(() => _isRestoringPurchases = true);
 
-              // Refresh cloud entitlement service
-              final cloudService = ref.read(
-                cloudSyncEntitlementServiceProvider,
-              );
-              await cloudService.refreshEntitlement();
-              ref.invalidate(cloudSyncEntitlementProvider);
+              try {
+                // Use canonical restore flow (includes RevenueCat + Firebase sync)
+                AppLogging.subscriptions(
+                  '🔄 User tapped restore from Manage Card',
+                );
 
-              if (mounted) {
+                // CRITICAL: Capture ALL providers before any await to prevent
+                // ref.read() on a disposed ConsumerStatefulElement.
+                final purchaseNotifier = ref.read(purchaseStateProvider);
+                final countBefore = purchaseNotifier.purchasedProductIds.length;
+                final cloudService = ref.read(
+                  cloudSyncEntitlementServiceProvider,
+                );
+
+                final success = await restorePurchases(ref);
+                if (!mounted) return;
+
+                // Refresh cloud entitlement service
+                await cloudService.refreshEntitlement();
+                if (!mounted) return;
+
+                ref.invalidate(cloudSyncEntitlementProvider);
+
                 // Check if new purchases were restored
                 final stateAfter = ref.read(purchaseStateProvider);
                 final countAfter = stateAfter.purchasedProductIds.length;
@@ -972,6 +995,8 @@ class _AccountSubscriptionsScreenState
                 } else {
                   showInfoSnackBar(context, 'No purchases found to restore');
                 }
+              } finally {
+                safeSetState(() => _isRestoringPurchases = false);
               }
             },
             isFirst: true,
@@ -1050,6 +1075,12 @@ class _AccountSubscriptionsScreenState
   /// Returns the [AuthService] if Firebase is ready, or `null` when
   /// Firebase has not finished initializing or failed.
   AuthService? _guardedAuthService() {
+    final online = ref.read(isOnlineProvider);
+    if (!online) {
+      AppLogging.subscriptions('║ ⚠️ Sign-in blocked — offline');
+      showErrorSnackBar(context, 'Sign-in requires an internet connection.');
+      return null;
+    }
     final isReady =
         ref.read(firebaseReadyProvider).whenOrNull(data: (v) => v) ?? false;
     if (!isReady) {
@@ -1453,6 +1484,16 @@ class _AccountSubscriptionsScreenState
   }
 
   Future<void> _signOut(BuildContext _) async {
+    final online = ref.read(isOnlineProvider);
+    if (!online) {
+      AppLogging.subscriptions('🚪 Sign out blocked — offline');
+      showErrorSnackBar(
+        context,
+        'Signing out requires an internet connection.',
+      );
+      return;
+    }
+
     // Capture provider ref before await
     final authService = ref.read(authServiceProvider);
 
@@ -1514,6 +1555,15 @@ class _AccountSubscriptionsScreenState
   }
 
   void _showLinkAccountSheet(BuildContext context) {
+    final online = ref.read(isOnlineProvider);
+    if (!online) {
+      AppLogging.subscriptions('[LinkAccount] blocked — offline');
+      showErrorSnackBar(
+        context,
+        'Linking an account requires an internet connection.',
+      );
+      return;
+    }
     showModalBottomSheet(
       context: context,
       backgroundColor: context.card,
@@ -1605,6 +1655,16 @@ class _AccountSubscriptionsScreenState
   }
 
   Future<void> _manageSubscription(CloudSyncEntitlement entitlement) async {
+    final online = ref.read(isOnlineProvider);
+    if (!online) {
+      AppLogging.subscriptions('[ManageSubscription] blocked — offline');
+      showErrorSnackBar(
+        context,
+        'Managing subscriptions requires an internet connection.',
+      );
+      return;
+    }
+
     // RevenueCat provides a direct URL to the App Store/Play Store subscription management
     final managementURL = entitlement.managementURL;
 
@@ -2807,6 +2867,8 @@ class _ManageListTile extends StatelessWidget {
   final VoidCallback onTap;
   final bool isFirst;
   final bool isLast;
+  final bool enabled;
+  final bool loading;
 
   const _ManageListTile({
     required this.icon,
@@ -2815,46 +2877,64 @@ class _ManageListTile extends StatelessWidget {
     required this.onTap,
     this.isFirst = false,
     this.isLast = false,
+    this.enabled = true,
+    this.loading = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Icon(icon, color: context.textSecondary, size: 24),
-              SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: context.textPrimary,
-                      ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
+    final isDisabled = !enabled || loading;
+    final opacity = isDisabled ? 0.4 : 1.0;
+
+    return Opacity(
+      opacity: opacity,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isDisabled ? null : onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(icon, color: context.textSecondary, size: 24),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        subtitle!,
+                        title,
                         style: TextStyle(
-                          fontSize: 12,
-                          color: context.textTertiary,
+                          fontSize: 16,
+                          color: context.textPrimary,
                         ),
                       ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              Icon(Icons.chevron_right, color: context.textTertiary),
-            ],
+                if (loading)
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: context.textTertiary,
+                    ),
+                  )
+                else
+                  Icon(Icons.chevron_right, color: context.textTertiary),
+              ],
+            ),
           ),
         ),
       ),

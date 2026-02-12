@@ -227,10 +227,18 @@ Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
     return result;
   } catch (e) {
     AppLogging.subscriptions('💳 [PurchaseProduct] Error: $e');
-    ref.read(subscriptionErrorProvider.notifier).setError(e.toString());
+    try {
+      ref.read(subscriptionErrorProvider.notifier).setError(e.toString());
+    } catch (_) {
+      // ref may be disposed if the calling widget was unmounted
+    }
     return PurchaseResult.error;
   } finally {
-    ref.read(subscriptionLoadingProvider.notifier).setLoading(false);
+    try {
+      ref.read(subscriptionLoadingProvider.notifier).setLoading(false);
+    } catch (_) {
+      // ref may be disposed if the calling widget was unmounted
+    }
   }
 }
 
@@ -247,8 +255,13 @@ Future<bool> restorePurchases(WidgetRef ref) async {
     '💳 [RestorePurchases] Setting loading state to true',
   );
 
-  ref.read(subscriptionLoadingProvider.notifier).setLoading(true);
-  ref.read(subscriptionErrorProvider.notifier).clear();
+  try {
+    ref.read(subscriptionLoadingProvider.notifier).setLoading(true);
+    ref.read(subscriptionErrorProvider.notifier).clear();
+  } catch (_) {
+    // ref may already be disposed — abort early
+    return false;
+  }
 
   try {
     AppLogging.subscriptions(
@@ -324,11 +337,27 @@ Future<bool> restorePurchases(WidgetRef ref) async {
     AppLogging.subscriptions(
       '💳 [RestorePurchases] Explicitly refreshing purchase state notifier...',
     );
-    await ref.read(purchaseStateProvider.notifier).refresh();
+    try {
+      await ref.read(purchaseStateProvider.notifier).refresh();
+    } catch (_) {
+      // ref may be disposed if the calling widget was unmounted
+      AppLogging.subscriptions(
+        '💳 [RestorePurchases] ref disposed during refresh — returning true',
+      );
+      return true;
+    }
     AppLogging.subscriptions('💳 [RestorePurchases] Refresh complete');
 
     // Determine success by comparing state BEFORE and AFTER
-    final stateAfter = ref.read(purchaseStateProvider);
+    PurchaseState stateAfter;
+    try {
+      stateAfter = ref.read(purchaseStateProvider);
+    } catch (_) {
+      AppLogging.subscriptions(
+        '💳 [RestorePurchases] ref disposed reading state — returning true',
+      );
+      return true;
+    }
     final purchaseCountAfter = stateAfter.purchasedProductIds.length;
     AppLogging.subscriptions(
       '💳 [RestorePurchases] State AFTER restore: ${stateAfter.purchasedProductIds} (count: $purchaseCountAfter)',
@@ -355,13 +384,21 @@ Future<bool> restorePurchases(WidgetRef ref) async {
   } catch (e, stackTrace) {
     AppLogging.subscriptions('💳 [RestorePurchases] ❌ ERROR: $e');
     AppLogging.subscriptions('💳 [RestorePurchases] Stack trace: $stackTrace');
-    ref.read(subscriptionErrorProvider.notifier).setError(e.toString());
+    try {
+      ref.read(subscriptionErrorProvider.notifier).setError(e.toString());
+    } catch (_) {
+      // ref may be disposed if the calling widget was unmounted
+    }
     return false;
   } finally {
     AppLogging.subscriptions(
       '💳 [RestorePurchases] Setting loading state to false',
     );
-    ref.read(subscriptionLoadingProvider.notifier).setLoading(false);
+    try {
+      ref.read(subscriptionLoadingProvider.notifier).setLoading(false);
+    } catch (_) {
+      // ref may be disposed if the calling widget was unmounted
+    }
   }
 }
 
@@ -383,13 +420,29 @@ Future<bool> syncRevenueCatWithFirebase(WidgetRef ref) async {
   );
 
   try {
-    final service = await ref.read(subscriptionServiceProvider.future);
+    PurchaseService service;
+    try {
+      service = await ref.read(subscriptionServiceProvider.future);
+    } catch (_) {
+      // ref may be disposed if the calling widget was unmounted
+      AppLogging.subscriptions(
+        '💳 [SyncRevenueCat] ref disposed getting service — aborting',
+      );
+      return false;
+    }
     final success = await service.logIn(firebaseUser.uid);
 
     if (success) {
       // Refresh to get any purchases associated with this user
       await service.refreshPurchases();
-      await ref.read(purchaseStateProvider.notifier).refresh();
+      try {
+        await ref.read(purchaseStateProvider.notifier).refresh();
+      } catch (_) {
+        // ref may be disposed if the calling widget was unmounted
+        AppLogging.subscriptions(
+          '💳 [SyncRevenueCat] ref disposed during refresh — continuing',
+        );
+      }
 
       // Sync purchases to Firestore via Cloud Function
       AppLogging.subscriptions(

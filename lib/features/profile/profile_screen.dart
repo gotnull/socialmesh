@@ -26,6 +26,7 @@ import '../../providers/subscription_providers.dart';
 import '../../services/content_moderation/profanity_checker.dart';
 import '../../services/profile/profile_cloud_sync_service.dart';
 import '../../core/logging.dart';
+import '../../providers/connectivity_providers.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../utils/validation.dart';
@@ -739,6 +740,12 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
   /// Returns the [AuthService] if Firebase is ready, or `null` when
   /// Firebase has not finished initializing or failed.
   AuthService? _guardedAuthService(BuildContext context) {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      AppLogging.auth('[ProfileScreen] Sign-in blocked — offline');
+      showErrorSnackBar(context, 'Sign-in requires an internet connection.');
+      return null;
+    }
     final isReady =
         ref.read(firebaseReadyProvider).whenOrNull(data: (v) => v) ?? false;
     if (!isReady) {
@@ -924,6 +931,12 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
   }
 
   Future<void> _retrySyncNow(BuildContext context) async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      AppLogging.auth('[ProfileScreen] Retry sync blocked — offline');
+      showErrorSnackBar(context, 'Syncing requires an internet connection.');
+      return;
+    }
     try {
       await triggerManualSync(ref);
       if (context.mounted) {
@@ -937,6 +950,16 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
   }
 
   Future<void> _signOut(BuildContext context) async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      AppLogging.auth('[ProfileScreen] Sign out blocked — offline');
+      showErrorSnackBar(
+        context,
+        'Signing out requires an internet connection.',
+      );
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -963,6 +986,16 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
   }
 
   Future<void> _deleteAccount(BuildContext context) async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      AppLogging.auth('[ProfileScreen] Delete account blocked — offline');
+      showErrorSnackBar(
+        context,
+        'Deleting your account requires an internet connection.',
+      );
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1783,6 +1816,15 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
   }
 
   Future<void> _pickAvatar() async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      safeShowSnackBar(
+        'Uploading avatars requires an internet connection.',
+        backgroundColor: Colors.red,
+      );
+      return;
+    }
+
     // Capture notifier before any async operation
     final notifier = ref.read(userProfileProvider.notifier);
 
@@ -1828,6 +1870,15 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
   }
 
   Future<void> _removeAvatar() async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      safeShowSnackBar(
+        'Removing avatars requires an internet connection.',
+        backgroundColor: Colors.red,
+      );
+      return;
+    }
+
     // Capture notifier before async operation
     final notifier = ref.read(userProfileProvider.notifier);
 
@@ -1850,6 +1901,15 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
   }
 
   Future<void> _pickBanner() async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      safeShowSnackBar(
+        'Uploading banners requires an internet connection.',
+        backgroundColor: Colors.red,
+      );
+      return;
+    }
+
     // Capture notifier before async operation
     final notifier = ref.read(userProfileProvider.notifier);
 
@@ -1894,6 +1954,15 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
   }
 
   Future<void> _removeBanner() async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      safeShowSnackBar(
+        'Removing banners requires an internet connection.',
+        backgroundColor: Colors.red,
+      );
+      return;
+    }
+
     // Capture notifier before async operation
     final notifier = ref.read(userProfileProvider.notifier);
 
@@ -1917,6 +1986,15 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
+
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      safeShowSnackBar(
+        'Saving your profile requires an internet connection.',
+        backgroundColor: Colors.red,
+      );
+      return;
+    }
 
     // Show loading immediately when save is tapped
     safeSetState(() => _isLoading = true);

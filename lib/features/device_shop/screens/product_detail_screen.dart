@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import '../../../core/logging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 
@@ -1289,6 +1290,80 @@ class _PurchaseWebViewScreenState extends State<_PurchaseWebViewScreen> {
   double _progress = 0;
   InAppWebViewController? _webViewController;
   bool _canGoBack = false;
+  bool _hasLoadError = false;
+  String _errorDescription = '';
+
+  void _retry() {
+    setState(() {
+      _hasLoadError = false;
+      _errorDescription = '';
+      _progress = 0;
+    });
+    _webViewController?.loadUrl(
+      urlRequest: URLRequest(url: WebUri(widget.url)),
+    );
+  }
+
+  Widget _buildOfflinePlaceholder(BuildContext context) {
+    final accentColor = Theme.of(context).colorScheme.primary;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.cloud_off,
+              size: 48,
+              color: accentColor.withValues(alpha: 0.7),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Unable to load page',
+              style: TextStyle(
+                color: context.textSecondary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'This content requires an internet connection. '
+              'Please check your connection and try again.',
+              style: TextStyle(color: context.textTertiary, fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+            if (_errorDescription.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                _errorDescription,
+                style: TextStyle(color: context.textTertiary, fontSize: 11),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: _retry,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Retry'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1317,50 +1392,87 @@ class _PurchaseWebViewScreenState extends State<_PurchaseWebViewScreen> {
             ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => _webViewController?.reload(),
+            onPressed: _hasLoadError
+                ? _retry
+                : () => _webViewController?.reload(),
             tooltip: 'Refresh',
           ),
         ],
       ),
       body: Column(
         children: [
-          // Progress indicator
-          if (_progress < 1.0)
+          // Progress indicator (only when loading and no error)
+          if (_progress < 1.0 && !_hasLoadError)
             LinearProgressIndicator(
               value: _progress,
               backgroundColor: context.card,
               valueColor: AlwaysStoppedAnimation<Color>(accentColor),
               minHeight: 2,
             ),
-          // WebView
+          // Content: either the WebView or the offline placeholder
           Expanded(
-            child: InAppWebView(
-              initialUrlRequest: URLRequest(url: WebUri(widget.url)),
-              initialSettings: InAppWebViewSettings(
-                transparentBackground: true,
-                javaScriptEnabled: true,
-                useShouldOverrideUrlLoading: false,
-                mediaPlaybackRequiresUserGesture: false,
-                allowsInlineMediaPlayback: true,
-                iframeAllowFullscreen: true,
-              ),
-              onWebViewCreated: (controller) {
-                _webViewController = controller;
-              },
-              onLoadStart: (controller, url) {
-                setState(() => _progress = 0);
-              },
-              onProgressChanged: (controller, progress) {
-                setState(() => _progress = progress / 100);
-              },
-              onLoadStop: (controller, url) async {
-                setState(() => _progress = 1.0);
-                final canGoBack = await controller.canGoBack();
-                if (mounted) {
-                  setState(() => _canGoBack = canGoBack);
-                }
-              },
-            ),
+            child: _hasLoadError
+                ? _buildOfflinePlaceholder(context)
+                : InAppWebView(
+                    initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+                    initialSettings: InAppWebViewSettings(
+                      transparentBackground: true,
+                      javaScriptEnabled: true,
+                      useShouldOverrideUrlLoading: false,
+                      mediaPlaybackRequiresUserGesture: false,
+                      allowsInlineMediaPlayback: true,
+                      iframeAllowFullscreen: true,
+                    ),
+                    onWebViewCreated: (controller) {
+                      _webViewController = controller;
+                    },
+                    onLoadStart: (controller, url) {
+                      if (mounted) {
+                        setState(() {
+                          _progress = 0;
+                          _hasLoadError = false;
+                          _errorDescription = '';
+                        });
+                      }
+                    },
+                    onProgressChanged: (controller, progress) {
+                      if (mounted) setState(() => _progress = progress / 100);
+                    },
+                    onLoadStop: (controller, url) async {
+                      if (!mounted) return;
+                      setState(() => _progress = 1.0);
+                      final canGoBack = await controller.canGoBack();
+                      if (mounted) setState(() => _canGoBack = canGoBack);
+                    },
+                    onReceivedError: (controller, request, error) {
+                      AppLogging.shop(
+                        'PurchaseWebView error: type=${error.type}, '
+                        'description=${error.description}, '
+                        'url=${request.url}',
+                      );
+
+                      final isMainFrame = request.url.toString() == widget.url;
+
+                      final isConnectivityError =
+                          error.type == WebResourceErrorType.HOST_LOOKUP ||
+                          error.type ==
+                              WebResourceErrorType.CANNOT_CONNECT_TO_HOST ||
+                          error.type ==
+                              WebResourceErrorType.NOT_CONNECTED_TO_INTERNET ||
+                          error.type == WebResourceErrorType.TIMEOUT ||
+                          error.type ==
+                              WebResourceErrorType.NETWORK_CONNECTION_LOST;
+
+                      if (isMainFrame || isConnectivityError) {
+                        if (mounted) {
+                          setState(() {
+                            _hasLoadError = true;
+                            _errorDescription = error.description;
+                          });
+                        }
+                      }
+                    },
+                  ),
           ),
         ],
       ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../safety/lifecycle_mixin.dart';
 import '../../models/subscription_models.dart';
+import '../../providers/connectivity_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/subscription/subscription_service.dart';
@@ -173,6 +174,12 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
     final purchase = _purchase;
     if (purchase == null) return;
 
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      showErrorSnackBar(context, 'Purchases require an internet connection.');
+      return;
+    }
+
     safeSetState(() => _isLoading = true);
 
     // Capture haptic service before await
@@ -209,6 +216,15 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
   }
 
   Future<void> _handleRestore() async {
+    final isOnline = ref.read(isOnlineProvider);
+    if (!isOnline) {
+      showErrorSnackBar(
+        context,
+        'Restoring purchases requires an internet connection.',
+      );
+      return;
+    }
+
     safeSetState(() => _isLoading = true);
 
     try {

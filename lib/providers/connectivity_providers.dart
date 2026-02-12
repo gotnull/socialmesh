@@ -139,7 +139,32 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
   }
 
   Future<void> _onPlatformChanged(List<ConnectivityResult> results) async {
-    // Trigger immediate check on platform changes
+    // Invalidate cache so checkNow() does a fresh reachability ping
+    _lastReachabilityCheck = null;
+    _lastReachable = null;
+
+    final platformConnected =
+        !results.contains(ConnectivityResult.none) && results.isNotEmpty;
+
+    if (!platformConnected) {
+      // Immediately set offline — don't wait for a ping that will fail anyway
+      state = const ConnectivityStatus(
+        platformConnected: false,
+        reachable: false,
+        reason: 'platform_disconnected',
+      );
+      AppLogging.connection(
+        '🌐 Connectivity: platform change -> offline (airplane/wifi off), '
+        'results=$results',
+      );
+      return;
+    }
+
+    // Platform says connected — do a fresh reachability check
+    AppLogging.connection(
+      '🌐 Connectivity: platform change -> connected, '
+      'verifying reachability, results=$results',
+    );
     await checkNow();
   }
 
