@@ -11,13 +11,19 @@ import '../services/opensky_service.dart';
 
 /// Bottom sheet for searching and selecting active flights from OpenSky.
 class FlightSearchSheet extends StatefulWidget {
-  const FlightSearchSheet({super.key});
+  const FlightSearchSheet({super.key, this.topPadding = 0});
+
+  /// Safe area top padding, captured from the caller context.
+  final double topPadding;
 
   /// Show the flight search sheet and return the selected flight.
   static Future<ActiveFlightInfo?> show(BuildContext context) {
+    // Capture top padding from the caller context — inside the modal
+    // bottom sheet the top padding may report 0.
+    final topPadding = MediaQuery.of(context).padding.top;
     return AppBottomSheet.show<ActiveFlightInfo>(
       context: context,
-      child: const FlightSearchSheet(),
+      child: FlightSearchSheet(topPadding: topPadding),
     );
   }
 
@@ -95,7 +101,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Top safe area padding (Dynamic Island)
-        SizedBox(height: MediaQuery.of(context).padding.top),
+        SizedBox(height: widget.topPadding),
 
         // Header
         Padding(

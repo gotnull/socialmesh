@@ -652,54 +652,146 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
 }
 
 /// Available notification icons
+enum _NotificationIconCategory { general, social, premium }
+
 enum _NotificationIcon {
+  // === GENERAL ===
   announcement(
     icon: Icons.campaign,
     label: 'Announcement',
     color: Colors.orange,
     fcmValue: 'announcement',
+    category: _NotificationIconCategory.general,
   ),
   update(
     icon: Icons.system_update,
     label: 'App Update',
     color: Colors.blue,
     fcmValue: 'update',
+    category: _NotificationIconCategory.general,
   ),
   feature(
     icon: Icons.auto_awesome,
     label: 'New Feature',
     color: Colors.purple,
     fcmValue: 'feature',
+    category: _NotificationIconCategory.general,
   ),
   maintenance(
     icon: Icons.build,
     label: 'Maintenance',
     color: Colors.amber,
     fcmValue: 'maintenance',
+    category: _NotificationIconCategory.general,
   ),
   alert(
     icon: Icons.warning_amber,
     label: 'Alert',
     color: Colors.red,
     fcmValue: 'alert',
+    category: _NotificationIconCategory.general,
   ),
   celebration(
     icon: Icons.celebration,
     label: 'Celebration',
     color: Colors.pink,
     fcmValue: 'celebration',
-  ),
-  community(
-    icon: Icons.people,
-    label: 'Community',
-    color: Colors.teal,
-    fcmValue: 'community',
+    category: _NotificationIconCategory.general,
   ),
   tip(
     icon: Icons.lightbulb,
     label: 'Tip',
     color: Colors.yellow,
     fcmValue: 'tip',
+    category: _NotificationIconCategory.general,
+  ),
+
+  // === SOCIAL ===
+  signals(
+    icon: Icons.sensors,
+    label: 'Signals',
+    color: Colors.purple,
+    fcmValue: 'signals',
+    category: _NotificationIconCategory.social,
+  ),
+  nodedex(
+    icon: Icons.auto_stories,
+    label: 'NodeDex',
+    color: Colors.amber,
+    fcmValue: 'nodedex',
+    category: _NotificationIconCategory.social,
+  ),
+  aether(
+    icon: Icons.flight_takeoff,
+    label: 'Aether',
+    color: Colors.lightBlue,
+    fcmValue: 'aether',
+    category: _NotificationIconCategory.social,
+  ),
+  activity(
+    icon: Icons.favorite,
+    label: 'Activity',
+    color: Colors.red,
+    fcmValue: 'activity',
+    category: _NotificationIconCategory.social,
+  ),
+  presence(
+    icon: Icons.people_alt,
+    label: 'Presence',
+    color: Colors.green,
+    fcmValue: 'presence',
+    category: _NotificationIconCategory.social,
+  ),
+  community(
+    icon: Icons.people,
+    label: 'Community',
+    color: Colors.teal,
+    fcmValue: 'community',
+    category: _NotificationIconCategory.social,
+  ),
+  worldMap(
+    icon: Icons.public,
+    label: 'World Map',
+    color: Colors.blue,
+    fcmValue: 'world_map',
+    category: _NotificationIconCategory.social,
+  ),
+
+  // === PREMIUM ===
+  themes(
+    icon: Icons.palette,
+    label: 'Theme Pack',
+    color: Colors.purple,
+    fcmValue: 'themes',
+    category: _NotificationIconCategory.premium,
+  ),
+  ringtones(
+    icon: Icons.music_note,
+    label: 'Ringtone Pack',
+    color: Colors.pink,
+    fcmValue: 'ringtones',
+    category: _NotificationIconCategory.premium,
+  ),
+  widgets(
+    icon: Icons.widgets,
+    label: 'Widgets',
+    color: Colors.deepOrange,
+    fcmValue: 'widgets',
+    category: _NotificationIconCategory.premium,
+  ),
+  automations(
+    icon: Icons.auto_awesome,
+    label: 'Automations',
+    color: Colors.yellow,
+    fcmValue: 'automations',
+    category: _NotificationIconCategory.premium,
+  ),
+  ifttt(
+    icon: Icons.webhook,
+    label: 'IFTTT Integration',
+    color: Colors.blue,
+    fcmValue: 'ifttt',
+    category: _NotificationIconCategory.premium,
   );
 
   const _NotificationIcon({
@@ -707,12 +799,18 @@ enum _NotificationIcon {
     required this.label,
     required this.color,
     required this.fcmValue,
+    required this.category,
   });
 
   final IconData icon;
   final String label;
   final Color color;
   final String fcmValue;
+  final _NotificationIconCategory category;
+
+  static List<_NotificationIcon> byCategory(_NotificationIconCategory cat) {
+    return values.where((v) => v.category == cat).toList();
+  }
 }
 
 /// Pinned header delegate for the notification preview
@@ -942,7 +1040,7 @@ class _CountdownIndicator extends StatelessWidget {
   }
 }
 
-/// Icon picker bottom sheet content
+/// Icon picker bottom sheet content with categorised sections.
 class _IconPickerContent extends StatelessWidget {
   const _IconPickerContent({
     required this.selectedIcon,
@@ -959,66 +1057,94 @@ class _IconPickerContent extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ...List.generate(_NotificationIcon.values.length, (index) {
-            final icon = _NotificationIcon.values[index];
-            final isSelected = icon == selectedIcon;
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: GestureDetector(
-                onTap: () => onIconSelected(icon),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? icon.color.withValues(alpha: 0.15)
-                        : context.card,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected
-                          ? icon.color.withValues(alpha: 0.5)
-                          : context.border.withValues(alpha: 0.3),
-                      width: isSelected ? 2 : 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: icon.color.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(icon.icon, color: icon.color, size: 22),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          icon.label,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            color: context.textPrimary,
-                          ),
-                        ),
-                      ),
-                      if (isSelected)
-                        Icon(Icons.check_circle, color: icon.color, size: 22),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
+          _buildSection(context, 'GENERAL', _NotificationIconCategory.general),
+          const SizedBox(height: 12),
+          _buildSection(context, 'SOCIAL', _NotificationIconCategory.social),
+          const SizedBox(height: 12),
+          _buildSection(context, 'PREMIUM', _NotificationIconCategory.premium),
           SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
         ],
       ),
+    );
+  }
+
+  Widget _buildSection(
+    BuildContext context,
+    String title,
+    _NotificationIconCategory category,
+  ) {
+    final icons = _NotificationIcon.byCategory(category);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
+              color: context.textTertiary,
+            ),
+          ),
+        ),
+        ...icons.map((icon) {
+          final isSelected = icon == selectedIcon;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: GestureDetector(
+              onTap: () => onIconSelected(icon),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? icon.color.withValues(alpha: 0.15)
+                      : context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected
+                        ? icon.color.withValues(alpha: 0.5)
+                        : context.border.withValues(alpha: 0.3),
+                    width: isSelected ? 2 : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: icon.color.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icon.icon, color: icon.color, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        icon.label,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                    ),
+                    if (isSelected)
+                      Icon(Icons.check_circle, color: icon.color, size: 22),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 }
