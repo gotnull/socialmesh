@@ -100,6 +100,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
   PresenceFilter _filter = PresenceFilter.all;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  bool _showSectionHeaders = true;
 
   @override
   void dispose() {
@@ -130,6 +131,30 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
   int _countForFilter(PresenceFilter filter, List<NodePresence> allPresences) {
     if (filter == PresenceFilter.all) return allPresences.length;
     return allPresences.where((p) => filter.matches(p)).length;
+  }
+
+  List<_PresenceSection> _groupPresencesIntoSections(
+    List<NodePresence> presences,
+  ) {
+    final active = presences
+        .where((p) => p.confidence == PresenceConfidence.active)
+        .toList();
+    final fading = presences
+        .where((p) => p.confidence == PresenceConfidence.fading)
+        .toList();
+    final stale = presences
+        .where((p) => p.confidence == PresenceConfidence.stale)
+        .toList();
+    final unknown = presences
+        .where((p) => p.confidence == PresenceConfidence.unknown)
+        .toList();
+
+    return [
+      _PresenceSection('Active', active, AppTheme.successGreen),
+      _PresenceSection('Seen Recently', fading, AppTheme.warningYellow),
+      _PresenceSection('Inactive', stale, context.textSecondary),
+      _PresenceSection('Unknown', unknown, context.textTertiary),
+    ];
   }
 
   @override
@@ -164,6 +189,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                 textScaler: MediaQuery.textScalerOf(context),
                 rebuildKey: Object.hashAll([
                   _filter,
+                  _showSectionHeaders,
                   allPresences.length,
                   _countForFilter(PresenceFilter.active, allPresences),
                   _countForFilter(PresenceFilter.fading, allPresences),
@@ -233,6 +259,14 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                         setState(() => _filter = PresenceFilter.familiar),
                   ),
                 ],
+                trailingControls: [
+                  SectionHeadersToggle(
+                    enabled: _showSectionHeaders,
+                    onToggle: () => setState(
+                      () => _showSectionHeaders = !_showSectionHeaders,
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -264,30 +298,52 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                   child: _buildActivityChart(theme, allPresences),
                 ),
 
-              // Node list header
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                  child: Text(
-                    _filter == PresenceFilter.all && _searchQuery.isEmpty
-                        ? 'All Nodes'
-                        : '${filtered.length} ${filtered.length == 1 ? 'node' : 'nodes'}',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: context.textSecondary,
-                      fontWeight: FontWeight.w600,
+              // Node list - grouped or flat depending on toggle and filter
+              if (_showSectionHeaders &&
+                  _filter == PresenceFilter.all &&
+                  _searchQuery.isEmpty) ...[
+                // Grouped display with sticky section headers
+                for (final section in _groupPresencesIntoSections(filtered))
+                  if (section.presences.isNotEmpty) ...[
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: SectionHeaderDelegate(
+                        title: section.title,
+                        count: section.presences.length,
+                      ),
+                    ),
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) =>
+                            _buildPresenceCard(theme, section.presences[index]),
+                        childCount: section.presences.length,
+                      ),
+                    ),
+                  ],
+              ] else ...[
+                // Flat list with simple header
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                    child: Text(
+                      _filter == PresenceFilter.all && _searchQuery.isEmpty
+                          ? 'All Nodes'
+                          : '${filtered.length} ${filtered.length == 1 ? 'node' : 'nodes'}',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: context.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
-              ),
-
-              // Node list
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) =>
-                      _buildPresenceCard(theme, filtered[index]),
-                  childCount: filtered.length,
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) =>
+                        _buildPresenceCard(theme, filtered[index]),
+                    childCount: filtered.length,
+                  ),
                 ),
-              ),
+              ],
 
               // Bottom safe area padding
               SliverToBoxAdapter(
@@ -1010,6 +1066,14 @@ class _BackNearbyBadge extends StatelessWidget {
 }
 
 /// Badge showing node role.
+class _PresenceSection {
+  final String title;
+  final List<NodePresence> presences;
+  final Color color;
+
+  const _PresenceSection(this.title, this.presences, this.color);
+}
+
 class _RoleBadge extends StatelessWidget {
   const _RoleBadge({required this.role});
 
