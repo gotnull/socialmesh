@@ -12,7 +12,7 @@ dependencies:
     sdk: flutter
 
   # State Management (3.x with updated API)
-  flutter_riverpod: ^3.0.3
+  flutter_riverpod: ^3.2.1
   riverpod_annotation: ^4.0.0
 
   # BLE Communication
