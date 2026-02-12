@@ -1324,11 +1324,8 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Thought particles - FIRST, behind everything
+                // Thought particles - behind the brain
                 if (widget.showThoughtParticles) ..._buildThoughtParticles(),
-
-                // Outer glow rings
-                ..._buildGlowRings(),
 
                 // Orbital rings
                 _buildOrbitalRings(),
@@ -1338,6 +1335,9 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
 
                 // Main brain mesh (the rotating icosahedron with face expressions)
                 _buildBrainMesh(),
+
+                // Outer glow rings - in front of brain
+                ..._buildGlowRings(),
 
                 // Additional effects for special moods (particles, etc.)
                 ..._buildSpecialEffects(),

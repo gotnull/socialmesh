@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../core/widgets/datetime_picker_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/status_banner.dart';
@@ -454,6 +455,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                   ),
           ),
         ],
+        bottomNavigationBar: _buildMyNodeBar(myNode),
         slivers: [
           SliverPadding(
             padding: const EdgeInsets.all(16),
@@ -470,12 +472,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                       icon: Icons.flight,
                       margin: EdgeInsets.zero,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
 
-                    // My Node Section
-                    _buildSectionHeader('Your Meshtastic Node'),
-                    const SizedBox(height: 12),
-                    _buildMyNodeCard(myNode),
+                    // Tips — right below the intro card
+                    _buildTipsCard(),
                     const SizedBox(height: 24),
 
                     // Flight Info Section
@@ -612,16 +612,82 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                       maxLines: 3,
                       maxLength: _maxNotesLength,
                     ),
-                    const SizedBox(height: 32),
-
-                    // Tips
-                    _buildTipsCard(),
-                    const SizedBox(height: 32),
+                    // Extra padding so content isn't hidden behind bottom bar
+                    SizedBox(
+                      height: MediaQuery.of(context).padding.bottom + 16,
+                    ),
                   ],
                 ),
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// Fixed bottom bar showing the selected Meshtastic node.
+  Widget _buildMyNodeBar(MeshNode? myNode) {
+    final isConnected = myNode != null;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        12,
+        16,
+        MediaQuery.of(context).padding.bottom + 12,
+      ),
+      decoration: BoxDecoration(
+        color: context.card,
+        border: Border(
+          top: BorderSide(color: context.border.withValues(alpha: 0.3)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color:
+                  (isConnected ? context.accentColor : AppTheme.warningYellow)
+                      .withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              isConnected ? Icons.memory : Icons.bluetooth_disabled,
+              color: isConnected ? context.accentColor : AppTheme.warningYellow,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isConnected ? myNode.displayName : 'No Device Connected',
+                  style: TextStyle(
+                    color: isConnected
+                        ? context.textPrimary
+                        : AppTheme.warningYellow,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  isConnected
+                      ? (myNode.userId ??
+                            '!${myNode.nodeNum.toRadixString(16)}')
+                      : 'Connect to schedule a flight',
+                  style: TextStyle(color: context.textTertiary, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          if (isConnected)
+            Icon(Icons.check_circle, color: context.accentColor, size: 22),
         ],
       ),
     );
@@ -674,67 +740,6 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
             ),
           ),
       ],
-    );
-  }
-
-  Widget _buildMyNodeCard(MeshNode? myNode) {
-    final isConnected = myNode != null;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isConnected ? context.accentColor : AppTheme.warningYellow,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color:
-                  (isConnected ? context.accentColor : AppTheme.warningYellow)
-                      .withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              isConnected ? Icons.memory : Icons.bluetooth_disabled,
-              color: isConnected ? context.accentColor : AppTheme.warningYellow,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isConnected ? myNode.displayName : 'No Device Connected',
-                  style: TextStyle(
-                    color: isConnected
-                        ? context.textPrimary
-                        : AppTheme.warningYellow,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  isConnected
-                      ? (myNode.userId ??
-                            '!${myNode.nodeNum.toRadixString(16)}')
-                      : 'Connect your device to schedule a flight',
-                  style: TextStyle(color: context.textTertiary, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          if (isConnected)
-            Icon(Icons.check_circle, color: context.accentColor, size: 24),
-        ],
-      ),
     );
   }
 
@@ -895,13 +900,9 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                     onTap: _isValidating ? null : _validateFlight,
                     tooltip: 'Validate flight',
                   ),
-                // Search button — always visible
-                _buildInlineAction(
-                  icon: Icons.search,
-                  onTap: _searchFlights,
-                  tooltip: 'Search flights',
-                ),
-                const SizedBox(width: 4),
+                // Search button — gradient pill, always visible
+                _buildSearchPill(),
+                const SizedBox(width: 8),
               ],
             ),
             filled: true,
@@ -961,6 +962,45 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       return Tooltip(message: tooltip, child: child);
     }
     return child;
+  }
+
+  /// Gradient pill button for flight search — eye-catching and tappable.
+  Widget _buildSearchPill() {
+    final gradientColors = AccentColors.gradientFor(context.accentColor);
+    final gradient = LinearGradient(
+      colors: [gradientColors[0], gradientColors[1]],
+    );
+
+    return Tooltip(
+      message: 'Search flights',
+      child: GestureDetector(
+        onTap: _searchFlights,
+        child: AnimatedGradientBackground(
+          gradient: gradient,
+          animate: true,
+          enabled: true,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.search, size: 16, color: Colors.white),
+                SizedBox(width: 4),
+                Text(
+                  'Search',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildValidationStatus() {

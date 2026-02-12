@@ -366,8 +366,10 @@ class _SearchFilterContent extends StatelessWidget {
         // -- Gap before divider --
         if (_hasChips) SizedBox(height: SearchFilterLayout.chipsToBottomGap),
 
-        // -- Bottom divider --
-        if (showDivider)
+        // -- Bottom padding (when no chips) or divider --
+        if (!_hasChips)
+          SizedBox(height: SearchFilterLayout.chipsToBottomGap)
+        else if (showDivider)
           Container(
             height: SearchFilterLayout.dividerHeight,
             color: context.border.withValues(alpha: 0.3),

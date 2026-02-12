@@ -140,14 +140,14 @@ void main() {
       expect(WhatsNewRegistry.allPayloads, isNotEmpty);
     });
 
-    test('contains a payload for NodeDex at 1.2.0', () {
-      final payload = WhatsNewRegistry.getPayload('1.2.0');
+    test('contains a payload for NodeDex at 1.13.0', () {
+      final payload = WhatsNewRegistry.getPayload('1.13.0');
       expect(payload, isNotNull);
       expect(payload!.items.any((i) => i.id == 'nodedex_intro'), isTrue);
     });
 
     test('NodeDex item has correct configuration', () {
-      final payload = WhatsNewRegistry.getPayload('1.2.0')!;
+      final payload = WhatsNewRegistry.getPayload('1.13.0')!;
       final item = payload.items.firstWhere((i) => i.id == 'nodedex_intro');
 
       expect(item.title, 'NodeDex');
@@ -165,9 +165,9 @@ void main() {
 
   group('WhatsNewRegistry.getPayload', () {
     test('returns payload for known version', () {
-      final payload = WhatsNewRegistry.getPayload('1.2.0');
+      final payload = WhatsNewRegistry.getPayload('1.13.0');
       expect(payload, isNotNull);
-      expect(payload!.version, '1.2.0');
+      expect(payload!.version, '1.13.0');
     });
 
     test('returns null for unknown version', () {
@@ -183,28 +183,28 @@ void main() {
   group('WhatsNewRegistry.getPendingPayload', () {
     test('returns payload when lastSeen is null (fresh install)', () {
       final payload = WhatsNewRegistry.getPendingPayload(
-        currentVersion: '1.2.0',
+        currentVersion: '1.13.0',
         lastSeenVersion: null,
       );
 
       expect(payload, isNotNull);
-      expect(payload!.version, '1.2.0');
+      expect(payload!.version, '1.13.0');
     });
 
     test('returns payload when lastSeen is older than payload', () {
       final payload = WhatsNewRegistry.getPendingPayload(
-        currentVersion: '1.2.0',
+        currentVersion: '1.13.0',
         lastSeenVersion: '1.1.0',
       );
 
       expect(payload, isNotNull);
-      expect(payload!.version, '1.2.0');
+      expect(payload!.version, '1.13.0');
     });
 
     test('returns null when lastSeen equals payload version', () {
       final payload = WhatsNewRegistry.getPendingPayload(
-        currentVersion: '1.2.0',
-        lastSeenVersion: '1.2.0',
+        currentVersion: '1.13.0',
+        lastSeenVersion: '1.13.0',
       );
 
       expect(payload, isNull);
@@ -212,8 +212,8 @@ void main() {
 
     test('returns null when lastSeen is newer than payload', () {
       final payload = WhatsNewRegistry.getPendingPayload(
-        currentVersion: '1.2.0',
-        lastSeenVersion: '1.3.0',
+        currentVersion: '1.13.0',
+        lastSeenVersion: '1.14.0',
       );
 
       expect(payload, isNull);
@@ -233,13 +233,13 @@ void main() {
       'returns payload when current version is newer than payload (update catchup)',
       () {
         final payload = WhatsNewRegistry.getPendingPayload(
-          currentVersion: '1.5.0',
+          currentVersion: '1.13.0',
           lastSeenVersion: '1.0.0',
         );
 
-        // User updated from 1.0.0 to 1.5.0, should see the 1.2.0 payload
+        // User updated from 1.0.0 to 1.13.0, should see the 1.13.0 payload
         expect(payload, isNotNull);
-        expect(payload!.version, '1.2.0');
+        expect(payload!.version, '1.13.0');
       },
     );
 
@@ -254,12 +254,12 @@ void main() {
 
     test('handles build metadata in version strings', () {
       final payload = WhatsNewRegistry.getPendingPayload(
-        currentVersion: '1.2.0+103',
+        currentVersion: '1.13.0+103',
         lastSeenVersion: '1.1.0+50',
       );
 
       expect(payload, isNotNull);
-      expect(payload!.version, '1.2.0');
+      expect(payload!.version, '1.13.0');
     });
   });
 
@@ -270,7 +270,7 @@ void main() {
   group('WhatsNewRegistry.getUnseenBadgeKeys', () {
     test('returns badge keys when lastSeen is null', () {
       final keys = WhatsNewRegistry.getUnseenBadgeKeys(
-        currentVersion: '1.2.0',
+        currentVersion: '1.13.0',
         lastSeenVersion: null,
       );
 
@@ -279,7 +279,7 @@ void main() {
 
     test('returns badge keys when lastSeen is older', () {
       final keys = WhatsNewRegistry.getUnseenBadgeKeys(
-        currentVersion: '1.2.0',
+        currentVersion: '1.13.0',
         lastSeenVersion: '1.1.0',
       );
 
@@ -288,8 +288,8 @@ void main() {
 
     test('returns empty set when lastSeen equals current', () {
       final keys = WhatsNewRegistry.getUnseenBadgeKeys(
-        currentVersion: '1.2.0',
-        lastSeenVersion: '1.2.0',
+        currentVersion: '1.13.0',
+        lastSeenVersion: '1.13.0',
       );
 
       expect(keys, isEmpty);
@@ -297,7 +297,7 @@ void main() {
 
     test('returns empty set when lastSeen is newer', () {
       final keys = WhatsNewRegistry.getUnseenBadgeKeys(
-        currentVersion: '1.2.0',
+        currentVersion: '1.13.0',
         lastSeenVersion: '2.0.0',
       );
 
@@ -314,7 +314,7 @@ void main() {
     });
 
     test('accumulates badge keys from multiple unseen payloads', () {
-      // If the registry only has 1.2.0, this test verifies the accumulation
+      // If the registry only has 1.13.0, this test verifies the accumulation
       // pattern works even with a single entry
       final keys = WhatsNewRegistry.getUnseenBadgeKeys(
         currentVersion: '2.0.0',
@@ -327,7 +327,7 @@ void main() {
 
     test('handles build metadata in version strings', () {
       final keys = WhatsNewRegistry.getUnseenBadgeKeys(
-        currentVersion: '1.2.0+200',
+        currentVersion: '1.13.0+200',
         lastSeenVersion: '1.1.0+100',
       );
 
@@ -440,7 +440,7 @@ void main() {
 
       // Step 2: Load completes — pending payload found
       const payload = WhatsNewPayload(
-        version: '1.2.0',
+        version: '1.13.0',
         headline: "What's New",
         items: [
           WhatsNewItem(
@@ -547,7 +547,7 @@ void main() {
     test('popup dismiss preserves badge keys for hamburger dot', () {
       // Verifies the hamburger menu dot stays visible after popup dismiss
       const payload = WhatsNewPayload(
-        version: '1.2.0',
+        version: '1.13.0',
         headline: "What's New",
         items: [
           WhatsNewItem(

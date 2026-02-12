@@ -94,6 +94,9 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Top safe area padding (Dynamic Island)
+        SizedBox(height: MediaQuery.of(context).padding.top),
+
         // Header
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
