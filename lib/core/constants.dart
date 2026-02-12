@@ -18,20 +18,27 @@ class AppUrls {
       dotenv.env['CLOUD_FUNCTIONS_URL'] ??
       'https://us-central1-social-mesh-app.cloudfunctions.net';
 
-  /// World Mesh API URL
+  /// World Mesh API URL — nodes, stats, map.
+  /// All APIs default to api.socialmesh.app (the unified API domain).
+  /// Override via .env for transitional Railway-direct routing.
+  /// See docs/DOMAIN_ARCHITECTURE.md for the full domain model.
   static String get worldMeshApiUrl =>
       dotenv.env['WORLD_MESH_API_URL'] ?? 'https://api.socialmesh.app';
 
-  /// Sigil API URL (Railway-hosted, custom domain)
+  /// Sigil API URL — node identity card snapshots (NodeDex backend).
+  /// Default: api.socialmesh.app. Override via .env to Railway domain
+  /// until the API gateway is deployed.
   static String get sigilApiUrl =>
-      dotenv.env['SIGIL_API_URL'] ?? 'https://sigil.socialmesh.app';
+      dotenv.env['SIGIL_API_URL'] ?? 'https://api.socialmesh.app';
 
   /// Sigil API key (authenticates POST requests)
   static String get sigilApiKey => dotenv.env['SIGIL_API_KEY'] ?? '';
 
-  /// Aether API URL (Railway-hosted, custom domain)
+  /// Aether API URL — shared flight snapshots.
+  /// Default: api.socialmesh.app. Override via .env to Railway domain
+  /// until the API gateway is deployed.
   static String get aetherApiUrl =>
-      dotenv.env['AETHER_API_URL'] ?? 'https://aether.socialmesh.app';
+      dotenv.env['AETHER_API_URL'] ?? 'https://api.socialmesh.app';
 
   /// Aether API key (authenticates POST requests)
   static String get aetherApiKey => dotenv.env['AETHER_API_KEY'] ?? '';
@@ -59,8 +66,10 @@ class AppUrls {
   static String get deleteAccountUrlInApp =>
       '$baseUrl/delete-account?inapp=true';
 
-  // Share link URLs
-  static String shareSigilUrl(String id) => '$baseUrl/sigil/$id';
+  // Share link URLs — these point to public web portals, never API domains.
+  // See docs/DOMAIN_ARCHITECTURE.md for the portal vs API distinction.
+  static String shareSigilUrl(String id) =>
+      'https://nodedex.socialmesh.app/sigil/$id';
   static String shareFlightUrl(String id) =>
       'https://aether.socialmesh.app/flight/$id';
   static String shareNodeUrl(String id) => '$baseUrl/share/node/$id';
