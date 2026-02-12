@@ -241,6 +241,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
               _isValidating = false;
             });
 
+            _populateFromValidation(result);
             _showValidationFeedback(result);
           }
           return;
@@ -256,6 +257,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
           _isValidating = false;
         });
 
+        _populateFromValidation(result);
         _showValidationFeedback(result);
       }
     } catch (e) {
@@ -270,6 +272,36 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
         showErrorSnackBar(context, 'Failed to validate flight');
       }
     }
+  }
+
+  /// Auto-populate form fields from validation result.
+  void _populateFromValidation(FlightValidationResult result) {
+    if (!result.isValid) return;
+
+    safeSetState(() {
+      // Populate departure airport if empty
+      if (_departureController.text.isEmpty &&
+          result.departureAirport != null) {
+        _departureController.text = result.departureAirport!;
+      }
+
+      // Populate arrival airport if empty
+      if (_arrivalController.text.isEmpty && result.arrivalAirport != null) {
+        _arrivalController.text = result.arrivalAirport!;
+      }
+
+      // Populate departure date/time if we have it
+      if (result.departureTime != null) {
+        _departureDate = result.departureTime;
+        _departureTime = TimeOfDay.fromDateTime(result.departureTime!);
+      }
+
+      // Populate arrival date/time if we have it
+      if (result.arrivalTime != null) {
+        _arrivalDate = result.arrivalTime;
+        _arrivalTime = TimeOfDay.fromDateTime(result.arrivalTime!);
+      }
+    });
   }
 
   void _showValidationFeedback(FlightValidationResult result) {

@@ -319,6 +319,8 @@ class OpenSkyService {
           icao24: matchingFlight.icao24,
           departureAirport: matchingFlight.estDepartureAirport,
           arrivalAirport: matchingFlight.estArrivalAirport,
+          departureTime: matchingFlight.departureTime,
+          arrivalTime: matchingFlight.arrivalTime,
         );
       }
 
@@ -567,6 +569,8 @@ class FlightValidationResult {
   final String? originCountry;
   final String? departureAirport;
   final String? arrivalAirport;
+  final DateTime? departureTime;
+  final DateTime? arrivalTime;
 
   const FlightValidationResult({
     required this.status,
@@ -576,6 +580,8 @@ class FlightValidationResult {
     this.originCountry,
     this.departureAirport,
     this.arrivalAirport,
+    this.departureTime,
+    this.arrivalTime,
   });
 
   bool get isValid =>
