@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:socialmesh/core/logging.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
@@ -610,18 +611,30 @@ class _AetherFlightDetailScreenState
   Future<void> _shareFlight(BuildContext _) async {
     HapticFeedback.mediumImpact();
 
+    AppLogging.aether('_shareFlight() called in flight detail screen');
+    AppLogging.aether('Flight: ${widget.flight.flightNumber}');
+    AppLogging.aether('Already shared? ${_shareId != null}');
+
     // If already shared, just copy / share the existing URL
     if (_shareId != null) {
       final url = AppUrls.shareFlightUrl(_shareId!);
+      AppLogging.aether('Using cached share ID: $_shareId');
+      AppLogging.aether('Generated URL: $url');
       await _showShareOptions(url);
       return;
     }
 
+    AppLogging.aether('Starting new share operation...');
     safeSetState(() => _isSharing = true);
 
     try {
       final shareService = ref.read(aetherShareServiceProvider);
+      AppLogging.aether('Calling shareService.shareFlight()...');
       final result = await shareService.shareFlight(widget.flight);
+
+      AppLogging.aether('Share completed successfully');
+      AppLogging.aether('Result ID: ${result.id}');
+      AppLogging.aether('Result URL: ${result.url}');
 
       if (!mounted) return;
 
@@ -632,6 +645,8 @@ class _AetherFlightDetailScreenState
 
       await _showShareOptions(result.url);
     } catch (e) {
+      AppLogging.aether('Share failed with error: $e');
+      AppLogging.aether('Error type: ${e.runtimeType}');
       safeSetState(() => _isSharing = false);
       if (mounted) {
         showErrorSnackBar(context, 'Could not share flight: $e');

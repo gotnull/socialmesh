@@ -108,6 +108,18 @@ class AetherShareService {
     final apiKey = AppUrls.aetherApiKey;
     final uri = Uri.parse('$baseUrl/api/flight');
 
+    AppLogging.aether('=' * 60);
+    AppLogging.aether('shareFlight() called');
+    AppLogging.aether(
+      'Flight: ${flight.flightNumber} ${flight.departure} -> ${flight.arrival}',
+    );
+    AppLogging.aether('Base URL: $baseUrl');
+    AppLogging.aether('Full URI: $uri');
+    AppLogging.aether('API Key present: ${apiKey.isNotEmpty}');
+    if (apiKey.isNotEmpty) {
+      AppLogging.aether('API Key (masked): ${apiKey.substring(0, 8)}...');
+    }
+
     final headers = <String, String>{'Content-Type': 'application/json'};
 
     if (apiKey.isNotEmpty) {
@@ -115,37 +127,46 @@ class AetherShareService {
     }
 
     final body = _flightToSharePayload(flight);
+    AppLogging.aether('Request payload: ${jsonEncode(body)}');
+    AppLogging.aether('Request headers: $headers');
 
-    AppLogging.app(
-      '[Aether] Sharing flight ${flight.flightNumber} '
-      '${flight.departure} -> ${flight.arrival}',
-    );
+    AppLogging.aether('Sending POST request...');
 
     try {
       final response = await http
           .post(uri, headers: headers, body: jsonEncode(body))
           .timeout(_requestTimeout);
 
+      AppLogging.aether('Response received');
+      AppLogging.aether('Status code: ${response.statusCode}');
+      AppLogging.aether('Response headers: ${response.headers}');
+      AppLogging.aether('Response body: ${response.body}');
+
       if (response.statusCode == 201) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
         final id = json['id'] as String;
         final url = json['url'] as String;
 
-        AppLogging.app('[Aether] Flight shared successfully: $url');
+        AppLogging.aether('Flight shared successfully!');
+        AppLogging.aether('Share ID: $id');
+        AppLogging.aether('Share URL: $url');
+        AppLogging.aether('=' * 60);
         return AetherShareResult(id: id, url: url);
       }
 
       final errorBody = response.body;
-      AppLogging.app(
-        '[Aether] Share failed: HTTP ${response.statusCode} $errorBody',
-      );
+      AppLogging.aether('Share failed: HTTP ${response.statusCode}');
+      AppLogging.aether('Error body: $errorBody');
+      AppLogging.aether('=' * 60);
       throw AetherShareException(
         'Failed to share flight (HTTP ${response.statusCode})',
         statusCode: response.statusCode,
       );
     } catch (e) {
       if (e is AetherShareException) rethrow;
-      AppLogging.app('[Aether] Share error: $e');
+      AppLogging.aether('Share error (exception): $e');
+      AppLogging.aether('Error type: ${e.runtimeType}');
+      AppLogging.aether('=' * 60);
       throw AetherShareException('Network error: $e');
     }
   }
@@ -237,16 +258,14 @@ class AetherShareService {
         );
       }
 
-      AppLogging.app(
-        '[Aether] Fetch flights failed: HTTP ${response.statusCode}',
-      );
+      AppLogging.aether('Fetch flights failed: HTTP ${response.statusCode}');
       throw AetherShareException(
         'Failed to fetch flights (HTTP ${response.statusCode})',
         statusCode: response.statusCode,
       );
     } catch (e) {
       if (e is AetherShareException) rethrow;
-      AppLogging.app('[Aether] Fetch flights error: $e');
+      AppLogging.aether('Fetch flights error: $e');
       throw AetherShareException('Network error: $e');
     }
   }
@@ -256,25 +275,33 @@ class AetherShareService {
     final baseUrl = AppUrls.aetherApiUrl;
     final uri = Uri.parse('$baseUrl/api/flight/$id');
 
+    AppLogging.aether('fetchFlight() called for ID: $id');
+    AppLogging.aether('URI: $uri');
+
     try {
       final response = await http.get(uri).timeout(_requestTimeout);
 
+      AppLogging.aether('Response: ${response.statusCode}');
+
       if (response.statusCode == 200) {
+        AppLogging.aether('Flight fetched successfully');
         final json = jsonDecode(response.body) as Map<String, dynamic>;
         return AetherFlight.fromApiJson(json);
       }
 
       if (response.statusCode == 404) {
+        AppLogging.aether('Flight not found (404)');
         throw const AetherShareException('Flight not found', statusCode: 404);
       }
 
+      AppLogging.aether('Fetch failed: ${response.statusCode}');
       throw AetherShareException(
         'Failed to fetch flight (HTTP ${response.statusCode})',
         statusCode: response.statusCode,
       );
     } catch (e) {
       if (e is AetherShareException) rethrow;
-      AppLogging.app('[Aether] Fetch flight error: $e');
+      AppLogging.aether('Fetch flight error: $e');
       throw AetherShareException('Network error: $e');
     }
   }
@@ -298,7 +325,7 @@ class AetherShareService {
       );
     } catch (e) {
       if (e is AetherShareException) rethrow;
-      AppLogging.app('[Aether] Fetch stats error: $e');
+      AppLogging.aether('Fetch stats error: $e');
       throw AetherShareException('Network error: $e');
     }
   }
@@ -324,7 +351,7 @@ class AetherShareService {
       );
     } catch (e) {
       if (e is AetherShareException) rethrow;
-      AppLogging.app('[Aether] Fetch airports error: $e');
+      AppLogging.aether('Fetch airports error: $e');
       throw AetherShareException('Network error: $e');
     }
   }
@@ -337,7 +364,7 @@ class AetherShareService {
       final response = await http.get(uri).timeout(_requestTimeout);
       return response.statusCode == 200;
     } catch (e) {
-      AppLogging.app('[Aether] Health check failed: $e');
+      AppLogging.aether('Health check failed: $e');
       return false;
     }
   }

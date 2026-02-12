@@ -436,14 +436,16 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   /// saved to Firestore. The user can always share later from the detail
   /// screen.
   void _shareFlightInBackground(AetherFlight flight) {
+    AppLogging.aether('_shareFlightInBackground() called');
+    AppLogging.aether('Flight: ${flight.flightNumber}');
     final shareService = ref.read(aetherShareServiceProvider);
     shareService
         .shareFlight(flight)
         .then((result) {
-          AppLogging.app('[Aether] Flight shared to Aether API: ${result.url}');
+          AppLogging.aether('Background share succeeded: ${result.url}');
         })
         .catchError((Object e) {
-          AppLogging.app('[Aether] Background share failed (non-fatal): $e');
+          AppLogging.aether('Background share failed (non-fatal): $e');
         });
   }
 
