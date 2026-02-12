@@ -81,6 +81,7 @@ class _AetherFlightDetailScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 16),
               // Live position card
               if (widget.flight.isActive)
                 _buildLivePositionCard(context, positionAsync),
@@ -133,13 +134,7 @@ class _AetherFlightDetailScreenState
   ) {
     final positionState = positionAsync.value;
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [context.accentColor.withValues(alpha: 0.3), context.card],
-        ),
-      ),
+      color: context.card,
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),

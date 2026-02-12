@@ -68,8 +68,7 @@ class AppUrls {
 
   // Share link URLs — these point to public web portals, never API domains.
   // See docs/DOMAIN_ARCHITECTURE.md for the portal vs API distinction.
-  static String shareSigilUrl(String id) =>
-      'https://nodedex.socialmesh.app/sigil/$id';
+  static String shareSigilUrl(String id) => 'https://socialmesh.app/sigil/$id';
   static String shareFlightUrl(String id) =>
       'https://aether.socialmesh.app/flight/$id';
   static String shareNodeUrl(String id) => '$baseUrl/share/node/$id';
