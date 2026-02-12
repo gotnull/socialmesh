@@ -30,10 +30,8 @@ web/
 
 # Environment files
 .env
+.env.*
 .env.local
-.env.*.local
-.env.example
-!.env.ci
 
 # Signing keys and certificates
 *.keystore
