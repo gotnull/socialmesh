@@ -6,6 +6,7 @@ import '../../core/widgets/ico_help_system.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/safety/lifecycle_mixin.dart';
+import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
@@ -101,6 +102,9 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
           admin_pbenum.AdminMessage_ConfigType.LORA_CONFIG,
         );
       }
+    } on StateError catch (e) {
+      // Device disconnected between isConnected check and getConfig call
+      AppLogging.protocol('Radio config load aborted: $e');
     } finally {
       if (mounted) safeSetState(() => _isLoading = false);
     }

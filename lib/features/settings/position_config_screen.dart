@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
@@ -165,6 +166,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
         // Wait a bit for response
         await Future.delayed(const Duration(milliseconds: 500));
       }
+    } on StateError catch (e) {
+      // Device disconnected between isConnected check and getConfig call
+      AppLogging.protocol('Position config load aborted: $e');
     } finally {
       safeSetState(() => _isLoading = false);
     }

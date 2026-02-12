@@ -104,6 +104,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
           targetNodeNum: targetNodeNum,
         );
       }
+    } on StateError catch (e) {
+      // Device disconnected between isConnected check and getConfig call
+      AppLogging.protocol('Device config load aborted: $e');
     } finally {
       safeSetState(() => _isLoading = false);
     }

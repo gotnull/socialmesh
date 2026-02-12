@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
@@ -80,6 +81,9 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
           admin_pbenum.AdminMessage_ConfigType.BLUETOOTH_CONFIG,
         );
       }
+    } on StateError catch (e) {
+      // Device disconnected between isConnected check and getConfig call
+      AppLogging.protocol('Bluetooth config load aborted: $e');
     } finally {
       safeSetState(() => _loading = false);
     }
