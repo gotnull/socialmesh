@@ -136,7 +136,7 @@ dev_dependencies:
 
   # Code generation (3.x to match riverpod 3.x)
   build_runner: ^2.4.13
-  riverpod_generator: ^4.0.0+1
+  riverpod_generator: ^4.0.3
   json_serializable: ^6.9.5
 
 # For information on the generic Dart part of this file, see the
