@@ -14,6 +14,7 @@ import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../providers/sky_scanner_providers.dart';
+import '../services/opensky_service.dart';
 
 // =============================================================================
 // Constants
@@ -70,6 +71,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   DateTime? _arrivalDate;
   TimeOfDay? _arrivalTime;
   bool _isSaving = false;
+
+  // Flight validation state
+  FlightValidationResult? _validationResult;
+  bool _isValidating = false;
 
   @override
   void dispose() {
@@ -189,6 +194,109 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     safeSetState(() {
       _arrivalDate = null;
       _arrivalTime = null;
+    });
+  }
+
+  // ===========================================================================
+  // Flight Validation (OpenSky Network)
+  // ===========================================================================
+
+  Future<void> _validateFlight() async {
+    final flightNumber = _flightNumberController.text.trim().toUpperCase();
+    final departure = _departureController.text.trim().toUpperCase();
+
+    if (flightNumber.isEmpty) {
+      showErrorSnackBar(context, 'Enter a flight number first');
+      return;
+    }
+
+    if (!_flightNumberPattern.hasMatch(flightNumber)) {
+      showErrorSnackBar(context, 'Invalid flight number format');
+      return;
+    }
+
+    safeSetState(() {
+      _isValidating = true;
+      _validationResult = null;
+    });
+
+    HapticFeedback.lightImpact();
+
+    try {
+      final openSky = OpenSkyService();
+
+      // If we have departure info and date, use scheduled validation
+      if (departure.isNotEmpty && _departureDate != null) {
+        final scheduledDeparture = _buildDepartureDateTime();
+        if (scheduledDeparture != null) {
+          final result = await openSky.validateScheduledFlight(
+            flightNumber: flightNumber,
+            departureAirport: departure,
+            scheduledDeparture: scheduledDeparture,
+          );
+
+          if (mounted) {
+            safeSetState(() {
+              _validationResult = result;
+              _isValidating = false;
+            });
+
+            _showValidationFeedback(result);
+          }
+          return;
+        }
+      }
+
+      // Otherwise, just check if the callsign is currently active
+      final result = await openSky.validateFlightByCallsign(flightNumber);
+
+      if (mounted) {
+        safeSetState(() {
+          _validationResult = result;
+          _isValidating = false;
+        });
+
+        _showValidationFeedback(result);
+      }
+    } catch (e) {
+      if (mounted) {
+        safeSetState(() {
+          _validationResult = FlightValidationResult(
+            status: FlightValidationStatus.error,
+            message: 'Validation failed: $e',
+          );
+          _isValidating = false;
+        });
+        showErrorSnackBar(context, 'Failed to validate flight');
+      }
+    }
+  }
+
+  void _showValidationFeedback(FlightValidationResult result) {
+    HapticFeedback.mediumImpact();
+
+    switch (result.status) {
+      case FlightValidationStatus.active:
+        showSuccessSnackBar(
+          context,
+          'Flight is currently active! ${result.position?.altitudeFeet?.toStringAsFixed(0) ?? ''} ft',
+        );
+      case FlightValidationStatus.verified:
+        showSuccessSnackBar(context, 'Flight verified in OpenSky records');
+      case FlightValidationStatus.pending:
+        showInfoSnackBar(context, result.message);
+      case FlightValidationStatus.notFound:
+        showWarningSnackBar(context, result.message);
+      case FlightValidationStatus.rateLimited:
+        showErrorSnackBar(context, 'Rate limited. Try again in a few minutes.');
+      case FlightValidationStatus.error:
+        showErrorSnackBar(context, result.message);
+    }
+  }
+
+  void _clearValidation() {
+    safeSetState(() {
+      _validationResult = null;
     });
   }
 
@@ -340,16 +448,8 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                     _buildSectionHeader('Flight Information'),
                     const SizedBox(height: 12),
 
-                    // Flight Number
-                    _buildTextField(
-                      controller: _flightNumberController,
-                      label: 'Flight Number',
-                      hint: 'e.g., UA123, DL456',
-                      icon: Icons.confirmation_number,
-                      maxLength: _maxFlightNumberLength,
-                      textCapitalization: TextCapitalization.characters,
-                      validator: _validateFlightNumber,
-                    ),
+                    // Flight Number with Validation
+                    _buildFlightNumberField(),
                     const SizedBox(height: 16),
 
                     // Airports row
@@ -613,11 +713,13 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     int? maxLength,
     TextCapitalization textCapitalization = TextCapitalization.none,
     String? Function(String?)? validator,
+    ValueChanged<String>? onChanged,
   }) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
       maxLength: maxLength,
+      onChanged: onChanged,
       textCapitalization: textCapitalization,
       style: TextStyle(color: context.textPrimary),
       validator: validator,
@@ -695,6 +797,137 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildFlightNumberField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildTextField(
+                controller: _flightNumberController,
+                label: 'Flight Number',
+                hint: 'e.g., UA123, DL456',
+                icon: Icons.confirmation_number,
+                maxLength: _maxFlightNumberLength,
+                textCapitalization: TextCapitalization.characters,
+                validator: _validateFlightNumber,
+                onChanged: (_) => _clearValidation(),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: _buildValidateButton(),
+            ),
+          ],
+        ),
+        if (_validationResult != null) ...[
+          const SizedBox(height: 8),
+          _buildValidationStatus(),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildValidateButton() {
+    return GestureDetector(
+      onTap: _isValidating ? null : _validateFlight,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: _isValidating
+              ? context.border.withValues(alpha: 0.3)
+              : context.accentColor.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _isValidating
+                ? context.border
+                : context.accentColor.withValues(alpha: 0.3),
+          ),
+        ),
+        child: _isValidating
+            ? Padding(
+                padding: const EdgeInsets.all(14),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: context.textSecondary,
+                ),
+              )
+            : Icon(
+                Icons.verified_outlined,
+                color: context.accentColor,
+                size: 24,
+              ),
+      ),
+    );
+  }
+
+  Widget _buildValidationStatus() {
+    final result = _validationResult!;
+    final Color color;
+    final IconData icon;
+
+    switch (result.status) {
+      case FlightValidationStatus.active:
+        color = Colors.green;
+        icon = Icons.flight_takeoff;
+      case FlightValidationStatus.verified:
+        color = Colors.green;
+        icon = Icons.verified;
+      case FlightValidationStatus.pending:
+        color = Colors.blue;
+        icon = Icons.schedule;
+      case FlightValidationStatus.notFound:
+        color = Colors.orange;
+        icon = Icons.help_outline;
+      case FlightValidationStatus.rateLimited:
+        color = Colors.red;
+        icon = Icons.timer_off;
+      case FlightValidationStatus.error:
+        color = Colors.red;
+        icon = Icons.error_outline;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              result.message,
+              style: TextStyle(
+                color: color,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          if (result.isActive && result.position?.hasPosition == true) ...[
+            const SizedBox(width: 8),
+            Text(
+              '${result.position!.altitudeFeet?.toStringAsFixed(0) ?? '--'} ft',
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
