@@ -19,11 +19,27 @@ import '../providers/sky_scanner_providers.dart';
 // Constants
 // =============================================================================
 
-/// Maximum length for flight number (e.g., "UA1234" = 6 chars, allow up to 10)
-const int _maxFlightNumberLength = 10;
+/// Maximum length for flight number (e.g., "UAL1234A" = 8 chars max)
+const int _maxFlightNumberLength = 8;
+
+/// Regex pattern for valid flight numbers.
+/// Format: 2-char airline (AA, B6, 9W) OR 3-letter airline (UAL, BAW)
+///         + 1-4 digit flight number + optional suffix letter
+/// Examples: UA123, BA2490, DL1, 9W4567, AA100A, UAL123
+final _flightNumberPattern = RegExp(
+  r'^(?:'
+  r'(?:[A-Z]{2}|[A-Z][0-9]|[0-9][A-Z])[0-9]{1,4}|' // 2-char airline + 1-4 digits
+  r'[A-Z]{3}[0-9]{1,4}' // 3-letter airline + 1-4 digits
+  r')[A-Z]?$',
+);
 
 /// Maximum length for airport codes (ICAO is 4, IATA is 3)
 const int _maxAirportCodeLength = 4;
+
+/// Regex pattern for valid airport codes.
+/// IATA: 3 uppercase letters (e.g., LAX, JFK, LHR)
+/// ICAO: 4 uppercase letters (e.g., KLAX, KJFK, EGLL)
+final _airportCodePattern = RegExp(r'^[A-Z]{3,4}$');
 
 /// Maximum length for notes field
 const int _maxNotesLength = 500;
@@ -137,6 +153,43 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     if (time != null && mounted) {
       safeSetState(() => _arrivalTime = time);
     }
+  }
+
+  // ===========================================================================
+  // Validation
+  // ===========================================================================
+
+  String? _validateFlightNumber(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Enter flight number';
+    }
+
+    final cleaned = value.toUpperCase().trim();
+    if (!_flightNumberPattern.hasMatch(cleaned)) {
+      return 'Invalid format (e.g., UA123, BA2490)';
+    }
+
+    return null;
+  }
+
+  String? _validateAirportCode(String? value, String fieldName) {
+    if (value == null || value.isEmpty) {
+      return 'Required';
+    }
+
+    final cleaned = value.toUpperCase().trim();
+    if (!_airportCodePattern.hasMatch(cleaned)) {
+      return 'Use 3-4 letter code';
+    }
+
+    return null;
+  }
+
+  void _clearArrivalDateTime() {
+    safeSetState(() {
+      _arrivalDate = null;
+      _arrivalTime = null;
+    });
   }
 
   DateTime? _buildDepartureDateTime() {
@@ -295,8 +348,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                       icon: Icons.confirmation_number,
                       maxLength: _maxFlightNumberLength,
                       textCapitalization: TextCapitalization.characters,
-                      validator: (v) =>
-                          v?.isEmpty == true ? 'Enter flight number' : null,
+                      validator: _validateFlightNumber,
                     ),
                     const SizedBox(height: 16),
 
@@ -312,7 +364,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                             maxLength: _maxAirportCodeLength,
                             textCapitalization: TextCapitalization.characters,
                             validator: (v) =>
-                                v?.isEmpty == true ? 'Required' : null,
+                                _validateAirportCode(v, 'departure'),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -325,7 +377,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                             maxLength: _maxAirportCodeLength,
                             textCapitalization: TextCapitalization.characters,
                             validator: (v) =>
-                                v?.isEmpty == true ? 'Required' : null,
+                                _validateAirportCode(v, 'arrival'),
                           ),
                         ),
                       ],
@@ -372,7 +424,11 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                     const SizedBox(height: 24),
 
                     // Arrival Time Section (optional)
-                    _buildSectionHeader('Arrival Time (Optional)'),
+                    _buildSectionHeaderWithClear(
+                      'Arrival Time (Optional)',
+                      showClear: _arrivalDate != null || _arrivalTime != null,
+                      onClear: _clearArrivalDateTime,
+                    ),
                     const SizedBox(height: 12),
 
                     Row(
@@ -448,8 +504,42 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
         color: context.textSecondary,
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.5,
       ),
+    );
+  }
+
+  Widget _buildSectionHeaderWithClear(
+    String title, {
+    required bool showClear,
+    required VoidCallback onClear,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            color: context.textSecondary,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (showClear)
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              onClear();
+            },
+            child: Text(
+              'Clear',
+              style: TextStyle(
+                color: context.primary,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+      ],
     );
   }
 

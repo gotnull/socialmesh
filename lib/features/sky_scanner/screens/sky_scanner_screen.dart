@@ -6,11 +6,10 @@
 // view reception reports, and compete on a leaderboard for longest range contacts.
 //
 // Layout:
-// - Glass app bar with title and help action
-// - Pinned stats summary card (active flights, scheduled, reports, distance record)
-// - Segmented filter control (All, Active, Upcoming, My Flights)
-// - Search bar for flight/airport/node filtering
-// - Scrollable flight list with staggered animations
+// - Glass app bar with title and gradient action button
+// - Tab bar for Flights / Leaderboard navigation
+// - Flights tab: stats card, filter chips, searchable flight list
+// - Leaderboard tab: global distance rankings with medals
 //
 // Firebase-backed with real-time streams and OpenSky Network integration
 // for live flight position tracking.
@@ -25,12 +24,14 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/animated_gradient_background.dart';
+import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
-import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../providers/help_providers.dart';
 import '../../../core/widgets/search_filter_header.dart';
+import '../../navigation/main_shell.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton_config.dart';
 import '../../../providers/accessibility_providers.dart';
@@ -41,11 +42,11 @@ import 'schedule_flight_screen.dart';
 import 'sky_node_detail_screen.dart';
 
 // =============================================================================
-// Filter Enum
+// Filter Enum (for Flights tab only)
 // =============================================================================
 
-/// Filter options for the sky scanner flight list.
-enum SkyScannerFilter { all, active, upcoming, myFlights, reports }
+/// Filter options for the flights list within the Flights tab.
+enum SkyScannerFilter { all, active, upcoming, myFlights }
 
 extension SkyScannerFilterLabel on SkyScannerFilter {
   String get label {
@@ -58,8 +59,6 @@ extension SkyScannerFilterLabel on SkyScannerFilter {
         return 'Upcoming';
       case SkyScannerFilter.myFlights:
         return 'My Flights';
-      case SkyScannerFilter.reports:
-        return 'Reports';
     }
   }
 
@@ -73,8 +72,6 @@ extension SkyScannerFilterLabel on SkyScannerFilter {
         return Icons.schedule;
       case SkyScannerFilter.myFlights:
         return Icons.person_outline;
-      case SkyScannerFilter.reports:
-        return Icons.signal_cellular_alt;
     }
   }
 }
@@ -92,15 +89,32 @@ class SkyScannerScreen extends ConsumerStatefulWidget {
 }
 
 class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
-    with LifecycleSafeMixin<SkyScannerScreen> {
+    with LifecycleSafeMixin<SkyScannerScreen>, SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   SkyScannerFilter _currentFilter = SkyScannerFilter.all;
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _tabController.dispose();
     super.dispose();
+  }
+
+  void _openSkyNodeDetail(SkyNode node) {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => SkyNodeDetailScreen(skyNode: node),
+      ),
+    );
   }
 
   void _dismissKeyboard() {
@@ -203,6 +217,38 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
     );
   }
 
+  /// Builds the gradient-animated action button for scheduling flights.
+  /// Matches the Signals "Go Active" button pattern for consistency.
+  Widget _buildScheduleFlightButton() {
+    final gradientColors = AccentColors.gradientFor(AccentColors.cyan);
+    final gradient = LinearGradient(
+      colors: [gradientColors[0], gradientColors[1]],
+    );
+
+    return Tooltip(
+      message: 'Schedule Flight',
+      child: BouncyTap(
+        onTap: _scheduleFlight,
+        child: AnimatedGradientBackground(
+          gradient: gradient,
+          animate: true,
+          enabled: true,
+          borderRadius: BorderRadius.circular(18),
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(18)),
+            child: const Icon(
+              Icons.flight_takeoff,
+              size: 20,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final skyNodesAsync = ref.watch(skyNodesProvider);
@@ -222,205 +268,314 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
       stepKeys: const {},
       child: GestureDetector(
         onTap: _dismissKeyboard,
-        child: GlassScaffold(
-          titleWidget: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.radar, color: context.accentColor, size: 22),
-              const SizedBox(width: 8),
-              Text(
-                'Sky Scanner',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: context.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.add, color: context.accentColor),
-              onPressed: _scheduleFlight,
-              tooltip: 'Schedule Flight',
-            ),
-            AppBarOverflowMenu<String>(
-              onSelected: (value) {
-                switch (value) {
-                  case 'info':
-                    _showInfo();
-                  case 'help':
-                    ref
-                        .read(helpProvider.notifier)
-                        .startTour('sky_scanner_overview');
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'info',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: context.textSecondary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'About Sky Scanner',
-                        style: TextStyle(color: context.textPrimary),
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'help',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.help_outline,
-                        color: context.textSecondary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Help',
-                        style: TextStyle(color: context.textPrimary),
-                      ),
-                    ],
+        child: Scaffold(
+          backgroundColor: context.background,
+          appBar: AppBar(
+            backgroundColor: context.background,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            leading: const HamburgerMenuButton(),
+            centerTitle: true,
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.radar, color: context.accentColor, size: 22),
+                const SizedBox(width: 8),
+                Text(
+                  'Sky Scanner',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
                   ),
                 ),
               ],
             ),
-          ],
-          slivers: [
-            // Stats summary card
-            SliverToBoxAdapter(
-              child: Skeletonizer(
-                enabled: isLoading,
-                effect: AppSkeletonConfig.effect(context),
-                child: _StatsCard(stats: stats),
-              ),
-            ),
-
-            // Pinned search + filter controls (following app-wide pattern)
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: SearchFilterHeaderDelegate(
-                textScaler: MediaQuery.textScalerOf(context),
-                searchController: _searchController,
-                searchQuery: _searchQuery,
-                hintText: 'Search flights, airports, nodes...',
-                onSearchChanged: (value) {
-                  safeSetState(() => _searchQuery = value);
+            actions: [
+              _buildScheduleFlightButton(),
+              const SizedBox(width: 4),
+              AppBarOverflowMenu<String>(
+                onSelected: (value) {
+                  switch (value) {
+                    case 'info':
+                      _showInfo();
+                    case 'help':
+                      ref
+                          .read(helpProvider.notifier)
+                          .startTour('sky_scanner_overview');
+                  }
                 },
-                rebuildKey: Object.hashAll([
-                  _currentFilter,
-                  stats.totalScheduled,
-                  stats.activeFlights,
-                  stats.totalReports,
-                ]),
-                filterChips: [
-                  SectionFilterChip(
-                    label: 'All',
-                    count: stats.totalScheduled,
-                    isSelected: _currentFilter == SkyScannerFilter.all,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      safeSetState(() => _currentFilter = SkyScannerFilter.all);
-                    },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'info',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: context.textSecondary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'About Sky Scanner',
+                          style: TextStyle(color: context.textPrimary),
+                        ),
+                      ],
+                    ),
                   ),
-                  SectionFilterChip(
-                    label: 'Active',
-                    count: stats.activeFlights,
-                    isSelected: _currentFilter == SkyScannerFilter.active,
-                    color: Colors.green,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      safeSetState(
-                        () => _currentFilter = SkyScannerFilter.active,
-                      );
-                    },
-                  ),
-                  SectionFilterChip(
-                    label: 'Upcoming',
-                    count: 0,
-                    isSelected: _currentFilter == SkyScannerFilter.upcoming,
-                    color: AccentColors.cyan,
-                    icon: Icons.schedule,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      safeSetState(
-                        () => _currentFilter = SkyScannerFilter.upcoming,
-                      );
-                    },
-                  ),
-                  SectionFilterChip(
-                    label: 'My Flights',
-                    count: 0,
-                    isSelected: _currentFilter == SkyScannerFilter.myFlights,
-                    color: AccentColors.purple,
-                    icon: Icons.person_outline,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      safeSetState(
-                        () => _currentFilter = SkyScannerFilter.myFlights,
-                      );
-                    },
-                  ),
-                  SectionFilterChip(
-                    label: 'Reports',
-                    count: stats.totalReports,
-                    isSelected: _currentFilter == SkyScannerFilter.reports,
-                    color: AccentColors.yellow,
-                    icon: Icons.leaderboard,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      safeSetState(
-                        () => _currentFilter = SkyScannerFilter.reports,
-                      );
-                    },
+                  PopupMenuItem(
+                    value: 'help',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.help_outline,
+                          color: context.textSecondary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Help',
+                          style: TextStyle(color: context.textPrimary),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
+              const SizedBox(width: 8),
+            ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(48),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: context.border.withValues(alpha: 0.3),
+                    ),
+                  ),
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  indicatorColor: context.accentColor,
+                  indicatorWeight: 3,
+                  labelColor: context.accentColor,
+                  unselectedLabelColor: context.textSecondary,
+                  labelStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  tabs: [
+                    Tab(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.flight, size: 18),
+                          const SizedBox(width: 6),
+                          const Text('Flights'),
+                          const SizedBox(width: 6),
+                          _TabBadge(count: stats.totalScheduled),
+                        ],
+                      ),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.emoji_events, size: 18),
+                          const SizedBox(width: 6),
+                          const Text('Leaderboard'),
+                          const SizedBox(width: 6),
+                          _TabBadge(count: stats.totalReports),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-
-            // Content based on filter
-            _buildContent(
-              context,
-              isLoading: isLoading,
-              skyNodesAsync: skyNodesAsync,
-              activeFlightsAsync: activeFlightsAsync,
-              leaderboardAsync: leaderboardAsync,
-              user: user,
-              reduceMotion: reduceMotion,
-            ),
-
-            // Bottom padding
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-          ],
+          ),
+          body: TabBarView(
+            controller: _tabController,
+            children: [
+              // Flights Tab
+              _FlightsTabContent(
+                skyNodesAsync: skyNodesAsync,
+                activeFlightsAsync: activeFlightsAsync,
+                stats: stats,
+                user: user,
+                reduceMotion: reduceMotion,
+                isLoading: isLoading,
+                searchController: _searchController,
+                searchQuery: _searchQuery,
+                currentFilter: _currentFilter,
+                onSearchChanged: (value) {
+                  safeSetState(() => _searchQuery = value);
+                },
+                onFilterChanged: (filter) {
+                  HapticFeedback.selectionClick();
+                  safeSetState(() => _currentFilter = filter);
+                },
+                onScheduleFlight: _scheduleFlight,
+                onOpenDetail: _openSkyNodeDetail,
+              ),
+              // Leaderboard Tab
+              _LeaderboardTabContent(
+                leaderboardAsync: leaderboardAsync,
+                reduceMotion: reduceMotion,
+                isLoading: isLoading,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildContent(
-    BuildContext context, {
-    required bool isLoading,
-    required AsyncValue<List<SkyNode>> skyNodesAsync,
-    required AsyncValue<List<SkyNode>> activeFlightsAsync,
-    required AsyncValue<List<ReceptionReport>> leaderboardAsync,
-    required dynamic user,
-    required bool reduceMotion,
-  }) {
-    if (_currentFilter == SkyScannerFilter.reports) {
-      return _buildLeaderboardContent(context, leaderboardAsync, reduceMotion);
-    }
+// =============================================================================
+// Tab Badge
+// =============================================================================
 
+/// Tab badge showing count
+class _TabBadge extends StatelessWidget {
+  final int count;
+
+  const _TabBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: context.border.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        count.toString(),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: context.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Flights Tab Content
+// =============================================================================
+
+class _FlightsTabContent extends StatelessWidget {
+  final AsyncValue<List<SkyNode>> skyNodesAsync;
+  final AsyncValue<List<SkyNode>> activeFlightsAsync;
+  final SkyScannerStats stats;
+  final dynamic user;
+  final bool reduceMotion;
+  final bool isLoading;
+  final TextEditingController searchController;
+  final String searchQuery;
+  final SkyScannerFilter currentFilter;
+  final ValueChanged<String> onSearchChanged;
+  final ValueChanged<SkyScannerFilter> onFilterChanged;
+  final VoidCallback onScheduleFlight;
+  final void Function(SkyNode) onOpenDetail;
+
+  const _FlightsTabContent({
+    required this.skyNodesAsync,
+    required this.activeFlightsAsync,
+    required this.stats,
+    required this.user,
+    required this.reduceMotion,
+    required this.isLoading,
+    required this.searchController,
+    required this.searchQuery,
+    required this.currentFilter,
+    required this.onSearchChanged,
+    required this.onFilterChanged,
+    required this.onScheduleFlight,
+    required this.onOpenDetail,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      slivers: [
+        // Stats summary card
+        SliverToBoxAdapter(
+          child: Skeletonizer(
+            enabled: isLoading,
+            effect: AppSkeletonConfig.effect(context),
+            child: _StatsCard(stats: stats),
+          ),
+        ),
+
+        // Pinned search + filter controls
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SearchFilterHeaderDelegate(
+            textScaler: MediaQuery.textScalerOf(context),
+            searchController: searchController,
+            searchQuery: searchQuery,
+            hintText: 'Search flights, airports, nodes...',
+            onSearchChanged: onSearchChanged,
+            rebuildKey: Object.hashAll([
+              currentFilter,
+              stats.totalScheduled,
+              stats.activeFlights,
+            ]),
+            filterChips: [
+              SectionFilterChip(
+                label: 'All',
+                count: stats.totalScheduled,
+                isSelected: currentFilter == SkyScannerFilter.all,
+                onTap: () => onFilterChanged(SkyScannerFilter.all),
+              ),
+              SectionFilterChip(
+                label: 'Active',
+                count: stats.activeFlights,
+                isSelected: currentFilter == SkyScannerFilter.active,
+                color: Colors.green,
+                onTap: () => onFilterChanged(SkyScannerFilter.active),
+              ),
+              SectionFilterChip(
+                label: 'Upcoming',
+                count: 0,
+                isSelected: currentFilter == SkyScannerFilter.upcoming,
+                color: AccentColors.cyan,
+                icon: Icons.schedule,
+                onTap: () => onFilterChanged(SkyScannerFilter.upcoming),
+              ),
+              SectionFilterChip(
+                label: 'My Flights',
+                count: 0,
+                isSelected: currentFilter == SkyScannerFilter.myFlights,
+                color: AccentColors.purple,
+                icon: Icons.person_outline,
+                onTap: () => onFilterChanged(SkyScannerFilter.myFlights),
+              ),
+            ],
+          ),
+        ),
+
+        // Flight list content
+        _buildFlightsList(context),
+
+        // Bottom padding
+        const SliverToBoxAdapter(child: SizedBox(height: 32)),
+      ],
+    );
+  }
+
+  Widget _buildFlightsList(BuildContext context) {
     final allNodes = skyNodesAsync.value ?? [];
     List<SkyNode> filteredNodes;
 
-    switch (_currentFilter) {
+    switch (currentFilter) {
       case SkyScannerFilter.all:
         filteredNodes = allNodes;
         break;
@@ -444,14 +599,11 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
         }
         filteredNodes = allNodes.where((n) => n.userId == user.uid).toList();
         break;
-      case SkyScannerFilter.reports:
-        filteredNodes = [];
-        break;
     }
 
     // Apply search filter
-    if (_searchQuery.isNotEmpty) {
-      final query = _searchQuery.toLowerCase();
+    if (searchQuery.isNotEmpty) {
+      final query = searchQuery.toLowerCase();
       filteredNodes = filteredNodes.where((node) {
         return node.flightNumber.toLowerCase().contains(query) ||
             node.departure.toLowerCase().contains(query) ||
@@ -488,14 +640,14 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
     if (filteredNodes.isEmpty) {
       return SliverFillRemaining(
         child: _EmptyState(
-          icon: _currentFilter.icon,
+          icon: currentFilter.icon,
           title: _getEmptyTitle(),
           subtitle: _getEmptySubtitle(),
           showAction:
-              _currentFilter == SkyScannerFilter.all ||
-              _currentFilter == SkyScannerFilter.myFlights,
+              currentFilter == SkyScannerFilter.all ||
+              currentFilter == SkyScannerFilter.myFlights,
           actionLabel: 'Schedule Flight',
-          onAction: _scheduleFlight,
+          onAction: onScheduleFlight,
         ),
       );
     }
@@ -509,22 +661,120 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
           child: _SkyScannerFlightCard(
             skyNode: node,
             showLiveTracking: node.isActive,
-            showActions: _currentFilter == SkyScannerFilter.myFlights,
+            showActions: currentFilter == SkyScannerFilter.myFlights,
           ),
         );
       }, childCount: filteredNodes.length),
     );
   }
 
-  /// Builds the global leaderboard content.
-  ///
-  /// Data is fetched from Firestore sorted by distance descending,
-  /// so rankings are globally consistent and persist across app reinstalls.
-  Widget _buildLeaderboardContent(
-    BuildContext context,
-    AsyncValue<List<ReceptionReport>> leaderboardAsync,
-    bool reduceMotion,
-  ) {
+  String _getEmptyTitle() {
+    switch (currentFilter) {
+      case SkyScannerFilter.all:
+        return 'No Flights Found';
+      case SkyScannerFilter.active:
+        return 'No Active Flights';
+      case SkyScannerFilter.upcoming:
+        return 'No Upcoming Flights';
+      case SkyScannerFilter.myFlights:
+        return 'No Flights Scheduled';
+    }
+  }
+
+  String _getEmptySubtitle() {
+    if (searchQuery.isNotEmpty) {
+      return 'No results match "$searchQuery".\nTry a different search term.';
+    }
+    switch (currentFilter) {
+      case SkyScannerFilter.all:
+        return 'No flights scheduled yet.\nBe the first to share your journey!';
+      case SkyScannerFilter.active:
+        return 'No Meshtastic nodes currently in the air.\nBe the first to schedule one!';
+      case SkyScannerFilter.upcoming:
+        return 'No flights scheduled yet.\nPlan your next airborne test!';
+      case SkyScannerFilter.myFlights:
+        return "You haven't scheduled any flights yet.\nTap the button above to add one!";
+    }
+  }
+}
+
+// =============================================================================
+// Leaderboard Tab Content
+// =============================================================================
+
+class _LeaderboardTabContent extends StatelessWidget {
+  final AsyncValue<List<ReceptionReport>> leaderboardAsync;
+  final bool reduceMotion;
+  final bool isLoading;
+
+  const _LeaderboardTabContent({
+    required this.leaderboardAsync,
+    required this.reduceMotion,
+    required this.isLoading,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      slivers: [
+        // Header with trophy icon
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: AccentColors.gradientFor(AccentColors.yellow),
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.emoji_events,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Distance Leaderboard',
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'Global rankings by reception distance',
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Leaderboard content
+        _buildLeaderboardList(context),
+
+        // Bottom padding
+        const SliverToBoxAdapter(child: SizedBox(height: 32)),
+      ],
+    );
+  }
+
+  Widget _buildLeaderboardList(BuildContext context) {
     return leaderboardAsync.when(
       loading: () => SliverList(
         delegate: SliverChildBuilderDelegate(
@@ -565,8 +815,6 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
           );
         }
 
-        // Leaderboard is already sorted by distance from Firestore
-        // Rankings are globally consistent and persist across app reinstalls
         return SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
             return _StaggeredListTile(
@@ -578,39 +826,6 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
         );
       },
     );
-  }
-
-  String _getEmptyTitle() {
-    switch (_currentFilter) {
-      case SkyScannerFilter.all:
-        return 'No Flights Found';
-      case SkyScannerFilter.active:
-        return 'No Active Flights';
-      case SkyScannerFilter.upcoming:
-        return 'No Upcoming Flights';
-      case SkyScannerFilter.myFlights:
-        return 'No Flights Scheduled';
-      case SkyScannerFilter.reports:
-        return 'Leaderboard Empty';
-    }
-  }
-
-  String _getEmptySubtitle() {
-    if (_searchQuery.isNotEmpty) {
-      return 'No results match "$_searchQuery".\nTry a different search term.';
-    }
-    switch (_currentFilter) {
-      case SkyScannerFilter.all:
-        return 'No flights scheduled yet.\nBe the first to share your journey!';
-      case SkyScannerFilter.active:
-        return 'No Meshtastic nodes currently in the air.\nBe the first to schedule one!';
-      case SkyScannerFilter.upcoming:
-        return 'No flights scheduled yet.\nPlan your next airborne test!';
-      case SkyScannerFilter.myFlights:
-        return "You haven't scheduled any flights yet.\nTap the button below to add one!";
-      case SkyScannerFilter.reports:
-        return 'Be the first to claim the top spot on the global leaderboard!';
-    }
   }
 }
 
