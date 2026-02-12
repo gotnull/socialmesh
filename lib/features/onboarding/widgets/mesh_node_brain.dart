@@ -1399,77 +1399,117 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     final hasCustomIcons =
         widget.particleIcons != null && widget.particleIcons!.isNotEmpty;
 
-    // Inner particles - always stars (the original default behavior)
-    for (int i = 0; i < _particles.length; i++) {
-      final particle = _particles[i];
-      final progress = (_particleController.value + particle.phase) % 1.0;
-      final angle = particle.angle + progress * 2 * math.pi * particle.speed;
-      final radius =
-          widget.size *
-          0.5 *
-          particle.radius *
-          (0.8 + 0.2 * math.sin(progress * math.pi * 2));
-
-      final x = math.cos(angle) * radius;
-      final y = math.sin(angle) * radius * 0.6;
-      final opacity = math.sin(progress * math.pi) * 0.8;
-
-      final particleColor = _colors[i % _colors.length];
-
-      // Default circle/star particles (inner)
-      particles.add(
-        Positioned(
-          left: widget.size * 0.8 + x - particle.size / 2,
-          top: widget.size * 0.8 + y - particle.size / 2,
-          child: Container(
-            width: particle.size,
-            height: particle.size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: particleColor.withValues(alpha: opacity),
-              boxShadow: [
-                BoxShadow(
-                  color: _colors[1].withValues(alpha: opacity * 0.5),
-                  blurRadius: particle.size,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    // Outer particles - custom icons orbiting further out
+    // Inner particles - custom icons close to the brain (replacing default stars)
     if (hasCustomIcons) {
       final iconCount = widget.particleIcons!.length;
-      for (int i = 0; i < iconCount; i++) {
-        final iconData = widget.particleIcons![i];
-        final phase = (i / iconCount) * 2 * math.pi;
-        final progress =
-            (_particleController.value + phase / (2 * math.pi)) % 1.0;
-        final angle = phase + _particleController.value * 2 * math.pi * 0.3;
-        // Outer radius - further from center than inner particles
+      for (int i = 0; i < _particles.length; i++) {
+        final particle = _particles[i];
+        final progress = (_particleController.value + particle.phase) % 1.0;
+        final angle = particle.angle + progress * 2 * math.pi * particle.speed;
         final radius =
-            widget.size * 0.85 + math.sin(progress * math.pi * 2) * 8;
+            widget.size *
+            0.5 *
+            particle.radius *
+            (0.8 + 0.2 * math.sin(progress * math.pi * 2));
 
         final x = math.cos(angle) * radius;
         final y = math.sin(angle) * radius * 0.6;
-        final opacity = (0.6 + 0.4 * math.sin(progress * math.pi * 2)).clamp(
-          0.0,
-          1.0,
-        );
+        final opacity = math.sin(progress * math.pi) * 0.8;
 
         final particleColor = _colors[i % _colors.length];
-        const iconSize = 14.0;
+        final iconData = widget.particleIcons![i % iconCount];
+        final iconSize = particle.size * 2.5;
+        final clampedOpacity = opacity.clamp(0.0, 1.0);
 
         particles.add(
           Positioned(
             left: widget.size * 0.8 + x - iconSize / 2,
             top: widget.size * 0.8 + y - iconSize / 2,
             child: Opacity(
-              opacity: opacity,
+              opacity: clampedOpacity,
               child: Icon(iconData, size: iconSize, color: particleColor),
+            ),
+          ),
+        );
+      }
+
+      // Outer particles - stars orbiting far outside the brain
+      for (int i = 0; i < iconCount; i++) {
+        final phase = (i / iconCount) * 2 * math.pi;
+        final progress =
+            (_particleController.value + phase / (2 * math.pi)) % 1.0;
+        final angle = phase + _particleController.value * 2 * math.pi * 0.25;
+        final radius =
+            widget.size * 1.3 + math.sin(progress * math.pi * 2) * 10;
+
+        final x = math.cos(angle) * radius;
+        final y = math.sin(angle) * radius * 0.7;
+        final opacity = (0.5 + 0.5 * math.sin(progress * math.pi * 2)).clamp(
+          0.0,
+          1.0,
+        );
+
+        final particleColor = _colors[i % _colors.length];
+        const starSize = 6.0;
+
+        particles.add(
+          Positioned(
+            left: widget.size * 0.8 + x - starSize / 2,
+            top: widget.size * 0.8 + y - starSize / 2,
+            child: Container(
+              width: starSize,
+              height: starSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: particleColor.withValues(alpha: opacity),
+                boxShadow: [
+                  BoxShadow(
+                    color: particleColor.withValues(alpha: opacity * 0.5),
+                    blurRadius: starSize,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+    } else {
+      // Default behavior - stars inner (no custom icons provided)
+      for (int i = 0; i < _particles.length; i++) {
+        final particle = _particles[i];
+        final progress = (_particleController.value + particle.phase) % 1.0;
+        final angle = particle.angle + progress * 2 * math.pi * particle.speed;
+        final radius =
+            widget.size *
+            0.5 *
+            particle.radius *
+            (0.8 + 0.2 * math.sin(progress * math.pi * 2));
+
+        final x = math.cos(angle) * radius;
+        final y = math.sin(angle) * radius * 0.6;
+        final opacity = math.sin(progress * math.pi) * 0.8;
+
+        final particleColor = _colors[i % _colors.length];
+
+        particles.add(
+          Positioned(
+            left: widget.size * 0.8 + x - particle.size / 2,
+            top: widget.size * 0.8 + y - particle.size / 2,
+            child: Container(
+              width: particle.size,
+              height: particle.size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: particleColor.withValues(alpha: opacity),
+                boxShadow: [
+                  BoxShadow(
+                    color: _colors[1].withValues(alpha: opacity * 0.5),
+                    blurRadius: particle.size,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
             ),
           ),
         );

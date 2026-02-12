@@ -52,6 +52,10 @@ import 'nodedex_detail_screen.dart';
 /// Shows all discovered nodes enriched with procedural identity,
 /// inferred personality traits, and encounter history. Accessible
 /// from the main shell drawer menu.
+
+// TODO: Remove this debug flag after testing empty states
+const _debugForceEmptyState = true;
+
 class NodeDexScreen extends ConsumerStatefulWidget {
   const NodeDexScreen({super.key});
 
@@ -432,7 +436,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
             );
           }, childCount: otherEntries.length),
         ),
-      ] else if (!isLoading && myEntry.isEmpty)
+      ] else if (_debugForceEmptyState || (!isLoading && myEntry.isEmpty))
         SliverFillRemaining(
           hasScrollBody: false,
           child: _EmptyState(filter: currentFilter),

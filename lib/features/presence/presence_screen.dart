@@ -276,7 +276,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
               const SliverToBoxAdapter(child: _QuietMeshHint()),
 
             // Content
-            if (allPresences.isEmpty) ...[
+            if (DemoConfig.debugEmptyStates || allPresences.isEmpty) ...[
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: _buildEmptyState(theme),
