@@ -36,6 +36,7 @@ SYNC_DIRS=(
 # Individual files to sync (relative to repo root)
 SYNC_FILES=(
   .env
+  .env.example
   .firebaserc
   firebase.json
   firestore.rules

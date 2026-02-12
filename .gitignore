@@ -28,11 +28,11 @@ deploy/
 # Firebase Hosting content (landing page, legal docs, admin tools)
 web/
 
-# Environment files (keep .env.example and .env.ci for CI)
+# Environment files
 .env
 .env.local
 .env.*.local
-!.env.example
+.env.example
 !.env.ci
 
 # Signing keys and certificates
