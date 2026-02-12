@@ -13,6 +13,7 @@ import '../../device_shop/providers/admin_shop_providers.dart';
 import '../../social/screens/reported_content_screen.dart';
 import '../../settings/admin_follow_requests_screen.dart';
 import '../../widget_builder/marketplace/widget_approval_screen.dart';
+import 'admin_broadcast_screen.dart';
 import 'qr_style_preview_screen.dart';
 import 'user_purchases_admin_screen.dart';
 
@@ -106,6 +107,13 @@ class AdminScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               const _SectionHeader(title: 'APP CONFIGURATION'),
+              _AdminTile(
+                icon: Icons.campaign_outlined,
+                label: 'Broadcast Notification',
+                subtitle: 'Send push notification to all users',
+                iconColor: Colors.orange.shade400,
+                onTap: () => _navigateTo(context, const AdminBroadcastScreen()),
+              ),
               _AdminTile(
                 icon: Icons.qr_code_2,
                 label: 'QR Code Styles',

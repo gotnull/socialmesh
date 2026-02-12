@@ -390,18 +390,18 @@ class _MainShellState extends ConsumerState<MainShell> {
       badgeProviderKey: 'activity',
     ),
     _DrawerMenuItem(
+      icon: Icons.people_alt_outlined,
+      label: 'Presence',
+      screen: const PresenceScreen(),
+      iconColor: Colors.green.shade400,
+      requiresConnection: true,
+    ),
+    _DrawerMenuItem(
       icon: Icons.timeline,
       label: 'Timeline',
       screen: const TimelineScreen(),
       sectionHeader: 'MESH',
       iconColor: Colors.indigo.shade400,
-      requiresConnection: true,
-    ),
-    _DrawerMenuItem(
-      icon: Icons.people_alt_outlined,
-      label: 'Presence',
-      screen: const PresenceScreen(),
-      iconColor: Colors.green.shade400,
       requiresConnection: true,
     ),
     _DrawerMenuItem(

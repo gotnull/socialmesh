@@ -362,7 +362,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
         topicId: 'signals_overview',
         stepKeys: const {},
         child: GlassScaffold(
-          title: 'Presence${allCount > 0 ? ' ($allCount)' : ''}',
+          title: 'Signals${allCount > 0 ? ' ($allCount)' : ''}',
 
           leading: const HamburgerMenuButton(),
           actions: [

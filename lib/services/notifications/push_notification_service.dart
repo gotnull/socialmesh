@@ -73,6 +73,15 @@ class PushNotificationService {
         importance: Importance.high,
       );
 
+  /// Android notification channel for admin announcements
+  final AndroidNotificationChannel _announcementsChannel =
+      const AndroidNotificationChannel(
+        'announcements',
+        'Announcements',
+        description: 'Important announcements from Socialmesh',
+        importance: Importance.high,
+      );
+
   /// Initialize the push notification service
   Future<void> initialize() async {
     if (_initialized) return;
@@ -98,14 +107,18 @@ class PushNotificationService {
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional) {
-        // Create Android notification channel
+        // Create Android notification channels
         if (Platform.isAndroid) {
-          await _localNotifications
+          final androidPlugin = _localNotifications
               .resolvePlatformSpecificImplementation<
                 AndroidFlutterLocalNotificationsPlugin
-              >()
-              ?.createNotificationChannel(_socialChannel);
+              >();
+          await androidPlugin?.createNotificationChannel(_socialChannel);
+          await androidPlugin?.createNotificationChannel(_announcementsChannel);
         }
+
+        // Subscribe to announcements topic for admin broadcasts
+        await _subscribeToAnnouncementsTopic();
 
         // Get and save FCM token
         await _saveFcmToken();
@@ -138,6 +151,18 @@ class PushNotificationService {
       }
     } catch (e) {
       AppLogging.notifications('🔔 Error initializing push notifications: $e');
+    }
+  }
+
+  /// Subscribe to the announcements FCM topic for admin broadcasts
+  Future<void> _subscribeToAnnouncementsTopic() async {
+    try {
+      await _messaging.subscribeToTopic('announcements');
+      AppLogging.notifications('🔔 Subscribed to announcements topic');
+    } catch (e) {
+      AppLogging.notifications(
+        '🔔 Error subscribing to announcements topic: $e',
+      );
     }
   }
 

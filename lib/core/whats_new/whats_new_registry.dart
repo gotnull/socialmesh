@@ -147,7 +147,7 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.10.0 — Signals / Presence Feed introduction
+    // v1.10.0 — Signals introduction
     WhatsNewPayload(
       version: '1.10.0',
       headline: "What's New in Socialmesh",
@@ -158,16 +158,40 @@ class WhatsNewRegistry {
           title: 'Signals',
           description:
               'Broadcast ephemeral moments to your mesh. Signals are '
-              'presence markers — share text, a photo, or your location '
+              'short-lived posts — share text, a photo, or your location '
               'with a TTL from 15 minutes up to 24 hours.\n\n'
               'Nearby signals appear first with proximity badges showing '
               'hop count. When they fade, they are gone. True off-grid, '
-              'ephemeral presence.',
+              'ephemeral content.',
           icon: Icons.sensors,
           iconColor: Color(0xFFBA68C8), // Colors.purple.shade300
           deepLinkRoute: '/signals',
           helpTopicId: 'signals_overview',
           ctaLabel: 'Open Signals',
+        ),
+      ],
+    ),
+
+    // v1.10.0 — Presence introduction
+    WhatsNewPayload(
+      version: '1.10.0',
+      headline: "What's New in Socialmesh",
+      subtitle: 'Version 1.10.0',
+      items: [
+        WhatsNewItem(
+          id: 'presence_intro',
+          title: 'Presence',
+          description:
+              'See who is active on your mesh at a glance. Presence shows '
+              'real-time node activity with intent indicators — whether '
+              'someone is monitoring, mobile, or at a fixed base station.\n\n'
+              'Filter by activity level, search by name, and tap any node '
+              'to see their full profile. Find it in the drawer under Social.',
+          icon: Icons.people_alt_outlined,
+          iconColor: Color(0xFF66BB6A), // Colors.green.shade400
+          deepLinkRoute: '/presence',
+          helpTopicId: 'presence_overview',
+          ctaLabel: 'Open Presence',
         ),
       ],
     ),

@@ -720,12 +720,12 @@ class HelpContent {
   );
 
   // ============================================================================
-  // SIGNALS / PRESENCE FEED HELP
+  // SIGNALS HELP
   // ============================================================================
 
   static final HelpTopic signalsOverview = HelpTopic(
     id: 'signals_overview',
-    title: 'Presence Feed',
+    title: 'Signals',
     description: 'Broadcast ephemeral signals to your mesh',
     icon: Icons.sensors,
     category: catMessaging,
@@ -734,7 +734,7 @@ class HelpContent {
       HelpStep(
         id: 'signals_intro',
         bubbleText:
-            "Welcome to **Presence**! Broadcast moments to your mesh. Signals are **ephemeral** - you choose how long they last, from **15 minutes** up to **24 hours**.",
+            "Welcome to **Signals**! Broadcast moments to your mesh. Signals are **ephemeral** - you choose how long they last, from **15 minutes** up to **24 hours**.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
@@ -759,7 +759,7 @@ class HelpContent {
       HelpStep(
         id: 'signals_privacy',
         bubbleText:
-            "Signals are **mesh-first** - they travel through the radio network. When they fade, they're gone. True ephemeral, off-grid presence!",
+            "Signals are **mesh-first** - they travel through the radio network. When they fade, they're gone. True ephemeral, off-grid content!",
         icoMood: MeshBrainMood.playful,
       ),
     ],

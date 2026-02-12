@@ -276,20 +276,13 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
             scrolledUnderElevation: 0,
             leading: const HamburgerMenuButton(),
             centerTitle: true,
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.radar, color: context.accentColor, size: 22),
-                const SizedBox(width: 8),
-                Text(
-                  'Aether',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: context.textPrimary,
-                  ),
-                ),
-              ],
+            title: Text(
+              'Aether',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
             ),
             actions: [
               _buildScheduleFlightButton(),
