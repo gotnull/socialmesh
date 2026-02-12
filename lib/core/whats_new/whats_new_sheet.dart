@@ -389,14 +389,9 @@ class _WhatsNewPage extends ConsumerWidget {
             child: MeshNodeBrain(
               mood: MeshBrainMood.excited,
               size: mascotSize,
-              colors:
-                  payload.items.isNotEmpty &&
-                      payload.items.first.iconColor != null
-                  ? [
-                      payload.items.first.iconColor!,
-                      payload.items.first.iconColor!.withValues(alpha: 0.6),
-                      payload.items.first.iconColor!.withValues(alpha: 0.3),
-                    ]
+              // Accent color for icons only - glow rings keep default colors
+              accentColor: payload.items.isNotEmpty
+                  ? payload.items.first.iconColor
                   : null,
               // Use feature icons as floating particles instead of default stars
               particleIcons: payload.items.isNotEmpty
