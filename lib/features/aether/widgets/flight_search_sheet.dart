@@ -12,24 +12,18 @@ import '../services/opensky_service.dart';
 
 /// Bottom sheet for searching and selecting active flights from OpenSky.
 class FlightSearchSheet extends StatefulWidget {
-  const FlightSearchSheet({super.key, this.topPadding = 0});
-
-  /// Safe area top padding, captured from the caller context.
-  final double topPadding;
+  const FlightSearchSheet({super.key});
 
   /// Show the flight search sheet and return the selected flight.
   static Future<ActiveFlightInfo?> show(
     BuildContext context, {
     bool isDismissible = true,
   }) {
-    // Capture top padding from the caller context — inside the modal
-    // bottom sheet the top padding may report 0.
-    final topPadding = MediaQuery.of(context).padding.top;
     return AppBottomSheet.show<ActiveFlightInfo>(
       context: context,
-      maxHeightFraction: 0.9,
+      maxHeightFraction: 0.85,
       isDismissible: isDismissible,
-      child: FlightSearchSheet(topPadding: topPadding),
+      child: const FlightSearchSheet(),
     );
   }
 
@@ -111,18 +105,15 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
   @override
   Widget build(BuildContext context) {
     // Prevent dismissal during active search to avoid wasted API calls
-    return WillPopScope(
-      onWillPop: () async => !_isLoading,
+    return PopScope(
+      canPop: !_isLoading,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Top safe area padding (Dynamic Island)
-          SizedBox(height: widget.topPadding),
-
           // Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
             child: Text(
               'Search Active Flights',
               style: TextStyle(
@@ -141,7 +132,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
               autofocus: true,
               textCapitalization: TextCapitalization.characters,
               decoration: InputDecoration(
-                hintText: 'Enter flight number (e.g. UA123, BA456)',
+                hintText: 'Flight number (e.g. UA123)',
                 hintStyle: TextStyle(color: context.textTertiary),
                 prefixIcon: Icon(
                   Icons.flight_takeoff,
@@ -186,6 +177,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
                   borderSide: BorderSide(color: context.accentColor, width: 2),
                 ),
               ),
+              maxLength: 11,
               style: TextStyle(
                 color: context.textPrimary,
                 fontSize: 16,
