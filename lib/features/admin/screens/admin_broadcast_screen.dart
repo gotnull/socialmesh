@@ -311,39 +311,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold(
         title: 'Broadcast Notification',
-        actions: [
-          if (_isCountingDown)
-            TextButton(
-              onPressed: _cancelCountdown,
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  color: Colors.red.shade400,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            )
-          else
-            TextButton(
-              onPressed: canInteract ? _startCountdown : null,
-              child: _isSending
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.accentColor,
-                      ),
-                    )
-                  : Text(
-                      'Send',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-            ),
-        ],
+        actions: const [],
         slivers: [
           // Pinned preview header
           SliverPersistentHeader(
@@ -403,15 +371,6 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                     ),
 
                     const SizedBox(height: 24),
-
-                    // Countdown indicator
-                    if (_isCountingDown) ...[
-                      _CountdownIndicator(
-                        countdown: _countdown,
-                        onCancel: _cancelCountdown,
-                      ),
-                      const SizedBox(height: 24),
-                    ],
 
                     // Icon selector
                     Text(
@@ -682,6 +641,65 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                     const SizedBox(height: 8),
                     Text(
                       'Send a test notification to admins before broadcasting to all users.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Send to Everyone button (with countdown)
+                    if (_isCountingDown)
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: _cancelCountdown,
+                          icon: const Icon(Icons.cancel_outlined, size: 20),
+                          label: Text('Cancel — sending in $_countdown...'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.red.shade700,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: canInteract ? _startCountdown : null,
+                          icon: _isSending
+                              ? SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.send_rounded, size: 20),
+                          label: Text(
+                            _isSending ? 'Sending...' : 'Send to Everyone',
+                          ),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.orange.shade700,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Sends a push notification to all Socialmesh users. '
+                      'A ${_countdownSeconds}s countdown gives you time to cancel.',
                       style: TextStyle(
                         fontSize: 12,
                         color: context.textTertiary,
@@ -1013,76 +1031,6 @@ class _NotificationPreview extends StatelessWidget {
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Countdown indicator shown before sending
-class _CountdownIndicator extends StatelessWidget {
-  const _CountdownIndicator({required this.countdown, required this.onCancel});
-
-  final int countdown;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.surface.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CircularProgressIndicator(
-                  value: countdown / 5,
-                  strokeWidth: 3,
-                  backgroundColor: Colors.red.withValues(alpha: 0.2),
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Colors.red.shade400,
-                  ),
-                ),
-                Text(
-                  '$countdown',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red.shade400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Sending in $countdown second${countdown == 1 ? '' : 's'}...',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.red.shade400,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Tap Cancel to abort',
-                  style: TextStyle(fontSize: 13, color: context.textSecondary),
                 ),
               ],
             ),
