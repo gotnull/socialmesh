@@ -1894,50 +1894,50 @@ class HelpContent {
   );
 
   // ============================================================================
-  // SKY SCANNER
+  // AETHER
   // ============================================================================
 
-  static final HelpTopic skyScannerOverview = HelpTopic(
-    id: 'sky_scanner_overview',
-    title: 'Sky Scanner',
+  static final HelpTopic aetherOverview = HelpTopic(
+    id: 'aether_overview',
+    title: 'Aether',
     description: 'Track Meshtastic nodes at altitude',
     icon: Icons.radar,
     category: catNodes,
     priority: 4,
     steps: [
       HelpStep(
-        id: 'sky_scanner_intro',
+        id: 'aether_intro',
         bubbleText:
-            "**Sky Scanner** lets you track Meshtastic nodes at altitude! At 35,000 ft, LoRa signals can reach **400+ km** — far beyond typical ground-level range.",
+            "**Aether** lets you track Meshtastic nodes at altitude! At 35,000 ft, LoRa signals can reach **400+ km** — far beyond typical ground-level range.",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
-        id: 'sky_scanner_schedule',
+        id: 'aether_schedule',
         bubbleText:
             "**Schedule a flight** before you fly. Enter your flight number, airports, departure time, and your node's ID. Other mesh enthusiasts can then track your journey and try to receive your signal.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
-        id: 'sky_scanner_active',
+        id: 'aether_active',
         bubbleText:
             "**Active flights** show live position data from the OpenSky Network API. You'll see altitude, speed, heading, and estimated coverage radius based on radio horizon calculations.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
-        id: 'sky_scanner_reports',
+        id: 'aether_reports',
         bubbleText:
             "**Reception reports** let ground stations report when they receive your signal. Reports include distance, RSSI, and SNR. All reports are saved to the **global leaderboard**.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
-        id: 'sky_scanner_leaderboard',
+        id: 'aether_leaderboard',
         bubbleText:
             "The **leaderboard is global and persistent** — stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire Socialmesh community. Top 3 get gold, silver, and bronze!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
-        id: 'sky_scanner_tips',
+        id: 'aether_tips',
         bubbleText:
             "**Tips**: Window seats help. Turn off airplane mode briefly during cruise altitude (where permitted). Ground stations with elevated antennas have better odds. Good luck!",
         icoMood: MeshBrainMood.approving,
@@ -2123,7 +2123,7 @@ class HelpContent {
     nodeDexConstellation,
     cloudSyncOverview,
     tracerouteOverview,
-    skyScannerOverview,
+    aetherOverview,
   ];
 
   /// Get a topic by ID

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// Sky Scanner Main Screen — track and discover Meshtastic nodes at altitude.
+// Aether Main Screen — track and discover Meshtastic nodes at altitude.
 //
 // Enables users to schedule flights with their mesh nodes, track active flights,
 // view reception reports, and compete on a leaderboard for longest range contacts.
@@ -36,41 +36,41 @@ import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton_config.dart';
 import '../../../providers/accessibility_providers.dart';
 import '../../../providers/auth_providers.dart';
-import '../models/sky_node.dart';
-import '../providers/sky_scanner_providers.dart';
+import '../models/aether_flight.dart';
+import '../providers/aether_providers.dart';
 import 'schedule_flight_screen.dart';
-import 'sky_node_detail_screen.dart';
+import 'aether_flight_detail_screen.dart';
 
 // =============================================================================
 // Filter Enum (for Flights tab only)
 // =============================================================================
 
 /// Filter options for the flights list within the Flights tab.
-enum SkyScannerFilter { all, active, upcoming, myFlights }
+enum AetherFilter { all, active, upcoming, myFlights }
 
-extension SkyScannerFilterLabel on SkyScannerFilter {
+extension AetherFilterLabel on AetherFilter {
   String get label {
     switch (this) {
-      case SkyScannerFilter.all:
+      case AetherFilter.all:
         return 'All';
-      case SkyScannerFilter.active:
+      case AetherFilter.active:
         return 'Active';
-      case SkyScannerFilter.upcoming:
+      case AetherFilter.upcoming:
         return 'Upcoming';
-      case SkyScannerFilter.myFlights:
+      case AetherFilter.myFlights:
         return 'My Flights';
     }
   }
 
   IconData get icon {
     switch (this) {
-      case SkyScannerFilter.all:
+      case AetherFilter.all:
         return Icons.flight;
-      case SkyScannerFilter.active:
+      case AetherFilter.active:
         return Icons.flight_takeoff;
-      case SkyScannerFilter.upcoming:
+      case AetherFilter.upcoming:
         return Icons.schedule;
-      case SkyScannerFilter.myFlights:
+      case AetherFilter.myFlights:
         return Icons.person_outline;
     }
   }
@@ -80,19 +80,19 @@ extension SkyScannerFilterLabel on SkyScannerFilter {
 // Main Screen
 // =============================================================================
 
-/// Main Sky Scanner screen — browse and track Meshtastic nodes in the sky.
-class SkyScannerScreen extends ConsumerStatefulWidget {
-  const SkyScannerScreen({super.key});
+/// Main Aether screen — browse and track Meshtastic nodes in the sky.
+class AetherScreen extends ConsumerStatefulWidget {
+  const AetherScreen({super.key});
 
   @override
-  ConsumerState<SkyScannerScreen> createState() => _SkyScannerScreenState();
+  ConsumerState<AetherScreen> createState() => _AetherScreenState();
 }
 
-class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
-    with LifecycleSafeMixin<SkyScannerScreen>, SingleTickerProviderStateMixin {
+class _AetherScreenState extends ConsumerState<AetherScreen>
+    with LifecycleSafeMixin<AetherScreen>, SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  SkyScannerFilter _currentFilter = SkyScannerFilter.all;
+  AetherFilter _currentFilter = AetherFilter.all;
   late TabController _tabController;
 
   @override
@@ -108,11 +108,11 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
     super.dispose();
   }
 
-  void _openSkyNodeDetail(SkyNode node) {
+  void _openFlightDetail(AetherFlight flight) {
     Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (context) => SkyNodeDetailScreen(skyNode: node),
+        builder: (context) => AetherFlightDetailScreen(flight: flight),
       ),
     );
   }
@@ -145,7 +145,7 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
           children: [
             Icon(Icons.radar, color: accentColor),
             const SizedBox(width: 8),
-            Text('Sky Scanner', style: TextStyle(color: textPrimary)),
+            Text('Aether', style: TextStyle(color: textPrimary)),
           ],
         ),
         content: Column(
@@ -251,20 +251,20 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
 
   @override
   Widget build(BuildContext context) {
-    final skyNodesAsync = ref.watch(skyNodesProvider);
-    final activeFlightsAsync = ref.watch(activeFlightsProvider);
-    final leaderboardAsync = ref.watch(globalLeaderboardProvider);
-    final stats = ref.watch(skyScannerStatsProvider);
+    final flightsAsync = ref.watch(aetherFlightsProvider);
+    final activeFlightsAsync = ref.watch(aetherActiveFlightsProvider);
+    final leaderboardAsync = ref.watch(aetherGlobalLeaderboardProvider);
+    final stats = ref.watch(aetherStatsProvider);
     final user = ref.watch(currentUserProvider);
     final reduceMotion = ref.watch(reduceMotionEnabledProvider);
 
     final isLoading =
-        skyNodesAsync is AsyncLoading ||
+        flightsAsync is AsyncLoading ||
         activeFlightsAsync is AsyncLoading ||
         leaderboardAsync is AsyncLoading;
 
     return HelpTourController(
-      topicId: 'sky_scanner_overview',
+      topicId: 'aether_overview',
       stepKeys: const {},
       child: GestureDetector(
         onTap: _dismissKeyboard,
@@ -282,7 +282,7 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
                 Icon(Icons.radar, color: context.accentColor, size: 22),
                 const SizedBox(width: 8),
                 Text(
-                  'Sky Scanner',
+                  'Aether',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -302,7 +302,7 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
                     case 'help':
                       ref
                           .read(helpProvider.notifier)
-                          .startTour('sky_scanner_overview');
+                          .startTour('aether_overview');
                   }
                 },
                 itemBuilder: (context) => [
@@ -317,7 +317,7 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'About Sky Scanner',
+                          'About Aether',
                           style: TextStyle(color: context.textPrimary),
                         ),
                       ],
@@ -403,7 +403,7 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
             children: [
               // Flights Tab
               _FlightsTabContent(
-                skyNodesAsync: skyNodesAsync,
+                flightsAsync: flightsAsync,
                 activeFlightsAsync: activeFlightsAsync,
                 stats: stats,
                 user: user,
@@ -420,7 +420,7 @@ class _SkyScannerScreenState extends ConsumerState<SkyScannerScreen>
                   safeSetState(() => _currentFilter = filter);
                 },
                 onScheduleFlight: _scheduleFlight,
-                onOpenDetail: _openSkyNodeDetail,
+                onOpenDetail: _openFlightDetail,
               ),
               // Leaderboard Tab
               _LeaderboardTabContent(
@@ -471,22 +471,22 @@ class _TabBadge extends StatelessWidget {
 // =============================================================================
 
 class _FlightsTabContent extends StatelessWidget {
-  final AsyncValue<List<SkyNode>> skyNodesAsync;
-  final AsyncValue<List<SkyNode>> activeFlightsAsync;
-  final SkyScannerStats stats;
+  final AsyncValue<List<AetherFlight>> flightsAsync;
+  final AsyncValue<List<AetherFlight>> activeFlightsAsync;
+  final AetherStats stats;
   final dynamic user;
   final bool reduceMotion;
   final bool isLoading;
   final TextEditingController searchController;
   final String searchQuery;
-  final SkyScannerFilter currentFilter;
+  final AetherFilter currentFilter;
   final ValueChanged<String> onSearchChanged;
-  final ValueChanged<SkyScannerFilter> onFilterChanged;
+  final ValueChanged<AetherFilter> onFilterChanged;
   final VoidCallback onScheduleFlight;
-  final void Function(SkyNode) onOpenDetail;
+  final void Function(AetherFlight) onOpenDetail;
 
   const _FlightsTabContent({
-    required this.skyNodesAsync,
+    required this.flightsAsync,
     required this.activeFlightsAsync,
     required this.stats,
     required this.user,
@@ -532,31 +532,31 @@ class _FlightsTabContent extends StatelessWidget {
               SectionFilterChip(
                 label: 'All',
                 count: stats.totalScheduled,
-                isSelected: currentFilter == SkyScannerFilter.all,
-                onTap: () => onFilterChanged(SkyScannerFilter.all),
+                isSelected: currentFilter == AetherFilter.all,
+                onTap: () => onFilterChanged(AetherFilter.all),
               ),
               SectionFilterChip(
                 label: 'Active',
                 count: stats.activeFlights,
-                isSelected: currentFilter == SkyScannerFilter.active,
+                isSelected: currentFilter == AetherFilter.active,
                 color: Colors.green,
-                onTap: () => onFilterChanged(SkyScannerFilter.active),
+                onTap: () => onFilterChanged(AetherFilter.active),
               ),
               SectionFilterChip(
                 label: 'Upcoming',
                 count: 0,
-                isSelected: currentFilter == SkyScannerFilter.upcoming,
+                isSelected: currentFilter == AetherFilter.upcoming,
                 color: AccentColors.cyan,
                 icon: Icons.schedule,
-                onTap: () => onFilterChanged(SkyScannerFilter.upcoming),
+                onTap: () => onFilterChanged(AetherFilter.upcoming),
               ),
               SectionFilterChip(
                 label: 'My Flights',
                 count: 0,
-                isSelected: currentFilter == SkyScannerFilter.myFlights,
+                isSelected: currentFilter == AetherFilter.myFlights,
                 color: AccentColors.purple,
                 icon: Icons.person_outline,
-                onTap: () => onFilterChanged(SkyScannerFilter.myFlights),
+                onTap: () => onFilterChanged(AetherFilter.myFlights),
               ),
             ],
           ),
@@ -572,22 +572,22 @@ class _FlightsTabContent extends StatelessWidget {
   }
 
   Widget _buildFlightsList(BuildContext context) {
-    final allNodes = skyNodesAsync.value ?? [];
-    List<SkyNode> filteredNodes;
+    final allFlights = flightsAsync.value ?? [];
+    List<AetherFlight> filteredFlights;
 
     switch (currentFilter) {
-      case SkyScannerFilter.all:
-        filteredNodes = allNodes;
+      case AetherFilter.all:
+        filteredFlights = allFlights;
         break;
-      case SkyScannerFilter.active:
-        filteredNodes = allNodes.where((n) => n.isActive).toList();
+      case AetherFilter.active:
+        filteredFlights = allFlights.where((f) => f.isActive).toList();
         break;
-      case SkyScannerFilter.upcoming:
-        filteredNodes = allNodes
-            .where((n) => !n.isActive && !n.isPast)
+      case AetherFilter.upcoming:
+        filteredFlights = allFlights
+            .where((f) => !f.isActive && !f.isPast)
             .toList();
         break;
-      case SkyScannerFilter.myFlights:
+      case AetherFilter.myFlights:
         if (user == null) {
           return SliverFillRemaining(
             child: _EmptyState(
@@ -597,30 +597,32 @@ class _FlightsTabContent extends StatelessWidget {
             ),
           );
         }
-        filteredNodes = allNodes.where((n) => n.userId == user.uid).toList();
+        filteredFlights = allFlights
+            .where((f) => f.userId == user.uid)
+            .toList();
         break;
     }
 
     // Apply search filter
     if (searchQuery.isNotEmpty) {
       final query = searchQuery.toLowerCase();
-      filteredNodes = filteredNodes.where((node) {
-        return node.flightNumber.toLowerCase().contains(query) ||
-            node.departure.toLowerCase().contains(query) ||
-            node.arrival.toLowerCase().contains(query) ||
-            (node.nodeName?.toLowerCase().contains(query) ?? false) ||
-            node.nodeId.toLowerCase().contains(query);
+      filteredFlights = filteredFlights.where((flight) {
+        return flight.flightNumber.toLowerCase().contains(query) ||
+            flight.departure.toLowerCase().contains(query) ||
+            flight.arrival.toLowerCase().contains(query) ||
+            (flight.nodeName?.toLowerCase().contains(query) ?? false) ||
+            flight.nodeId.toLowerCase().contains(query);
       }).toList();
     }
 
-    if (isLoading && filteredNodes.isEmpty) {
+    if (isLoading && filteredFlights.isEmpty) {
       return SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) => Skeletonizer(
             enabled: true,
             effect: AppSkeletonConfig.effect(context),
-            child: _SkyScannerFlightCard(
-              skyNode: SkyNode(
+            child: _AetherFlightCard(
+              flight: AetherFlight(
                 id: 'skeleton_$index',
                 nodeId: '!12345678',
                 flightNumber: 'AA1234',
@@ -637,15 +639,15 @@ class _FlightsTabContent extends StatelessWidget {
       );
     }
 
-    if (filteredNodes.isEmpty) {
+    if (filteredFlights.isEmpty) {
       return SliverFillRemaining(
         child: _EmptyState(
           icon: currentFilter.icon,
           title: _getEmptyTitle(),
           subtitle: _getEmptySubtitle(),
           showAction:
-              currentFilter == SkyScannerFilter.all ||
-              currentFilter == SkyScannerFilter.myFlights,
+              currentFilter == AetherFilter.all ||
+              currentFilter == AetherFilter.myFlights,
           actionLabel: 'Schedule Flight',
           onAction: onScheduleFlight,
         ),
@@ -654,29 +656,29 @@ class _FlightsTabContent extends StatelessWidget {
 
     return SliverList(
       delegate: SliverChildBuilderDelegate((context, index) {
-        final node = filteredNodes[index];
+        final flight = filteredFlights[index];
         return _StaggeredListTile(
           index: index,
           reduceMotion: reduceMotion,
-          child: _SkyScannerFlightCard(
-            skyNode: node,
-            showLiveTracking: node.isActive,
-            showActions: currentFilter == SkyScannerFilter.myFlights,
+          child: _AetherFlightCard(
+            flight: flight,
+            showLiveTracking: flight.isActive,
+            showActions: currentFilter == AetherFilter.myFlights,
           ),
         );
-      }, childCount: filteredNodes.length),
+      }, childCount: filteredFlights.length),
     );
   }
 
   String _getEmptyTitle() {
     switch (currentFilter) {
-      case SkyScannerFilter.all:
+      case AetherFilter.all:
         return 'No Flights Found';
-      case SkyScannerFilter.active:
+      case AetherFilter.active:
         return 'No Active Flights';
-      case SkyScannerFilter.upcoming:
+      case AetherFilter.upcoming:
         return 'No Upcoming Flights';
-      case SkyScannerFilter.myFlights:
+      case AetherFilter.myFlights:
         return 'No Flights Scheduled';
     }
   }
@@ -686,13 +688,13 @@ class _FlightsTabContent extends StatelessWidget {
       return 'No results match "$searchQuery".\nTry a different search term.';
     }
     switch (currentFilter) {
-      case SkyScannerFilter.all:
+      case AetherFilter.all:
         return 'No flights scheduled yet.\nBe the first to share your journey!';
-      case SkyScannerFilter.active:
+      case AetherFilter.active:
         return 'No Meshtastic nodes currently in the air.\nBe the first to schedule one!';
-      case SkyScannerFilter.upcoming:
+      case AetherFilter.upcoming:
         return 'No flights scheduled yet.\nPlan your next airborne test!';
-      case SkyScannerFilter.myFlights:
+      case AetherFilter.myFlights:
         return "You haven't scheduled any flights yet.\nTap the button above to add one!";
     }
   }
@@ -784,7 +786,7 @@ class _LeaderboardTabContent extends StatelessWidget {
             child: _ReportCard(
               report: ReceptionReport(
                 id: 'skeleton_$index',
-                skyNodeId: 'skeleton',
+                aetherFlightId: 'skeleton',
                 flightNumber: 'AA1234',
                 reporterId: 'skeleton',
                 receivedAt: DateTime.now(),
@@ -834,7 +836,7 @@ class _LeaderboardTabContent extends StatelessWidget {
 // =============================================================================
 
 class _StatsCard extends StatelessWidget {
-  final SkyScannerStats stats;
+  final AetherStats stats;
 
   const _StatsCard({required this.stats});
 
@@ -952,13 +954,13 @@ class _VerticalDivider extends StatelessWidget {
 // Flight Card
 // =============================================================================
 
-class _SkyScannerFlightCard extends ConsumerWidget {
-  final SkyNode skyNode;
+class _AetherFlightCard extends ConsumerWidget {
+  final AetherFlight flight;
   final bool showLiveTracking;
   final bool showActions;
 
-  const _SkyScannerFlightCard({
-    required this.skyNode,
+  const _AetherFlightCard({
+    required this.flight,
     this.showLiveTracking = false,
     this.showActions = false,
   });
@@ -973,7 +975,7 @@ class _SkyScannerFlightCard extends ConsumerWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => SkyNodeDetailScreen(skyNode: skyNode),
+            builder: (context) => AetherFlightDetailScreen(flight: flight),
           ),
         );
       },
@@ -981,9 +983,9 @@ class _SkyScannerFlightCard extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         child: GradientBorderContainer(
           borderRadius: 16,
-          borderWidth: skyNode.isActive ? 2 : 1,
-          accentOpacity: skyNode.isActive ? 0.6 : 0.3,
-          enableDepthBlend: skyNode.isActive,
+          borderWidth: flight.isActive ? 2 : 1,
+          accentOpacity: flight.isActive ? 0.6 : 0.3,
+          enableDepthBlend: flight.isActive,
           depthBlendOpacity: 0.1,
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -993,11 +995,11 @@ class _SkyScannerFlightCard extends ConsumerWidget {
               Row(
                 children: [
                   // Status badge
-                  _StatusBadge(skyNode: skyNode),
+                  _StatusBadge(flight: flight),
                   const Spacer(),
                   // Flight number
                   Text(
-                    skyNode.flightNumber,
+                    flight.flightNumber,
                     style: TextStyle(
                       color: context.accentColor,
                       fontSize: 18,
@@ -1011,7 +1013,7 @@ class _SkyScannerFlightCard extends ConsumerWidget {
               // Route visualization
               Row(
                 children: [
-                  _AirportCode(code: skyNode.departure),
+                  _AirportCode(code: flight.departure),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1038,7 +1040,7 @@ class _SkyScannerFlightCard extends ConsumerWidget {
                             ),
                             child: Icon(
                               Icons.flight,
-                              color: skyNode.isActive
+                              color: flight.isActive
                                   ? context.accentColor
                                   : context.textTertiary,
                               size: 18,
@@ -1048,7 +1050,7 @@ class _SkyScannerFlightCard extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  _AirportCode(code: skyNode.arrival),
+                  _AirportCode(code: flight.arrival),
                 ],
               ),
               const SizedBox(height: 12),
@@ -1058,7 +1060,7 @@ class _SkyScannerFlightCard extends ConsumerWidget {
                   Icon(Icons.schedule, size: 14, color: context.textTertiary),
                   const SizedBox(width: 4),
                   Text(
-                    dateFormat.format(skyNode.scheduledDeparture.toLocal()),
+                    dateFormat.format(flight.scheduledDeparture.toLocal()),
                     style: TextStyle(
                       color: context.textSecondary,
                       fontSize: 13,
@@ -1069,7 +1071,7 @@ class _SkyScannerFlightCard extends ConsumerWidget {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      skyNode.nodeName ?? skyNode.nodeId,
+                      flight.nodeName ?? flight.nodeId,
                       style: TextStyle(
                         color: context.textSecondary,
                         fontSize: 13,
@@ -1080,7 +1082,7 @@ class _SkyScannerFlightCard extends ConsumerWidget {
                 ],
               ),
               // Reception count
-              if (skyNode.receptionCount > 0) ...[
+              if (flight.receptionCount > 0) ...[
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -1091,7 +1093,7 @@ class _SkyScannerFlightCard extends ConsumerWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${skyNode.receptionCount} reception${skyNode.receptionCount != 1 ? 's' : ''}',
+                      '${flight.receptionCount} reception${flight.receptionCount != 1 ? 's' : ''}',
                       style: TextStyle(
                         color: context.accentColor,
                         fontSize: 13,
@@ -1102,9 +1104,9 @@ class _SkyScannerFlightCard extends ConsumerWidget {
                 ),
               ],
               // Live tracking
-              if (showLiveTracking && skyNode.isActive) ...[
+              if (showLiveTracking && flight.isActive) ...[
                 const SizedBox(height: 12),
-                _LiveTrackingIndicator(callsign: skyNode.flightNumber),
+                _LiveTrackingIndicator(callsign: flight.flightNumber),
               ],
             ],
           ),
@@ -1115,9 +1117,9 @@ class _SkyScannerFlightCard extends ConsumerWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  final SkyNode skyNode;
+  final AetherFlight flight;
 
-  const _StatusBadge({required this.skyNode});
+  const _StatusBadge({required this.flight});
 
   @override
   Widget build(BuildContext context) {
@@ -1133,12 +1135,12 @@ class _StatusBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (skyNode.isActive) ...[
+          if (flight.isActive) ...[
             _PulsingDot(color: color),
             const SizedBox(width: 6),
           ],
           Text(
-            skyNode.statusText,
+            flight.statusText,
             style: TextStyle(
               color: color,
               fontSize: 12,
@@ -1151,9 +1153,9 @@ class _StatusBadge extends StatelessWidget {
   }
 
   Color _getStatusColor(BuildContext context) {
-    if (skyNode.isActive) return context.accentColor;
-    if (skyNode.isPast) return context.textTertiary;
-    if (skyNode.isUpcoming) return AppTheme.warningYellow;
+    if (flight.isActive) return context.accentColor;
+    if (flight.isPast) return context.textTertiary;
+    if (flight.isUpcoming) return AppTheme.warningYellow;
     return context.textSecondary;
   }
 }
@@ -1251,7 +1253,7 @@ class _LiveTrackingIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final positionAsync = ref.watch(flightPositionProvider(callsign));
+    final positionAsync = ref.watch(aetherFlightPositionProvider(callsign));
 
     return Container(
       padding: const EdgeInsets.all(12),

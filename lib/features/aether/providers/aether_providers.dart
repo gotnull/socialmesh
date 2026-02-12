@@ -4,45 +4,45 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
 
-import '../models/sky_node.dart';
-import '../services/sky_scanner_service.dart';
+import '../models/aether_flight.dart';
+import '../services/aether_service.dart';
 
-/// Provider for SkyScannerService
-final skyScannerServiceProvider = Provider<SkyScannerService>((ref) {
-  return SkyScannerService();
+/// Provider for AetherService
+final aetherServiceProvider = Provider<AetherService>((ref) {
+  return AetherService();
 });
 
-/// Provider for all sky nodes (upcoming and active)
-final skyNodesProvider = StreamProvider<List<SkyNode>>((ref) {
-  final service = ref.watch(skyScannerServiceProvider);
-  return service.watchSkyNodes();
+/// Provider for all flights (upcoming and active)
+final aetherFlightsProvider = StreamProvider<List<AetherFlight>>((ref) {
+  final service = ref.watch(aetherServiceProvider);
+  return service.watchFlights();
 });
 
 /// Provider for active flights only
-final activeFlightsProvider = StreamProvider<List<SkyNode>>((ref) {
-  final service = ref.watch(skyScannerServiceProvider);
+final aetherActiveFlightsProvider = StreamProvider<List<AetherFlight>>((ref) {
+  final service = ref.watch(aetherServiceProvider);
   return service.watchActiveFlights();
 });
 
-/// Provider for user's own sky nodes
-final userSkyNodesProvider = StreamProvider.family<List<SkyNode>, String>((
-  ref,
-  userId,
-) {
-  final service = ref.watch(skyScannerServiceProvider);
-  return service.watchUserSkyNodes(userId);
-});
+/// Provider for user's own flights
+final aetherUserFlightsProvider =
+    StreamProvider.family<List<AetherFlight>, String>((ref, userId) {
+      final service = ref.watch(aetherServiceProvider);
+      return service.watchUserFlights(userId);
+    });
 
-/// Provider for reception reports for a specific sky node
-final skyNodeReportsProvider =
-    StreamProvider.family<List<ReceptionReport>, String>((ref, skyNodeId) {
-      final service = ref.watch(skyScannerServiceProvider);
-      return service.watchReports(skyNodeId);
+/// Provider for reception reports for a specific flight
+final aetherFlightReportsProvider =
+    StreamProvider.family<List<ReceptionReport>, String>((ref, flightId) {
+      final service = ref.watch(aetherServiceProvider);
+      return service.watchReports(flightId);
     });
 
 /// Provider for recent reception reports
-final recentReportsProvider = StreamProvider<List<ReceptionReport>>((ref) {
-  final service = ref.watch(skyScannerServiceProvider);
+final aetherRecentReportsProvider = StreamProvider<List<ReceptionReport>>((
+  ref,
+) {
+  final service = ref.watch(aetherServiceProvider);
   return service.watchRecentReports();
 });
 
@@ -51,35 +51,41 @@ final recentReportsProvider = StreamProvider<List<ReceptionReport>>((ref) {
 /// This is the primary leaderboard, sorted by distance descending.
 /// Data is persisted in Firestore and survives app deletion.
 /// Accessible to all users globally.
-final globalLeaderboardProvider = StreamProvider<List<ReceptionReport>>((ref) {
-  final service = ref.watch(skyScannerServiceProvider);
+final aetherGlobalLeaderboardProvider = StreamProvider<List<ReceptionReport>>((
+  ref,
+) {
+  final service = ref.watch(aetherServiceProvider);
   return service.watchLeaderboard();
 });
 
 /// Provider for this week's leaderboard
-final weeklyLeaderboardProvider = StreamProvider<List<ReceptionReport>>((ref) {
-  final service = ref.watch(skyScannerServiceProvider);
+final aetherWeeklyLeaderboardProvider = StreamProvider<List<ReceptionReport>>((
+  ref,
+) {
+  final service = ref.watch(aetherServiceProvider);
   final oneWeekAgo = DateTime.now().subtract(const Duration(days: 7));
   return service.watchLeaderboardByPeriod(since: oneWeekAgo);
 });
 
 /// Provider for this month's leaderboard
-final monthlyLeaderboardProvider = StreamProvider<List<ReceptionReport>>((ref) {
-  final service = ref.watch(skyScannerServiceProvider);
+final aetherMonthlyLeaderboardProvider = StreamProvider<List<ReceptionReport>>((
+  ref,
+) {
+  final service = ref.watch(aetherServiceProvider);
   final oneMonthAgo = DateTime.now().subtract(const Duration(days: 30));
   return service.watchLeaderboardByPeriod(since: oneMonthAgo);
 });
 
 /// Provider for the all-time distance record
-final topDistanceRecordProvider = FutureProvider<ReceptionReport?>((ref) {
-  final service = ref.watch(skyScannerServiceProvider);
+final aetherTopDistanceRecordProvider = FutureProvider<ReceptionReport?>((ref) {
+  final service = ref.watch(aetherServiceProvider);
   return service.getTopDistanceRecord();
 });
 
 /// Provider for a user's personal best distance
-final userPersonalBestProvider =
+final aetherUserPersonalBestProvider =
     FutureProvider.family<ReceptionReport?, String>((ref, userId) {
-      final service = ref.watch(skyScannerServiceProvider);
+      final service = ref.watch(aetherServiceProvider);
       return service.getUserPersonalBest(userId);
     });
 
@@ -114,9 +120,9 @@ class FlightPositionState {
 
 /// Provider for live flight position tracking using FutureProvider
 /// Auto-refreshes periodically while watched
-final flightPositionProvider = FutureProvider.autoDispose
+final aetherFlightPositionProvider = FutureProvider.autoDispose
     .family<FlightPositionState, String>((ref, callsign) async {
-      final service = ref.watch(skyScannerServiceProvider);
+      final service = ref.watch(aetherServiceProvider);
 
       // Set up periodic refresh every 30 seconds
       final timer = Timer.periodic(const Duration(seconds: 30), (_) {
@@ -132,16 +138,16 @@ final flightPositionProvider = FutureProvider.autoDispose
           lastFetch: DateTime.now(),
         );
       } catch (e) {
-        AppLogging.app('[SkyScanner] Error fetching position: $e');
+        AppLogging.app('[Aether] Error fetching position: $e');
         return FlightPositionState(isLoading: false, error: e.toString());
       }
     });
 
 /// Provider to calculate distance from user to flight
-final distanceToFlightProvider =
+final aetherDistanceToFlightProvider =
     Provider.family<double?, ({FlightPosition flight, double lat, double lon})>(
       (ref, params) {
-        return SkyScannerService.calculateDistance(
+        return AetherService.calculateDistance(
           params.lat,
           params.lon,
           params.flight.latitude,
@@ -150,14 +156,14 @@ final distanceToFlightProvider =
       },
     );
 
-/// Stats provider for sky scanner
+/// Stats provider for Aether
 ///
 /// Uses the global leaderboard for accurate stats that persist
 /// across app reinstalls and are consistent for all users.
-final skyScannerStatsProvider = Provider<SkyScannerStats>((ref) {
-  final skyNodes = ref.watch(skyNodesProvider);
-  final activeFlights = ref.watch(activeFlightsProvider);
-  final leaderboard = ref.watch(globalLeaderboardProvider);
+final aetherStatsProvider = Provider<AetherStats>((ref) {
+  final flights = ref.watch(aetherFlightsProvider);
+  final activeFlights = ref.watch(aetherActiveFlightsProvider);
+  final leaderboard = ref.watch(aetherGlobalLeaderboardProvider);
 
   // Get total report count from leaderboard (all reports with distance)
   final reports = leaderboard.value ?? [];
@@ -165,22 +171,22 @@ final skyScannerStatsProvider = Provider<SkyScannerStats>((ref) {
       ? reports.first.estimatedDistance ?? 0
       : 0.0;
 
-  return SkyScannerStats(
-    totalScheduled: skyNodes.value?.length ?? 0,
+  return AetherStats(
+    totalScheduled: flights.value?.length ?? 0,
     activeFlights: activeFlights.value?.length ?? 0,
     totalReports: reports.length,
     longestDistance: longestDistance,
   );
 });
 
-/// Stats summary for sky scanner
-class SkyScannerStats {
+/// Stats summary for Aether
+class AetherStats {
   final int totalScheduled;
   final int activeFlights;
   final int totalReports;
   final double longestDistance;
 
-  const SkyScannerStats({
+  const AetherStats({
     required this.totalScheduled,
     required this.activeFlights,
     required this.totalReports,

@@ -226,28 +226,28 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.15.0 — Sky Scanner introduction
+    // v1.15.0 — Aether introduction
     WhatsNewPayload(
       version: '1.15.0',
       headline: "What's New in Socialmesh",
       subtitle: 'Version 1.15.0',
       items: [
         WhatsNewItem(
-          id: 'sky_scanner_intro',
-          title: 'Sky Scanner',
+          id: 'aether_intro',
+          title: 'Aether',
           description:
               'Track Meshtastic nodes at altitude! Schedule your flight with '
               'your mesh node and let ground stations around the world '
               'listen for your signal.\n\n'
               'At 35,000 ft, LoRa can reach 400+ km. Report receptions, '
               'compete on the distance leaderboard, and set new range '
-              'records. Find it in the drawer menu under Mesh.',
+              'records. Find it in the drawer menu under Social.',
           icon: Icons.flight_takeoff_outlined,
           iconColor: Color(0xFF29B6F6), // Colors.lightBlue.shade400
-          deepLinkRoute: '/sky-scanner',
-          helpTopicId: 'sky_scanner_overview',
-          badgeKey: 'sky_scanner',
-          ctaLabel: 'Open Sky Scanner',
+          deepLinkRoute: '/aether',
+          helpTopicId: 'aether_overview',
+          badgeKey: 'aether',
+          ctaLabel: 'Open Aether',
         ),
       ],
     ),

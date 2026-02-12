@@ -8,7 +8,7 @@ import '../../features/navigation/main_shell.dart';
 import '../../features/nodedex/screens/nodedex_screen.dart';
 import '../../features/onboarding/widgets/mesh_node_brain.dart';
 import '../../features/reachability/mesh_reachability_screen.dart';
-import '../../features/sky_scanner/screens/sky_scanner_screen.dart';
+import '../../features/aether/screens/aether_screen.dart';
 import '../../features/world_mesh/world_mesh_screen.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/whats_new_providers.dart';
@@ -697,8 +697,8 @@ class _WhatsNewItemCard extends ConsumerWidget {
         return const WorldMeshScreen();
       case '/reachability':
         return const MeshReachabilityScreen();
-      case '/sky-scanner':
-        return const SkyScannerScreen();
+      case '/aether':
+        return const AetherScreen();
       default:
         return null;
     }

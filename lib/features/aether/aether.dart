@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-/// Sky Scanner — track Meshtastic nodes at altitude.
+/// Aether — track Meshtastic nodes at altitude.
 ///
 /// This feature enables users to:
 /// - Schedule flights with their mesh nodes
@@ -12,9 +12,9 @@
 /// making this an exciting way to test the limits of mesh communication.
 library;
 
-export 'models/sky_node.dart';
-export 'providers/sky_scanner_providers.dart';
+export 'models/aether_flight.dart';
+export 'providers/aether_providers.dart';
 export 'screens/schedule_flight_screen.dart';
-export 'screens/sky_node_detail_screen.dart';
-export 'screens/sky_scanner_screen.dart';
-export 'services/sky_scanner_service.dart';
+export 'screens/aether_flight_detail_screen.dart';
+export 'screens/aether_screen.dart';
+export 'services/aether_service.dart';

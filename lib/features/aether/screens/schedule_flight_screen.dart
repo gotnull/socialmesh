@@ -13,7 +13,7 @@ import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
-import '../providers/sky_scanner_providers.dart';
+import '../providers/aether_providers.dart';
 import '../services/opensky_service.dart';
 
 // =============================================================================
@@ -49,7 +49,7 @@ const int _maxNotesLength = 500;
 // Screen
 // =============================================================================
 
-/// Screen to schedule a new sky node flight
+/// Screen to schedule a new Aether flight
 class ScheduleFlightScreen extends ConsumerStatefulWidget {
   const ScheduleFlightScreen({super.key});
 
@@ -350,8 +350,8 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     safeSetState(() => _isSaving = true);
 
     try {
-      final service = ref.read(skyScannerServiceProvider);
-      await service.createSkyNode(
+      final service = ref.read(aetherServiceProvider);
+      await service.createFlight(
         nodeId: myNode.userId ?? '!${myNode.nodeNum.toRadixString(16)}',
         nodeName: myNode.displayName,
         flightNumber: _flightNumberController.text.trim().toUpperCase(),

@@ -10,45 +10,46 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
-import '../models/sky_node.dart';
-import '../providers/sky_scanner_providers.dart';
-import '../services/sky_scanner_service.dart';
+import '../models/aether_flight.dart';
+import '../providers/aether_providers.dart';
+import '../services/aether_service.dart';
 
-/// Detail screen for a sky node with live tracking and report submission
-class SkyNodeDetailScreen extends ConsumerStatefulWidget {
-  final SkyNode skyNode;
+/// Detail screen for an Aether flight with live tracking and report submission
+class AetherFlightDetailScreen extends ConsumerStatefulWidget {
+  final AetherFlight flight;
 
-  const SkyNodeDetailScreen({super.key, required this.skyNode});
+  const AetherFlightDetailScreen({super.key, required this.flight});
 
   @override
-  ConsumerState<SkyNodeDetailScreen> createState() =>
-      _SkyNodeDetailScreenState();
+  ConsumerState<AetherFlightDetailScreen> createState() =>
+      _AetherFlightDetailScreenState();
 }
 
-class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen>
+class _AetherFlightDetailScreenState
+    extends ConsumerState<AetherFlightDetailScreen>
     with LifecycleSafeMixin {
   final _dateFormat = DateFormat('EEEE, MMM d, yyyy');
   final _timeFormat = DateFormat('h:mm a');
 
   @override
   Widget build(BuildContext context) {
-    final reports = ref.watch(skyNodeReportsProvider(widget.skyNode.id));
+    final reports = ref.watch(aetherFlightReportsProvider(widget.flight.id));
     final positionAsync = ref.watch(
-      flightPositionProvider(widget.skyNode.flightNumber),
+      aetherFlightPositionProvider(widget.flight.flightNumber),
     );
 
     return GlassScaffold(
-      title: widget.skyNode.flightNumber,
+      title: widget.flight.flightNumber,
       expandedHeight: 200,
       flexibleSpace: FlexibleSpaceBar(
         background: _buildHeader(context, positionAsync),
       ),
       actions: [
-        if (widget.skyNode.isActive)
+        if (widget.flight.isActive)
           IconButton(
             icon: Icon(Icons.refresh, color: context.accentColor),
             onPressed: () => ref.invalidate(
-              flightPositionProvider(widget.skyNode.flightNumber),
+              aetherFlightPositionProvider(widget.flight.flightNumber),
             ),
             tooltip: 'Refresh position',
           ),
@@ -60,14 +61,14 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Live position card
-              if (widget.skyNode.isActive)
+              if (widget.flight.isActive)
                 _buildLivePositionCard(context, positionAsync),
 
               // Flight details
               _buildDetailsCard(context),
 
               // Report button
-              if (widget.skyNode.isActive)
+              if (widget.flight.isActive)
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: ElevatedButton.icon(
@@ -128,14 +129,14 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildAirportDisplay(widget.skyNode.departure, 'Departure'),
+                  _buildAirportDisplay(widget.flight.departure, 'Departure'),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
                       children: [
                         Icon(
                           Icons.flight,
-                          color: widget.skyNode.isActive
+                          color: widget.flight.isActive
                               ? context.accentColor
                               : context.textTertiary,
                           size: 32,
@@ -154,7 +155,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen>
                       ],
                     ),
                   ),
-                  _buildAirportDisplay(widget.skyNode.arrival, 'Arrival'),
+                  _buildAirportDisplay(widget.flight.arrival, 'Arrival'),
                 ],
               ),
             ],
@@ -372,35 +373,35 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen>
           _buildDetailRow(
             Icons.schedule,
             'Departure',
-            '${_dateFormat.format(widget.skyNode.scheduledDeparture.toLocal())}\n${_timeFormat.format(widget.skyNode.scheduledDeparture.toLocal())}',
+            '${_dateFormat.format(widget.flight.scheduledDeparture.toLocal())}\n${_timeFormat.format(widget.flight.scheduledDeparture.toLocal())}',
           ),
-          if (widget.skyNode.scheduledArrival != null) ...[
+          if (widget.flight.scheduledArrival != null) ...[
             const SizedBox(height: 12),
             _buildDetailRow(
               Icons.flight_land,
               'Arrival',
-              '${_dateFormat.format(widget.skyNode.scheduledArrival!.toLocal())}\n${_timeFormat.format(widget.skyNode.scheduledArrival!.toLocal())}',
+              '${_dateFormat.format(widget.flight.scheduledArrival!.toLocal())}\n${_timeFormat.format(widget.flight.scheduledArrival!.toLocal())}',
             ),
           ],
           const SizedBox(height: 12),
           _buildDetailRow(
             Icons.memory,
             'Node',
-            widget.skyNode.nodeName ?? widget.skyNode.nodeId,
+            widget.flight.nodeName ?? widget.flight.nodeId,
           ),
-          if (widget.skyNode.userName != null) ...[
+          if (widget.flight.userName != null) ...[
             const SizedBox(height: 12),
-            _buildDetailRow(Icons.person, 'Operator', widget.skyNode.userName!),
+            _buildDetailRow(Icons.person, 'Operator', widget.flight.userName!),
           ],
-          if (widget.skyNode.notes != null) ...[
+          if (widget.flight.notes != null) ...[
             const SizedBox(height: 12),
-            _buildDetailRow(Icons.notes, 'Notes', widget.skyNode.notes!),
+            _buildDetailRow(Icons.notes, 'Notes', widget.flight.notes!),
           ],
           const SizedBox(height: 12),
           _buildDetailRow(
             Icons.signal_cellular_alt,
             'Receptions',
-            '${widget.skyNode.receptionCount} reported',
+            '${widget.flight.receptionCount} reported',
           ),
         ],
       ),
@@ -489,7 +490,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen>
                           'No receptions reported yet',
                           style: TextStyle(color: context.textSecondary),
                         ),
-                        if (widget.skyNode.isActive) ...[
+                        if (widget.flight.isActive) ...[
                           SizedBox(height: 4),
                           Text(
                             'Be the first to receive this signal!',
@@ -588,12 +589,12 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen>
   void _reportReception(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
       backgroundColor: context.card,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => _ReportBottomSheet(skyNode: widget.skyNode),
+      builder: (context) => _ReportBottomSheet(flight: widget.flight),
     );
   }
 
@@ -691,9 +692,9 @@ class _RadarPainter extends CustomPainter {
 
 /// Bottom sheet for reporting a reception
 class _ReportBottomSheet extends ConsumerStatefulWidget {
-  final SkyNode skyNode;
+  final AetherFlight flight;
 
-  const _ReportBottomSheet({required this.skyNode});
+  const _ReportBottomSheet({required this.flight});
 
   @override
   ConsumerState<_ReportBottomSheet> createState() => _ReportBottomSheetState();
@@ -728,7 +729,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
     safeSetState(() => _isSaving = true);
 
     try {
-      final service = ref.read(skyScannerServiceProvider);
+      final service = ref.read(aetherServiceProvider);
 
       // Get user's location if available
       final myNode = ref.read(myNodeNumProvider);
@@ -745,13 +746,13 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
 
         // Calculate distance if flight position is available
         final positionAsync = ref.read(
-          flightPositionProvider(widget.skyNode.flightNumber),
+          aetherFlightPositionProvider(widget.flight.flightNumber),
         );
         final positionState = positionAsync.value;
         if (positionState?.position != null &&
             latitude != null &&
             longitude != null) {
-          estimatedDistance = SkyScannerService.calculateSlantRange(
+          estimatedDistance = AetherService.calculateSlantRange(
             latitude,
             longitude,
             node.altitude?.toDouble() ?? 0,
@@ -763,8 +764,8 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
       }
 
       await service.createReport(
-        skyNodeId: widget.skyNode.id,
-        flightNumber: widget.skyNode.flightNumber,
+        flightId: widget.flight.id,
+        flightNumber: widget.flight.flightNumber,
         reporterId: user.uid,
         reporterName: user.displayName,
         latitude: latitude,
@@ -835,7 +836,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
             ),
             const SizedBox(height: 8),
             Text(
-              'I received a signal from ${widget.skyNode.flightNumber}!',
+              'I received a signal from ${widget.flight.flightNumber}!',
               style: TextStyle(color: context.textSecondary),
             ),
             SizedBox(height: 24),

@@ -56,7 +56,7 @@ import '../profile/profile_screen.dart';
 import '../debug/device_logs_screen.dart';
 import '../nodedex/screens/nodedex_screen.dart';
 import '../social/screens/activity_timeline_screen.dart';
-import '../sky_scanner/screens/sky_scanner_screen.dart';
+import '../aether/screens/aether_screen.dart';
 // import '../global_layer/screens/global_layer_hub_screen.dart';
 import '../../providers/activity_providers.dart';
 import '../../providers/whats_new_providers.dart';
@@ -375,11 +375,11 @@ class _MainShellState extends ConsumerState<MainShell> {
     ),
     _DrawerMenuItem(
       icon: Icons.flight_takeoff_outlined,
-      label: 'Sky Scanner',
-      screen: const SkyScannerScreen(),
+      label: 'Aether',
+      screen: const AetherScreen(),
       iconColor: Colors.lightBlue.shade400,
       requiresConnection: false,
-      whatsNewBadgeKey: 'sky_scanner',
+      whatsNewBadgeKey: 'aether',
     ),
     _DrawerMenuItem(
       icon: Icons.favorite_border,

@@ -4,7 +4,7 @@ import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// A Meshtastic node scheduled to be on a flight
-class SkyNode {
+class AetherFlight {
   final String id;
   final String nodeId; // Meshtastic node ID (hex)
   final String? nodeName; // Optional friendly name
@@ -21,7 +21,7 @@ class SkyNode {
   final DateTime createdAt;
   final int receptionCount; // Number of reception reports
 
-  const SkyNode({
+  const AetherFlight({
     required this.id,
     required this.nodeId,
     this.nodeName,
@@ -39,8 +39,8 @@ class SkyNode {
     this.receptionCount = 0,
   });
 
-  factory SkyNode.fromJson(Map<String, dynamic> json, String id) {
-    return SkyNode(
+  factory AetherFlight.fromJson(Map<String, dynamic> json, String id) {
+    return AetherFlight(
       id: id,
       nodeId: json['nodeId'] as String,
       nodeName: json['nodeName'] as String?,
@@ -82,7 +82,7 @@ class SkyNode {
     };
   }
 
-  SkyNode copyWith({
+  AetherFlight copyWith({
     String? id,
     String? nodeId,
     String? nodeName,
@@ -99,7 +99,7 @@ class SkyNode {
     DateTime? createdAt,
     int? receptionCount,
   }) {
-    return SkyNode(
+    return AetherFlight(
       id: id ?? this.id,
       nodeId: nodeId ?? this.nodeId,
       nodeName: nodeName ?? this.nodeName,
@@ -147,7 +147,7 @@ class SkyNode {
 /// A reception report from a ground station
 class ReceptionReport {
   final String id;
-  final String skyNodeId;
+  final String aetherFlightId;
   final String flightNumber;
   final String reporterId; // User who received
   final String? reporterName;
@@ -164,7 +164,7 @@ class ReceptionReport {
 
   const ReceptionReport({
     required this.id,
-    required this.skyNodeId,
+    required this.aetherFlightId,
     required this.flightNumber,
     required this.reporterId,
     this.reporterName,
@@ -183,7 +183,7 @@ class ReceptionReport {
   factory ReceptionReport.fromJson(Map<String, dynamic> json, String id) {
     return ReceptionReport(
       id: id,
-      skyNodeId: json['skyNodeId'] as String,
+      aetherFlightId: json['aetherFlightId'] as String,
       flightNumber: json['flightNumber'] as String,
       reporterId: json['reporterId'] as String,
       reporterName: json['reporterName'] as String?,
@@ -202,7 +202,7 @@ class ReceptionReport {
 
   Map<String, dynamic> toJson() {
     return {
-      'skyNodeId': skyNodeId,
+      'aetherFlightId': aetherFlightId,
       'flightNumber': flightNumber,
       'reporterId': reporterId,
       'reporterName': reporterName,

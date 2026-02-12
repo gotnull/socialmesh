@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter_test/flutter_test.dart';
-import 'package:socialmesh/features/sky_scanner/services/opensky_service.dart';
+import 'package:socialmesh/features/aether/services/opensky_service.dart';
 
 void main() {
   group('OpenSkyService', () {

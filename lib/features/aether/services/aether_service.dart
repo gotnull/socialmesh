@@ -6,64 +6,65 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:socialmesh/core/logging.dart';
 
-import '../models/sky_node.dart';
+import '../models/aether_flight.dart';
 
-/// Service for Sky Scanner functionality
-class SkyScannerService {
+/// Service for Aether flight tracking functionality
+class AetherService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Collection references
-  CollectionReference<Map<String, dynamic>> get _skyNodesCollection =>
+  // Note: Firestore collection names kept as 'skyNodes' for backward compatibility
+  CollectionReference<Map<String, dynamic>> get _flightsCollection =>
       _firestore.collection('skyNodes');
 
   CollectionReference<Map<String, dynamic>> get _reportsCollection =>
       _firestore.collection('receptionReports');
 
-  // ============ Sky Nodes ============
+  // ============ Aether Flights ============
 
-  /// Get all upcoming and active sky nodes
-  Stream<List<SkyNode>> watchSkyNodes() {
+  /// Get all upcoming and active flights
+  Stream<List<AetherFlight>> watchFlights() {
     final cutoff = DateTime.now().subtract(const Duration(hours: 12));
-    return _skyNodesCollection
+    return _flightsCollection
         .where('scheduledDeparture', isGreaterThan: Timestamp.fromDate(cutoff))
         .orderBy('scheduledDeparture')
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => SkyNode.fromJson(doc.data(), doc.id))
+              .map((doc) => AetherFlight.fromJson(doc.data(), doc.id))
               .toList(),
         );
   }
 
   /// Get active flights (in progress)
-  Stream<List<SkyNode>> watchActiveFlights() {
-    return _skyNodesCollection
+  Stream<List<AetherFlight>> watchActiveFlights() {
+    return _flightsCollection
         .where('isActive', isEqualTo: true)
         .orderBy('scheduledDeparture')
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => SkyNode.fromJson(doc.data(), doc.id))
+              .map((doc) => AetherFlight.fromJson(doc.data(), doc.id))
               .toList(),
         );
   }
 
-  /// Get sky nodes for a specific user
-  Stream<List<SkyNode>> watchUserSkyNodes(String userId) {
-    return _skyNodesCollection
+  /// Get flights for a specific user
+  Stream<List<AetherFlight>> watchUserFlights(String userId) {
+    return _flightsCollection
         .where('userId', isEqualTo: userId)
         .orderBy('scheduledDeparture', descending: true)
         .limit(20)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => SkyNode.fromJson(doc.data(), doc.id))
+              .map((doc) => AetherFlight.fromJson(doc.data(), doc.id))
               .toList(),
         );
   }
 
-  /// Create a new sky node (schedule a flight)
-  Future<SkyNode> createSkyNode({
+  /// Create a new flight schedule
+  Future<AetherFlight> createFlight({
     required String nodeId,
     String? nodeName,
     required String flightNumber,
@@ -95,27 +96,28 @@ class SkyScannerService {
       'receptionCount': 0,
     };
 
-    final docRef = await _skyNodesCollection.add(data);
+    final docRef = await _flightsCollection.add(data);
     final doc = await docRef.get();
-    return SkyNode.fromJson(doc.data()!, doc.id);
+    return AetherFlight.fromJson(doc.data()!, doc.id);
   }
 
-  /// Update sky node active status
-  Future<void> updateSkyNodeStatus(String id, {required bool isActive}) async {
-    await _skyNodesCollection.doc(id).update({'isActive': isActive});
+  /// Update flight active status
+  Future<void> updateFlightStatus(String id, {required bool isActive}) async {
+    await _flightsCollection.doc(id).update({'isActive': isActive});
   }
 
-  /// Delete a sky node
-  Future<void> deleteSkyNode(String id) async {
-    await _skyNodesCollection.doc(id).delete();
+  /// Delete a flight
+  Future<void> deleteFlight(String id) async {
+    await _flightsCollection.doc(id).delete();
   }
 
   // ============ Reception Reports ============
 
-  /// Watch reception reports for a sky node
-  Stream<List<ReceptionReport>> watchReports(String skyNodeId) {
+  /// Watch reception reports for a flight
+  Stream<List<ReceptionReport>> watchReports(String flightId) {
+    // Query both old and new field names for backward compatibility
     return _reportsCollection
-        .where('skyNodeId', isEqualTo: skyNodeId)
+        .where('skyNodeId', isEqualTo: flightId)
         .orderBy('receivedAt', descending: true)
         .snapshots()
         .map(
@@ -233,7 +235,7 @@ class SkyScannerService {
 
   /// Create a reception report
   Future<ReceptionReport> createReport({
-    required String skyNodeId,
+    required String flightId,
     required String flightNumber,
     required String reporterId,
     String? reporterName,
@@ -248,7 +250,9 @@ class SkyScannerService {
     required DateTime receivedAt,
   }) async {
     final data = {
-      'skyNodeId': skyNodeId,
+      // Store both field names for backward compatibility
+      'aetherFlightId': flightId,
+      'skyNodeId': flightId,
       'flightNumber': flightNumber,
       'reporterId': reporterId,
       'reporterName': reporterName,
@@ -266,8 +270,8 @@ class SkyScannerService {
 
     final docRef = await _reportsCollection.add(data);
 
-    // Increment reception count on sky node
-    await _skyNodesCollection.doc(skyNodeId).update({
+    // Increment reception count on flight
+    await _flightsCollection.doc(flightId).update({
       'receptionCount': FieldValue.increment(1),
     });
 
@@ -319,7 +323,7 @@ class SkyScannerService {
 
       return null;
     } catch (e) {
-      AppLogging.app('[SkyScanner] Error fetching flight position: $e');
+      AppLogging.app('[Aether] Error fetching flight position: $e');
       return null;
     }
   }

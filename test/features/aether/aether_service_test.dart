@@ -2,8 +2,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:socialmesh/features/sky_scanner/models/sky_node.dart';
-import 'package:socialmesh/features/sky_scanner/services/sky_scanner_service.dart';
+import 'package:socialmesh/features/aether/models/aether_flight.dart';
+import 'package:socialmesh/features/aether/services/aether_service.dart';
 
 void main() {
   group('FlightPosition', () {
@@ -240,10 +240,10 @@ void main() {
     });
   });
 
-  group('SkyScannerService', () {
+  group('AetherService', () {
     group('calculateDistance', () {
       test('returns zero for same coordinates', () {
-        final distance = SkyScannerService.calculateDistance(
+        final distance = AetherService.calculateDistance(
           34.0522,
           -118.2437,
           34.0522,
@@ -257,7 +257,7 @@ void main() {
         // LAX: 33.9425° N, 118.4081° W
         // JFK: 40.6413° N, 73.7781° W
         // Expected distance: ~3,983 km
-        final distance = SkyScannerService.calculateDistance(
+        final distance = AetherService.calculateDistance(
           33.9425,
           -118.4081,
           40.6413,
@@ -271,7 +271,7 @@ void main() {
         // LHR: 51.4700° N, 0.4543° W
         // SYD: 33.8688° S, 151.2093° E
         // Expected distance: ~16,994 km
-        final distance = SkyScannerService.calculateDistance(
+        final distance = AetherService.calculateDistance(
           51.4700,
           -0.4543,
           -33.8688,
@@ -284,7 +284,7 @@ void main() {
       test('calculates short distance correctly', () {
         // Two points about 1 km apart in Los Angeles
         // Moving roughly 0.009 degrees north = ~1 km
-        final distance = SkyScannerService.calculateDistance(
+        final distance = AetherService.calculateDistance(
           34.0522,
           -118.2437,
           34.0612,
@@ -297,7 +297,7 @@ void main() {
       test('handles crossing prime meridian', () {
         // London (west of prime meridian) to Paris (east of prime meridian)
         // Expected distance: ~344 km
-        final distance = SkyScannerService.calculateDistance(
+        final distance = AetherService.calculateDistance(
           51.5074,
           -0.1278,
           48.8566,
@@ -310,7 +310,7 @@ void main() {
       test('handles crossing equator', () {
         // Quito, Ecuador (near equator) to Bogota, Colombia
         // Expected distance: ~714 km
-        final distance = SkyScannerService.calculateDistance(
+        final distance = AetherService.calculateDistance(
           -0.1807,
           -78.4678,
           4.7110,
@@ -323,7 +323,7 @@ void main() {
       test('handles crossing international date line', () {
         // Fiji to Samoa (crossing date line)
         // Expected distance: ~1,152 km
-        final distance = SkyScannerService.calculateDistance(
+        final distance = AetherService.calculateDistance(
           -18.1416,
           178.4419,
           -13.8333,
@@ -335,26 +335,21 @@ void main() {
 
       test('handles antipodal points', () {
         // Points on opposite sides of Earth (max distance ~20,000 km)
-        final distance = SkyScannerService.calculateDistance(
-          0.0,
-          0.0,
-          0.0,
-          180.0,
-        );
+        final distance = AetherService.calculateDistance(0.0, 0.0, 0.0, 180.0);
 
         // Half Earth circumference at equator ~20,000 km
         expect(distance, closeTo(20015, 50));
       });
 
       test('is symmetric', () {
-        final distanceAtoB = SkyScannerService.calculateDistance(
+        final distanceAtoB = AetherService.calculateDistance(
           34.0522,
           -118.2437,
           40.7128,
           -74.0060,
         );
 
-        final distanceBtoA = SkyScannerService.calculateDistance(
+        final distanceBtoA = AetherService.calculateDistance(
           40.7128,
           -74.0060,
           34.0522,
@@ -367,14 +362,14 @@ void main() {
 
     group('calculateSlantRange', () {
       test('equals ground distance when altitudes are equal', () {
-        final groundDistance = SkyScannerService.calculateDistance(
+        final groundDistance = AetherService.calculateDistance(
           34.0522,
           -118.2437,
           34.1522,
           -118.2437,
         );
 
-        final slantRange = SkyScannerService.calculateSlantRange(
+        final slantRange = AetherService.calculateSlantRange(
           34.0522,
           -118.2437,
           100.0, // 100m altitude
@@ -388,7 +383,7 @@ void main() {
 
       test('accounts for altitude difference', () {
         // Ground station at sea level, aircraft at 10km altitude directly overhead
-        final slantRange = SkyScannerService.calculateSlantRange(
+        final slantRange = AetherService.calculateSlantRange(
           34.0522,
           -118.2437,
           0.0, // Ground station at sea level
@@ -407,14 +402,14 @@ void main() {
 
         // First calculate what ground distance gives us ~10 km
         // At ~34° latitude, 0.09° ~ 10km
-        final groundDistance = SkyScannerService.calculateDistance(
+        final groundDistance = AetherService.calculateDistance(
           34.0522,
           -118.2437,
           34.1422,
           -118.2437,
         );
 
-        final slantRange = SkyScannerService.calculateSlantRange(
+        final slantRange = AetherService.calculateSlantRange(
           34.0522,
           -118.2437,
           0.0, // Ground
@@ -435,7 +430,7 @@ void main() {
 
       test('handles negative altitude difference', () {
         // Aircraft below ground station (unlikely but possible)
-        final slantRange = SkyScannerService.calculateSlantRange(
+        final slantRange = AetherService.calculateSlantRange(
           34.0522,
           -118.2437,
           2000.0, // Ground station at 2km (mountain top)
@@ -454,14 +449,14 @@ void main() {
 
         // Get coordinates ~100km east
         // At 34° N, 1° longitude ≈ 93km
-        final groundDistance = SkyScannerService.calculateDistance(
+        final groundDistance = AetherService.calculateDistance(
           34.0522,
           -118.2437,
           34.0522,
           -117.1437, // ~100km east
         );
 
-        final slantRange = SkyScannerService.calculateSlantRange(
+        final slantRange = AetherService.calculateSlantRange(
           34.0522,
           -118.2437,
           100.0, // Ground at 100m
@@ -482,7 +477,7 @@ void main() {
       });
 
       test('is symmetric', () {
-        final rangeAtoB = SkyScannerService.calculateSlantRange(
+        final rangeAtoB = AetherService.calculateSlantRange(
           34.0522,
           -118.2437,
           100.0,
@@ -491,7 +486,7 @@ void main() {
           10000.0,
         );
 
-        final rangeBtoA = SkyScannerService.calculateSlantRange(
+        final rangeBtoA = AetherService.calculateSlantRange(
           40.7128,
           -74.0060,
           10000.0,

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:socialmesh/features/sky_scanner/models/sky_node.dart';
+import 'package:socialmesh/features/aether/models/aether_flight.dart';
 
 void main() {
-  group('SkyNode', () {
+  group('AetherFlight', () {
     group('constructor', () {
       test('creates instance with required fields', () {
         final now = DateTime.now();
-        final skyNode = SkyNode(
+        final flight = AetherFlight(
           id: 'test-id',
           nodeId: '!abc123',
           flightNumber: 'UA123',
@@ -19,16 +19,16 @@ void main() {
           createdAt: now,
         );
 
-        expect(skyNode.id, 'test-id');
-        expect(skyNode.nodeId, '!abc123');
-        expect(skyNode.flightNumber, 'UA123');
-        expect(skyNode.departure, 'LAX');
-        expect(skyNode.arrival, 'JFK');
-        expect(skyNode.scheduledDeparture, now);
-        expect(skyNode.userId, 'user-123');
-        expect(skyNode.createdAt, now);
-        expect(skyNode.isActive, false);
-        expect(skyNode.receptionCount, 0);
+        expect(flight.id, 'test-id');
+        expect(flight.nodeId, '!abc123');
+        expect(flight.flightNumber, 'UA123');
+        expect(flight.departure, 'LAX');
+        expect(flight.arrival, 'JFK');
+        expect(flight.scheduledDeparture, now);
+        expect(flight.userId, 'user-123');
+        expect(flight.createdAt, now);
+        expect(flight.isActive, false);
+        expect(flight.receptionCount, 0);
       });
 
       test('creates instance with all optional fields', () {
@@ -36,7 +36,7 @@ void main() {
         final arrival = DateTime(2025, 6, 15, 18, 0);
         final created = DateTime(2025, 6, 1, 12, 0);
 
-        final skyNode = SkyNode(
+        final flight = AetherFlight(
           id: 'full-id',
           nodeId: '!def456',
           nodeName: 'TestNode',
@@ -54,13 +54,13 @@ void main() {
           receptionCount: 5,
         );
 
-        expect(skyNode.nodeName, 'TestNode');
-        expect(skyNode.airline, 'British Airways');
-        expect(skyNode.scheduledArrival, arrival);
-        expect(skyNode.userName, 'Test User');
-        expect(skyNode.notes, 'Window seat, row 12');
-        expect(skyNode.isActive, true);
-        expect(skyNode.receptionCount, 5);
+        expect(flight.nodeName, 'TestNode');
+        expect(flight.airline, 'British Airways');
+        expect(flight.scheduledArrival, arrival);
+        expect(flight.userName, 'Test User');
+        expect(flight.notes, 'Window seat, row 12');
+        expect(flight.isActive, true);
+        expect(flight.receptionCount, 5);
       });
     });
 
@@ -77,17 +77,17 @@ void main() {
           'createdAt': Timestamp.fromDate(now),
         };
 
-        final skyNode = SkyNode.fromJson(json, 'doc-id');
+        final flight = AetherFlight.fromJson(json, 'doc-id');
 
-        expect(skyNode.id, 'doc-id');
-        expect(skyNode.nodeId, '!abc123');
-        expect(skyNode.flightNumber, 'UA123');
-        expect(skyNode.departure, 'LAX');
-        expect(skyNode.arrival, 'JFK');
-        expect(skyNode.scheduledDeparture, now);
-        expect(skyNode.userId, 'user-123');
-        expect(skyNode.isActive, false);
-        expect(skyNode.receptionCount, 0);
+        expect(flight.id, 'doc-id');
+        expect(flight.nodeId, '!abc123');
+        expect(flight.flightNumber, 'UA123');
+        expect(flight.departure, 'LAX');
+        expect(flight.arrival, 'JFK');
+        expect(flight.scheduledDeparture, now);
+        expect(flight.userId, 'user-123');
+        expect(flight.isActive, false);
+        expect(flight.receptionCount, 0);
       });
 
       test('parses optional fields when present', () {
@@ -112,15 +112,15 @@ void main() {
           'receptionCount': 10,
         };
 
-        final skyNode = SkyNode.fromJson(json, 'full-doc-id');
+        final flight = AetherFlight.fromJson(json, 'full-doc-id');
 
-        expect(skyNode.nodeName, 'MyNode');
-        expect(skyNode.airline, 'British Airways');
-        expect(skyNode.scheduledArrival, arrival);
-        expect(skyNode.userName, 'John Doe');
-        expect(skyNode.notes, 'Test notes');
-        expect(skyNode.isActive, true);
-        expect(skyNode.receptionCount, 10);
+        expect(flight.nodeName, 'MyNode');
+        expect(flight.airline, 'British Airways');
+        expect(flight.scheduledArrival, arrival);
+        expect(flight.userName, 'John Doe');
+        expect(flight.notes, 'Test notes');
+        expect(flight.isActive, true);
+        expect(flight.receptionCount, 10);
       });
 
       test('handles null optional fields gracefully', () {
@@ -142,15 +142,15 @@ void main() {
           'receptionCount': null,
         };
 
-        final skyNode = SkyNode.fromJson(json, 'doc-id');
+        final flight = AetherFlight.fromJson(json, 'doc-id');
 
-        expect(skyNode.nodeName, isNull);
-        expect(skyNode.airline, isNull);
-        expect(skyNode.scheduledArrival, isNull);
-        expect(skyNode.userName, isNull);
-        expect(skyNode.notes, isNull);
-        expect(skyNode.isActive, false);
-        expect(skyNode.receptionCount, 0);
+        expect(flight.nodeName, isNull);
+        expect(flight.airline, isNull);
+        expect(flight.scheduledArrival, isNull);
+        expect(flight.userName, isNull);
+        expect(flight.notes, isNull);
+        expect(flight.isActive, false);
+        expect(flight.receptionCount, 0);
       });
     });
 
@@ -160,7 +160,7 @@ void main() {
         final arrival = DateTime(2025, 6, 15, 18, 0);
         final created = DateTime(2025, 6, 1, 12, 0);
 
-        final skyNode = SkyNode(
+        final flight = AetherFlight(
           id: 'test-id',
           nodeId: '!abc123',
           nodeName: 'TestNode',
@@ -178,7 +178,7 @@ void main() {
           receptionCount: 5,
         );
 
-        final json = skyNode.toJson();
+        final json = flight.toJson();
 
         expect(json['nodeId'], '!abc123');
         expect(json['nodeName'], 'TestNode');
@@ -198,7 +198,7 @@ void main() {
 
       test('serializes null scheduledArrival correctly', () {
         final now = DateTime.now();
-        final skyNode = SkyNode(
+        final flight = AetherFlight(
           id: 'test-id',
           nodeId: '!abc123',
           flightNumber: 'UA123',
@@ -210,14 +210,14 @@ void main() {
           createdAt: now,
         );
 
-        final json = skyNode.toJson();
+        final json = flight.toJson();
 
         expect(json['scheduledArrival'], isNull);
       });
 
       test('does not include id in json output', () {
         final now = DateTime.now();
-        final skyNode = SkyNode(
+        final flight = AetherFlight(
           id: 'test-id',
           nodeId: '!abc123',
           flightNumber: 'UA123',
@@ -228,7 +228,7 @@ void main() {
           createdAt: now,
         );
 
-        final json = skyNode.toJson();
+        final json = flight.toJson();
 
         expect(json.containsKey('id'), false);
       });
@@ -237,7 +237,7 @@ void main() {
     group('copyWith', () {
       test('copies all fields when none specified', () {
         final now = DateTime.now();
-        final original = SkyNode(
+        final original = AetherFlight(
           id: 'test-id',
           nodeId: '!abc123',
           nodeName: 'TestNode',
@@ -270,7 +270,7 @@ void main() {
 
       test('overrides specified fields only', () {
         final now = DateTime.now();
-        final original = SkyNode(
+        final original = AetherFlight(
           id: 'test-id',
           nodeId: '!abc123',
           flightNumber: 'UA123',
@@ -306,7 +306,7 @@ void main() {
       group('isUpcoming', () {
         test('returns true for flight 12 hours in future', () {
           // Use a comfortable margin well within the 24-hour window
-          final skyNode = SkyNode(
+          final flight = AetherFlight(
             id: 'test',
             nodeId: '!abc',
             flightNumber: 'UA123',
@@ -317,12 +317,12 @@ void main() {
             createdAt: DateTime.now(),
           );
 
-          expect(skyNode.isUpcoming, true);
+          expect(flight.isUpcoming, true);
         });
 
         test('returns true for flight 1 minute in future', () {
           // Just barely in the future - should be upcoming
-          final skyNode = SkyNode(
+          final flight = AetherFlight(
             id: 'test',
             nodeId: '!abc',
             flightNumber: 'UA123',
@@ -333,12 +333,12 @@ void main() {
             createdAt: DateTime.now(),
           );
 
-          expect(skyNode.isUpcoming, true);
+          expect(flight.isUpcoming, true);
         });
 
         test('returns false for flight 48 hours in future', () {
           // Use a large margin well beyond the 24-hour window
-          final skyNode = SkyNode(
+          final flight = AetherFlight(
             id: 'test',
             nodeId: '!abc',
             flightNumber: 'UA123',
@@ -349,11 +349,11 @@ void main() {
             createdAt: DateTime.now(),
           );
 
-          expect(skyNode.isUpcoming, false);
+          expect(flight.isUpcoming, false);
         });
 
         test('returns false for flight 1 hour in the past', () {
-          final skyNode = SkyNode(
+          final flight = AetherFlight(
             id: 'test',
             nodeId: '!abc',
             flightNumber: 'UA123',
@@ -366,13 +366,13 @@ void main() {
             createdAt: DateTime.now(),
           );
 
-          expect(skyNode.isUpcoming, false);
+          expect(flight.isUpcoming, false);
         });
       });
 
       group('isPast', () {
         test('returns true when 2 hours past scheduled arrival', () {
-          final skyNode = SkyNode(
+          final flight = AetherFlight(
             id: 'test',
             nodeId: '!abc',
             flightNumber: 'UA123',
@@ -386,11 +386,11 @@ void main() {
             createdAt: DateTime.now(),
           );
 
-          expect(skyNode.isPast, true);
+          expect(flight.isPast, true);
         });
 
         test('returns false when scheduled arrival is 2 hours in future', () {
-          final skyNode = SkyNode(
+          final flight = AetherFlight(
             id: 'test',
             nodeId: '!abc',
             flightNumber: 'UA123',
@@ -404,12 +404,12 @@ void main() {
             createdAt: DateTime.now(),
           );
 
-          expect(skyNode.isPast, false);
+          expect(flight.isPast, false);
         });
 
         test('returns true when 14 hours past departure with no arrival', () {
           // Well past the 12-hour assumed max flight time
-          final skyNode = SkyNode(
+          final flight = AetherFlight(
             id: 'test',
             nodeId: '!abc',
             flightNumber: 'UA123',
@@ -423,12 +423,12 @@ void main() {
             createdAt: DateTime.now(),
           );
 
-          expect(skyNode.isPast, true);
+          expect(flight.isPast, true);
         });
 
         test('returns false when 6 hours past departure with no arrival', () {
           // Well within the 12-hour assumed max flight time
-          final skyNode = SkyNode(
+          final flight = AetherFlight(
             id: 'test',
             nodeId: '!abc',
             flightNumber: 'UA123',
@@ -442,13 +442,13 @@ void main() {
             createdAt: DateTime.now(),
           );
 
-          expect(skyNode.isPast, false);
+          expect(flight.isPast, false);
         });
       });
 
       group('statusText', () {
         test('returns "In Flight" when active', () {
-          final skyNode = SkyNode(
+          final flight = AetherFlight(
             id: 'test',
             nodeId: '!abc',
             flightNumber: 'UA123',
@@ -462,12 +462,12 @@ void main() {
             isActive: true,
           );
 
-          expect(skyNode.statusText, 'In Flight');
+          expect(flight.statusText, 'In Flight');
         });
 
         test('returns "Completed" when past', () {
           // 24 hours past - definitely completed
-          final skyNode = SkyNode(
+          final flight = AetherFlight(
             id: 'test',
             nodeId: '!abc',
             flightNumber: 'UA123',
@@ -481,11 +481,11 @@ void main() {
             isActive: false,
           );
 
-          expect(skyNode.statusText, 'Completed');
+          expect(flight.statusText, 'Completed');
         });
 
         test('returns "Upcoming" when 5 hours in future', () {
-          final skyNode = SkyNode(
+          final flight = AetherFlight(
             id: 'test',
             nodeId: '!abc',
             flightNumber: 'UA123',
@@ -497,11 +497,11 @@ void main() {
             isActive: false,
           );
 
-          expect(skyNode.statusText, 'Upcoming');
+          expect(flight.statusText, 'Upcoming');
         });
 
         test('returns "Scheduled" when 3 days in future', () {
-          final skyNode = SkyNode(
+          final flight = AetherFlight(
             id: 'test',
             nodeId: '!abc',
             flightNumber: 'UA123',
@@ -513,7 +513,7 @@ void main() {
             isActive: false,
           );
 
-          expect(skyNode.statusText, 'Scheduled');
+          expect(flight.statusText, 'Scheduled');
         });
       });
     });
@@ -525,7 +525,7 @@ void main() {
         final now = DateTime.now();
         final report = ReceptionReport(
           id: 'report-id',
-          skyNodeId: 'skynode-id',
+          aetherFlightId: 'aether-flight-id',
           flightNumber: 'UA123',
           reporterId: 'reporter-id',
           receivedAt: now,
@@ -533,7 +533,7 @@ void main() {
         );
 
         expect(report.id, 'report-id');
-        expect(report.skyNodeId, 'skynode-id');
+        expect(report.aetherFlightId, 'aether-flight-id');
         expect(report.flightNumber, 'UA123');
         expect(report.reporterId, 'reporter-id');
         expect(report.receivedAt, now);
@@ -546,7 +546,7 @@ void main() {
 
         final report = ReceptionReport(
           id: 'full-report',
-          skyNodeId: 'skynode-id',
+          aetherFlightId: 'aether-flight-id',
           flightNumber: 'BA456',
           reporterId: 'reporter-id',
           reporterName: 'Ground Station Alpha',
@@ -580,7 +580,7 @@ void main() {
         final created = DateTime(2025, 6, 15, 14, 31);
 
         final json = {
-          'skyNodeId': 'skynode-id',
+          'aetherFlightId': 'aether-flight-id',
           'flightNumber': 'UA123',
           'reporterId': 'reporter-id',
           'receivedAt': Timestamp.fromDate(received),
@@ -590,7 +590,7 @@ void main() {
         final report = ReceptionReport.fromJson(json, 'doc-id');
 
         expect(report.id, 'doc-id');
-        expect(report.skyNodeId, 'skynode-id');
+        expect(report.aetherFlightId, 'aether-flight-id');
         expect(report.flightNumber, 'UA123');
         expect(report.reporterId, 'reporter-id');
         expect(report.receivedAt, received);
@@ -600,7 +600,7 @@ void main() {
       test('parses optional numeric fields correctly', () {
         final now = DateTime.now();
         final json = {
-          'skyNodeId': 'skynode-id',
+          'aetherFlightId': 'aether-flight-id',
           'flightNumber': 'UA123',
           'reporterId': 'reporter-id',
           'latitude': 34.0522,
@@ -626,7 +626,7 @@ void main() {
       test('handles null optional fields gracefully', () {
         final now = DateTime.now();
         final json = {
-          'skyNodeId': 'skynode-id',
+          'aetherFlightId': 'aether-flight-id',
           'flightNumber': 'UA123',
           'reporterId': 'reporter-id',
           'reporterName': null,
@@ -663,7 +663,7 @@ void main() {
 
         final report = ReceptionReport(
           id: 'report-id',
-          skyNodeId: 'skynode-id',
+          aetherFlightId: 'aether-flight-id',
           flightNumber: 'UA123',
           reporterId: 'reporter-id',
           reporterName: 'Ground Station',
@@ -681,7 +681,7 @@ void main() {
 
         final json = report.toJson();
 
-        expect(json['skyNodeId'], 'skynode-id');
+        expect(json['aetherFlightId'], 'aether-flight-id');
         expect(json['flightNumber'], 'UA123');
         expect(json['reporterId'], 'reporter-id');
         expect(json['reporterName'], 'Ground Station');
@@ -701,7 +701,7 @@ void main() {
         final now = DateTime.now();
         final report = ReceptionReport(
           id: 'report-id',
-          skyNodeId: 'skynode-id',
+          aetherFlightId: 'aether-flight-id',
           flightNumber: 'UA123',
           reporterId: 'reporter-id',
           receivedAt: now,
