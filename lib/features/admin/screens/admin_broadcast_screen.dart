@@ -12,6 +12,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 
+import '../../../core/logging.dart';
 import '../../../services/haptic_service.dart';
 
 /// Screen for admins to send broadcast push notifications to all users.
@@ -124,7 +125,15 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
     try {
       // Force-refresh the auth token to avoid stale token errors
       final user = FirebaseAuth.instance.currentUser;
+      AppLogging.app(
+        '[Broadcast] Auth state: user=${user?.uid ?? 'NULL'}, '
+        'email=${user?.email ?? 'none'}, '
+        'isAnonymous=${user?.isAnonymous}, '
+        'testOnly=$testOnly',
+      );
+
       if (user == null) {
+        AppLogging.app('[Broadcast] ABORT: No Firebase user');
         if (!mounted) return;
         ref.read(hapticServiceProvider).trigger(HapticType.error);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -135,19 +144,29 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
         );
         return;
       }
-      await user.getIdToken(true);
 
-      final callable = FirebaseFunctions.instance.httpsCallable(
-        'broadcastPushNotification',
+      AppLogging.app('[Broadcast] Refreshing ID token...');
+      final idToken = await user.getIdToken(true);
+      AppLogging.app(
+        '[Broadcast] Token refreshed: ${idToken != null ? '${idToken.length} chars' : 'NULL'}',
       );
 
-      await callable.call<dynamic>({
+      final payload = <String, dynamic>{
         'title': title,
         'body': body,
         if (deepLink.isNotEmpty) 'deepLink': deepLink,
         'icon': _selectedIcon.fcmValue,
         if (testOnly) 'testOnly': true,
-      });
+      };
+      AppLogging.app('[Broadcast] Payload: $payload');
+
+      final callable = FirebaseFunctions.instance.httpsCallable(
+        'broadcastPushNotification',
+      );
+
+      AppLogging.app('[Broadcast] Calling function...');
+      await callable.call<dynamic>(payload);
+      AppLogging.app('[Broadcast] Function call succeeded');
 
       if (!mounted) return;
 
@@ -200,23 +219,31 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
           _selectedIcon = _NotificationIcon.announcement;
         });
       }
-    } on FirebaseFunctionsException catch (e) {
+    } on FirebaseFunctionsException catch (e, stack) {
+      AppLogging.app(
+        '[Broadcast] FirebaseFunctionsException: '
+        'code=${e.code}, message=${e.message}, '
+        'details=${e.details}',
+      );
+      AppLogging.app('[Broadcast] Stack: $stack');
       if (!mounted) return;
 
       ref.read(hapticServiceProvider).trigger(HapticType.error);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to send: ${e.message}'),
+          content: Text('Failed to send: ${e.code} - ${e.message}'),
           backgroundColor: Colors.red.shade400,
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      AppLogging.app('[Broadcast] Unexpected error: $e');
+      AppLogging.app('[Broadcast] Stack: $stack');
       if (!mounted) return;
 
       ref.read(hapticServiceProvider).trigger(HapticType.error);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Failed to send broadcast'),
+          content: Text('Failed to send: $e'),
           backgroundColor: Colors.red.shade400,
         ),
       );
