@@ -877,6 +877,17 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                   'MQTT must be configured on your device for uplink/downlink to work.',
               margin: EdgeInsets.zero,
             ),
+            const SizedBox(height: 12),
+            StatusBanner.info(
+              title:
+                  'Most devices have very limited processing power '
+                  'and RAM. Bridging a busy channel like LongFast '
+                  'via the default MQTT server can flood the device '
+                  'with 15-25 packets per second, causing it to '
+                  'stop responding. Consider using a private broker '
+                  'or a quieter channel.',
+              margin: EdgeInsets.zero,
+            ),
           ],
         ],
       ),

@@ -11,8 +11,10 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/status_banner.dart';
 
 /// Screen for configuring MQTT module settings
 class MqttConfigScreen extends ConsumerStatefulWidget {
@@ -175,6 +177,37 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
               padding: const EdgeInsets.symmetric(vertical: 8),
               sliver: SliverList.list(
                 children: [
+                  // Duty cycle warning
+                  // EU_433, EU_868, UA_433, UA_868 have 10% duty cycle
+                  Builder(
+                    builder: (context) {
+                      final regionAsync = ref.watch(deviceRegionProvider);
+                      return regionAsync.when(
+                        data: (region) {
+                          final dutyCyclePercent = _dutyCycleForRegion(region);
+                          if (dutyCyclePercent > 0 && dutyCyclePercent < 100) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: StatusBanner.warning(
+                                title:
+                                    'Your region has a $dutyCyclePercent% duty '
+                                    'cycle. MQTT is not advised when you are '
+                                    'duty cycle restricted — the extra traffic '
+                                    'will quickly overwhelm your LoRa mesh.',
+                                icon: Icons.warning_amber_rounded,
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, _) => const SizedBox.shrink(),
+                      );
+                    },
+                  ),
                   _SettingsTile(
                     icon: Icons.cloud,
                     iconColor: _enabled ? context.accentColor : null,
@@ -620,6 +653,20 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         ],
       ),
     );
+  }
+}
+
+/// Returns the duty cycle percentage for a given LoRa region.
+/// EU and UA regions are restricted to 10%. All others are 100% (unrestricted).
+int _dutyCycleForRegion(config_pbenum.Config_LoRaConfig_RegionCode region) {
+  switch (region) {
+    case config_pbenum.Config_LoRaConfig_RegionCode.EU_433:
+    case config_pbenum.Config_LoRaConfig_RegionCode.EU_868:
+    case config_pbenum.Config_LoRaConfig_RegionCode.UA_433:
+    case config_pbenum.Config_LoRaConfig_RegionCode.UA_868:
+      return 10;
+    default:
+      return 100;
   }
 }
 

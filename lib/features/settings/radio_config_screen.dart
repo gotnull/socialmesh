@@ -562,7 +562,10 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'Channel number for frequency calculation',
+                      'Your operating frequency is calculated from '
+                      'the region, modem preset, and this value. '
+                      'When set to 0, the slot is automatically '
+                      'derived from the primary channel name.',
                       style: TextStyle(
                         color: context.textSecondary,
                         fontSize: 13,
@@ -604,6 +607,18 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
               ),
             ],
           ),
+          if (_channelNum == 0) ...[
+            const SizedBox(height: 8),
+            StatusBanner.warning(
+              title:
+                  'Changing your primary channel name will change '
+                  'your LoRa operating frequency. If you move your '
+                  'primary off LongFast, you will not see standard '
+                  'LongFast traffic even if LongFast is set as a '
+                  'secondary channel with the correct PSK.',
+              margin: EdgeInsets.zero,
+            ),
+          ],
 
           Divider(height: 24, color: context.border),
 

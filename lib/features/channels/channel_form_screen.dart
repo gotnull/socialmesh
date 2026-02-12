@@ -773,6 +773,23 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
             value: _downlinkEnabled,
             onChanged: (v) => setState(() => _downlinkEnabled = v),
           ),
+          if (_uplinkEnabled || _downlinkEnabled) ...[
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: StatusBanner.info(
+                title:
+                    'Most devices have very limited processing power '
+                    'and RAM. Bridging a busy channel like LongFast '
+                    'via the default MQTT server can flood the device '
+                    'with 15-25 packets per second, causing it to '
+                    'stop responding. Consider using a private broker '
+                    'or a quieter channel.',
+                margin: EdgeInsets.zero,
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
         ],
       ),
     );

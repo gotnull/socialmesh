@@ -1745,7 +1745,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Enable ham radio mode with call sign',
+                        'Sets call sign, overrides frequency/power, '
+                        'disables encryption',
                         style: TextStyle(
                           fontSize: 12,
                           color: context.textTertiary,
@@ -1776,7 +1777,18 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                   StatusBanner.accent(
                     title:
                         'Ham mode uses your long name as call sign (max 8 chars), '
-                        'overrides frequency/power, and disables encryption.',
+                        'broadcasts node info every 10 minutes, overrides '
+                        'frequency, duty cycle, and TX power, and disables '
+                        'encryption.',
+                    margin: EdgeInsets.zero,
+                  ),
+                  const SizedBox(height: 12),
+                  StatusBanner.warning(
+                    title:
+                        'HAM nodes cannot relay encrypted traffic. Other '
+                        'non-HAM nodes in your mesh will not be able to '
+                        'route encrypted messages through this node, '
+                        'creating a relay gap in the network.',
                     margin: EdgeInsets.zero,
                   ),
                   const SizedBox(height: 16),
