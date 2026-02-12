@@ -8,7 +8,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/section_header.dart';
-import '../../dev/debug_flags.dart';
+import '../../core/logging.dart';
 import '../../dev/demo/demo_config.dart';
 
 import '../../models/node_encounter.dart';
@@ -277,7 +277,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
               const SliverToBoxAdapter(child: _QuietMeshHint()),
 
             // Content
-            if (DebugFlags.forceEmptyStates || allPresences.isEmpty) ...[
+            if (AppLogging.forceEmptyStates || allPresences.isEmpty) ...[
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: _buildEmptyState(theme),

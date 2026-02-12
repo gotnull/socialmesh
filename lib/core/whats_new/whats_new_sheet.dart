@@ -386,18 +386,7 @@ class _WhatsNewPage extends ConsumerWidget {
           SizedBox(
             width: mascotRenderSize,
             height: mascotRenderSize,
-            child: MeshNodeBrain(
-              mood: MeshBrainMood.excited,
-              size: mascotSize,
-              // Accent color for icons only - glow rings keep default colors
-              accentColor: payload.items.isNotEmpty
-                  ? payload.items.first.iconColor
-                  : null,
-              // Use feature icons as floating particles instead of default stars
-              particleIcons: payload.items.isNotEmpty
-                  ? payload.items.map((item) => item.icon).toList()
-                  : null,
-            ),
+            child: MeshNodeBrain(mood: MeshBrainMood.excited, size: mascotSize),
           ),
           const SizedBox(height: 4),
 

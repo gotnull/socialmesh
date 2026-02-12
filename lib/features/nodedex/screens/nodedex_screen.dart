@@ -23,7 +23,6 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/widgets/animated_empty_state.dart';
-import '../../../dev/debug_flags.dart';
 import '../../../providers/accessibility_providers.dart';
 import '../../../providers/app_providers.dart';
 import '../../../core/theme.dart';
@@ -434,7 +433,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
             );
           }, childCount: otherEntries.length),
         ),
-      ] else if (DebugFlags.forceEmptyStates || (!isLoading && myEntry.isEmpty))
+      ] else if (AppLogging.forceEmptyStates || (!isLoading && myEntry.isEmpty))
         SliverFillRemaining(
           hasScrollBody: false,
           child: _EmptyState(filter: currentFilter),

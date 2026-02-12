@@ -491,17 +491,8 @@ class MeshNodeBrain extends StatefulWidget {
   /// Whether to show thought particles
   final bool showThoughtParticles;
 
-  /// Optional list of icons to use as floating particles instead of circles.
-  /// When provided, these icons orbit around the brain instead of default stars.
-  final List<IconData>? particleIcons;
-
   /// Whether to show expression overlay (eyes, mouth)
   final bool showExpression;
-
-  /// Optional accent color for particle icons only.
-  /// When provided, this color is used for the orbiting icons while
-  /// glow rings retain their default/mood colors.
-  final Color? accentColor;
 
   const MeshNodeBrain({
     super.key,
@@ -515,8 +506,6 @@ class MeshNodeBrain extends StatefulWidget {
     this.onTap,
     this.showThoughtParticles = true,
     this.showExpression = true,
-    this.particleIcons,
-    this.accentColor,
   });
 
   @override
@@ -529,8 +518,8 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
   late AnimationController _wobbleController;
   late AnimationController _pulseController;
   late AnimationController _bounceController;
-  late AnimationController _particleController;
   late AnimationController _orbitController;
+  late AnimationController _particleController;
   late AnimationController _expressionController;
   late AnimationController _specialController;
   late AnimationController _spinController;
@@ -572,9 +561,10 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
       vsync: this,
     );
 
-    // Simple repeating controller - we use lastElapsedDuration for continuous time
+    // 10 second duration - use value * 2π for continuous circular motion
+    // The wrap-around is seamless because sin/cos are periodic
     _particleController = AnimationController(
-      duration: const Duration(seconds: 1),
+      duration: const Duration(seconds: 10),
       vsync: this,
     )..repeat();
 
@@ -1334,20 +1324,20 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
             child: Stack(
               alignment: Alignment.center,
               children: [
+                // Thought particles - FIRST, behind everything
+                if (widget.showThoughtParticles) ..._buildThoughtParticles(),
+
                 // Outer glow rings
                 ..._buildGlowRings(),
-
-                // Thought particles
-                if (widget.showThoughtParticles) ..._buildThoughtParticles(),
 
                 // Orbital rings
                 _buildOrbitalRings(),
 
+                // Inner core glow - BEHIND brain mesh
+                _buildCoreGlow(),
+
                 // Main brain mesh (the rotating icosahedron with face expressions)
                 _buildBrainMesh(),
-
-                // Inner core glow
-                _buildCoreGlow(),
 
                 // Additional effects for special moods (particles, etc.)
                 ..._buildSpecialEffects(),
@@ -1403,134 +1393,56 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
 
     if (!isActive) return particles;
 
-    final hasCustomIcons =
-        widget.particleIcons != null && widget.particleIcons!.isNotEmpty;
+    // value is 0-1 over 10 seconds
+    final v = _particleController.value;
 
-    // When custom icons provided: STARS inner, ICONS outer (swapped)
-    if (hasCustomIcons) {
-      final t =
-          (_particleController.lastElapsedDuration?.inMilliseconds ?? 0) /
-          1000.0;
+    // Default star circle particles
+    for (int i = 0; i < _particles.length; i++) {
+      final particle = _particles[i];
+      // Integer rotation count ensures seamless wrap: when v goes 0->1->0,
+      // angle changes by exactly N * 2π which is the same position
+      final rotations = (1 + (i % 3)).toDouble(); // 1, 2, or 3 full rotations
+      final angle =
+          particle.angle + particle.phase + v * 2 * math.pi * rotations;
+      // Pulsing radius - integer cycle count for seamless wrap
+      final radius =
+          widget.size *
+          0.5 *
+          particle.radius *
+          (0.8 + 0.2 * math.sin(v * 2 * math.pi * 2 + particle.phase));
 
-      // INNER particles - glowing star dots close to the brain
-      for (int i = 0; i < 8; i++) {
-        final phase = (i / 8) * 2 * math.pi;
-        // Slow rotation for inner stars - 0.075 rad/sec
-        final angle = phase + t * 0.075;
-        // Gentle radius variation close to brain
-        final radius = widget.size * 0.38 + math.sin(t * 1.2 + phase) * 4;
+      final x = math.cos(angle) * radius;
+      final y = math.sin(angle) * radius * 0.6;
+      // Smooth pulsing opacity - integer cycle count for seamless wrap
+      final opacity =
+          (0.4 + 0.4 * math.sin(v * 2 * math.pi * 3 + particle.phase)).clamp(
+            0.0,
+            0.8,
+          );
 
-        final x = math.cos(angle) * radius;
-        final y = math.sin(angle) * radius * 0.6;
-        // Subtle opacity variation
-        final opacity = (0.5 + 0.3 * math.sin(t * 1.2 + phase)).clamp(0.0, 1.0);
+      final particleColor = _colors[i % _colors.length];
 
-        final particleColor = _colors[i % _colors.length];
-        const starSize = 4.0;
-
-        particles.add(
-          Positioned(
-            left: widget.size * 0.8 + x - starSize / 2,
-            top: widget.size * 0.8 + y - starSize / 2,
-            child: Container(
-              width: starSize,
-              height: starSize,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: particleColor.withValues(alpha: opacity),
-                boxShadow: [
-                  BoxShadow(
-                    color: particleColor.withValues(alpha: opacity * 0.5),
-                    blurRadius: starSize,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
+      particles.add(
+        Positioned(
+          left: widget.size * 0.8 + x - particle.size / 2,
+          top: widget.size * 0.8 + y - particle.size / 2,
+          child: Container(
+            width: particle.size,
+            height: particle.size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: particleColor.withValues(alpha: opacity),
+              boxShadow: [
+                BoxShadow(
+                  color: _colors[1].withValues(alpha: opacity * 0.5),
+                  blurRadius: particle.size,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
           ),
-        );
-      }
-
-      // OUTER particles - feature icons orbiting far outside the brain
-      final iconCount = widget.particleIcons!.length;
-      for (int i = 0; i < iconCount; i++) {
-        final iconData = widget.particleIcons![i];
-        // Evenly distribute icons around the circle
-        final baseAngle = (i / iconCount) * 2 * math.pi;
-        // Slow continuous rotation - 0.05 rad/sec
-        final angle = baseAngle + t * 0.05;
-        // Gentle radius pulsing far from brain
-        final radius = widget.size * 1.15 + math.sin(t * 0.8 + baseAngle) * 6;
-
-        final x = math.cos(angle) * radius;
-        final y = math.sin(angle) * radius * 0.7;
-        // Constant opacity - no blinking
-        const opacity = 0.9;
-
-        // Use accentColor for icons if provided, otherwise fall back to _colors
-        final particleColor = widget.accentColor ?? _colors[i % _colors.length];
-        const iconSize = 14.0;
-
-        particles.add(
-          Positioned(
-            left: widget.size * 0.8 + x - iconSize / 2,
-            top: widget.size * 0.8 + y - iconSize / 2,
-            child: Opacity(
-              opacity: opacity,
-              child: Icon(iconData, size: iconSize, color: particleColor),
-            ),
-          ),
-        );
-      }
-    } else {
-      // Default behavior - stars inner (no custom icons provided)
-      final t =
-          (_particleController.lastElapsedDuration?.inMilliseconds ?? 0) /
-          1000.0;
-      for (int i = 0; i < _particles.length; i++) {
-        final particle = _particles[i];
-        // Continuous rotation with per-particle speed (halved)
-        final angle =
-            particle.angle + particle.phase + t * particle.speed * 0.5;
-        // Pulsing radius
-        final radius =
-            widget.size *
-            0.5 *
-            particle.radius *
-            (0.8 + 0.2 * math.sin(t * 2.0 + particle.phase));
-
-        final x = math.cos(angle) * radius;
-        final y = math.sin(angle) * radius * 0.6;
-        // Smooth pulsing opacity
-        final opacity = (0.4 + 0.4 * math.sin(t * 1.5 + particle.phase)).clamp(
-          0.0,
-          0.8,
-        );
-
-        final particleColor = _colors[i % _colors.length];
-
-        particles.add(
-          Positioned(
-            left: widget.size * 0.8 + x - particle.size / 2,
-            top: widget.size * 0.8 + y - particle.size / 2,
-            child: Container(
-              width: particle.size,
-              height: particle.size,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: particleColor.withValues(alpha: opacity),
-                boxShadow: [
-                  BoxShadow(
-                    color: _colors[1].withValues(alpha: opacity * 0.5),
-                    blurRadius: particle.size,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }
+        ),
+      );
     }
 
     return particles;

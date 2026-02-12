@@ -24,6 +24,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/logging.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../core/widgets/animations.dart';
@@ -41,6 +42,7 @@ import '../models/aether_flight.dart';
 import '../providers/aether_providers.dart';
 import 'schedule_flight_screen.dart';
 import 'aether_flight_detail_screen.dart';
+import '../../settings/settings_screen.dart';
 
 // =============================================================================
 // Filter Enum (for Flights tab only)
@@ -297,6 +299,12 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
                       ref
                           .read(helpProvider.notifier)
                           .startTour('aether_overview');
+                    case 'settings':
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const SettingsScreen(),
+                        ),
+                      );
                   }
                 },
                 itemBuilder: (context) => [
@@ -329,6 +337,23 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
                         const SizedBox(width: 12),
                         Text(
                           'Help',
+                          style: TextStyle(color: context.textPrimary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'settings',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.settings_outlined,
+                          color: context.textSecondary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Settings',
                           style: TextStyle(color: context.textPrimary),
                         ),
                       ],
@@ -637,7 +662,7 @@ class _FlightsTabContent extends StatelessWidget {
       );
     }
 
-    if (filteredFlights.isEmpty) {
+    if (AppLogging.forceEmptyStates || filteredFlights.isEmpty) {
       // For the main "all" view with no search, show animated empty state
       if (currentFilter == AetherFilter.all && searchQuery.isEmpty) {
         return SliverFillRemaining(

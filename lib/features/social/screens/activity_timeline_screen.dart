@@ -247,7 +247,7 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
         '📬 [ActivityScreen] build() — showing error: ${feedState.error}',
       );
       contentSliver = SliverFillRemaining(child: _buildError(feedState.error!));
-    } else if (signalActivities.isEmpty) {
+    } else if (AppLogging.forceEmptyStates || signalActivities.isEmpty) {
       AppLogging.social(
         '📬 [ActivityScreen] build() — showing empty state '
         '(${_invalidActivityIds.length} invalidated)',

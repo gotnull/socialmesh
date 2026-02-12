@@ -54,6 +54,7 @@ class AppLogging {
   static bool? _nodeDexLoggingEnabled;
   static bool? _syncLoggingEnabled;
   static bool? _mfaLoggingEnabled;
+  static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
   static Logger? _noOpLogger;
@@ -244,6 +245,15 @@ class AppLogging {
     _syncLoggingEnabled ??=
         _safeGetEnv('SYNC_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _syncLoggingEnabled!;
+  }
+
+  /// Force empty states to show for testing animated empty state widgets.
+  /// Enable with DEBUG_EMPTY_STATES=true in .env file.
+  /// Defaults to false (opt-in).
+  static bool get forceEmptyStates {
+    _forceEmptyStates ??=
+        _safeGetEnv('DEBUG_EMPTY_STATES')?.toLowerCase() == 'true';
+    return _forceEmptyStates!;
   }
 
   static Logger get bleLogger {

@@ -658,7 +658,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                   // Content
                   feedState.isLoading && feedState.signals.isEmpty
                       ? _buildLoading()
-                      : signals.isEmpty
+                      : (AppLogging.forceEmptyStates || signals.isEmpty)
                       ? _buildEmptyState()
                       : _buildSignalView(
                           signals,

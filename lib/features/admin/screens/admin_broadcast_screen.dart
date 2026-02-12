@@ -10,7 +10,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
-import '../../../utils/snackbar.dart';
+
 import '../../../services/haptic_service.dart';
 
 /// Screen for admins to send broadcast push notifications to all users.
@@ -33,9 +33,13 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
   final _deepLinkController = TextEditingController();
 
   bool _isSending = false;
+  bool _isSendingTest = false;
   bool _isCountingDown = false;
   int _countdown = 0;
   Timer? _countdownTimer;
+
+  // Selected icon for the notification
+  _NotificationIcon _selectedIcon = _NotificationIcon.announcement;
 
   static const int _maxTitleLength = 100;
   static const int _maxBodyLength = 500;
@@ -43,12 +47,27 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
   static const int _countdownSeconds = 5;
 
   @override
+  void initState() {
+    super.initState();
+    // Add listeners to update preview live
+    _titleController.addListener(_onTextChanged);
+    _bodyController.addListener(_onTextChanged);
+  }
+
+  @override
   void dispose() {
     _countdownTimer?.cancel();
+    _titleController.removeListener(_onTextChanged);
+    _bodyController.removeListener(_onTextChanged);
     _titleController.dispose();
     _bodyController.dispose();
     _deepLinkController.dispose();
     super.dispose();
+  }
+
+  void _onTextChanged() {
+    // Trigger rebuild to update preview
+    safeSetState(() {});
   }
 
   void _startCountdown() {
@@ -85,88 +104,155 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
     });
   }
 
-  Future<void> _sendBroadcast() async {
+  Future<void> _sendBroadcast({bool testOnly = false}) async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Show final confirmation dialog
-    final confirmed = await AppBottomSheet.showConfirm(
-      context: context,
-      title: 'Final Confirmation',
-      message:
-          'This will send a push notification to ALL users of Socialmesh. '
-          'This action cannot be undone.\n\n'
-          'Title: ${_titleController.text.trim()}\n'
-          'Body: ${_bodyController.text.trim()}',
-      confirmLabel: 'Send Now',
-      isDestructive: true,
-    );
-
-    if (confirmed != true || !mounted) {
-      safeSetState(() {
-        _isCountingDown = false;
-        _countdown = 0;
-      });
-      return;
-    }
+    final title = _titleController.text.trim();
+    final body = _bodyController.text.trim();
+    final deepLink = _deepLinkController.text.trim();
 
     safeSetState(() {
-      _isCountingDown = false;
-      _isSending = true;
+      if (testOnly) {
+        _isSendingTest = true;
+      } else {
+        _isSending = true;
+        _isCountingDown = false;
+      }
     });
-    ref.read(hapticServiceProvider).trigger(HapticType.heavy);
 
     try {
       final callable = FirebaseFunctions.instance.httpsCallable(
         'broadcastPushNotification',
       );
 
-      final result = await callable.call<Map<String, dynamic>>({
-        'title': _titleController.text.trim(),
-        'body': _bodyController.text.trim(),
-        if (_deepLinkController.text.trim().isNotEmpty)
-          'deepLink': _deepLinkController.text.trim(),
+      await callable.call<dynamic>({
+        'title': title,
+        'body': body,
+        if (deepLink.isNotEmpty) 'deepLink': deepLink,
+        'icon': _selectedIcon.fcmValue,
+        if (testOnly) 'testOnly': true,
       });
 
       if (!mounted) return;
 
-      final success = result.data['success'] as bool? ?? false;
-      final messageId = result.data['messageId'] as String?;
+      ref.read(hapticServiceProvider).trigger(HapticType.success);
 
-      if (success) {
-        ref.read(hapticServiceProvider).success();
-        showSuccessSnackBar(
-          context,
-          'Broadcast sent successfully${messageId != null ? ' (ID: ${messageId.substring(0, 20)}...)' : ''}',
-        );
+      // Show success confirmation
+      await AppBottomSheet.show(
+        context: context,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle, color: Colors.green.shade400, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              testOnly ? 'Test Sent' : 'Broadcast Sent',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              testOnly
+                  ? 'Your test notification has been sent to all admins.'
+                  : 'Your notification has been sent to all Socialmesh users.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: context.textSecondary),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Done'),
+              ),
+            ),
+          ],
+        ),
+      );
 
-        // Clear form after successful send
+      if (!mounted) return;
+
+      // Only clear form after full broadcast, not test
+      if (!testOnly) {
         _titleController.clear();
         _bodyController.clear();
         _deepLinkController.clear();
-      } else {
-        showErrorSnackBar(context, 'Failed to send broadcast');
+        safeSetState(() {
+          _selectedIcon = _NotificationIcon.announcement;
+        });
       }
     } on FirebaseFunctionsException catch (e) {
       if (!mounted) return;
-      ref.read(hapticServiceProvider).error();
-      showErrorSnackBar(
-        context,
-        e.message ?? 'Failed to send broadcast: ${e.code}',
+
+      ref.read(hapticServiceProvider).trigger(HapticType.error);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to send: ${e.message}'),
+          backgroundColor: Colors.red.shade400,
+        ),
       );
     } catch (e) {
       if (!mounted) return;
-      ref.read(hapticServiceProvider).error();
-      showErrorSnackBar(context, 'Failed to send broadcast: $e');
+
+      ref.read(hapticServiceProvider).trigger(HapticType.error);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Failed to send broadcast'),
+          backgroundColor: Colors.red.shade400,
+        ),
+      );
     } finally {
       if (mounted) {
-        setState(() => _isSending = false);
+        safeSetState(() {
+          _isSending = false;
+          _isSendingTest = false;
+        });
       }
     }
   }
 
+  Future<void> _sendTestToAdmins() async {
+    ref.read(hapticServiceProvider).trigger(HapticType.medium);
+    await _sendBroadcast(testOnly: true);
+  }
+
+  void _showIconPicker() {
+    ref.read(hapticServiceProvider).trigger(HapticType.selection);
+    AppBottomSheet.show(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Select Icon',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
+            ),
+          ),
+          _IconPickerContent(
+            selectedIcon: _selectedIcon,
+            onIconSelected: (icon) {
+              safeSetState(() => _selectedIcon = icon);
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final canInteract = !_isSending && !_isCountingDown;
+    final canInteract = !_isSending && !_isCountingDown && !_isSendingTest;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -206,6 +292,21 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
             ),
         ],
         slivers: [
+          // Pinned preview header
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _PreviewHeaderDelegate(
+              title: _titleController.text.isEmpty
+                  ? 'Notification Title'
+                  : _titleController.text,
+              body: _bodyController.text.isEmpty
+                  ? 'Notification message will appear here...'
+                  : _bodyController.text,
+              icon: _selectedIcon,
+            ),
+          ),
+
+          // Form content
           SliverPadding(
             padding: const EdgeInsets.all(16),
             sliver: SliverToBoxAdapter(
@@ -258,6 +359,69 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                       ),
                       const SizedBox(height: 24),
                     ],
+
+                    // Icon selector
+                    Text(
+                      'Icon',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: canInteract ? _showIconPicker : null,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: context.border.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: _selectedIcon.color.withValues(
+                                  alpha: 0.2,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                _selectedIcon.icon,
+                                color: _selectedIcon.color,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _selectedIcon.label,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: context.textPrimary,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: context.textTertiary,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
 
                     // Title field
                     Text(
@@ -422,29 +586,54 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                       ),
                       style: TextStyle(color: context.textPrimary),
                       textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _sendBroadcast(),
+                      onFieldSubmitted: (_) => _startCountdown(),
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
 
-                    // Preview section
-                    Text(
-                      'PREVIEW',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.2,
-                        color: context.textTertiary,
+                    // Test to Admins button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: canInteract ? _sendTestToAdmins : null,
+                        icon: _isSendingTest
+                            ? SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: context.accentColor,
+                                ),
+                              )
+                            : Icon(
+                                Icons.science_outlined,
+                                color: context.accentColor,
+                              ),
+                        label: Text(
+                          _isSendingTest
+                              ? 'Sending Test...'
+                              : 'Test to Admins Only',
+                          style: TextStyle(color: context.accentColor),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: BorderSide(
+                            color: context.accentColor.withValues(alpha: 0.5),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    _NotificationPreview(
-                      title: _titleController.text.isEmpty
-                          ? 'Notification Title'
-                          : _titleController.text,
-                      body: _bodyController.text.isEmpty
-                          ? 'Notification message will appear here...'
-                          : _bodyController.text,
+                    const SizedBox(height: 8),
+                    Text(
+                      'Send a test notification to admins before broadcasting to all users.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
 
                     // Bottom padding
@@ -462,64 +651,120 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
   }
 }
 
-/// Countdown indicator with cancel button
-class _CountdownIndicator extends StatelessWidget {
-  const _CountdownIndicator({required this.countdown, required this.onCancel});
+/// Available notification icons
+enum _NotificationIcon {
+  announcement(
+    icon: Icons.campaign,
+    label: 'Announcement',
+    color: Colors.orange,
+    fcmValue: 'announcement',
+  ),
+  update(
+    icon: Icons.system_update,
+    label: 'App Update',
+    color: Colors.blue,
+    fcmValue: 'update',
+  ),
+  feature(
+    icon: Icons.auto_awesome,
+    label: 'New Feature',
+    color: Colors.purple,
+    fcmValue: 'feature',
+  ),
+  maintenance(
+    icon: Icons.build,
+    label: 'Maintenance',
+    color: Colors.amber,
+    fcmValue: 'maintenance',
+  ),
+  alert(
+    icon: Icons.warning_amber,
+    label: 'Alert',
+    color: Colors.red,
+    fcmValue: 'alert',
+  ),
+  celebration(
+    icon: Icons.celebration,
+    label: 'Celebration',
+    color: Colors.pink,
+    fcmValue: 'celebration',
+  ),
+  community(
+    icon: Icons.people,
+    label: 'Community',
+    color: Colors.teal,
+    fcmValue: 'community',
+  ),
+  tip(
+    icon: Icons.lightbulb,
+    label: 'Tip',
+    color: Colors.yellow,
+    fcmValue: 'tip',
+  );
 
-  final int countdown;
-  final VoidCallback onCancel;
+  const _NotificationIcon({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.fcmValue,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final String fcmValue;
+}
+
+/// Pinned header delegate for the notification preview
+class _PreviewHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _PreviewHeaderDelegate({
+    required this.title,
+    required this.body,
+    required this.icon,
+  });
+
+  final String title;
+  final String body;
+  final _NotificationIcon icon;
 
   @override
-  Widget build(BuildContext context) {
+  double get minExtent => 140;
+
+  @override
+  double get maxExtent => 140;
+
+  @override
+  bool shouldRebuild(covariant _PreviewHeaderDelegate oldDelegate) {
+    return title != oldDelegate.title ||
+        body != oldDelegate.body ||
+        icon != oldDelegate.icon;
+  }
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.red.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-      ),
+      color: context.background,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                color: Colors.red.shade400,
-                size: 24,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Sending in $countdown...',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.red.shade400,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
           Text(
-            'Tap Cancel in the app bar to stop',
-            style: TextStyle(fontSize: 13, color: context.textSecondary),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: onCancel,
-              icon: const Icon(Icons.close),
-              label: const Text('Cancel Broadcast'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.red.shade400,
-                side: BorderSide(color: Colors.red.shade400),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
+            'PREVIEW',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
+              color: context.textTertiary,
             ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: _NotificationPreview(title: title, body: body, icon: icon),
           ),
         ],
       ),
@@ -527,17 +772,22 @@ class _CountdownIndicator extends StatelessWidget {
   }
 }
 
-/// Preview widget showing how the notification will appear
+/// Visual preview of how the notification will appear
 class _NotificationPreview extends StatelessWidget {
-  const _NotificationPreview({required this.title, required this.body});
+  const _NotificationPreview({
+    required this.title,
+    required this.body,
+    required this.icon,
+  });
 
   final String title;
   final String body;
+  final _NotificationIcon icon;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: context.card,
         borderRadius: BorderRadius.circular(16),
@@ -553,21 +803,22 @@ class _NotificationPreview extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // App icon
+          // App icon with selected notification icon
           Container(
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: context.accentColor.withValues(alpha: 0.2),
+              color: icon.color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.hub, color: context.accentColor, size: 22),
+            child: Icon(icon.icon, color: icon.color, size: 22),
           ),
           const SizedBox(width: 12),
           // Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   children: [
@@ -609,12 +860,163 @@ class _NotificationPreview extends StatelessWidget {
                     color: context.textSecondary,
                     height: 1.3,
                   ),
-                  maxLines: 3,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Countdown indicator shown before sending
+class _CountdownIndicator extends StatelessWidget {
+  const _CountdownIndicator({required this.countdown, required this.onCancel});
+
+  final int countdown;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircularProgressIndicator(
+                  value: countdown / 5,
+                  strokeWidth: 3,
+                  backgroundColor: Colors.red.withValues(alpha: 0.2),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Colors.red.shade400,
+                  ),
+                ),
+                Text(
+                  '$countdown',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Sending in $countdown second${countdown == 1 ? '' : 's'}...',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red.shade400,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Tap Cancel to abort',
+                  style: TextStyle(fontSize: 13, color: context.textSecondary),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Icon picker bottom sheet content
+class _IconPickerContent extends StatelessWidget {
+  const _IconPickerContent({
+    required this.selectedIcon,
+    required this.onIconSelected,
+  });
+
+  final _NotificationIcon selectedIcon;
+  final void Function(_NotificationIcon) onIconSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ...List.generate(_NotificationIcon.values.length, (index) {
+            final icon = _NotificationIcon.values[index];
+            final isSelected = icon == selectedIcon;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: GestureDetector(
+                onTap: () => onIconSelected(icon),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? icon.color.withValues(alpha: 0.15)
+                        : context.card,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected
+                          ? icon.color.withValues(alpha: 0.5)
+                          : context.border.withValues(alpha: 0.3),
+                      width: isSelected ? 2 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: icon.color.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(icon.icon, color: icon.color, size: 22),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          icon.label,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                      ),
+                      if (isSelected)
+                        Icon(Icons.check_circle, color: icon.color, size: 22),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
         ],
       ),
     );

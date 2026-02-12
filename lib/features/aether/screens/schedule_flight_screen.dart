@@ -203,6 +203,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   // ===========================================================================
 
   Future<void> _validateFlight() async {
+    FocusScope.of(context).unfocus();
     final flightNumber = _flightNumberController.text.trim().toUpperCase();
     final departure = _departureController.text.trim().toUpperCase();
 
@@ -847,35 +848,82 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   }
 
   Widget _buildFlightNumberField() {
+    final hasFlightNumber = _flightNumberController.text.trim().isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _flightNumberController,
-                label: 'Flight Number',
-                hint: 'e.g., UA123, DL456',
-                icon: Icons.confirmation_number,
-                maxLength: _maxFlightNumberLength,
-                textCapitalization: TextCapitalization.characters,
-                validator: _validateFlightNumber,
-                onChanged: (_) => _clearValidation(),
-              ),
+        // Full-width flight number field with inline actions
+        TextFormField(
+          controller: _flightNumberController,
+          maxLength: _maxFlightNumberLength,
+          textCapitalization: TextCapitalization.characters,
+          style: TextStyle(
+            color: context.textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.2,
+          ),
+          validator: _validateFlightNumber,
+          onChanged: (_) {
+            _clearValidation();
+            setState(() {});
+          },
+          decoration: InputDecoration(
+            labelText: 'Flight Number',
+            hintText: 'UA123',
+            labelStyle: TextStyle(color: context.textSecondary),
+            hintStyle: TextStyle(
+              color: context.textTertiary,
+              fontSize: 18,
+              fontWeight: FontWeight.w400,
+              letterSpacing: 1.2,
             ),
-            const SizedBox(width: 8),
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: _buildSearchButton(),
+            prefixIcon: Icon(
+              Icons.flight,
+              color: context.textTertiary,
+              size: 22,
             ),
-            const SizedBox(width: 8),
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: _buildValidateButton(),
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Validate button — only visible when there's text
+                if (hasFlightNumber)
+                  _buildInlineAction(
+                    icon: Icons.verified_outlined,
+                    isLoading: _isValidating,
+                    onTap: _isValidating ? null : _validateFlight,
+                    tooltip: 'Validate flight',
+                  ),
+                // Search button — always visible
+                _buildInlineAction(
+                  icon: Icons.search,
+                  onTap: _searchFlights,
+                  tooltip: 'Search flights',
+                ),
+                const SizedBox(width: 4),
+              ],
             ),
-          ],
+            filled: true,
+            fillColor: context.card,
+            counterStyle: TextStyle(color: context.textTertiary),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: context.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: context.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: context.accentColor),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppTheme.errorRed),
+            ),
+          ),
         ),
         if (_validationResult != null) ...[
           const SizedBox(height: 8),
@@ -885,57 +933,34 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     );
   }
 
-  Widget _buildSearchButton() {
-    return SizedBox(
-      height: 56,
-      child: OutlinedButton.icon(
-        onPressed: _searchFlights,
-        icon: const Icon(Icons.search, size: 18),
-        label: const Text('Search'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: context.accentColor,
-          side: BorderSide(color: context.accentColor),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildValidateButton() {
-    return GestureDetector(
-      onTap: _isValidating ? null : _validateFlight,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: _isValidating
-              ? context.border.withValues(alpha: 0.3)
-              : context.accentColor.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: _isValidating
-                ? context.border
-                : context.accentColor.withValues(alpha: 0.3),
-          ),
-        ),
-        child: _isValidating
-            ? Padding(
-                padding: const EdgeInsets.all(14),
+  /// Compact inline icon action for use inside input field suffixes.
+  Widget _buildInlineAction({
+    required IconData icon,
+    required VoidCallback? onTap,
+    bool isLoading = false,
+    String? tooltip,
+  }) {
+    final child = GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: isLoading
+            ? SizedBox(
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: context.textSecondary,
                 ),
               )
-            : Icon(
-                Icons.verified_outlined,
-                color: context.accentColor,
-                size: 24,
-              ),
+            : Icon(icon, color: context.accentColor, size: 22),
       ),
     );
+
+    if (tooltip != null) {
+      return Tooltip(message: tooltip, child: child);
+    }
+    return child;
   }
 
   Widget _buildValidationStatus() {
