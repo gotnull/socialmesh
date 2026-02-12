@@ -55,6 +55,7 @@ import 'services/app_intents/app_intents_service.dart';
 import 'services/deep_link_manager.dart';
 import 'utils/snackbar.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
+import 'services/notifications/notification_service.dart';
 import 'services/notifications/push_notification_service.dart';
 import 'services/content_moderation/profanity_checker.dart';
 import 'features/scanner/scanner_screen.dart';
@@ -235,6 +236,7 @@ class SocialmeshApp extends ConsumerStatefulWidget {
 class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     with WidgetsBindingObserver, LifecycleSafeMixin {
   StreamSubscription<NotificationNavigation>? _pushNotificationSubscription;
+  StreamSubscription<String>? _localNotificationTapSubscription;
 
   /// Guard to prevent concurrent reconnect attempts.
   bool _reconnectInFlight = false;
@@ -273,6 +275,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   @override
   void dispose() {
     _pushNotificationSubscription?.cancel();
+    _localNotificationTapSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -899,6 +902,22 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       _pushNotificationSubscription = PushNotificationService()
           .onNotificationNavigation
           .listen(_handlePushNotificationNavigation);
+
+      // Also listen for foreground local notification taps
+      // Payload format is 'type' or 'type|deepLink'
+      _localNotificationTapSubscription = NotificationService()
+          .onPushNotificationTap
+          .listen((payload) {
+            final parts = payload.split('|');
+            final type = parts.first;
+            final deepLink = parts.length > 1
+                ? parts.sublist(1).join('|')
+                : null;
+            _handlePushNotificationNavigation(
+              NotificationNavigation(type: type, deepLink: deepLink),
+            );
+          });
+
       AppLogging.notifications('🔔 Push notification navigation initialized');
     } catch (e) {
       AppLogging.notifications(
@@ -963,6 +982,16 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
             '/my-bug-reports',
             arguments: nav.targetId != null ? {'reportId': nav.targetId} : null,
           );
+          break;
+
+        case 'announcement':
+          // Navigate using the deep link if provided
+          if (nav.deepLink != null && nav.deepLink!.isNotEmpty) {
+            AppLogging.notifications(
+              '🔔 Announcement deep link: ${nav.deepLink}',
+            );
+            navigator.pushNamed(nav.deepLink!);
+          }
           break;
 
         default:

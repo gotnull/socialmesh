@@ -32,7 +32,6 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
-  final _deepLinkController = TextEditingController();
 
   bool _isSending = false;
   bool _isSendingTest = false;
@@ -43,9 +42,11 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
   // Selected icon for the notification
   _NotificationIcon _selectedIcon = _NotificationIcon.announcement;
 
+  // Selected deep link (optional)
+  _DeepLink? _selectedDeepLink;
+
   static const int _maxTitleLength = 100;
   static const int _maxBodyLength = 500;
-  static const int _maxDeepLinkLength = 200;
   static const int _countdownSeconds = 5;
 
   @override
@@ -63,7 +64,6 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
     _bodyController.removeListener(_onTextChanged);
     _titleController.dispose();
     _bodyController.dispose();
-    _deepLinkController.dispose();
     super.dispose();
   }
 
@@ -111,7 +111,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
 
     final title = _titleController.text.trim();
     final body = _bodyController.text.trim();
-    final deepLink = _deepLinkController.text.trim();
+    final deepLink = _selectedDeepLink?.path ?? '';
 
     safeSetState(() {
       if (testOnly) {
@@ -214,9 +214,9 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
       if (!testOnly) {
         _titleController.clear();
         _bodyController.clear();
-        _deepLinkController.clear();
         safeSetState(() {
           _selectedIcon = _NotificationIcon.announcement;
+          _selectedDeepLink = null;
         });
       }
     } on FirebaseFunctionsException catch (e, stack) {
@@ -262,6 +262,57 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
     await _sendBroadcast(testOnly: true);
   }
 
+  void _clearForm() {
+    ref.read(hapticServiceProvider).trigger(HapticType.light);
+    _titleController.clear();
+    _bodyController.clear();
+    safeSetState(() {
+      _selectedIcon = _NotificationIcon.announcement;
+      _selectedDeepLink = null;
+    });
+  }
+
+  void _showDeepLinkPicker() {
+    ref.read(hapticServiceProvider).trigger(HapticType.selection);
+    AppBottomSheet.show(
+      context: context,
+      padding: EdgeInsets.zero,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              child: Text(
+                'Select Deep Link',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
+                ),
+              ),
+            ),
+            Flexible(
+              child: SingleChildScrollView(
+                child: _DeepLinkPickerContent(
+                  selectedDeepLink: _selectedDeepLink,
+                  onDeepLinkSelected: (deepLink) {
+                    safeSetState(() => _selectedDeepLink = deepLink);
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showIconPicker() {
     ref.read(hapticServiceProvider).trigger(HapticType.selection);
     AppBottomSheet.show(
@@ -291,7 +342,19 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                 child: _IconPickerContent(
                   selectedIcon: _selectedIcon,
                   onIconSelected: (icon) {
+                    final previous = _selectedIcon;
                     safeSetState(() => _selectedIcon = icon);
+                    // Auto-fill title/body if empty or still matches previous defaults
+                    final currentTitle = _titleController.text.trim();
+                    final currentBody = _bodyController.text.trim();
+                    if (currentTitle.isEmpty ||
+                        currentTitle == previous.defaultTitle) {
+                      _titleController.text = icon.defaultTitle;
+                    }
+                    if (currentBody.isEmpty ||
+                        currentBody == previous.defaultBody) {
+                      _bodyController.text = icon.defaultBody;
+                    }
                     Navigator.of(context).pop();
                   },
                 ),
@@ -435,6 +498,39 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
 
                     const SizedBox(height: 16),
 
+                    // Clear form button
+                    if (_titleController.text.isNotEmpty ||
+                        _bodyController.text.isNotEmpty ||
+                        _selectedDeepLink != null)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: canInteract ? _clearForm : null,
+                          icon: Icon(
+                            Icons.clear_all,
+                            size: 18,
+                            color: context.textTertiary,
+                          ),
+                          label: Text(
+                            'Clear',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: context.textTertiary,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      ),
+
+                    const SizedBox(height: 8),
+
                     // Title field
                     Text(
                       'Title',
@@ -548,57 +644,115 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
 
                     const SizedBox(height: 16),
 
-                    // Deep link field (optional)
-                    Text(
-                      'Deep Link (Optional)',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: context.textPrimary,
-                      ),
+                    // Deep link selector (optional)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Deep Link (Optional)',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: context.textPrimary,
+                            ),
+                          ),
+                        ),
+                        if (_selectedDeepLink != null)
+                          GestureDetector(
+                            onTap: canInteract
+                                ? () {
+                                    ref
+                                        .read(hapticServiceProvider)
+                                        .trigger(HapticType.light);
+                                    safeSetState(
+                                      () => _selectedDeepLink = null,
+                                    );
+                                  }
+                                : null,
+                            child: Icon(
+                              Icons.close,
+                              size: 18,
+                              color: context.textTertiary,
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Route to open when notification is tapped (e.g., /nodedex, /signals)',
+                      'Screen to open when notification is tapped.',
                       style: TextStyle(
                         fontSize: 12,
                         color: context.textTertiary,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _deepLinkController,
-                      maxLength: _maxDeepLinkLength,
-                      enabled: canInteract,
-                      decoration: InputDecoration(
-                        hintText: '/route-path',
-                        filled: true,
-                        fillColor: context.card,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+                    GestureDetector(
+                      onTap: canInteract ? _showDeepLinkPicker : null,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
-                        enabledBorder: OutlineInputBorder(
+                        decoration: BoxDecoration(
+                          color: context.card,
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
+                          border: Border.all(
                             color: context.border.withValues(alpha: 0.3),
                           ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: context.accentColor,
-                            width: 2,
-                          ),
-                        ),
-                        counterStyle: TextStyle(
-                          color: context.textTertiary,
-                          fontSize: 12,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color:
+                                    (_selectedDeepLink?.color ??
+                                            context.textTertiary)
+                                        .withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                _selectedDeepLink?.icon ?? Icons.link_off,
+                                color:
+                                    _selectedDeepLink?.color ??
+                                    context.textTertiary,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _selectedDeepLink?.label ?? 'None',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: _selectedDeepLink != null
+                                          ? context.textPrimary
+                                          : context.textTertiary,
+                                    ),
+                                  ),
+                                  if (_selectedDeepLink != null)
+                                    Text(
+                                      _selectedDeepLink!.path,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: context.textTertiary,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: context.textTertiary,
+                              size: 20,
+                            ),
+                          ],
                         ),
                       ),
-                      style: TextStyle(color: context.textPrimary),
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _startCountdown(),
                     ),
 
                     const SizedBox(height: 24),
@@ -733,6 +887,9 @@ enum _NotificationIcon {
     color: Colors.orange,
     fcmValue: 'announcement',
     category: _NotificationIconCategory.general,
+    defaultTitle: 'Announcement',
+    defaultBody:
+        'We have an important announcement for the Socialmesh community.',
   ),
   update(
     icon: Icons.system_update,
@@ -740,6 +897,9 @@ enum _NotificationIcon {
     color: Colors.blue,
     fcmValue: 'update',
     category: _NotificationIconCategory.general,
+    defaultTitle: 'App Update Available',
+    defaultBody:
+        'A new version of Socialmesh is available with improvements and bug fixes.',
   ),
   feature(
     icon: Icons.auto_awesome,
@@ -747,6 +907,8 @@ enum _NotificationIcon {
     color: Colors.purple,
     fcmValue: 'feature',
     category: _NotificationIconCategory.general,
+    defaultTitle: 'New Feature',
+    defaultBody: 'We just launched a new feature in Socialmesh. Check it out!',
   ),
   maintenance(
     icon: Icons.build,
@@ -754,6 +916,9 @@ enum _NotificationIcon {
     color: Colors.amber,
     fcmValue: 'maintenance',
     category: _NotificationIconCategory.general,
+    defaultTitle: 'Scheduled Maintenance',
+    defaultBody:
+        'Socialmesh services will be briefly unavailable for scheduled maintenance.',
   ),
   alert(
     icon: Icons.warning_amber,
@@ -761,6 +926,8 @@ enum _NotificationIcon {
     color: Colors.red,
     fcmValue: 'alert',
     category: _NotificationIconCategory.general,
+    defaultTitle: 'Important Alert',
+    defaultBody: 'Please be aware of an important issue affecting Socialmesh.',
   ),
   celebration(
     icon: Icons.celebration,
@@ -768,6 +935,9 @@ enum _NotificationIcon {
     color: Colors.pink,
     fcmValue: 'celebration',
     category: _NotificationIconCategory.general,
+    defaultTitle: 'Celebration',
+    defaultBody:
+        'We have something exciting to celebrate with the Socialmesh community!',
   ),
   tip(
     icon: Icons.lightbulb,
@@ -775,6 +945,8 @@ enum _NotificationIcon {
     color: Colors.yellow,
     fcmValue: 'tip',
     category: _NotificationIconCategory.general,
+    defaultTitle: 'Pro Tip',
+    defaultBody: 'Here is a helpful tip to get the most out of Socialmesh.',
   ),
 
   // === SOCIAL ===
@@ -784,6 +956,8 @@ enum _NotificationIcon {
     color: Colors.purple,
     fcmValue: 'signals',
     category: _NotificationIconCategory.social,
+    defaultTitle: 'Signals Update',
+    defaultBody: 'Check out what is new in Signals, your mesh presence feed.',
   ),
   nodedex(
     icon: Icons.auto_stories,
@@ -791,6 +965,9 @@ enum _NotificationIcon {
     color: Colors.amber,
     fcmValue: 'nodedex',
     category: _NotificationIconCategory.social,
+    defaultTitle: 'NodeDex Update',
+    defaultBody:
+        'NodeDex has new features for discovering and tracking mesh nodes.',
   ),
   aether(
     icon: Icons.flight_takeoff,
@@ -798,6 +975,8 @@ enum _NotificationIcon {
     color: Colors.lightBlue,
     fcmValue: 'aether',
     category: _NotificationIconCategory.social,
+    defaultTitle: 'Aether Update',
+    defaultBody: 'New improvements to Aether flight sharing are now live.',
   ),
   activity(
     icon: Icons.favorite,
@@ -805,6 +984,8 @@ enum _NotificationIcon {
     color: Colors.red,
     fcmValue: 'activity',
     category: _NotificationIconCategory.social,
+    defaultTitle: 'Activity Update',
+    defaultBody: 'See what is happening in your Activity feed.',
   ),
   presence(
     icon: Icons.people_alt,
@@ -812,6 +993,9 @@ enum _NotificationIcon {
     color: Colors.green,
     fcmValue: 'presence',
     category: _NotificationIconCategory.social,
+    defaultTitle: 'Presence Update',
+    defaultBody:
+        'Presence detection has been improved for better mesh awareness.',
   ),
   community(
     icon: Icons.people,
@@ -819,6 +1003,8 @@ enum _NotificationIcon {
     color: Colors.teal,
     fcmValue: 'community',
     category: _NotificationIconCategory.social,
+    defaultTitle: 'Community Update',
+    defaultBody: 'Join the latest Socialmesh community initiatives.',
   ),
   worldMap(
     icon: Icons.public,
@@ -826,6 +1012,9 @@ enum _NotificationIcon {
     color: Colors.blue,
     fcmValue: 'world_map',
     category: _NotificationIconCategory.social,
+    defaultTitle: 'World Map Update',
+    defaultBody:
+        'The World Mesh Map has new features for exploring global mesh coverage.',
   ),
 
   // === PREMIUM ===
@@ -835,6 +1024,8 @@ enum _NotificationIcon {
     color: Colors.purple,
     fcmValue: 'themes',
     category: _NotificationIconCategory.premium,
+    defaultTitle: 'New Theme Pack',
+    defaultBody: 'A new theme pack is now available in the Socialmesh store.',
   ),
   ringtones(
     icon: Icons.music_note,
@@ -842,6 +1033,9 @@ enum _NotificationIcon {
     color: Colors.pink,
     fcmValue: 'ringtones',
     category: _NotificationIconCategory.premium,
+    defaultTitle: 'New Ringtone Pack',
+    defaultBody:
+        'A new ringtone pack is now available for your mesh notifications.',
   ),
   widgets(
     icon: Icons.widgets,
@@ -849,6 +1043,8 @@ enum _NotificationIcon {
     color: Colors.deepOrange,
     fcmValue: 'widgets',
     category: _NotificationIconCategory.premium,
+    defaultTitle: 'New Widgets',
+    defaultBody: 'New home screen widgets are now available for Socialmesh.',
   ),
   automations(
     icon: Icons.auto_awesome,
@@ -856,6 +1052,8 @@ enum _NotificationIcon {
     color: Colors.yellow,
     fcmValue: 'automations',
     category: _NotificationIconCategory.premium,
+    defaultTitle: 'Automations Update',
+    defaultBody: 'New automation triggers and actions are now available.',
   ),
   ifttt(
     icon: Icons.webhook,
@@ -863,6 +1061,8 @@ enum _NotificationIcon {
     color: Colors.blue,
     fcmValue: 'ifttt',
     category: _NotificationIconCategory.premium,
+    defaultTitle: 'IFTTT Integration',
+    defaultBody: 'Connect Socialmesh with your favourite services via IFTTT.',
   );
 
   const _NotificationIcon({
@@ -871,6 +1071,8 @@ enum _NotificationIcon {
     required this.color,
     required this.fcmValue,
     required this.category,
+    required this.defaultTitle,
+    required this.defaultBody,
   });
 
   final IconData icon;
@@ -878,6 +1080,8 @@ enum _NotificationIcon {
   final Color color;
   final String fcmValue;
   final _NotificationIconCategory category;
+  final String defaultTitle;
+  final String defaultBody;
 
   static List<_NotificationIcon> byCategory(_NotificationIconCategory cat) {
     return values.where((v) => v.category == cat).toList();
@@ -1139,6 +1343,308 @@ class _IconPickerContent extends StatelessWidget {
                     ),
                     if (isSelected)
                       Icon(Icons.check_circle, color: icon.color, size: 22),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+/// Deep link categories for the picker
+enum _DeepLinkCategory { core, social, mesh, premium }
+
+/// Available deep link routes for broadcast notifications
+enum _DeepLink {
+  // === CORE ===
+  settings(
+    path: '/settings',
+    label: 'Settings',
+    icon: Icons.settings,
+    color: Colors.blueGrey,
+    category: _DeepLinkCategory.core,
+  ),
+  account(
+    path: '/account',
+    label: 'Account & Subscriptions',
+    icon: Icons.account_circle,
+    color: Colors.indigo,
+    category: _DeepLinkCategory.core,
+  ),
+  scanner(
+    path: '/scanner',
+    label: 'Scanner',
+    icon: Icons.bluetooth_searching,
+    color: Colors.blue,
+    category: _DeepLinkCategory.core,
+  ),
+  messages(
+    path: '/messages',
+    label: 'Messages',
+    icon: Icons.chat,
+    color: Colors.green,
+    category: _DeepLinkCategory.core,
+  ),
+  channels(
+    path: '/channels',
+    label: 'Channels',
+    icon: Icons.forum,
+    color: Colors.teal,
+    category: _DeepLinkCategory.core,
+  ),
+  nodes(
+    path: '/nodes',
+    label: 'Nodes',
+    icon: Icons.router,
+    color: Colors.orange,
+    category: _DeepLinkCategory.core,
+  ),
+  map(
+    path: '/map',
+    label: 'Map',
+    icon: Icons.map,
+    color: Colors.green,
+    category: _DeepLinkCategory.core,
+  ),
+
+  // === SOCIAL ===
+  signals(
+    path: '/signals',
+    label: 'Signals',
+    icon: Icons.sensors,
+    color: Colors.purple,
+    category: _DeepLinkCategory.social,
+  ),
+  nodedex(
+    path: '/nodedex',
+    label: 'NodeDex',
+    icon: Icons.auto_stories,
+    color: Colors.amber,
+    category: _DeepLinkCategory.social,
+  ),
+  aether(
+    path: '/aether',
+    label: 'Aether',
+    icon: Icons.flight_takeoff,
+    color: Colors.lightBlue,
+    category: _DeepLinkCategory.social,
+  ),
+  activity(
+    path: '/activity',
+    label: 'Activity',
+    icon: Icons.favorite,
+    color: Colors.red,
+    category: _DeepLinkCategory.social,
+  ),
+  presence(
+    path: '/presence',
+    label: 'Presence',
+    icon: Icons.people_alt,
+    color: Colors.green,
+    category: _DeepLinkCategory.social,
+  ),
+
+  // === MESH ===
+  timeline(
+    path: '/timeline',
+    label: 'Timeline',
+    icon: Icons.timeline,
+    color: Colors.cyan,
+    category: _DeepLinkCategory.mesh,
+  ),
+  worldMap(
+    path: '/world-map',
+    label: 'World Map',
+    icon: Icons.public,
+    color: Colors.blue,
+    category: _DeepLinkCategory.mesh,
+  ),
+  globe(
+    path: '/globe',
+    label: '3D Globe',
+    icon: Icons.language,
+    color: Colors.indigo,
+    category: _DeepLinkCategory.mesh,
+  ),
+  reachability(
+    path: '/reachability',
+    label: 'Reachability',
+    icon: Icons.cell_tower,
+    color: Colors.deepOrange,
+    category: _DeepLinkCategory.mesh,
+  ),
+
+  // === PREMIUM ===
+  themes(
+    path: '/themes',
+    label: 'Theme Pack',
+    icon: Icons.palette,
+    color: Colors.purple,
+    category: _DeepLinkCategory.premium,
+  ),
+  ringtones(
+    path: '/ringtones',
+    label: 'Ringtone Pack',
+    icon: Icons.music_note,
+    color: Colors.pink,
+    category: _DeepLinkCategory.premium,
+  ),
+  widgets(
+    path: '/widgets',
+    label: 'Widgets',
+    icon: Icons.widgets,
+    color: Colors.deepOrange,
+    category: _DeepLinkCategory.premium,
+  ),
+  automations(
+    path: '/automations',
+    label: 'Automations',
+    icon: Icons.auto_awesome,
+    color: Colors.yellow,
+    category: _DeepLinkCategory.premium,
+  ),
+  ifttt(
+    path: '/ifttt',
+    label: 'IFTTT Integration',
+    icon: Icons.webhook,
+    color: Colors.blue,
+    category: _DeepLinkCategory.premium,
+  );
+
+  const _DeepLink({
+    required this.path,
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.category,
+  });
+
+  final String path;
+  final String label;
+  final IconData icon;
+  final Color color;
+  final _DeepLinkCategory category;
+
+  static List<_DeepLink> byCategory(_DeepLinkCategory cat) {
+    return values.where((v) => v.category == cat).toList();
+  }
+}
+
+/// Deep link picker bottom sheet content with categorised sections.
+class _DeepLinkPickerContent extends StatelessWidget {
+  const _DeepLinkPickerContent({
+    required this.selectedDeepLink,
+    required this.onDeepLinkSelected,
+  });
+
+  final _DeepLink? selectedDeepLink;
+  final void Function(_DeepLink) onDeepLinkSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildSection(context, 'CORE', _DeepLinkCategory.core),
+          const SizedBox(height: 12),
+          _buildSection(context, 'SOCIAL', _DeepLinkCategory.social),
+          const SizedBox(height: 12),
+          _buildSection(context, 'MESH', _DeepLinkCategory.mesh),
+          const SizedBox(height: 12),
+          _buildSection(context, 'PREMIUM', _DeepLinkCategory.premium),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(
+    BuildContext context,
+    String title,
+    _DeepLinkCategory category,
+  ) {
+    final links = _DeepLink.byCategory(category);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
+              color: context.textTertiary,
+            ),
+          ),
+        ),
+        ...links.map((link) {
+          final isSelected = link == selectedDeepLink;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: GestureDetector(
+              onTap: () => onDeepLinkSelected(link),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? link.color.withValues(alpha: 0.15)
+                      : context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected
+                        ? link.color.withValues(alpha: 0.5)
+                        : context.border.withValues(alpha: 0.3),
+                    width: isSelected ? 2 : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: link.color.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(link.icon, color: link.color, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            link.label,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              color: context.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            link.path,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (isSelected)
+                      Icon(Icons.check_circle, color: link.color, size: 22),
                   ],
                 ),
               ),

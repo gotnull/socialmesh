@@ -64,6 +64,13 @@ class NotificationService {
   /// Callback to send reaction messages back to senders
   ReactionCallback? onReactionSelected;
 
+  /// Stream of push notification navigation payloads (type|deepLink format)
+  final _pushTapController = StreamController<String>.broadcast();
+
+  /// Stream that emits when a push-originated local notification is tapped.
+  /// The payload format is 'type' or 'type|deepLink'.
+  Stream<String> get onPushNotificationTap => _pushTapController.stream;
+
   /// Initialize the notification service
   Future<void> initialize() async {
     if (_initialized) return;
@@ -185,9 +192,11 @@ class NotificationService {
     }
 
     // Handle regular notification tap - could navigate to specific screen
-    if (payload != null) {
+    if (payload != null && payload.isNotEmpty) {
       AppLogging.notifications('🔔 Notification tapped with payload: $payload');
-      // Could navigate to nodes screen, message thread, etc.
+      // Push notification payloads use 'type' or 'type|deepLink' format
+      // Emit on the stream so the app can navigate
+      _pushTapController.add(payload);
     }
   }
 

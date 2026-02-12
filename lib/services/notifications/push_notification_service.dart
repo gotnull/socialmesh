@@ -264,6 +264,13 @@ class PushNotificationService {
     );
 
     // Show local notification for foreground messages
+    // Encode type and deepLink into payload for navigation on tap
+    final payloadType = message.data['type'] as String? ?? '';
+    final payloadDeepLink = message.data['deepLink'] as String?;
+    final payloadString = payloadDeepLink != null && payloadDeepLink.isNotEmpty
+        ? '$payloadType|$payloadDeepLink'
+        : payloadType;
+
     await _localNotifications.show(
       id: notification.hashCode,
       title: notification.title,
@@ -272,7 +279,7 @@ class PushNotificationService {
         android: androidDetails,
         iOS: iosDetails,
       ),
-      payload: message.data['type'],
+      payload: payloadString,
     );
   }
 
@@ -415,15 +422,27 @@ class PushNotificationService {
         }
       }
 
-      _handleNotificationNavigation(type, targetId);
+      _handleNotificationNavigation(
+        type,
+        targetId,
+        deepLink: message.data['deepLink'] as String?,
+      );
     }
   }
 
   /// Handle navigation based on notification type
-  void _handleNotificationNavigation(String type, String? targetId) {
+  void _handleNotificationNavigation(
+    String type,
+    String? targetId, {
+    String? deepLink,
+  }) {
     // Navigation will be handled via a stream that the app listens to
     _notificationNavigationController.add(
-      NotificationNavigation(type: type, targetId: targetId),
+      NotificationNavigation(
+        type: type,
+        targetId: targetId,
+        deepLink: deepLink,
+      ),
     );
   }
 
@@ -581,8 +600,13 @@ class PushNotificationService {
 class NotificationNavigation {
   final String type;
   final String? targetId;
+  final String? deepLink;
 
-  const NotificationNavigation({required this.type, this.targetId});
+  const NotificationNavigation({
+    required this.type,
+    this.targetId,
+    this.deepLink,
+  });
 }
 
 /// Event for content refresh triggered by push notification
