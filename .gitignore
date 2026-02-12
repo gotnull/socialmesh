@@ -31,6 +31,7 @@ web/
 # Environment files
 .env
 .env.*
+!.env.ci
 .env.local
 
 # Signing keys and certificates
