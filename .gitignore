@@ -46,6 +46,13 @@ web/
 **/google-services.json
 **/GoogleService-Info.plist
 
+# Firebase project config (rules, indexes, project bindings)
+firebase.json
+firestore.rules
+firestore.indexes.json
+storage.rules
+.firebaserc
+
 # Firebase/GCP service account keys (NEVER commit these!)
 *-firebase-adminsdk-*.json
 firebase-service-account.json

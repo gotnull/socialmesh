@@ -1110,20 +1110,49 @@ class AuthService {
   /// or stale data after unenroll.
   Future<List<MultiFactorInfo>> getEnrolledMFAFactors() async {
     final user = currentUser;
-    if (user == null) return [];
+    AppLogging.mfa(
+      '[getEnrolledMFAFactors] START — user: ${user?.uid ?? "NULL"}',
+    );
+    if (user == null) {
+      AppLogging.mfa('[getEnrolledMFAFactors] No current user, returning []');
+      return [];
+    }
 
     try {
-      await user.reload();
+      AppLogging.mfa(
+        '[getEnrolledMFAFactors] Calling user.reload() with 5s timeout...',
+      );
+      await user.reload().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          AppLogging.mfa(
+            '[getEnrolledMFAFactors] user.reload() TIMED OUT after 5s '
+            '— using cached factors',
+          );
+        },
+      );
+      AppLogging.mfa('[getEnrolledMFAFactors] user.reload() completed');
     } catch (e) {
       AppLogging.mfa(
-        'getEnrolledMFAFactors - reload failed (using cached): $e',
+        '[getEnrolledMFAFactors] user.reload() FAILED (using cached): $e',
       );
     }
 
     // Read from the refreshed user reference
     final refreshedUser = _auth.currentUser;
-    if (refreshedUser == null) return [];
-    return refreshedUser.multiFactor.getEnrolledFactors();
+    if (refreshedUser == null) {
+      AppLogging.mfa(
+        '[getEnrolledMFAFactors] refreshedUser is NULL after reload, '
+        'returning []',
+      );
+      return [];
+    }
+    final factors = await refreshedUser.multiFactor.getEnrolledFactors();
+    AppLogging.mfa(
+      '[getEnrolledMFAFactors] DONE — ${factors.length} factor(s) enrolled: '
+      '${factors.map((f) => '${f.factorId}(${f.displayName ?? "unnamed"})').join(', ')}',
+    );
+    return factors;
   }
 
   /// Check if user has MFA enabled
@@ -1211,6 +1240,16 @@ final userDisplayNameProvider = Provider<String>((ref) {
 final enrolledMFAFactorsProvider = FutureProvider<List<MultiFactorInfo>>((
   ref,
 ) async {
+  AppLogging.mfa('[enrolledMFAFactorsProvider] Provider triggered');
   final authService = ref.watch(authServiceProvider);
-  return authService.getEnrolledMFAFactors();
+  try {
+    final factors = await authService.getEnrolledMFAFactors();
+    AppLogging.mfa(
+      '[enrolledMFAFactorsProvider] Resolved with ${factors.length} factor(s)',
+    );
+    return factors;
+  } catch (e) {
+    AppLogging.mfa('[enrolledMFAFactorsProvider] ERROR: $e');
+    rethrow;
+  }
 });

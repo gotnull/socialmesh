@@ -20,6 +20,7 @@ import '../../models/subscription_models.dart';
 import '../../models/user_profile.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/cloud_sync_entitlement_providers.dart';
+import '../../providers/connectivity_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/subscription/cloud_sync_entitlement_service.dart';
@@ -121,33 +122,65 @@ class _AccountSubscriptionsScreenState
     Color accentColor,
   ) {
     final isSignedIn = ref.watch(isSignedInProvider);
+    final firebaseUser = ref.watch(currentUserProvider);
+    final isOnline = ref.watch(isOnlineProvider);
 
-    AppLogging.subscriptions('');
-    AppLogging.subscriptions(
+    AppLogging.auth('');
+    AppLogging.auth(
       '╔══════════════════════════════════════════════════════════════',
     );
-    AppLogging.subscriptions('║ 🏗️ _buildProfileCard() called');
-    AppLogging.subscriptions('║ 📦 profileAsync state:');
-    AppLogging.subscriptions('║    - isLoading: ${profileAsync.isLoading}');
-    AppLogging.subscriptions('║    - hasValue: ${profileAsync.hasValue}');
-    AppLogging.subscriptions('║    - hasError: ${profileAsync.hasError}');
-    AppLogging.subscriptions('║    - isSignedIn: $isSignedIn');
+    AppLogging.auth('║ _buildProfileCard() called');
+    AppLogging.auth('║ profileAsync state:');
+    AppLogging.auth('║    - isLoading: ${profileAsync.isLoading}');
+    AppLogging.auth('║    - hasValue: ${profileAsync.hasValue}');
+    AppLogging.auth('║    - hasError: ${profileAsync.hasError}');
+    AppLogging.auth('║    - isSignedIn: $isSignedIn');
+    AppLogging.auth('║    - isOnline: $isOnline');
+    AppLogging.auth(
+      '║    - firebaseUser: ${firebaseUser?.uid ?? "NULL"} '
+      '(displayName: ${firebaseUser?.displayName ?? "NULL"}, '
+      'email: ${firebaseUser?.email ?? "NULL"})',
+    );
     if (profileAsync.hasValue && !profileAsync.hasError) {
-      AppLogging.subscriptions(
-        '║    - value: ${profileAsync.value?.displayName ?? "NULL"}',
+      AppLogging.auth(
+        '║    - profileValue: ${profileAsync.value?.displayName ?? "NULL"}',
       );
     }
-    AppLogging.subscriptions(
+    AppLogging.auth(
       '╚══════════════════════════════════════════════════════════════',
     );
 
+    // Compute a fallback display name from Firebase user info when the
+    // local profile still says "Guest" but the user IS signed in.
+    UserProfile? applyFallbackName(UserProfile? profile) {
+      if (profile == null || !isSignedIn || firebaseUser == null) {
+        return profile;
+      }
+      final name = profile.displayName;
+      if (name != 'Guest' && name != 'New User' && name.isNotEmpty) {
+        return profile;
+      }
+      final fallback =
+          firebaseUser.displayName ??
+          firebaseUser.email?.split('@').first ??
+          'Guest';
+      AppLogging.auth(
+        '║ Profile displayName is "$name" but user is signed in — '
+        'using Firebase fallback: "$fallback"',
+      );
+      return profile.copyWith(displayName: fallback);
+    }
+
     return profileAsync.when(
       data: (profile) {
-        AppLogging.subscriptions(
-          '║ 📤 profileAsync.when -> data: ${profile?.displayName ?? "NULL"}',
+        final effectiveProfile = applyFallbackName(profile);
+        AppLogging.auth(
+          '║ profileAsync.when -> data: '
+          'raw="${profile?.displayName ?? "NULL"}", '
+          'effective="${effectiveProfile?.displayName ?? "NULL"}"',
         );
         return _ProfilePreviewCard(
-          profile: profile,
+          profile: effectiveProfile,
           isSignedIn: isSignedIn,
           onEditTap: isSignedIn
               ? () => Navigator.push(
@@ -158,13 +191,22 @@ class _AccountSubscriptionsScreenState
         );
       },
       loading: () {
-        AppLogging.subscriptions('║ ⏳ profileAsync.when -> loading');
+        AppLogging.auth('║ profileAsync.when -> loading');
         return const _LoadingCard();
       },
       error: (e, _) {
-        AppLogging.subscriptions('║ ❌ profileAsync.when -> error: $e');
+        AppLogging.auth('║ profileAsync.when -> error: $e');
+        // Still apply fallback name from Firebase user on error
+        final fallbackProfile = applyFallbackName(
+          UserProfile.fromFirebaseUser(
+            uid: firebaseUser?.uid ?? 'error',
+            email: firebaseUser?.email,
+            displayName: firebaseUser?.displayName,
+            photoUrl: firebaseUser?.photoURL,
+          ),
+        );
         return _ProfilePreviewCard(
-          profile: null,
+          profile: isSignedIn ? fallbackProfile : null,
           isSignedIn: isSignedIn,
           onEditTap: isSignedIn
               ? () => Navigator.push(
@@ -183,7 +225,14 @@ class _AccountSubscriptionsScreenState
 
   Widget _buildSignedInAccountCard(User user) {
     final syncStatus = ref.watch(syncStatusProvider);
+    final isOnline = ref.watch(isOnlineProvider);
     final isAnonymous = user.isAnonymous;
+
+    AppLogging.auth(
+      '[AccountScreen] _buildSignedInAccountCard — '
+      'syncStatus: $syncStatus, isOnline: $isOnline, '
+      'isAnonymous: $isAnonymous, uid: ${user.uid}',
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -1591,21 +1640,19 @@ class _ProfilePreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    AppLogging.subscriptions('');
-    AppLogging.subscriptions(
+    AppLogging.auth('');
+    AppLogging.auth(
       '╔══════════════════════════════════════════════════════════════',
     );
-    AppLogging.subscriptions('║ 🎨 _ProfilePreviewCard.build()');
-    AppLogging.subscriptions('║ 📋 Profile received:');
-    AppLogging.subscriptions('║    - profile is null: ${profile == null}');
-    AppLogging.subscriptions(
-      '║    - displayName: ${profile?.displayName ?? "NULL"}',
-    );
-    AppLogging.subscriptions('║    - callsign: ${profile?.callsign ?? "NULL"}');
-    AppLogging.subscriptions('║    - id: ${profile?.id ?? "NULL"}');
-    AppLogging.subscriptions('║    - isSynced: ${profile?.isSynced ?? "NULL"}');
-    AppLogging.subscriptions('║    - isSignedIn: $isSignedIn');
-    AppLogging.subscriptions(
+    AppLogging.auth('║ _ProfilePreviewCard.build()');
+    AppLogging.auth('║ Profile received:');
+    AppLogging.auth('║    - profile is null: ${profile == null}');
+    AppLogging.auth('║    - displayName: ${profile?.displayName ?? "NULL"}');
+    AppLogging.auth('║    - callsign: ${profile?.callsign ?? "NULL"}');
+    AppLogging.auth('║    - id: ${profile?.id ?? "NULL"}');
+    AppLogging.auth('║    - isSynced: ${profile?.isSynced ?? "NULL"}');
+    AppLogging.auth('║    - isSignedIn: $isSignedIn');
+    AppLogging.auth(
       '╚══════════════════════════════════════════════════════════════',
     );
 
@@ -1745,12 +1792,35 @@ class _MFAStatusButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mfaAsync = ref.watch(enrolledMFAFactorsProvider);
-    final isLoading = mfaAsync is AsyncLoading;
+    final isOnline = ref.watch(isOnlineProvider);
+
+    AppLogging.mfa(
+      '[MFAStatusButton] build — '
+      'state: ${mfaAsync.isLoading
+          ? "loading"
+          : mfaAsync.hasError
+          ? "error(${mfaAsync.error})"
+          : "data(${mfaAsync.value?.length ?? 0} factors)"}, '
+      'isOnline: $isOnline',
+    );
+
+    // When offline and still loading, show a non-spinning fallback
+    // instead of an infinite spinner (user.reload() hangs without network)
+    final showAsUnavailable = !isOnline && mfaAsync is AsyncLoading;
+
+    if (showAsUnavailable) {
+      AppLogging.mfa(
+        '[MFAStatusButton] Offline + loading — showing offline fallback '
+        'instead of infinite spinner',
+      );
+    }
 
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton(
-        onPressed: isLoading ? null : onTap,
+        onPressed: showAsUnavailable
+            ? null
+            : (mfaAsync is AsyncLoading ? null : onTap),
         style: OutlinedButton.styleFrom(
           alignment: Alignment.centerLeft,
           side: BorderSide(
@@ -1763,64 +1833,19 @@ class _MFAStatusButton extends ConsumerWidget {
                 context.border,
           ),
         ),
-        child: mfaAsync.when(
-          loading: () => Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: context.textSecondary,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Two-Factor Authentication',
-                  style: TextStyle(color: context.textSecondary),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
-            ],
-          ),
-          error: (_, _) => Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.security, size: 18),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Two-Factor Authentication',
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
-            ],
-          ),
-          data: (factors) {
-            final hasMFA = factors.isNotEmpty;
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  hasMFA ? Icons.verified_user : Icons.security,
-                  size: 18,
-                  color: hasMFA ? AccentColors.green : null,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Two-Factor Authentication',
-                    style: TextStyle(color: hasMFA ? AccentColors.green : null),
-                    overflow: TextOverflow.ellipsis,
+        child: showAsUnavailable
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.security, size: 18, color: context.textTertiary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Two-Factor Authentication',
+                      style: TextStyle(color: context.textTertiary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                if (hasMFA) ...[
                   const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -1828,47 +1853,181 @@ class _MFAStatusButton extends ConsumerWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AccentColors.green.withValues(alpha: 0.15),
+                      color: context.textTertiary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      'ON',
+                      'Offline',
                       style: TextStyle(
                         fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AccentColors.green,
+                        fontWeight: FontWeight.w600,
+                        color: context.textTertiary,
                       ),
                     ),
                   ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: context.textTertiary,
+                  ),
                 ],
-                Icon(
-                  Icons.chevron_right,
-                  size: 18,
-                  color: hasMFA
-                      ? AccentColors.green.withValues(alpha: 0.7)
-                      : context.textTertiary,
+              )
+            : mfaAsync.when(
+                loading: () => Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Two-Factor Authentication',
+                        style: TextStyle(color: context.textSecondary),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: context.textTertiary,
+                    ),
+                  ],
                 ),
-              ],
-            );
-          },
-        ),
+                error: (error, _) {
+                  AppLogging.mfa('[MFAStatusButton] error state: $error');
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.security,
+                        size: 18,
+                        color: context.textTertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Two-Factor Authentication',
+                          style: TextStyle(color: context.textSecondary),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.errorRed.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'Unavailable',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.errorRed,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: context.textTertiary,
+                      ),
+                    ],
+                  );
+                },
+                data: (factors) {
+                  final hasMFA = factors.isNotEmpty;
+                  AppLogging.mfa(
+                    '[MFAStatusButton] data — ${factors.length} factor(s), '
+                    'hasMFA: $hasMFA',
+                  );
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        hasMFA ? Icons.verified_user : Icons.security,
+                        size: 18,
+                        color: hasMFA ? AccentColors.green : null,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Two-Factor Authentication',
+                          style: TextStyle(
+                            color: hasMFA ? AccentColors.green : null,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (hasMFA) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AccentColors.green.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'ON',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: AccentColors.green,
+                            ),
+                          ),
+                        ),
+                      ],
+                      Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: hasMFA
+                            ? AccentColors.green.withValues(alpha: 0.7)
+                            : context.textTertiary,
+                      ),
+                    ],
+                  );
+                },
+              ),
       ),
     );
   }
 }
 
-class _SyncStatusBadge extends StatelessWidget {
+class _SyncStatusBadge extends ConsumerWidget {
   final SyncStatus status;
 
   const _SyncStatusBadge({required this.status});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isOnline = ref.watch(isOnlineProvider);
+
+    AppLogging.auth('[SyncStatusBadge] status: $status, isOnline: $isOnline');
+
+    // When idle and online, don't show a badge — nothing interesting to report
+    if (status == SyncStatus.idle && isOnline) {
+      return const SizedBox.shrink();
+    }
+
     final (color, text) = switch (status) {
       SyncStatus.syncing => (Colors.blue, 'Syncing'),
       SyncStatus.synced => (AccentColors.green, 'Synced'),
       SyncStatus.error => (AppTheme.errorRed, 'Error'),
-      SyncStatus.idle => (context.textTertiary, 'Idle'),
+      // Idle + offline = show "Offline" instead of confusing "Idle"
+      SyncStatus.idle => (context.textTertiary, isOnline ? 'Ready' : 'Offline'),
     };
 
     return Container(

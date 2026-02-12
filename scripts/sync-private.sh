@@ -36,6 +36,11 @@ SYNC_DIRS=(
 # Individual files to sync (relative to repo root)
 SYNC_FILES=(
   .env
+  .firebaserc
+  firebase.json
+  firestore.rules
+  firestore.indexes.json
+  storage.rules
   android/key.properties
   android/app/google-services.json
   ios/Runner/GoogleService-Info.plist
