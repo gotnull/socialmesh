@@ -46,18 +46,6 @@ Socialmesh works fully offline over BLE and USB. Firebase is optional for cloud 
 
 Every node you discover on the mesh is automatically catalogued in the **NodeDex** — a living record of your mesh encounters. Each node receives a unique **procedural Sigil** (a geometric glyph derived deterministically from its identity) and a **personality Trait** inferred from real behavioral data. Accessible from the drawer menu.
 
-<p align="center">
-  <img src="web/screenshots/nodedex-screenshot-1.png" width="180" alt="NodeDex List">
-  <img src="web/screenshots/nodedex-screenshot-2.png" width="180" alt="NodeDex Sigil Detail">
-  <img src="web/screenshots/nodedex-screenshot-3.png" width="180" alt="NodeDex Node Detail">
-  <img src="web/screenshots/nodedex-screenshot-4.png" width="180" alt="NodeDex Sigil Card">
-</p>
-<p align="center">
-  <img src="web/screenshots/nodedex-screenshot-5.png" width="180" alt="NodeDex Traits and Patina">
-  <img src="web/screenshots/nodedex-screenshot-6.png" width="180" alt="NodeDex Field Notes">
-  <img src="web/screenshots/nodedex-screenshot-7.png" width="180" alt="NodeDex Constellation View">
-</p>
-
 ### Procedural Sigils
 
 Every node gets a unique constellation-style geometric identity generated from its node number. The same node always produces the same sigil — no randomness, no variation. Sigils are built from outer polygons (3-8 vertices), optional inner rings, radial lines, and a unique 3-color palette drawn from 16 curated colors.
@@ -125,12 +113,6 @@ Signals is a mesh-first way to communicate. Drop a message, and it appears to ev
 
 Think of it as digital graffiti that fades with time.
 
-<p align="center">
-  <img src="web/screenshots/signals-home.png" width="180" alt="Signals Feed">
-  <img src="web/screenshots/signals-upload-screen.png" width="180" alt="Broadcast Signal">
-  <img src="web/screenshots/signals-map-screen.png" width="180" alt="Signals Map">
-</p>
-
 ---
 
 ## Features
@@ -146,12 +128,6 @@ Think of it as digital graffiti that fades with time.
 | **Offline Queue** | Messages queued when disconnected, sent automatically on reconnect |
 | **Reactions** | React to messages with emoji responses |
 
-<p align="center">
-  <img src="web/screenshots/channels.png" width="180" alt="Channel Messaging">
-  <img src="web/screenshots/node-dm.png" width="180" alt="Direct Messages">
-  <img src="web/screenshots/quick-responses.png" width="180" alt="Quick Responses">
-</p>
-
 ### Network and Nodes
 
 | Feature | Description |
@@ -165,12 +141,6 @@ Think of it as digital graffiti that fades with time.
 | **Node Profiles** | Rich profiles with user info, social links, and custom avatars |
 | **Presence** | Track when nodes are online, their activity patterns, and last seen times |
 
-<p align="center">
-  <img src="web/screenshots/nodes.png" width="180" alt="Node List">
-  <img src="web/screenshots/node-info-sheet.png" width="180" alt="Node Info">
-  <img src="web/screenshots/traceroute.png" width="180" alt="Traceroute">
-</p>
-
 ### Maps and Location
 
 | Feature | Description |
@@ -181,11 +151,6 @@ Think of it as digital graffiti that fades with time.
 | **Map Styles** | Street, satellite, and terrain views |
 | **Route Recording** | Record and save your routes with GPS tracks |
 
-<p align="center">
-  <img src="web/screenshots/mesh-map.png" width="180" alt="Node Map">
-  <img src="web/screenshots/routes.png" width="180" alt="Route Recording">
-</p>
-
 ### Social
 
 | Feature | Description |
@@ -193,11 +158,6 @@ Think of it as digital graffiti that fades with time.
 | **Activity Timeline** | Chronological feed of mesh activity and events with identity resolution |
 | **Social Profiles** | View user profiles with posts, followers, and social links |
 | **Signals Feed** | Ephemeral mesh-first content sorted by proximity and expiry |
-
-<p align="center">
-  <img src="web/screenshots/timeline.png" width="180" alt="Activity Timeline">
-  <img src="web/screenshots/presence-screen.png" width="180" alt="Presence Screen">
-</p>
 
 ### Device Configuration
 
@@ -211,11 +171,6 @@ Full control over your Meshtastic device:
 - **Display** — Timeout, brightness, flip screen, OLED burn-in protection
 - **Detection Sensor** — Motion and door sensor triggers
 - **Canned Messages** — On-device quick responses
-
-<p align="center">
-  <img src="web/screenshots/side-menu.png" width="180" alt="Navigation Menu">
-  <img src="web/screenshots/firmware.png" width="180" alt="Firmware Updates">
-</p>
 
 ### Audio
 
@@ -244,12 +199,6 @@ Full control over your Meshtastic device:
 | **Globe View** | 3D rotating globe with node positions plotted worldwide |
 | **Timeline** | Chronological feed of all mesh activity and events |
 
-<p align="center">
-  <img src="web/screenshots/mesh3d-signal.png" width="180" alt="3D Mesh View">
-  <img src="web/screenshots/mesh3d-propagation.png" width="180" alt="Signal Propagation">
-  <img src="web/screenshots/mesh-globe.png" width="180" alt="Globe View">
-</p>
-
 ### Analytics and Monitoring
 
 | Feature | Description |
@@ -271,16 +220,6 @@ These features are available via one-time in-app purchases:
 | **Widgets** | Build custom dashboard widgets with live data, charts, and gauges |
 | **Automations** | Create rules that trigger alerts, send messages, and react to events |
 | **IFTTT Integration** | Connect your mesh to 700+ apps and services via webhooks |
-
-<p align="center">
-  <img src="web/screenshots/themes.png" width="180" alt="Theme Pack">
-  <img src="web/screenshots/ringtones.png" width="180" alt="Ringtone Library">
-  <img src="web/screenshots/dashboard.png" width="180" alt="Widget Dashboard">
-  <img src="web/screenshots/automation-create.png" width="180" alt="Automations">
-</p>
-<p align="center">
-  <img src="web/screenshots/ifttt-config.png" width="180" alt="IFTTT Integration">
-</p>
 
 ---
 
