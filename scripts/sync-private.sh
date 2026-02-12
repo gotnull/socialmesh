@@ -43,6 +43,7 @@ SYNC_FILES=(
   firestore.rules
   firestore.indexes.json
   storage.rules
+  docker-compose.yml
   android/key.properties
   android/app/google-services.json
   ios/Runner/GoogleService-Info.plist

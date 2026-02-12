@@ -51,6 +51,7 @@ firestore.rules
 firestore.indexes.json
 storage.rules
 .firebaserc
+docker-compose.yml
 
 # Firebase/GCP service account keys (NEVER commit these!)
 *-firebase-adminsdk-*.json
