@@ -22,19 +22,19 @@ import '../widgets/flight_search_sheet.dart';
 // Constants
 // =============================================================================
 
-/// Maximum length for flight number (e.g., "UAL1234A" = 8 chars max)
-const int _maxFlightNumberLength = 8;
+/// Maximum length for flight number / ICAO callsign (e.g., "EXS49MY" = 7 chars)
+const int _maxFlightNumberLength = 10;
 
-/// Regex pattern for valid flight numbers.
-/// Format: 2-char airline (AA, B6, 9W) OR 3-letter airline (UAL, BAW)
-///         + 1-4 digit flight number + optional suffix letter
-/// Examples: UA123, BA2490, DL1, 9W4567, AA100A, UAL123
-final _flightNumberPattern = RegExp(
-  r'^(?:'
-  r'(?:[A-Z]{2}|[A-Z][0-9]|[0-9][A-Z])[0-9]{1,4}|' // 2-char airline + 1-4 digits
-  r'[A-Z]{3}[0-9]{1,4}' // 3-letter airline + 1-4 digits
-  r')[A-Z]?$',
-);
+/// Regex pattern for valid flight numbers and ICAO callsigns.
+///
+/// Accepts:
+///   IATA style  — UA123, BA2490, DL1, 9W4567, AA100A
+///   ICAO style  — UAL123, BAW2490, EXS49MY, T7MYC, RYR1862
+///   General     — 2-10 alphanumeric chars starting with a letter or digit+letter
+///
+/// OpenSky returns ICAO callsigns which can have multi-character suffixes
+/// (e.g., EXS49MY, FMY8050) so the pattern must be permissive.
+final _flightNumberPattern = RegExp(r'^[A-Z0-9]{2,10}$');
 
 /// Maximum length for airport codes (ICAO is 4, IATA is 3)
 const int _maxAirportCodeLength = 4;
@@ -173,7 +173,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
 
     final cleaned = value.toUpperCase().trim();
     if (!_flightNumberPattern.hasMatch(cleaned)) {
-      return 'Invalid format (e.g., UA123, BA2490)';
+      return 'Invalid format (e.g., UA123, EXS49MY)';
     }
 
     return null;
@@ -312,9 +312,14 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
 
     switch (result.status) {
       case FlightValidationStatus.active:
+        final altFmt = result.position?.altitudeFeet != null
+            ? NumberFormat(
+                '#,##0',
+              ).format(result.position!.altitudeFeet!.round())
+            : '';
         showSuccessSnackBar(
           context,
-          'Flight is currently active! ${result.position?.altitudeFeet?.toStringAsFixed(0) ?? ''} ft',
+          'Flight is currently active!${altFmt.isNotEmpty ? ' $altFmt ft' : ''}',
         );
       case FlightValidationStatus.verified:
         showSuccessSnackBar(context, 'Flight verified in OpenSky records');
@@ -1053,7 +1058,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
           if (result.isActive && result.position?.hasPosition == true) ...[
             const SizedBox(width: 8),
             Text(
-              '${result.position!.altitudeFeet?.toStringAsFixed(0) ?? '--'} ft',
+              '${result.position!.altitudeFeet != null ? NumberFormat('#,##0').format(result.position!.altitudeFeet!.round()) : '--'} ft',
               style: TextStyle(
                 color: color,
                 fontSize: 12,

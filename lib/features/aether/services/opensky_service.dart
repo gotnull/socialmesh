@@ -259,13 +259,40 @@ class OpenSkyService {
       // Parse the first matching state vector
       final state = states.first as List<dynamic>;
       final position = _parseStateVector(state, cleanCallsign);
+      final icao24 = state[0] as String?;
+      final originCountry = state[2] as String?;
+
+      // Try to get route info (departure/arrival airports and times)
+      // via the aircraft flights endpoint using the icao24 transponder ID.
+      String? departureAirport;
+      String? arrivalAirport;
+      DateTime? departureTime;
+      DateTime? arrivalTime;
+
+      if (icao24 != null) {
+        try {
+          final routeInfo = await _lookupAircraftRoute(icao24);
+          if (routeInfo != null) {
+            departureAirport = routeInfo.estDepartureAirport;
+            arrivalAirport = routeInfo.estArrivalAirport;
+            departureTime = routeInfo.departureTime;
+            arrivalTime = routeInfo.arrivalTime;
+          }
+        } catch (e) {
+          AppLogging.app('[OpenSky] Route lookup failed (non-fatal): $e');
+        }
+      }
 
       return FlightValidationResult(
         status: FlightValidationStatus.active,
         message: 'Flight is currently active',
         position: position,
-        icao24: state[0] as String?,
-        originCountry: state[2] as String?,
+        icao24: icao24,
+        originCountry: originCountry,
+        departureAirport: departureAirport,
+        arrivalAirport: arrivalAirport,
+        departureTime: departureTime,
+        arrivalTime: arrivalTime,
       );
     } catch (e) {
       AppLogging.app('[OpenSky] Parse error: $e');
@@ -336,6 +363,44 @@ class OpenSkyService {
     } catch (e) {
       AppLogging.app('[OpenSky] Parse arrivals error: $e');
       return [];
+    }
+  }
+
+  /// Look up the current route for a specific aircraft by its ICAO24
+  /// transponder address. Queries the last 2 hours of flight data.
+  ///
+  /// Returns the most recent [OpenSkyFlight] for the aircraft, or null
+  /// if no route data is available (common for flights that just departed
+  /// — OpenSky batch-processes route data with some delay).
+  Future<OpenSkyFlight?> _lookupAircraftRoute(String icao24) async {
+    final now = DateTime.now();
+    final begin = now.subtract(const Duration(hours: 2));
+    final beginTs = begin.millisecondsSinceEpoch ~/ 1000;
+    final endTs = now.millisecondsSinceEpoch ~/ 1000;
+
+    final response = await _authenticatedGet(
+      '/flights/aircraft?icao24=${icao24.toLowerCase()}&begin=$beginTs&end=$endTs',
+    );
+
+    if (response == null || response.statusCode != 200) {
+      return null;
+    }
+
+    try {
+      final json = jsonDecode(response.body) as List<dynamic>;
+      if (json.isEmpty) return null;
+
+      // Return the most recent flight for this aircraft
+      final flights = json
+          .map((f) => OpenSkyFlight.fromJson(f as Map<String, dynamic>))
+          .toList();
+
+      // Sort by firstSeen descending so we get the latest
+      flights.sort((a, b) => (b.firstSeen ?? 0).compareTo(a.firstSeen ?? 0));
+      return flights.first;
+    } catch (e) {
+      AppLogging.app('[OpenSky] Aircraft route parse error: $e');
+      return null;
     }
   }
 

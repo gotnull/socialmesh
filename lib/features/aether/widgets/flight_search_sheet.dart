@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -387,7 +388,7 @@ class _FlightResultTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    '${flight.altitudeFeet!.toStringAsFixed(0)} ft',
+                    '${NumberFormat('#,##0').format(flight.altitudeFeet!.round())} ft',
                     style: TextStyle(
                       color: context.textSecondary,
                       fontSize: 12,
@@ -415,7 +416,9 @@ class _FlightResultTile extends StatelessWidget {
     if (flight.onGround) {
       parts.add('On ground');
     } else if (flight.velocityKnots != null) {
-      parts.add('${flight.velocityKnots!.toStringAsFixed(0)} kts');
+      parts.add(
+        '${NumberFormat('#,##0').format(flight.velocityKnots!.round())} kts',
+      );
     }
 
     return parts.isEmpty ? 'Active flight' : parts.join(' · ');
