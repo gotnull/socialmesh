@@ -23,6 +23,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/widgets/animated_empty_state.dart';
+import '../../../dev/debug_flags.dart';
 import '../../../providers/accessibility_providers.dart';
 import '../../../providers/app_providers.dart';
 import '../../../core/theme.dart';
@@ -52,9 +53,6 @@ import 'nodedex_detail_screen.dart';
 /// Shows all discovered nodes enriched with procedural identity,
 /// inferred personality traits, and encounter history. Accessible
 /// from the main shell drawer menu.
-
-// TODO: Remove this debug flag after testing empty states
-const _debugForceEmptyState = true;
 
 class NodeDexScreen extends ConsumerStatefulWidget {
   const NodeDexScreen({super.key});
@@ -436,7 +434,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
             );
           }, childCount: otherEntries.length),
         ),
-      ] else if (_debugForceEmptyState || (!isLoading && myEntry.isEmpty))
+      ] else if (DebugFlags.forceEmptyStates || (!isLoading && myEntry.isEmpty))
         SliverFillRemaining(
           hasScrollBody: false,
           child: _EmptyState(filter: currentFilter),

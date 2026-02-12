@@ -27,6 +27,10 @@ class OpenSkyService {
   String? _accessToken;
   DateTime? _tokenExpiry;
 
+  // Rate limiting for search
+  DateTime? _lastSearchTime;
+  static const _searchCooldown = Duration(seconds: 5);
+
   // Singleton instance
   static final OpenSkyService _instance = OpenSkyService._internal();
   factory OpenSkyService() => _instance;
@@ -102,6 +106,98 @@ class OpenSkyService {
     } catch (e) {
       AppLogging.app('[OpenSky] API request error: $e');
       return null;
+    }
+  }
+
+  /// Search for active flights matching a query string.
+  ///
+  /// Searches callsigns of all currently active flights.
+  /// Returns up to [limit] matching flights sorted by relevance.
+  /// Uses 4 credits (global states query).
+  /// Rate limited to one search per 5 seconds.
+  Future<List<ActiveFlightInfo>> searchActiveFlights(
+    String query, {
+    int limit = 20,
+  }) async {
+    if (query.trim().length < 2) {
+      return [];
+    }
+
+    // Rate limiting - prevent abuse
+    if (_lastSearchTime != null) {
+      final elapsed = DateTime.now().difference(_lastSearchTime!);
+      if (elapsed < _searchCooldown) {
+        AppLogging.app(
+          '[OpenSky] Search rate limited, ${_searchCooldown.inSeconds - elapsed.inSeconds}s remaining',
+        );
+        return [];
+      }
+    }
+    _lastSearchTime = DateTime.now();
+
+    final response = await _authenticatedGet('/states/all');
+
+    if (response == null || response.statusCode != 200) {
+      return [];
+    }
+
+    try {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final states = json['states'] as List<dynamic>?;
+
+      if (states == null || states.isEmpty) {
+        return [];
+      }
+
+      final normalizedQuery = query.toUpperCase().trim();
+      final results = <ActiveFlightInfo>[];
+
+      for (final state in states) {
+        if (state is! List || state.length < 8) continue;
+
+        final callsign = (state[1] as String?)?.trim().toUpperCase() ?? '';
+        if (callsign.isEmpty) continue;
+
+        // Match if callsign starts with or contains the query
+        if (callsign.startsWith(normalizedQuery) ||
+            callsign.contains(normalizedQuery)) {
+          final icao24 = state[0] as String?;
+          final originCountry = state[2] as String?;
+          final longitude = (state[5] as num?)?.toDouble();
+          final latitude = (state[6] as num?)?.toDouble();
+          final altitude = (state[7] as num?)?.toDouble();
+          final onGround = state[8] as bool? ?? false;
+          final velocity = (state[9] as num?)?.toDouble();
+
+          results.add(
+            ActiveFlightInfo(
+              callsign: callsign,
+              icao24: icao24,
+              originCountry: originCountry,
+              latitude: latitude,
+              longitude: longitude,
+              altitude: altitude,
+              onGround: onGround,
+              velocity: velocity,
+            ),
+          );
+
+          if (results.length >= limit) break;
+        }
+      }
+
+      // Sort by relevance - exact prefix matches first
+      results.sort((a, b) {
+        final aStartsWith = a.callsign.startsWith(normalizedQuery) ? 0 : 1;
+        final bStartsWith = b.callsign.startsWith(normalizedQuery) ? 0 : 1;
+        if (aStartsWith != bStartsWith) return aStartsWith - bStartsWith;
+        return a.callsign.compareTo(b.callsign);
+      });
+
+      return results;
+    } catch (e) {
+      AppLogging.app('[OpenSky] Search flights error: $e');
+      return [];
     }
   }
 
@@ -692,4 +788,44 @@ class OpenSkyFlight {
   DateTime? get arrivalTime => lastSeen != null
       ? DateTime.fromMillisecondsSinceEpoch(lastSeen! * 1000)
       : null;
+}
+
+/// Active flight info from live search.
+class ActiveFlightInfo {
+  final String callsign;
+  final String? icao24;
+  final String? originCountry;
+  final double? latitude;
+  final double? longitude;
+  final double? altitude;
+  final bool onGround;
+  final double? velocity;
+
+  const ActiveFlightInfo({
+    required this.callsign,
+    this.icao24,
+    this.originCountry,
+    this.latitude,
+    this.longitude,
+    this.altitude,
+    this.onGround = false,
+    this.velocity,
+  });
+
+  /// Altitude in feet (converted from meters).
+  double? get altitudeFeet => altitude != null ? altitude! * 3.28084 : null;
+
+  /// Velocity in knots (converted from m/s).
+  double? get velocityKnots => velocity != null ? velocity! * 1.94384 : null;
+
+  /// Display string for the flight.
+  String get displayString {
+    final parts = <String>[callsign];
+    if (originCountry != null) parts.add('($originCountry)');
+    if (altitudeFeet != null && !onGround) {
+      parts.add('${altitudeFeet!.toStringAsFixed(0)} ft');
+    }
+    if (onGround) parts.add('(on ground)');
+    return parts.join(' ');
+  }
 }

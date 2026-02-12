@@ -19,10 +19,4 @@ class DemoConfig {
 
   /// Demo mode identifier for logging.
   static const String modeLabel = isEnabled ? '[DEMO]' : '';
-
-  /// Force empty states to show for testing animated empty state widgets.
-  /// Enable via: flutter run --dart-define=DEBUG_EMPTY_STATES=true
-  static const bool debugEmptyStates =
-      kDebugMode &&
-      bool.fromEnvironment('DEBUG_EMPTY_STATES', defaultValue: false);
 }

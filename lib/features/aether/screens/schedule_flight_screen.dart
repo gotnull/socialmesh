@@ -15,6 +15,7 @@ import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../providers/aether_providers.dart';
 import '../services/opensky_service.dart';
+import '../widgets/flight_search_sheet.dart';
 
 // =============================================================================
 // Constants
@@ -833,6 +834,18 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     );
   }
 
+  Future<void> _searchFlights() async {
+    final result = await FlightSearchSheet.show(context);
+    if (result != null && mounted) {
+      safeSetState(() {
+        _flightNumberController.text = result.callsign;
+        _clearValidation();
+      });
+      // Auto-validate the selected flight
+      _validateFlight();
+    }
+  }
+
   Widget _buildFlightNumberField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -852,7 +865,12 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                 onChanged: (_) => _clearValidation(),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: _buildSearchButton(),
+            ),
+            const SizedBox(width: 8),
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: _buildValidateButton(),
@@ -864,6 +882,25 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
           _buildValidationStatus(),
         ],
       ],
+    );
+  }
+
+  Widget _buildSearchButton() {
+    return SizedBox(
+      height: 56,
+      child: OutlinedButton.icon(
+        onPressed: _searchFlights,
+        icon: const Icon(Icons.search, size: 18),
+        label: const Text('Search'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: context.accentColor,
+          side: BorderSide(color: context.accentColor),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+        ),
+      ),
     );
   }
 
