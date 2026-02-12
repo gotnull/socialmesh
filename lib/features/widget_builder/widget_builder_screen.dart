@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
+import '../../core/widgets/animations.dart';
+import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/premium_gating.dart';
 import '../../models/subscription_models.dart';
@@ -243,45 +246,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
   Widget _buildWidgetList() {
     if (_myWidgets.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.widgets_outlined,
-        title: 'No Widgets Yet',
-        subtitle: 'Create your own or browse the marketplace',
-        action: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _createNewWidget,
-                  icon: Icon(Icons.add, color: Colors.white),
-                  label: Text(
-                    'Create Widget',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.accentColor,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            TextButton.icon(
-              onPressed: _openMarketplace,
-              icon: Icon(Icons.store, color: context.accentColor),
-              label: Text(
-                'Browse Marketplace',
-                style: TextStyle(color: context.accentColor),
-              ),
-            ),
-          ],
-        ),
-      );
+      return _buildDetailedEmptyState();
     }
 
     return RefreshIndicator(
@@ -427,53 +392,533 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     );
   }
 
-  Widget _buildEmptyState({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    Widget? action,
-  }) {
-    return SizedBox.expand(
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: context.accentColor.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  size: 48,
-                  color: context.accentColor.withValues(alpha: 0.6),
-                ),
+  /// Build the detailed first-visit/empty state as a guided widget builder
+  /// This transforms "empty list" into "invitation to create"
+  Widget _buildDetailedEmptyState() {
+    final hasWidgetsPack = ref.watch(
+      hasFeatureProvider(PremiumFeature.homeWidgets),
+    );
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Hero section - What widgets are
+          _buildHeroSection(hasWidgetsPack),
+
+          const SizedBox(height: 24),
+
+          // Create from scratch CTA - Primary action
+          _buildCreateFromScratchCard(hasWidgetsPack),
+
+          const SizedBox(height: 24),
+
+          // Quick Start Templates - Secondary inspiration
+          _buildTemplatesSection(hasWidgetsPack),
+
+          const SizedBox(height: 24),
+
+          // Widget Types - Exploration path
+          _buildWidgetTypesSection(hasWidgetsPack),
+
+          const SizedBox(height: 24),
+
+          // Marketplace CTA
+          _buildMarketplaceSection(),
+
+          // Bottom padding
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+        ],
+      ),
+    );
+  }
+
+  /// Hero section explaining what widgets are
+  Widget _buildHeroSection(bool hasWidgetsPack) {
+    final accentColor = context.accentColor;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accentColor.withValues(alpha: 0.1),
+            accentColor.withValues(alpha: 0.03),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accentColor.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [accentColor, accentColor.withValues(alpha: 0.7)],
               ),
-              SizedBox(height: 24),
-              Text(
-                title,
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: accentColor.withValues(alpha: 0.25),
+                  blurRadius: 16,
+                  spreadRadius: 2,
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                subtitle,
-                style: TextStyle(color: context.textSecondary, fontSize: 14),
-                textAlign: TextAlign.center,
-              ),
-              if (action != null) ...[const SizedBox(height: 24), action],
+              ],
+            ),
+            child: const Icon(Icons.widgets, size: 44, color: Colors.white),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Custom Dashboard Widgets',
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Build personalized widgets to display mesh data exactly how you want. '
+            'Monitor battery, signal strength, location, and more at a glance.',
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Primary CTA to create from scratch
+  Widget _buildCreateFromScratchCard(bool hasWidgetsPack) {
+    return BouncyTap(
+      onTap: _createNewWidget,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              context.accentColor.withValues(alpha: 0.15),
+              context.accentColor.withValues(alpha: 0.05),
             ],
           ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: context.accentColor.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(Icons.add, size: 28, color: context.accentColor),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Create Your First Widget',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Use the wizard to build a custom widget with your preferred data and layout',
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: context.textTertiary),
+          ],
         ),
       ),
     );
+  }
+
+  /// Quick Start Templates section
+  Widget _buildTemplatesSection(bool hasWidgetsPack) {
+    final templates = _getQuickStartTemplates();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Row(
+            children: [
+              Icon(Icons.flash_on, size: 18, color: Colors.amber),
+              const SizedBox(width: 6),
+              Text(
+                'Quick Start Templates',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            'Pre-built widgets ready to customize',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 120,
+          child: EdgeFade.horizontal(
+            fadeSize: 24,
+            fadeColor: context.background,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              itemCount: templates.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final template = templates[index];
+                return BouncyTap(
+                  onTap: () => _useBuiltInTemplate(template),
+                  child: Container(
+                    width: 140,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: template.color.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            template.icon,
+                            size: 20,
+                            color: template.color,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          template.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          template.description,
+                          style: TextStyle(
+                            color: context.textTertiary,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Widget types section for exploration
+  Widget _buildWidgetTypesSection(bool hasWidgetsPack) {
+    final widgetTypes = _getWidgetTypes();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Row(
+            children: [
+              Icon(Icons.category, size: 18, color: context.accentColor),
+              const SizedBox(width: 6),
+              Text(
+                'Widget Types',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            'Choose a style that fits your needs',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Build type chips in a wrap
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: widgetTypes.map((type) {
+            return BouncyTap(
+              onTap: () => _createWithType(type.id),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: type.color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(type.icon, size: 18, color: type.color),
+                    ),
+                    const SizedBox(width: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          type.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text(
+                          type.description,
+                          style: TextStyle(
+                            color: context.textTertiary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  /// Marketplace section
+  Widget _buildMarketplaceSection() {
+    return BouncyTap(
+      onTap: _openMarketplace,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.purple.shade400, Colors.blue.shade400],
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.store, size: 24, color: Colors.white),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Browse Marketplace',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Discover widgets created by the community',
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: context.textTertiary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Get quick start templates
+  List<_WidgetTemplateInfo> _getQuickStartTemplates() {
+    return [
+      _WidgetTemplateInfo(
+        id: 'battery',
+        name: 'Battery Status',
+        description: 'Monitor power levels',
+        icon: Icons.battery_full,
+        color: ChartColors.green,
+      ),
+      _WidgetTemplateInfo(
+        id: 'signal',
+        name: 'Signal Strength',
+        description: 'Track connectivity',
+        icon: Icons.signal_cellular_alt,
+        color: ChartColors.categoryNode,
+      ),
+      _WidgetTemplateInfo(
+        id: 'environment',
+        name: 'Environment',
+        description: 'Weather & sensors',
+        icon: Icons.thermostat,
+        color: ChartColors.cyan,
+      ),
+      _WidgetTemplateInfo(
+        id: 'network',
+        name: 'Network Overview',
+        description: 'Mesh at a glance',
+        icon: Icons.hub,
+        color: ChartColors.purple,
+      ),
+      _WidgetTemplateInfo(
+        id: 'gps',
+        name: 'GPS Position',
+        description: 'Location tracking',
+        icon: Icons.location_on,
+        color: ChartColors.orange,
+      ),
+    ];
+  }
+
+  /// Get widget types for exploration
+  List<_WidgetTypeInfo> _getWidgetTypes() {
+    return [
+      _WidgetTypeInfo(
+        id: 'status',
+        name: 'Status Display',
+        description: 'Values with progress bars',
+        icon: Icons.speed,
+        color: ChartColors.green,
+      ),
+      _WidgetTypeInfo(
+        id: 'gauge',
+        name: 'Gauge',
+        description: 'Big visual meter',
+        icon: Icons.data_usage,
+        color: ChartColors.yellow,
+      ),
+      _WidgetTypeInfo(
+        id: 'graph',
+        name: 'Graph',
+        description: 'Charts over time',
+        icon: Icons.show_chart,
+        color: ChartColors.orange,
+      ),
+      _WidgetTypeInfo(
+        id: 'actions',
+        name: 'Quick Actions',
+        description: 'Tap to trigger',
+        icon: Icons.flash_on,
+        color: ChartColors.pink,
+      ),
+      _WidgetTypeInfo(
+        id: 'info',
+        name: 'Info Card',
+        description: 'Text & details',
+        icon: Icons.info_outline,
+        color: ChartColors.categoryNode,
+      ),
+      _WidgetTypeInfo(
+        id: 'location',
+        name: 'Location',
+        description: 'GPS coordinates',
+        icon: Icons.location_on,
+        color: ChartColors.purple,
+      ),
+    ];
+  }
+
+  /// Use a built-in template
+  void _useBuiltInTemplate(_WidgetTemplateInfo template) async {
+    HapticFeedback.selectionClick();
+    AppLogging.widgets(
+      '[WidgetBuilder] Using built-in template: ${template.id}',
+    );
+
+    // Get the actual template schema
+    WidgetSchema? schema;
+    switch (template.id) {
+      case 'battery':
+        schema = WidgetTemplates.batteryWidget();
+      case 'signal':
+        schema = WidgetTemplates.signalWidget();
+      case 'environment':
+        schema = WidgetTemplates.environmentWidget();
+      case 'network':
+        schema = WidgetTemplates.networkOverviewWidget();
+      case 'gps':
+        schema = WidgetTemplates.gpsWidget();
+    }
+
+    if (schema != null) {
+      _useTemplate(schema);
+    } else {
+      _createNewWidget();
+    }
+  }
+
+  /// Create with a specific widget type pre-selected
+  void _createWithType(String typeId) {
+    HapticFeedback.selectionClick();
+    AppLogging.widgets('[WidgetBuilder] Creating with type: $typeId');
+
+    // Navigate to wizard - user will select the type in step 1
+    _createNewWidget();
   }
 
   void _createNewWidget() async {
@@ -1134,4 +1579,38 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
       }
     }
   }
+}
+
+/// Helper class for quick start template info
+class _WidgetTemplateInfo {
+  final String id;
+  final String name;
+  final String description;
+  final IconData icon;
+  final Color color;
+
+  const _WidgetTemplateInfo({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.icon,
+    required this.color,
+  });
+}
+
+/// Helper class for widget type info
+class _WidgetTypeInfo {
+  final String id;
+  final String name;
+  final String description;
+  final IconData icon;
+  final Color color;
+
+  const _WidgetTypeInfo({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.icon,
+    required this.color,
+  });
 }
