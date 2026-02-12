@@ -13,7 +13,7 @@ dependencies:
 
   # State Management (3.x with updated API)
   flutter_riverpod: ^3.0.3
-  riverpod_annotation: ^4.0.2
+  riverpod_annotation: ^4.0.0
 
   # BLE Communication
   flutter_blue_plus: ^2.0.2
@@ -136,7 +136,7 @@ dev_dependencies:
 
   # Code generation (3.x to match riverpod 3.x)
   build_runner: ^2.4.13
-  riverpod_generator: ^4.0.3
+  riverpod_generator: ^4.0.0+1
   json_serializable: ^6.9.5
 
 # For information on the generic Dart part of this file, see the
