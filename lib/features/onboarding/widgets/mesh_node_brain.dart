@@ -491,6 +491,10 @@ class MeshNodeBrain extends StatefulWidget {
   /// Whether to show thought particles
   final bool showThoughtParticles;
 
+  /// Optional list of icons to use as floating particles instead of circles.
+  /// When provided, these icons orbit around the brain instead of default stars.
+  final List<IconData>? particleIcons;
+
   /// Whether to show expression overlay (eyes, mouth)
   final bool showExpression;
 
@@ -506,6 +510,7 @@ class MeshNodeBrain extends StatefulWidget {
     this.onTap,
     this.showThoughtParticles = true,
     this.showExpression = true,
+    this.particleIcons,
   });
 
   @override
@@ -1391,7 +1396,11 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
 
     if (!isActive) return particles;
 
-    for (final particle in _particles) {
+    final hasCustomIcons =
+        widget.particleIcons != null && widget.particleIcons!.isNotEmpty;
+
+    for (int i = 0; i < _particles.length; i++) {
+      final particle = _particles[i];
       final progress = (_particleController.value + particle.phase) % 1.0;
       final angle = particle.angle + progress * 2 * math.pi * particle.speed;
       final radius =
@@ -1404,29 +1413,56 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
       final y = math.sin(angle) * radius * 0.6;
       final opacity = math.sin(progress * math.pi) * 0.8;
 
-      particles.add(
-        Positioned(
-          left: widget.size * 0.8 + x - particle.size / 2,
-          top: widget.size * 0.8 + y - particle.size / 2,
-          child: Container(
-            width: particle.size,
-            height: particle.size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: _colors[_random.nextInt(_colors.length)].withValues(
-                alpha: opacity,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _colors[1].withValues(alpha: opacity * 0.5),
-                  blurRadius: particle.size,
-                  spreadRadius: 1,
+      final particleColor = _colors[i % _colors.length];
+
+      if (hasCustomIcons) {
+        // Render custom icon particles
+        final iconIndex = i % widget.particleIcons!.length;
+        final iconData = widget.particleIcons![iconIndex];
+        // Scale icon size based on particle size (icons need to be larger than dots)
+        final iconSize = particle.size * 2.5;
+
+        particles.add(
+          Positioned(
+            left: widget.size * 0.8 + x - iconSize / 2,
+            top: widget.size * 0.8 + y - iconSize / 2,
+            child: Icon(
+              iconData,
+              size: iconSize,
+              color: particleColor.withValues(alpha: opacity),
+              shadows: [
+                Shadow(
+                  color: particleColor.withValues(alpha: opacity * 0.6),
+                  blurRadius: iconSize * 0.8,
                 ),
               ],
             ),
           ),
-        ),
-      );
+        );
+      } else {
+        // Default circle particles
+        particles.add(
+          Positioned(
+            left: widget.size * 0.8 + x - particle.size / 2,
+            top: widget.size * 0.8 + y - particle.size / 2,
+            child: Container(
+              width: particle.size,
+              height: particle.size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: particleColor.withValues(alpha: opacity),
+                boxShadow: [
+                  BoxShadow(
+                    color: _colors[1].withValues(alpha: opacity * 0.5),
+                    blurRadius: particle.size,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
     }
 
     return particles;
