@@ -89,6 +89,95 @@ enum AetherSortOption {
   const AetherSortOption(this.apiValue);
 }
 
+/// A leaderboard entry from the Aether API.
+class AetherLeaderboardEntry {
+  final int rank;
+  final String id;
+  final String flightId;
+  final String flightNumber;
+  final String? receiverName;
+  final String? receiverNodeId;
+  final double? latitude;
+  final double? longitude;
+  final double? altitudeM;
+  final double? snr;
+  final double? rssi;
+  final double estimatedDistanceKm;
+  final String? departure;
+  final String? arrival;
+  final String? airline;
+  final String? nodeName;
+  final int? altitudeFt;
+  final String? frequency;
+  final String receivedAt;
+
+  const AetherLeaderboardEntry({
+    required this.rank,
+    required this.id,
+    required this.flightId,
+    required this.flightNumber,
+    this.receiverName,
+    this.receiverNodeId,
+    this.latitude,
+    this.longitude,
+    this.altitudeM,
+    this.snr,
+    this.rssi,
+    required this.estimatedDistanceKm,
+    this.departure,
+    this.arrival,
+    this.airline,
+    this.nodeName,
+    this.altitudeFt,
+    this.frequency,
+    required this.receivedAt,
+  });
+
+  factory AetherLeaderboardEntry.fromJson(Map<String, dynamic> json) {
+    return AetherLeaderboardEntry(
+      rank: json['rank'] as int,
+      id: json['id'] as String,
+      flightId: json['flight_id'] as String,
+      flightNumber: json['flight_number'] as String,
+      receiverName: json['receiver_name'] as String?,
+      receiverNodeId: json['receiver_node_id'] as String?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      altitudeM: (json['altitude_m'] as num?)?.toDouble(),
+      snr: (json['snr'] as num?)?.toDouble(),
+      rssi: (json['rssi'] as num?)?.toDouble(),
+      estimatedDistanceKm: (json['estimated_distance_km'] as num).toDouble(),
+      departure: json['departure'] as String?,
+      arrival: json['arrival'] as String?,
+      airline: json['airline'] as String?,
+      nodeName: json['node_name'] as String?,
+      altitudeFt: json['altitude_ft'] as int?,
+      frequency: json['frequency'] as String?,
+      receivedAt: json['received_at'] as String,
+    );
+  }
+
+  /// Convert to a [ReceptionReport] for use in existing leaderboard UI.
+  ReceptionReport toReceptionReport() {
+    return ReceptionReport(
+      id: id,
+      aetherFlightId: flightId,
+      flightNumber: flightNumber,
+      reporterId: receiverNodeId ?? 'api',
+      reporterName: receiverName,
+      reporterNodeId: receiverNodeId,
+      latitude: latitude,
+      longitude: longitude,
+      altitude: altitudeM,
+      snr: snr,
+      rssi: rssi,
+      estimatedDistance: estimatedDistanceKm,
+      receivedAt: DateTime.tryParse(receivedAt) ?? DateTime.now(),
+      createdAt: DateTime.tryParse(receivedAt) ?? DateTime.now(),
+    );
+  }
+}
+
 /// Service for sharing and discovering Aether flights via the public API.
 ///
 /// The Aether API is a Railway-hosted Node.js service that stores shared
@@ -366,6 +455,42 @@ class AetherShareService {
     } catch (e) {
       AppLogging.aether('Health check failed: $e');
       return false;
+    }
+  }
+
+  /// Fetch the distance leaderboard from the API.
+  ///
+  /// Returns up to [limit] entries sorted by reception distance descending.
+  Future<List<AetherLeaderboardEntry>> fetchLeaderboard({
+    int limit = 50,
+  }) async {
+    final baseUrl = AppUrls.aetherApiUrl;
+    final uri = Uri.parse('$baseUrl/api/leaderboard?limit=$limit');
+
+    try {
+      final response = await http.get(uri).timeout(_requestTimeout);
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        final entries = json['leaderboard'] as List<dynamic>;
+        return entries
+            .map(
+              (e) => AetherLeaderboardEntry.fromJson(e as Map<String, dynamic>),
+            )
+            .toList();
+      }
+
+      AppLogging.aether(
+        'Fetch leaderboard failed: HTTP ${response.statusCode}',
+      );
+      throw AetherShareException(
+        'Failed to fetch leaderboard (HTTP ${response.statusCode})',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      if (e is AetherShareException) rethrow;
+      AppLogging.aether('Fetch leaderboard error: $e');
+      throw AetherShareException('Network error: $e');
     }
   }
 }

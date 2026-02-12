@@ -55,14 +55,21 @@ final aetherRecentReportsProvider = StreamProvider<List<ReceptionReport>>((
 
 /// Provider for global leaderboard — all-time top distances
 ///
-/// This is the primary leaderboard, sorted by distance descending.
-/// Data is persisted in Firestore and survives app deletion.
-/// Accessible to all users globally.
-final aetherGlobalLeaderboardProvider = StreamProvider<List<ReceptionReport>>((
+/// Fetches from the Aether REST API which aggregates all reception
+/// reports globally. Falls back to Firestore if the API is unavailable.
+final aetherGlobalLeaderboardProvider = FutureProvider<List<ReceptionReport>>((
   ref,
-) {
-  final service = ref.watch(aetherServiceProvider);
-  return service.watchLeaderboard();
+) async {
+  final shareService = ref.watch(aetherShareServiceProvider);
+  try {
+    final entries = await shareService.fetchLeaderboard(limit: 100);
+    return entries.map((e) => e.toReceptionReport()).toList();
+  } catch (e) {
+    // Fall back to Firestore stream if API is unavailable
+    AppLogging.aether('API leaderboard failed, falling back to Firestore: $e');
+    final service = ref.watch(aetherServiceProvider);
+    return service.watchLeaderboard().first;
+  }
 });
 
 /// Provider for this week's leaderboard
