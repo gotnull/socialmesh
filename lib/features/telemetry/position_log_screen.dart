@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
@@ -8,15 +9,48 @@ import 'package:intl/intl.dart';
 import '../../core/map_config.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/datetime_picker_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../core/widgets/map_controls.dart';
+import '../../core/widgets/search_filter_header.dart';
+import '../../core/widgets/section_header.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
 
-/// Position history screen with filtering and map view
+// ---------------------------------------------------------------------------
+// Filter enum
+// ---------------------------------------------------------------------------
+
+enum _PositionFilter { all, today, thisWeek, goodFix, myNode }
+
+extension _PositionFilterLabel on _PositionFilter {
+  String get label => switch (this) {
+    _PositionFilter.all => 'All',
+    _PositionFilter.today => 'Today',
+    _PositionFilter.thisWeek => 'This Week',
+    _PositionFilter.goodFix => 'Good Fix',
+    _PositionFilter.myNode => 'My Node',
+  };
+
+  IconData? get icon => switch (this) {
+    _PositionFilter.all => null,
+    _PositionFilter.today => Icons.today,
+    _PositionFilter.thisWeek => Icons.date_range,
+    _PositionFilter.goodFix => Icons.satellite_alt,
+    _PositionFilter.myNode => Icons.person_pin_circle,
+  };
+}
+
+/// Minimum satellites for a "good fix" filter.
+const int _kGoodFixMinSats = 6;
+
+// ---------------------------------------------------------------------------
+// Position history screen with search, filter chips, and map view
+// ---------------------------------------------------------------------------
+
 class PositionLogScreen extends ConsumerStatefulWidget {
   const PositionLogScreen({super.key});
 
@@ -26,11 +60,14 @@ class PositionLogScreen extends ConsumerStatefulWidget {
 
 class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
     with LifecycleSafeMixin<PositionLogScreen> {
-  DateTime? _startDate;
-  DateTime? _endDate;
-  int? _minAltitude;
-  int? _maxAltitude;
-  int? _minSatellites;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  _PositionFilter _activeFilter = _PositionFilter.all;
+
+  // Optional custom date range (applied when user picks via DatePickerSheet).
+  DateTime? _customStartDate;
+  DateTime? _customEndDate;
+
   bool _showMap = false;
   MapTileStyle _mapStyle = MapTileStyle.dark;
 
@@ -38,6 +75,12 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
   void initState() {
     super.initState();
     _loadMapStyle();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadMapStyle() async {
@@ -49,31 +92,56 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
     }
   }
 
+  // -----------------------------------------------------------------------
+  // Filtering
+  // -----------------------------------------------------------------------
+
   List<PositionLog> _filterLogs(List<PositionLog> logs) {
+    final now = DateTime.now();
+
     return logs.where((log) {
-      // Date filter
-      if (_startDate != null && log.timestamp.isBefore(_startDate!)) {
+      // ---- enum-based filter ----
+      switch (_activeFilter) {
+        case _PositionFilter.today:
+          final startOfDay = DateTime(now.year, now.month, now.day);
+          if (log.timestamp.isBefore(startOfDay)) return false;
+        case _PositionFilter.thisWeek:
+          final startOfWeek = DateTime(
+            now.year,
+            now.month,
+            now.day,
+          ).subtract(Duration(days: now.weekday - 1));
+          if (log.timestamp.isBefore(startOfWeek)) return false;
+        case _PositionFilter.goodFix:
+          if (log.satsInView == null || log.satsInView! < _kGoodFixMinSats) {
+            return false;
+          }
+        case _PositionFilter.myNode:
+          final myNodeNum = ref.read(myNodeNumProvider);
+          if (myNodeNum == null || log.nodeNum != myNodeNum) return false;
+        case _PositionFilter.all:
+          break;
+      }
+
+      // ---- optional custom date range ----
+      if (_customStartDate != null &&
+          log.timestamp.isBefore(_customStartDate!)) {
         return false;
       }
-      if (_endDate != null &&
-          log.timestamp.isAfter(_endDate!.add(const Duration(days: 1)))) {
+      if (_customEndDate != null &&
+          log.timestamp.isAfter(_customEndDate!.add(const Duration(days: 1)))) {
         return false;
       }
 
-      // Altitude filter
-      if (_minAltitude != null &&
-          (log.altitude == null || log.altitude! < _minAltitude!)) {
-        return false;
-      }
-      if (_maxAltitude != null &&
-          (log.altitude == null || log.altitude! > _maxAltitude!)) {
-        return false;
-      }
-
-      // Satellites filter
-      if (_minSatellites != null &&
-          (log.satsInView == null || log.satsInView! < _minSatellites!)) {
-        return false;
+      // ---- text search by node name ----
+      if (_searchQuery.isNotEmpty) {
+        final nodes = ref.read(nodesProvider);
+        final nodeName =
+            nodes[log.nodeNum]?.displayName ??
+            '!${log.nodeNum.toRadixString(16).toUpperCase()}';
+        if (!nodeName.toLowerCase().contains(_searchQuery.toLowerCase())) {
+          return false;
+        }
       }
 
       return true;
@@ -81,299 +149,307 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
   }
 
   bool get _hasActiveFilters =>
-      _startDate != null ||
-      _endDate != null ||
-      _minAltitude != null ||
-      _maxAltitude != null ||
-      _minSatellites != null;
+      _activeFilter != _PositionFilter.all ||
+      _customStartDate != null ||
+      _customEndDate != null ||
+      _searchQuery.isNotEmpty;
 
   void _clearFilters() {
+    HapticFeedback.selectionClick();
     safeSetState(() {
-      _startDate = null;
-      _endDate = null;
-      _minAltitude = null;
-      _maxAltitude = null;
-      _minSatellites = null;
+      _activeFilter = _PositionFilter.all;
+      _customStartDate = null;
+      _customEndDate = null;
+      _searchQuery = '';
+      _searchController.clear();
     });
   }
 
+  // -----------------------------------------------------------------------
+  // Date range picker (uses DatePickerSheet, not banned Material dialogs)
+  // -----------------------------------------------------------------------
+
   Future<void> _selectDateRange() async {
-    final picked = await showDateRangePicker(
-      context: context,
+    final start = await DatePickerSheet.show(
+      context,
+      initialDate: _customStartDate ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
-      initialDateRange: _startDate != null && _endDate != null
-          ? DateTimeRange(start: _startDate!, end: _endDate!)
-          : null,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(
-              context,
-            ).colorScheme.copyWith(primary: context.accentColor),
-          ),
-          child: child!,
-        );
-      },
+      title: 'Start Date',
     );
+    if (!mounted || start == null) return;
 
-    if (!mounted) return;
-    if (picked != null) {
-      safeSetState(() {
-        _startDate = picked.start;
-        _endDate = picked.end;
-      });
-    }
+    final end = await DatePickerSheet.show(
+      context,
+      initialDate: _customEndDate ?? start,
+      firstDate: start,
+      lastDate: DateTime.now(),
+      title: 'End Date',
+    );
+    if (!mounted || end == null) return;
+
+    safeSetState(() {
+      _customStartDate = start;
+      _customEndDate = end;
+    });
   }
 
-  void _showFilterSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: context.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
+  // -----------------------------------------------------------------------
+  // Filter chips
+  // -----------------------------------------------------------------------
+
+  List<Widget> _buildFilterChips(
+    BuildContext context,
+    List<PositionLog> allLogs,
+  ) {
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final startOfWeek = startOfDay.subtract(Duration(days: now.weekday - 1));
+    final myNodeNum = ref.watch(myNodeNumProvider);
+
+    final todayCount = allLogs
+        .where((l) => !l.timestamp.isBefore(startOfDay))
+        .length;
+    final weekCount = allLogs
+        .where((l) => !l.timestamp.isBefore(startOfWeek))
+        .length;
+    final goodFixCount = allLogs
+        .where((l) => l.satsInView != null && l.satsInView! >= _kGoodFixMinSats)
+        .length;
+    final myNodeCount = myNodeNum != null
+        ? allLogs.where((l) => l.nodeNum == myNodeNum).length
+        : 0;
+
+    return [
+      SectionFilterChip(
+        label: _PositionFilter.all.label,
+        count: allLogs.length,
+        isSelected: _activeFilter == _PositionFilter.all,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          safeSetState(() => _activeFilter = _PositionFilter.all);
+        },
       ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) => Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Filters',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      _clearFilters();
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Clear All'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Date range
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.date_range),
-                title: const Text('Date Range'),
-                subtitle: _startDate != null && _endDate != null
-                    ? Text(
-                        '${DateFormat.MMMd().format(_startDate!)} - ${DateFormat.MMMd().format(_endDate!)}',
-                      )
-                    : const Text('All dates'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _selectDateRange();
-                },
-              ),
-
-              // Min satellites
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.satellite_alt),
-                title: const Text('Minimum Satellites'),
-                subtitle: Text(_minSatellites?.toString() ?? 'No minimum'),
-                trailing: DropdownButton<int?>(
-                  value: _minSatellites,
-                  items: [
-                    DropdownMenuItem(value: null, child: Text('Any')),
-                    ...[4, 6, 8, 10, 12].map(
-                      (v) => DropdownMenuItem(value: v, child: Text('$v+')),
-                    ),
-                  ],
-                  onChanged: (v) {
-                    setState(() => _minSatellites = v);
-                    setSheetState(() {});
-                  },
-                ),
-              ),
-
-              // Altitude range
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.terrain),
-                title: const Text('Altitude Range (m)'),
-                subtitle: _minAltitude != null || _maxAltitude != null
-                    ? Text(
-                        '${_minAltitude ?? 'Any'} - ${_maxAltitude ?? 'Any'}',
-                      )
-                    : const Text('All altitudes'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 60,
-                      child: TextFormField(
-                        key: ValueKey('minAlt_$_minAltitude'),
-                        initialValue: _minAltitude?.toString() ?? '',
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          hintText: 'Min',
-                          isDense: true,
-                        ),
-                        onChanged: (v) {
-                          setState(() => _minAltitude = int.tryParse(v));
-                          setSheetState(() {});
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    SizedBox(
-                      width: 60,
-                      child: TextFormField(
-                        key: ValueKey('maxAlt_$_maxAltitude'),
-                        initialValue: _maxAltitude?.toString() ?? '',
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          hintText: 'Max',
-                          isDense: true,
-                        ),
-                        onChanged: (v) {
-                          setState(() => _maxAltitude = int.tryParse(v));
-                          setSheetState(() {});
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Apply Filters'),
-                ),
-              ),
-            ],
-          ),
+      SectionFilterChip(
+        label: _PositionFilter.today.label,
+        count: todayCount,
+        isSelected: _activeFilter == _PositionFilter.today,
+        icon: _PositionFilter.today.icon,
+        color: AccentColors.cyan,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          safeSetState(() => _activeFilter = _PositionFilter.today);
+        },
+      ),
+      SectionFilterChip(
+        label: _PositionFilter.thisWeek.label,
+        count: weekCount,
+        isSelected: _activeFilter == _PositionFilter.thisWeek,
+        icon: _PositionFilter.thisWeek.icon,
+        color: AccentColors.purple,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          safeSetState(() => _activeFilter = _PositionFilter.thisWeek);
+        },
+      ),
+      SectionFilterChip(
+        label: _PositionFilter.goodFix.label,
+        count: goodFixCount,
+        isSelected: _activeFilter == _PositionFilter.goodFix,
+        icon: _PositionFilter.goodFix.icon,
+        color: AccentColors.green,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          safeSetState(() => _activeFilter = _PositionFilter.goodFix);
+        },
+      ),
+      if (myNodeNum != null)
+        SectionFilterChip(
+          label: _PositionFilter.myNode.label,
+          count: myNodeCount,
+          isSelected: _activeFilter == _PositionFilter.myNode,
+          icon: _PositionFilter.myNode.icon,
+          color: AppTheme.primaryMagenta,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            safeSetState(() => _activeFilter = _PositionFilter.myNode);
+          },
         ),
-      ),
-    );
+    ];
   }
+
+  // -----------------------------------------------------------------------
+  // Build
+  // -----------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
     final logsAsync = ref.watch(positionLogsProvider);
     final nodes = ref.watch(nodesProvider);
 
-    return GlassScaffold(
-      title: 'Position',
-      actions: [
-        if (_hasActiveFilters)
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: GlassScaffold(
+        title: 'Position',
+        actions: [
+          // Date range selector
           IconButton(
-            icon: const Icon(Icons.filter_alt_off),
-            tooltip: 'Clear filters',
-            onPressed: _clearFilters,
+            icon: Badge(
+              isLabelVisible:
+                  _customStartDate != null || _customEndDate != null,
+              child: const Icon(Icons.date_range),
+            ),
+            tooltip: 'Date range',
+            onPressed: _selectDateRange,
           ),
-        IconButton(
-          icon: Badge(
-            isLabelVisible: _hasActiveFilters,
-            child: const Icon(Icons.filter_list),
+          // Map / list toggle
+          IconButton(
+            icon: Icon(_showMap ? Icons.list : Icons.map),
+            tooltip: _showMap ? 'List view' : 'Map view',
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              safeSetState(() => _showMap = !_showMap);
+            },
           ),
-          tooltip: 'Filters',
-          onPressed: _showFilterSheet,
-        ),
-        IconButton(
-          icon: Icon(_showMap ? Icons.list : Icons.map),
-          tooltip: _showMap ? 'List view' : 'Map view',
-          onPressed: () => setState(() => _showMap = !_showMap),
-        ),
-      ],
-      slivers: [
-        logsAsync.when(
-          loading: () =>
-              const SliverFillRemaining(child: ScreenLoadingIndicator()),
-          error: (e, s) =>
-              SliverFillRemaining(child: Center(child: Text('Error: $e'))),
-          data: (logs) {
-            final filtered = _filterLogs(logs)
-              ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        ],
+        slivers: [
+          logsAsync.when(
+            loading: () =>
+                const SliverFillRemaining(child: ScreenLoadingIndicator()),
+            error: (e, s) =>
+                SliverFillRemaining(child: Center(child: Text('Error: $e'))),
+            data: (logs) {
+              final filtered = _filterLogs(logs)
+                ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
-            if (filtered.isEmpty) {
-              return SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.location_off,
-                        size: 64,
-                        color: context.textTertiary,
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        _hasActiveFilters
-                            ? 'No positions match filters'
-                            : 'No position history',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: context.textSecondary,
-                        ),
-                      ),
-                      if (_hasActiveFilters) ...[
-                        const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: _clearFilters,
-                          child: const Text('Clear filters'),
-                        ),
-                      ],
-                    ],
+              // Build the list of slivers for the data state
+              return SliverMainAxisGroup(
+                slivers: [
+                  // Pinned search + filter chips
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: SearchFilterHeaderDelegate(
+                      searchController: _searchController,
+                      searchQuery: _searchQuery,
+                      onSearchChanged: (value) =>
+                          safeSetState(() => _searchQuery = value),
+                      hintText: 'Search by node name',
+                      textScaler: MediaQuery.textScalerOf(context),
+                      rebuildKey: Object.hashAll([
+                        _activeFilter,
+                        _customStartDate,
+                        _customEndDate,
+                        logs.length,
+                        _searchQuery,
+                      ]),
+                      filterChips: _buildFilterChips(context, logs),
+                    ),
                   ),
-                ),
+
+                  // Date range indicator (when custom range is active)
+                  if (_customStartDate != null || _customEndDate != null)
+                    SliverToBoxAdapter(
+                      child: _DateRangeBanner(
+                        startDate: _customStartDate,
+                        endDate: _customEndDate,
+                        onClear: () {
+                          HapticFeedback.selectionClick();
+                          safeSetState(() {
+                            _customStartDate = null;
+                            _customEndDate = null;
+                          });
+                        },
+                      ),
+                    ),
+
+                  // Empty state
+                  if (filtered.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.location_off,
+                              size: 64,
+                              color: context.textTertiary,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _hasActiveFilters
+                                  ? 'No positions match filters'
+                                  : 'No position history',
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(color: context.textSecondary),
+                            ),
+                            if (_hasActiveFilters) ...[
+                              const SizedBox(height: 12),
+                              TextButton.icon(
+                                onPressed: _clearFilters,
+                                icon: const Icon(
+                                  Icons.filter_alt_off,
+                                  size: 18,
+                                ),
+                                label: const Text('Clear all filters'),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    )
+                  // Map view
+                  else if (_showMap)
+                    SliverFillRemaining(
+                      child: _PositionMapView(
+                        logs: filtered,
+                        nodes: nodes,
+                        mapStyle: _mapStyle,
+                      ),
+                    )
+                  // List view
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.all(16),
+                      sliver: SliverList.separated(
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final log = filtered[index];
+                          final prevLog = index < filtered.length - 1
+                              ? filtered[index + 1]
+                              : null;
+                          final distance = prevLog != null
+                              ? _calculateDistance(
+                                  log.latitude,
+                                  log.longitude,
+                                  prevLog.latitude,
+                                  prevLog.longitude,
+                                )
+                              : null;
+
+                          final nodeName =
+                              nodes[log.nodeNum]?.displayName ??
+                              '!${log.nodeNum.toRadixString(16).toUpperCase()}';
+
+                          return _PositionCard(
+                            log: log,
+                            nodeName: nodeName,
+                            distanceFromPrev: distance,
+                          );
+                        },
+                      ),
+                    ),
+                ],
               );
-            }
-
-            if (_showMap) {
-              return SliverFillRemaining(
-                child: _PositionMapView(
-                  logs: filtered,
-                  nodes: nodes,
-                  mapStyle: _mapStyle,
-                ),
-              );
-            }
-
-            return SliverPadding(
-              padding: const EdgeInsets.all(16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final log = filtered[index];
-                  final prevLog = index < filtered.length - 1
-                      ? filtered[index + 1]
-                      : null;
-                  final distance = prevLog != null
-                      ? _calculateDistance(
-                          log.latitude,
-                          log.longitude,
-                          prevLog.latitude,
-                          prevLog.longitude,
-                        )
-                      : null;
-
-                  final nodeName =
-                      nodes[log.nodeNum]?.displayName ??
-                      '!${log.nodeNum.toRadixString(16).toUpperCase()}';
-
-                  return _PositionCard(
-                    log: log,
-                    nodeName: nodeName,
-                    distanceFromPrev: distance,
-                  );
-                }, childCount: filtered.length),
-              ),
-            );
-          },
-        ),
-      ],
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -396,6 +472,63 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
     return r * c;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Date range banner — shown below filter chips when a custom range is active
+// ---------------------------------------------------------------------------
+
+class _DateRangeBanner extends StatelessWidget {
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final VoidCallback onClear;
+
+  const _DateRangeBanner({this.startDate, this.endDate, required this.onClear});
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = DateFormat.MMMd();
+    final label = startDate != null && endDate != null
+        ? '${fmt.format(startDate!)} – ${fmt.format(endDate!)}'
+        : startDate != null
+        ? 'From ${fmt.format(startDate!)}'
+        : 'Until ${fmt.format(endDate!)}';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: context.accentColor.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.date_range, size: 16, color: context.accentColor),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: context.accentColor,
+              ),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: onClear,
+              child: Icon(Icons.close, size: 16, color: context.accentColor),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Map view (preserved from original)
+// ---------------------------------------------------------------------------
 
 class _PositionMapView extends StatefulWidget {
   final List<PositionLog> logs;
@@ -442,7 +575,19 @@ class _PositionMapViewState extends State<_PositionMapView> {
   Widget build(BuildContext context) {
     final logs = _filteredLogs;
     if (logs.isEmpty) {
-      return const Center(child: Text('No positions to display'));
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.map_outlined, size: 48, color: context.textTertiary),
+            const SizedBox(height: 12),
+            Text(
+              'No positions to display',
+              style: TextStyle(color: context.textSecondary),
+            ),
+          ],
+        ),
+      );
     }
 
     // Calculate bounds
@@ -528,7 +673,10 @@ class _PositionMapViewState extends State<_PositionMapView> {
                       value: _selectedNodeNum,
                       hint: const Text('All nodes'),
                       items: [
-                        DropdownMenuItem(value: null, child: Text('All nodes')),
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('All nodes'),
+                        ),
                         ..._nodeNums.map((n) {
                           final name =
                               widget.nodes[n]?.displayName ??
@@ -541,7 +689,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
                   ),
                 ),
 
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
 
               // Toggle trail
               Container(
@@ -563,7 +711,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
 
               const SizedBox(height: 8),
 
-              // Zoom controls - use shared widget
+              // Zoom controls
               MapZoomControls(
                 currentZoom: _currentZoom,
                 minZoom: 3.0,
@@ -621,7 +769,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
   }
 
   Color _getNodeColor(int nodeNum) {
-    final colors = [
+    const colors = [
       AppTheme.primaryMagenta,
       AppTheme.primaryPurple,
       AppTheme.primaryBlue,
@@ -662,6 +810,10 @@ class _PositionMapViewState extends State<_PositionMapView> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Stat item (map overlay)
+// ---------------------------------------------------------------------------
+
 class _StatItem extends StatelessWidget {
   final String label;
   final String value;
@@ -692,6 +844,10 @@ class _StatItem extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Position card (list view)
+// ---------------------------------------------------------------------------
+
 class _PositionCard extends StatelessWidget {
   final PositionLog log;
   final String nodeName;
@@ -709,13 +865,13 @@ class _PositionCard extends StatelessWidget {
     final timeFormat = DateFormat('HH:mm:ss');
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
+            // Header: node name + date
             Row(
               children: [
                 Icon(
@@ -788,6 +944,10 @@ class _PositionCard extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Metric chip
+// ---------------------------------------------------------------------------
+
 class _MetricChip extends StatelessWidget {
   final IconData icon;
   final String value;
@@ -807,7 +967,7 @@ class _MetricChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: color ?? context.textTertiary),
-          SizedBox(width: 4),
+          const SizedBox(width: 4),
           Text(
             value,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(

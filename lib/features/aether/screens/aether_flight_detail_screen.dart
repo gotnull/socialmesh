@@ -601,6 +601,7 @@ class _AetherFlightDetailScreenState
   void _reportReception(BuildContext context) {
     AppBottomSheet.show(
       context: context,
+      padding: EdgeInsets.zero,
       child: _ReportBottomSheet(flight: widget.flight),
     );
   }
@@ -911,129 +912,57 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: context.textTertiary,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Icon(Icons.signal_cellular_alt, color: context.accentColor),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Report Reception',
-                      style: TextStyle(
-                        color: context.textPrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.signal_cellular_alt, color: context.accentColor),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Report Reception',
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'I received a signal from ${widget.flight.flightNumber}!',
-                style: TextStyle(color: context.textSecondary),
-              ),
-              const SizedBox(height: 24),
-
-              // Auto-detected signal info (read-only)
-              if (hasSignalData)
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: context.background,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.sensors, color: context.accentColor, size: 20),
-                      const SizedBox(width: 12),
-                      if (_detectedRssi != null) ...[
-                        Text(
-                          'RSSI ',
-                          style: TextStyle(
-                            color: context.textSecondary,
-                            fontSize: 13,
-                          ),
-                        ),
-                        Text(
-                          '${_detectedRssi!.toInt()} dBm',
-                          style: TextStyle(
-                            color: context.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                      if (_detectedRssi != null && _detectedSnr != null)
-                        const SizedBox(width: 16),
-                      if (_detectedSnr != null) ...[
-                        Text(
-                          'SNR ',
-                          style: TextStyle(
-                            color: context.textSecondary,
-                            fontSize: 13,
-                          ),
-                        ),
-                        Text(
-                          '${_detectedSnr!.toStringAsFixed(1)} dB',
-                          style: TextStyle(
-                            color: context.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'I received a signal from ${widget.flight.flightNumber}!',
+              style: TextStyle(color: context.textSecondary),
+            ),
+            const SizedBox(height: 24),
 
-              if (hasSignalData) const SizedBox(height: 12),
-
-              // Auto-detected distance
-              if (_estimatedDistance != null)
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: context.background,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.straighten,
-                        color: context.accentColor,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
+            // Auto-detected signal info (read-only)
+            if (hasSignalData)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: context.background,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.sensors, color: context.accentColor, size: 20),
+                    const SizedBox(width: 12),
+                    if (_detectedRssi != null) ...[
                       Text(
-                        'Estimated distance ',
+                        'RSSI ',
                         style: TextStyle(
                           color: context.textSecondary,
                           fontSize: 13,
                         ),
                       ),
                       Text(
-                        '${_estimatedDistance!.toStringAsFixed(1)} km',
+                        '${_detectedRssi!.toInt()} dBm',
                         style: TextStyle(
                           color: context.textPrimary,
                           fontWeight: FontWeight.w600,
@@ -1041,12 +970,33 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                         ),
                       ),
                     ],
-                  ),
+                    if (_detectedRssi != null && _detectedSnr != null)
+                      const SizedBox(width: 16),
+                    if (_detectedSnr != null) ...[
+                      Text(
+                        'SNR ',
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        '${_detectedSnr!.toStringAsFixed(1)} dB',
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
+              ),
 
-              if (_estimatedDistance != null) const SizedBox(height: 12),
+            if (hasSignalData) const SizedBox(height: 12),
 
-              // Location status
+            // Auto-detected distance
+            if (_estimatedDistance != null)
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -1056,189 +1006,219 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                 child: Row(
                   children: [
                     Icon(
-                      hasLocation ? Icons.location_on : Icons.location_off,
-                      color: hasLocation
-                          ? context.accentColor
-                          : context.textTertiary,
+                      Icons.straighten,
+                      color: context.accentColor,
                       size: 20,
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      hasLocation
-                          ? 'Location auto-detected'
-                          : 'Location unavailable',
+                      'Estimated distance ',
                       style: TextStyle(
-                        color: hasLocation
-                            ? context.textPrimary
-                            : context.textTertiary,
+                        color: context.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      '${_estimatedDistance!.toStringAsFixed(1)} km',
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontWeight: FontWeight.w600,
                         fontSize: 13,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
 
-              // Optional notes — matches NodeDex _UserNoteCard pattern
-              if (!_showNotes)
-                Center(
-                  child: GestureDetector(
-                    onTap: () => safeSetState(() => _showNotes = true),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: context.accentColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'Add Notes',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: context.accentColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-              else
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.edit_note,
-                          size: 18,
-                          color: context.textSecondary,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Notes',
-                          style: TextStyle(
-                            color: context.textSecondary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const Spacer(),
-                        GestureDetector(
-                          onTap: () {
-                            FocusScope.of(context).unfocus();
-                            _notesController.clear();
-                            safeSetState(() => _showNotes = false);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: context.textTertiary.withValues(
-                                alpha: 0.1,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              'Remove',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: context.textSecondary,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _notesController,
-                      maxLines: 4,
-                      maxLength: _maxReportNotesLength,
-                      autofocus: true,
-                      scrollPadding: const EdgeInsets.all(80),
-                      onTapOutside: (_) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: context.textPrimary,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Equipment, antenna, location details...',
-                        hintStyle: TextStyle(
-                          fontSize: 14,
-                          color: context.textTertiary,
-                        ),
-                        filled: true,
-                        fillColor: context.background,
-                        contentPadding: const EdgeInsets.all(12),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: context.border.withValues(alpha: 0.3),
-                            width: 0.5,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: context.border.withValues(alpha: 0.3),
-                            width: 0.5,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: context.accentColor.withValues(alpha: 0.5),
-                            width: 1.0,
-                          ),
-                        ),
-                        counterStyle: TextStyle(
-                          fontSize: 10,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              const SizedBox(height: 24),
+            if (_estimatedDistance != null) const SizedBox(height: 12),
 
-              // Submit button
-              ElevatedButton(
-                onPressed: _isSaving ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.accentColor,
-                  minimumSize: const Size(double.infinity, 52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Submit Report',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
+            // Location status
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: context.background,
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(height: 16),
-            ],
-          ),
+              child: Row(
+                children: [
+                  Icon(
+                    hasLocation ? Icons.location_on : Icons.location_off,
+                    color: hasLocation
+                        ? context.accentColor
+                        : context.textTertiary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    hasLocation
+                        ? 'Location auto-detected'
+                        : 'Location unavailable',
+                    style: TextStyle(
+                      color: hasLocation
+                          ? context.textPrimary
+                          : context.textTertiary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Optional notes — matches NodeDex _UserNoteCard pattern
+            if (!_showNotes)
+              Center(
+                child: GestureDetector(
+                  onTap: () => safeSetState(() => _showNotes = true),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Add Notes',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: context.accentColor,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.edit_note,
+                        size: 18,
+                        color: context.textSecondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Notes',
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () {
+                          FocusScope.of(context).unfocus();
+                          _notesController.clear();
+                          safeSetState(() => _showNotes = false);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.textTertiary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Remove',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: context.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _notesController,
+                    maxLines: 4,
+                    maxLength: _maxReportNotesLength,
+                    autofocus: true,
+                    scrollPadding: const EdgeInsets.all(80),
+                    onTapOutside: (_) {
+                      FocusScope.of(context).unfocus();
+                    },
+                    style: TextStyle(fontSize: 14, color: context.textPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'Equipment, antenna, location details...',
+                      hintStyle: TextStyle(
+                        fontSize: 14,
+                        color: context.textTertiary,
+                      ),
+                      filled: true,
+                      fillColor: context.background,
+                      contentPadding: const EdgeInsets.all(12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: context.border.withValues(alpha: 0.3),
+                          width: 0.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: context.border.withValues(alpha: 0.3),
+                          width: 0.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: context.accentColor.withValues(alpha: 0.5),
+                          width: 1.0,
+                        ),
+                      ),
+                      counterStyle: TextStyle(
+                        fontSize: 10,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 24),
+
+            // Submit button
+            ElevatedButton(
+              onPressed: _isSaving ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.accentColor,
+                minimumSize: const Size(double.infinity, 52),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Submit Report',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );

@@ -325,9 +325,6 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// [MediaQuery.removePadding] in sync with the banner's real footprint.
   bool _bannerActuallyVisible = false;
 
-  /// Whether the Aether flight overlay should be hidden due to scrolling.
-  bool _overlayHiddenByScroll = false;
-
   @override
   void initState() {
     super.initState();
@@ -1225,64 +1222,39 @@ class _MainShellState extends ConsumerState<MainShell> {
                 // Always strip the framework-level top inset — we
                 // manage it ourselves via the AnimatedPadding above.
                 removeTop: true,
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: (notification) {
-                    if (notification is ScrollStartNotification) {
-                      if (!_overlayHiddenByScroll) {
-                        setState(() => _overlayHiddenByScroll = true);
-                      }
-                    } else if (notification is ScrollEndNotification) {
-                      // Delay reappearance so the overlay doesn't
-                      // flicker during fling deceleration.
-                      Future<void>.delayed(
-                        const Duration(milliseconds: 800),
-                        () {
-                          if (mounted && _overlayHiddenByScroll) {
-                            setState(() => _overlayHiddenByScroll = false);
-                          }
-                        },
-                      );
-                    }
-                    return false; // Don't absorb — let child scrollables work.
-                  },
-                  child: Stack(
-                    children: [
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        transitionBuilder: (child, animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(0, 0.02),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: KeyedSubtree(
-                          key: ValueKey(
-                            'main_${ref.watch(mainShellIndexProvider)}',
+                child: Stack(
+                  children: [
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 0.02),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
                           ),
-                          child: _buildScreen(
-                            ref.watch(mainShellIndexProvider),
-                          ),
+                        );
+                      },
+                      child: KeyedSubtree(
+                        key: ValueKey(
+                          'main_${ref.watch(mainShellIndexProvider)}',
                         ),
+                        child: _buildScreen(ref.watch(mainShellIndexProvider)),
                       ),
-                      // Aether flight match floating overlay
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 8,
-                        child: AetherFlightDetectedOverlay(
-                          hidden: _overlayHiddenByScroll,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                    // Aether flight match floating overlay — flush to bottom
+                    const Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: AetherFlightDetectedOverlay(),
+                    ),
+                  ],
                 ),
               ),
             ),
