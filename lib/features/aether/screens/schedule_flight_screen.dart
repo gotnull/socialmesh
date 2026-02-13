@@ -105,6 +105,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   // ===========================================================================
 
   Future<void> _selectDepartureDate() async {
+    AppLogging.aether('Schedule: selecting departure date');
     final now = DateTime.now();
     final date = await DatePickerSheet.show(
       context,
@@ -123,6 +124,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   }
 
   Future<void> _selectDepartureTime() async {
+    AppLogging.aether('Schedule: selecting departure time');
     final time = await TimePickerSheet.show(
       context,
       initialTime: _departureTime ?? TimeOfDay.now(),
@@ -135,6 +137,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   }
 
   Future<void> _selectArrivalDate() async {
+    AppLogging.aether('Schedule: selecting arrival date');
     final now = DateTime.now();
     final date = await DatePickerSheet.show(
       context,
@@ -153,6 +156,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   }
 
   Future<void> _selectArrivalTime() async {
+    AppLogging.aether('Schedule: selecting arrival time');
     final time = await TimePickerSheet.show(
       context,
       initialTime: _arrivalTime ?? TimeOfDay.now(),
@@ -209,6 +213,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     FocusScope.of(context).unfocus();
     final flightNumber = _flightNumberController.text.trim().toUpperCase();
     final departure = _departureController.text.trim().toUpperCase();
+
+    AppLogging.aether(
+      'Schedule: _validateFlight() — flight=$flightNumber dep=$departure',
+    );
 
     if (flightNumber.isEmpty) {
       showErrorSnackBar(context, 'Enter a flight number first');
@@ -310,6 +318,9 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   }
 
   void _showValidationFeedback(FlightValidationResult result) {
+    AppLogging.aether(
+      'Schedule: validation feedback — ${result.status.name}: ${result.message}',
+    );
     HapticFeedback.mediumImpact();
 
     switch (result.status) {
@@ -371,6 +382,8 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
+    AppLogging.aether('Schedule: _save() — saving flight');
+
     final myNode = _getMyNode();
     if (myNode == null) {
       showWarningSnackBar(context, 'Connect your Meshtastic device first');
@@ -425,6 +438,11 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       if (!mounted) return;
 
       HapticFeedback.mediumImpact();
+
+      AppLogging.aether(
+        'Schedule: flight saved — ${activeFlight.flightNumber} '
+        '(active=${activeFlight.isActive})',
+      );
 
       // Share to Aether API in background (non-blocking)
       _shareFlightInBackground(activeFlight);
@@ -887,8 +905,12 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   }
 
   Future<void> _searchFlights() async {
+    AppLogging.aether('Schedule: opening flight search sheet');
     final result = await FlightSearchSheet.show(context);
     if (result != null && mounted) {
+      AppLogging.aether(
+        'Schedule: flight selected from search — ${result.callsign}',
+      );
       safeSetState(() {
         _flightNumberController.text = result.callsign;
 
@@ -937,6 +959,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   /// Fetches route info (airports + times) for a flight selected from search.
   /// Runs in background so the UI doesn't block — fields populate when ready.
   Future<void> _lookupRouteForSearchResult(String icao24) async {
+    AppLogging.aether('Schedule: looking up route for icao24=$icao24');
     try {
       final routeInfo = await OpenSkyService().lookupAircraftRoute(icao24);
       if (routeInfo == null || !mounted) return;

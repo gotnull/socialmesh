@@ -599,6 +599,9 @@ class _AetherFlightDetailScreenState
   }
 
   void _reportReception(BuildContext context) {
+    AppLogging.aether(
+      'Opening report reception sheet for ${widget.flight.flightNumber}',
+    );
     AppBottomSheet.show(
       context: context,
       padding: EdgeInsets.zero,
@@ -653,6 +656,7 @@ class _AetherFlightDetailScreenState
   }
 
   Future<void> _showShareOptions(String url) async {
+    AppLogging.aether('Showing share options for URL: $url');
     final flight = widget.flight;
     final text =
         '${flight.flightNumber} '
@@ -807,6 +811,10 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
 
   /// Look up the flight's node in the mesh to get RSSI/SNR automatically.
   void _autoDetectSignalData() {
+    AppLogging.aether(
+      'Auto-detecting signal data for ${widget.flight.flightNumber} '
+      '(nodeId=${widget.flight.nodeId})',
+    );
     final nodes = ref.read(nodesProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
 
@@ -827,6 +835,9 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
     if (flightNode != null) {
       _detectedRssi = flightNode.rssi?.toDouble();
       _detectedSnr = flightNode.snr?.toDouble();
+      AppLogging.aether(
+        'Signal data detected: rssi=$_detectedRssi snr=$_detectedSnr',
+      );
     }
 
     // Get reporter's location from their own node.

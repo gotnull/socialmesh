@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../services/opensky_service.dart';
@@ -53,6 +54,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
   }
 
   void _onSearchChanged(String query) {
+    AppLogging.aether('FlightSearch: query changed to "$query"');
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       _performSearch(query);
@@ -67,6 +69,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
   }
 
   Future<void> _performSearch(String query) async {
+    AppLogging.aether('FlightSearch: performing search for "$query"');
     if (query.trim().length < 2) {
       setState(() {
         _results = [];
@@ -89,6 +92,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
           _isLoading = false;
           _error = results.isEmpty ? 'No active flights found' : null;
         });
+        AppLogging.aether('FlightSearch: got ${results.length} results');
 
         // Fetch route data for the top results in the background.
         // Limit to first 10 to avoid burning API credits.
@@ -106,6 +110,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
   }
 
   void _selectFlight(ActiveFlightInfo flight) {
+    AppLogging.aether('FlightSearch: selected ${flight.callsign}');
     HapticFeedback.selectionClick();
     Navigator.of(context).pop(flight);
   }
@@ -118,6 +123,9 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
         .toList();
 
     if (toFetch.isEmpty) return;
+    AppLogging.aether(
+      'FlightSearch: fetching routes for ${toFetch.length} flights',
+    );
 
     // Mark as in-progress (null = loading)
     for (final f in toFetch) {

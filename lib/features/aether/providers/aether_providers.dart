@@ -51,9 +51,13 @@ final aetherFlightReportsProvider =
 final aetherGlobalLeaderboardProvider = FutureProvider<List<ReceptionReport>>((
   ref,
 ) async {
+  AppLogging.aether('aetherGlobalLeaderboardProvider — fetching leaderboard');
   final shareService = ref.watch(aetherShareServiceProvider);
   try {
     final entries = await shareService.fetchLeaderboard(limit: 100);
+    AppLogging.aether(
+      'aetherGlobalLeaderboardProvider — got ${entries.length} entries',
+    );
     return entries.map((e) => e.toReceptionReport()).toList();
   } catch (e) {
     // Fall back to Firestore stream if API is unavailable
@@ -97,6 +101,7 @@ class FlightPositionState {
 /// Uses authenticated OpenSky API for better rate limits.
 final aetherFlightPositionProvider = FutureProvider.autoDispose
     .family<FlightPositionState, String>((ref, callsign) async {
+      AppLogging.aether('aetherFlightPositionProvider — tracking $callsign');
       final openSky = ref.watch(openSkyServiceProvider);
 
       // Set up periodic refresh every 30 seconds
@@ -110,6 +115,10 @@ final aetherFlightPositionProvider = FutureProvider.autoDispose
 
         if (result.isActive && result.position != null) {
           final pos = result.position!;
+          AppLogging.aether(
+            'Position update for $callsign: '
+            'lat=${pos.latitude} lon=${pos.longitude} alt=${pos.altitude}m',
+          );
           return FlightPositionState(
             position: FlightPosition(
               callsign: pos.callsign,
@@ -251,10 +260,17 @@ class DiscoveryNotifier extends AsyncNotifier<DiscoveryState> {
 
   @override
   Future<DiscoveryState> build() async {
+    AppLogging.aether('DiscoveryNotifier.build() — initial fetch');
     return _fetchPage(1, const DiscoveryState());
   }
 
   Future<DiscoveryState> _fetchPage(int page, DiscoveryState current) async {
+    AppLogging.aether(
+      'DiscoveryNotifier._fetchPage() — page=$page '
+      'query="${current.searchQuery}" dep=${current.departureFilter} '
+      'arr=${current.arrivalFilter} active=${current.activeOnly} '
+      'sort=${current.sort.apiValue}',
+    );
     final service = ref.read(aetherShareServiceProvider);
 
     try {
@@ -290,6 +306,9 @@ class DiscoveryNotifier extends AsyncNotifier<DiscoveryState> {
   Future<void> loadMore() async {
     final current = state.value;
     if (current == null || !current.hasMore || current.isLoadingMore) return;
+    AppLogging.aether(
+      'DiscoveryNotifier.loadMore() — page ${current.currentPage + 1}',
+    );
 
     state = AsyncData(current.copyWith(isLoadingMore: true));
     final updated = await _fetchPage(current.currentPage + 1, current);
@@ -300,6 +319,7 @@ class DiscoveryNotifier extends AsyncNotifier<DiscoveryState> {
   Future<void> search(String query) async {
     final current = state.value ?? const DiscoveryState();
     if (current.searchQuery == query) return;
+    AppLogging.aether('DiscoveryNotifier.search() — query="$query"');
 
     state = const AsyncLoading();
     final updated = await _fetchPage(1, current.copyWith(searchQuery: query));
@@ -308,6 +328,9 @@ class DiscoveryNotifier extends AsyncNotifier<DiscoveryState> {
 
   /// Apply airport departure filter and reload.
   Future<void> filterByDeparture(String? airport) async {
+    AppLogging.aether(
+      'DiscoveryNotifier.filterByDeparture() — airport=$airport',
+    );
     final current = state.value ?? const DiscoveryState();
     state = const AsyncLoading();
     final updated = await _fetchPage(
@@ -325,6 +348,7 @@ class DiscoveryNotifier extends AsyncNotifier<DiscoveryState> {
 
   /// Apply airport arrival filter and reload.
   Future<void> filterByArrival(String? airport) async {
+    AppLogging.aether('DiscoveryNotifier.filterByArrival() — airport=$airport');
     final current = state.value ?? const DiscoveryState();
     state = const AsyncLoading();
     final updated = await _fetchPage(
@@ -342,6 +366,7 @@ class DiscoveryNotifier extends AsyncNotifier<DiscoveryState> {
 
   /// Filter by active status (null = all, true = active, false = inactive).
   Future<void> filterByActive(bool? active) async {
+    AppLogging.aether('DiscoveryNotifier.filterByActive() — active=$active');
     final current = state.value ?? const DiscoveryState();
     state = const AsyncLoading();
     final updated = await _fetchPage(
@@ -361,6 +386,7 @@ class DiscoveryNotifier extends AsyncNotifier<DiscoveryState> {
   Future<void> setSort(AetherSortOption sort) async {
     final current = state.value ?? const DiscoveryState();
     if (current.sort == sort) return;
+    AppLogging.aether('DiscoveryNotifier.setSort() — sort=${sort.apiValue}');
 
     state = const AsyncLoading();
     final updated = await _fetchPage(
@@ -378,6 +404,7 @@ class DiscoveryNotifier extends AsyncNotifier<DiscoveryState> {
 
   /// Refresh from page 1, preserving current filters.
   Future<void> refresh() async {
+    AppLogging.aether('DiscoveryNotifier.refresh()');
     final current = state.value ?? const DiscoveryState();
     state = const AsyncLoading();
     final updated = await _fetchPage(
@@ -395,6 +422,7 @@ class DiscoveryNotifier extends AsyncNotifier<DiscoveryState> {
 
   /// Clear all filters and reload.
   Future<void> clearFilters() async {
+    AppLogging.aether('DiscoveryNotifier.clearFilters()');
     state = const AsyncLoading();
     final updated = await _fetchPage(1, const DiscoveryState());
     state = AsyncData(updated);

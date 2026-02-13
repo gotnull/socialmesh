@@ -21,6 +21,7 @@ class AetherService {
 
   /// Get all upcoming and active flights
   Stream<List<AetherFlight>> watchFlights() {
+    AppLogging.aether('watchFlights() — subscribing to flights since 12h ago');
     final cutoff = DateTime.now().subtract(const Duration(hours: 12));
     return _flightsCollection
         .where('scheduledDeparture', isGreaterThan: Timestamp.fromDate(cutoff))
@@ -35,6 +36,7 @@ class AetherService {
 
   /// Get active flights (in progress)
   Stream<List<AetherFlight>> watchActiveFlights() {
+    AppLogging.aether('watchActiveFlights() — subscribing to active flights');
     return _flightsCollection
         .where('isActive', isEqualTo: true)
         .orderBy('scheduledDeparture')
@@ -60,6 +62,11 @@ class AetherService {
     String? userName,
     String? notes,
   }) async {
+    AppLogging.aether(
+      'createFlight() — $flightNumber $departure -> $arrival '
+      'departing ${scheduledDeparture.toIso8601String()}',
+    );
+
     final data = {
       'nodeId': nodeId,
       'nodeName': nodeName,
@@ -80,24 +87,29 @@ class AetherService {
     };
 
     final docRef = await _flightsCollection.add(data);
+    AppLogging.aether('Flight created: ${docRef.id}');
     final doc = await docRef.get();
     return AetherFlight.fromJson(doc.data()!, doc.id);
   }
 
   /// Update flight active status
   Future<void> updateFlightStatus(String id, {required bool isActive}) async {
+    AppLogging.aether('updateFlightStatus() — id=$id isActive=$isActive');
     await _flightsCollection.doc(id).update({'isActive': isActive});
   }
 
   /// Delete a flight
   Future<void> deleteFlight(String id) async {
+    AppLogging.aether('deleteFlight() — id=$id');
     await _flightsCollection.doc(id).delete();
+    AppLogging.aether('Flight deleted: $id');
   }
 
   // ============ Reception Reports ============
 
   /// Watch reception reports for a flight
   Stream<List<ReceptionReport>> watchReports(String flightId) {
+    AppLogging.aether('watchReports() — flightId=$flightId');
     return _reportsCollection
         .where('aetherFlightId', isEqualTo: flightId)
         .orderBy('receivedAt', descending: true)
@@ -115,6 +127,7 @@ class AetherService {
   /// estimatedDistance descending so the longest range contacts appear first.
   /// Data is persisted in Firestore and survives app deletion.
   Stream<List<ReceptionReport>> watchLeaderboard({int limit = 100}) {
+    AppLogging.aether('watchLeaderboard() — limit=$limit');
     return _reportsCollection
         .where('estimatedDistance', isGreaterThan: 0)
         .orderBy('estimatedDistance', descending: true)

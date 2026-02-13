@@ -116,6 +116,9 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
   }
 
   void _openFlightDetail(AetherFlight flight) {
+    AppLogging.aether(
+      'Opening flight detail: ${flight.flightNumber} (${flight.id})',
+    );
     Navigator.push(
       context,
       MaterialPageRoute<void>(
@@ -129,6 +132,7 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
   }
 
   void _scheduleFlight() {
+    AppLogging.aether('Navigating to schedule flight screen');
     HapticFeedback.mediumImpact();
     Navigator.push(
       context,
@@ -137,6 +141,7 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
   }
 
   void _showInfo() {
+    AppLogging.aether('Showing Aether info sheet');
     final accentColor = context.accentColor;
     final textSecondary = context.textSecondary;
     final textTertiary = context.textTertiary;
@@ -260,6 +265,7 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
 
   /// Shows the leaderboard in a scrollable bottom sheet.
   void _showLeaderboard() {
+    AppLogging.aether('Showing leaderboard modal');
     HapticFeedback.selectionClick();
     final leaderboardAsync = ref.read(aetherGlobalLeaderboardProvider);
     final reduceMotion = ref.read(reduceMotionEnabledProvider);
@@ -758,7 +764,6 @@ class _FlightsTabContent extends StatelessWidget {
           reduceMotion: reduceMotion,
           child: _AetherFlightCard(
             flight: flight,
-            showLiveTracking: flight.isActive,
             showActions: currentFilter == AetherFilter.myFlights,
           ),
         );
@@ -843,16 +848,19 @@ class _DiscoverTabContentState extends ConsumerState<_DiscoverTabContent> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
+      AppLogging.aether('Discover tab: triggering loadMore on scroll');
       ref.read(aetherDiscoveryProvider.notifier).loadMore();
     }
   }
 
   void _onSearchChanged(String value) {
+    AppLogging.aether('Discover tab: search changed to "$value"');
     setState(() => _searchQuery = value);
     ref.read(aetherDiscoveryProvider.notifier).search(value);
   }
 
   void _onFilterChanged(_DiscoverFilter filter) {
+    AppLogging.aether('Discover tab: filter changed to ${filter.name}');
     HapticFeedback.selectionClick();
     setState(() => _filter = filter);
 
@@ -1002,10 +1010,7 @@ class _DiscoverTabContentState extends ConsumerState<_DiscoverTabContent> {
                 return _StaggeredListTile(
                   index: index,
                   reduceMotion: widget.reduceMotion,
-                  child: _AetherFlightCard(
-                    flight: flight,
-                    showLiveTracking: flight.isActive,
-                  ),
+                  child: _AetherFlightCard(flight: flight),
                 );
               }, childCount: state.flights.length + 1),
             );
@@ -1343,14 +1348,9 @@ class _VerticalDivider extends StatelessWidget {
 
 class _AetherFlightCard extends ConsumerWidget {
   final AetherFlight flight;
-  final bool showLiveTracking;
   final bool showActions;
 
-  const _AetherFlightCard({
-    required this.flight,
-    this.showLiveTracking = false,
-    this.showActions = false,
-  });
+  const _AetherFlightCard({required this.flight, this.showActions = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1490,11 +1490,6 @@ class _AetherFlightCard extends ConsumerWidget {
                   ],
                 ),
               ],
-              // Live tracking
-              if (showLiveTracking && flight.isActive) ...[
-                const SizedBox(height: 12),
-                _LiveTrackingIndicator(callsign: flight.flightNumber),
-              ],
             ],
           ),
         ),
@@ -1625,102 +1620,6 @@ class _PulsingDotState extends State<_PulsingDot>
           ),
         );
       },
-    );
-  }
-}
-
-// =============================================================================
-// Live Tracking Indicator
-// =============================================================================
-
-class _LiveTrackingIndicator extends ConsumerWidget {
-  final String callsign;
-
-  const _LiveTrackingIndicator({required this.callsign});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final positionAsync = ref.watch(aetherFlightPositionProvider(callsign));
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: context.accentColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
-      ),
-      child: positionAsync.when(
-        loading: () => Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: context.accentColor,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Getting live position...',
-              style: TextStyle(color: context.accentColor, fontSize: 13),
-            ),
-          ],
-        ),
-        error: (e, _) => Row(
-          children: [
-            Icon(Icons.cloud_off, color: context.textTertiary, size: 18),
-            const SizedBox(width: 8),
-            Text(
-              'Position unavailable',
-              style: TextStyle(color: context.textTertiary, fontSize: 13),
-            ),
-          ],
-        ),
-        data: (positionState) {
-          if (positionState.position == null) {
-            return Row(
-              children: [
-                Icon(Icons.cloud_off, color: context.textTertiary, size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  positionState.error ?? 'Position unavailable',
-                  style: TextStyle(color: context.textTertiary, fontSize: 13),
-                ),
-              ],
-            );
-          }
-          return Row(
-            children: [
-              Icon(Icons.radar, color: context.accentColor, size: 18),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'FL${(positionState.position!.altitudeFeet / 100).round()} · ${positionState.position!.velocityKnots.round()} kts',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      'Coverage radius: ~${positionState.position!.coverageRadiusKm.round()} km',
-                      style: TextStyle(
-                        color: context.accentColor.withValues(alpha: 0.8),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
     );
   }
 }
@@ -1858,6 +1757,7 @@ class _ReportCard extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
               // Time
               Text(
                 dateFormat.format(report.receivedAt.toLocal()),

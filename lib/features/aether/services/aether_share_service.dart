@@ -305,6 +305,13 @@ class AetherShareService {
     int page = 1,
     int limit = 20,
   }) async {
+    AppLogging.aether(
+      'fetchFlights() — page=$page limit=$limit sort=${sort.apiValue}'
+      '${query != null ? ' q="$query"' : ''}'
+      '${departure != null ? ' dep=$departure' : ''}'
+      '${arrival != null ? ' arr=$arrival' : ''}'
+      '${activeOnly != null ? ' active=$activeOnly' : ''}',
+    );
     final baseUrl = AppUrls.aetherApiUrl;
     final params = <String, String>{
       'page': page.toString(),
@@ -337,6 +344,11 @@ class AetherShareService {
         final flights = flightsJson
             .map((e) => AetherFlight.fromApiJson(e as Map<String, dynamic>))
             .toList();
+
+        AppLogging.aether(
+          'fetchFlights() — got ${flights.length} flights '
+          '(page ${pagination['page']}/${pagination['totalPages']})',
+        );
 
         return AetherFlightsPage(
           flights: flights,
@@ -397,6 +409,7 @@ class AetherShareService {
 
   /// Fetch aggregate statistics from the API.
   Future<AetherApiStats> fetchStats() async {
+    AppLogging.aether('fetchStats() — fetching aggregate stats');
     final baseUrl = AppUrls.aetherApiUrl;
     final uri = Uri.parse('$baseUrl/api/flights/stats');
 
@@ -405,6 +418,7 @@ class AetherShareService {
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
+        AppLogging.aether('fetchStats() — stats received');
         return AetherApiStats.fromJson(json);
       }
 
@@ -421,6 +435,7 @@ class AetherShareService {
 
   /// Fetch available airport codes for filter dropdowns.
   Future<AetherAirports> fetchAirports() async {
+    AppLogging.aether('fetchAirports() — fetching available airports');
     final baseUrl = AppUrls.aetherApiUrl;
     final uri = Uri.parse('$baseUrl/api/flights/airports');
 
@@ -431,6 +446,10 @@ class AetherShareService {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
         final departures = (json['departures'] as List<dynamic>).cast<String>();
         final arrivals = (json['arrivals'] as List<dynamic>).cast<String>();
+        AppLogging.aether(
+          'fetchAirports() — ${departures.length} departures, '
+          '${arrivals.length} arrivals',
+        );
         return AetherAirports(departures: departures, arrivals: arrivals);
       }
 
@@ -447,11 +466,16 @@ class AetherShareService {
 
   /// Check if the Aether API is reachable.
   Future<bool> checkHealth() async {
+    AppLogging.aether('checkHealth() — pinging Aether API');
     try {
       final baseUrl = AppUrls.aetherApiUrl;
       final uri = Uri.parse('$baseUrl/health');
       final response = await http.get(uri).timeout(_requestTimeout);
-      return response.statusCode == 200;
+      final healthy = response.statusCode == 200;
+      AppLogging.aether(
+        'checkHealth() — ${healthy ? 'healthy' : 'unhealthy (${response.statusCode})'}',
+      );
+      return healthy;
     } catch (e) {
       AppLogging.aether('Health check failed: $e');
       return false;
@@ -464,6 +488,7 @@ class AetherShareService {
   Future<List<AetherLeaderboardEntry>> fetchLeaderboard({
     int limit = 50,
   }) async {
+    AppLogging.aether('fetchLeaderboard() — limit=$limit');
     final baseUrl = AppUrls.aetherApiUrl;
     final uri = Uri.parse('$baseUrl/api/leaderboard?limit=$limit');
 
@@ -473,6 +498,7 @@ class AetherShareService {
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
         final entries = json['leaderboard'] as List<dynamic>;
+        AppLogging.aether('fetchLeaderboard() — got ${entries.length} entries');
         return entries
             .map(
               (e) => AetherLeaderboardEntry.fromJson(e as Map<String, dynamic>),

@@ -109,6 +109,10 @@ class AetherFlightLifecycleNotifier extends Notifier<FlightLifecycleState> {
 
   /// Mark a lifecycle event as acknowledged so it won't be emitted again.
   void acknowledgeEvent(FlightLifecycleEvent event) {
+    AppLogging.aether(
+      'Lifecycle: acknowledged ${event.activated ? 'activation' : 'deactivation'} '
+      'of ${event.flight.flightNumber}',
+    );
     final updated = List<FlightLifecycleEvent>.from(state.pendingEvents)
       ..remove(event);
     state = state.copyWith(pendingEvents: updated);
@@ -116,6 +120,9 @@ class AetherFlightLifecycleNotifier extends Notifier<FlightLifecycleState> {
 
   /// Clear all pending events.
   void acknowledgeAll() {
+    AppLogging.aether(
+      'Lifecycle: acknowledgeAll() — clearing ${state.pendingEvents.length} events',
+    );
     state = state.copyWith(pendingEvents: []);
   }
 
@@ -124,6 +131,10 @@ class AetherFlightLifecycleNotifier extends Notifier<FlightLifecycleState> {
     final flightsAsync = ref.read(aetherFlightsProvider);
     final flights = flightsAsync.value;
     if (flights == null || flights.isEmpty) return;
+
+    AppLogging.aether(
+      'Lifecycle: _checkFlights() — scanning ${flights.length} flights',
+    );
 
     final now = DateTime.now();
     final updater = ref.read(aetherFlightStatusUpdaterProvider);

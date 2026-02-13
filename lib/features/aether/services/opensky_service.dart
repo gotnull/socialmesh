@@ -49,6 +49,8 @@ class OpenSkyService {
       }
     }
 
+    AppLogging.aether('[OpenSky] Requesting new access token...');
+
     try {
       final response = await http
           .post(
@@ -71,7 +73,7 @@ class OpenSkyService {
         AppLogging.aether('[OpenSky] Token obtained, expires in ${expiresIn}s');
         return _accessToken;
       } else {
-        AppLogging.app(
+        AppLogging.aether(
           '[OpenSky] Token request failed: ${response.statusCode}',
         );
         return null;
@@ -84,6 +86,7 @@ class OpenSkyService {
 
   /// Make an authenticated API request.
   Future<http.Response?> _authenticatedGet(String endpoint) async {
+    AppLogging.aether('[OpenSky] GET $endpoint');
     final token = await _getAccessToken();
     if (token == null) {
       AppLogging.aether('[OpenSky] No access token available');
@@ -121,6 +124,9 @@ class OpenSkyService {
     String query, {
     int limit = 20,
   }) async {
+    AppLogging.aether(
+      '[OpenSky] searchActiveFlights() — query="$query" limit=$limit',
+    );
     if (query.trim().length < 2) {
       return [];
     }
@@ -129,7 +135,7 @@ class OpenSkyService {
     if (_lastSearchTime != null) {
       final elapsed = DateTime.now().difference(_lastSearchTime!);
       if (elapsed < _searchCooldown) {
-        AppLogging.app(
+        AppLogging.aether(
           '[OpenSky] Search rate limited, ${_searchCooldown.inSeconds - elapsed.inSeconds}s remaining',
         );
         return [];
@@ -210,6 +216,9 @@ class OpenSkyService {
   Future<FlightValidationResult> validateFlightByCallsign(
     String callsign,
   ) async {
+    AppLogging.aether(
+      '[OpenSky] validateFlightByCallsign() — callsign="$callsign"',
+    );
     final cleanCallsign = _normalizeCallsign(callsign);
 
     final response = await _authenticatedGet(
@@ -315,6 +324,10 @@ class OpenSkyService {
     required DateTime begin,
     required DateTime end,
   }) async {
+    AppLogging.aether(
+      '[OpenSky] getFlightsDeparting() — airport=$airport '
+      'begin=${begin.toIso8601String()} end=${end.toIso8601String()}',
+    );
     final beginTs = begin.millisecondsSinceEpoch ~/ 1000;
     final endTs = end.millisecondsSinceEpoch ~/ 1000;
 
@@ -344,6 +357,7 @@ class OpenSkyService {
   /// if no route data is available (common for flights that just departed
   /// — OpenSky batch-processes route data with some delay).
   Future<OpenSkyFlight?> lookupAircraftRoute(String icao24) async {
+    AppLogging.aether('[OpenSky] lookupAircraftRoute() — icao24=$icao24');
     final now = DateTime.now();
     final begin = now.subtract(const Duration(hours: 2));
     final beginTs = begin.millisecondsSinceEpoch ~/ 1000;
@@ -385,6 +399,10 @@ class OpenSkyService {
     required String departureAirport,
     required DateTime scheduledDeparture,
   }) async {
+    AppLogging.aether(
+      '[OpenSky] validateScheduledFlight() — $flightNumber from $departureAirport '
+      'at ${scheduledDeparture.toIso8601String()}',
+    );
     // First, try to check if it's currently active
     final activeResult = await validateFlightByCallsign(flightNumber);
     if (activeResult.status == FlightValidationStatus.active) {
@@ -633,6 +651,7 @@ class OpenSkyService {
 
   /// Clear the cached token (useful for testing or forced re-auth).
   void clearTokenCache() {
+    AppLogging.aether('[OpenSky] Token cache cleared');
     _accessToken = null;
     _tokenExpiry = null;
   }

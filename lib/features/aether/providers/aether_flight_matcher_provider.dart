@@ -86,6 +86,7 @@ String _normalizeNodeId(String id) {
 class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
   @override
   AetherFlightMatcherState build() {
+    AppLogging.aether('AetherFlightMatcherNotifier.build() — initializing');
     // Watch the local nodes list for changes
     ref.listen<Map<int, MeshNode>>(nodesProvider, (previous, next) {
       _recheckMatches();
@@ -136,6 +137,7 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
     final nodes = ref.read(nodesProvider);
     if (nodes.isEmpty) {
       if (state.matches.isNotEmpty) {
+        AppLogging.aether('Flight matcher: nodes empty, clearing matches');
         state = state.copyWith(matches: [], hasFetched: true);
       }
       return;
@@ -193,11 +195,18 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
     }
 
     state = state.copyWith(matches: newMatches, hasFetched: true);
+    if (newMatches.isNotEmpty) {
+      AppLogging.aether(
+        'Flight matcher: ${newMatches.length} match(es) found — '
+        '${newMatches.map((m) => m.flight.flightNumber).join(', ')}',
+      );
+    }
   }
 
   /// Mark a node ID as notified so we don't alert the user again
   /// for the same flight during this session.
   void markNotified(String nodeId) {
+    AppLogging.aether('Flight matcher: markNotified($nodeId)');
     final normalized = _normalizeNodeId(nodeId);
     state = state.copyWith(
       notifiedNodeIds: {...state.notifiedNodeIds, normalized},
@@ -215,6 +224,7 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
   /// Dismiss a match from the floating overlay. The match still
   /// appears in the Aether screen section for later action.
   void dismissOverlay(String nodeId) {
+    AppLogging.aether('Flight matcher: dismissOverlay($nodeId)');
     final normalized = _normalizeNodeId(nodeId);
     state = state.copyWith(
       dismissedOverlayNodeIds: {...state.dismissedOverlayNodeIds, normalized},
