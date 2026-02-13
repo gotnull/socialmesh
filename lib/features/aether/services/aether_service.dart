@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:http/http.dart' as http;
-import 'package:socialmesh/core/logging.dart';
 
 import '../models/aether_flight.dart';
 
@@ -40,20 +37,6 @@ class AetherService {
     return _flightsCollection
         .where('isActive', isEqualTo: true)
         .orderBy('scheduledDeparture')
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => AetherFlight.fromJson(doc.data(), doc.id))
-              .toList(),
-        );
-  }
-
-  /// Get flights for a specific user
-  Stream<List<AetherFlight>> watchUserFlights(String userId) {
-    return _flightsCollection
-        .where('userId', isEqualTo: userId)
-        .orderBy('scheduledDeparture', descending: true)
-        .limit(20)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
@@ -125,19 +108,6 @@ class AetherService {
         );
   }
 
-  /// Get recent reception reports
-  Stream<List<ReceptionReport>> watchRecentReports({int limit = 50}) {
-    return _reportsCollection
-        .orderBy('createdAt', descending: true)
-        .limit(limit)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ReceptionReport.fromJson(doc.data(), doc.id))
-              .toList(),
-        );
-  }
-
   /// Get global leaderboard — all-time top distances
   ///
   /// This is the primary leaderboard query. Results are sorted by
@@ -154,81 +124,6 @@ class AetherService {
               .map((doc) => ReceptionReport.fromJson(doc.data(), doc.id))
               .toList(),
         );
-  }
-
-  /// Get top distance record (all-time best)
-  Future<ReceptionReport?> getTopDistanceRecord() async {
-    final snapshot = await _reportsCollection
-        .where('estimatedDistance', isGreaterThan: 0)
-        .orderBy('estimatedDistance', descending: true)
-        .limit(1)
-        .get();
-
-    if (snapshot.docs.isEmpty) return null;
-    final doc = snapshot.docs.first;
-    return ReceptionReport.fromJson(doc.data(), doc.id);
-  }
-
-  /// Get leaderboard filtered by time period
-  Stream<List<ReceptionReport>> watchLeaderboardByPeriod({
-    required DateTime since,
-    int limit = 50,
-  }) {
-    return _reportsCollection
-        .where('estimatedDistance', isGreaterThan: 0)
-        .where('createdAt', isGreaterThan: Timestamp.fromDate(since))
-        .orderBy('estimatedDistance', descending: true)
-        .orderBy('createdAt', descending: true)
-        .limit(limit)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ReceptionReport.fromJson(doc.data(), doc.id))
-              .toList(),
-        );
-  }
-
-  /// Get a user's personal best distance
-  Future<ReceptionReport?> getUserPersonalBest(String userId) async {
-    final snapshot = await _reportsCollection
-        .where('reporterId', isEqualTo: userId)
-        .where('estimatedDistance', isGreaterThan: 0)
-        .orderBy('estimatedDistance', descending: true)
-        .limit(1)
-        .get();
-
-    if (snapshot.docs.isEmpty) return null;
-    final doc = snapshot.docs.first;
-    return ReceptionReport.fromJson(doc.data(), doc.id);
-  }
-
-  /// Get user's rank on the leaderboard
-  Future<int?> getUserLeaderboardRank(String userId) async {
-    // Get all reports sorted by distance
-    final snapshot = await _reportsCollection
-        .where('estimatedDistance', isGreaterThan: 0)
-        .orderBy('estimatedDistance', descending: true)
-        .get();
-
-    if (snapshot.docs.isEmpty) return null;
-
-    // Find user's best report position
-    int rank = 1;
-    double? userBestDistance;
-
-    for (final doc in snapshot.docs) {
-      final report = ReceptionReport.fromJson(doc.data(), doc.id);
-      if (report.reporterId == userId) {
-        if (userBestDistance == null ||
-            (report.estimatedDistance ?? 0) > userBestDistance) {
-          userBestDistance = report.estimatedDistance;
-          return rank;
-        }
-      }
-      rank++;
-    }
-
-    return null; // User has no reports
   }
 
   /// Create a reception report
@@ -275,54 +170,7 @@ class AetherService {
     return ReceptionReport.fromJson(doc.data()!, doc.id);
   }
 
-  // ============ Flight Tracking (OpenSky Network) ============
-
-  /// Get live flight position from OpenSky Network API
-  /// This is a free API with rate limits - be respectful
-  Future<FlightPosition?> getFlightPosition(String callsign) async {
-    try {
-      // Clean callsign (remove spaces, uppercase)
-      final cleanCallsign = callsign.replaceAll(' ', '').toUpperCase();
-
-      final uri = Uri.parse(
-        'https://opensky-network.org/api/states/all?icao24=&callsign=$cleanCallsign',
-      );
-
-      final response = await http.get(uri).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        final states = json['states'] as List<dynamic>?;
-
-        if (states != null && states.isNotEmpty) {
-          final state = states.first as List<dynamic>;
-          // OpenSky state vector format:
-          // [0] icao24, [1] callsign, [2] origin_country, [3] time_position,
-          // [4] last_contact, [5] longitude, [6] latitude, [7] baro_altitude,
-          // [8] on_ground, [9] velocity, [10] true_track, [11] vertical_rate,
-          // [12] sensors, [13] geo_altitude, [14] squawk, [15] spi, [16] position_source
-
-          return FlightPosition(
-            callsign: (state[1] as String?)?.trim() ?? cleanCallsign,
-            longitude: (state[5] as num?)?.toDouble() ?? 0,
-            latitude: (state[6] as num?)?.toDouble() ?? 0,
-            altitude: (state[7] as num?)?.toDouble() ?? 0,
-            onGround: state[8] as bool? ?? false,
-            velocity: (state[9] as num?)?.toDouble() ?? 0,
-            heading: (state[10] as num?)?.toDouble() ?? 0,
-            lastUpdate: DateTime.fromMillisecondsSinceEpoch(
-              ((state[4] as num?)?.toInt() ?? 0) * 1000,
-            ),
-          );
-        }
-      }
-
-      return null;
-    } catch (e) {
-      AppLogging.app('[Aether] Error fetching flight position: $e');
-      return null;
-    }
-  }
+  // ============ Distance Calculations ============
 
   /// Calculate distance between two coordinates in km
   static double calculateDistance(

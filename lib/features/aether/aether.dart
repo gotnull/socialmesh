@@ -13,9 +13,14 @@
 library;
 
 export 'models/aether_flight.dart';
+export 'providers/aether_flight_lifecycle_provider.dart';
+export 'providers/aether_flight_matcher_provider.dart';
 export 'providers/aether_providers.dart';
-export 'screens/schedule_flight_screen.dart';
 export 'screens/aether_flight_detail_screen.dart';
 export 'screens/aether_screen.dart';
+export 'screens/schedule_flight_screen.dart';
 export 'services/aether_service.dart';
 export 'services/aether_share_service.dart';
+export 'services/opensky_service.dart';
+export 'widgets/aether_flight_match_card.dart';
+export 'widgets/flight_search_sheet.dart';

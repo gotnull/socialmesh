@@ -1001,7 +1001,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
         }
       }
     } catch (e) {
-      AppLogging.app('[Aether] Route lookup after search failed: $e');
+      AppLogging.aether('Route lookup after search failed: $e');
     }
   }
 

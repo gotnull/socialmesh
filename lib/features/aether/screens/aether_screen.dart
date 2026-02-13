@@ -30,6 +30,7 @@ import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../providers/help_providers.dart';
@@ -135,87 +136,80 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
   }
 
   void _showInfo() {
-    final cardColor = context.card;
     final accentColor = context.accentColor;
-    final textPrimary = context.textPrimary;
     final textSecondary = context.textSecondary;
     final textTertiary = context.textTertiary;
 
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: cardColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(Icons.radar, color: accentColor),
-            const SizedBox(width: 8),
-            Text('Aether', style: TextStyle(color: textPrimary)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Track Meshtastic nodes at altitude!',
-              style: TextStyle(
-                color: textSecondary,
-                fontWeight: FontWeight.w500,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.radar, color: accentColor),
+              const SizedBox(width: 8),
+              Text(
+                'Aether',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Track Meshtastic nodes at altitude!',
+            style: TextStyle(color: textSecondary, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 16),
+          _InfoRow(
+            icon: Icons.flight_takeoff,
+            text: 'Schedule your flight with your node',
+            iconColor: textTertiary,
+            textColor: textSecondary,
+          ),
+          const SizedBox(height: 8),
+          _InfoRow(
+            icon: Icons.radar,
+            text: 'Ground stations watch for your signal',
+            iconColor: textTertiary,
+            textColor: textSecondary,
+          ),
+          const SizedBox(height: 8),
+          _InfoRow(
+            icon: Icons.celebration,
+            text: 'Report receptions & set range records!',
+            iconColor: textTertiary,
+            textColor: textSecondary,
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: accentColor.withValues(alpha: 0.3)),
             ),
-            const SizedBox(height: 16),
-            _InfoRow(
-              icon: Icons.flight_takeoff,
-              text: 'Schedule your flight with your node',
-              iconColor: textTertiary,
-              textColor: textSecondary,
-            ),
-            const SizedBox(height: 8),
-            _InfoRow(
-              icon: Icons.radar,
-              text: 'Ground stations watch for your signal',
-              iconColor: textTertiary,
-              textColor: textSecondary,
-            ),
-            const SizedBox(height: 8),
-            _InfoRow(
-              icon: Icons.celebration,
-              text: 'Report receptions & set range records!',
-              iconColor: textTertiary,
-              textColor: textSecondary,
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: accentColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: accentColor.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.lightbulb, color: accentColor, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'At 35,000ft, LoRa can reach 400+ km!',
-                      style: TextStyle(
-                        color: accentColor,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
+            child: Row(
+              children: [
+                Icon(Icons.lightbulb, color: accentColor, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'At 35,000ft, LoRa can reach 400+ km!',
+                    style: TextStyle(
+                      color: accentColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text('Got it!', style: TextStyle(color: accentColor)),
           ),
         ],
       ),
@@ -559,6 +553,14 @@ class _FlightsTabContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final allFlights = flightsAsync.value ?? [];
+    final upcomingCount = allFlights
+        .where((f) => !f.isActive && !f.isPast)
+        .length;
+    final myFlightsCount = user != null
+        ? allFlights.where((f) => f.userId == user!.uid).length
+        : 0;
+
     return CustomScrollView(
       slivers: [
         // Stats summary card
@@ -600,7 +602,7 @@ class _FlightsTabContent extends StatelessWidget {
               ),
               SectionFilterChip(
                 label: 'Upcoming',
-                count: 0,
+                count: upcomingCount,
                 isSelected: currentFilter == AetherFilter.upcoming,
                 color: AccentColors.cyan,
                 icon: Icons.schedule,
@@ -608,7 +610,7 @@ class _FlightsTabContent extends StatelessWidget {
               ),
               SectionFilterChip(
                 label: 'My Flights',
-                count: 0,
+                count: myFlightsCount,
                 isSelected: currentFilter == AetherFilter.myFlights,
                 color: AccentColors.purple,
                 icon: Icons.person_outline,

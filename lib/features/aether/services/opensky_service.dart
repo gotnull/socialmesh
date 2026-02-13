@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:convert';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:socialmesh/core/logging.dart';
 
@@ -19,9 +20,10 @@ class OpenSkyService {
       'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
   static const String _apiBaseUrl = 'https://opensky-network.org/api';
 
-  // OAuth2 credentials
-  static const String _clientId = 'gotnull-api-client';
-  static const String _clientSecret = 'zic97k9aAHWWMxFHbj9ajUQSlxPFo1Py';
+  // OAuth2 credentials — loaded from .env, never hardcoded
+  static String get _clientId =>
+      dotenv.env['OPENSKY_CLIENT_ID'] ?? 'gotnull-api-client';
+  static String get _clientSecret => dotenv.env['OPENSKY_CLIENT_SECRET'] ?? '';
 
   // Token cache
   String? _accessToken;
@@ -66,7 +68,7 @@ class OpenSkyService {
         final expiresIn = json['expires_in'] as int? ?? 1800; // Default 30 min
         _tokenExpiry = DateTime.now().add(Duration(seconds: expiresIn));
 
-        AppLogging.app('[OpenSky] Token obtained, expires in ${expiresIn}s');
+        AppLogging.aether('[OpenSky] Token obtained, expires in ${expiresIn}s');
         return _accessToken;
       } else {
         AppLogging.app(
@@ -75,7 +77,7 @@ class OpenSkyService {
         return null;
       }
     } catch (e) {
-      AppLogging.app('[OpenSky] Token request error: $e');
+      AppLogging.aether('[OpenSky] Token request error: $e');
       return null;
     }
   }
@@ -84,7 +86,7 @@ class OpenSkyService {
   Future<http.Response?> _authenticatedGet(String endpoint) async {
     final token = await _getAccessToken();
     if (token == null) {
-      AppLogging.app('[OpenSky] No access token available');
+      AppLogging.aether('[OpenSky] No access token available');
       return null;
     }
 
@@ -99,12 +101,12 @@ class OpenSkyService {
       // Log rate limit info if available
       final remaining = response.headers['x-rate-limit-remaining'];
       if (remaining != null) {
-        AppLogging.app('[OpenSky] Credits remaining: $remaining');
+        AppLogging.aether('[OpenSky] Credits remaining: $remaining');
       }
 
       return response;
     } catch (e) {
-      AppLogging.app('[OpenSky] API request error: $e');
+      AppLogging.aether('[OpenSky] API request error: $e');
       return null;
     }
   }
@@ -196,7 +198,7 @@ class OpenSkyService {
 
       return results;
     } catch (e) {
-      AppLogging.app('[OpenSky] Search flights error: $e');
+      AppLogging.aether('[OpenSky] Search flights error: $e');
       return [];
     }
   }
@@ -279,7 +281,7 @@ class OpenSkyService {
             arrivalTime = routeInfo.arrivalTime;
           }
         } catch (e) {
-          AppLogging.app('[OpenSky] Route lookup failed (non-fatal): $e');
+          AppLogging.aether('[OpenSky] Route lookup failed (non-fatal): $e');
         }
       }
 
@@ -295,7 +297,7 @@ class OpenSkyService {
         arrivalTime: arrivalTime,
       );
     } catch (e) {
-      AppLogging.app('[OpenSky] Parse error: $e');
+      AppLogging.aether('[OpenSky] Parse error: $e');
       return FlightValidationResult(
         status: FlightValidationStatus.error,
         message: 'Failed to parse flight data',
@@ -330,38 +332,7 @@ class OpenSkyService {
           .map((f) => OpenSkyFlight.fromJson(f as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      AppLogging.app('[OpenSky] Parse departures error: $e');
-      return [];
-    }
-  }
-
-  /// Get flights arriving at an airport in a time range.
-  ///
-  /// [airport] must be an ICAO code (4 letters, e.g., KJFK, EGLL).
-  /// Time range must not exceed 2 days.
-  Future<List<OpenSkyFlight>> getFlightsArriving({
-    required String airport,
-    required DateTime begin,
-    required DateTime end,
-  }) async {
-    final beginTs = begin.millisecondsSinceEpoch ~/ 1000;
-    final endTs = end.millisecondsSinceEpoch ~/ 1000;
-
-    final response = await _authenticatedGet(
-      '/flights/arrival?airport=${airport.toUpperCase()}&begin=$beginTs&end=$endTs',
-    );
-
-    if (response == null || response.statusCode != 200) {
-      return [];
-    }
-
-    try {
-      final json = jsonDecode(response.body) as List<dynamic>;
-      return json
-          .map((f) => OpenSkyFlight.fromJson(f as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      AppLogging.app('[OpenSky] Parse arrivals error: $e');
+      AppLogging.aether('[OpenSky] Parse departures error: $e');
       return [];
     }
   }
@@ -399,37 +370,8 @@ class OpenSkyService {
       flights.sort((a, b) => (b.firstSeen ?? 0).compareTo(a.firstSeen ?? 0));
       return flights.first;
     } catch (e) {
-      AppLogging.app('[OpenSky] Aircraft route parse error: $e');
+      AppLogging.aether('[OpenSky] Aircraft route parse error: $e');
       return null;
-    }
-  }
-
-  /// Get all flights in a time interval (max 2 hours).
-  ///
-  /// Useful for checking if a specific flight existed in a time range.
-  Future<List<OpenSkyFlight>> getFlightsInInterval({
-    required DateTime begin,
-    required DateTime end,
-  }) async {
-    final beginTs = begin.millisecondsSinceEpoch ~/ 1000;
-    final endTs = end.millisecondsSinceEpoch ~/ 1000;
-
-    final response = await _authenticatedGet(
-      '/flights/all?begin=$beginTs&end=$endTs',
-    );
-
-    if (response == null || response.statusCode != 200) {
-      return [];
-    }
-
-    try {
-      final json = jsonDecode(response.body) as List<dynamic>;
-      return json
-          .map((f) => OpenSkyFlight.fromJson(f as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      AppLogging.app('[OpenSky] Parse flights error: $e');
-      return [];
     }
   }
 
@@ -684,7 +626,7 @@ class OpenSkyService {
             : null,
       );
     } catch (e) {
-      AppLogging.app('[OpenSky] Error parsing state vector: $e');
+      AppLogging.aether('[OpenSky] Error parsing state vector: $e');
       return null;
     }
   }

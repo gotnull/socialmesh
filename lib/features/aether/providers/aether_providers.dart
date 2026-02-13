@@ -8,6 +8,7 @@ import 'package:socialmesh/core/logging.dart';
 import '../models/aether_flight.dart';
 import '../services/aether_service.dart';
 import '../services/aether_share_service.dart';
+import '../services/opensky_service.dart';
 
 /// Provider for AetherService
 final aetherServiceProvider = Provider<AetherService>((ref) {
@@ -17,6 +18,11 @@ final aetherServiceProvider = Provider<AetherService>((ref) {
 /// Provider for AetherShareService (sharing flights to aether.socialmesh.app)
 final aetherShareServiceProvider = Provider<AetherShareService>((ref) {
   return AetherShareService();
+});
+
+/// Provider for OpenSkyService (authenticated flight lookups)
+final openSkyServiceProvider = Provider<OpenSkyService>((ref) {
+  return OpenSkyService();
 });
 
 /// Provider for all flights (upcoming and active)
@@ -31,27 +37,12 @@ final aetherActiveFlightsProvider = StreamProvider<List<AetherFlight>>((ref) {
   return service.watchActiveFlights();
 });
 
-/// Provider for user's own flights
-final aetherUserFlightsProvider =
-    StreamProvider.family<List<AetherFlight>, String>((ref, userId) {
-      final service = ref.watch(aetherServiceProvider);
-      return service.watchUserFlights(userId);
-    });
-
 /// Provider for reception reports for a specific flight
 final aetherFlightReportsProvider =
     StreamProvider.family<List<ReceptionReport>, String>((ref, flightId) {
       final service = ref.watch(aetherServiceProvider);
       return service.watchReports(flightId);
     });
-
-/// Provider for recent reception reports
-final aetherRecentReportsProvider = StreamProvider<List<ReceptionReport>>((
-  ref,
-) {
-  final service = ref.watch(aetherServiceProvider);
-  return service.watchRecentReports();
-});
 
 /// Provider for global leaderboard — all-time top distances
 ///
@@ -71,37 +62,6 @@ final aetherGlobalLeaderboardProvider = FutureProvider<List<ReceptionReport>>((
     return service.watchLeaderboard().first;
   }
 });
-
-/// Provider for this week's leaderboard
-final aetherWeeklyLeaderboardProvider = StreamProvider<List<ReceptionReport>>((
-  ref,
-) {
-  final service = ref.watch(aetherServiceProvider);
-  final oneWeekAgo = DateTime.now().subtract(const Duration(days: 7));
-  return service.watchLeaderboardByPeriod(since: oneWeekAgo);
-});
-
-/// Provider for this month's leaderboard
-final aetherMonthlyLeaderboardProvider = StreamProvider<List<ReceptionReport>>((
-  ref,
-) {
-  final service = ref.watch(aetherServiceProvider);
-  final oneMonthAgo = DateTime.now().subtract(const Duration(days: 30));
-  return service.watchLeaderboardByPeriod(since: oneMonthAgo);
-});
-
-/// Provider for the all-time distance record
-final aetherTopDistanceRecordProvider = FutureProvider<ReceptionReport?>((ref) {
-  final service = ref.watch(aetherServiceProvider);
-  return service.getTopDistanceRecord();
-});
-
-/// Provider for a user's personal best distance
-final aetherUserPersonalBestProvider =
-    FutureProvider.family<ReceptionReport?, String>((ref, userId) {
-      final service = ref.watch(aetherServiceProvider);
-      return service.getUserPersonalBest(userId);
-    });
 
 /// State for flight position tracking
 class FlightPositionState {
@@ -133,10 +93,11 @@ class FlightPositionState {
 }
 
 /// Provider for live flight position tracking using FutureProvider
-/// Auto-refreshes periodically while watched
+/// Auto-refreshes periodically while watched.
+/// Uses authenticated OpenSky API for better rate limits.
 final aetherFlightPositionProvider = FutureProvider.autoDispose
     .family<FlightPositionState, String>((ref, callsign) async {
-      final service = ref.watch(aetherServiceProvider);
+      final openSky = ref.watch(openSkyServiceProvider);
 
       // Set up periodic refresh every 30 seconds
       final timer = Timer.periodic(const Duration(seconds: 30), (_) {
@@ -145,30 +106,32 @@ final aetherFlightPositionProvider = FutureProvider.autoDispose
       ref.onDispose(timer.cancel);
 
       try {
-        final position = await service.getFlightPosition(callsign);
-        return FlightPositionState(
-          position: position,
-          isLoading: false,
-          lastFetch: DateTime.now(),
-        );
+        final result = await openSky.validateFlightByCallsign(callsign);
+
+        if (result.isActive && result.position != null) {
+          final pos = result.position!;
+          return FlightPositionState(
+            position: FlightPosition(
+              callsign: pos.callsign,
+              latitude: pos.latitude ?? 0,
+              longitude: pos.longitude ?? 0,
+              altitude: pos.altitude ?? 0,
+              onGround: pos.onGround,
+              velocity: pos.velocity ?? 0,
+              heading: pos.heading ?? 0,
+              lastUpdate: pos.lastContact ?? DateTime.now(),
+            ),
+            isLoading: false,
+            lastFetch: DateTime.now(),
+          );
+        }
+
+        return FlightPositionState(isLoading: false, lastFetch: DateTime.now());
       } catch (e) {
-        AppLogging.app('[Aether] Error fetching position: $e');
+        AppLogging.aether('Error fetching position for $callsign: $e');
         return FlightPositionState(isLoading: false, error: e.toString());
       }
     });
-
-/// Provider to calculate distance from user to flight
-final aetherDistanceToFlightProvider =
-    Provider.family<double?, ({FlightPosition flight, double lat, double lon})>(
-      (ref, params) {
-        return AetherService.calculateDistance(
-          params.lat,
-          params.lon,
-          params.flight.latitude,
-          params.flight.longitude,
-        );
-      },
-    );
 
 /// Stats provider for Aether
 ///
@@ -212,6 +175,10 @@ class AetherStats {
 // Discovery Providers (Aether API)
 // =============================================================================
 
+/// Sentinel value for copyWith methods that need to distinguish
+/// "not provided" from "explicitly set to null".
+const Object _sentinel = Object();
+
 /// Immutable state for the discovery feed.
 @immutable
 class DiscoveryState {
@@ -249,11 +216,11 @@ class DiscoveryState {
     int? totalPages,
     int? total,
     bool? isLoadingMore,
-    String? error,
+    Object? error = _sentinel,
     String? searchQuery,
-    String? departureFilter,
-    String? arrivalFilter,
-    bool? activeOnly,
+    Object? departureFilter = _sentinel,
+    Object? arrivalFilter = _sentinel,
+    Object? activeOnly = _sentinel,
     AetherSortOption? sort,
   }) {
     return DiscoveryState(
@@ -262,11 +229,17 @@ class DiscoveryState {
       totalPages: totalPages ?? this.totalPages,
       total: total ?? this.total,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      error: error,
+      error: error == _sentinel ? this.error : error as String?,
       searchQuery: searchQuery ?? this.searchQuery,
-      departureFilter: departureFilter ?? this.departureFilter,
-      arrivalFilter: arrivalFilter ?? this.arrivalFilter,
-      activeOnly: activeOnly ?? this.activeOnly,
+      departureFilter: departureFilter == _sentinel
+          ? this.departureFilter
+          : departureFilter as String?,
+      arrivalFilter: arrivalFilter == _sentinel
+          ? this.arrivalFilter
+          : arrivalFilter as String?,
+      activeOnly: activeOnly == _sentinel
+          ? this.activeOnly
+          : activeOnly as bool?,
       sort: sort ?? this.sort,
     );
   }
@@ -308,7 +281,7 @@ class DiscoveryNotifier extends AsyncNotifier<DiscoveryState> {
         error: null,
       );
     } catch (e) {
-      AppLogging.app('[Aether] Discovery fetch error: $e');
+      AppLogging.aether('Discovery fetch error: $e');
       return current.copyWith(isLoadingMore: false, error: e.toString());
     }
   }
