@@ -410,13 +410,29 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
 
       if (!mounted) return;
 
+      // If OpenSky confirmed this flight is currently airborne,
+      // activate it immediately instead of waiting for the periodic check.
+      var activeFlight = flight;
+      if (_validationResult?.isActive ?? false) {
+        await service.updateFlightStatus(flight.id, isActive: true);
+        activeFlight = flight.copyWith(isActive: true);
+        AppLogging.aether(
+          'Flight ${flight.flightNumber} auto-activated: '
+          'OpenSky confirmed currently airborne',
+        );
+      }
+
+      if (!mounted) return;
+
       HapticFeedback.mediumImpact();
 
       // Share to Aether API in background (non-blocking)
-      _shareFlightInBackground(flight);
+      _shareFlightInBackground(activeFlight);
 
-      Navigator.pop(context, true);
-      showSuccessSnackBar(context, 'Flight scheduled!');
+      final messenger = ScaffoldMessenger.of(context);
+      final status = activeFlight.isActive ? 'in flight!' : 'scheduled!';
+      Navigator.of(context).pop(true);
+      messenger.showSnackBar(SnackBar(content: Text('Flight $status')));
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Error: $e');
@@ -908,6 +924,84 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
         showInfoSnackBar(context, 'Flight is currently on the ground');
         HapticFeedback.lightImpact();
       }
+
+      // Look up route data (airports + times) in the background.
+      // The search sheet only provides callsign + position; the route
+      // endpoint gives us departure/arrival airports and times.
+      if (result.icao24 != null) {
+        _lookupRouteForSearchResult(result.icao24!);
+      }
+    }
+  }
+
+  /// Fetches route info (airports + times) for a flight selected from search.
+  /// Runs in background so the UI doesn't block — fields populate when ready.
+  Future<void> _lookupRouteForSearchResult(String icao24) async {
+    try {
+      final routeInfo = await OpenSkyService().lookupAircraftRoute(icao24);
+      if (routeInfo == null || !mounted) return;
+
+      safeSetState(() {
+        // Populate departure airport if empty
+        if (_departureController.text.isEmpty &&
+            routeInfo.estDepartureAirport != null) {
+          _departureController.text = routeInfo.estDepartureAirport!;
+        }
+
+        // Populate arrival airport if empty
+        if (_arrivalController.text.isEmpty &&
+            routeInfo.estArrivalAirport != null) {
+          _arrivalController.text = routeInfo.estArrivalAirport!;
+        }
+
+        // Populate departure date/time
+        if (routeInfo.departureTime != null) {
+          _departureDate = routeInfo.departureTime;
+          _departureTime = TimeOfDay.fromDateTime(routeInfo.departureTime!);
+        }
+
+        // Populate arrival date/time
+        if (routeInfo.arrivalTime != null) {
+          _arrivalDate = routeInfo.arrivalTime;
+          _arrivalTime = TimeOfDay.fromDateTime(routeInfo.arrivalTime!);
+        }
+
+        // Update validation result with route data
+        if (_validationResult != null) {
+          _validationResult = FlightValidationResult(
+            status: _validationResult!.status,
+            message: _validationResult!.message,
+            position: _validationResult!.position,
+            icao24: _validationResult!.icao24,
+            originCountry: _validationResult!.originCountry,
+            departureAirport:
+                routeInfo.estDepartureAirport ??
+                _validationResult!.departureAirport,
+            arrivalAirport:
+                routeInfo.estArrivalAirport ??
+                _validationResult!.arrivalAirport,
+            departureTime:
+                routeInfo.departureTime ?? _validationResult!.departureTime,
+            arrivalTime:
+                routeInfo.arrivalTime ?? _validationResult!.arrivalTime,
+          );
+        }
+      });
+
+      if (mounted) {
+        final parts = <String>[];
+        if (routeInfo.estDepartureAirport != null) {
+          parts.add(routeInfo.estDepartureAirport!);
+        }
+        if (routeInfo.estArrivalAirport != null) {
+          parts.add(routeInfo.estArrivalAirport!);
+        }
+        if (parts.isNotEmpty) {
+          showSuccessSnackBar(context, 'Route found: ${parts.join(" → ")}');
+        }
+      }
+    } catch (e) {
+      AppLogging.app('[Aether] Route lookup after search failed: $e');
     }
   }
 

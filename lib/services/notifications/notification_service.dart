@@ -300,6 +300,69 @@ class NotificationService {
     AppLogging.notifications('🔔 Showed notification for node: $nodeName');
   }
 
+  /// Show notification when a mesh node matches an active Aether flight.
+  ///
+  /// Alerts the user that a node in their mesh is currently airborne on
+  /// a known flight so they can report their reception.
+  Future<void> showAetherFlightDetectedNotification({
+    required String flightNumber,
+    required String departure,
+    required String arrival,
+    required String nodeName,
+    bool playSound = true,
+    bool vibrate = true,
+  }) async {
+    if (!_initialized) {
+      AppLogging.notifications(
+        '🔔 NotificationService not initialized, skipping Aether notification',
+      );
+      return;
+    }
+
+    final androidDetails = AndroidNotificationDetails(
+      'aether_flights',
+      'Aether Flights',
+      channelDescription:
+          'Notifications when an airborne Aether flight node is detected in your mesh',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'aether_flights',
+      playSound: playSound,
+      enableVibration: vibrate,
+      color: const Color(0xFF29B6F6), // lightBlue.shade400
+    );
+
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: playSound,
+      threadIdentifier: 'aether_flights',
+    );
+
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    final notificationId = DateTime.now().millisecondsSinceEpoch % 100000000;
+    final route = '$departure → $arrival';
+
+    await _notifications.show(
+      id: notificationId,
+      title: 'Aether Flight Detected',
+      body:
+          '$nodeName is airborne on $flightNumber ($route) — report your reception!',
+      notificationDetails: notificationDetails,
+      payload: 'aether:$flightNumber',
+    );
+
+    AppLogging.notifications(
+      '🔔 Showed Aether flight notification: $flightNumber ($route)',
+    );
+  }
+
   /// Show notification for firmware alert (errors, warnings from device)
   /// These are important notifications that should be shown even when app is in background
   Future<void> showFirmwareNotification({

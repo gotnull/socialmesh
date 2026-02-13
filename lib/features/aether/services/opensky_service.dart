@@ -271,7 +271,7 @@ class OpenSkyService {
 
       if (icao24 != null) {
         try {
-          final routeInfo = await _lookupAircraftRoute(icao24);
+          final routeInfo = await lookupAircraftRoute(icao24);
           if (routeInfo != null) {
             departureAirport = routeInfo.estDepartureAirport;
             arrivalAirport = routeInfo.estArrivalAirport;
@@ -372,7 +372,7 @@ class OpenSkyService {
   /// Returns the most recent [OpenSkyFlight] for the aircraft, or null
   /// if no route data is available (common for flights that just departed
   /// — OpenSky batch-processes route data with some delay).
-  Future<OpenSkyFlight?> _lookupAircraftRoute(String icao24) async {
+  Future<OpenSkyFlight?> lookupAircraftRoute(String icao24) async {
     final now = DateTime.now();
     final begin = now.subtract(const Duration(hours: 2));
     final beginTs = begin.millisecondsSinceEpoch ~/ 1000;

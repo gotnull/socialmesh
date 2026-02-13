@@ -44,6 +44,8 @@ import '../nodedex/services/trait_engine.dart';
 import '../nodedex/widgets/sigil_card_sheet.dart';
 import '../../providers/presence_providers.dart';
 // import '../social/screens/profile_social_screen.dart';
+import '../aether/providers/aether_flight_matcher_provider.dart';
+import '../aether/widgets/aether_flight_match_card.dart';
 
 // Battery helper functions
 // Meshtastic uses 101 for charging, 100 for plugged in fully charged
@@ -381,7 +383,10 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                   ),
                 ),
               )
-            else
+            else ...[
+              // Aether Flights Nearby — show matched active flights
+              // above the regular node list so they're impossible to miss.
+              ..._buildAetherFlightSlivers(context),
               ..._buildNodeSlivers(
                 nodesList,
                 myNodeNum,
@@ -390,10 +395,36 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                 isConnected: isConnected,
                 isInDiscoveryCooldown: isInDiscoveryCooldown,
               ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  /// Build slivers for the "Aether Flights Nearby" section.
+  ///
+  /// When a mesh node in the local node list matches an active Aether
+  /// flight, this section appears at the top of the Nodes screen with
+  /// a prominent card linking directly to the flight detail / report page.
+  List<Widget> _buildAetherFlightSlivers(BuildContext context) {
+    final matches = ref.watch(aetherFlightMatchesProvider);
+    if (matches.isEmpty) return [];
+
+    return [
+      SliverPersistentHeader(
+        pinned: true,
+        delegate: SectionHeaderDelegate(
+          title: 'Aether Flights Nearby',
+          count: matches.length,
+        ),
+      ),
+      SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          return AetherFlightMatchCard(match: matches[index]);
+        }, childCount: matches.length),
+      ),
+    ];
   }
 
   List<Widget> _buildNodeSlivers(

@@ -41,6 +41,10 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
   Timer? _debounce;
   bool _hasSearched = false;
 
+  /// Cached route data keyed by icao24 transponder address.
+  /// null value means lookup is in progress; populated once resolved.
+  final Map<String, OpenSkyFlight?> _routeCache = {};
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -85,6 +89,10 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
           _isLoading = false;
           _error = results.isEmpty ? 'No active flights found' : null;
         });
+
+        // Fetch route data for the top results in the background.
+        // Limit to first 10 to avoid burning API credits.
+        _fetchRoutesForResults(results.take(10).toList());
       }
     } catch (e) {
       if (mounted) {
@@ -102,17 +110,54 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
     Navigator.of(context).pop(flight);
   }
 
+  /// Fetch route info for search results in parallel (max 3 concurrent).
+  /// Updates the UI as each route resolves so tiles enrich progressively.
+  Future<void> _fetchRoutesForResults(List<ActiveFlightInfo> flights) async {
+    final toFetch = flights
+        .where((f) => f.icao24 != null && !_routeCache.containsKey(f.icao24))
+        .toList();
+
+    if (toFetch.isEmpty) return;
+
+    // Mark as in-progress (null = loading)
+    for (final f in toFetch) {
+      _routeCache[f.icao24!] = null;
+    }
+
+    // Process in batches of 3 to avoid hammering the API
+    const batchSize = 3;
+    for (var i = 0; i < toFetch.length; i += batchSize) {
+      if (!mounted) return;
+
+      final batch = toFetch.skip(i).take(batchSize);
+      final futures = batch.map((f) async {
+        try {
+          final route = await _openSky.lookupAircraftRoute(f.icao24!);
+          if (mounted) {
+            setState(() {
+              _routeCache[f.icao24!] = route;
+            });
+          }
+        } catch (_) {
+          // Non-fatal — tile just won't show route info
+        }
+      });
+
+      await Future.wait(futures);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Fixed height: 70% of screen. No resizing, no janky layout shifts.
+    final sheetHeight = MediaQuery.of(context).size.height * 0.7;
+
     // Prevent dismissal during active search to avoid wasted API calls
     return PopScope(
       canPop: !_isLoading,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-        ),
+      child: SizedBox(
+        height: sheetHeight,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Header
@@ -195,8 +240,8 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
 
             Divider(height: 1, color: context.border),
 
-            // Results
-            Flexible(child: _buildResults()),
+            // Results — always fills remaining space, no resizing
+            Expanded(child: _buildResults()),
           ],
         ),
       ),
@@ -221,8 +266,10 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
       itemCount: _results.length,
       itemBuilder: (context, index) {
         final flight = _results[index];
+        final route = flight.icao24 != null ? _routeCache[flight.icao24] : null;
         return _FlightResultTile(
           flight: flight,
+          route: route,
           onTap: () => _selectFlight(flight),
         );
       },
@@ -230,94 +277,100 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
   }
 
   Widget _buildHint() {
-    return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.flight,
-            size: 48,
-            color: context.textTertiary.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Search for active flights',
-            style: TextStyle(
-              color: context.textSecondary,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.flight,
+              size: 48,
+              color: context.textTertiary.withValues(alpha: 0.5),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Enter at least 2 characters to search\nfor flights currently in the air',
-            style: TextStyle(color: context.textTertiary, fontSize: 14),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              'Search for active flights',
+              style: TextStyle(
+                color: context.textSecondary,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Enter at least 2 characters to search\nfor flights currently in the air',
+              style: TextStyle(color: context.textTertiary, fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildEmpty() {
-    return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.search_off,
-            size: 48,
-            color: context.textTertiary.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No active flights found',
-            style: TextStyle(
-              color: context.textSecondary,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 48,
+              color: context.textTertiary.withValues(alpha: 0.5),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Try a different flight number or check\nif the flight is currently airborne',
-            style: TextStyle(color: context.textTertiary, fontSize: 14),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              'No active flights found',
+              style: TextStyle(
+                color: context.textSecondary,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try a different flight number or check\nif the flight is currently airborne',
+              style: TextStyle(color: context.textTertiary, fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildError() {
-    return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 48,
-            color: Colors.red.withValues(alpha: 0.7),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _error!,
-            style: TextStyle(
-              color: context.textSecondary,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Colors.red.withValues(alpha: 0.7),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: () => _performSearch(_searchController.text),
-            child: const Text('Retry'),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              _error!,
+              style: TextStyle(
+                color: context.textSecondary,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => _performSearch(_searchController.text),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -325,12 +378,22 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
 
 class _FlightResultTile extends StatelessWidget {
   final ActiveFlightInfo flight;
+  final OpenSkyFlight? route;
   final VoidCallback onTap;
 
-  const _FlightResultTile({required this.flight, required this.onTap});
+  const _FlightResultTile({
+    required this.flight,
+    this.route,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final hasRoute =
+        route != null &&
+        (route!.estDepartureAirport != null ||
+            route!.estArrivalAirport != null);
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       color: context.background,
@@ -367,21 +430,62 @@ class _FlightResultTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      flight.callsign,
-                      style: TextStyle(
-                        color: context.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'monospace',
-                      ),
+                    // Callsign + country
+                    Row(
+                      children: [
+                        Text(
+                          flight.callsign,
+                          style: TextStyle(
+                            color: context.textPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        if (flight.originCountry != null) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            flight.originCountry!,
+                            style: TextStyle(
+                              color: context.textTertiary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
+
+                    // Route: DEP -> ARR
+                    if (hasRoute) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.route,
+                            size: 13,
+                            color: context.accentColor.withValues(alpha: 0.7),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _buildRouteString(),
+                            style: TextStyle(
+                              color: context.textPrimary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+
                     const SizedBox(height: 2),
+
+                    // Speed + departure time
                     Text(
                       _buildSubtitle(),
                       style: TextStyle(
                         color: context.textSecondary,
-                        fontSize: 13,
+                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -418,12 +522,14 @@ class _FlightResultTile extends StatelessWidget {
     );
   }
 
+  String _buildRouteString() {
+    final dep = route?.estDepartureAirport ?? '???';
+    final arr = route?.estArrivalAirport ?? '???';
+    return '$dep \u2192 $arr';
+  }
+
   String _buildSubtitle() {
     final parts = <String>[];
-
-    if (flight.originCountry != null) {
-      parts.add(flight.originCountry!);
-    }
 
     if (flight.onGround) {
       parts.add('On ground');
@@ -433,6 +539,12 @@ class _FlightResultTile extends StatelessWidget {
       );
     }
 
-    return parts.isEmpty ? 'Active flight' : parts.join(' · ');
+    // Show departure time if route data available
+    if (route?.departureTime != null) {
+      final fmt = DateFormat('h:mm a');
+      parts.add('Departed ${fmt.format(route!.departureTime!)}');
+    }
+
+    return parts.isEmpty ? 'Active flight' : parts.join(' \u00B7 ');
   }
 }

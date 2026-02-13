@@ -92,7 +92,7 @@ void main() {
       });
 
       test('sigilApiUrl defaults to sigil subdomain', () {
-        expect(AppUrls.sigilApiUrl, 'https://sigil.socialmesh.app');
+        expect(AppUrls.sigilApiUrl, 'https://api.socialmesh.app');
       });
     });
 

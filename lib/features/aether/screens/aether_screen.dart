@@ -398,9 +398,14 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.flight, size: 16),
-                          const SizedBox(width: 4),
-                          const Text('Flights'),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 2),
+                          const Flexible(
+                            child: Text(
+                              'Flights',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
                           _TabBadge(count: stats.totalScheduled),
                         ],
                       ),
@@ -410,9 +415,14 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.explore_outlined, size: 16),
-                          const SizedBox(width: 4),
-                          const Text('Discover'),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 2),
+                          const Flexible(
+                            child: Text(
+                              'Discover',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
                           _TabBadge(count: discoveryTotal),
                         ],
                       ),
@@ -422,9 +432,14 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.emoji_events, size: 16),
-                          const SizedBox(width: 4),
-                          const Text('Board'),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 2),
+                          const Flexible(
+                            child: Text(
+                              'Board',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
                           _TabBadge(count: stats.totalReports),
                         ],
                       ),

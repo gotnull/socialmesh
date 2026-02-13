@@ -10,6 +10,7 @@ import '../../../core/constants.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
@@ -764,7 +765,13 @@ class _RadarPainter extends CustomPainter {
       oldDelegate.progress != progress;
 }
 
-/// Bottom sheet for reporting a reception
+/// Maximum length for notes field
+const int _maxReportNotesLength = 500;
+
+/// Bottom sheet for reporting a reception.
+///
+/// Auto-detects RSSI, SNR, location, and distance from the mesh — no
+/// manual input required. The user just taps "Submit" to confirm.
 class _ReportBottomSheet extends ConsumerStatefulWidget {
   final AetherFlight flight;
 
@@ -777,17 +784,81 @@ class _ReportBottomSheet extends ConsumerStatefulWidget {
 class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
     with LifecycleSafeMixin {
   final _notesController = TextEditingController();
-  final _rssiController = TextEditingController();
-  final _snrController = TextEditingController();
   bool _isSaving = false;
   final DateTime _receivedAt = DateTime.now();
+  bool _showNotes = false;
+
+  // Auto-detected values
+  double? _detectedRssi;
+  double? _detectedSnr;
+  double? _latitude;
+  double? _longitude;
+  double? _estimatedDistance;
+  String? _reporterNodeId;
+
+  @override
+  void initState() {
+    super.initState();
+    _autoDetectSignalData();
+  }
 
   @override
   void dispose() {
     _notesController.dispose();
-    _rssiController.dispose();
-    _snrController.dispose();
     super.dispose();
+  }
+
+  /// Look up the flight's node in the mesh to get RSSI/SNR automatically.
+  void _autoDetectSignalData() {
+    final nodes = ref.read(nodesProvider);
+    final myNodeNum = ref.read(myNodeNumProvider);
+
+    // Find the flight's node by matching nodeId.
+    final flightNodeId = widget.flight.nodeId.replaceAll('!', '').toLowerCase();
+    MeshNode? flightNode;
+    for (final node in nodes.values) {
+      final nodeHex =
+          node.userId?.replaceAll('!', '').toLowerCase() ??
+          node.nodeNum.toRadixString(16).toLowerCase();
+      if (nodeHex == flightNodeId) {
+        flightNode = node;
+        break;
+      }
+    }
+
+    // Get signal data from the flight's node.
+    if (flightNode != null) {
+      _detectedRssi = flightNode.rssi?.toDouble();
+      _detectedSnr = flightNode.snr?.toDouble();
+    }
+
+    // Get reporter's location from their own node.
+    final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
+    if (myNode != null) {
+      _reporterNodeId = myNode.userId ?? '!${myNode.nodeNum.toRadixString(16)}';
+      if (myNode.latitude != null && myNode.longitude != null) {
+        _latitude = myNode.latitude;
+        _longitude = myNode.longitude;
+      }
+    }
+
+    // Calculate distance if we have both positions.
+    if (_latitude != null && _longitude != null) {
+      final positionAsync = ref.read(
+        aetherFlightPositionProvider(widget.flight.flightNumber),
+      );
+      final positionState = positionAsync.value;
+      if (positionState?.position != null) {
+        _estimatedDistance = AetherService.calculateSlantRange(
+          _latitude!,
+          _longitude!,
+          myNode?.altitude?.toDouble() ?? 0,
+          positionState!.position!.latitude,
+          positionState.position!.longitude,
+          positionState.position!.altitude,
+        );
+      }
+    }
   }
 
   Future<void> _submit() async {
@@ -805,52 +876,17 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
     try {
       final service = ref.read(aetherServiceProvider);
 
-      // Get user's location if available
-      final myNode = ref.read(myNodeNumProvider);
-      final nodes = ref.read(nodesProvider);
-      final node = myNode != null ? nodes[myNode] : null;
-
-      double? latitude;
-      double? longitude;
-      double? estimatedDistance;
-
-      if (node?.latitude != null && node?.longitude != null) {
-        latitude = node!.latitude;
-        longitude = node.longitude;
-
-        // Calculate distance if flight position is available
-        final positionAsync = ref.read(
-          aetherFlightPositionProvider(widget.flight.flightNumber),
-        );
-        final positionState = positionAsync.value;
-        if (positionState?.position != null &&
-            latitude != null &&
-            longitude != null) {
-          estimatedDistance = AetherService.calculateSlantRange(
-            latitude,
-            longitude,
-            node.altitude?.toDouble() ?? 0,
-            positionState!.position!.latitude,
-            positionState.position!.longitude,
-            positionState.position!.altitude,
-          );
-        }
-      }
-
       await service.createReport(
         flightId: widget.flight.id,
         flightNumber: widget.flight.flightNumber,
         reporterId: user.uid,
         reporterName: user.displayName,
-        latitude: latitude,
-        longitude: longitude,
-        rssi: _rssiController.text.isNotEmpty
-            ? double.tryParse(_rssiController.text)
-            : null,
-        snr: _snrController.text.isNotEmpty
-            ? double.tryParse(_snrController.text)
-            : null,
-        estimatedDistance: estimatedDistance,
+        reporterNodeId: _reporterNodeId,
+        latitude: _latitude,
+        longitude: _longitude,
+        rssi: _detectedRssi,
+        snr: _detectedSnr,
+        estimatedDistance: _estimatedDistance,
         notes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
@@ -861,7 +897,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
         HapticFeedback.mediumImpact();
       }
       safeNavigatorPop();
-      safeShowSnackBar('Reception reported! 📡');
+      safeShowSnackBar('Reception reported!');
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Error: $e');
@@ -873,6 +909,9 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
 
   @override
   Widget build(BuildContext context) {
+    final hasSignalData = _detectedRssi != null || _detectedSnr != null;
+    final hasLocation = _latitude != null && _longitude != null;
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -893,17 +932,19 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                 ),
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             Row(
               children: [
                 Icon(Icons.signal_cellular_alt, color: context.accentColor),
-                SizedBox(width: 12),
-                Text(
-                  'Report Reception',
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Report Reception',
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -913,75 +954,171 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
               'I received a signal from ${widget.flight.flightNumber}!',
               style: TextStyle(color: context.textSecondary),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-            // Signal info (optional)
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _rssiController,
-                    keyboardType: TextInputType.numberWithOptions(signed: true),
-                    style: TextStyle(color: context.textPrimary),
-                    decoration: InputDecoration(
-                      labelText: 'RSSI (dBm)',
-                      labelStyle: TextStyle(color: context.textSecondary),
-                      hintText: '-90',
-                      hintStyle: TextStyle(color: context.textTertiary),
-                      filled: true,
-                      fillColor: context.background,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: TextField(
-                    controller: _snrController,
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    style: TextStyle(color: context.textPrimary),
-                    decoration: InputDecoration(
-                      labelText: 'SNR (dB)',
-                      labelStyle: TextStyle(color: context.textSecondary),
-                      hintText: '9.5',
-                      hintStyle: TextStyle(color: context.textTertiary),
-                      filled: true,
-                      fillColor: context.background,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-
-            // Notes
-            TextField(
-              controller: _notesController,
-              maxLines: 3,
-              style: TextStyle(color: context.textPrimary),
-              decoration: InputDecoration(
-                labelText: 'Notes (optional)',
-                labelStyle: TextStyle(color: context.textSecondary),
-                hintText: 'Equipment used, antenna, location details...',
-                hintStyle: TextStyle(color: context.textTertiary),
-                filled: true,
-                fillColor: context.background,
-                border: OutlineInputBorder(
+            // Auto-detected signal info (read-only)
+            if (hasSignalData)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: context.background,
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.sensors, color: context.accentColor, size: 20),
+                    const SizedBox(width: 12),
+                    if (_detectedRssi != null) ...[
+                      Text(
+                        'RSSI ',
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        '${_detectedRssi!.toInt()} dBm',
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                    if (_detectedRssi != null && _detectedSnr != null)
+                      const SizedBox(width: 16),
+                    if (_detectedSnr != null) ...[
+                      Text(
+                        'SNR ',
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        '${_detectedSnr!.toStringAsFixed(1)} dB',
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
+
+            if (hasSignalData) const SizedBox(height: 12),
+
+            // Auto-detected distance
+            if (_estimatedDistance != null)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: context.background,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.straighten,
+                      color: context.accentColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Estimated distance ',
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      '${_estimatedDistance!.toStringAsFixed(1)} km',
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            if (_estimatedDistance != null) const SizedBox(height: 12),
+
+            // Location status
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: context.background,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    hasLocation ? Icons.location_on : Icons.location_off,
+                    color: hasLocation
+                        ? context.accentColor
+                        : context.textTertiary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    hasLocation
+                        ? 'Location auto-detected'
+                        : 'Location unavailable',
+                    style: TextStyle(
+                      color: hasLocation
+                          ? context.textPrimary
+                          : context.textTertiary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 16),
+
+            // Optional notes toggle
+            if (!_showNotes)
+              Center(
+                child: TextButton.icon(
+                  onPressed: () => safeSetState(() => _showNotes = true),
+                  icon: Icon(
+                    Icons.note_add_outlined,
+                    size: 18,
+                    color: context.textSecondary,
+                  ),
+                  label: Text(
+                    'Add notes',
+                    style: TextStyle(color: context.textSecondary),
+                  ),
+                ),
+              )
+            else
+              GestureDetector(
+                onTap: () => FocusScope.of(context).unfocus(),
+                child: TextField(
+                  controller: _notesController,
+                  maxLines: 3,
+                  maxLength: _maxReportNotesLength,
+                  style: TextStyle(color: context.textPrimary),
+                  decoration: InputDecoration(
+                    labelText: 'Notes (optional)',
+                    labelStyle: TextStyle(color: context.textSecondary),
+                    hintText: 'Equipment, antenna, location details...',
+                    hintStyle: TextStyle(color: context.textTertiary),
+                    filled: true,
+                    fillColor: context.background,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 24),
 
             // Submit button
             ElevatedButton(

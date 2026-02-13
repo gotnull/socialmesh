@@ -31,6 +31,10 @@ void main() {
       ),
     );
 
+    // Let the slide-in animation complete (350ms) without triggering
+    // the 2-second dismiss timer that pumpAndSettle would advance past.
+    await tester.pump(const Duration(milliseconds: 400));
+
     expect(find.text('Retry'), findsNothing);
     expect(
       find.text(
@@ -69,6 +73,10 @@ void main() {
         ),
       ),
     );
+
+    // Let the slide-in animation complete (350ms) without triggering
+    // the 2-second dismiss timer that pumpAndSettle would advance past.
+    await tester.pump(const Duration(milliseconds: 400));
 
     // Retry button should NOT be shown for auth failures
     expect(find.text('Retry'), findsNothing);
@@ -109,6 +117,10 @@ void main() {
         ),
       ),
     );
+
+    // Let the slide-in animation complete (350ms) without triggering
+    // the 2-second dismiss timer that pumpAndSettle would advance past.
+    await tester.pump(const Duration(milliseconds: 400));
 
     // Retry button SHOULD be shown for device-not-found
     expect(find.text('Retry'), findsOneWidget);

@@ -57,6 +57,9 @@ import '../debug/device_logs_screen.dart';
 import '../nodedex/screens/nodedex_screen.dart';
 import '../social/screens/activity_timeline_screen.dart';
 import '../aether/screens/aether_screen.dart';
+import '../aether/providers/aether_flight_matcher_provider.dart';
+import '../aether/providers/aether_flight_lifecycle_provider.dart';
+import '../aether/screens/aether_flight_detail_screen.dart';
 // import '../global_layer/screens/global_layer_hub_screen.dart';
 import '../../providers/activity_providers.dart';
 import '../../providers/whats_new_providers.dart';
@@ -317,6 +320,11 @@ class MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<MainShell> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  /// Tracks whether the [TopStatusBanner] is actually taking up space on
+  /// screen (accounts for slide animation). Used to keep
+  /// [MediaQuery.removePadding] in sync with the banner's real footprint.
+  bool _bannerActuallyVisible = false;
+
   @override
   void initState() {
     super.initState();
@@ -363,7 +371,6 @@ class _MainShellState extends ConsumerState<MainShell> {
       tabIndex: 2,
       sectionHeader: 'SOCIAL',
       iconColor: Colors.purple.shade300,
-      requiresConnection: true,
     ),
     _DrawerMenuItem(
       icon: Icons.auto_stories_outlined,
@@ -402,7 +409,6 @@ class _MainShellState extends ConsumerState<MainShell> {
       screen: const TimelineScreen(),
       sectionHeader: 'MESH',
       iconColor: Colors.indigo.shade400,
-      requiresConnection: true,
     ),
     _DrawerMenuItem(
       icon: Icons.public,
@@ -416,14 +422,12 @@ class _MainShellState extends ConsumerState<MainShell> {
       label: '3D Mesh View',
       screen: const Mesh3DScreen(),
       iconColor: Colors.cyan.shade400,
-      requiresConnection: true,
     ),
     _DrawerMenuItem(
       icon: Icons.route,
       label: 'Routes',
       screen: const RoutesScreen(),
       iconColor: Colors.purple.shade400,
-      requiresConnection: true,
     ),
     _DrawerMenuItem(
       icon: Icons.wifi_find,
@@ -497,7 +501,6 @@ class _MainShellState extends ConsumerState<MainShell> {
       screen: const AutomationsScreen(),
       premiumFeature: PremiumFeature.automations,
       iconColor: Colors.yellow.shade700,
-      requiresConnection: true,
     ),
     _DrawerMenuItem(
       icon: Icons.webhook_outlined,
@@ -1070,6 +1073,96 @@ class _MainShellState extends ConsumerState<MainShell> {
       });
     });
 
+    // Aether flight detection — cross-reference mesh nodes with active
+    // flights and alert the user when a match is found so they can
+    // report their reception immediately.
+    ref.listen<AetherFlightMatcherState>(aetherFlightMatcherProvider, (
+      previous,
+      next,
+    ) {
+      if (!mounted) return;
+      final matcher = ref.read(aetherFlightMatcherProvider.notifier);
+      final unnotified = matcher.unnotifiedMatches;
+      for (final match in unnotified) {
+        matcher.markNotified(match.flight.nodeId);
+        final route = '${match.flight.departure} → ${match.flight.arrival}';
+        // In-app snackbar with action to open the flight
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.flight, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${match.flight.flightNumber} ($route) detected in your mesh!',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF29B6F6),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 6),
+            action: SnackBarAction(
+              label: 'Report',
+              textColor: Colors.white,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        AetherFlightDetailScreen(flight: match.flight),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+        // Push notification (visible if app is backgrounded)
+        NotificationService().showAetherFlightDetectedNotification(
+          flightNumber: match.flight.flightNumber,
+          departure: match.flight.departure,
+          arrival: match.flight.arrival,
+          nodeName: match.node.displayName,
+        );
+        AppLogging.aether(
+          'Flight match detected: ${match.flight.flightNumber} '
+          'node ${match.flight.nodeId} = ${match.node.displayName}',
+        );
+      }
+    });
+
+    // Aether flight lifecycle — auto-activate flights when departure
+    // time passes and auto-deactivate when arrival time passes.
+    ref.listen<FlightLifecycleState>(aetherFlightLifecycleProvider, (
+      previous,
+      next,
+    ) {
+      if (!mounted) return;
+      final notifier = ref.read(aetherFlightLifecycleProvider.notifier);
+      for (final event in next.pendingEvents) {
+        notifier.acknowledgeEvent(event);
+        final flight = event.flight;
+        final route = '${flight.departure} → ${flight.arrival}';
+        if (event.activated) {
+          showInfoSnackBar(
+            context,
+            '${flight.flightNumber} ($route) is now in flight!',
+          );
+          AppLogging.aether('Lifecycle: activated ${flight.flightNumber}');
+        } else {
+          showInfoSnackBar(
+            context,
+            '${flight.flightNumber} ($route) flight completed',
+          );
+          AppLogging.aether('Lifecycle: deactivated ${flight.flightNumber}');
+        }
+      }
+    });
+
     // Check if we need to show the "Connect Device" screen
     // ONLY show scanner on first launch (never paired before) AND auto-reconnect disabled
     // For subsequent disconnections, show a non-intrusive banner instead
@@ -1120,54 +1213,74 @@ class _MainShellState extends ConsumerState<MainShell> {
       key: _scaffoldKey,
       drawer: _buildDrawer(context),
       drawerEdgeDragWidth: 40,
-      body: Stack(
+      body: Column(
         children: [
-          // Main content (fills available space)
-          // Allow user interaction even when reconnection banner is showing
-          // The app should remain usable with cached data while reconnecting
-          Positioned.fill(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.02),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
+          // Reconnection status banner — sits above content when
+          // disconnected after having paired before. Always in the tree
+          // so it can animate in/out; visibility is driven by [visible].
+          TopStatusBanner(
+            autoReconnectState: autoReconnectState,
+            autoReconnectEnabled: autoReconnectEnabled,
+            visible: showReconnectionBanner,
+            onVisibilityChanged: (visible) {
+              if (mounted && visible != _bannerActuallyVisible) {
+                setState(() => _bannerActuallyVisible = visible);
+              }
+            },
+            onRetry: () {
+              ref
+                  .read(deviceConnectionProvider.notifier)
+                  .startBackgroundConnection();
+            },
+            onGoToScanner: () => Navigator.of(context).pushNamed('/scanner'),
+            deviceState: deviceState,
+          ),
+
+          // Main content (fills remaining space below banner)
+          // Users can fully interact with cached data while
+          // reconnecting — app bars, drawers, and nav all work.
+          Expanded(
+            // Smoothly transition the top inset as the banner animates
+            // in/out so the app bar doesn't jump when safe-area padding
+            // is restored. Duration & curve match TopStatusBanner's
+            // AnimationController so they stay in visual sync.
+            child: AnimatedPadding(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.only(
+                top: _bannerActuallyVisible
+                    ? 0.0
+                    : MediaQuery.of(context).padding.top,
+              ),
+              child: MediaQuery.removePadding(
+                context: context,
+                // Always strip the framework-level top inset — we
+                // manage it ourselves via the AnimatedPadding above.
+                removeTop: true,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.02),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: KeyedSubtree(
+                    key: ValueKey('main_${ref.watch(mainShellIndexProvider)}'),
+                    child: _buildScreen(ref.watch(mainShellIndexProvider)),
                   ),
-                );
-              },
-              child: KeyedSubtree(
-                key: ValueKey('main_${ref.watch(mainShellIndexProvider)}'),
-                child: _buildScreen(ref.watch(mainShellIndexProvider)),
+                ),
               ),
             ),
           ),
-
-          // Reconnection status banner - overlays content when disconnected after having paired before
-          if (showReconnectionBanner)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: TopStatusBanner(
-                autoReconnectState: autoReconnectState,
-                autoReconnectEnabled: autoReconnectEnabled,
-                onRetry: () {
-                  ref
-                      .read(deviceConnectionProvider.notifier)
-                      .startBackgroundConnection();
-                },
-                onGoToScanner: () =>
-                    Navigator.of(context).pushNamed('/scanner'),
-                deviceState: deviceState,
-              ),
-            ),
         ],
       ),
       bottomNavigationBar: Column(
