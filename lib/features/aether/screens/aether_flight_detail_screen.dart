@@ -861,6 +861,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
   Future<void> _submit() async {
     final user = ref.read(currentUserProvider);
     if (user == null) {
+      AppLogging.aether('Submit report: user not signed in');
       showSignInRequiredSnackBar(
         context,
         'Sign in to submit a reception report',
@@ -868,12 +869,22 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
       return;
     }
 
+    AppLogging.aether(
+      'Submit report: starting for ${widget.flight.flightNumber}',
+    );
+    AppLogging.aether('  user: ${user.uid} (${user.displayName})');
+    AppLogging.aether('  reporterNodeId: $_reporterNodeId');
+    AppLogging.aether('  rssi: $_detectedRssi, snr: $_detectedSnr');
+    AppLogging.aether('  lat/lon: $_latitude, $_longitude');
+    AppLogging.aether('  estimatedDistance: $_estimatedDistance');
+    AppLogging.aether('  receivedAt: $_receivedAt');
+
     safeSetState(() => _isSaving = true);
 
     try {
       final service = ref.read(aetherServiceProvider);
 
-      await service.createReport(
+      final report = await service.createReport(
         flightId: widget.flight.id,
         flightNumber: widget.flight.flightNumber,
         reporterId: user.uid,
@@ -890,12 +901,16 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
         receivedAt: _receivedAt,
       );
 
+      AppLogging.aether('Submit report: success, id=${report.id}');
+
       if (mounted) {
         HapticFeedback.mediumImpact();
       }
       safeNavigatorPop();
       safeShowSnackBar('Reception reported!');
-    } catch (e) {
+    } catch (e, st) {
+      AppLogging.aether('Submit report: FAILED - $e');
+      AppLogging.aether('Stack trace: $st');
       if (mounted) {
         showErrorSnackBar(context, 'Error: $e');
       }

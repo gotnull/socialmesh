@@ -43,9 +43,7 @@ import '../../../providers/accessibility_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../models/aether_flight.dart';
 import '../providers/aether_providers.dart';
-import '../providers/aether_flight_matcher_provider.dart';
 import '../services/aether_share_service.dart';
-import '../widgets/aether_flight_match_card.dart';
 import 'schedule_flight_screen.dart';
 import 'aether_flight_detail_screen.dart';
 import '../../settings/settings_screen.dart';
@@ -526,7 +524,7 @@ class _TabBadge extends StatelessWidget {
 // Flights Tab Content
 // =============================================================================
 
-class _FlightsTabContent extends ConsumerWidget {
+class _FlightsTabContent extends StatelessWidget {
   final AsyncValue<List<AetherFlight>> flightsAsync;
   final AsyncValue<List<AetherFlight>> activeFlightsAsync;
   final AetherStats stats;
@@ -558,9 +556,8 @@ class _FlightsTabContent extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final allFlights = flightsAsync.value ?? [];
-    final flightMatches = ref.watch(aetherFlightMatchesProvider);
     final upcomingCount = allFlights
         .where((f) => !f.isActive && !f.isPast)
         .length;
@@ -570,22 +567,6 @@ class _FlightsTabContent extends ConsumerWidget {
 
     return CustomScrollView(
       slivers: [
-        // Detected flights section (matches from mesh)
-        if (flightMatches.isNotEmpty) ...[
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: SectionHeaderDelegate(
-              title: 'Detected in Mesh',
-              count: flightMatches.length,
-            ),
-          ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              return AetherFlightMatchCard(match: flightMatches[index]);
-            }, childCount: flightMatches.length),
-          ),
-        ],
-
         // Stats summary card
         SliverToBoxAdapter(
           child: Skeletonizer(

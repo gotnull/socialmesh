@@ -142,6 +142,19 @@ class AetherService {
     String? notes,
     required DateTime receivedAt,
   }) async {
+    AppLogging.aether('=' * 60);
+    AppLogging.aether('Creating reception report');
+    AppLogging.aether('  flightId: $flightId');
+    AppLogging.aether('  flightNumber: $flightNumber');
+    AppLogging.aether('  reporterId: $reporterId');
+    AppLogging.aether('  reporterName: $reporterName');
+    AppLogging.aether('  reporterNodeId: $reporterNodeId');
+    AppLogging.aether('  lat/lon: $latitude, $longitude');
+    AppLogging.aether('  rssi: $rssi, snr: $snr');
+    AppLogging.aether('  estimatedDistance: $estimatedDistance km');
+    AppLogging.aether('  notes: ${notes != null ? '"$notes"' : 'none'}');
+    AppLogging.aether('  receivedAt: $receivedAt');
+
     final data = {
       'aetherFlightId': flightId,
       'flightNumber': flightNumber,
@@ -159,15 +172,29 @@ class AetherService {
       'createdAt': FieldValue.serverTimestamp(),
     };
 
-    final docRef = await _reportsCollection.add(data);
+    try {
+      AppLogging.aether('Writing report to Firestore...');
+      final docRef = await _reportsCollection.add(data);
+      AppLogging.aether('Report created: ${docRef.id}');
 
-    // Increment reception count on flight
-    await _flightsCollection.doc(flightId).update({
-      'receptionCount': FieldValue.increment(1),
-    });
+      // Increment reception count on flight
+      AppLogging.aether('Incrementing reception count on flight $flightId...');
+      await _flightsCollection.doc(flightId).update({
+        'receptionCount': FieldValue.increment(1),
+      });
+      AppLogging.aether('Reception count incremented');
 
-    final doc = await docRef.get();
-    return ReceptionReport.fromJson(doc.data()!, doc.id);
+      final doc = await docRef.get();
+      final report = ReceptionReport.fromJson(doc.data()!, doc.id);
+      AppLogging.aether('Report confirmed: ${report.id}');
+      AppLogging.aether('=' * 60);
+      return report;
+    } catch (e, st) {
+      AppLogging.aether('Report creation FAILED: $e');
+      AppLogging.aether('Stack trace: $st');
+      AppLogging.aether('=' * 60);
+      rethrow;
+    }
   }
 
   // ============ Distance Calculations ============
