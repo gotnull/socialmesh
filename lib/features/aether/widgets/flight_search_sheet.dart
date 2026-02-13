@@ -149,8 +149,9 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
 
   @override
   Widget build(BuildContext context) {
-    // Fixed height: 70% of screen. No resizing, no janky layout shifts.
-    final sheetHeight = MediaQuery.of(context).size.height * 0.7;
+    // Fill the screen below the safe area (status bar / dynamic island).
+    final topPadding = MediaQuery.of(context).padding.top;
+    final sheetHeight = MediaQuery.of(context).size.height - topPadding;
 
     // Prevent dismissal during active search to avoid wasted API calls
     return PopScope(
