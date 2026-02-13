@@ -2,6 +2,7 @@
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:socialmesh/core/logging.dart';
 
 import '../models/aether_flight.dart';
 
