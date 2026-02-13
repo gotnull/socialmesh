@@ -35,23 +35,32 @@ class AetherFlightMatcherState {
   /// Prevents spamming the user when the same node reconnects.
   final Set<String> notifiedNodeIds;
 
+  /// Node IDs whose overlay card was manually dismissed by the user.
+  /// These matches still appear in the Aether screen section but
+  /// no longer show as a floating overlay.
+  final Set<String> dismissedOverlayNodeIds;
+
   /// Whether active flights have been fetched at least once.
   final bool hasFetched;
 
   const AetherFlightMatcherState({
     this.matches = const [],
     this.notifiedNodeIds = const {},
+    this.dismissedOverlayNodeIds = const {},
     this.hasFetched = false,
   });
 
   AetherFlightMatcherState copyWith({
     List<AetherFlightMatch>? matches,
     Set<String>? notifiedNodeIds,
+    Set<String>? dismissedOverlayNodeIds,
     bool? hasFetched,
   }) {
     return AetherFlightMatcherState(
       matches: matches ?? this.matches,
       notifiedNodeIds: notifiedNodeIds ?? this.notifiedNodeIds,
+      dismissedOverlayNodeIds:
+          dismissedOverlayNodeIds ?? this.dismissedOverlayNodeIds,
       hasFetched: hasFetched ?? this.hasFetched,
     );
   }
@@ -202,6 +211,23 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
       return !state.notifiedNodeIds.contains(normalized);
     }).toList();
   }
+
+  /// Dismiss a match from the floating overlay. The match still
+  /// appears in the Aether screen section for later action.
+  void dismissOverlay(String nodeId) {
+    final normalized = _normalizeNodeId(nodeId);
+    state = state.copyWith(
+      dismissedOverlayNodeIds: {...state.dismissedOverlayNodeIds, normalized},
+    );
+  }
+
+  /// Matches that should show in the floating overlay (not dismissed).
+  List<AetherFlightMatch> get activeOverlayMatches {
+    return state.matches.where((m) {
+      final normalized = _normalizeNodeId(m.flight.nodeId);
+      return !state.dismissedOverlayNodeIds.contains(normalized);
+    }).toList();
+  }
 }
 
 /// Provider for the Aether flight matcher.
@@ -213,4 +239,13 @@ final aetherFlightMatcherProvider =
 /// Convenience provider that exposes just the current matches list.
 final aetherFlightMatchesProvider = Provider<List<AetherFlightMatch>>((ref) {
   return ref.watch(aetherFlightMatcherProvider).matches;
+});
+
+/// Matches that should appear in the floating overlay (not dismissed).
+final aetherOverlayMatchesProvider = Provider<List<AetherFlightMatch>>((ref) {
+  final state = ref.watch(aetherFlightMatcherProvider);
+  return state.matches.where((m) {
+    final normalized = _normalizeNodeId(m.flight.nodeId);
+    return !state.dismissedOverlayNodeIds.contains(normalized);
+  }).toList();
 });

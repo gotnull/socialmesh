@@ -59,7 +59,7 @@ import '../social/screens/activity_timeline_screen.dart';
 import '../aether/screens/aether_screen.dart';
 import '../aether/providers/aether_flight_matcher_provider.dart';
 import '../aether/providers/aether_flight_lifecycle_provider.dart';
-import '../aether/screens/aether_flight_detail_screen.dart';
+import '../aether/widgets/aether_flight_detected_overlay.dart';
 // import '../global_layer/screens/global_layer_hub_screen.dart';
 import '../../providers/activity_providers.dart';
 import '../../providers/whats_new_providers.dart';
@@ -324,6 +324,9 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// screen (accounts for slide animation). Used to keep
   /// [MediaQuery.removePadding] in sync with the banner's real footprint.
   bool _bannerActuallyVisible = false;
+
+  /// Whether the Aether flight overlay should be hidden due to scrolling.
+  bool _overlayHiddenByScroll = false;
 
   @override
   void initState() {
@@ -1075,7 +1078,8 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     // Aether flight detection — cross-reference mesh nodes with active
     // flights and alert the user when a match is found so they can
-    // report their reception immediately.
+    // report their reception immediately. The in-app floating overlay
+    // is handled by AetherFlightDetectedOverlay in the body Stack.
     ref.listen<AetherFlightMatcherState>(aetherFlightMatcherProvider, (
       previous,
       next,
@@ -1085,42 +1089,6 @@ class _MainShellState extends ConsumerState<MainShell> {
       final unnotified = matcher.unnotifiedMatches;
       for (final match in unnotified) {
         matcher.markNotified(match.flight.nodeId);
-        final route = '${match.flight.departure} → ${match.flight.arrival}';
-        // In-app snackbar with action to open the flight
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.flight, color: Colors.white, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '${match.flight.flightNumber} ($route) detected in your mesh!',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: const Color(0xFF29B6F6),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 6),
-            action: SnackBarAction(
-              label: 'Report',
-              textColor: Colors.white,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) =>
-                        AetherFlightDetailScreen(flight: match.flight),
-                  ),
-                );
-              },
-            ),
-          ),
-        );
         // Push notification (visible if app is backgrounded)
         NotificationService().showAetherFlightDetectedNotification(
           flightNumber: match.flight.flightNumber,
@@ -1257,25 +1225,63 @@ class _MainShellState extends ConsumerState<MainShell> {
                 // Always strip the framework-level top inset — we
                 // manage it ourselves via the AnimatedPadding above.
                 removeTop: true,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.02),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      ),
-                    );
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification is ScrollStartNotification) {
+                      if (!_overlayHiddenByScroll) {
+                        setState(() => _overlayHiddenByScroll = true);
+                      }
+                    } else if (notification is ScrollEndNotification) {
+                      // Delay reappearance so the overlay doesn't
+                      // flicker during fling deceleration.
+                      Future<void>.delayed(
+                        const Duration(milliseconds: 800),
+                        () {
+                          if (mounted && _overlayHiddenByScroll) {
+                            setState(() => _overlayHiddenByScroll = false);
+                          }
+                        },
+                      );
+                    }
+                    return false; // Don't absorb — let child scrollables work.
                   },
-                  child: KeyedSubtree(
-                    key: ValueKey('main_${ref.watch(mainShellIndexProvider)}'),
-                    child: _buildScreen(ref.watch(mainShellIndexProvider)),
+                  child: Stack(
+                    children: [
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, 0.02),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: KeyedSubtree(
+                          key: ValueKey(
+                            'main_${ref.watch(mainShellIndexProvider)}',
+                          ),
+                          child: _buildScreen(
+                            ref.watch(mainShellIndexProvider),
+                          ),
+                        ),
+                      ),
+                      // Aether flight match floating overlay
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 8,
+                        child: AetherFlightDetectedOverlay(
+                          hidden: _overlayHiddenByScroll,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

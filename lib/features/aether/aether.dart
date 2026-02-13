@@ -22,5 +22,6 @@ export 'screens/schedule_flight_screen.dart';
 export 'services/aether_service.dart';
 export 'services/aether_share_service.dart';
 export 'services/opensky_service.dart';
+export 'widgets/aether_flight_detected_overlay.dart';
 export 'widgets/aether_flight_match_card.dart';
 export 'widgets/flight_search_sheet.dart';

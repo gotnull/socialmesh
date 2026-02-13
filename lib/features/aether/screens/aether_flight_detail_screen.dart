@@ -1079,43 +1079,132 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
               ),
               const SizedBox(height: 16),
 
-              // Optional notes toggle
+              // Optional notes — matches NodeDex _UserNoteCard pattern
               if (!_showNotes)
                 Center(
-                  child: TextButton.icon(
-                    onPressed: () => safeSetState(() => _showNotes = true),
-                    icon: Icon(
-                      Icons.note_add_outlined,
-                      size: 18,
-                      color: context.textSecondary,
-                    ),
-                    label: Text(
-                      'Add notes',
-                      style: TextStyle(color: context.textSecondary),
+                  child: GestureDetector(
+                    onTap: () => safeSetState(() => _showNotes = true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Add Notes',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: context.accentColor,
+                        ),
+                      ),
                     ),
                   ),
                 )
               else
-                GestureDetector(
-                  onTap: () => FocusScope.of(context).unfocus(),
-                  child: TextField(
-                    controller: _notesController,
-                    maxLines: 3,
-                    maxLength: _maxReportNotesLength,
-                    style: TextStyle(color: context.textPrimary),
-                    decoration: InputDecoration(
-                      labelText: 'Notes (optional)',
-                      labelStyle: TextStyle(color: context.textSecondary),
-                      hintText: 'Equipment, antenna, location details...',
-                      hintStyle: TextStyle(color: context.textTertiary),
-                      filled: true,
-                      fillColor: context.background,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.edit_note,
+                          size: 18,
+                          color: context.textSecondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Notes',
+                          style: TextStyle(
+                            color: context.textSecondary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: () {
+                            FocusScope.of(context).unfocus();
+                            _notesController.clear();
+                            safeSetState(() => _showNotes = false);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: context.textTertiary.withValues(
+                                alpha: 0.1,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'Remove',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: context.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _notesController,
+                      maxLines: 4,
+                      maxLength: _maxReportNotesLength,
+                      autofocus: true,
+                      scrollPadding: const EdgeInsets.all(80),
+                      onTapOutside: (_) {
+                        FocusScope.of(context).unfocus();
+                      },
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: context.textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Equipment, antenna, location details...',
+                        hintStyle: TextStyle(
+                          fontSize: 14,
+                          color: context.textTertiary,
+                        ),
+                        filled: true,
+                        fillColor: context.background,
+                        contentPadding: const EdgeInsets.all(12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: context.border.withValues(alpha: 0.3),
+                            width: 0.5,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: context.border.withValues(alpha: 0.3),
+                            width: 0.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: context.accentColor.withValues(alpha: 0.5),
+                            width: 1.0,
+                          ),
+                        ),
+                        counterStyle: TextStyle(
+                          fontSize: 10,
+                          color: context.textTertiary,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               const SizedBox(height: 24),
 

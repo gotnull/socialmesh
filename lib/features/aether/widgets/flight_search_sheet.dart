@@ -149,9 +149,9 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
 
   @override
   Widget build(BuildContext context) {
-    // Fill the screen below the safe area (status bar / dynamic island).
-    final topPadding = MediaQuery.of(context).padding.top;
-    final sheetHeight = MediaQuery.of(context).size.height - topPadding;
+    // Cap at 85% of screen height so the sheet never clashes with the
+    // Dynamic Island / status bar area.
+    final sheetHeight = MediaQuery.of(context).size.height * 0.85;
 
     // Prevent dismissal during active search to avoid wasted API calls
     return PopScope(
@@ -445,11 +445,15 @@ class _FlightResultTile extends StatelessWidget {
                         ),
                         if (flight.originCountry != null) ...[
                           const SizedBox(width: 8),
-                          Text(
-                            flight.originCountry!,
-                            style: TextStyle(
-                              color: context.textTertiary,
-                              fontSize: 12,
+                          Flexible(
+                            child: Text(
+                              flight.originCountry!,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: TextStyle(
+                                color: context.textTertiary,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                         ],
@@ -524,9 +528,12 @@ class _FlightResultTile extends StatelessWidget {
   }
 
   String _buildRouteString() {
-    final dep = route?.estDepartureAirport ?? '???';
-    final arr = route?.estArrivalAirport ?? '???';
-    return '$dep \u2192 $arr';
+    final dep = route?.estDepartureAirport;
+    final arr = route?.estArrivalAirport;
+    if (dep != null && arr != null) return '$dep \u2192 $arr';
+    if (dep != null) return 'From $dep';
+    if (arr != null) return 'To $arr';
+    return '';
   }
 
   String _buildSubtitle() {

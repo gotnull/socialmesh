@@ -6,11 +6,12 @@
 // view reception reports, and compete on a leaderboard for longest range contacts.
 //
 // Layout:
-// - Glass app bar with title and gradient action button
-// - Tab bar for Flights / Discover / Leaderboard navigation
-// - Flights tab: stats card, filter chips, searchable flight list (Firestore)
+// - Glass app bar with title, schedule button, leaderboard button, overflow menu
+// - Tab bar for Flights / Discover navigation
+// - Flights tab: detected flights section, stats card, filter chips, searchable
+//   flight list (Firestore)
 // - Discover tab: community-shared flights from the Aether API
-// - Leaderboard tab: global distance rankings with medals
+// - Leaderboard: accessible via app bar trophy button as scrollable modal
 //
 // Firebase-backed with real-time streams and OpenSky Network integration
 // for live flight position tracking.
@@ -42,7 +43,9 @@ import '../../../providers/accessibility_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../models/aether_flight.dart';
 import '../providers/aether_providers.dart';
+import '../providers/aether_flight_matcher_provider.dart';
 import '../services/aether_share_service.dart';
+import '../widgets/aether_flight_match_card.dart';
 import 'schedule_flight_screen.dart';
 import 'aether_flight_detail_screen.dart';
 import '../../settings/settings_screen.dart';
@@ -104,7 +107,7 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -248,11 +251,37 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
     );
   }
 
+  /// Builds the leaderboard button for the app bar.
+  Widget _buildLeaderboardButton(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.emoji_events, color: context.textSecondary, size: 22),
+      tooltip: 'Leaderboard',
+      onPressed: _showLeaderboard,
+    );
+  }
+
+  /// Shows the leaderboard in a scrollable bottom sheet.
+  void _showLeaderboard() {
+    HapticFeedback.selectionClick();
+    final leaderboardAsync = ref.read(aetherGlobalLeaderboardProvider);
+    final reduceMotion = ref.read(reduceMotionEnabledProvider);
+
+    AppBottomSheet.show(
+      context: context,
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.7,
+        child: _LeaderboardModalContent(
+          leaderboardAsync: leaderboardAsync,
+          reduceMotion: reduceMotion,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final flightsAsync = ref.watch(aetherFlightsProvider);
     final activeFlightsAsync = ref.watch(aetherActiveFlightsProvider);
-    final leaderboardAsync = ref.watch(aetherGlobalLeaderboardProvider);
     final discoveryAsync = ref.watch(aetherDiscoveryProvider);
     final stats = ref.watch(aetherStatsProvider);
     final user = ref.watch(currentUserProvider);
@@ -261,9 +290,7 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
     final discoveryTotal = discoveryAsync.value?.total ?? 0;
 
     final isLoading =
-        flightsAsync is AsyncLoading ||
-        activeFlightsAsync is AsyncLoading ||
-        leaderboardAsync is AsyncLoading;
+        flightsAsync is AsyncLoading || activeFlightsAsync is AsyncLoading;
 
     return HelpTourController(
       topicId: 'aether_overview',
@@ -288,6 +315,8 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
             ),
             actions: [
               _buildScheduleFlightButton(context),
+              const SizedBox(width: 4),
+              _buildLeaderboardButton(context),
               const SizedBox(width: 4),
               AppBarOverflowMenu<String>(
                 onSelected: (value) {
@@ -421,23 +450,6 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
                         ],
                       ),
                     ),
-                    Tab(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.emoji_events, size: 16),
-                          const SizedBox(width: 2),
-                          const Flexible(
-                            child: Text(
-                              'Board',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 2),
-                          _TabBadge(count: stats.totalReports),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -471,12 +483,6 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
               _DiscoverTabContent(
                 reduceMotion: reduceMotion,
                 onScheduleFlight: _scheduleFlight,
-              ),
-              // Leaderboard Tab
-              _LeaderboardTabContent(
-                leaderboardAsync: leaderboardAsync,
-                reduceMotion: reduceMotion,
-                isLoading: isLoading,
               ),
             ],
           ),
@@ -520,7 +526,7 @@ class _TabBadge extends StatelessWidget {
 // Flights Tab Content
 // =============================================================================
 
-class _FlightsTabContent extends StatelessWidget {
+class _FlightsTabContent extends ConsumerWidget {
   final AsyncValue<List<AetherFlight>> flightsAsync;
   final AsyncValue<List<AetherFlight>> activeFlightsAsync;
   final AetherStats stats;
@@ -552,8 +558,9 @@ class _FlightsTabContent extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final allFlights = flightsAsync.value ?? [];
+    final flightMatches = ref.watch(aetherFlightMatchesProvider);
     final upcomingCount = allFlights
         .where((f) => !f.isActive && !f.isPast)
         .length;
@@ -563,6 +570,22 @@ class _FlightsTabContent extends StatelessWidget {
 
     return CustomScrollView(
       slivers: [
+        // Detected flights section (matches from mesh)
+        if (flightMatches.isNotEmpty) ...[
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: SectionHeaderDelegate(
+              title: 'Detected in Mesh',
+              count: flightMatches.length,
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              return AetherFlightMatchCard(match: flightMatches[index]);
+            }, childCount: flightMatches.length),
+          ),
+        ],
+
         // Stats summary card
         SliverToBoxAdapter(
           child: Skeletonizer(
@@ -1096,130 +1119,118 @@ class _ApiStatsCard extends StatelessWidget {
 }
 
 // =============================================================================
-// Leaderboard Tab Content
+// Leaderboard Modal Content
 // =============================================================================
 
-class _LeaderboardTabContent extends StatelessWidget {
+class _LeaderboardModalContent extends StatelessWidget {
   final AsyncValue<List<ReceptionReport>> leaderboardAsync;
   final bool reduceMotion;
-  final bool isLoading;
 
-  const _LeaderboardTabContent({
+  const _LeaderboardModalContent({
     required this.leaderboardAsync,
     required this.reduceMotion,
-    required this.isLoading,
   });
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
+    return Column(
+      children: [
         // Header with trophy icon
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: AccentColors.gradientFor(context.accentColor),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: AccentColors.gradientFor(context.accentColor),
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.emoji_events,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Distance Leaderboard',
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.emoji_events,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Distance Leaderboard',
-                        style: TextStyle(
-                          color: context.textPrimary,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    Text(
+                      'Global rankings by reception distance',
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: 13,
                       ),
-                      Text(
-                        'Global rankings by reception distance',
-                        style: TextStyle(
-                          color: context.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
 
         // Leaderboard content
-        _buildLeaderboardList(context),
-
-        // Bottom padding
-        const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        Expanded(child: _buildLeaderboardList(context)),
       ],
     );
   }
 
   Widget _buildLeaderboardList(BuildContext context) {
     return leaderboardAsync.when(
-      loading: () => SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) => Skeletonizer(
-            enabled: true,
-            effect: AppSkeletonConfig.effect(context),
-            child: _ReportCard(
-              report: ReceptionReport(
-                id: 'skeleton_$index',
-                aetherFlightId: 'skeleton',
-                flightNumber: 'AA1234',
-                reporterId: 'skeleton',
-                receivedAt: DateTime.now(),
-                createdAt: DateTime.now(),
-              ),
-              rank: index + 1,
+      loading: () => ListView.builder(
+        itemCount: 5,
+        itemBuilder: (context, index) => Skeletonizer(
+          enabled: true,
+          effect: AppSkeletonConfig.effect(context),
+          child: _ReportCard(
+            report: ReceptionReport(
+              id: 'skeleton_$index',
+              aetherFlightId: 'skeleton',
+              flightNumber: 'AA1234',
+              reporterId: 'skeleton',
+              receivedAt: DateTime.now(),
+              createdAt: DateTime.now(),
             ),
+            rank: index + 1,
           ),
-          childCount: 5,
         ),
       ),
-      error: (e, _) => SliverFillRemaining(
-        child: _EmptyState(
-          icon: Icons.error_outline,
-          title: 'Error Loading Leaderboard',
-          subtitle: 'Pull to refresh and try again.',
-        ),
+      error: (e, _) => _EmptyState(
+        icon: Icons.error_outline,
+        title: 'Error Loading Leaderboard',
+        subtitle: 'Pull to refresh and try again.',
       ),
       data: (leaderboard) {
         if (leaderboard.isEmpty) {
-          return SliverFillRemaining(
-            child: _EmptyState(
-              icon: Icons.emoji_events_outlined,
-              title: 'Leaderboard Empty',
-              subtitle:
-                  'Be the first to receive a signal from a sky node and claim the top spot!',
-            ),
+          return _EmptyState(
+            icon: Icons.emoji_events_outlined,
+            title: 'Leaderboard Empty',
+            subtitle:
+                'Be the first to receive a signal from a sky node and claim the top spot!',
           );
         }
 
-        return SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
+        return ListView.builder(
+          itemCount: leaderboard.length,
+          itemBuilder: (context, index) {
             return _StaggeredListTile(
               index: index,
               reduceMotion: reduceMotion,
               child: _ReportCard(report: leaderboard[index], rank: index + 1),
             );
-          }, childCount: leaderboard.length),
+          },
         );
       },
     );

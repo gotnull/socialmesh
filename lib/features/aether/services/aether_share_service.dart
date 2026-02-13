@@ -231,7 +231,7 @@ class AetherShareService {
       AppLogging.aether('Response headers: ${response.headers}');
       AppLogging.aether('Response body: ${response.body}');
 
-      if (response.statusCode == 201) {
+      if (response.statusCode >= 200 && response.statusCode < 300) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
         final id = json['id'] as String;
         final url = json['url'] as String;
