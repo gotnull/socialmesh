@@ -111,8 +111,10 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
           admin_pbenum.AdminMessage_ConfigType.SECURITY_CONFIG,
         );
       }
-    } on StateError catch (e) {
+    } catch (e) {
       // Device disconnected between isConnected check and getConfig call
+      // Catches both StateError (pre-send check) and PlatformException
+      // (native BLE disconnect race during characteristic write)
       AppLogging.protocol('Security config load aborted: $e');
     } finally {
       safeSetState(() => _loading = false);

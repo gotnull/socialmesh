@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/logging.dart';
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
 import '../models/aether_flight.dart';
 import 'aether_providers.dart';
+
+/// SharedPreferences keys for persisting flight notification state.
+const _kNotifiedNodeIds = 'aether_notified_node_ids';
+const _kDismissedOverlayNodeIds = 'aether_dismissed_overlay_node_ids';
 
 /// A match between a mesh node in your node list and an active Aether flight.
 class AetherFlightMatch {
@@ -97,10 +102,63 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
       _recheckMatches();
     });
 
-    // Also do an initial fetch from the API for community flights
-    _fetchApiFlights();
+    // Restore persisted notification state, then fetch flights
+    _restorePersistedState();
 
     return const AetherFlightMatcherState();
+  }
+
+  /// Restore notified / dismissed sets from SharedPreferences so
+  /// the user is not re-alerted for flights they already saw.
+  Future<void> _restorePersistedState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final notified = prefs.getStringList(_kNotifiedNodeIds) ?? [];
+      final dismissed = prefs.getStringList(_kDismissedOverlayNodeIds) ?? [];
+      state = state.copyWith(
+        notifiedNodeIds: {...state.notifiedNodeIds, ...notified},
+        dismissedOverlayNodeIds: {
+          ...state.dismissedOverlayNodeIds,
+          ...dismissed,
+        },
+      );
+      AppLogging.aether(
+        'Flight matcher: restored ${notified.length} notified, '
+        '${dismissed.length} dismissed from disk',
+      );
+    } catch (e) {
+      AppLogging.aether(
+        'Flight matcher: failed to restore persisted state: $e',
+      );
+    }
+    // Now safe to fetch flights
+    await _fetchApiFlights();
+  }
+
+  /// Persist the notified set to disk.
+  Future<void> _persistNotified() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+        _kNotifiedNodeIds,
+        state.notifiedNodeIds.toList(),
+      );
+    } catch (e) {
+      AppLogging.aether('Flight matcher: failed to persist notified: $e');
+    }
+  }
+
+  /// Persist the dismissed overlay set to disk.
+  Future<void> _persistDismissed() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+        _kDismissedOverlayNodeIds,
+        state.dismissedOverlayNodeIds.toList(),
+      );
+    } catch (e) {
+      AppLogging.aether('Flight matcher: failed to persist dismissed: $e');
+    }
   }
 
   /// Active flights from the REST API (community-shared).
@@ -201,16 +259,41 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
         '${newMatches.map((m) => m.flight.flightNumber).join(', ')}',
       );
     }
+
+    // Prune persisted state for flights that are no longer active
+    // so stale entries don't accumulate across sessions.
+    final activeNodeIds = newMatches
+        .map((m) => _normalizeNodeId(m.flight.nodeId))
+        .toSet();
+    final staleNotified = state.notifiedNodeIds.difference(activeNodeIds);
+    final staleDismissed = state.dismissedOverlayNodeIds.difference(
+      activeNodeIds,
+    );
+    if (staleNotified.isNotEmpty || staleDismissed.isNotEmpty) {
+      state = state.copyWith(
+        notifiedNodeIds: state.notifiedNodeIds.difference(staleNotified),
+        dismissedOverlayNodeIds: state.dismissedOverlayNodeIds.difference(
+          staleDismissed,
+        ),
+      );
+      _persistNotified();
+      _persistDismissed();
+      AppLogging.aether(
+        'Flight matcher: pruned ${staleNotified.length} notified, '
+        '${staleDismissed.length} dismissed stale entries',
+      );
+    }
   }
 
-  /// Mark a node ID as notified so we don't alert the user again
-  /// for the same flight during this session.
+  /// Mark a node ID as notified so we don't alert the user again.
+  /// Persisted to disk so the notification survives app restarts.
   void markNotified(String nodeId) {
     AppLogging.aether('Flight matcher: markNotified($nodeId)');
     final normalized = _normalizeNodeId(nodeId);
     state = state.copyWith(
       notifiedNodeIds: {...state.notifiedNodeIds, normalized},
     );
+    _persistNotified();
   }
 
   /// Get matches that haven't been notified yet.
@@ -223,12 +306,28 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
 
   /// Dismiss a match from the floating overlay. The match still
   /// appears in the Aether screen section for later action.
+  /// Persisted to disk so the overlay stays dismissed across restarts.
   void dismissOverlay(String nodeId) {
     AppLogging.aether('Flight matcher: dismissOverlay($nodeId)');
     final normalized = _normalizeNodeId(nodeId);
     state = state.copyWith(
       dismissedOverlayNodeIds: {...state.dismissedOverlayNodeIds, normalized},
     );
+    _persistDismissed();
+  }
+
+  /// Clear persisted notification state. Called when all flights for
+  /// a node have ended so stale entries don't accumulate forever.
+  Future<void> clearPersistedStateForNode(String nodeId) async {
+    final normalized = _normalizeNodeId(nodeId);
+    final newNotified = {...state.notifiedNodeIds}..remove(normalized);
+    final newDismissed = {...state.dismissedOverlayNodeIds}..remove(normalized);
+    state = state.copyWith(
+      notifiedNodeIds: newNotified,
+      dismissedOverlayNodeIds: newDismissed,
+    );
+    await _persistNotified();
+    await _persistDismissed();
   }
 
   /// Matches that should show in the floating overlay (not dismissed).

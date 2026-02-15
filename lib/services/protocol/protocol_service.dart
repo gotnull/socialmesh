@@ -11,7 +11,6 @@ import '../../models/device_error.dart';
 import '../../models/telemetry_log.dart';
 import '../../generated/meshtastic/admin.pb.dart' as admin;
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
-import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
@@ -19,6 +18,9 @@ import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
 import '../../generated/meshtastic/portnums.pbenum.dart' as pn;
 import '../../generated/meshtastic/telemetry.pb.dart' as telemetry;
+import 'admin_ack_tracker.dart';
+import 'admin_target.dart';
+import 'mesh_packet_builder.dart';
 import 'packet_framer.dart';
 import '../mesh_packet_dedupe_store.dart';
 import '../../utils/text_sanitizer.dart';
@@ -317,6 +319,9 @@ class ProtocolService {
   // Track pending messages by packet ID for delivery status updates
   final Map<int, String> _pendingMessages = {}; // packetId -> messageId
 
+  /// Tracks remote admin packets awaiting ACK from the mesh.
+  final AdminAckTracker _adminAckTracker = AdminAckTracker();
+
   // BLE device name for hardware model inference
   String? _deviceName;
 
@@ -614,6 +619,12 @@ class ProtocolService {
   /// Stream of message delivery updates
   Stream<MessageDeliveryUpdate> get deliveryStream =>
       _deliveryController.stream;
+
+  /// ACK tracker for confirmed-mode remote admin operations.
+  ///
+  /// Local admin callers MUST NOT use this — local packets are processed
+  /// synchronously by the firmware and never produce routing ACKs.
+  AdminAckTracker get adminAckTracker => _adminAckTracker;
 
   /// Get last known RSSI
   int get lastRssi => _lastRssi;
@@ -1564,8 +1575,8 @@ class ProtocolService {
     // Handle Device config
     if (config.hasDevice()) {
       final deviceConfig = config.device;
-      AppLogging.liveActivity(
-        'FromRadio Device config: role=${deviceConfig.role.name}',
+      AppLogging.protocol(
+        'FromRadio Device config: role=${deviceConfig.role.name} (value=${deviceConfig.role.value})',
       );
       _currentDeviceConfig = deviceConfig;
       _deviceConfigController.add(deviceConfig);
@@ -1803,6 +1814,9 @@ class ProtocolService {
         error: delivered ? null : routingError,
       );
       _deliveryController.add(update);
+
+      // Forward to admin ACK tracker for confirmed-mode remote admin
+      _adminAckTracker.onDeliveryUpdate(update);
     } catch (e) {
       AppLogging.protocol('Error handling routing message: $e');
     }
@@ -2493,6 +2507,10 @@ class ProtocolService {
       if (user.hasRole()) {
         role = user.role.name;
       }
+      AppLogging.protocol(
+        'NodeInfo ${nodeInfo.num}: User.role=${user.role.name} (value=${user.role.value}), '
+        'hasRole=${user.hasRole()}, resolved role=$role',
+      );
       if (user.hasId()) {
         userId = user.id;
       }
@@ -2793,13 +2811,14 @@ class ProtocolService {
         data.replyId = replyId;
       }
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum!
-        ..to = to
-        ..channel = channel
-        ..decoded = data
-        ..id = packetId
-        ..wantAck = wantAck;
+      final packet = MeshPacketBuilder.userPayload(
+        myNodeNum: _myNodeNum!,
+        to: to,
+        data: data,
+        packetId: packetId,
+        channel: channel,
+        wantAck: wantAck,
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -2898,12 +2917,12 @@ class ProtocolService {
         ..portnum = pn.PortNum.PRIVATE_APP
         ..payload = payload;
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum!
-        ..to =
-            0xFFFFFFFF // Broadcast
-        ..decoded = data
-        ..id = packetId;
+      final packet = MeshPacketBuilder.userPayload(
+        myNodeNum: _myNodeNum!,
+        to: 0xFFFFFFFF,
+        data: data,
+        packetId: packetId,
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -2967,13 +2986,14 @@ class ProtocolService {
         data.replyId = replyId;
       }
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum!
-        ..to = to
-        ..channel = channel
-        ..decoded = data
-        ..id = packetId
-        ..wantAck = wantAck;
+      final packet = MeshPacketBuilder.userPayload(
+        myNodeNum: _myNodeNum!,
+        to: to,
+        data: data,
+        packetId: packetId,
+        channel: channel,
+        wantAck: wantAck,
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3013,6 +3033,14 @@ class ProtocolService {
   }
 
   /// Generate a random packet ID
+  /// Resolve an [AdminTarget] to a concrete destination node number.
+  ///
+  /// If [target] is null, defaults to the local device.
+  int _resolveTarget(AdminTarget? target) {
+    if (target == null) return _myNodeNum!;
+    return target.resolve(_myNodeNum!);
+  }
+
   int _generatePacketId() {
     return _random.nextInt(0x7FFFFFFF);
   }
@@ -3044,12 +3072,12 @@ class ProtocolService {
         ..portnum = pn.PortNum.POSITION_APP
         ..payload = position.writeToBuffer();
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum ?? 0
-        ..to =
-            0xFFFFFFFF // Broadcast
-        ..decoded = data
-        ..id = _generatePacketId();
+      final packet = MeshPacketBuilder.userPayload(
+        myNodeNum: _myNodeNum ?? 0,
+        to: 0xFFFFFFFF,
+        data: data,
+        packetId: _generatePacketId(),
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3105,13 +3133,13 @@ class ProtocolService {
         ..portnum = pn.PortNum.POSITION_APP
         ..payload = position.writeToBuffer();
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum ?? 0
-        ..to =
-            nodeNum // Send to specific node
-        ..decoded = data
-        ..id = _generatePacketId()
-        ..wantAck = true;
+      final packet = MeshPacketBuilder.userPayload(
+        myNodeNum: _myNodeNum ?? 0,
+        to: nodeNum,
+        data: data,
+        packetId: _generatePacketId(),
+        wantAck: true,
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3158,13 +3186,13 @@ class ProtocolService {
         ..wantResponse = true; // Request a response with their info
 
       // Send directly to the target node (not broadcast) with wantResponse
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum ?? 0
-        ..to =
-            nodeNum // Direct to target node
-        ..decoded = data
-        ..id = _generatePacketId()
-        ..wantAck = true;
+      final packet = MeshPacketBuilder.userPayload(
+        myNodeNum: _myNodeNum ?? 0,
+        to: nodeNum,
+        data: data,
+        packetId: _generatePacketId(),
+        wantAck: true,
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3196,12 +3224,12 @@ class ProtocolService {
         ..portnum = pn.PortNum.NODEINFO_APP
         ..payload = user.writeToBuffer();
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum ?? 0
-        ..to =
-            0xFFFFFFFF // Broadcast
-        ..decoded = data
-        ..id = _generatePacketId();
+      final packet = MeshPacketBuilder.userPayload(
+        myNodeNum: _myNodeNum ?? 0,
+        to: 0xFFFFFFFF,
+        data: data,
+        packetId: _generatePacketId(),
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3227,12 +3255,13 @@ class ProtocolService {
         ..payload = position.writeToBuffer()
         ..wantResponse = true;
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum ?? 0
-        ..to = nodeNum
-        ..decoded = data
-        ..id = _generatePacketId()
-        ..wantAck = true;
+      final packet = MeshPacketBuilder.userPayload(
+        myNodeNum: _myNodeNum ?? 0,
+        to: nodeNum,
+        data: data,
+        packetId: _generatePacketId(),
+        wantAck: true,
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3274,12 +3303,13 @@ class ProtocolService {
       ..payload = routeDiscovery.writeToBuffer()
       ..wantResponse = true;
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum ?? 0
-      ..to = nodeNum
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.userPayload(
+      myNodeNum: _myNodeNum ?? 0,
+      to: nodeNum,
+      data: data,
+      packetId: _generatePacketId(),
+      wantAck: true,
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     final bytes = toRadio.writeToBuffer();
@@ -3357,13 +3387,11 @@ class ProtocolService {
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum!
-        ..to = _myNodeNum!
-        ..decoded = data
-        ..id = _generatePacketId()
-        ..priority = pbenum.MeshPacket_Priority.RELIABLE
-        ..wantAck = true;
+      final packet = MeshPacketBuilder.localAdmin(
+        myNodeNum: _myNodeNum!,
+        data: data,
+        packetId: _generatePacketId(),
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3393,11 +3421,11 @@ class ProtocolService {
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum ?? 0
-        ..to = _myNodeNum ?? 0
-        ..decoded = data
-        ..id = _generatePacketId();
+      final packet = MeshPacketBuilder.localAdmin(
+        myNodeNum: _myNodeNum ?? 0,
+        data: data,
+        packetId: _generatePacketId(),
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3408,66 +3436,17 @@ class ProtocolService {
     }
   }
 
-  /// Set device role
-  Future<void> setDeviceRole(config_pb.Config_DeviceConfig_Role role) async {
-    // Validate we're ready to send
-    if (_myNodeNum == null) {
-      throw StateError(
-        'Cannot set device role: device not ready (no node number)',
-      );
-    }
-    if (!_transport.isConnected) {
-      throw StateError('Cannot set device role: not connected to device');
-    }
-
-    try {
-      AppLogging.protocol('Setting device role: ${role.name}');
-
-      // Get current owner info and update role
-      final user = pb.User()..role = role;
-
-      final adminMsg = admin.AdminMessage()..setOwner = user;
-
-      final data = pb.Data()
-        ..portnum = pn.PortNum.ADMIN_APP
-        ..payload = adminMsg.writeToBuffer()
-        ..wantResponse = true;
-
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum!
-        ..to = _myNodeNum!
-        ..decoded = data
-        ..id = _generatePacketId();
-
-      final toRadio = pb.ToRadio()..packet = packet;
-      final bytes = toRadio.writeToBuffer();
-
-      await _transport.send(_prepareForSend(bytes));
-
-      // Immediately update local node cache so UI reflects the change
-      final existingNode = _nodes[_myNodeNum!];
-      if (existingNode != null) {
-        final updatedNode = existingNode.copyWith(role: role.name);
-        _nodes[_myNodeNum!] = updatedNode;
-        _nodeController.add(updatedNode);
-        AppLogging.protocol('Updated local node cache with new role');
-      }
-    } catch (e) {
-      AppLogging.protocol('Error setting device role: $e');
-      rethrow;
-    }
-  }
-
-  /// Set owner config (name and/or role) in a single admin message.
-  /// This is preferred over calling setUserName and setDeviceRole separately
-  /// because the device will reboot after each setOwner call.
+  /// Set owner config (name and/or user flags) in a single admin message.
   ///
   /// After calling this, the device will save the config and reboot.
   /// The caller should expect a disconnection.
+  ///
+  /// Note: Device role is NOT sent here — it belongs in Config.DeviceConfig
+  /// (via [setDeviceConfig]), which is the only place the firmware reads it.
+  /// This matches the official Meshtastic iOS app's approach.
   Future<void> setOwnerConfig({
     String? longName,
     String? shortName,
-    config_pb.Config_DeviceConfig_Role? role,
     bool? isUnmessagable,
     bool? isLicensed,
   }) async {
@@ -3484,7 +3463,6 @@ class ProtocolService {
     // Must have at least one field to update
     if (longName == null &&
         shortName == null &&
-        role == null &&
         isUnmessagable == null &&
         isLicensed == null) {
       AppLogging.protocol('setOwnerConfig called with no changes');
@@ -3504,16 +3482,16 @@ class ProtocolService {
         'Setting owner config: '
         'longName=${trimmedLong ?? "(unchanged)"}, '
         'shortName=${trimmedShort ?? "(unchanged)"}, '
-        'role=${role?.name ?? "(unchanged)"}, '
         'isUnmessagable=${isUnmessagable ?? "(unchanged)"}, '
         'isLicensed=${isLicensed ?? "(unchanged)"}',
       );
 
       // Build User object with all provided fields
+      // Note: role is intentionally NOT set here — it belongs in
+      // Config.DeviceConfig and is sent via setDeviceConfig().
       final user = pb.User();
       if (trimmedLong != null) user.longName = trimmedLong;
       if (trimmedShort != null) user.shortName = trimmedShort;
-      if (role != null) user.role = role;
       if (isUnmessagable != null) user.isUnmessagable = isUnmessagable;
       if (isLicensed != null) user.isLicensed = isLicensed;
 
@@ -3524,11 +3502,11 @@ class ProtocolService {
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum!
-        ..to = _myNodeNum!
-        ..decoded = data
-        ..id = _generatePacketId();
+      final packet = MeshPacketBuilder.localAdmin(
+        myNodeNum: _myNodeNum!,
+        data: data,
+        packetId: _generatePacketId(),
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3542,7 +3520,6 @@ class ProtocolService {
         final updatedNode = existingNode.copyWith(
           longName: trimmedLong ?? existingNode.longName,
           shortName: trimmedShort ?? existingNode.shortName,
-          role: role?.name ?? existingNode.role,
         );
         _nodes[_myNodeNum!] = updatedNode;
         _nodeController.add(updatedNode);
@@ -3606,11 +3583,11 @@ class ProtocolService {
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum!
-        ..to = _myNodeNum!
-        ..decoded = data
-        ..id = _generatePacketId();
+      final packet = MeshPacketBuilder.localAdmin(
+        myNodeNum: _myNodeNum!,
+        data: data,
+        packetId: _generatePacketId(),
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3674,11 +3651,11 @@ class ProtocolService {
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum!
-        ..to = _myNodeNum!
-        ..decoded = data
-        ..id = _generatePacketId();
+      final packet = MeshPacketBuilder.localAdmin(
+        myNodeNum: _myNodeNum!,
+        data: data,
+        packetId: _generatePacketId(),
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3726,11 +3703,11 @@ class ProtocolService {
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum!
-        ..to = _myNodeNum!
-        ..decoded = data
-        ..id = _generatePacketId();
+      final packet = MeshPacketBuilder.localAdmin(
+        myNodeNum: _myNodeNum!,
+        data: data,
+        packetId: _generatePacketId(),
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3741,12 +3718,15 @@ class ProtocolService {
     }
   }
 
-  /// Request the current LoRa configuration (for region)
-  Future<void> getLoRaConfig({int? targetNodeNum}) async {
+  /// Request the current LoRa configuration (for region).
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
+  Future<void> getLoRaConfig({AdminTarget? target}) async {
     try {
-      final target = targetNodeNum ?? _myNodeNum ?? 0;
+      final dest = _resolveTarget(target);
+      final isRemote = dest != _myNodeNum;
       AppLogging.protocol(
-        'Requesting LoRa config${targetNodeNum != null ? ' from node $targetNodeNum' : ''}',
+        'Requesting LoRa config${isRemote ? ' from node $dest' : ''}',
       );
 
       // Use ConfigType enum for LoRa config
@@ -3758,11 +3738,12 @@ class ProtocolService {
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum ?? 0
-        ..to = target
-        ..decoded = data
-        ..id = _generatePacketId();
+      final packet = MeshPacketBuilder.admin(
+        myNodeNum: _myNodeNum ?? 0,
+        targetNodeNum: dest,
+        data: data,
+        packetId: _generatePacketId(),
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3773,12 +3754,15 @@ class ProtocolService {
     }
   }
 
-  /// Request the current Position configuration (GPS settings)
-  Future<void> getPositionConfig({int? targetNodeNum}) async {
+  /// Request the current Position configuration (GPS settings).
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
+  Future<void> getPositionConfig({AdminTarget? target}) async {
     try {
-      final target = targetNodeNum ?? _myNodeNum ?? 0;
+      final dest = _resolveTarget(target);
+      final isRemote = dest != _myNodeNum;
       AppLogging.protocol(
-        'Requesting Position config${targetNodeNum != null ? ' from node $targetNodeNum' : ''}',
+        'Requesting Position config${isRemote ? ' from node $dest' : ''}',
       );
 
       final adminMsg = admin.AdminMessage()
@@ -3789,11 +3773,12 @@ class ProtocolService {
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
-      final packet = pb.MeshPacket()
-        ..from = _myNodeNum ?? 0
-        ..to = target
-        ..decoded = data
-        ..id = _generatePacketId();
+      final packet = MeshPacketBuilder.admin(
+        myNodeNum: _myNodeNum ?? 0,
+        targetNodeNum: dest,
+        data: data,
+        packetId: _generatePacketId(),
+      );
 
       final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3825,13 +3810,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -3854,13 +3837,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -3886,13 +3867,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -3918,13 +3897,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -3948,13 +3925,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -3995,14 +3970,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..channel = 0
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -4027,11 +3999,11 @@ class ProtocolService {
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId();
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -4058,13 +4030,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -4089,13 +4059,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -4118,13 +4086,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -4158,13 +4124,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -4187,13 +4151,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -4216,13 +4178,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -4245,13 +4205,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -4278,13 +4236,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -4307,15 +4263,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..channel =
-          0 // Primary channel
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -4357,11 +4309,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId();
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -4371,12 +4323,12 @@ class ProtocolService {
   // CONFIGURATION METHODS
   // ============================================================================
 
-  /// Get device configuration by type
-  /// If [targetNodeNum] is provided, requests config from that remote node
-  /// (requires remote admin authorization on the target node)
+  /// Get device configuration by type.
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
   Future<void> getConfig(
     admin.AdminMessage_ConfigType configType, {
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot get config: device not ready');
@@ -4385,15 +4337,15 @@ class ProtocolService {
       throw StateError('Cannot get config: not connected');
     }
 
-    final target = targetNodeNum ?? _myNodeNum!;
-    final isRemote = target != _myNodeNum;
+    final dest = _resolveTarget(target);
+    final isRemote = dest != _myNodeNum;
 
     AppLogging.protocol(
-      'Requesting config: ${configType.name}${isRemote ? ' from remote node $target' : ''}',
+      'Requesting config: ${configType.name}${isRemote ? ' from remote node $dest' : ''}',
     );
     if (isRemote) {
       AppLogging.protocol(
-        '🔧 Remote Admin: Requesting ${configType.name} from ${target.toRadixString(16)}',
+        '🔧 Remote Admin: Requesting ${configType.name} from ${dest.toRadixString(16)}',
       );
     }
 
@@ -4404,20 +4356,21 @@ class ProtocolService {
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = target
-      ..decoded = data
-      ..id = _generatePacketId();
+    final packet = MeshPacketBuilder.admin(
+      myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Set device configuration
-  /// If [targetNodeNum] is provided, sends config to that remote node
-  /// (requires remote admin authorization on the target node)
-  Future<void> setConfig(config_pb.Config config, {int? targetNodeNum}) async {
+  /// Set device configuration.
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
+  Future<void> setConfig(config_pb.Config config, {AdminTarget? target}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot set config: device not ready');
     }
@@ -4425,35 +4378,50 @@ class ProtocolService {
       throw StateError('Cannot set config: not connected');
     }
 
-    final target = targetNodeNum ?? _myNodeNum!;
-    final isRemote = target != _myNodeNum;
+    final dest = _resolveTarget(target);
+    final isRemote = dest != _myNodeNum;
 
     AppLogging.protocol(
-      'Setting config${isRemote ? ' on remote node $target' : ''}',
+      'setConfig: Setting config${isRemote ? ' on remote node $dest' : ''} — '
+      'hasDevice=${config.hasDevice()}, hasLora=${config.hasLora()}, '
+      'hasPosition=${config.hasPosition()}, hasPower=${config.hasPower()}',
     );
     if (isRemote) {
       AppLogging.protocol(
-        '🔧 Remote Admin: Setting config on ${target.toRadixString(16)}',
+        '🔧 Remote Admin: Setting config on ${dest.toRadixString(16)}',
       );
     }
 
     final adminMsg = admin.AdminMessage()..setConfig = config;
+    final adminBytes = adminMsg.writeToBuffer();
 
     final data = pb.Data()
       ..portnum = pn.PortNum.ADMIN_APP
-      ..payload = adminMsg.writeToBuffer()
+      ..payload = adminBytes
       ..wantResponse = true;
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = target
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packetId = _generatePacketId();
+    final packet = MeshPacketBuilder.admin(
+      myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
+      data: data,
+      packetId: packetId,
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
-    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+    final outBytes = _prepareForSend(toRadio.writeToBuffer());
+
+    AppLogging.protocol(
+      'setConfig: sending admin message — '
+      'packetId=$packetId, adminPayload=${adminBytes.length} bytes, '
+      'toRadio=${outBytes.length} bytes, from=${_myNodeNum!}, to=$dest',
+    );
+
+    await _transport.send(outBytes);
+
+    AppLogging.protocol(
+      'setConfig: transport.send completed — packet $packetId delivered to BLE stack',
+    );
 
     // Optimistically update the local cache and emit to streams so config
     // screens show the saved values immediately when navigating back.
@@ -4469,7 +4437,16 @@ class ProtocolService {
 
   /// Applies a just-saved config to the local cache and emits to streams.
   void _applySavedConfigToCache(config_pb.Config config) {
+    AppLogging.protocol(
+      '_applySavedConfigToCache: hasDevice=${config.hasDevice()}, '
+      'hasLora=${config.hasLora()}, hasPosition=${config.hasPosition()}',
+    );
     if (config.hasDevice()) {
+      AppLogging.protocol(
+        '_applySavedConfigToCache: caching device config — '
+        'role=${config.device.role.name} (value=${config.device.role.value}), '
+        'emitting to deviceConfigController',
+      );
       _currentDeviceConfig = config.device;
       _deviceConfigController.add(config.device);
     }
@@ -4522,7 +4499,7 @@ class ProtocolService {
     double overrideFrequency = 0.0,
     bool ignoreMqtt = false,
     bool configOkToMqtt = false,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting LoRa config');
 
@@ -4544,7 +4521,7 @@ class ProtocolService {
       ..configOkToMqtt = configOkToMqtt;
 
     final config = config_pb.Config()..lora = loraConfig;
-    await setConfig(config, targetNodeNum: targetNodeNum);
+    await setConfig(config, target: target);
   }
 
   /// Set device configuration (role, serial, etc.)
@@ -4561,11 +4538,43 @@ class ProtocolService {
     String tzdef = '',
     config_pbenum.Config_DeviceConfig_BuzzerMode buzzerMode =
         config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
-    AppLogging.protocol('Setting device config');
+    AppLogging.protocol(
+      'setDeviceConfig called \u2014 role=${role.name} (value=${role.value}), '
+      'rebroadcastMode=${rebroadcastMode.name}, '
+      'serialEnabled=$serialEnabled, '
+      'nodeInfoBroadcastSecs=$nodeInfoBroadcastSecs, '
+      'ledHeartbeatDisabled=$ledHeartbeatDisabled, '
+      'target=$target',
+    );
 
-    final deviceConfig = config_pb.Config_DeviceConfig()
+    // Read-modify-write: clone the device's current config so we preserve
+    // any firmware fields we don't expose in the UI.  Building a brand-new
+    // Config_DeviceConfig from scratch zeroes out unknown fields, which can
+    // cause the firmware to silently reject or mishandle the config.
+    final config_pb.Config_DeviceConfig deviceConfig;
+    if (_currentDeviceConfig != null) {
+      // Clone by round-tripping through serialization — this preserves
+      // every field the device sent us, including ones our generated
+      // protobuf doesn't know about (unknown fields).
+      deviceConfig = config_pb.Config_DeviceConfig.fromBuffer(
+        _currentDeviceConfig!.writeToBuffer(),
+      );
+      AppLogging.protocol(
+        'setDeviceConfig: cloned current config '
+        '(${_currentDeviceConfig!.writeToBuffer().length} bytes), '
+        'existing role=${deviceConfig.role.name}',
+      );
+    } else {
+      deviceConfig = config_pb.Config_DeviceConfig();
+      AppLogging.protocol(
+        'setDeviceConfig: no cached config — building from scratch',
+      );
+    }
+
+    // Now apply the user's changes on top of the cloned config
+    deviceConfig
       ..role = role
       ..rebroadcastMode = rebroadcastMode
       ..serialEnabled = serialEnabled
@@ -4578,8 +4587,44 @@ class ProtocolService {
       ..tzdef = tzdef
       ..buzzerMode = buzzerMode;
 
+    // Verify the protobuf was built correctly before sending
+    AppLogging.protocol(
+      'setDeviceConfig proto verification — '
+      'deviceConfig.role=${deviceConfig.role.name} (value=${deviceConfig.role.value}), '
+      'deviceConfig bytes=${deviceConfig.writeToBuffer().length}',
+    );
+
     final config = config_pb.Config()..device = deviceConfig;
-    await setConfig(config, targetNodeNum: targetNodeNum);
+
+    AppLogging.protocol(
+      'setDeviceConfig Config wrapper — '
+      'config.hasDevice()=${config.hasDevice()}, '
+      'config.device.role=${config.device.role.name}, '
+      'total config bytes=${config.writeToBuffer().length}',
+    );
+
+    await setConfig(config, target: target);
+
+    AppLogging.protocol(
+      'setDeviceConfig: setConfig completed \u2014 admin message sent to device',
+    );
+
+    // Update local node cache with the new role so the UI reflects it
+    // immediately (the device will reboot before it can send a response).
+    if (target == null || target.isLocal) {
+      final nodeNum = _myNodeNum;
+      if (nodeNum != null) {
+        final existingNode = _nodes[nodeNum];
+        if (existingNode != null) {
+          final updatedNode = existingNode.copyWith(role: role.name);
+          _nodes[nodeNum] = updatedNode;
+          _nodeController.add(updatedNode);
+          AppLogging.protocol(
+            'Updated local node cache with new device role: ${role.name}',
+          );
+        }
+      }
+    }
   }
 
   /// Set position configuration
@@ -4596,7 +4641,7 @@ class ProtocolService {
     int rxGpio = 0,
     int txGpio = 0,
     int gpsEnGpio = 0,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting position config: gpsMode=$gpsMode');
 
@@ -4616,7 +4661,7 @@ class ProtocolService {
       ..gpsEnGpio = gpsEnGpio;
 
     final config = config_pb.Config()..position = posConfig;
-    await setConfig(config, targetNodeNum: targetNodeNum);
+    await setConfig(config, target: target);
   }
 
   /// Set power configuration
@@ -4628,7 +4673,7 @@ class ProtocolService {
     required int minWakeSecs,
     int onBatteryShutdownAfterSecs = 0,
     double adcMultiplierOverride = 0.0,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting power config');
 
@@ -4642,7 +4687,7 @@ class ProtocolService {
       ..minWakeSecs = minWakeSecs;
 
     final config = config_pb.Config()..power = powerConfig;
-    await setConfig(config, targetNodeNum: targetNodeNum);
+    await setConfig(config, target: target);
   }
 
   /// Set display configuration
@@ -4660,7 +4705,7 @@ class ProtocolService {
     config_pb.Config_DisplayConfig_CompassOrientation compassOrientation =
         config_pb.Config_DisplayConfig_CompassOrientation.DEGREES_0,
     bool compassNorthTop = false,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting display config');
 
@@ -4678,7 +4723,7 @@ class ProtocolService {
       ..compassNorthTop = compassNorthTop;
 
     final config = config_pb.Config()..display = displayConfig;
-    await setConfig(config, targetNodeNum: targetNodeNum);
+    await setConfig(config, target: target);
   }
 
   /// Set Bluetooth configuration
@@ -4686,7 +4731,7 @@ class ProtocolService {
     required bool enabled,
     required config_pb.Config_BluetoothConfig_PairingMode mode,
     required int fixedPin,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting Bluetooth config');
 
@@ -4696,7 +4741,7 @@ class ProtocolService {
       ..fixedPin = fixedPin;
 
     final config = config_pb.Config()..bluetooth = btConfig;
-    await setConfig(config, targetNodeNum: targetNodeNum);
+    await setConfig(config, target: target);
   }
 
   /// Set network configuration
@@ -4710,7 +4755,7 @@ class ProtocolService {
         config_pb.Config_NetworkConfig_AddressMode.DHCP,
     String rsyslogServer = '',
     int enabledProtocols = 0,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting network config');
 
@@ -4725,7 +4770,7 @@ class ProtocolService {
       ..enabledProtocols = enabledProtocols;
 
     final config = config_pb.Config()..network = networkConfig;
-    await setConfig(config, targetNodeNum: targetNodeNum);
+    await setConfig(config, target: target);
   }
 
   /// Set security configuration
@@ -4736,7 +4781,7 @@ class ProtocolService {
     required bool adminChannelEnabled,
     List<int> privateKey = const [],
     List<List<int>> adminKeys = const [],
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting security config');
 
@@ -4757,18 +4802,19 @@ class ProtocolService {
     }
 
     final config = config_pb.Config()..security = secConfig;
-    await setConfig(config, targetNodeNum: targetNodeNum);
+    await setConfig(config, target: target);
   }
 
   // ============================================================================
   // MODULE CONFIGURATION METHODS
   // ============================================================================
 
-  /// Get module configuration by type
-  /// If [targetNodeNum] is provided, requests config from that remote node
+  /// Get module configuration by type.
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
   Future<void> getModuleConfig(
     admin.AdminMessage_ModuleConfigType moduleType, {
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot get module config: device not ready');
@@ -4777,15 +4823,15 @@ class ProtocolService {
       throw StateError('Cannot get module config: not connected');
     }
 
-    final target = targetNodeNum ?? _myNodeNum!;
-    final isRemote = target != _myNodeNum;
+    final dest = _resolveTarget(target);
+    final isRemote = dest != _myNodeNum;
 
     AppLogging.protocol(
-      'Requesting module config: ${moduleType.name}${isRemote ? ' from remote node $target' : ''}',
+      'Requesting module config: ${moduleType.name}${isRemote ? ' from remote node $dest' : ''}',
     );
     if (isRemote) {
       AppLogging.protocol(
-        '🔧 Remote Admin: Requesting ${moduleType.name} from ${target.toRadixString(16)}',
+        '🔧 Remote Admin: Requesting ${moduleType.name} from ${dest.toRadixString(16)}',
       );
     }
 
@@ -4796,21 +4842,23 @@ class ProtocolService {
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = target
-      ..decoded = data
-      ..id = _generatePacketId();
+    final packet = MeshPacketBuilder.admin(
+      myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Set module configuration
-  /// If [targetNodeNum] is provided, sends config to that remote node
+  /// Set module configuration.
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
   Future<void> setModuleConfig(
     module_pb.ModuleConfig moduleConfig, {
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot set module config: device not ready');
@@ -4819,15 +4867,15 @@ class ProtocolService {
       throw StateError('Cannot set module config: not connected');
     }
 
-    final target = targetNodeNum ?? _myNodeNum!;
-    final isRemote = target != _myNodeNum;
+    final dest = _resolveTarget(target);
+    final isRemote = dest != _myNodeNum;
 
     AppLogging.protocol(
-      'Setting module config${isRemote ? ' on remote node $target' : ''}',
+      'Setting module config${isRemote ? ' on remote node $dest' : ''}',
     );
     if (isRemote) {
       AppLogging.protocol(
-        '🔧 Remote Admin: Setting module config on ${target.toRadixString(16)}',
+        '🔧 Remote Admin: Setting module config on ${dest.toRadixString(16)}',
       );
     }
 
@@ -4838,18 +4886,17 @@ class ProtocolService {
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = target
-      ..decoded = data
-      ..id = _generatePacketId()
-      ..priority = pbenum.MeshPacket_Priority.RELIABLE
-      ..wantAck = true;
+    final packet = MeshPacketBuilder.admin(
+      myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
 
-    // Optimistically update the local cache (same rationale as setConfig —
+    // Optimistically update the local cache (same rationale as setConfig --
     // the device reboots before it can send back a config response).
     if (!isRemote) {
       _applySavedModuleConfigToCache(moduleConfig);
@@ -4916,11 +4963,11 @@ class ProtocolService {
     required bool mapReportingEnabled,
     int mapPublishIntervalSecs = 3600,
     int mapPositionPrecision = 14,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
-    final isRemote = targetNodeNum != null && targetNodeNum != _myNodeNum;
+    final isRemote = target is RemoteAdminTarget;
     AppLogging.protocol(
-      'Setting MQTT config${isRemote ? ' on remote node $targetNodeNum' : ''}',
+      'Setting MQTT config${isRemote ? ' on remote node $target' : ''}',
     );
 
     final mapReportSettings = module_pb.ModuleConfig_MapReportSettings()
@@ -4941,7 +4988,7 @@ class ProtocolService {
       ..mapReportSettings = mapReportSettings;
 
     final moduleConfig = module_pb.ModuleConfig()..mqtt = mqttConfig;
-    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
+    await setModuleConfig(moduleConfig, target: target);
   }
 
   /// Set canned message module configuration
@@ -4960,7 +5007,7 @@ class ProtocolService {
     inputbrokerEventCcw,
     required module_pb.ModuleConfig_CannedMessageConfig_InputEventChar
     inputbrokerEventPress,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting canned message config');
 
@@ -4978,7 +5025,7 @@ class ProtocolService {
       ..inputbrokerEventPress = inputbrokerEventPress;
 
     final moduleConfig = module_pb.ModuleConfig()..cannedMessage = cannedConfig;
-    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
+    await setModuleConfig(moduleConfig, target: target);
   }
 
   /// Get Telemetry module configuration
@@ -5020,7 +5067,7 @@ class ProtocolService {
     bool? powerMeasurementEnabled,
     int? powerUpdateInterval,
     bool? powerScreenEnabled,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting telemetry config');
 
@@ -5062,7 +5109,7 @@ class ProtocolService {
     }
 
     final moduleConfig = module_pb.ModuleConfig()..telemetry = telemetryConfig;
-    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
+    await setModuleConfig(moduleConfig, target: target);
   }
 
   /// Get External Notification module configuration
@@ -5109,7 +5156,7 @@ class ProtocolService {
     bool? usePwm,
     bool? useI2sAsBuzzer,
     int? nagTimeout,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting external notification config');
 
@@ -5142,7 +5189,7 @@ class ProtocolService {
 
     final moduleConfig = module_pb.ModuleConfig()
       ..externalNotification = extNotifConfig;
-    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
+    await setModuleConfig(moduleConfig, target: target);
   }
 
   /// Set Store & Forward module configuration
@@ -5153,7 +5200,7 @@ class ProtocolService {
     int? historyReturnMax,
     int? historyReturnWindow,
     bool? isServer,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting store & forward config');
 
@@ -5168,7 +5215,7 @@ class ProtocolService {
     if (isServer != null) sfConfig.isServer = isServer;
 
     final moduleConfig = module_pb.ModuleConfig()..storeForward = sfConfig;
-    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
+    await setModuleConfig(moduleConfig, target: target);
   }
 
   /// Get Store & Forward module configuration
@@ -5257,7 +5304,7 @@ class ProtocolService {
     bool? enabled,
     int? sender,
     bool? save,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting range test config');
 
@@ -5267,7 +5314,7 @@ class ProtocolService {
     if (save != null) rtConfig.save = save;
 
     final moduleConfig = module_pb.ModuleConfig()..rangeTest = rtConfig;
-    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
+    await setModuleConfig(moduleConfig, target: target);
   }
 
   /// Get Ambient Lighting module configuration
@@ -5306,7 +5353,7 @@ class ProtocolService {
     required int green,
     required int blue,
     int? current,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting ambient lighting config');
 
@@ -5318,7 +5365,7 @@ class ProtocolService {
     if (current != null) alConfig.current = current;
 
     final moduleConfig = module_pb.ModuleConfig()..ambientLighting = alConfig;
-    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
+    await setModuleConfig(moduleConfig, target: target);
   }
 
   /// Get PAX Counter module configuration
@@ -5354,7 +5401,7 @@ class ProtocolService {
     int? updateInterval,
     bool? wifiEnabled,
     bool? bleEnabled,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting PAX counter config');
 
@@ -5365,7 +5412,7 @@ class ProtocolService {
     }
 
     final moduleConfig = module_pb.ModuleConfig()..paxcounter = paxConfig;
-    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
+    await setModuleConfig(moduleConfig, target: target);
   }
 
   /// Get Serial module configuration
@@ -5402,7 +5449,7 @@ class ProtocolService {
     int? timeout,
     int? mode,
     bool? overrideConsoleSerialPort,
-    int? targetNodeNum,
+    AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting serial config');
 
@@ -5427,7 +5474,7 @@ class ProtocolService {
     }
 
     final moduleConfig = module_pb.ModuleConfig()..serial = serialConfig;
-    await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
+    await setModuleConfig(moduleConfig, target: target);
   }
 
   // ============================================================================
@@ -5453,11 +5500,11 @@ class ProtocolService {
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId();
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -5481,11 +5528,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId();
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -5509,11 +5556,11 @@ class ProtocolService {
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId();
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -5536,11 +5583,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId();
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -5563,11 +5610,11 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = pb.MeshPacket()
-      ..from = _myNodeNum!
-      ..to = _myNodeNum!
-      ..decoded = data
-      ..id = _generatePacketId();
+    final packet = MeshPacketBuilder.localAdmin(
+      myNodeNum: _myNodeNum!,
+      data: data,
+      packetId: _generatePacketId(),
+    );
 
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -5757,6 +5804,7 @@ class ProtocolService {
 
   /// Dispose resources
   Future<void> dispose() async {
+    _adminAckTracker.cancelAll();
     await _dataSubscription?.cancel();
     await _messageController.close();
     await _nodeController.close();

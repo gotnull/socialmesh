@@ -96,8 +96,10 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
           admin_pbenum.AdminMessage_ConfigType.NETWORK_CONFIG,
         );
       }
-    } on StateError catch (e) {
+    } catch (e) {
       // Device disconnected between isConnected check and getConfig call
+      // Catches both StateError (from protocol layer) and PlatformException
+      // (from BLE layer) when device disconnects during the config request
       AppLogging.protocol('Network config load aborted: $e');
     } finally {
       safeSetState(() => _loading = false);

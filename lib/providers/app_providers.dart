@@ -2876,11 +2876,13 @@ class MessagesNotifier extends Notifier<List<Message>> {
     return false;
   }
 
-  /// Returns true if [message] has the same sender, text, and channel as an
-  /// existing message in state whose timestamp is within [_contentDedupeWindow].
+  /// Returns true if [message] has the same sender, recipient, text, and
+  /// channel as an existing message in state whose timestamp is within
+  /// [_contentDedupeWindow].
   bool _isContentDuplicate(Message message) {
     for (final m in state) {
       if (m.from != message.from) continue;
+      if (m.to != message.to) continue;
       if (m.text != message.text) continue;
       // Treat null and 0 as equivalent (primary channel)
       final mCh = (m.channel == null || m.channel == 0) ? 0 : m.channel;

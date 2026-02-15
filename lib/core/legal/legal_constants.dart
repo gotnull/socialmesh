@@ -11,7 +11,7 @@ class LegalConstants {
 
   /// Current Terms of Service version (matches "Last Updated" on website).
   /// Bump this value when Terms content changes materially.
-  static const String termsVersion = '2026-02-12';
+  static const String termsVersion = '2026-02-14';
 
   /// Current Privacy Policy version (matches "Last Updated" on website).
   /// Bump this value when Privacy Policy content changes materially.

@@ -8,6 +8,7 @@ import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
 import '../../providers/app_providers.dart';
@@ -18,6 +19,7 @@ import '../../providers/countdown_providers.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../services/protocol/admin_target.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../utils/validation.dart';
 
@@ -42,19 +44,24 @@ final deviceRoles = [
     'Same as client but will not transmit any messages from itself. Useful for monitoring.',
   ),
   DeviceRoleOption(
+    config_pbenum.Config_DeviceConfig_Role.CLIENT_HIDDEN,
+    'Client Hidden',
+    'Acts as client but hides from the node list. Still routes traffic.',
+  ),
+  DeviceRoleOption(
+    config_pbenum.Config_DeviceConfig_Role.CLIENT_BASE,
+    'Client Base',
+    'Base station for favorited nodes. Routes their packets like a router, others as client.',
+  ),
+  DeviceRoleOption(
     config_pbenum.Config_DeviceConfig_Role.ROUTER,
     'Router',
     'Routes mesh packets between nodes. Screen and Bluetooth disabled to conserve power.',
   ),
   DeviceRoleOption(
-    config_pbenum.Config_DeviceConfig_Role.ROUTER_CLIENT,
-    'Router & Client',
-    'Combination of Router and Client. Routes packets while allowing full device usage.',
-  ),
-  DeviceRoleOption(
-    config_pbenum.Config_DeviceConfig_Role.REPEATER,
-    'Repeater',
-    'Focuses purely on retransmitting packets. Lowest power mode for extending network range.',
+    config_pbenum.Config_DeviceConfig_Role.ROUTER_LATE,
+    'Router Late',
+    'Rebroadcasts all packets after other routers. Extends coverage without consuming priority hops.',
   ),
   DeviceRoleOption(
     config_pbenum.Config_DeviceConfig_Role.TRACKER,
@@ -72,19 +79,14 @@ final deviceRoles = [
     'Team Awareness Kit integration. Bridges Meshtastic and TAK systems.',
   ),
   DeviceRoleOption(
-    config_pbenum.Config_DeviceConfig_Role.CLIENT_HIDDEN,
-    'Client Hidden',
-    'Acts as client but hides from the node list. Still routes traffic.',
+    config_pbenum.Config_DeviceConfig_Role.TAK_TRACKER,
+    'TAK Tracker',
+    'Combination of TAK and Tracker modes.',
   ),
   DeviceRoleOption(
     config_pbenum.Config_DeviceConfig_Role.LOST_AND_FOUND,
     'Lost and Found',
     'Optimized for finding lost devices. Sends periodic beacons.',
-  ),
-  DeviceRoleOption(
-    config_pbenum.Config_DeviceConfig_Role.TAK_TRACKER,
-    'TAK Tracker',
-    'Combination of TAK and Tracker modes.',
   ),
 ];
 
@@ -196,6 +198,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
   config_pbenum.Config_DeviceConfig_RebroadcastMode? _originalRebroadcastMode;
   int _nodeInfoBroadcastSecs = 10800;
   int _originalNodeInfoBroadcastSecs = 10800;
+  bool _serialEnabled = true;
+  bool _originalSerialEnabled = true;
   bool _doubleTapAsButtonPress = false;
   bool _originalDoubleTapAsButtonPress = false;
   bool _disableTripleClick = false;
@@ -251,45 +255,56 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
 
   void _applyDeviceConfig(config_pb.Config_DeviceConfig config) {
     setState(() {
-      // Rebroadcast mode
-      _rebroadcastMode = config.rebroadcastMode;
-      _originalRebroadcastMode = config.rebroadcastMode;
-
-      // Node info broadcast interval
-      _nodeInfoBroadcastSecs = config.nodeInfoBroadcastSecs > 0
+      final nodeInfoSecs = config.nodeInfoBroadcastSecs > 0
           ? config.nodeInfoBroadcastSecs
           : 10800;
-      _originalNodeInfoBroadcastSecs = _nodeInfoBroadcastSecs;
 
-      // Boolean settings
-      _doubleTapAsButtonPress = config.doubleTapAsButtonPress;
+      // Only overwrite user-facing values when the user has NOT started
+      // editing.  Once _hasChanges is true the user has made a selection
+      // and we must not clobber it — otherwise the stream response (or
+      // the optimistic cache update inside setConfig) silently reverts
+      // their choice, _saveConfig recalculates roleChanged as false,
+      // and the save is skipped entirely.
+      if (!_hasChanges) {
+        _selectedRole = config.role;
+        _rebroadcastMode = config.rebroadcastMode;
+        _nodeInfoBroadcastSecs = nodeInfoSecs;
+        _serialEnabled = config.serialEnabled;
+        _doubleTapAsButtonPress = config.doubleTapAsButtonPress;
+        _disableTripleClick = config.disableTripleClick;
+        _ledHeartbeatDisabled = config.ledHeartbeatDisabled;
+        _tzdef = config.tzdef;
+        _buttonGpio = config.buttonGpio;
+        _buzzerGpio = config.buzzerGpio;
+        _buzzerMode = config.buzzerMode;
+      }
+
+      // Always update the "original" snapshot so change detection stays
+      // correct against the latest device state.
+      _originalRole = config.role;
+      _originalRebroadcastMode = config.rebroadcastMode;
+      _originalNodeInfoBroadcastSecs = nodeInfoSecs;
+      _originalSerialEnabled = config.serialEnabled;
       _originalDoubleTapAsButtonPress = config.doubleTapAsButtonPress;
-      _disableTripleClick = config.disableTripleClick;
       _originalDisableTripleClick = config.disableTripleClick;
-      _ledHeartbeatDisabled = config.ledHeartbeatDisabled;
       _originalLedHeartbeatDisabled = config.ledHeartbeatDisabled;
-
-      // Timezone
-      _tzdef = config.tzdef;
       _originalTzdef = config.tzdef;
-
-      // GPIO settings
-      _buttonGpio = config.buttonGpio;
       _originalButtonGpio = config.buttonGpio;
-      _buzzerGpio = config.buzzerGpio;
       _originalBuzzerGpio = config.buzzerGpio;
-
-      // Buzzer mode
-      _buzzerMode = config.buzzerMode;
       _originalBuzzerMode = config.buzzerMode;
     });
   }
 
   void _applyUserConfig(pb.User user) {
     setState(() {
-      _isUnmessagable = user.isUnmessagable;
+      // Only overwrite user-facing values when the user has NOT started
+      // editing — same guard as _applyDeviceConfig to prevent the stream
+      // response from silently reverting in-progress edits.
+      if (!_hasChanges) {
+        _isUnmessagable = user.isUnmessagable;
+        _isLicensed = user.isLicensed;
+      }
       _originalIsUnmessagable = user.isUnmessagable;
-      _isLicensed = user.isLicensed;
       _originalIsLicensed = user.isLicensed;
       AppLogging.protocol(
         'DeviceConfigScreen: Applied user config - isUnmessagable=$_isUnmessagable, isLicensed=$_isLicensed',
@@ -300,6 +315,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
   Future<void> _loadCurrentConfig() async {
     safeSetState(() => _isLoading = true);
 
+    final targetNodeNum = ref.read(remoteAdminTargetProvider);
+    final isRemote = targetNodeNum != null;
     final myNodeNum = ref.read(myNodeNumProvider);
     final nodes = ref.read(nodesProvider);
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
@@ -350,12 +367,22 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     try {
       final protocol = ref.read(protocolServiceProvider);
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentDeviceConfig;
-      if (cached != null) {
-        _applyDeviceConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (!isRemote) {
+        final cached = protocol.currentDeviceConfig;
+        if (cached != null) {
+          _applyDeviceConfig(cached);
+        } else {
+          // Set defaults if no cached config
+          _rebroadcastMode =
+              config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL;
+          _originalRebroadcastMode = _rebroadcastMode;
+          _buzzerMode =
+              config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED;
+          _originalBuzzerMode = _buzzerMode;
+        }
       } else {
-        // Set defaults if no cached config
+        // Remote: set defaults until we get a response
         _rebroadcastMode =
             config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL;
         _originalRebroadcastMode = _rebroadcastMode;
@@ -371,19 +398,23 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
         });
 
         // Listen for user config response (for isUnmessagable/isLicensed)
-        _userConfigSubscription = protocol.userConfigStream.listen((user) {
-          if (mounted) _applyUserConfig(user);
-        });
+        // Only for local device — user flags are not fetched via remote admin.
+        if (!isRemote) {
+          _userConfigSubscription = protocol.userConfigStream.listen((user) {
+            if (mounted) _applyUserConfig(user);
+          });
 
-        // Apply cached user config if available
-        final cachedUser = protocol.currentUserConfig;
-        if (cachedUser != null) {
-          _applyUserConfig(cachedUser);
+          // Apply cached user config if available
+          final cachedUser = protocol.currentUserConfig;
+          if (cachedUser != null) {
+            _applyUserConfig(cachedUser);
+          }
         }
 
-        // Request fresh config from device
+        // Request fresh config from device (or remote node)
         await protocol.getConfig(
           admin_pbenum.AdminMessage_ConfigType.DEVICE_CONFIG,
+          target: AdminTarget.fromNullable(targetNodeNum),
         );
       }
     } catch (e) {
@@ -408,6 +439,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     final rebroadcastChanged = _rebroadcastMode != _originalRebroadcastMode;
     final nodeInfoChanged =
         _nodeInfoBroadcastSecs != _originalNodeInfoBroadcastSecs;
+    final serialChanged = _serialEnabled != _originalSerialEnabled;
     final doubleTapChanged =
         _doubleTapAsButtonPress != _originalDoubleTapAsButtonPress;
     final tripleClickChanged =
@@ -427,6 +459,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
           roleChanged ||
           rebroadcastChanged ||
           nodeInfoChanged ||
+          serialChanged ||
           doubleTapChanged ||
           tripleClickChanged ||
           ledChanged ||
@@ -441,42 +474,21 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
   }
 
   Future<void> _confirmAndSave() async {
-    // Show confirmation dialog warning about device reboot
-    final confirmed = await showDialog<bool>(
+    final isRemote = ref.read(remoteAdminTargetProvider) != null;
+
+    // Remote admin saves don't reboot the local device, skip confirmation.
+    if (isRemote) {
+      await _saveConfig();
+      return;
+    }
+
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: context.border),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: context.accentColor),
-            const SizedBox(width: 12),
-            Text('Save Changes?', style: TextStyle(color: context.textPrimary)),
-          ],
-        ),
-        content: Text(
+      title: 'Save Changes?',
+      message:
           'Saving device configuration will cause the device to reboot. '
           'You will be briefly disconnected while the device restarts.',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textTertiary),
-            ),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: context.accentColor),
-            child: const Text('Save & Reboot'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Save & Reboot',
     );
 
     if (confirmed == true) {
@@ -486,6 +498,38 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
 
   Future<void> _saveConfig() async {
     AppLogging.protocol('DeviceConfigScreen: _saveConfig started');
+
+    // Capture remote admin target before any async work.
+    final targetNodeNum = ref.read(remoteAdminTargetProvider);
+    final isRemote = targetNodeNum != null;
+
+    // Cancel stream subscriptions BEFORE saving. setDeviceConfig calls
+    // _applySavedConfigToCache which emits back on deviceConfigStream.
+    // If we're still listening, _applyDeviceConfig fires — and once we
+    // set _hasChanges=false later, the guard is gone and a late stream
+    // event can overwrite _selectedRole back to the old value.
+    _configSubscription?.cancel();
+    _configSubscription = null;
+    _userConfigSubscription?.cancel();
+    _userConfigSubscription = null;
+
+    // Snapshot the values we are about to send so no stream or setState
+    // can change them between now and the actual BLE write.
+    final roleToSend =
+        _selectedRole ?? config_pbenum.Config_DeviceConfig_Role.CLIENT;
+    final rebroadcastToSend =
+        _rebroadcastMode ??
+        config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL;
+    final buzzerToSend =
+        _buzzerMode ?? config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED;
+
+    AppLogging.protocol(
+      'DeviceConfigScreen: will send role=${roleToSend.name}, '
+      'rebroadcast=${rebroadcastToSend.name}, '
+      'nodeInfoBroadcastSecs=$_nodeInfoBroadcastSecs'
+      '${isRemote ? " (remote admin)" : ""}',
+    );
+
     safeSetState(() => _isSaving = true);
 
     try {
@@ -497,8 +541,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
           _shortNameController.text != _originalShortName;
       final roleChanged = _selectedRole != _originalRole;
       final deviceConfigChanged =
+          roleChanged ||
           _rebroadcastMode != _originalRebroadcastMode ||
           _nodeInfoBroadcastSecs != _originalNodeInfoBroadcastSecs ||
+          _serialEnabled != _originalSerialEnabled ||
           _doubleTapAsButtonPress != _originalDoubleTapAsButtonPress ||
           _disableTripleClick != _originalDisableTripleClick ||
           _ledHeartbeatDisabled != _originalLedHeartbeatDisabled ||
@@ -518,7 +564,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
       );
 
       if (!nameChanged &&
-          !roleChanged &&
           !deviceConfigChanged &&
           !userFlagsChanged &&
           !hamModeChanged) {
@@ -529,12 +574,41 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
         return;
       }
 
-      // Save name, role, and user flags changes via setOwnerConfig
-      if (nameChanged || roleChanged || userFlagsChanged) {
+      // Save device config FIRST — the role lives in Config.DeviceConfig,
+      // which is the only place the firmware reads it from.  setOwnerConfig
+      // (below) triggers a reboot, so if we sent it first the device would
+      // reboot before this packet arrived and the role would never persist.
+      if (deviceConfigChanged) {
+        AppLogging.protocol(
+          'DeviceConfigScreen: sending setDeviceConfig with role=${roleToSend.name}',
+        );
+        await protocol.setDeviceConfig(
+          role: roleToSend,
+          rebroadcastMode: rebroadcastToSend,
+          serialEnabled: _serialEnabled,
+          nodeInfoBroadcastSecs: _nodeInfoBroadcastSecs,
+          ledHeartbeatDisabled: _ledHeartbeatDisabled,
+          doubleTapAsButtonPress: _doubleTapAsButtonPress,
+          buttonGpio: _buttonGpio,
+          buzzerGpio: _buzzerGpio,
+          disableTripleClick: _disableTripleClick,
+          tzdef: _tzdef,
+          buzzerMode: buzzerToSend,
+          target: AdminTarget.fromNullable(targetNodeNum),
+        );
+        AppLogging.protocol(
+          'DeviceConfigScreen: setDeviceConfig completed (role=${roleToSend.name})',
+        );
+      }
+
+      // Save name and user flags via setOwnerConfig (setOwner admin message).
+      // Role is NOT sent here — it belongs in Config.DeviceConfig above.
+      // This is sent AFTER setDeviceConfig so the device processes the
+      // device config before the setOwner-triggered reboot.
+      if (nameChanged || userFlagsChanged) {
         await protocol.setOwnerConfig(
           longName: nameChanged ? _longNameController.text : null,
           shortName: nameChanged ? _shortNameController.text : null,
-          role: roleChanged ? _selectedRole : null,
           isUnmessagable: _isUnmessagable,
           isLicensed: _isLicensed,
         );
@@ -551,41 +625,28 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
         );
       }
 
-      // Save device config changes
-      if (deviceConfigChanged) {
-        await protocol.setDeviceConfig(
-          role: _selectedRole ?? config_pbenum.Config_DeviceConfig_Role.CLIENT,
-          rebroadcastMode:
-              _rebroadcastMode ??
-              config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL,
-          serialEnabled: true, // Keep serial enabled by default
-          nodeInfoBroadcastSecs: _nodeInfoBroadcastSecs,
-          ledHeartbeatDisabled: _ledHeartbeatDisabled,
-          doubleTapAsButtonPress: _doubleTapAsButtonPress,
-          buttonGpio: _buttonGpio,
-          buzzerGpio: _buzzerGpio,
-          disableTripleClick: _disableTripleClick,
-          tzdef: _tzdef,
-          buzzerMode:
-              _buzzerMode ??
-              config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED,
-        );
-      }
-
       AppLogging.protocol(
-        'DeviceConfigScreen: Config saved, device will reboot',
+        'DeviceConfigScreen: Config saved${isRemote ? " (remote)" : ", device will reboot"}',
       );
 
       safeSetState(() => _hasChanges = false);
       if (mounted) {
-        showSuccessSnackBar(context, 'Configuration saved - device rebooting');
+        showSuccessSnackBar(
+          context,
+          isRemote
+              ? 'Configuration sent to remote node'
+              : 'Configuration saved - device rebooting',
+        );
       }
 
-      // Start global reboot countdown — banner persists across navigation
-      // and auto-cancels when the device reconnects.
-      ref
-          .read(countdownProvider.notifier)
-          .startDeviceRebootCountdown(reason: 'config saved');
+      // Start global reboot countdown for local saves — banner persists
+      // across navigation and auto-cancels when the device reconnects.
+      // Remote admin saves don't reboot the local device.
+      if (!isRemote) {
+        ref
+            .read(countdownProvider.notifier)
+            .startDeviceRebootCountdown(reason: 'config saved');
+      }
 
       // Pop the screen after a brief delay to let the snackbar appear
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -607,16 +668,20 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     final nodes = ref.watch(nodesProvider);
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
     final connectedDevice = ref.watch(connectedDeviceProvider);
+    final remoteState = ref.watch(remoteAdminProvider);
+    final isRemote = remoteState.isRemote;
+
+    final title = isRemote ? 'Device Config (Remote)' : 'Device Config';
 
     if (_isLoading) {
       return GlassScaffold(
-        title: 'Device Config',
+        title: title,
         slivers: [SliverFillRemaining(child: const ScreenLoadingIndicator())],
       );
     }
 
     return GlassScaffold(
-      title: 'Device Config',
+      title: title,
       actions: [
         if (_hasChanges)
           TextButton(
@@ -644,6 +709,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
           padding: const EdgeInsets.all(16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
+              // Remote admin banner
+              if (isRemote) _buildRemoteAdminBanner(context, remoteState),
+
               // Long Name Field
               _buildNameField(
                 icon: Icons.badge_outlined,
@@ -858,6 +926,12 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
 
               const SizedBox(height: 24),
 
+              // Serial Console Section
+              _buildSectionHeader('Serial'),
+              _buildSerialConsoleSetting(),
+
+              const SizedBox(height: 24),
+
               // Timezone Section
               _buildSectionHeader('Timezone'),
               _buildTimezoneSettings(),
@@ -870,12 +944,20 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
 
               const SizedBox(height: 24),
 
+              // Danger Zone — only for local devices
+              if (!isRemote) ...[
+                _buildSectionHeader('Danger Zone'),
+                _buildDangerZone(),
+                const SizedBox(height: 24),
+              ],
+
               // Warning
-              StatusBanner.warning(
-                title:
-                    'Changes to device configuration will cause the device to reboot.',
-                margin: EdgeInsets.zero,
-              ),
+              if (!isRemote)
+                StatusBanner.warning(
+                  title:
+                      'Changes to device configuration will cause the device to reboot.',
+                  margin: EdgeInsets.zero,
+                ),
 
               const SizedBox(height: 32),
             ]),
@@ -1882,5 +1964,258 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildRemoteAdminBanner(
+    BuildContext context,
+    RemoteAdminState remoteState,
+  ) {
+    final accentColor = context.accentColor;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accentColor.withValues(alpha: 0.15),
+            accentColor.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accentColor.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.admin_panel_settings, color: accentColor, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Remote Administration',
+                  style: TextStyle(
+                    color: accentColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Configuring: ${remoteState.targetNodeName ?? '0x${remoteState.targetNodeNum!.toRadixString(16)}'}',
+                  style: TextStyle(
+                    color: accentColor.withValues(alpha: 0.8),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSerialConsoleSetting() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      child: _buildToggleRow(
+        icon: Icons.terminal,
+        label: 'Serial Console',
+        subtitle: 'Enable serial port for debugging',
+        value: _serialEnabled,
+        onChanged: (value) {
+          setState(() => _serialEnabled = value);
+          _checkForChanges();
+        },
+      ),
+    );
+  }
+
+  Widget _buildDangerZone() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        children: [
+          // NodeDB Reset
+          InkWell(
+            onTap: _showNodeDbResetConfirm,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppTheme.warningYellow.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.refresh,
+                      color: AppTheme.warningYellow,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Reset Node Database',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Clear all stored node information',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: context.textTertiary),
+                ],
+              ),
+            ),
+          ),
+          _buildDivider(),
+          // Factory Reset
+          InkWell(
+            onTap: _showFactoryResetConfirm,
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.warning_rounded,
+                      color: Colors.red,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Factory Reset',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.red,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Reset device to factory defaults',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: context.textTertiary),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showNodeDbResetConfirm() async {
+    // Capture provider before any await
+    final protocol = ref.read(protocolServiceProvider);
+
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: 'Reset Node Database',
+      message:
+          'This will clear all stored node information from the device. '
+          'The mesh network will need to rediscover all nodes.\n\n'
+          'Are you sure you want to continue?',
+      confirmLabel: 'Reset',
+    );
+
+    if (!mounted) return;
+    if (confirmed == true) {
+      try {
+        await protocol.nodeDbReset();
+        if (mounted) {
+          showSuccessSnackBar(context, 'Node database reset initiated');
+        }
+      } catch (e) {
+        if (mounted) {
+          showErrorSnackBar(context, 'Failed to reset: $e');
+        }
+      }
+    }
+  }
+
+  Future<void> _showFactoryResetConfirm() async {
+    // Capture provider before any await
+    final protocol = ref.read(protocolServiceProvider);
+
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: 'Factory Reset',
+      message:
+          'This will reset ALL device settings to factory defaults, '
+          'including channels, configuration, and stored data.\n\n'
+          'This action cannot be undone!',
+      confirmLabel: 'Factory Reset',
+    );
+
+    if (!mounted) return;
+    if (confirmed == true) {
+      AppLogging.protocol('DeviceConfig: Factory reset confirmed');
+      try {
+        await protocol.factoryResetDevice();
+        AppLogging.protocol('DeviceConfig: factoryResetDevice command sent');
+        if (mounted) {
+          showSuccessSnackBar(
+            context,
+            'Factory reset initiated - device will restart',
+          );
+        }
+      } catch (e) {
+        AppLogging.protocol('DeviceConfig: factoryResetDevice FAILED: $e');
+        if (mounted) {
+          showErrorSnackBar(context, 'Failed to reset: $e');
+        }
+      }
+    }
   }
 }

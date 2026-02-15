@@ -81,8 +81,10 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
           admin_pbenum.AdminMessage_ConfigType.BLUETOOTH_CONFIG,
         );
       }
-    } on StateError catch (e) {
+    } catch (e) {
       // Device disconnected between isConnected check and getConfig call
+      // Catches both StateError (from protocol layer) and PlatformException
+      // (from BLE layer) when device disconnects during the config request
       AppLogging.protocol('Bluetooth config load aborted: $e');
     } finally {
       safeSetState(() => _loading = false);

@@ -198,9 +198,26 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     return null;
   }
 
-  void _clearArrivalDateTime() {
+  void _clearDepartureDate() {
+    safeSetState(() {
+      _departureDate = null;
+    });
+  }
+
+  void _clearDepartureTime() {
+    safeSetState(() {
+      _departureTime = null;
+    });
+  }
+
+  void _clearArrivalDate() {
     safeSetState(() {
       _arrivalDate = null;
+    });
+  }
+
+  void _clearArrivalTime() {
+    safeSetState(() {
       _arrivalTime = null;
     });
   }
@@ -596,6 +613,9 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                                 : 'Select',
                             icon: Icons.calendar_today,
                             onTap: _selectDepartureDate,
+                            onClear: _departureDate != null
+                                ? _clearDepartureDate
+                                : null,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -615,6 +635,9 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                                 : 'Select',
                             icon: Icons.access_time,
                             onTap: _selectDepartureTime,
+                            onClear: _departureTime != null
+                                ? _clearDepartureTime
+                                : null,
                           ),
                         ),
                       ],
@@ -622,11 +645,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                     const SizedBox(height: 24),
 
                     // Arrival Time Section (optional)
-                    _buildSectionHeaderWithClear(
-                      'Arrival Time (Optional)',
-                      showClear: _arrivalDate != null || _arrivalTime != null,
-                      onClear: _clearArrivalDateTime,
-                    ),
+                    _buildSectionHeader('Arrival Time (Optional)'),
                     const SizedBox(height: 12),
 
                     Row(
@@ -639,6 +658,9 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                                 : 'Select',
                             icon: Icons.calendar_today,
                             onTap: _selectArrivalDate,
+                            onClear: _arrivalDate != null
+                                ? _clearArrivalDate
+                                : null,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -658,6 +680,9 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                                 : 'Select',
                             icon: Icons.access_time,
                             onTap: _selectArrivalTime,
+                            onClear: _arrivalTime != null
+                                ? _clearArrivalTime
+                                : null,
                           ),
                         ),
                       ],
@@ -772,41 +797,6 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     );
   }
 
-  Widget _buildSectionHeaderWithClear(
-    String title, {
-    required bool showClear,
-    required VoidCallback onClear,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: context.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        if (showClear)
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              onClear();
-            },
-            child: Text(
-              'Clear',
-              style: TextStyle(
-                color: context.primary,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -862,6 +852,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     required String value,
     required IconData icon,
     required VoidCallback onTap,
+    VoidCallback? onClear,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -898,6 +889,14 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                 ],
               ),
             ),
+            if (onClear != null)
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  onClear();
+                },
+                child: Icon(Icons.close, color: context.textTertiary, size: 18),
+              ),
           ],
         ),
       ),

@@ -166,8 +166,10 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
         // Wait a bit for response
         await Future.delayed(const Duration(milliseconds: 500));
       }
-    } on StateError catch (e) {
+    } catch (e) {
       // Device disconnected between isConnected check and getConfig call
+      // Catches both StateError (from protocol layer) and PlatformException
+      // (from BLE layer) when device disconnects during the config request
       AppLogging.protocol('Position config load aborted: $e');
     } finally {
       safeSetState(() => _isLoading = false);

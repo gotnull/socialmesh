@@ -38,7 +38,7 @@ import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../device/region_selection_screen.dart';
 import 'device_management_screen.dart';
-import 'device_config_screen.dart';
+import '../device/device_config_screen.dart';
 import 'radio_config_screen.dart';
 import 'position_config_screen.dart';
 import 'display_config_screen.dart';

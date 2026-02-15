@@ -281,15 +281,15 @@ class HelpContent {
         icoMood: MeshBrainMood.proud,
       ),
       HelpStep(
-        id: 'role_router_client',
+        id: 'role_router_late',
         bubbleText:
-            "**ROUTER_CLIENT**: Best of both worlds - you relay messages AND have normal client features. Most people use this!",
+            "**ROUTER LATE**: Rebroadcasts after other routers. Extends coverage without taking priority hops. Great for backup relays!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
-        id: 'role_repeater',
+        id: 'role_client_base',
         bubbleText:
-            "**REPEATER**: Only forwards messages, no phone connection needed. Perfect for **mountaintops** or fixed installations!",
+            "**CLIENT BASE**: Base station for your favorited nodes. Routes their packets like a router, handles everything else like a client!",
         icoMood: MeshBrainMood.energized,
       ),
     ],

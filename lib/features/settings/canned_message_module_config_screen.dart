@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -102,6 +103,10 @@ class _CannedMessageModuleConfigScreenState
           admin.AdminMessage_ModuleConfigType.CANNEDMSG_CONFIG,
         );
       }
+    } catch (e) {
+      // Device may disconnect between isConnected check and getModuleConfig
+      // call, causing a PlatformException from the BLE layer
+      AppLogging.settings('[CannedMessage] Config load aborted: $e');
     } finally {
       safeSetState(() => _isLoading = false);
     }

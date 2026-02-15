@@ -93,8 +93,10 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
           admin_pbenum.AdminMessage_ConfigType.DISPLAY_CONFIG,
         );
       }
-    } on StateError catch (e) {
+    } catch (e) {
       // Device disconnected between isConnected check and getConfig call
+      // Catches both StateError (from protocol layer) and PlatformException
+      // (from BLE layer) when device disconnects during the config request
       AppLogging.protocol('Display config load aborted: $e');
     } finally {
       safeSetState(() => _isLoading = false);

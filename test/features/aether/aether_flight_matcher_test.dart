@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:socialmesh/features/aether/models/aether_flight.dart';
 import 'package:socialmesh/features/aether/providers/aether_flight_matcher_provider.dart';
@@ -131,6 +132,10 @@ _createContainer({
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
 
   group('AetherFlightMatch model', () {
     test('stores flight, node, and detection time', () {

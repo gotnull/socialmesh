@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
@@ -108,6 +109,10 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
           admin_pbenum.AdminMessage_ModuleConfigType.MQTT_CONFIG,
         );
       }
+    } catch (e) {
+      // Device disconnected between isConnected check and getModuleConfig call
+      // (PlatformException from BLE layer or StateError from protocol layer)
+      AppLogging.protocol('MQTT config load aborted: $e');
     } finally {
       safeSetState(() => _isLoading = false);
     }

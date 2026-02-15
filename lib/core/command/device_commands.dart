@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/connection_providers.dart';
 import '../../models/mesh_models.dart';
+import '../../services/protocol/admin_target.dart';
 import 'command.dart';
 
 /// Command to send a text message via the mesh network
@@ -272,7 +273,9 @@ class GetLoRaConfigCommand extends DeviceCommand<void> {
   @override
   Future<void> execute(Ref ref) async {
     final protocol = ref.read(protocolServiceProvider);
-    await protocol.getLoRaConfig(targetNodeNum: targetNodeNum);
+    await protocol.getLoRaConfig(
+      target: AdminTarget.fromNullable(targetNodeNum),
+    );
   }
 }
 

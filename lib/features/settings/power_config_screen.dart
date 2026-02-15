@@ -93,8 +93,9 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
           admin_pbenum.AdminMessage_ConfigType.POWER_CONFIG,
         );
       }
-    } on StateError catch (e) {
-      // Device disconnected between isConnected check and getConfig call
+    } catch (e) {
+      // Device may disconnect between isConnected check and getConfig call,
+      // throwing StateError or PlatformException from the BLE layer
       AppLogging.protocol('Power config load aborted: $e');
     } finally {
       safeSetState(() => _loading = false);

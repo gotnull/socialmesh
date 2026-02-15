@@ -327,6 +327,7 @@ class _TimePickerSheetState extends State<TimePickerSheet> {
                 child: Text(
                   ':',
                   style: TextStyle(
+                    fontFamily: AppTheme.fontFamily,
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
                     color: context.textPrimary,
@@ -567,6 +568,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
               Text(
                 'Date',
                 style: TextStyle(
+                  fontFamily: AppTheme.fontFamily,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: context.textSecondary,
@@ -627,6 +629,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
               Text(
                 'Time',
                 style: TextStyle(
+                  fontFamily: AppTheme.fontFamily,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: context.textSecondary,
@@ -661,6 +664,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
               Text(
                 ':',
                 style: TextStyle(
+                  fontFamily: AppTheme.fontFamily,
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
                   color: context.textPrimary,
@@ -725,6 +729,7 @@ class _PickerHeader extends StatelessWidget {
             child: Text(
               'Cancel',
               style: TextStyle(
+                fontFamily: AppTheme.fontFamily,
                 color: context.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
@@ -735,6 +740,7 @@ class _PickerHeader extends StatelessWidget {
               title,
               textAlign: TextAlign.center,
               style: TextStyle(
+                fontFamily: AppTheme.fontFamily,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: context.textPrimary,
@@ -746,6 +752,7 @@ class _PickerHeader extends StatelessWidget {
             child: Text(
               'Done',
               style: TextStyle(
+                fontFamily: AppTheme.fontFamily,
                 color: context.accentColor,
                 fontWeight: FontWeight.w600,
               ),
@@ -796,6 +803,7 @@ class _PickerWheel extends StatelessWidget {
           child: Text(
             itemBuilder(index),
             style: TextStyle(
+              fontFamily: AppTheme.fontFamily,
               fontSize: 20,
               fontWeight: FontWeight.w500,
               color: context.textPrimary,
@@ -868,6 +876,7 @@ class _AmPmButton extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
+            fontFamily: AppTheme.fontFamily,
             fontSize: 14,
             fontWeight: FontWeight.w600,
             color: isSelected ? Colors.white : context.textSecondary,

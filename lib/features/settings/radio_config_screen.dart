@@ -102,8 +102,10 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
           admin_pbenum.AdminMessage_ConfigType.LORA_CONFIG,
         );
       }
-    } on StateError catch (e) {
+    } catch (e) {
       // Device disconnected between isConnected check and getConfig call
+      // Catches both StateError (from protocol layer) and PlatformException
+      // (from BLE layer) when device disconnects during the config request
       AppLogging.protocol('Radio config load aborted: $e');
     } finally {
       if (mounted) safeSetState(() => _isLoading = false);

@@ -1636,10 +1636,10 @@ class _ReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('MMM d, h:mm a');
+    final dateFormat = DateFormat('MMM d, h:mma');
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
       child: Container(
         decoration: BoxDecoration(
           color: context.card,
@@ -1647,7 +1647,7 @@ class _ReportCard extends StatelessWidget {
           border: Border.all(color: context.border),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           child: Row(
             children: [
               // Rank badge
@@ -1752,16 +1752,18 @@ class _ReportCard extends StatelessWidget {
                             ),
                           ),
                         ],
+                        const Spacer(),
+                        Text(
+                          dateFormat.format(report.receivedAt.toLocal()),
+                          style: TextStyle(
+                            color: context.textTertiary,
+                            fontSize: 11,
+                          ),
+                        ),
                       ],
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              // Time
-              Text(
-                dateFormat.format(report.receivedAt.toLocal()),
-                style: TextStyle(color: context.textTertiary, fontSize: 11),
               ),
             ],
           ),
