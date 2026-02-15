@@ -26,6 +26,7 @@ sigil-api/
 deploy/
 aether-api/
 api-gateway/
+tools/
 
 # Firebase Hosting content (landing page, legal docs, admin tools)
 web/

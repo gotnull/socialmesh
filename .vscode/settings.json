@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^source tools/telegram_agent/\\.venv/bin/activate && python -m pytest tools/telegram_agent/tests/ -v 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

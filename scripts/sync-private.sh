@@ -18,7 +18,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PUBLIC_REPO="$(cd "$SCRIPT_DIR/.." && pwd)"
-PRIVATE_REPO="$(cd "$PUBLIC_REPO/.." && pwd)/socialmesh-private"
+PRIVATE_REPO="${PRIVATE_REPO:-$(cd "$PUBLIC_REPO/.." && pwd)/socialmesh-private}"
 PRIVATE_REMOTE="https://github.com/gotnull/socialmesh-private.git"
 
 # Directories to sync (relative to repo root)
@@ -32,6 +32,7 @@ SYNC_DIRS=(
   mesh-observer
   scripts
   sigil-api
+  tools
   web
 )
 
@@ -61,6 +62,7 @@ EXCLUDE_PATTERNS=(
   ".pub-cache"
   "__pycache__"
   "*.pyc"
+  ".venv"
   ".DS_Store"
   "workflows"
 )
@@ -250,6 +252,8 @@ cmd_status() {
         -not -path "*/.dart_tool/*" \
         -not -path "*/build/*" \
         -not -path "*/__pycache__/*" \
+        -not -path "*/.venv/*" \
+        -not -name "*.pyc" \
         -not -name ".DS_Store" | wc -l | tr -d ' ')
       echo -e "  ${GREEN}$dir/${NC}  ($count files)"
     else
