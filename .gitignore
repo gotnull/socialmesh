@@ -62,6 +62,7 @@ firebase-service-account.json
 **/service-account*.json
 **/*-service-account.json
 scripts/*.json
+scripts/run.sh
 
 # IntelliJ related
 *.iml
