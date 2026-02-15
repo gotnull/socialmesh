@@ -27,6 +27,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/logging.dart';
@@ -118,6 +119,8 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
     with LifecycleSafeMixin<_SigilCardSheetContent> {
   final GlobalKey _captureKey = GlobalKey();
   bool _isSharing = false;
+  bool _isAddingToWallet = false;
+  String? _publishedSigilId;
 
   @override
   Widget build(BuildContext context) {
@@ -246,6 +249,50 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
               ),
             ),
           ),
+
+        // --- Add to Apple Wallet button (iOS only) ---
+        if (Platform.isIOS) ...[
+          const SizedBox(height: 10),
+          if (_isAddingToWallet)
+            const SizedBox(
+              height: 48,
+              child: Center(
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                ),
+              ),
+            )
+          else
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _addToAppleWallet,
+                icon: const Icon(Icons.wallet, size: 18),
+                label: const Text(
+                  'Add to Apple Wallet',
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: BorderSide(
+                    color: context.textTertiary.withValues(alpha: 0.3),
+                  ),
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+              ),
+            ),
+        ],
 
         // Bottom safe area padding so button text is never clipped
         SizedBox(height: MediaQuery.of(context).padding.bottom),
@@ -482,6 +529,116 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Apple Wallet
+  // ---------------------------------------------------------------------------
+
+  Future<void> _addToAppleWallet() async {
+    if (_isAddingToWallet) return;
+
+    AppLogging.nodeDex(
+      'Add to Apple Wallet initiated for node ${widget.entry.nodeNum}',
+    );
+
+    setState(() => _isAddingToWallet = true);
+
+    try {
+      // Publish the sigil card first (or reuse existing ID).
+      final sigilId = _publishedSigilId ?? await _publishAndGetId();
+
+      if (!mounted) return;
+
+      if (sigilId == null) {
+        showErrorSnackBar(context, 'Could not publish sigil card');
+        return;
+      }
+
+      _publishedSigilId = sigilId;
+
+      // Open the wallet pass URL in Safari — iOS will detect the
+      // .pkpass MIME type and present the "Add to Wallet" dialog.
+      final walletUrl = Uri.parse(
+        '${AppUrls.sigilApiUrl}/api/sigil/$sigilId/wallet',
+      );
+
+      AppLogging.nodeDex('Opening wallet pass URL: $walletUrl');
+
+      final launched = await launchUrl(
+        walletUrl,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched && mounted) {
+        showErrorSnackBar(context, 'Could not open Apple Wallet');
+      }
+    } catch (e, stack) {
+      AppLogging.nodeDex(
+        'Add to Wallet failed for node ${widget.entry.nodeNum}: $e\n$stack',
+      );
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Could not add to Apple Wallet');
+    } finally {
+      if (mounted) {
+        setState(() => _isAddingToWallet = false);
+      }
+    }
+  }
+
+  /// Publish the sigil card and return just the ID (not the full URL).
+  Future<String?> _publishAndGetId() async {
+    final entry = widget.entry;
+    final payload = <String, dynamic>{
+      'nodeNum': entry.nodeNum,
+      'displayName': widget.displayName,
+      'hexId': widget.hexId,
+      'trait': widget.traitResult.primary.name,
+      'encounterCount': entry.encounterCount,
+      'messageCount': entry.messageCount,
+      'coSeenCount': entry.coSeenCount,
+      'ageDays': entry.age.inDays,
+    };
+
+    if (entry.maxDistanceSeen != null) {
+      payload['maxDistance'] = entry.maxDistanceSeen!.round();
+    }
+    if (entry.bestSnr != null) {
+      payload['bestSnr'] = entry.bestSnr;
+    }
+    if (widget.role != null && widget.role!.isNotEmpty) {
+      payload['role'] = widget.role;
+    }
+    if (widget.hardwareModel != null && widget.hardwareModel!.isNotEmpty) {
+      payload['hardwareModel'] = widget.hardwareModel;
+    }
+    if (widget.firmwareVersion != null && widget.firmwareVersion!.isNotEmpty) {
+      payload['firmwareVersion'] = widget.firmwareVersion;
+    }
+
+    try {
+      final uri = Uri.parse('${AppUrls.sigilApiUrl}/api/sigil');
+      final response = await http
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              if (AppUrls.sigilApiKey.isNotEmpty)
+                'X-API-Key': AppUrls.sigilApiKey,
+            },
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 201) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        return body['id'] as String?;
+      }
+      return null;
+    } catch (e) {
+      AppLogging.nodeDex('Sigil API publish failed for wallet: $e');
+      return null;
+    }
+  }
+
   /// Publish sigil card data to the API and return the shareable URL.
   ///
   /// Returns null if the API call fails — sharing should still proceed
@@ -533,13 +690,16 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
 
       if (response.statusCode == 201) {
         final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final id = body['id'] as String?;
+        if (id != null) {
+          _publishedSigilId = id;
+        }
         final url = body['url'] as String?;
         if (url != null) {
           AppLogging.nodeDex('Sigil published: $url');
           return url;
         }
         // Fallback: construct URL from returned ID
-        final id = body['id'] as String?;
         if (id != null) {
           final fallbackUrl = AppUrls.shareSigilUrl(id);
           AppLogging.nodeDex('Sigil published (constructed URL): $fallbackUrl');
