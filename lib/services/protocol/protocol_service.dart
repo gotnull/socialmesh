@@ -22,8 +22,18 @@ import 'admin_ack_tracker.dart';
 import 'admin_target.dart';
 import 'mesh_packet_builder.dart';
 import 'packet_framer.dart';
+import 'socialmesh/sm_capability_store.dart';
+import 'socialmesh/sm_codec.dart';
+import 'socialmesh/sm_constants.dart';
+import 'socialmesh/sm_feature_flag.dart';
+import 'socialmesh/sm_identity.dart';
+import 'socialmesh/sm_metrics.dart';
+import 'socialmesh/sm_packet_router.dart';
+import 'socialmesh/sm_presence.dart';
+import 'socialmesh/sm_signal.dart';
 import '../mesh_packet_dedupe_store.dart';
 import '../../utils/text_sanitizer.dart';
+import '../../models/presence_confidence.dart';
 import '../../features/nodes/node_display_name_resolver.dart';
 
 /// Mesh signal packet received from PRIVATE_APP portnum.
@@ -325,75 +335,99 @@ class ProtocolService {
   // BLE device name for hardware model inference
   String? _deviceName;
 
-  ProtocolService(this._transport, {MeshPacketDedupeStore? dedupeStore})
-    : _framer = PacketFramer(),
-      _messageController = StreamController<Message>.broadcast(),
-      _nodeController = StreamController<MeshNode>.broadcast(),
-      _channelController = StreamController<ChannelConfig>.broadcast(),
-      _errorController = StreamController<DeviceError>.broadcast(),
-      _signalController = StreamController<MeshSignalPacket>.broadcast(),
-      _myNodeNumController = StreamController<int>.broadcast(),
-      _rssiController = StreamController<int>.broadcast(),
-      _snrController = StreamController<double>.broadcast(),
-      _channelUtilController = StreamController<double>.broadcast(),
-      _deliveryController = StreamController<MessageDeliveryUpdate>.broadcast(),
-      _regionController =
-          StreamController<
-            config_pbenum.Config_LoRaConfig_RegionCode
-          >.broadcast(),
-      _positionConfigController =
-          StreamController<config_pb.Config_PositionConfig>.broadcast(),
-      _deviceConfigController =
-          StreamController<config_pb.Config_DeviceConfig>.broadcast(),
-      _displayConfigController =
-          StreamController<config_pb.Config_DisplayConfig>.broadcast(),
-      _powerConfigController =
-          StreamController<config_pb.Config_PowerConfig>.broadcast(),
-      _networkConfigController =
-          StreamController<config_pb.Config_NetworkConfig>.broadcast(),
-      _bluetoothConfigController =
-          StreamController<config_pb.Config_BluetoothConfig>.broadcast(),
-      _securityConfigController =
-          StreamController<config_pb.Config_SecurityConfig>.broadcast(),
-      _loraConfigController =
-          StreamController<config_pb.Config_LoRaConfig>.broadcast(),
-      _mqttConfigController =
-          StreamController<module_pb.ModuleConfig_MQTTConfig>.broadcast(),
-      _telemetryConfigController =
-          StreamController<module_pb.ModuleConfig_TelemetryConfig>.broadcast(),
-      _paxCounterConfigController =
-          StreamController<module_pb.ModuleConfig_PaxcounterConfig>.broadcast(),
-      _ambientLightingConfigController =
-          StreamController<
-            module_pb.ModuleConfig_AmbientLightingConfig
-          >.broadcast(),
-      _serialConfigController =
-          StreamController<module_pb.ModuleConfig_SerialConfig>.broadcast(),
-      _storeForwardConfigController =
-          StreamController<
-            module_pb.ModuleConfig_StoreForwardConfig
-          >.broadcast(),
-      _detectionSensorConfigController =
-          StreamController<
-            module_pb.ModuleConfig_DetectionSensorConfig
-          >.broadcast(),
-      _rangeTestConfigController =
-          StreamController<module_pb.ModuleConfig_RangeTestConfig>.broadcast(),
-      _externalNotificationConfigController =
-          StreamController<
-            module_pb.ModuleConfig_ExternalNotificationConfig
-          >.broadcast(),
-      _cannedMessageConfigController =
-          StreamController<
-            module_pb.ModuleConfig_CannedMessageConfig
-          >.broadcast(),
-      _clientNotificationController =
-          StreamController<pb.ClientNotification>.broadcast(),
-      _userConfigController = StreamController<pb.User>.broadcast(),
-      _detectionSensorEventController =
-          StreamController<DetectionSensorEvent>.broadcast(),
-      _traceRouteLogController = StreamController<TraceRouteLog>.broadcast(),
-      _dedupeStore = dedupeStore ?? MeshPacketDedupeStore();
+  // --- Socialmesh binary protocol components ---
+  final SmCapabilityStore _smCapabilityStore;
+  final SmFeatureFlag _smFeatureFlag;
+  final SmMetrics _smMetrics;
+  final SmRateLimiter _smRateLimiter;
+  final SmIdentityRateLimiter _smIdentityRateLimiter;
+
+  /// Public accessors for SM binary protocol components.
+  SmCapabilityStore get smCapabilityStore => _smCapabilityStore;
+  SmFeatureFlag get smFeatureFlag => _smFeatureFlag;
+  SmMetrics get smMetrics => _smMetrics;
+
+  ProtocolService(
+    this._transport, {
+    MeshPacketDedupeStore? dedupeStore,
+    SmCapabilityStore? smCapabilityStore,
+    SmFeatureFlag? smFeatureFlag,
+  }) : _framer = PacketFramer(),
+       _messageController = StreamController<Message>.broadcast(),
+       _nodeController = StreamController<MeshNode>.broadcast(),
+       _channelController = StreamController<ChannelConfig>.broadcast(),
+       _errorController = StreamController<DeviceError>.broadcast(),
+       _signalController = StreamController<MeshSignalPacket>.broadcast(),
+       _myNodeNumController = StreamController<int>.broadcast(),
+       _rssiController = StreamController<int>.broadcast(),
+       _snrController = StreamController<double>.broadcast(),
+       _channelUtilController = StreamController<double>.broadcast(),
+       _deliveryController =
+           StreamController<MessageDeliveryUpdate>.broadcast(),
+       _regionController =
+           StreamController<
+             config_pbenum.Config_LoRaConfig_RegionCode
+           >.broadcast(),
+       _positionConfigController =
+           StreamController<config_pb.Config_PositionConfig>.broadcast(),
+       _deviceConfigController =
+           StreamController<config_pb.Config_DeviceConfig>.broadcast(),
+       _displayConfigController =
+           StreamController<config_pb.Config_DisplayConfig>.broadcast(),
+       _powerConfigController =
+           StreamController<config_pb.Config_PowerConfig>.broadcast(),
+       _networkConfigController =
+           StreamController<config_pb.Config_NetworkConfig>.broadcast(),
+       _bluetoothConfigController =
+           StreamController<config_pb.Config_BluetoothConfig>.broadcast(),
+       _securityConfigController =
+           StreamController<config_pb.Config_SecurityConfig>.broadcast(),
+       _loraConfigController =
+           StreamController<config_pb.Config_LoRaConfig>.broadcast(),
+       _mqttConfigController =
+           StreamController<module_pb.ModuleConfig_MQTTConfig>.broadcast(),
+       _telemetryConfigController =
+           StreamController<module_pb.ModuleConfig_TelemetryConfig>.broadcast(),
+       _paxCounterConfigController =
+           StreamController<
+             module_pb.ModuleConfig_PaxcounterConfig
+           >.broadcast(),
+       _ambientLightingConfigController =
+           StreamController<
+             module_pb.ModuleConfig_AmbientLightingConfig
+           >.broadcast(),
+       _serialConfigController =
+           StreamController<module_pb.ModuleConfig_SerialConfig>.broadcast(),
+       _storeForwardConfigController =
+           StreamController<
+             module_pb.ModuleConfig_StoreForwardConfig
+           >.broadcast(),
+       _detectionSensorConfigController =
+           StreamController<
+             module_pb.ModuleConfig_DetectionSensorConfig
+           >.broadcast(),
+       _rangeTestConfigController =
+           StreamController<module_pb.ModuleConfig_RangeTestConfig>.broadcast(),
+       _externalNotificationConfigController =
+           StreamController<
+             module_pb.ModuleConfig_ExternalNotificationConfig
+           >.broadcast(),
+       _cannedMessageConfigController =
+           StreamController<
+             module_pb.ModuleConfig_CannedMessageConfig
+           >.broadcast(),
+       _clientNotificationController =
+           StreamController<pb.ClientNotification>.broadcast(),
+       _userConfigController = StreamController<pb.User>.broadcast(),
+       _detectionSensorEventController =
+           StreamController<DetectionSensorEvent>.broadcast(),
+       _traceRouteLogController = StreamController<TraceRouteLog>.broadcast(),
+       _dedupeStore = dedupeStore ?? MeshPacketDedupeStore(),
+       _smCapabilityStore = smCapabilityStore ?? SmCapabilityStore(),
+       _smFeatureFlag = smFeatureFlag ?? SmFeatureFlag(),
+       _smMetrics = SmMetrics(),
+       _smRateLimiter = SmRateLimiter(),
+       _smIdentityRateLimiter = SmIdentityRateLimiter();
 
   /// Set the BLE device name for hardware model inference
   void setDeviceName(String? name) {
@@ -1025,9 +1059,13 @@ class ProtocolService {
           _handleTracerouteMessage(packet, data);
           break;
         default:
-          AppLogging.protocol(
-            'Received message with portnum: ${data.portnum} (${data.portnum.value})',
-          );
+          if (SmCodec.isSocialmeshPortnum(data.portnum.value)) {
+            _handleSmPacket(packet, data);
+          } else {
+            AppLogging.protocol(
+              'Received message with portnum: ${data.portnum} (${data.portnum.value})',
+            );
+          }
       }
     }
   }
@@ -1144,11 +1182,161 @@ class ProtocolService {
         '(ttl=${signalPacket.ttlMinutes}m)',
       );
 
+      _smMetrics.recordLegacyPacketReceived();
       _signalController.add(signalPacket);
     } catch (e) {
       AppLogging.social('Failed to parse signal packet: $e');
     }
   }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Socialmesh binary protocol handlers (portnums 260/261/262)
+  // ─────────────────────────────────────────────────────────────────
+
+  /// Handle inbound Socialmesh binary packet.
+  ///
+  /// Decodes via [SmCodec], marks sender as binary-capable, and routes
+  /// the decoded payload into the existing domain pipelines.
+  void _handleSmPacket(pb.MeshPacket packet, pb.Data data) {
+    // Ignore our own packets echoed back
+    if (packet.from == _myNodeNum) return;
+
+    _smMetrics.recordBinaryPacketReceived();
+
+    final portnum = data.portnum.value;
+    final payload = Uint8List.fromList(data.payload);
+    final decoded = SmCodec.decode(portnum, payload);
+
+    if (decoded == null) {
+      _smMetrics.recordDecodeNull(portnum);
+      AppLogging.protocol(
+        'SM: decode returned null for portnum=$portnum, '
+        '${payload.length} bytes from ${packet.from.toRadixString(16)}',
+      );
+      return;
+    }
+
+    // Mark sender as binary-capable
+    _smCapabilityStore.markNodeSupported(packet.from);
+
+    switch (decoded.type) {
+      case SmPacketType.presence:
+        _handleSmPresence(decoded.presence, packet.from);
+      case SmPacketType.signal:
+        _handleSmSignal(decoded.signal, packet.from, packet.id);
+      case SmPacketType.identity:
+        _handleSmIdentity(decoded.identity, packet.from);
+    }
+  }
+
+  /// Handle decoded SM_PRESENCE: update extended presence info.
+  void _handleSmPresence(SmPresence presence, int senderNodeNum) {
+    AppLogging.protocol(
+      'SM_PRESENCE from ${senderNodeNum.toRadixString(16)}: $presence',
+    );
+
+    // Map SmPresenceIntent -> PresenceIntent (1:1 by index value)
+    final intent = PresenceIntent.fromValue(presence.intent.index);
+
+    final extendedInfo = ExtendedPresenceInfo(
+      intent: intent,
+      shortStatus: presence.status,
+    );
+
+    // Notify via the onSmPresenceUpdate callback if set.
+    // This allows providers to feed it into ExtendedPresenceService.
+    onSmPresenceUpdate?.call(
+      nodeNum: senderNodeNum,
+      info: extendedInfo,
+      battery: presence.battery,
+      latitudeI: presence.latitudeI,
+      longitudeI: presence.longitudeI,
+    );
+  }
+
+  /// Handle decoded SM_SIGNAL: convert to MeshSignalPacket and emit
+  /// on the existing signal stream.
+  void _handleSmSignal(SmSignal signal, int senderNodeNum, int packetId) {
+    final signalIdStr = SmPacketRouter.signalIdToString(signal.signalId);
+    final ttlMinutes = SmPacketRouter.ttlToMinutes(signal.ttl);
+
+    final meshPacket = MeshSignalPacket(
+      senderNodeId: senderNodeNum,
+      packetId: packetId,
+      signalId: signalIdStr,
+      content: signal.content,
+      ttlMinutes: ttlMinutes,
+      latitude: signal.latitude,
+      longitude: signal.longitude,
+      receivedAt: DateTime.now(),
+      hasImage: signal.hasImage,
+      // No presenceInfo in binary signals — presence is a separate packet.
+    );
+
+    AppLogging.social(
+      'SM_SIGNAL mapped: signalId=$signalIdStr '
+      'from=${senderNodeNum.toRadixString(16)} '
+      'ttl=${ttlMinutes}m content=${signal.content.length} chars',
+    );
+
+    _signalController.add(meshPacket);
+  }
+
+  /// Handle decoded SM_IDENTITY: request/response routing.
+  void _handleSmIdentity(SmIdentity identity, int senderNodeNum) {
+    if (identity.isRequest) {
+      AppLogging.protocol(
+        'SM_IDENTITY request from ${senderNodeNum.toRadixString(16)}',
+      );
+      // Auto-respond if rate limit allows
+      if (_smIdentityRateLimiter.canRequest(senderNodeNum)) {
+        _smIdentityRateLimiter.recordRequest(senderNodeNum);
+        _sendSmIdentityResponse(senderNodeNum);
+      } else {
+        AppLogging.protocol(
+          'SM_IDENTITY request rate-limited for '
+          '${senderNodeNum.toRadixString(16)}',
+        );
+      }
+    } else {
+      // Response or unsolicited broadcast
+      AppLogging.protocol(
+        'SM_IDENTITY ${identity.isResponse ? "response" : "broadcast"} '
+        'from ${senderNodeNum.toRadixString(16)}: $identity',
+      );
+
+      // Verify sigil hash against sender's node number
+      final hashValid = SmIdentity.verifySigilHash(
+        identity.sigilHash,
+        senderNodeNum,
+      );
+
+      onSmIdentityUpdate?.call(
+        nodeNum: senderNodeNum,
+        identity: identity,
+        hashValid: hashValid,
+      );
+    }
+  }
+
+  /// Callback for SM_PRESENCE updates. Set by providers to feed into
+  /// ExtendedPresenceService without importing it here.
+  void Function({
+    required int nodeNum,
+    required ExtendedPresenceInfo info,
+    int? battery,
+    int? latitudeI,
+    int? longitudeI,
+  })?
+  onSmPresenceUpdate;
+
+  /// Callback for SM_IDENTITY updates (response / unsolicited).
+  void Function({
+    required int nodeNum,
+    required SmIdentity identity,
+    required bool hashValid,
+  })?
+  onSmIdentityUpdate;
 
   /// Handle detection sensor events (DETECTION_SENSOR_APP portnum)
   void _handleDetectionSensorMessage(pb.MeshPacket packet, pb.Data data) {
@@ -2939,6 +3127,278 @@ class ProtocolService {
       AppLogging.social('Error broadcasting signal: $e');
       rethrow;
     }
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Socialmesh binary protocol send methods
+  // ─────────────────────────────────────────────────────────────────
+
+  /// Broadcast a binary SM_SIGNAL (portnum 261).
+  ///
+  /// Returns the packet ID for tracking, or null if encoding failed.
+  Future<int?> sendSmSignal(SmSignal signal) async {
+    if (_myNodeNum == null || !_transport.isConnected) return null;
+
+    final encoded = SmCodec.encodeSignal(signal);
+    if (encoded == null) {
+      AppLogging.social('SM_SIGNAL encode failed');
+      return null;
+    }
+
+    if (!_smRateLimiter.canSend(SmPortnum.signal)) {
+      AppLogging.social('SM_SIGNAL rate-limited');
+      return null;
+    }
+
+    final packetId = _generatePacketId();
+
+    final data = pb.Data()
+      ..portnum = pn.PortNum.valueOf(SmPortnum.signal) ?? pn.PortNum.PRIVATE_APP
+      ..payload = encoded;
+
+    final packet = MeshPacketBuilder.userPayload(
+      myNodeNum: _myNodeNum!,
+      to: 0xFFFFFFFF,
+      data: data,
+      packetId: packetId,
+    );
+
+    // Apply priority from signal spec
+    final meshPriority = smSignalPriorityToMeshPriority(signal.priority);
+    if (meshPriority > 64) {
+      // Only set non-default priorities
+      packet.priority = pn.PortNum.valueOf(meshPriority) != null
+          ? pb.MeshPacket_Priority.valueOf(meshPriority) ??
+                pb.MeshPacket_Priority.DEFAULT
+          : pb.MeshPacket_Priority.DEFAULT;
+    }
+
+    // Apply hop limit from spec
+    final hopLimit = signal.priority == SmSignalPriority.emergency
+        ? SmTransport.emergencyHopLimit
+        : SmTransport.signalHopLimit;
+    packet.hopLimit = hopLimit;
+
+    final toRadio = pb.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    _smRateLimiter.recordSend(SmPortnum.signal);
+
+    AppLogging.social(
+      'SM_SIGNAL broadcast: signalId=${SmPacketRouter.signalIdToString(signal.signalId)} '
+      'content=${signal.content.length} chars, packetId=$packetId',
+    );
+
+    return packetId;
+  }
+
+  /// Broadcast a binary SM_PRESENCE (portnum 260).
+  ///
+  /// Returns the packet ID for tracking, or null if encoding or rate
+  /// limit prevented sending.
+  Future<int?> sendSmPresence(SmPresence presence) async {
+    if (_myNodeNum == null || !_transport.isConnected) return null;
+
+    final encoded = SmCodec.encodePresence(presence);
+    if (encoded == null) {
+      AppLogging.protocol('SM_PRESENCE encode failed');
+      return null;
+    }
+
+    if (!_smRateLimiter.canSend(SmPortnum.presence)) {
+      AppLogging.protocol('SM_PRESENCE rate-limited');
+      return null;
+    }
+
+    final packetId = _generatePacketId();
+
+    final data = pb.Data()
+      ..portnum =
+          pn.PortNum.valueOf(SmPortnum.presence) ?? pn.PortNum.PRIVATE_APP
+      ..payload = encoded;
+
+    final packet = MeshPacketBuilder.userPayload(
+      myNodeNum: _myNodeNum!,
+      to: 0xFFFFFFFF,
+      data: data,
+      packetId: packetId,
+    );
+    packet.hopLimit = SmTransport.presenceHopLimit;
+
+    final toRadio = pb.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    _smRateLimiter.recordSend(SmPortnum.presence);
+
+    AppLogging.protocol('SM_PRESENCE broadcast: $presence, packetId=$packetId');
+    return packetId;
+  }
+
+  /// Send an SM_IDENTITY request to a specific node (unicast).
+  ///
+  /// Respects per-node rate limits. Returns the packet ID, or null if
+  /// rate-limited or not connected.
+  Future<int?> sendSmIdentityRequest(int targetNodeNum) async {
+    if (_myNodeNum == null || !_transport.isConnected) return null;
+
+    if (!_smIdentityRateLimiter.canRequest(targetNodeNum)) {
+      AppLogging.protocol(
+        'SM_IDENTITY request rate-limited for '
+        '${targetNodeNum.toRadixString(16)}',
+      );
+      return null;
+    }
+
+    final identity = SmIdentity(
+      sigilHash: SmIdentity.computeSigilHash(_myNodeNum!),
+      isRequest: true,
+    );
+
+    final encoded = SmCodec.encodeIdentity(identity);
+    if (encoded == null) return null;
+
+    final packetId = _generatePacketId();
+
+    final data = pb.Data()
+      ..portnum =
+          pn.PortNum.valueOf(SmPortnum.identity) ?? pn.PortNum.PRIVATE_APP
+      ..payload = encoded;
+
+    final packet = MeshPacketBuilder.userPayload(
+      myNodeNum: _myNodeNum!,
+      to: targetNodeNum,
+      data: data,
+      packetId: packetId,
+    );
+    packet.hopLimit = SmTransport.identityRequestHopLimit;
+
+    final toRadio = pb.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    _smIdentityRateLimiter.recordRequest(targetNodeNum);
+
+    AppLogging.protocol(
+      'SM_IDENTITY request sent to ${targetNodeNum.toRadixString(16)}, '
+      'packetId=$packetId',
+    );
+    return packetId;
+  }
+
+  /// Send an SM_IDENTITY response to a requesting node (unicast).
+  void _sendSmIdentityResponse(int targetNodeNum) async {
+    if (_myNodeNum == null || !_transport.isConnected) return;
+
+    final identity = SmIdentity(
+      sigilHash: SmIdentity.computeSigilHash(_myNodeNum!),
+      isResponse: true,
+      // trait and encounterCount left null until NodeDex integration
+    );
+
+    final encoded = SmCodec.encodeIdentity(identity);
+    if (encoded == null) return;
+
+    final packetId = _generatePacketId();
+
+    final data = pb.Data()
+      ..portnum =
+          pn.PortNum.valueOf(SmPortnum.identity) ?? pn.PortNum.PRIVATE_APP
+      ..payload = encoded;
+
+    final packet = MeshPacketBuilder.userPayload(
+      myNodeNum: _myNodeNum!,
+      to: targetNodeNum,
+      data: data,
+      packetId: packetId,
+    );
+    packet.hopLimit = SmTransport.identityRequestHopLimit;
+
+    final toRadio = pb.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    AppLogging.protocol(
+      'SM_IDENTITY response sent to ${targetNodeNum.toRadixString(16)}, '
+      'packetId=$packetId',
+    );
+  }
+
+  /// Broadcast a signal with dual-send support (binary + legacy).
+  ///
+  /// When [smBinaryEnabled] is true:
+  ///   1. Always sends SM_SIGNAL (portnum 261) first.
+  ///   2. If legacy compatibility is still needed, also sends legacy
+  ///      JSON (portnum 256) with the same logical signal ID.
+  ///
+  /// When [smBinaryEnabled] is false:
+  ///   Behaves exactly like [sendSignal] (legacy JSON only).
+  ///
+  /// Returns the packet ID of the primary send, or null on failure.
+  Future<int?> sendSignalDualMode({
+    required String signalId,
+    required String content,
+    required int ttlMinutes,
+    double? latitude,
+    double? longitude,
+    bool hasImage = false,
+    Map<String, dynamic>? presenceInfo,
+  }) async {
+    if (_myNodeNum == null || !_transport.isConnected) return null;
+
+    if (!_smFeatureFlag.shouldSendBinary) {
+      // Binary disabled — legacy only (existing behavior).
+      // Uses the caller-provided signalId (UUID) unchanged.
+      final packetId = await sendSignal(
+        signalId: signalId,
+        content: content,
+        ttlMinutes: ttlMinutes,
+        latitude: latitude,
+        longitude: longitude,
+        hasImage: hasImage,
+        presenceInfo: presenceInfo,
+      );
+      return packetId;
+    }
+
+    // Binary enabled — build and send SM_SIGNAL first
+    final binarySignalId = SmSignal.generateSignalId();
+    final signalIdStr = SmPacketRouter.signalIdToString(binarySignalId);
+
+    final smSignal = SmSignal(
+      signalId: binarySignalId,
+      content: content,
+      ttl: SmPacketRouter.ttlFromMinutes(ttlMinutes),
+      hasImage: hasImage,
+      latitudeI: latitude != null ? (latitude * 1e7).round() : null,
+      longitudeI: longitude != null ? (longitude * 1e7).round() : null,
+    );
+
+    final binaryPacketId = await sendSmSignal(smSignal);
+    int? resultPacketId = binaryPacketId;
+
+    // Check if legacy send is needed
+    final sendLegacy = _smFeatureFlag.shouldSendLegacyGivenMeshState(
+      isMeshBinaryReady: _smCapabilityStore.isMeshBinaryReady,
+    );
+
+    if (sendLegacy) {
+      try {
+        // Use the same signalId string for dedupe
+        final legacyPacketId = await sendSignal(
+          signalId: signalIdStr,
+          content: content,
+          ttlMinutes: ttlMinutes,
+          latitude: latitude,
+          longitude: longitude,
+          hasImage: hasImage,
+          presenceInfo: presenceInfo,
+        );
+        resultPacketId ??= legacyPacketId;
+        _smMetrics.recordDualSend();
+      } catch (e) {
+        AppLogging.social('Dual-send legacy failed (binary succeeded): $e');
+      }
+    }
+
+    return resultPacketId;
   }
 
   /// Send a text message with pre-tracking callback

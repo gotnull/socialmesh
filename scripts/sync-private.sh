@@ -59,6 +59,7 @@ EXCLUDE_PATTERNS=(
   "node_modules"
   ".dart_tool"
   "build"
+  "dist"
   ".pub-cache"
   "__pycache__"
   "*.pyc"

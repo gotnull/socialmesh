@@ -254,7 +254,11 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
               );
             }
 
-            final packetId = await protocol.sendSignal(
+            // Use dual-mode send: sends binary SM_SIGNAL (261) when enabled,
+            // with optional legacy JSON (256) fallback for compatibility.
+            // When binary is disabled (default), behaves identically to
+            // the previous direct sendSignal() call.
+            final packetId = await protocol.sendSignalDualMode(
               signalId: signalId,
               content: content,
               ttlMinutes: ttlMinutes,
@@ -292,6 +296,28 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         AppLogging.social('Remote delete stream error: $e');
       },
     );
+
+    // Wire SM_PRESENCE callback to feed into ExtendedPresenceService.
+    // This keeps the binary presence path consistent with the legacy
+    // piggyback mechanism without modifying the presence providers.
+    protocol.onSmPresenceUpdate =
+        ({
+          required int nodeNum,
+          required ExtendedPresenceInfo info,
+          int? battery,
+          int? latitudeI,
+          int? longitudeI,
+        }) {
+          final presenceService = ref.read(extendedPresenceServiceProvider);
+          if (info.hasData) {
+            presenceService.handleRemotePresence(nodeNum, info);
+            AppLogging.social(
+              'SM_PRESENCE: updated extended presence for '
+              '!${nodeNum.toRadixString(16)}: '
+              'intent=${info.intent.name}, status=${info.shortStatus}',
+            );
+          }
+        };
 
     AppLogging.social('Mesh integration wired');
   }

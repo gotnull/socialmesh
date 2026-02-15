@@ -199,8 +199,13 @@ Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
   AppLogging.subscriptions(
     '💳 [PurchaseProduct] Starting purchase for: $productId',
   );
-  ref.read(subscriptionLoadingProvider.notifier).setLoading(true);
-  ref.read(subscriptionErrorProvider.notifier).clear();
+  try {
+    ref.read(subscriptionLoadingProvider.notifier).setLoading(true);
+    ref.read(subscriptionErrorProvider.notifier).clear();
+  } catch (_) {
+    // ref may already be disposed — abort early
+    return PurchaseResult.error;
+  }
 
   try {
     final service = await ref.read(subscriptionServiceProvider.future);
@@ -214,15 +219,22 @@ Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
       AppLogging.subscriptions(
         '💳 [PurchaseProduct] Success! Refreshing purchase state notifier...',
       );
-      // Await the refresh to ensure state is updated before returning
-      await ref.read(purchaseStateProvider.notifier).refresh();
-      AppLogging.subscriptions('💳 [PurchaseProduct] Refresh complete');
+      try {
+        // Await the refresh to ensure state is updated before returning
+        await ref.read(purchaseStateProvider.notifier).refresh();
+        AppLogging.subscriptions('💳 [PurchaseProduct] Refresh complete');
 
-      // Double-check the state
-      final state = ref.read(purchaseStateProvider);
-      AppLogging.subscriptions(
-        '💳 [PurchaseProduct] Final state: ${state.purchasedProductIds}',
-      );
+        // Double-check the state
+        final state = ref.read(purchaseStateProvider);
+        AppLogging.subscriptions(
+          '💳 [PurchaseProduct] Final state: ${state.purchasedProductIds}',
+        );
+      } catch (_) {
+        // ref may be disposed if the calling widget was unmounted during purchase
+        AppLogging.subscriptions(
+          '💳 [PurchaseProduct] Widget unmounted during purchase — skipping state refresh',
+        );
+      }
     }
     return result;
   } catch (e) {
