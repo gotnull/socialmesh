@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/info_chip.dart';
 import '../services/opensky_service.dart';
 
 // =============================================================================
@@ -494,47 +495,29 @@ class _FlightTile extends StatelessWidget {
 
     // Country
     if (flight.originCountry != null) {
-      chips.add(
-        _InfoChip(
-          icon: Icons.public,
-          label: flight.originCountry!,
-          color: context.textTertiary,
-          backgroundColor: context.surface,
-        ),
-      );
+      chips.add(InfoChip(icon: Icons.public, label: flight.originCountry!));
     }
 
     // Altitude
     if (!flight.onGround && flight.altitudeFeet != null) {
       chips.add(
-        _InfoChip(
+        InfoChip(
           icon: Icons.height,
           label:
               '${NumberFormat('#,##0').format(flight.altitudeFeet!.round())} ft',
-          color: context.textSecondary,
-          backgroundColor: context.surface,
         ),
       );
     }
 
     // Speed or on-ground
     if (flight.onGround) {
-      chips.add(
-        _InfoChip(
-          icon: Icons.flight_land,
-          label: 'On ground',
-          color: context.textTertiary,
-          backgroundColor: context.surface,
-        ),
-      );
+      chips.add(InfoChip(icon: Icons.flight_land, label: 'On ground'));
     } else if (flight.velocityKnots != null) {
       chips.add(
-        _InfoChip(
+        InfoChip(
           icon: Icons.speed,
           label:
               '${NumberFormat('#,##0').format(flight.velocityKnots!.round())} kts',
-          color: context.textSecondary,
-          backgroundColor: context.surface,
         ),
       );
     }
@@ -542,11 +525,9 @@ class _FlightTile extends StatelessWidget {
     // Departure time
     if (route?.departureTime != null) {
       chips.add(
-        _InfoChip(
+        InfoChip(
           icon: Icons.schedule,
           label: DateFormat('h:mm a').format(route!.departureTime!),
-          color: context.textSecondary,
-          backgroundColor: context.surface,
         ),
       );
     }
@@ -561,49 +542,5 @@ class _FlightTile extends StatelessWidget {
     if (dep != null) return 'From $dep';
     if (arr != null) return 'To $arr';
     return '';
-  }
-}
-
-// =============================================================================
-// Info chip — compact, never truncates
-// =============================================================================
-
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final Color backgroundColor;
-
-  const _InfoChip({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.backgroundColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
