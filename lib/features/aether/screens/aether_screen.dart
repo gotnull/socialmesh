@@ -16,6 +16,7 @@
 // Firebase-backed with real-time streams and OpenSky Network integration
 // for live flight position tracking.
 
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -28,6 +29,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/logging.dart';
 import '../../../core/widgets/animated_empty_state.dart';
+import '../../../core/widgets/animated_gold_button.dart';
 import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
@@ -256,8 +258,8 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
 
   /// Builds the leaderboard button for the app bar.
   Widget _buildLeaderboardButton(BuildContext context) {
-    return IconButton(
-      icon: Icon(Icons.emoji_events, color: context.textSecondary, size: 22),
+    return AnimatedGoldIconButton(
+      icon: Icons.emoji_events,
       tooltip: 'Leaderboard',
       onPressed: _showLeaderboard,
     );
@@ -1628,6 +1630,245 @@ class _PulsingDotState extends State<_PulsingDot>
 // Report Card
 // =============================================================================
 
+/// Rank badge with sparkles for #1 position
+class _RankBadge extends StatefulWidget {
+  final int rank;
+
+  const _RankBadge({required this.rank});
+
+  @override
+  State<_RankBadge> createState() => _RankBadgeState();
+}
+
+class _RankBadgeState extends State<_RankBadge> with TickerProviderStateMixin {
+  late AnimationController _sparkleController;
+  Timer? _sparkleTimer;
+  final List<_Sparkle> _sparkles = [];
+  final math.Random _random = math.Random();
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.rank == 1) {
+      _sparkleController = AnimationController(
+        duration: const Duration(milliseconds: 800),
+        vsync: this,
+      );
+      _scheduleNextSparkle();
+    }
+  }
+
+  @override
+  void dispose() {
+    if (widget.rank == 1) {
+      _sparkleTimer?.cancel();
+      _sparkleController.dispose();
+    }
+    super.dispose();
+  }
+
+  void _scheduleNextSparkle() {
+    final delay = Duration(milliseconds: 1500 + _random.nextInt(2500));
+    _sparkleTimer?.cancel();
+    _sparkleTimer = Timer(delay, () {
+      if (mounted) {
+        _triggerSparkles();
+        _scheduleNextSparkle();
+      }
+    });
+  }
+
+  void _triggerSparkles() {
+    setState(() {
+      _sparkles.clear();
+      final count = 3 + _random.nextInt(4);
+      for (int i = 0; i < count; i++) {
+        final xPos = _random.nextDouble();
+        final yPos = _random.nextDouble();
+        _sparkles.add(
+          _Sparkle(
+            xPos: xPos,
+            yPos: yPos,
+            delay: _random.nextInt(300),
+            size: 4 + _random.nextDouble() * 6,
+          ),
+        );
+      }
+    });
+    _sparkleController.forward(from: 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.rank == 1) {
+      return SizedBox(
+        width: 40,
+        height: 40,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [_buildBadgeContainer(context), ..._buildSparkles()],
+        ),
+      );
+    }
+
+    return _buildBadgeContainer(context);
+  }
+
+  Widget _buildBadgeContainer(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: widget.rank <= 3
+            ? LinearGradient(
+                colors: [
+                  _getRankColor(context),
+                  _getRankColor(context).withValues(alpha: 0.6),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+        color: widget.rank > 3
+            ? _getRankColor(context).withValues(alpha: 0.2)
+            : null,
+      ),
+      child: Center(
+        child: Text(
+          '#${widget.rank}',
+          style: TextStyle(
+            color: widget.rank <= 3 ? Colors.white : _getRankColor(context),
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildSparkles() {
+    return _sparkles.map((sparkle) {
+      return AnimatedBuilder(
+        animation: _sparkleController,
+        builder: (context, child) {
+          final delayProgress =
+              ((_sparkleController.value * 1000 - sparkle.delay) / 500).clamp(
+                0.0,
+                1.0,
+              );
+
+          final opacity = delayProgress < 0.5
+              ? delayProgress * 2
+              : (1 - delayProgress) * 2;
+
+          final scale = delayProgress < 0.5
+              ? 0.5 + delayProgress
+              : 1.5 - delayProgress;
+
+          if (opacity <= 0) return const SizedBox.shrink();
+
+          return Positioned(
+            left: sparkle.xPos * 40 - sparkle.size / 2,
+            top: sparkle.yPos * 40 - sparkle.size / 2,
+            child: Opacity(
+              opacity: opacity.clamp(0.0, 1.0),
+              child: Transform.scale(
+                scale: scale,
+                child: _buildSparkleStar(sparkle.size),
+              ),
+            ),
+          );
+        },
+      );
+    }).toList();
+  }
+
+  Widget _buildSparkleStar(double size) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _SparklePainter(color: Colors.white)),
+    );
+  }
+
+  Color _getRankColor(BuildContext context) {
+    switch (widget.rank) {
+      case 1:
+        return const Color(0xFFFFD700); // Gold
+      case 2:
+        return const Color(0xFFC0C0C0); // Silver
+      case 3:
+        return const Color(0xFFCD7F32); // Bronze
+      default:
+        return context.accentColor;
+    }
+  }
+}
+
+/// Sparkle data class shared with AnimatedGoldIconButton
+class _Sparkle {
+  final double xPos;
+  final double yPos;
+  final int delay;
+  final double size;
+
+  _Sparkle({
+    required this.xPos,
+    required this.yPos,
+    required this.delay,
+    required this.size,
+  });
+}
+
+/// Sparkle painter shared with AnimatedGoldIconButton
+class _SparklePainter extends CustomPainter {
+  final Color color;
+
+  _SparklePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final path = Path();
+
+    final outerRadius = size.width / 2;
+    final innerRadius = outerRadius * 0.3;
+
+    for (int i = 0; i < 8; i++) {
+      final radius = i.isEven ? outerRadius : innerRadius;
+      final angle = (i * math.pi / 4) - math.pi / 2;
+      final point = Offset(
+        center.dx + radius * math.cos(angle),
+        center.dy + radius * math.sin(angle),
+      );
+
+      if (i == 0) {
+        path.moveTo(point.dx, point.dy);
+      } else {
+        path.lineTo(point.dx, point.dy);
+      }
+    }
+    path.close();
+
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color.withValues(alpha: 0.5)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+    );
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class _ReportCard extends StatelessWidget {
   final ReceptionReport report;
   final int rank;
@@ -1650,37 +1891,8 @@ class _ReportCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           child: Row(
             children: [
-              // Rank badge
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: rank <= 3
-                      ? LinearGradient(
-                          colors: [
-                            _getRankColor(context),
-                            _getRankColor(context).withValues(alpha: 0.6),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
-                      : null,
-                  color: rank > 3
-                      ? _getRankColor(context).withValues(alpha: 0.2)
-                      : null,
-                ),
-                child: Center(
-                  child: Text(
-                    '#$rank',
-                    style: TextStyle(
-                      color: rank <= 3 ? Colors.white : _getRankColor(context),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ),
+              // Rank badge with sparkles for #1
+              _RankBadge(rank: rank),
               const SizedBox(width: 12),
               // Details
               Expanded(
@@ -1770,19 +1982,6 @@ class _ReportCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Color _getRankColor(BuildContext context) {
-    switch (rank) {
-      case 1:
-        return const Color(0xFFFFD700); // Gold
-      case 2:
-        return const Color(0xFFC0C0C0); // Silver
-      case 3:
-        return const Color(0xFFCD7F32); // Bronze
-      default:
-        return context.accentColor;
-    }
   }
 }
 

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/legal/legal_constants.dart';
 import '../../../core/logging.dart';
 import '../models/aether_flight.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
@@ -11,6 +12,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../core/widgets/datetime_picker_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/legal_document_sheet.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
@@ -79,6 +81,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   // Flight validation state
   FlightValidationResult? _validationResult;
   bool _isValidating = false;
+
+  // Route data completeness tracking
+  bool _showIncompleteDataNotice = false;
+  List<String> _missingFields = [];
 
   @override
   void dispose() {
@@ -509,223 +515,300 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     final dateFormat = DateFormat('MMM d, yyyy');
     final timeFormat = DateFormat('h:mm a');
     final myNode = _getMyNode();
+    final gradientColors = AccentColors.gradientFor(context.accentColor);
 
     return GestureDetector(
       onTap: _dismissKeyboard,
       behavior: HitTestBehavior.opaque,
-      child: GlassScaffold(
+      child: GlassScaffold.body(
         title: 'Schedule Flight',
         actions: [
-          TextButton(
-            onPressed: _isSaving ? null : _save,
-            child: _isSaving
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: context.accentColor,
-                    ),
-                  )
-                : Text(
-                    'Save',
-                    style: TextStyle(
-                      color: context.accentColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-          ),
-        ],
-        bottomNavigationBar: _buildMyNodeBar(myNode),
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: SliverToBoxAdapter(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Info card
-                    StatusBanner.accent(
-                      title:
-                          'Schedule your flight and share it on aether.socialmesh.app so the community can try to receive your signal!',
-                      icon: Icons.flight,
-                      margin: EdgeInsets.zero,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Tips — right below the intro card
-                    _buildTipsCard(),
-                    const SizedBox(height: 24),
-
-                    // Flight Info Section
-                    _buildSectionHeader('Flight Information'),
-                    const SizedBox(height: 12),
-
-                    // Flight Number with Validation
-                    _buildFlightNumberField(),
-                    const SizedBox(height: 16),
-
-                    // Airports row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _departureController,
-                            label: 'From',
-                            hint: 'LAX',
-                            icon: Icons.flight_takeoff,
-                            maxLength: _maxAirportCodeLength,
-                            textCapitalization: TextCapitalization.characters,
-                            validator: (v) =>
-                                _validateAirportCode(v, 'departure'),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _arrivalController,
-                            label: 'To',
-                            hint: 'JFK',
-                            icon: Icons.flight_land,
-                            maxLength: _maxAirportCodeLength,
-                            textCapitalization: TextCapitalization.characters,
-                            validator: (v) =>
-                                _validateAirportCode(v, 'arrival'),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Departure Time Section
-                    _buildSectionHeader('Departure Time'),
-                    const SizedBox(height: 12),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildDateButton(
-                            label: 'Date',
-                            value: _departureDate != null
-                                ? dateFormat.format(_departureDate!)
-                                : 'Select',
-                            icon: Icons.calendar_today,
-                            onTap: _selectDepartureDate,
-                            onClear: _departureDate != null
-                                ? _clearDepartureDate
-                                : null,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildDateButton(
-                            label: 'Time',
-                            value: _departureTime != null
-                                ? timeFormat.format(
-                                    DateTime(
-                                      2000,
-                                      1,
-                                      1,
-                                      _departureTime!.hour,
-                                      _departureTime!.minute,
-                                    ),
-                                  )
-                                : 'Select',
-                            icon: Icons.access_time,
-                            onTap: _selectDepartureTime,
-                            onClear: _departureTime != null
-                                ? _clearDepartureTime
-                                : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Arrival Time Section (optional)
-                    _buildSectionHeader('Arrival Time (Optional)'),
-                    const SizedBox(height: 12),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildDateButton(
-                            label: 'Date',
-                            value: _arrivalDate != null
-                                ? dateFormat.format(_arrivalDate!)
-                                : 'Select',
-                            icon: Icons.calendar_today,
-                            onTap: _selectArrivalDate,
-                            onClear: _arrivalDate != null
-                                ? _clearArrivalDate
-                                : null,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildDateButton(
-                            label: 'Time',
-                            value: _arrivalTime != null
-                                ? timeFormat.format(
-                                    DateTime(
-                                      2000,
-                                      1,
-                                      1,
-                                      _arrivalTime!.hour,
-                                      _arrivalTime!.minute,
-                                    ),
-                                  )
-                                : 'Select',
-                            icon: Icons.access_time,
-                            onTap: _selectArrivalTime,
-                            onClear: _arrivalTime != null
-                                ? _clearArrivalTime
-                                : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Notes Section
-                    _buildSectionHeader('Additional Notes (Optional)'),
-                    const SizedBox(height: 12),
-
-                    _buildTextField(
-                      controller: _notesController,
-                      label: 'Notes',
-                      hint: 'Window seat, left side. Running at 20dBm.',
-                      icon: Icons.notes,
-                      maxLines: 3,
-                      maxLength: _maxNotesLength,
-                    ),
-                    // Extra padding so content isn't hidden behind bottom bar
-                    SizedBox(
-                      height: MediaQuery.of(context).padding.bottom + 16,
-                    ),
-                  ],
-                ),
-              ),
+          IconButton(
+            icon: Icon(
+              Icons.policy_outlined,
+              color: context.textSecondary,
+              size: 20,
+            ),
+            tooltip: 'Your Responsibility',
+            onPressed: () => LegalDocumentSheet.showTermsSection(
+              context,
+              LegalConstants.anchorAcceptableUse,
             ),
           ),
         ],
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Info card
+                      StatusBanner.accent(
+                        title:
+                            'Schedule your flight and share it on aether.socialmesh.app so the community can try to receive your signal!',
+                        icon: Icons.flight,
+                        margin: EdgeInsets.zero,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Tips — right below the intro card
+                      _buildTipsCard(),
+                      const SizedBox(height: 16),
+
+                      // Incomplete route data notice (if applicable)
+                      if (_showIncompleteDataNotice) ...[
+                        _buildIncompleteDataNotice(),
+                        const SizedBox(height: 16),
+                      ],
+
+                      const SizedBox(height: 8),
+
+                      // Flight Info Section
+                      _buildSectionHeader('Flight Information'),
+                      const SizedBox(height: 12),
+
+                      // Flight Number with Validation
+                      _buildFlightNumberField(),
+                      const SizedBox(height: 16),
+
+                      // Airports row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              controller: _departureController,
+                              label: 'From',
+                              hint: 'LAX',
+                              icon: Icons.flight_takeoff,
+                              maxLength: _maxAirportCodeLength,
+                              textCapitalization: TextCapitalization.characters,
+                              validator: (v) =>
+                                  _validateAirportCode(v, 'departure'),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildTextField(
+                              controller: _arrivalController,
+                              label: 'To',
+                              hint: 'JFK',
+                              icon: Icons.flight_land,
+                              maxLength: _maxAirportCodeLength,
+                              textCapitalization: TextCapitalization.characters,
+                              validator: (v) =>
+                                  _validateAirportCode(v, 'arrival'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Departure Time Section
+                      _buildSectionHeader('Departure Time'),
+                      const SizedBox(height: 12),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildDateButton(
+                              label: 'Date',
+                              value: _departureDate != null
+                                  ? dateFormat.format(_departureDate!)
+                                  : 'Select',
+                              icon: Icons.calendar_today,
+                              onTap: _selectDepartureDate,
+                              onClear: _departureDate != null
+                                  ? _clearDepartureDate
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildDateButton(
+                              label: 'Time',
+                              value: _departureTime != null
+                                  ? timeFormat.format(
+                                      DateTime(
+                                        2000,
+                                        1,
+                                        1,
+                                        _departureTime!.hour,
+                                        _departureTime!.minute,
+                                      ),
+                                    )
+                                  : 'Select',
+                              icon: Icons.access_time,
+                              onTap: _selectDepartureTime,
+                              onClear: _departureTime != null
+                                  ? _clearDepartureTime
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Arrival Time Section (optional)
+                      _buildSectionHeader('Arrival Time (Optional)'),
+                      const SizedBox(height: 12),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildDateButton(
+                              label: 'Date',
+                              value: _arrivalDate != null
+                                  ? dateFormat.format(_arrivalDate!)
+                                  : 'Select',
+                              icon: Icons.calendar_today,
+                              onTap: _selectArrivalDate,
+                              onClear: _arrivalDate != null
+                                  ? _clearArrivalDate
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildDateButton(
+                              label: 'Time',
+                              value: _arrivalTime != null
+                                  ? timeFormat.format(
+                                      DateTime(
+                                        2000,
+                                        1,
+                                        1,
+                                        _arrivalTime!.hour,
+                                        _arrivalTime!.minute,
+                                      ),
+                                    )
+                                  : 'Select',
+                              icon: Icons.access_time,
+                              onTap: _selectArrivalTime,
+                              onClear: _arrivalTime != null
+                                  ? _clearArrivalTime
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Notes Section
+                      _buildSectionHeader('Additional Notes (Optional)'),
+                      const SizedBox(height: 12),
+
+                      _buildTextField(
+                        controller: _notesController,
+                        label: 'Notes',
+                        hint: 'Window seat, left side. Running at 20dBm.',
+                        icon: Icons.notes,
+                        maxLines: 3,
+                        maxLength: _maxNotesLength,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Bottom node bar
+            _buildMyNodeBar(myNode),
+            // Bottom save button
+            Container(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                12,
+                20,
+                12 + MediaQuery.of(context).padding.bottom,
+              ),
+              decoration: BoxDecoration(
+                color: context.background,
+                border: Border(
+                  top: BorderSide(color: context.border.withValues(alpha: 0.2)),
+                ),
+              ),
+              child: GestureDetector(
+                onTap: !_isSaving && myNode != null ? _save : null,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    gradient: !_isSaving && myNode != null
+                        ? LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [gradientColors[0], gradientColors[1]],
+                          )
+                        : null,
+                    color: !_isSaving && myNode != null
+                        ? null
+                        : context.border.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: !_isSaving && myNode != null
+                        ? [
+                            BoxShadow(
+                              color: gradientColors[0].withValues(alpha: 0.4),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: _isSaving
+                      ? const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.flight,
+                              size: 22,
+                              color: myNode != null
+                                  ? Colors.white
+                                  : context.textTertiary,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Schedule Flight',
+                              style: TextStyle(
+                                color: myNode != null
+                                    ? Colors.white
+                                    : context.textTertiary,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  /// Fixed bottom bar showing the selected Meshtastic node.
+  /// Fixed bar showing the selected Meshtastic node.
   Widget _buildMyNodeBar(MeshNode? myNode) {
     final isConnected = myNode != null;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        MediaQuery.of(context).padding.bottom + 12,
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: BoxDecoration(
         color: context.card,
         border: Border(
@@ -961,31 +1044,58 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     AppLogging.aether('Schedule: looking up route for icao24=$icao24');
     try {
       final routeInfo = await OpenSkyService().lookupAircraftRoute(icao24);
-      if (routeInfo == null || !mounted) return;
+      if (routeInfo == null || !mounted) {
+        AppLogging.aether('Schedule: route lookup returned null');
+        return;
+      }
+
+      AppLogging.aether(
+        'Schedule: processing route data — '
+        'dep=${routeInfo.estDepartureAirport} '
+        'arr=${routeInfo.estArrivalAirport} '
+        'depTime=${routeInfo.departureTime} '
+        'arrTime=${routeInfo.arrivalTime}',
+      );
 
       safeSetState(() {
-        // Populate departure airport if empty
+        // Populate departure airport if empty (defensive: check for null AND empty string)
         if (_departureController.text.isEmpty &&
-            routeInfo.estDepartureAirport != null) {
+            routeInfo.estDepartureAirport != null &&
+            routeInfo.estDepartureAirport!.trim().isNotEmpty) {
           _departureController.text = routeInfo.estDepartureAirport!;
+          AppLogging.aether('Schedule: populated departure airport');
         }
 
-        // Populate arrival airport if empty
+        // Populate arrival airport if empty (defensive: check for null AND empty string)
         if (_arrivalController.text.isEmpty &&
-            routeInfo.estArrivalAirport != null) {
+            routeInfo.estArrivalAirport != null &&
+            routeInfo.estArrivalAirport!.trim().isNotEmpty) {
           _arrivalController.text = routeInfo.estArrivalAirport!;
+          AppLogging.aether('Schedule: populated arrival airport');
         }
 
         // Populate departure date/time
         if (routeInfo.departureTime != null) {
           _departureDate = routeInfo.departureTime;
           _departureTime = TimeOfDay.fromDateTime(routeInfo.departureTime!);
+          AppLogging.aether(
+            'Schedule: populated departure time: ${routeInfo.departureTime}',
+          );
+        } else {
+          AppLogging.aether('Schedule: no departure time available');
         }
 
         // Populate arrival date/time
         if (routeInfo.arrivalTime != null) {
           _arrivalDate = routeInfo.arrivalTime;
           _arrivalTime = TimeOfDay.fromDateTime(routeInfo.arrivalTime!);
+          AppLogging.aether(
+            'Schedule: populated arrival time: ${routeInfo.arrivalTime}',
+          );
+        } else {
+          AppLogging.aether(
+            'Schedule: no arrival time (flight may still be in progress)',
+          );
         }
 
         // Update validation result with route data
@@ -1024,6 +1134,37 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       }
     } catch (e) {
       AppLogging.aether('Route lookup after search failed: $e');
+      // Show notice that route lookup failed
+      if (mounted) {
+        safeSetState(() {
+          _missingFields = ['departure airport', 'arrival airport', 'times'];
+          _showIncompleteDataNotice = true;
+        });
+      }
+    }
+
+    // Check which fields are still missing after route lookup
+    if (mounted) {
+      final missing = <String>[];
+      if (_departureController.text.trim().isEmpty) {
+        missing.add('departure airport');
+      }
+      if (_arrivalController.text.trim().isEmpty) {
+        missing.add('arrival airport');
+      }
+      if (_departureDate == null || _departureTime == null) {
+        missing.add('departure time');
+      }
+      if (_arrivalDate == null || _arrivalTime == null) {
+        missing.add('arrival time');
+      }
+
+      if (missing.isNotEmpty) {
+        safeSetState(() {
+          _missingFields = missing;
+          _showIncompleteDataNotice = true;
+        });
+      }
     }
   }
 
@@ -1296,6 +1437,60 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
               text,
               style: TextStyle(color: context.textSecondary, fontSize: 13),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIncompleteDataNotice() {
+    final missingText = _missingFields.length == 1
+        ? _missingFields.first
+        : _missingFields.length == 2
+        ? '${_missingFields[0]} and ${_missingFields[1]}'
+        : '${_missingFields.sublist(0, _missingFields.length - 1).join(', ')}, and ${_missingFields.last}';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.warningYellow.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.warningYellow.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, color: AppTheme.warningYellow, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Incomplete Flight Data',
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Could not auto-fill $missingText from OpenSky Network. Please enter these details manually below.',
+                  style: TextStyle(color: context.textSecondary, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              safeSetState(() => _showIncompleteDataNotice = false);
+            },
+            child: Icon(Icons.close, color: context.textTertiary, size: 18),
           ),
         ],
       ),

@@ -261,3 +261,203 @@ class _SparklePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+/// An animated gold icon button with shimmer effect and sparkles.
+/// Perfect for premium features like leaderboards that deserve extra attention.
+class AnimatedGoldIconButton extends StatefulWidget {
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final String? tooltip;
+  final double size;
+
+  const AnimatedGoldIconButton({
+    super.key,
+    required this.icon,
+    this.onPressed,
+    this.tooltip,
+    this.size = 22,
+  });
+
+  @override
+  State<AnimatedGoldIconButton> createState() => _AnimatedGoldIconButtonState();
+}
+
+class _AnimatedGoldIconButtonState extends State<AnimatedGoldIconButton>
+    with TickerProviderStateMixin {
+  late AnimationController _shimmerController;
+  late AnimationController _sparkleController;
+  late Animation<double> _shimmerAnimation;
+
+  final Random _random = Random();
+  Timer? _sparkleTimer;
+  final List<_Sparkle> _sparkles = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Shimmer animation for gradient movement
+    _shimmerController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat(reverse: true);
+    _shimmerAnimation = Tween<double>(begin: -1.0, end: 2.0).animate(
+      CurvedAnimation(parent: _shimmerController, curve: Curves.easeInOut),
+    );
+
+    // Sparkle animation controller
+    _sparkleController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _scheduleNextSparkle();
+  }
+
+  @override
+  void dispose() {
+    _sparkleTimer?.cancel();
+    _shimmerController.dispose();
+    _sparkleController.dispose();
+    super.dispose();
+  }
+
+  void _scheduleNextSparkle() {
+    final delay = Duration(milliseconds: 1500 + _random.nextInt(2500));
+    _sparkleTimer?.cancel();
+    _sparkleTimer = Timer(delay, () {
+      if (mounted) {
+        _triggerSparkles();
+        _scheduleNextSparkle();
+      }
+    });
+  }
+
+  void _triggerSparkles() {
+    setState(() {
+      _sparkles.clear();
+      final count = 3 + _random.nextInt(4);
+      for (int i = 0; i < count; i++) {
+        // Spread sparkles across the button area
+        final xPos = _random.nextDouble();
+        final yPos = _random.nextDouble();
+        _sparkles.add(
+          _Sparkle(
+            xPos: xPos,
+            yPos: yPos,
+            delay: _random.nextInt(300),
+            size: 4 + _random.nextDouble() * 6, // Smaller sparkles for icon
+          ),
+        );
+      }
+    });
+    _sparkleController.forward(from: 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 48, // Standard IconButton tap target
+      height: 48,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          // Background shimmer container
+          AnimatedBuilder(
+            animation: _shimmerAnimation,
+            builder: (context, child) {
+              return Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment(-1 + _shimmerAnimation.value, -1),
+                    end: Alignment(1 + _shimmerAnimation.value, 1),
+                    colors: const [
+                      AccentColors.goldBrown,
+                      AccentColors.goldDarkGoldenrod,
+                      AccentColors.goldMetallic,
+                      AccentColors.goldDarkYellow,
+                      AccentColors.goldMetallic,
+                      AccentColors.goldDarkGoldenrod,
+                      AccentColors.goldBrown,
+                    ],
+                    stops: const [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0],
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AccentColors.goldBrown.withValues(alpha: 0.4),
+                      blurRadius: 8,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+
+          // Icon on top
+          IconButton(
+            icon: Icon(
+              widget.icon,
+              color: const Color(0xFF4A3000), // Dark brown for contrast
+              size: widget.size,
+            ),
+            tooltip: widget.tooltip,
+            onPressed: widget.onPressed,
+          ),
+
+          // Sparkles layer
+          ..._buildSparkles(),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildSparkles() {
+    return _sparkles.map((sparkle) {
+      return AnimatedBuilder(
+        animation: _sparkleController,
+        builder: (context, child) {
+          final delayProgress =
+              ((_sparkleController.value * 1000 - sparkle.delay) / 500).clamp(
+                0.0,
+                1.0,
+              );
+
+          final opacity = delayProgress < 0.5
+              ? delayProgress * 2
+              : (1 - delayProgress) * 2;
+
+          final scale = delayProgress < 0.5
+              ? 0.5 + delayProgress
+              : 1.5 - delayProgress;
+
+          if (opacity <= 0) return const SizedBox.shrink();
+
+          return Positioned(
+            left: sparkle.xPos * 36 - sparkle.size / 2,
+            top: sparkle.yPos * 36 - sparkle.size / 2,
+            child: Opacity(
+              opacity: opacity.clamp(0.0, 1.0),
+              child: Transform.scale(
+                scale: scale,
+                child: _buildSparkleStar(sparkle.size),
+              ),
+            ),
+          );
+        },
+      );
+    }).toList();
+  }
+
+  Widget _buildSparkleStar(double size) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _SparklePainter(color: Colors.white)),
+    );
+  }
+}

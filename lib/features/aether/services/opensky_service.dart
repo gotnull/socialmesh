@@ -359,7 +359,10 @@ class OpenSkyService {
   Future<OpenSkyFlight?> lookupAircraftRoute(String icao24) async {
     AppLogging.aether('[OpenSky] lookupAircraftRoute() — icao24=$icao24');
     final now = DateTime.now();
-    final begin = now.subtract(const Duration(hours: 2));
+    // Extended window to 12 hours to catch flights that departed hours ago
+    // Most commercial flights are under 12 hours, and we need the departure
+    // data even for in-progress flights.
+    final begin = now.subtract(const Duration(hours: 12));
     final beginTs = begin.millisecondsSinceEpoch ~/ 1000;
     final endTs = now.millisecondsSinceEpoch ~/ 1000;
 
@@ -382,7 +385,17 @@ class OpenSkyService {
 
       // Sort by firstSeen descending so we get the latest
       flights.sort((a, b) => (b.firstSeen ?? 0).compareTo(a.firstSeen ?? 0));
-      return flights.first;
+      final flight = flights.first;
+
+      // Log what data we got to help diagnose issues
+      AppLogging.aether(
+        '[OpenSky] Route found: dep=${flight.estDepartureAirport ?? "null"} '
+        'arr=${flight.estArrivalAirport ?? "null"} '
+        'firstSeen=${flight.firstSeen != null ? "${DateTime.fromMillisecondsSinceEpoch(flight.firstSeen! * 1000)}" : "null"} '
+        'lastSeen=${flight.lastSeen != null ? "${DateTime.fromMillisecondsSinceEpoch(flight.lastSeen! * 1000)}" : "null"}',
+      );
+
+      return flight;
     } catch (e) {
       AppLogging.aether('[OpenSky] Aircraft route parse error: $e');
       return null;
