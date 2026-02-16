@@ -20,17 +20,17 @@ android/.kotlin/sessions/
 .github/copilot-instructions.md
 
 # Backend services (proprietary, not part of public repo)
-mesh-observer/
-functions/
-sigil-api/
-deploy/
-aether-api/
-api-gateway/
-tools/
-blog/
+/mesh-observer/
+/functions/
+/sigil-api/
+/deploy/
+/aether-api/
+/api-gateway/
+/tools/
+/blog/
 
 # Firebase Hosting content (landing page, legal docs, admin tools)
-web/
+/web/
 
 # Environment files
 .env
@@ -101,12 +101,12 @@ app.*.map.json
 assets/widget_templates/*.json
 
 # Internal docs (keep public-facing docs for repo links)
-docs/
-!docs/ARCHITECTURE.md
-!docs/BACKEND.md
-!docs/RELEASING.md
+/docs/
+!/docs/ARCHITECTURE.md
+!/docs/BACKEND.md
+!/docs/RELEASING.md
 
 # Scripts dependencies
-scripts/node_modules/
-scripts/package-lock.json
+/scripts/node_modules/
+/scripts/package-lock.json
 android/key.properties
