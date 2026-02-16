@@ -19,9 +19,8 @@ class AppUrls {
       'https://us-central1-social-mesh-app.cloudfunctions.net';
 
   /// World Mesh API URL — nodes, stats, map.
-  /// All APIs default to api.socialmesh.app (the unified API domain).
+  /// All APIs default to api.socialmesh.app (the unified API entry point).
   /// Override via .env for transitional Railway-direct routing.
-  /// See docs/DOMAIN_ARCHITECTURE.md for the full domain model.
   static String get worldMeshApiUrl =>
       dotenv.env['WORLD_MESH_API_URL'] ?? 'https://api.socialmesh.app';
 
@@ -67,7 +66,7 @@ class AppUrls {
       '$baseUrl/delete-account?inapp=true';
 
   // Share link URLs — these point to public web portals, never API domains.
-  // See docs/DOMAIN_ARCHITECTURE.md for the portal vs API distinction.
+  // Portal domains (socialmesh.app/*) serve HTML; API domains serve JSON.
   static String shareSigilUrl(String id) => 'https://socialmesh.app/sigil/$id';
   static String shareFlightUrl(String id) =>
       'https://socialmesh.app/aether/flight/$id';

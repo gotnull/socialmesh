@@ -89,7 +89,7 @@ class WhatsNewPayload {
 /// 4. If a drawer item should show a NEW chip, set [WhatsNewItem.badgeKey]
 ///    to the same value used in the drawer menu's `whatsNewBadgeKey` field.
 ///
-/// See docs/WHATS_NEW.md for the full guide.
+/// See the class-level documentation above for the full guide.
 class WhatsNewRegistry {
   WhatsNewRegistry._();
 
