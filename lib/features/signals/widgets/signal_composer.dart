@@ -34,7 +34,7 @@ class _SignalComposerState extends ConsumerState<SignalComposer>
 
   bool get _canSubmit =>
       _controller.text.trim().isNotEmpty &&
-      _controller.text.length <= 280 &&
+      _controller.text.length <= 140 &&
       !_isSubmitting;
 
   Future<void> _submit() async {
@@ -132,10 +132,10 @@ class _SignalComposerState extends ConsumerState<SignalComposer>
             controller: _controller,
             enabled: !_isSubmitting,
             maxLines: 3,
-            maxLength: 280,
+            maxLength: 140,
             maxLengthEnforcement: MaxLengthEnforcement.enforced,
             textCapitalization: TextCapitalization.sentences,
-            inputFormatters: [LengthLimitingTextInputFormatter(280)],
+            inputFormatters: [LengthLimitingTextInputFormatter(140)],
             style: TextStyle(color: context.textPrimary),
             decoration: InputDecoration(
               hintText: 'What are you signaling?',
