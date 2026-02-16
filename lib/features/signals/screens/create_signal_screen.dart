@@ -61,7 +61,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
   // Track if we've shown the cloud banner animation this session
   static bool _hasShownCloudBannerHint = false;
 
-  static const int _maxLength = 280;
+  static const int _maxLength = 140;
   bool _isSubmitting = false;
   bool _isLoadingLocation = false;
   bool _isValidatingImage = false;

@@ -3103,7 +3103,12 @@ class ProtocolService {
   ///
   /// Throws [ArgumentError] if payload exceeds max mesh packet size.
   /// Note: 180 chars ≠ 180 bytes. Emojis and special chars inflate UTF-8 size.
-  static const int _maxSignalPayloadBytes = 200;
+  /// Maximum legacy JSON signal payload size in bytes.
+  ///
+  /// Aligned with [SmPayloadLimit.loraMtu] — the LoRa MTU ceiling for
+  /// the Data.payload field. Previously 200, which was overly
+  /// conservative and prevented legitimate signals from broadcasting.
+  static const int _maxSignalPayloadBytes = SmPayloadLimit.loraMtu;
 
   Future<int> sendSignal({
     required String signalId,
@@ -3122,22 +3127,75 @@ class ProtocolService {
     }
 
     try {
-      final signalPacket = MeshSignalPacket(
+      var effectiveContent = content;
+      var effectivePresence = presenceInfo;
+
+      var signalPacket = MeshSignalPacket(
         senderNodeId: _myNodeNum!,
         packetId: 0,
         signalId: signalId,
-        content: content,
+        content: effectiveContent,
         ttlMinutes: ttlMinutes,
         latitude: latitude,
         longitude: longitude,
         receivedAt: DateTime.now(),
         hasImage: hasImage,
-        presenceInfo: presenceInfo,
+        presenceInfo: effectivePresence,
       );
 
-      final payload = signalPacket.toPayload();
+      var payload = signalPacket.toPayload();
 
-      // Guard: Prevent oversized payloads that cause fragmentation or drops
+      // Graceful degradation: strip presence first, then truncate content.
+      // The full content is preserved in the local DB and Firestore; this
+      // truncation only affects the over-the-air mesh broadcast.
+      if (payload.length > _maxSignalPayloadBytes &&
+          effectivePresence != null) {
+        effectivePresence = null;
+        signalPacket = MeshSignalPacket(
+          senderNodeId: _myNodeNum!,
+          packetId: 0,
+          signalId: signalId,
+          content: effectiveContent,
+          ttlMinutes: ttlMinutes,
+          latitude: latitude,
+          longitude: longitude,
+          receivedAt: DateTime.now(),
+          hasImage: hasImage,
+        );
+        payload = signalPacket.toPayload();
+        AppLogging.social(
+          'Stripped presence from legacy payload to fit mesh limit '
+          '(now ${payload.length} bytes)',
+        );
+      }
+
+      if (payload.length > _maxSignalPayloadBytes) {
+        // Truncate content to fit. Cloud sync delivers full text.
+        final excess = payload.length - _maxSignalPayloadBytes;
+        final trimLen = effectiveContent.length - excess - 3;
+        if (trimLen > 10) {
+          effectiveContent = '${effectiveContent.substring(0, trimLen)}...';
+          signalPacket = MeshSignalPacket(
+            senderNodeId: _myNodeNum!,
+            packetId: 0,
+            signalId: signalId,
+            content: effectiveContent,
+            ttlMinutes: ttlMinutes,
+            latitude: latitude,
+            longitude: longitude,
+            receivedAt: DateTime.now(),
+            hasImage: hasImage,
+          );
+          payload = signalPacket.toPayload();
+          AppLogging.social(
+            'Truncated signal content for mesh: '
+            '${content.length} -> ${effectiveContent.length} chars '
+            '(${payload.length} bytes)',
+          );
+        }
+      }
+
+      // Final guard: if still too large after trimming, reject
       if (payload.length > _maxSignalPayloadBytes) {
         AppLogging.social(
           'Signal payload too large: ${payload.length} bytes '
@@ -3438,7 +3496,10 @@ class ProtocolService {
         resultPacketId ??= legacyPacketId;
         _smMetrics.recordDualSend();
       } catch (e) {
-        AppLogging.social('Dual-send legacy failed (binary succeeded): $e');
+        final binaryStatus = binaryPacketId != null
+            ? 'succeeded'
+            : 'also failed';
+        AppLogging.social('Dual-send legacy failed (binary $binaryStatus): $e');
       }
     }
 
