@@ -27,6 +27,7 @@ deploy/
 aether-api/
 api-gateway/
 tools/
+blog/
 
 # Firebase Hosting content (landing page, legal docs, admin tools)
 web/

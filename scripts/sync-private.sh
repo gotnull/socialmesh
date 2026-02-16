@@ -26,6 +26,7 @@ SYNC_DIRS=(
   .github
   aether-api
   api-gateway
+  blog
   deploy
   docs
   functions
