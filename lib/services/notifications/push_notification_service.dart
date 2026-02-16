@@ -379,6 +379,19 @@ class PushNotificationService {
           '🔔 Emitted bug_report_response refresh for report: $targetId',
         );
         break;
+      case 'new_signal':
+        // When a new signal is created and pushed via FCM. The targetId
+        // is the Firestore UUID. Emit so signal_service can bind sm-
+        // signals to the UUID when the legacy JSON packet never arrives.
+        if (targetId != null) {
+          _contentRefreshController.add(
+            ContentRefreshEvent(contentType: 'new_signal', targetId: targetId),
+          );
+          AppLogging.notifications(
+            '🔔 Emitted new_signal refresh for signal: $targetId',
+          );
+        }
+        break;
     }
   }
 

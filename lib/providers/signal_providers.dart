@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/logging.dart';
 import '../models/presence_confidence.dart';
 import '../models/social.dart';
+import '../services/notifications/push_notification_service.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/signal_service.dart';
 import '../utils/location_privacy.dart';
@@ -180,6 +181,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
   Timer? _countdownTimer;
   StreamSubscription<MeshSignalPacket>? _signalSubscription;
   StreamSubscription<String>? _remoteDeleteSubscription;
+  StreamSubscription<ContentRefreshEvent>? _pushSignalSubscription;
   bool _isObserving = false;
 
   @override
@@ -190,6 +192,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     _startCountdownTimer();
     _startLifecycleObserver();
     _wireMeshIntegration();
+    _wireFcmSignalBinding();
 
     // Cleanup when disposed
     ref.onDispose(() {
@@ -198,6 +201,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       _countdownTimer?.cancel();
       _signalSubscription?.cancel();
       _remoteDeleteSubscription?.cancel();
+      _pushSignalSubscription?.cancel();
       _stopLifecycleObserver();
     });
 
@@ -320,6 +324,43 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         };
 
     AppLogging.social('Mesh integration wired');
+  }
+
+  /// Listen for FCM push notifications with type=new_signal to bind
+  /// sm- signals to their Firestore UUID. When SM binary is enabled,
+  /// the sm- signal may arrive over mesh before the legacy JSON packet.
+  /// If the legacy packet is lost, the FCM notification (which carries
+  /// the UUID as targetId) is the fallback for discovering the Firestore
+  /// document path.
+  void _wireFcmSignalBinding() {
+    _pushSignalSubscription?.cancel();
+    try {
+      final push = ref.read(pushNotificationServiceProvider);
+      _pushSignalSubscription = push.onContentRefresh.listen((event) {
+        if (event.contentType != 'new_signal' || event.targetId == null) {
+          return;
+        }
+        final uuid = event.targetId!;
+        AppLogging.social(
+          'FCM_SIGNAL: received new_signal push with UUID=$uuid, '
+          'attempting sm- binding',
+        );
+        final service = ref.read(signalServiceProvider);
+        Future.microtask(() async {
+          final bound = await service.bindSmSignalToUuid(uuid);
+          if (bound) {
+            AppLogging.social(
+              'FCM_SIGNAL: bound sm- signal to UUID=$uuid, refreshing feed',
+            );
+            refresh(silent: true);
+          }
+        });
+      });
+      AppLogging.social('FCM signal binding wired');
+    } catch (e) {
+      // PushNotificationService may not be available (e.g. no Firebase)
+      AppLogging.social('FCM signal binding skipped: $e');
+    }
   }
 
   /// Handle incoming mesh signal packet from ProtocolService.

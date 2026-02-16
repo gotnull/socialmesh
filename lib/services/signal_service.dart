@@ -1271,7 +1271,7 @@ class SignalService {
     // document) instead of creating a duplicate.
     if (!SmPacketRouter.isSmSignalId(signalId)) {
       // This is a UUID-format signal. Check if an sm- signal from the same
-      // sender with the same content already exists (dual-send companion).
+      // sender already exists (dual-send companion).
       final existing = await _findSmSignalFromSameSender(senderNodeId, content);
       if (existing != null) {
         AppLogging.social(
@@ -1279,11 +1279,13 @@ class SignalService {
           'from sender ${senderNodeId.toRadixString(16)} '
           '- rebinding cloud listener to UUID',
         );
-        // Stop the sm- post listener (wrong Firestore path)
+        // Stop any sm- listeners (defense-in-depth; Fix 1 skips them)
         _stopPostListener(existing.id);
-        // Start a post listener using the UUID (correct Firestore path)
+        _stopCommentsListener(existing.id);
+        // Start listeners using the UUID (correct Firestore path)
         if (allowCloud) {
           _startPostListener(signalId);
+          _startCommentsListener(signalId);
         }
         // Store the UUID as alternate cloud ID in the signal metadata
         // so retryCloudLookups can find the correct Firestore doc
@@ -1349,7 +1351,15 @@ class SignalService {
 
     // Attach comments/post listeners and perform an async enrichment step
     // in the background. Do not await - fire-and-forget.
-    if (allowCloud) {
+    //
+    // IMPORTANT: SM binary signals use an sm-{hex} ID that has NO matching
+    // Firestore document. The Firestore doc uses the UUID from the legacy
+    // JSON send. Attaching a post listener to posts/sm-{hex} would wait
+    // forever. Skip cloud listeners for sm- signals; they will be started
+    // once the UUID is discovered via cross-format dedupe, FCM binding,
+    // or cloud retry.
+    final isSmSignal = SmPacketRouter.isSmSignalId(signal.id);
+    if (allowCloud && !isSmSignal) {
       AppLogging.social('RECV: starting post listener posts/${signal.id}');
       _startPostListener(signal.id);
       AppLogging.social(
@@ -1385,6 +1395,11 @@ class SignalService {
           }
         });
       }
+    } else if (allowCloud && isSmSignal) {
+      AppLogging.social(
+        'RECV: cloud listeners deferred for ${signal.id} '
+        '(sm- signal, no Firestore doc at this path)',
+      );
     } else {
       AppLogging.social(
         'RECV: cloud listeners skipped for ${signal.id} (mesh-only debug)',
@@ -1553,8 +1568,13 @@ class SignalService {
   }
 
   /// Find an existing SM-binary signal (id starts with "sm-") from
-  /// the same sender with matching content. Used for cross-format
-  /// dedupe when a legacy UUID and SM binary signal are dual-sent.
+  /// the same sender. Used for cross-format dedupe when a legacy UUID
+  /// and SM binary signal are dual-sent.
+  ///
+  /// Matches by sender + recency (created within last 60 seconds) rather
+  /// than exact content, because the legacy JSON payload may be truncated
+  /// by the sender's graceful degradation logic (content + "..." suffix)
+  /// while the SM binary carries the full content.
   Future<Post?> _findSmSignalFromSameSender(
     int senderNodeId,
     String content,
@@ -1563,21 +1583,82 @@ class SignalService {
 
     final senderHex = senderNodeId.toRadixString(16);
     final now = DateTime.now().millisecondsSinceEpoch;
+    // Dual-send packets arrive within seconds of each other
+    final recentThreshold = now - const Duration(seconds: 60).inMilliseconds;
 
     final rows = await _db!.query(
       _tableName,
       where: '''
         id LIKE 'sm-%'
         AND nodeId = ?
-        AND content = ?
+        AND createdAt > ?
         AND (expiresAt IS NULL OR expiresAt > ?)
       ''',
-      whereArgs: [senderHex, content, now],
+      whereArgs: [senderHex, recentThreshold, now],
+      orderBy: 'createdAt DESC',
       limit: 1,
     );
 
     if (rows.isEmpty) return null;
     return _postFromDbMap(rows.first);
+  }
+
+  /// Bind an sm- signal to its Firestore UUID when the UUID is discovered
+  /// through an out-of-band channel (e.g. FCM push notification).
+  ///
+  /// This handles the case where the legacy JSON packet (which carries the
+  /// UUID) never arrives over mesh, but the cloud platform already pushed
+  /// the UUID via FCM. Without this binding, the sm- signal would remain
+  /// mesh-only with no way to download cloud media.
+  ///
+  /// Returns true if a binding was made, false if no matching sm- signal
+  /// was found or the signal already has a cloud binding.
+  Future<bool> bindSmSignalToUuid(String uuid) async {
+    await init();
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    // Find recent sm- signals without a _cloudSignalId that could match
+    // this UUID. We don't know the sender, so find any recent sm- signal
+    // that lacks cloud data.
+    final rows = await _db!.query(
+      _tableName,
+      where: '''
+        id LIKE 'sm-%'
+        AND (expiresAt IS NULL OR expiresAt > ?)
+        AND (imageState IS NULL OR imageState = 'none')
+        AND (mediaUrls IS NULL OR mediaUrls = '[]')
+      ''',
+      whereArgs: [now],
+      orderBy: 'createdAt DESC',
+      limit: 5,
+    );
+
+    for (final row in rows) {
+      final signal = _postFromDbMap(row);
+      // Skip signals that already have a cloud binding
+      final existingCloudId = signal.presenceInfo?['_cloudSignalId'] as String?;
+      if (existingCloudId != null) continue;
+
+      AppLogging.social('FCM_BIND: binding sm=${signal.id} to UUID=$uuid');
+
+      // Store the UUID binding
+      final updated = signal.copyWith(
+        presenceInfo: <String, dynamic>{
+          ...?signal.presenceInfo,
+          '_cloudSignalId': uuid,
+        },
+      );
+      await updateSignal(updated);
+
+      // Start cloud listeners on the correct UUID path
+      _startPostListener(uuid);
+      _startCommentsListener(uuid);
+
+      return true;
+    }
+
+    return false;
   }
 
   // ===========================================================================
@@ -2100,9 +2181,31 @@ class SignalService {
         continue;
       }
 
+      // For sm- signals, resolve the Firestore-matching UUID from
+      // cross-format dedupe metadata. posts/sm-{hex} does not exist
+      // in Firestore; the actual doc uses the UUID from the legacy send.
+      final isSmId = SmPacketRouter.isSmSignalId(signal.id);
+      String? cloudId;
+      if (isSmId) {
+        cloudId = signal.presenceInfo?['_cloudSignalId'] as String?;
+        if (cloudId == null) {
+          AppLogging.social(
+            '📡 Cloud retry: skipping sm- signal ${signal.id} '
+            '(no _cloudSignalId yet)',
+          );
+          continue;
+        }
+      }
+      final lookupId = cloudId ?? signal.id;
+
+      // Skip if already has a post listener on the resolved ID
+      if (cloudId != null && _postListeners.containsKey(cloudId)) {
+        continue;
+      }
+
       // Attempt cloud lookup
       try {
-        final cloudSignal = await _lookupCloudSignal(signal.id);
+        final cloudSignal = await _lookupCloudSignal(lookupId);
 
         if (cloudSignal != null && cloudSignal.mediaUrls.isNotEmpty) {
           AppLogging.social(
@@ -2129,10 +2232,11 @@ class SignalService {
           }
         }
 
-        // Start listeners for ongoing updates (even if no image yet)
-        _startPostListener(signal.id);
-        if (!_commentsListeners.containsKey(signal.id)) {
-          _startCommentsListener(signal.id);
+        // Start listeners for ongoing updates (even if no image yet).
+        // Use the resolved lookupId so sm- signals listen on the UUID path.
+        _startPostListener(lookupId);
+        if (!_commentsListeners.containsKey(lookupId)) {
+          _startCommentsListener(lookupId);
         }
 
         // Also attempt to resolve any pending images for this signal
