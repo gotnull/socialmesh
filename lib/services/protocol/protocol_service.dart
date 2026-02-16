@@ -224,6 +224,50 @@ class ProtocolDebugFlags {
   static bool logChannels = false;
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// Protobuf portnum helpers for SM portnums (260-262)
+//
+// The generated PortNum enum only covers values defined in the
+// Meshtastic .proto files.  SM portnums 260-262 are NOT in the enum,
+// so PortNum.valueOf(261) returns null.  On the sender side we need
+// to write the raw int to the wire; on the receiver side protobuf
+// 6.0.0 stores unknown enum values in unknownFields rather than in
+// the field getter (data.portnum.value returns 0).
+// ─────────────────────────────────────────────────────────────────────
+
+/// Creates a [pb.Data] with the given portnum set as raw protobuf bytes.
+///
+/// Use this instead of `..portnum = PortNum.valueOf(x)` for portnums
+/// outside the generated enum (SM portnums 260-262).
+pb.Data _createDataWithPortnum(int portnum, Uint8List payload) {
+  final data = pb.Data()..payload = payload;
+  // Encode field 1 (portnum), wire type 0 (varint)
+  final bytes = <int>[0x08]; // tag: (1 << 3) | 0
+  var v = portnum;
+  while (v > 0x7F) {
+    bytes.add((v & 0x7F) | 0x80);
+    v >>= 7;
+  }
+  bytes.add(v & 0x7F);
+  data.mergeFromBuffer(bytes);
+  return data;
+}
+
+/// Extracts the raw portnum int from a [pb.Data] message.
+///
+/// Protobuf 6.0.0 maps unknown enum values to the default (0).
+/// The raw int is preserved in [UnknownFieldSet] under tag 1.
+int _extractRawPortnum(pb.Data data) {
+  final value = data.portnum.value;
+  if (value != 0) return value;
+  // Check unknownFields for the raw portnum value
+  final field = data.unknownFields.getField(1);
+  if (field != null && field.varints.isNotEmpty) {
+    return field.varints.first.toInt();
+  }
+  return value;
+}
+
 /// Protocol service for handling Meshtastic protocol
 class ProtocolService {
   final DeviceTransport _transport;
@@ -1027,45 +1071,52 @@ class ProtocolService {
         await _dedupeStore.markSeen(key, ttl: _messagePacketTtl);
       }
 
-      switch (data.portnum) {
-        case pn.PortNum.TEXT_MESSAGE_APP:
-          _handleTextMessage(packet, data);
-          break;
-        case pn.PortNum.POSITION_APP:
-          _handlePositionUpdate(packet, data);
-          break;
-        case pn.PortNum.NODEINFO_APP:
-          _handleNodeInfoUpdate(packet, data);
-          break;
-        case pn.PortNum.ROUTING_APP:
-          _handleRoutingMessage(packet, data);
-          break;
-        case pn.PortNum.TELEMETRY_APP:
-          _handleTelemetry(packet, data);
-          break;
-        case pn.PortNum.ADMIN_APP:
-          _handleAdminMessage(packet, data);
-          break;
-        case pn.PortNum.PRIVATE_APP:
-          _handleSignalMessage(packet, data);
-          break;
-        case pn.PortNum.DETECTION_SENSOR_APP:
-          _handleDetectionSensorMessage(packet, data);
-          break;
-        case pn.PortNum.NODE_STATUS_APP:
-          _handleNodeStatusMessage(packet, data);
-          break;
-        case pn.PortNum.TRACEROUTE_APP:
-          _handleTracerouteMessage(packet, data);
-          break;
-        default:
-          if (SmCodec.isSocialmeshPortnum(data.portnum.value)) {
-            _handleSmPacket(packet, data);
-          } else {
+      // Extract the raw portnum int.  Protobuf 6.0.0 maps unknown
+      // enum values (SM portnums 260-262) to UNKNOWN_APP (0) in the
+      // getter, but preserves the raw int in unknownFields.
+      final rawPortnum = _extractRawPortnum(data);
+
+      // Fast path: SM binary portnums bypass the enum-based switch.
+      if (SmCodec.isSocialmeshPortnum(rawPortnum)) {
+        _handleSmPacket(packet, data);
+      } else {
+        switch (data.portnum) {
+          case pn.PortNum.TEXT_MESSAGE_APP:
+            _handleTextMessage(packet, data);
+            break;
+          case pn.PortNum.POSITION_APP:
+            _handlePositionUpdate(packet, data);
+            break;
+          case pn.PortNum.NODEINFO_APP:
+            _handleNodeInfoUpdate(packet, data);
+            break;
+          case pn.PortNum.ROUTING_APP:
+            _handleRoutingMessage(packet, data);
+            break;
+          case pn.PortNum.TELEMETRY_APP:
+            _handleTelemetry(packet, data);
+            break;
+          case pn.PortNum.ADMIN_APP:
+            _handleAdminMessage(packet, data);
+            break;
+          case pn.PortNum.PRIVATE_APP:
+            _handleSignalMessage(packet, data);
+            break;
+          case pn.PortNum.DETECTION_SENSOR_APP:
+            _handleDetectionSensorMessage(packet, data);
+            break;
+          case pn.PortNum.NODE_STATUS_APP:
+            _handleNodeStatusMessage(packet, data);
+            break;
+          case pn.PortNum.TRACEROUTE_APP:
+            _handleTracerouteMessage(packet, data);
+            break;
+          default:
             AppLogging.protocol(
-              'Received message with portnum: ${data.portnum} (${data.portnum.value})',
+              'Received message with portnum: ${data.portnum} '
+              '(${data.portnum.value}, raw=$rawPortnum)',
             );
-          }
+        }
       }
     }
   }
@@ -1203,7 +1254,7 @@ class ProtocolService {
 
     _smMetrics.recordBinaryPacketReceived();
 
-    final portnum = data.portnum.value;
+    final portnum = _extractRawPortnum(data);
     final payload = Uint8List.fromList(data.payload);
     final decoded = SmCodec.decode(portnum, payload);
 
@@ -3152,9 +3203,7 @@ class ProtocolService {
 
     final packetId = _generatePacketId();
 
-    final data = pb.Data()
-      ..portnum = pn.PortNum.valueOf(SmPortnum.signal) ?? pn.PortNum.PRIVATE_APP
-      ..payload = encoded;
+    final data = _createDataWithPortnum(SmPortnum.signal, encoded);
 
     final packet = MeshPacketBuilder.userPayload(
       myNodeNum: _myNodeNum!,
@@ -3212,10 +3261,7 @@ class ProtocolService {
 
     final packetId = _generatePacketId();
 
-    final data = pb.Data()
-      ..portnum =
-          pn.PortNum.valueOf(SmPortnum.presence) ?? pn.PortNum.PRIVATE_APP
-      ..payload = encoded;
+    final data = _createDataWithPortnum(SmPortnum.presence, encoded);
 
     final packet = MeshPacketBuilder.userPayload(
       myNodeNum: _myNodeNum!,
@@ -3259,10 +3305,7 @@ class ProtocolService {
 
     final packetId = _generatePacketId();
 
-    final data = pb.Data()
-      ..portnum =
-          pn.PortNum.valueOf(SmPortnum.identity) ?? pn.PortNum.PRIVATE_APP
-      ..payload = encoded;
+    final data = _createDataWithPortnum(SmPortnum.identity, encoded);
 
     final packet = MeshPacketBuilder.userPayload(
       myNodeNum: _myNodeNum!,
@@ -3299,10 +3342,7 @@ class ProtocolService {
 
     final packetId = _generatePacketId();
 
-    final data = pb.Data()
-      ..portnum =
-          pn.PortNum.valueOf(SmPortnum.identity) ?? pn.PortNum.PRIVATE_APP
-      ..payload = encoded;
+    final data = _createDataWithPortnum(SmPortnum.identity, encoded);
 
     final packet = MeshPacketBuilder.userPayload(
       myNodeNum: _myNodeNum!,
