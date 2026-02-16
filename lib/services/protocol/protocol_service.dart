@@ -3360,7 +3360,6 @@ class ProtocolService {
 
     // Binary enabled — build and send SM_SIGNAL first
     final binarySignalId = SmSignal.generateSignalId();
-    final signalIdStr = SmPacketRouter.signalIdToString(binarySignalId);
 
     final smSignal = SmSignal(
       signalId: binarySignalId,
@@ -3381,9 +3380,14 @@ class ProtocolService {
 
     if (sendLegacy) {
       try {
-        // Use the same signalId string for dedupe
+        // Use the ORIGINAL caller signalId (UUID) for the legacy packet.
+        // This matches the Firestore document ID so receivers can look up
+        // cloud data via posts/{signalId}. The binary packet uses its own
+        // sm- prefixed ID; cross-format dedupe on the receive side handles
+        // duplicates. If legacy send carried the sm- ID, receivers would
+        // start a post listener for a Firestore doc that doesn't exist.
         final legacyPacketId = await sendSignal(
-          signalId: signalIdStr,
+          signalId: signalId,
           content: content,
           ttlMinutes: ttlMinutes,
           latitude: latitude,

@@ -729,12 +729,10 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
   Future<void> deleteSignal(String signalId) async {
     final service = ref.read(signalServiceProvider);
 
-    AppLogging.social('Deleting signal: $signalId');
-
     try {
       await service.deleteSignal(signalId);
       state = state.withoutSignal(signalId);
-      AppLogging.social('Signal deleted successfully');
+      AppLogging.social('Signal delete complete: $signalId');
     } catch (e) {
       AppLogging.social('Failed to delete signal: $e');
     }

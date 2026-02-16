@@ -174,11 +174,15 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
     _animController.addStatusListener(_onAnimationStatusChanged);
 
     if (widget.visible) {
-      // Animate in on first frame so the banner slides down.
-      _animController.forward();
+      // Mark visible immediately so layout accounts for the banner,
+      // but defer the animation start to avoid calling the parent's
+      // onVisibilityChanged (which may setState) during the build phase.
       _actuallyVisible = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) widget.onVisibilityChanged?.call(true);
+        if (mounted) {
+          _animController.forward();
+          widget.onVisibilityChanged?.call(true);
+        }
       });
 
       // If NOT reconnecting on first build, schedule dismiss.

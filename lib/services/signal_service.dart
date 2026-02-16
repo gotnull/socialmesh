@@ -18,6 +18,7 @@ import 'package:uuid/uuid.dart';
 import '../core/logging.dart';
 import '../models/social.dart';
 import 'mesh_packet_dedupe_store.dart';
+import 'protocol/socialmesh/sm_packet_router.dart';
 import 'social_activity_service.dart';
 
 /// Default signal TTL options in minutes.
@@ -1260,6 +1261,44 @@ class SignalService {
       AppLogging.social('DEDUP_DROP signalId=$signalId reason=exists_in_db');
       return null;
     }
+
+    // Cross-format dedupe: when binary is enabled the sender dual-sends:
+    //   SM binary (portnum 261) with sm-{hex} signal ID
+    //   Legacy JSON (portnum 256) with UUID signal ID (Firestore doc ID)
+    // The binary usually arrives first. If a UUID signal arrives from the
+    // same sender with matching content and we already have an sm- signal,
+    // rebind the cloud listener to the UUID (which matches the Firestore
+    // document) instead of creating a duplicate.
+    if (!SmPacketRouter.isSmSignalId(signalId)) {
+      // This is a UUID-format signal. Check if an sm- signal from the same
+      // sender with the same content already exists (dual-send companion).
+      final existing = await _findSmSignalFromSameSender(senderNodeId, content);
+      if (existing != null) {
+        AppLogging.social(
+          'DEDUP_CROSS_FORMAT: UUID=$signalId matches sm=${existing.id} '
+          'from sender ${senderNodeId.toRadixString(16)} '
+          '- rebinding cloud listener to UUID',
+        );
+        // Stop the sm- post listener (wrong Firestore path)
+        _stopPostListener(existing.id);
+        // Start a post listener using the UUID (correct Firestore path)
+        if (allowCloud) {
+          _startPostListener(signalId);
+        }
+        // Store the UUID as alternate cloud ID in the signal metadata
+        // so retryCloudLookups can find the correct Firestore doc
+        final updated = existing.copyWith(
+          // nodeId already stores hex. Reuse presenceInfo to stash the
+          // Firestore-matching UUID under a well-known key.
+          presenceInfo: <String, dynamic>{
+            ...?existing.presenceInfo,
+            '_cloudSignalId': signalId,
+          },
+        );
+        await updateSignal(updated);
+        return null; // don't create duplicate
+      }
+    }
     AppLogging.social(
       'DEDUP_ACCEPT signalId=$signalId packetId=${packetId ?? "none"}',
     );
@@ -1513,6 +1552,34 @@ class SignalService {
     return result.isNotEmpty;
   }
 
+  /// Find an existing SM-binary signal (id starts with "sm-") from
+  /// the same sender with matching content. Used for cross-format
+  /// dedupe when a legacy UUID and SM binary signal are dual-sent.
+  Future<Post?> _findSmSignalFromSameSender(
+    int senderNodeId,
+    String content,
+  ) async {
+    await init();
+
+    final senderHex = senderNodeId.toRadixString(16);
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    final rows = await _db!.query(
+      _tableName,
+      where: '''
+        id LIKE 'sm-%'
+        AND nodeId = ?
+        AND content = ?
+        AND (expiresAt IS NULL OR expiresAt > ?)
+      ''',
+      whereArgs: [senderHex, content, now],
+      limit: 1,
+    );
+
+    if (rows.isEmpty) return null;
+    return _postFromDbMap(rows.first);
+  }
+
   // ===========================================================================
   // DATABASE OPERATIONS
   // ===========================================================================
@@ -1682,25 +1749,38 @@ class SignalService {
 
     await _db!.delete(_tableName, where: 'id = ?', whereArgs: [signalId]);
 
-    // Also delete from Firebase if authenticated
+    // Also delete from Firebase if authenticated.
+    // Each step is individually wrapped so a failure in subcollection
+    // cleanup never prevents the post document itself from being deleted.
     if (_currentUserId != null) {
+      // 1. Delete all comments and their votes subcollections
       try {
-        // 1. Delete all comments and their votes subcollections
         final commentsSnapshot = await _firestore
             .collection('posts')
             .doc(signalId)
             .collection('comments')
             .get();
         for (final doc in commentsSnapshot.docs) {
-          // Delete votes subcollection for each comment
-          final votesSnapshot = await doc.reference.collection('votes').get();
-          for (final voteDoc in votesSnapshot.docs) {
-            await voteDoc.reference.delete();
+          try {
+            final votesSnapshot = await doc.reference.collection('votes').get();
+            for (final voteDoc in votesSnapshot.docs) {
+              await voteDoc.reference.delete();
+            }
+          } catch (e) {
+            AppLogging.social(
+              'DELETE step 1a: failed to delete votes for comment ${doc.id}: $e',
+            );
           }
           await doc.reference.delete();
         }
+      } catch (e) {
+        AppLogging.social(
+          'DELETE step 1: failed to delete comments subcollection: $e',
+        );
+      }
 
-        // 2. Delete likes subcollection on the post
+      // 2. Delete likes subcollection on the post
+      try {
         final likesSubSnapshot = await _firestore
             .collection('posts')
             .doc(signalId)
@@ -1709,8 +1789,14 @@ class SignalService {
         for (final doc in likesSubSnapshot.docs) {
           await doc.reference.delete();
         }
+      } catch (e) {
+        AppLogging.social(
+          'DELETE step 2: failed to delete likes subcollection: $e',
+        );
+      }
 
-        // 3. Delete flat likes referencing this signal (postId field)
+      // 3. Delete flat likes referencing this signal (postId field)
+      try {
         final flatLikesSnapshot = await _firestore
             .collection('likes')
             .where('postId', isEqualTo: signalId)
@@ -1723,44 +1809,47 @@ class SignalService {
             'Deleted ${flatLikesSnapshot.docs.length} flat likes for signal $signalId',
           );
         }
+      } catch (e) {
+        AppLogging.social('DELETE step 3: failed to delete flat likes: $e');
+      }
 
-        // 4. Delete the post document itself (after subcollections)
+      // 4. Delete the post document itself — this is the critical step.
+      // Must succeed for Device B to see the deletion via Firestore listener.
+      try {
         await _firestore.collection('posts').doc(signalId).delete();
+        AppLogging.social(
+          'DELETE step 4: post document deleted from Firestore: $signalId',
+        );
+      } catch (e) {
+        AppLogging.social(
+          'DELETE step 4: FAILED to delete post document from Firestore: $e',
+        );
+      }
 
-        // 5. Delete images from Firebase Storage if they exist
-        if (signal != null && signal.mediaUrls.isNotEmpty) {
+      // 5. Delete images from Firebase Storage if they exist
+      if (signal != null && signal.mediaUrls.isNotEmpty) {
+        for (var i = 0; i < signal.mediaUrls.length; i++) {
+          final url = signal.mediaUrls[i];
+          if (url.isEmpty) continue;
+
           try {
-            // Delete all images with suffixes (_0, _1, _2, _3)
-            for (var i = 0; i < signal.mediaUrls.length; i++) {
-              final url = signal.mediaUrls[i];
-              if (url.isEmpty) continue;
-
-              try {
-                final ref = _storage.ref(
-                  'signals/$_currentUserId/${signalId}_$i.jpg',
-                );
-                await ref.delete();
-                AppLogging.social(
-                  'Deleted signal image $i from Storage: $signalId',
-                );
-              } catch (storageError) {
-                if (storageError.toString().contains('object-not-found')) {
-                  AppLogging.social(
-                    'Signal image $i already deleted: $signalId',
-                  );
-                } else {
-                  AppLogging.social(
-                    'Failed to delete signal image $i from Storage: $storageError',
-                  );
-                }
-              }
+            final ref = _storage.ref(
+              'signals/$_currentUserId/${signalId}_$i.jpg',
+            );
+            await ref.delete();
+            AppLogging.social(
+              'Deleted signal image $i from Storage: $signalId',
+            );
+          } catch (storageError) {
+            if (storageError.toString().contains('object-not-found')) {
+              AppLogging.social('Signal image $i already deleted: $signalId');
+            } else {
+              AppLogging.social(
+                'DELETE step 5: failed to delete image $i from Storage: $storageError',
+              );
             }
-          } catch (e) {
-            AppLogging.social('Error deleting signal images from Storage: $e');
           }
         }
-      } catch (e) {
-        AppLogging.social('Failed to delete signal from Firebase: $e');
       }
     }
   }
@@ -2238,9 +2327,11 @@ class SignalService {
         return null;
       }
 
-      // Step 3: Update Firestore FIRST (if not expired)
-      // Skip Firestore update during batch uploads - the final batch update will handle it
-      if (!signal.isExpired && !skipFirestoreUpdate) {
+      // Step 3: Update Firestore with mediaUrls
+      // Skip only if this is a batch upload (skipFirestoreUpdate=true).
+      // DO NOT skip based on local expiry - other devices may still have
+      // the signal active and are waiting for mediaUrls to appear.
+      if (!skipFirestoreUpdate) {
         final firestoreSuccess = await _updateFirestoreImageFields(
           signalId: signalId,
           url: url,
@@ -2277,8 +2368,9 @@ class SignalService {
           return url;
         }
       } else {
+        // Batch upload mode - skip individual Firestore update
         AppLogging.social(
-          '📷 FIRESTORE SKIP: signal $signalId expired, not writing to cloud',
+          '📷 FIRESTORE SKIP: signal $signalId - batch mode, will update in bulk',
         );
         return url;
       }
