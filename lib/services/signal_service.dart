@@ -347,6 +347,12 @@ class SignalService {
   /// explicit deletion (exists -> false).
   final Map<String, bool> _postDocumentSeen = {};
 
+  /// In-memory map: Firestore UUID → local sm- signal ID.
+  /// Populated by [bindSmSignalToUuid] and cross-format dedupe so that
+  /// Firestore listeners (attached by UUID) can resolve the local signal
+  /// stored under its sm- ID. Also persisted to DB via cloudSignalId column.
+  final Map<String, String> _uuidToSmId = {};
+
   /// Active Firestore vote listeners keyed by signalId.
   /// Used to receive real-time myVote updates from posts/{signalId}/comments/*/votes/{uid}.
   final Map<String, StreamSubscription<QuerySnapshot>> _voteListeners = {};
@@ -471,12 +477,26 @@ class SignalService {
 
       _db = await openDatabase(
         dbPath,
-        version: 6,
+        version: 7,
         onCreate: (db, version) async {
           AppLogging.social('Creating signals database v$version');
           await _createTables(db);
         },
+        onUpgrade: (db, oldVersion, newVersion) async {
+          AppLogging.social(
+            'Upgrading signals database v$oldVersion → v$newVersion',
+          );
+          if (oldVersion < 7) {
+            await db.execute(
+              'ALTER TABLE $_tableName ADD COLUMN cloudSignalId TEXT',
+            );
+            AppLogging.social('Added cloudSignalId column to $_tableName');
+          }
+        },
       );
+
+      // Rebuild in-memory UUID→sm-ID map from persisted cloudSignalId column
+      await _loadCloudIdMappings();
       await _dedupeStore.init();
 
       _startAuthListener();
@@ -527,6 +547,52 @@ class SignalService {
     );
   }
 
+  /// Load persisted UUID→sm-ID mappings from the cloudSignalId column.
+  Future<void> _loadCloudIdMappings() async {
+    final rows = await _db!.query(
+      _tableName,
+      columns: ['id', 'cloudSignalId'],
+      where: "cloudSignalId IS NOT NULL AND cloudSignalId != ''",
+    );
+    for (final row in rows) {
+      final smId = row['id'] as String;
+      final uuid = row['cloudSignalId'] as String;
+      _uuidToSmId[uuid] = smId;
+    }
+    if (rows.isNotEmpty) {
+      AppLogging.social('Loaded ${rows.length} UUID→sm-ID mappings from DB');
+    }
+  }
+
+  /// Look up a local signal by its ID, falling back to the sm- ID
+  /// if [signalId] is a Firestore UUID mapped via [_uuidToSmId].
+  Future<Post?> _getSignalByIdOrCloudId(String signalId) async {
+    // Direct lookup first
+    final direct = await getSignalById(signalId);
+    if (direct != null) return direct;
+
+    // Fallback: check if this UUID maps to an sm- signal
+    final smId = _uuidToSmId[signalId];
+    if (smId != null) {
+      return getSignalById(smId);
+    }
+    return null;
+  }
+
+  /// Resolve a signal ID to the Firestore document ID (UUID).
+  ///
+  /// For regular UUID signals, returns the ID unchanged.
+  /// For sm- signals, returns the bound UUID from [_uuidToSmId] (reverse
+  /// lookup), or `null` if no binding exists yet.
+  String? _resolveCloudId(String signalId) {
+    if (!SmPacketRouter.isSmSignalId(signalId)) return signalId;
+    // Reverse lookup: find the UUID whose value matches this sm- ID
+    for (final entry in _uuidToSmId.entries) {
+      if (entry.value == signalId) return entry.key;
+    }
+    return null;
+  }
+
   Future<void> _createTables(Database db) async {
     // Main signals table
     await db.execute('''
@@ -551,7 +617,8 @@ class SignalService {
         imageState TEXT NOT NULL,
         imageLocalPath TEXT,
         hasPendingCloudImage INTEGER DEFAULT 0,
-        syncedToCloud INTEGER DEFAULT 0
+        syncedToCloud INTEGER DEFAULT 0,
+        cloudSignalId TEXT
       )
     ''');
 
@@ -1288,10 +1355,16 @@ class SignalService {
           _startCommentsListener(signalId);
         }
         // Store the UUID as alternate cloud ID in the signal metadata
-        // so retryCloudLookups can find the correct Firestore doc
+        // so retryCloudLookups can find the correct Firestore doc.
+        // Persist to both in-memory map and DB column.
+        _uuidToSmId[signalId] = existing.id;
+        await _db!.update(
+          _tableName,
+          {'cloudSignalId': signalId},
+          where: 'id = ?',
+          whereArgs: [existing.id],
+        );
         final updated = existing.copyWith(
-          // nodeId already stores hex. Reuse presenceInfo to stash the
-          // Firestore-matching UUID under a well-known key.
           presenceInfo: <String, dynamic>{
             ...?existing.presenceInfo,
             '_cloudSignalId': signalId,
@@ -1637,19 +1710,19 @@ class SignalService {
     for (final row in rows) {
       final signal = _postFromDbMap(row);
       // Skip signals that already have a cloud binding
-      final existingCloudId = signal.presenceInfo?['_cloudSignalId'] as String?;
-      if (existingCloudId != null) continue;
+      final existingCloudId = row['cloudSignalId'] as String?;
+      if (existingCloudId != null && existingCloudId.isNotEmpty) continue;
 
       AppLogging.social('FCM_BIND: binding sm=${signal.id} to UUID=$uuid');
 
-      // Store the UUID binding
-      final updated = signal.copyWith(
-        presenceInfo: <String, dynamic>{
-          ...?signal.presenceInfo,
-          '_cloudSignalId': uuid,
-        },
+      // Persist UUID→sm-ID mapping (in-memory + DB)
+      _uuidToSmId[uuid] = signal.id;
+      await _db!.update(
+        _tableName,
+        {'cloudSignalId': uuid},
+        where: 'id = ?',
+        whereArgs: [signal.id],
       );
-      await updateSignal(updated);
 
       // Start cloud listeners on the correct UUID path
       _startPostListener(uuid);
@@ -1747,9 +1820,11 @@ class SignalService {
 
     final signals = rows.map((row) => _postFromDbMap(row)).toList();
 
-    // Ensure comment listeners are attached for all active signals
+    // Ensure comment listeners are attached for all active signals.
+    // Skip sm- signals — they have no Firestore doc at posts/sm-{hex}.
     if (_currentUserId != null) {
       for (final signal in signals) {
+        if (SmPacketRouter.isSmSignalId(signal.id)) continue;
         if (!_commentsListeners.containsKey(signal.id)) {
           _startCommentsListener(signal.id);
         }
@@ -1783,8 +1858,10 @@ class SignalService {
   /// Used when caching cloud signals locally (e.g., from activity notifications).
   Future<void> saveSignalLocally(Post signal) async {
     await _saveSignalToDb(signal);
-    // Start listeners for this signal
-    if (_currentUserId != null) {
+    // Start listeners for this signal.
+    // Skip sm- signals — they have no Firestore doc at posts/sm-{hex}.
+    // Their listeners are deferred until the UUID binding arrives.
+    if (_currentUserId != null && !SmPacketRouter.isSmSignalId(signal.id)) {
       _startCommentsListener(signal.id);
       _startPostListener(signal.id);
     }
@@ -2126,9 +2203,21 @@ class SignalService {
     await init();
     final signals = await getActiveSignals();
     for (final signal in signals) {
-      _startCommentsListener(signal.id);
-      _startPostListener(signal.id);
-      startVoteListener(signal.id);
+      // For sm- signals, use the cloudSignalId (UUID) for Firestore
+      // listeners since posts/sm-{hex} doesn't exist in Firestore.
+      final isSmId = SmPacketRouter.isSmSignalId(signal.id);
+      if (isSmId) {
+        final cloudId = _resolveCloudId(signal.id);
+        if (cloudId != null) {
+          _startCommentsListener(cloudId);
+          _startPostListener(cloudId);
+          startVoteListener(cloudId);
+        }
+      } else {
+        _startCommentsListener(signal.id);
+        _startPostListener(signal.id);
+        startVoteListener(signal.id);
+      }
     }
     await retryCloudLookups();
   }
@@ -2182,16 +2271,16 @@ class SignalService {
       }
 
       // For sm- signals, resolve the Firestore-matching UUID from
-      // cross-format dedupe metadata. posts/sm-{hex} does not exist
+      // the persisted cloudSignalId column. posts/sm-{hex} does not exist
       // in Firestore; the actual doc uses the UUID from the legacy send.
       final isSmId = SmPacketRouter.isSmSignalId(signal.id);
       String? cloudId;
       if (isSmId) {
-        cloudId = signal.presenceInfo?['_cloudSignalId'] as String?;
-        if (cloudId == null) {
+        cloudId = row['cloudSignalId'] as String?;
+        if (cloudId == null || cloudId.isEmpty) {
           AppLogging.social(
             '📡 Cloud retry: skipping sm- signal ${signal.id} '
-            '(no _cloudSignalId yet)',
+            '(no cloudSignalId yet)',
           );
           continue;
         }
@@ -2656,8 +2745,11 @@ class SignalService {
   /// Ensure the comments listener is active for a signal.
   /// Call this when viewing a signal detail screen to receive real-time updates.
   void ensureCommentsListener(String signalId) {
-    _startCommentsListener(signalId);
-    startVoteListener(signalId);
+    // For sm- signals, resolve to the Firestore UUID.
+    final cloudId = _resolveCloudId(signalId);
+    if (cloudId == null) return; // No UUID binding yet
+    _startCommentsListener(cloudId);
+    startVoteListener(cloudId);
   }
 
   /// Start listening for cloud comments on a signal.
@@ -2709,8 +2801,14 @@ class SignalService {
             // Update cloud comments cache (replaces, not appends)
             _cloudComments[signalId] = comments;
 
-            // Notify listeners that comments have updated
+            // Notify listeners that comments have updated.
+            // For UUID-keyed listeners, also notify the sm- signal ID so the
+            // detail screen (which uses signal.id = sm-xxx) picks it up.
             _commentUpdateController.add(signalId);
+            final smId = _uuidToSmId[signalId];
+            if (smId != null) {
+              _commentUpdateController.add(smId);
+            }
 
             // Persist cloud comments to local DB for offline access
             if (_db != null) {
@@ -2849,11 +2947,13 @@ class SignalService {
               // persisted syncedToCloud flag in SQLite as evidence that the
               // Firestore document was previously confirmed to exist.
               if (!hadExisted) {
+                // Look up by the actual local ID (may be sm- prefix)
+                final lid = _uuidToSmId[signalId] ?? signalId;
                 final rows = await _db!.query(
                   _tableName,
                   columns: ['syncedToCloud'],
                   where: 'id = ?',
-                  whereArgs: [signalId],
+                  whereArgs: [lid],
                 );
                 if (rows.isNotEmpty &&
                     (rows.first['syncedToCloud'] as int?) == 1) {
@@ -2866,7 +2966,7 @@ class SignalService {
               }
 
               // Check if we have this signal locally
-              final localSignal = await getSignalById(signalId);
+              final localSignal = await _getSignalByIdOrCloudId(signalId);
 
               if (!hadExisted) {
                 AppLogging.social(
@@ -2927,15 +3027,17 @@ class SignalService {
             // detect later transitions to not-exist as deletions by the author.
             // Persist to SQLite so the state survives app restart.
             _postDocumentSeen[signalId] = true;
+            // Update syncedToCloud on the actual signal row (may be sm- ID)
+            final localId = _uuidToSmId[signalId] ?? signalId;
             _db!.update(
               _tableName,
               {'syncedToCloud': 1},
               where: 'id = ? AND syncedToCloud = 0',
-              whereArgs: [signalId],
+              whereArgs: [localId],
             );
 
-            // Get current local signal state
-            final signal = await getSignalById(signalId);
+            // Get current local signal state (resolves UUID→sm-ID)
+            final signal = await _getSignalByIdOrCloudId(signalId);
             if (signal == null) {
               AppLogging.social(
                 '📡 Post listener: signal $signalId not found in local DB - '
@@ -3413,12 +3515,14 @@ class SignalService {
       );
     }
 
-    // Check cloud cache
+    // Check cloud cache.
+    // For sm- signals, cloud comments are cached under the UUID key.
+    final cloudKey = _resolveCloudId(signalId) ?? signalId;
     AppLogging.social(
       '📬 COMMENT_LOOKUP: Not in local DB, checking cloud cache '
-      '(${_cloudComments[signalId]?.length ?? 0} cached comments)',
+      '(${_cloudComments[cloudKey]?.length ?? 0} cached comments)',
     );
-    final cloudComments = _cloudComments[signalId] ?? [];
+    final cloudComments = _cloudComments[cloudKey] ?? [];
     for (final comment in cloudComments) {
       if (comment.id == commentId) {
         AppLogging.social(
@@ -3472,8 +3576,10 @@ class SignalService {
       );
     }).toList();
 
-    // Get cloud comments from cache (apply myVote)
-    final cloudComments = (_cloudComments[signalId] ?? [])
+    // Get cloud comments from cache (apply myVote).
+    // For sm- signals, cloud comments are cached under the UUID key.
+    final cloudKey = _resolveCloudId(signalId) ?? signalId;
+    final cloudComments = (_cloudComments[cloudKey] ?? [])
         .map((r) => r.copyWith(myVote: myVotes[r.id] ?? 0))
         .toList();
 
