@@ -1887,9 +1887,7 @@ class _DrawerNodeHeader extends ConsumerWidget {
               width: 14,
               height: 14,
               decoration: BoxDecoration(
-                color: isConnected
-                    ? AppTheme.successGreen
-                    : AppTheme.errorRed,
+                color: isConnected ? AppTheme.successGreen : AppTheme.errorRed,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: theme.scaffoldBackgroundColor,
