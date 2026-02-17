@@ -843,6 +843,8 @@ class ScreenLoadingIndicator extends ConsumerWidget {
               interactive: false,
               showThoughtParticles: true,
               showExpression: true,
+              showFaces: true,
+              faceOpacity: 0.5,
             ),
             if (message != null) ...[
               const SizedBox(height: 16),
