@@ -822,7 +822,7 @@ class _IcosahedronPainter extends CustomPainter {
         final fp2 = deformedPoints[face[2]];
 
         final avgZ = entry.value;
-        final depthFactor = ((avgZ + 0.5) * 0.45 + 0.55).clamp(0.4, 1.0);
+        final depthFactor = ((avgZ + 0.5) * 0.7 + 0.3).clamp(0.3, 1.0);
 
         final centroidX = (fp0.dx + fp1.dx + fp2.dx) / 3;
         final t = centroidX / size.width;
@@ -937,8 +937,8 @@ class _IcosahedronPainter extends CustomPainter {
     // Depth-based opacity - back-facing edges (negative z) should be dimmer
     // z ranges roughly from -0.5 (back) to 0.5 (front)
     final avgZ = (z1 + z2) / 2;
-    // Map z from [-0.5, 0.5] to [0.55, 1.0] - back edges fairly visible
-    final depthFactor = ((avgZ + 0.5) * 0.45 + 0.55).clamp(0.55, 1.0);
+    // Map z from [-0.5, 0.5] to [0.3, 1.0] - strong depth cue on edges
+    final depthFactor = ((avgZ + 0.5) * 0.7 + 0.3).clamp(0.3, 1.0);
 
     // Calculate color based on X position (left=orange, middle=magenta, right=blue)
     final avgX = (p1.dx + p2.dx) / 2;
@@ -1114,8 +1114,8 @@ class _IcosahedronPainter extends CustomPainter {
     int vertexIndex,
   ) {
     // Node size varies based on depth (closer = bigger)
-    // Normalize depth from [-0.42, 0.42] to reasonable scale
-    final depthFactor = ((depth + 0.5) * 1.0 + 0.5).clamp(0.5, 1.3);
+    // Normalize depth from [-0.42, 0.42] to a wide scale for visible 3D effect
+    final depthFactor = ((depth + 0.5) * 1.6 + 0.2).clamp(0.2, 1.5);
 
     // Apply eye scale if this is an eye vertex
     double eyeScale = 1.0;
@@ -1143,9 +1143,9 @@ class _IcosahedronPainter extends CustomPainter {
     final t = point.dx / size.width;
     final color = _getGradientColor(t);
 
-    // Opacity based on depth - back-facing nodes should be dimmer but visible
-    // Map z from [-0.5, 0.5] to [0.65, 1.0] - back nodes fairly solid
-    final opacity = ((depth + 0.5) * 0.35 + 0.65).clamp(0.65, 1.0);
+    // Opacity based on depth - back-facing nodes dimmer for 3D depth
+    // Map z from [-0.5, 0.5] to [0.3, 1.0] - strong depth cue
+    final opacity = ((depth + 0.5) * 0.7 + 0.3).clamp(0.3, 1.0);
 
     // === ENHANCED GLOW FOR PULSING NODES ===
     // Draw outer glow (enhanced when pulsing)
@@ -1305,6 +1305,12 @@ class AccelerometerMeshNode extends StatefulWidget {
   /// How much the grabbed vertex can stretch (0.0 = none, 1.0 = full)
   final double stretchIntensity;
 
+  /// Whether to render translucent triangular faces between edges
+  final bool showFaces;
+
+  /// Opacity of triangular faces (0.0 - 1.0)
+  final double faceOpacity;
+
   const AccelerometerMeshNode({
     super.key,
     this.size = 600,
@@ -1323,6 +1329,8 @@ class AccelerometerMeshNode extends StatefulWidget {
     this.enablePullToStretch = false,
     this.touchIntensity = 0.5,
     this.stretchIntensity = 0.3,
+    this.showFaces = false,
+    this.faceOpacity = 0.0,
   });
 
   @override
@@ -1694,6 +1702,8 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
         grabbedVertexIndex: activeVertexIndex,
         dragPosition: _dragPosition,
         stretchIntensity: widget.stretchIntensity,
+        showFaces: widget.showFaces,
+        faceOpacity: widget.faceOpacity,
       ),
     );
   }

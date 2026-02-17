@@ -385,6 +385,8 @@ class _ConfiguredSplashMeshNodeState
             enablePullToStretch: config.enablePullToStretch,
             touchIntensity: config.touchIntensity,
             stretchIntensity: config.stretchIntensity,
+            showFaces: true,
+            faceOpacity: 0.5,
           );
 
     return SizedBox(
