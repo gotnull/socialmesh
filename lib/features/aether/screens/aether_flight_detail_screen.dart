@@ -15,6 +15,7 @@ import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
+import '../data/airports.dart';
 import '../models/aether_flight.dart';
 import '../providers/aether_providers.dart';
 import '../services/aether_service.dart';
@@ -135,49 +136,83 @@ class _AetherFlightDetailScreenState
     AsyncValue<FlightPositionState> positionAsync,
   ) {
     final positionState = positionAsync.value;
+    final depAirport = lookupAirport(widget.flight.departure);
+    final arrAirport = lookupAirport(widget.flight.arrival);
+    final distKm = (depAirport != null && arrAirport != null)
+        ? depAirport.distanceToKm(arrAirport)
+        : null;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       decoration: BoxDecoration(
         color: context.card,
         border: Border(bottom: BorderSide(color: context.border, width: 1)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
         children: [
-          _buildAirportDisplay(widget.flight.departure, 'Departure'),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.flight,
-                  color: widget.flight.isActive
-                      ? context.accentColor
-                      : context.textTertiary,
-                  size: 32,
-                ),
-                if (positionState?.position != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    'FL${(positionState!.position!.altitudeFeet / 100).round()}',
-                    style: TextStyle(
-                      color: context.accentColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: AppTheme.fontFamily,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildAirportDisplay(widget.flight.departure, depAirport?.city),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.flight,
+                      color: widget.flight.isActive
+                          ? context.accentColor
+                          : context.textTertiary,
+                      size: 32,
                     ),
-                  ),
-                ],
-              ],
-            ),
+                    if (positionState?.position != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'FL${(positionState!.position!.altitudeFeet / 100).round()}',
+                        style: TextStyle(
+                          color: context.accentColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: AppTheme.fontFamily,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              _buildAirportDisplay(widget.flight.arrival, arrAirport?.city),
+            ],
           ),
-          _buildAirportDisplay(widget.flight.arrival, 'Arrival'),
+          if (distKm != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _formatRouteDistance(distKm),
+              style: TextStyle(
+                color: context.textTertiary,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildAirportDisplay(String code, String label) {
+  /// Formats a route distance with estimated flight time.
+  static String _formatRouteDistance(double km) {
+    final distStr = km >= 1000
+        ? '${(km / 1000).toStringAsFixed(1)}k km'
+        : '${km.round()} km';
+    const cruiseKmh = 850.0;
+    const overheadMin = 30;
+    final totalMin = (km / cruiseKmh * 60).round() + overheadMin;
+    final h = totalMin ~/ 60;
+    final m = totalMin % 60;
+    final timeStr = h == 0 ? '${m}min' : '${h}h ${m}min';
+    return '$distStr \u00b7 ~$timeStr';
+  }
+
+  Widget _buildAirportDisplay(String code, String? cityName) {
     return Column(
       children: [
         Text(
@@ -191,7 +226,7 @@ class _AetherFlightDetailScreenState
         ),
         const SizedBox(height: 4),
         Text(
-          label,
+          cityName ?? code,
           style: TextStyle(color: context.textTertiary, fontSize: 12),
         ),
       ],

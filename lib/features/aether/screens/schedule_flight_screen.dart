@@ -128,6 +128,14 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     }
   }
 
+  void _swapAirports() {
+    HapticFeedback.selectionClick();
+    final depText = _departureController.text;
+    final arrText = _arrivalController.text;
+    _departureController.text = arrText;
+    _arrivalController.text = depText;
+  }
+
   // ===========================================================================
   // My Node Helper
   // ===========================================================================
@@ -653,7 +661,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                 _buildFlightNumberField(),
                 const SizedBox(height: 16),
 
-                // Airports row
+                // Airports row with swap button
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -668,7 +676,19 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                         resolvedAirport: _resolvedDeparture,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: IconButton(
+                        onPressed: _swapAirports,
+                        icon: Icon(
+                          Icons.swap_horiz,
+                          color: context.textTertiary,
+                          size: 22,
+                        ),
+                        tooltip: 'Swap airports',
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
                     Expanded(
                       child: _buildAirportAutocomplete(
                         controller: _arrivalController,
