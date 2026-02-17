@@ -676,7 +676,9 @@ class _FlightsTabContent extends StatelessWidget {
         filteredFlights = allFlights;
         break;
       case AetherFilter.active:
-        filteredFlights = allFlights.where((f) => f.isActive).toList();
+        filteredFlights = allFlights
+            .where((f) => f.isActive || f.isInFlight)
+            .toList();
         break;
       case AetherFilter.upcoming:
         filteredFlights = allFlights
@@ -1210,7 +1212,7 @@ class _LeaderboardModalContent extends StatelessWidget {
             icon: Icons.emoji_events_outlined,
             title: 'Leaderboard Empty',
             subtitle:
-                'Be the first to receive a signal from a sky node and claim the top spot!',
+                'Be the first to report a reception from a sky node and claim the top spot!',
           );
         }
 
@@ -1376,9 +1378,16 @@ class _AetherFlightCard extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         child: GradientBorderContainer(
           borderRadius: 16,
-          borderWidth: (flight.isActive && !flight.isPast) ? 2 : 1,
-          accentOpacity: (flight.isActive && !flight.isPast) ? 0.6 : 0.3,
-          enableDepthBlend: flight.isActive && !flight.isPast,
+          borderWidth:
+              ((flight.isActive || flight.isInFlight) && !flight.isPast)
+              ? 2
+              : 1,
+          accentOpacity:
+              ((flight.isActive || flight.isInFlight) && !flight.isPast)
+              ? 0.6
+              : 0.3,
+          enableDepthBlend:
+              (flight.isActive || flight.isInFlight) && !flight.isPast,
           depthBlendOpacity: 0.1,
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -1523,7 +1532,7 @@ class _StatusBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (flight.isActive && !flight.isPast) ...[
+          if ((flight.isActive || flight.isInFlight) && !flight.isPast) ...[
             _PulsingDot(color: color),
             const SizedBox(width: 6),
           ],
@@ -1542,7 +1551,7 @@ class _StatusBadge extends StatelessWidget {
 
   Color _getStatusColor(BuildContext context) {
     if (flight.isPast) return context.textTertiary;
-    if (flight.isActive) return context.accentColor;
+    if (flight.isActive || flight.isInFlight) return context.accentColor;
     if (flight.isUpcoming) return AppTheme.warningYellow;
     return context.textSecondary;
   }

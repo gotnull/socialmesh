@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:skeletonizer/skeletonizer.dart';
+
 import 'package:socialmesh/core/logging.dart';
 
 import '../../../core/constants.dart';
@@ -11,6 +13,8 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/skeleton_config.dart';
+
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
@@ -42,9 +46,6 @@ class _AetherFlightDetailScreenState
   @override
   Widget build(BuildContext context) {
     final reports = ref.watch(aetherFlightReportsProvider(widget.flight.id));
-    final positionAsync = ref.watch(
-      aetherFlightPositionProvider(widget.flight.flightNumber),
-    );
 
     // Watch live flight list so isActive updates in real time.
     // Fall back to the widget snapshot if the flight is no longer in the list
@@ -57,7 +58,23 @@ class _AetherFlightDetailScreenState
             .where((f) => f.id == widget.flight.id)
             .firstOrNull ??
         widget.flight;
-    final canReport = liveFlight.isActive && !liveFlight.isPast;
+    // Only allow reporting when the flight is actually airborne:
+    // either the server says active AND departure time has passed,
+    // or the schedule says it should be in flight right now.
+    final canReport =
+        !liveFlight.isPast &&
+        (liveFlight.isInFlight ||
+            (liveFlight.isActive && !liveFlight.isUpcoming));
+
+    // Only hit OpenSky when the flight could actually be in the air.
+    // Past and upcoming flights have no live position — skip the API call
+    // entirely so the screen loads instantly.
+    final bool shouldTrackPosition =
+        liveFlight.isInFlight ||
+        (liveFlight.isActive && !liveFlight.isUpcoming && !liveFlight.isPast);
+    final AsyncValue<FlightPositionState>? positionAsync = shouldTrackPosition
+        ? ref.watch(aetherFlightPositionProvider(widget.flight.flightNumber))
+        : null;
 
     return GlassScaffold(
       title: widget.flight.flightNumber,
@@ -90,14 +107,14 @@ class _AetherFlightDetailScreenState
       ],
       slivers: [
         // Route header - always visible, no collapse
-        SliverToBoxAdapter(child: _buildRouteHeader(context, positionAsync)),
+        SliverToBoxAdapter(child: _buildRouteHeader(context)),
         // Content
         SliverToBoxAdapter(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Live position card
-              if (canReport)
+              if (canReport && positionAsync != null)
                 _buildLivePositionCard(context, positionAsync)
               else
                 const SizedBox(height: 16),
@@ -123,7 +140,7 @@ class _AetherFlightDetailScreenState
                       color: Colors.white,
                     ),
                     label: const Text(
-                      'I Received This Signal!',
+                      'I Received This Flight!',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -144,11 +161,7 @@ class _AetherFlightDetailScreenState
     );
   }
 
-  Widget _buildRouteHeader(
-    BuildContext context,
-    AsyncValue<FlightPositionState> positionAsync,
-  ) {
-    final positionState = positionAsync.value;
+  Widget _buildRouteHeader(BuildContext context) {
     final depAirport = lookupAirport(widget.flight.departure);
     final arrAirport = lookupAirport(widget.flight.arrival);
     final distKm = (depAirport != null && arrAirport != null)
@@ -168,28 +181,12 @@ class _AetherFlightDetailScreenState
               _buildAirportDisplay(widget.flight.departure, depAirport?.city),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.flight,
-                      color: widget.flight.isActive
-                          ? context.accentColor
-                          : context.textTertiary,
-                      size: 32,
-                    ),
-                    if (positionState?.position != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        'FL${(positionState!.position!.altitudeFeet / 100).round()}',
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: AppTheme.fontFamily,
-                        ),
-                      ),
-                    ],
-                  ],
+                child: Icon(
+                  Icons.flight,
+                  color: (widget.flight.isActive || widget.flight.isInFlight)
+                      ? context.accentColor
+                      : context.textTertiary,
+                  size: 32,
                 ),
               ),
               _buildAirportDisplay(widget.flight.arrival, arrAirport?.city),
@@ -284,98 +281,117 @@ class _AetherFlightDetailScreenState
                 ),
             ],
           ),
-          SizedBox(height: 16),
-          positionAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-              child: Column(
-                children: [
-                  Icon(Icons.cloud_off, color: context.textTertiary, size: 32),
-                  SizedBox(height: 8),
-                  Text(
-                    'Error: $e',
-                    style: TextStyle(color: context.textTertiary),
-                  ),
-                ],
+          const SizedBox(height: 16),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 500),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
+            child: positionAsync.when(
+              loading: () => Skeletonizer(
+                key: const ValueKey('position_skeleton'),
+                enabled: true,
+                effect: AppSkeletonConfig.effect(context),
+                child: _SkeletonPositionContent(context: context),
               ),
-            ),
-            data: (positionState) {
-              if (positionState.position == null) {
-                return Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.cloud_off,
-                        color: context.textTertiary,
-                        size: 32,
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        positionState.error ?? 'Position data unavailable',
-                        style: TextStyle(color: context.textTertiary),
-                      ),
-                    ],
-                  ),
-                );
-              }
-              return Column(
-                children: [
-                  _buildPositionRow(
-                    context,
-                    Icons.height,
-                    'Altitude',
-                    '${positionState.position!.altitudeFeet.round().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ft',
-                  ),
-                  SizedBox(height: 8),
-                  _buildPositionRow(
-                    context,
-                    Icons.speed,
-                    'Ground Speed',
-                    '${positionState.position!.velocityKnots.round()} kts',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildPositionRow(
-                    context,
-                    Icons.explore,
-                    'Heading',
-                    '${positionState.position!.heading.round()}°',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildPositionRow(
-                    context,
-                    Icons.radar,
-                    'Coverage Radius',
-                    '~${positionState.position!.coverageRadiusKm.round()} km',
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+              error: (e, _) => Center(
+                key: const ValueKey('position_error'),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.cloud_off,
+                      color: context.textTertiary,
+                      size: 32,
                     ),
-                    child: Row(
+                    const SizedBox(height: 8),
+                    Text(
+                      'Error: $e',
+                      style: TextStyle(color: context.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+              data: (positionState) {
+                if (positionState.position == null) {
+                  return Center(
+                    key: const ValueKey('position_unavailable'),
+                    child: Column(
                       children: [
                         Icon(
-                          Icons.location_on,
-                          color: context.accentColor,
-                          size: 18,
+                          Icons.cloud_off,
+                          color: context.textTertiary,
+                          size: 32,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(height: 8),
                         Text(
-                          '${positionState.position!.latitude.toStringAsFixed(4)}, ${positionState.position!.longitude.toStringAsFixed(4)}',
-                          style: TextStyle(
-                            color: context.accentColor,
-                            fontFamily: AppTheme.fontFamily,
-                            fontSize: 13,
-                          ),
+                          positionState.error ?? 'Position data unavailable',
+                          style: TextStyle(color: context.textTertiary),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              );
-            },
+                  );
+                }
+                return Column(
+                  key: const ValueKey('position_data'),
+                  children: [
+                    _buildPositionRow(
+                      context,
+                      Icons.height,
+                      'Altitude',
+                      '${positionState.position!.altitudeFeet.round().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ft',
+                    ),
+                    const SizedBox(height: 8),
+                    _buildPositionRow(
+                      context,
+                      Icons.speed,
+                      'Ground Speed',
+                      '${positionState.position!.velocityKnots.round()} kts',
+                    ),
+                    const SizedBox(height: 8),
+                    _buildPositionRow(
+                      context,
+                      Icons.explore,
+                      'Heading',
+                      '${positionState.position!.heading.round()}°',
+                    ),
+                    const SizedBox(height: 8),
+                    _buildPositionRow(
+                      context,
+                      Icons.radar,
+                      'Coverage Radius',
+                      '~${positionState.position!.coverageRadiusKm.round()} km',
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            color: context.accentColor,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${positionState.position!.latitude.toStringAsFixed(4)}, ${positionState.position!.longitude.toStringAsFixed(4)}',
+                            style: TextStyle(
+                              color: context.accentColor,
+                              fontFamily: AppTheme.fontFamily,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -522,56 +538,80 @@ class _AetherFlightDetailScreenState
             ],
           ),
           const SizedBox(height: 16),
-          reports.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text(
-              'Error loading reports',
-              style: TextStyle(color: AppTheme.errorRed),
-            ),
-            data: (reportList) {
-              if (reportList.isEmpty) {
-                return Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: context.border),
-                  ),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.signal_cellular_0_bar,
-                          color: context.textTertiary,
-                          size: 32,
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'No receptions reported yet',
-                          style: TextStyle(color: context.textSecondary),
-                        ),
-                        if (widget.flight.isActive) ...[
-                          SizedBox(height: 4),
-                          Text(
-                            'Be the first to receive this signal!',
-                            style: TextStyle(
-                              color: context.accentColor,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ],
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 500),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
+            child: reports.when(
+              loading: () => Skeletonizer(
+                key: const ValueKey('reports_skeleton'),
+                enabled: true,
+                effect: AppSkeletonConfig.effect(context),
+                child: Column(
+                  children: List.generate(
+                    3,
+                    (index) => _SkeletonReportTile(
+                      key: ValueKey('skeleton_report_$index'),
+                      context: context,
                     ),
                   ),
-                );
-              }
+                ),
+              ),
+              error: (e, _) => Text(
+                key: const ValueKey('reports_error'),
+                'Error loading reports',
+                style: TextStyle(color: AppTheme.errorRed),
+              ),
+              data: (reportList) {
+                if (reportList.isEmpty) {
+                  return Container(
+                    key: const ValueKey('reports_empty'),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.border),
+                    ),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.signal_cellular_0_bar,
+                            color: context.textTertiary,
+                            size: 32,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'No receptions reported yet',
+                            style: TextStyle(color: context.textSecondary),
+                          ),
+                          if (widget.flight.isActive ||
+                              widget.flight.isInFlight) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              'Be the first to report this flight!',
+                              style: TextStyle(
+                                color: context.accentColor,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                }
 
-              return Column(
-                children: reportList
-                    .map((report) => _buildReportTile(context, report))
-                    .toList(),
-              );
-            },
+                return Column(
+                  key: const ValueKey('reports_data'),
+                  children: reportList
+                      .map((report) => _buildReportTile(context, report))
+                      .toList(),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -816,6 +856,105 @@ class _RadarPainter extends CustomPainter {
       oldDelegate.progress != progress;
 }
 
+/// Skeleton placeholder matching the live position card content layout.
+/// Used inside a [Skeletonizer] to show a shimmer while position loads.
+class _SkeletonPositionContent extends StatelessWidget {
+  final BuildContext context;
+
+  const _SkeletonPositionContent({required this.context});
+
+  @override
+  Widget build(BuildContext _) {
+    return Column(
+      children: [
+        _buildSkeletonRow(Icons.height, 'Altitude'),
+        const SizedBox(height: 8),
+        _buildSkeletonRow(Icons.speed, 'Ground Speed'),
+        const SizedBox(height: 8),
+        _buildSkeletonRow(Icons.explore, 'Heading'),
+        const SizedBox(height: 8),
+        _buildSkeletonRow(Icons.radar, 'Coverage Radius'),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              const Bone.icon(size: 18),
+              const SizedBox(width: 8),
+              Bone.text(words: 3, fontSize: 13),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSkeletonRow(IconData icon, String label) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: context.textTertiary),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(color: context.textSecondary, fontSize: 14),
+        ),
+        const Spacer(),
+        Bone.text(words: 1, fontSize: 14),
+      ],
+    );
+  }
+}
+
+/// Skeleton placeholder matching a single reception report tile.
+/// Used inside a [Skeletonizer] to show a shimmer while reports load.
+class _SkeletonReportTile extends StatelessWidget {
+  final BuildContext context;
+
+  const _SkeletonReportTile({super.key, required this.context});
+
+  @override
+  Widget build(BuildContext _) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      child: Row(
+        children: [
+          const Bone.circle(size: 40),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Bone.text(words: 2),
+                const SizedBox(height: 4),
+                Bone.text(words: 2, fontSize: 13),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Bone.text(words: 1, fontSize: 12),
+              const SizedBox(height: 4),
+              Bone.text(words: 1, fontSize: 12),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Maximum length for notes field
 const int _maxReportNotesLength = 500;
 
@@ -931,7 +1070,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
             .where((f) => f.id == widget.flight.id)
             .firstOrNull ??
         widget.flight;
-    if (!liveFlight.isActive || liveFlight.isPast) {
+    if ((!liveFlight.isActive && !liveFlight.isInFlight) || liveFlight.isPast) {
       if (mounted) {
         showErrorSnackBar(context, 'This flight has ended');
         safeNavigatorPop();
@@ -1032,7 +1171,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
             ),
             const SizedBox(height: 8),
             Text(
-              'I received a signal from ${widget.flight.flightNumber}!',
+              'I received flight ${widget.flight.flightNumber} on my node!',
               style: TextStyle(color: context.textSecondary),
             ),
             const SizedBox(height: 24),

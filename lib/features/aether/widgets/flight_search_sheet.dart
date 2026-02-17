@@ -5,7 +5,6 @@
 // Full-screen route (same pattern as UserSearchScreen / SignalFeedScreen).
 // Single debounced search path — no duplicate calls, no race conditions.
 
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -49,10 +48,14 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
   final Map<String, OpenSkyFlight?> _routeCache = {};
   final Set<String> _routeLoading = {};
 
-  Timer? _debounce;
   _SearchState _state = _SearchState.idle;
   List<ActiveFlightInfo> _results = [];
   String _errorMessage = '';
+
+  /// Monotonic counter — incremented on every text change. Async search
+  /// results are discarded when they arrive for an outdated generation,
+  /// preventing stale partial-match results from overwriting newer state.
+  int _searchGeneration = 0;
 
   @override
   void initState() {
@@ -66,16 +69,30 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
   void dispose() {
     _controller.dispose();
     _focus.dispose();
-    _debounce?.cancel();
     super.dispose();
   }
 
   // ---------------------------------------------------------------------------
-  // Search logic — single entry point, debounced
+  // Search logic — explicit submit only (no auto-search on typing)
   // ---------------------------------------------------------------------------
 
+  /// Called on every keystroke — only updates UI state (clear button, idle
+  /// reset). Does NOT trigger a search. The user must press Enter / Search.
   void _onTextChanged(String text) {
-    _debounce?.cancel();
+    // Rebuild so the clear button appears/disappears
+    setState(() {
+      // If the user clears the field, reset to idle
+      if (text.trim().length < 2 && _state != _SearchState.idle) {
+        _state = _SearchState.idle;
+        _results = [];
+      }
+    });
+  }
+
+  /// Explicit submit (keyboard Search button or search icon tap).
+  /// This is the ONLY path that fires an OpenSky query.
+  void _onSubmitted(String text) {
+    _searchGeneration++;
 
     final query = text.trim().toUpperCase();
     if (query.length < 2) {
@@ -86,20 +103,33 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
       return;
     }
 
-    // Show loading immediately so user sees feedback
+    // Dismiss keyboard so results are visible
+    FocusScope.of(context).unfocus();
+
     setState(() => _state = _SearchState.loading);
 
-    _debounce = Timer(const Duration(milliseconds: 400), () {
-      _executeSearch(query);
-    });
+    _executeSearch(query);
   }
 
   Future<void> _executeSearch(String query) async {
-    AppLogging.aether('FlightSearch: searching "$query"');
+    final generation = _searchGeneration;
+    AppLogging.aether('FlightSearch: searching "$query" (gen=$generation)');
 
     try {
       final results = await _openSky.searchActiveFlights(query, limit: 30);
       if (!mounted) return;
+
+      // Discard stale results — a newer query has been issued while we waited
+      // for the OpenSky response. Without this guard, slow responses for
+      // partial queries (e.g. "MH") overwrite results for the final query
+      // (e.g. "MH370").
+      if (generation != _searchGeneration) {
+        AppLogging.aether(
+          'FlightSearch: discarding stale results for "$query" '
+          '(gen=$generation, current=$_searchGeneration)',
+        );
+        return;
+      }
 
       if (results.isEmpty) {
         setState(() {
@@ -115,6 +145,9 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
       }
     } catch (e) {
       if (!mounted) return;
+      // Also check generation for error state — don't show errors for
+      // superseded queries.
+      if (generation != _searchGeneration) return;
       AppLogging.aether('FlightSearch: error — $e');
       setState(() {
         _state = _SearchState.error;
@@ -126,7 +159,6 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
 
   void _clearSearch() {
     _controller.clear();
-    _debounce?.cancel();
     setState(() {
       _state = _SearchState.idle;
       _results = [];
@@ -204,6 +236,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
                   controller: _controller,
                   focusNode: _focus,
                   onChanged: _onTextChanged,
+                  onSubmitted: _onSubmitted,
                   textCapitalization: TextCapitalization.characters,
                   textInputAction: TextInputAction.search,
                   maxLength: 11,
@@ -216,12 +249,27 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
                       color: context.textTertiary,
                     ),
                     suffixIcon: _controller.text.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              Icons.clear,
-                              color: context.textTertiary,
-                            ),
-                            onPressed: _clearSearch,
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Search button — visible tap target
+                              IconButton(
+                                icon: Icon(
+                                  Icons.search,
+                                  color: context.accentColor,
+                                ),
+                                onPressed: () => _onSubmitted(_controller.text),
+                                tooltip: 'Search',
+                              ),
+                              // Clear button
+                              IconButton(
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: context.textTertiary,
+                                ),
+                                onPressed: _clearSearch,
+                              ),
+                            ],
                           )
                         : null,
                     border: InputBorder.none,
@@ -260,7 +308,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
             icon: Icons.flight,
             title: 'Search for active flights',
             subtitle:
-                'Enter at least 2 characters to search\nfor flights currently in the air',
+                'Type a callsign and press Search\nto find flights currently in the air',
           ),
         ),
       ],

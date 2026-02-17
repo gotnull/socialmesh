@@ -205,9 +205,6 @@ class AetherShareService {
     AppLogging.aether('Base URL: $baseUrl');
     AppLogging.aether('Full URI: $uri');
     AppLogging.aether('API Key present: ${apiKey.isNotEmpty}');
-    if (apiKey.isNotEmpty) {
-      AppLogging.aether('API Key (masked): ${apiKey.substring(0, 8)}...');
-    }
 
     final headers = <String, String>{'Content-Type': 'application/json'};
 
@@ -216,9 +213,6 @@ class AetherShareService {
     }
 
     final body = _flightToSharePayload(flight);
-    AppLogging.aether('Request payload: ${jsonEncode(body)}');
-    AppLogging.aether('Request headers: $headers');
-
     AppLogging.aether('Sending POST request...');
 
     try {
@@ -228,8 +222,6 @@ class AetherShareService {
 
       AppLogging.aether('Response received');
       AppLogging.aether('Status code: ${response.statusCode}');
-      AppLogging.aether('Response headers: ${response.headers}');
-      AppLogging.aether('Response body: ${response.body}');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -519,6 +511,83 @@ class AetherShareService {
       throw AetherShareException('Network error: $e');
     }
   }
+
+  /// Fetch cached flight position from the Aether API.
+  ///
+  /// The server polls OpenSky in the background and caches positions.
+  /// This endpoint costs zero OpenSky credits — the server handles all
+  /// credit spend regardless of how many clients are polling.
+  ///
+  /// Returns `null` if no position is available (flight not tracked,
+  /// not in the air, or server has no OpenSky credentials configured).
+  Future<CachedFlightPosition?> fetchFlightPosition(String callsign) async {
+    final baseUrl = AppUrls.aetherApiUrl;
+    final uri = Uri.parse(
+      '$baseUrl/api/position/${Uri.encodeComponent(callsign)}',
+    );
+
+    try {
+      final response = await http.get(uri).timeout(_requestTimeout);
+
+      if (response.statusCode != 200) return null;
+
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final posJson = json['position'] as Map<String, dynamic>?;
+      if (posJson == null) return null;
+
+      final latitude = (posJson['latitude'] as num?)?.toDouble();
+      final longitude = (posJson['longitude'] as num?)?.toDouble();
+      if (latitude == null || longitude == null) return null;
+
+      final altitude = (posJson['altitude'] as num?)?.toDouble() ?? 0;
+      final velocity = (posJson['velocity'] as num?)?.toDouble() ?? 0;
+      final heading = (posJson['heading'] as num?)?.toDouble() ?? 0;
+      final onGround = posJson['on_ground'] as bool? ?? false;
+      final lastContact = posJson['last_contact'] as String?;
+      final cachedAt = posJson['cached_at'] as String?;
+      final stale = json['stale'] as bool? ?? false;
+      final callsign =
+          (posJson['callsign'] as String?) ?? json['flight_number'] as String;
+
+      return CachedFlightPosition(
+        position: FlightPosition(
+          callsign: callsign,
+          latitude: latitude,
+          longitude: longitude,
+          altitude: altitude,
+          velocity: velocity,
+          heading: heading,
+          onGround: onGround,
+          lastUpdate: lastContact != null
+              ? DateTime.tryParse(lastContact) ?? DateTime.now()
+              : DateTime.now(),
+        ),
+        cachedAt: cachedAt != null
+            ? DateTime.tryParse(cachedAt) ?? DateTime.now()
+            : DateTime.now(),
+        stale: stale,
+      );
+    } catch (e) {
+      AppLogging.aether('fetchFlightPosition error: $e');
+      return null;
+    }
+  }
+}
+
+/// Cached flight position returned by the Aether API.
+///
+/// The server polls OpenSky and caches positions — clients never call
+/// OpenSky directly. This eliminates per-user credit burn entirely.
+class CachedFlightPosition {
+  final FlightPosition position;
+  final DateTime cachedAt;
+  final bool stale;
+
+  const CachedFlightPosition({
+    required this.position,
+    required this.cachedAt,
+    required this.stale,
+  });
 }
 
 /// Exception thrown when sharing a flight fails.

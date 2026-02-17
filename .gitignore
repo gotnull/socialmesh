@@ -28,6 +28,7 @@ android/.kotlin/sessions/
 /api-gateway/
 /tools/
 /blog/
+/workers/
 
 # Firebase Hosting content (landing page, legal docs, admin tools)
 /web/

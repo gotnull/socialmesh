@@ -8,13 +8,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/admin_pin_dialog.dart';
-import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/countdown_banner.dart';
 import '../../core/widgets/top_status_banner.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart';
+import '../nodedex/widgets/sigil_painter.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
@@ -1879,23 +1879,24 @@ class _DrawerNodeHeader extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Node avatar - same as nodes screen for own node
-          NodeAvatar(
-            text: myNode?.shortName ?? '--',
-            color: isConnected ? accentColor : theme.dividerColor,
+          // Node sigil avatar — matches NodeDex list style
+          SigilAvatar(
+            nodeNum: myNodeNum ?? 0,
             size: 56,
-            showOnlineIndicator: true,
-            onlineStatus: isConnected
-                ? OnlineStatus.online
-                : OnlineStatus.offline,
-            batteryLevel: myNode?.batteryLevel,
-            showBatteryBadge: myNode?.batteryLevel != null,
-            border: isConnected
-                ? Border.all(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    width: 2,
-                  )
-                : null,
+            badge: Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                color: isConnected
+                    ? AppTheme.successGreen
+                    : AppTheme.errorRed,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: theme.scaffoldBackgroundColor,
+                  width: 2,
+                ),
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           // Node info - flexible column

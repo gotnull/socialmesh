@@ -36,6 +36,7 @@ SYNC_DIRS=(
   tools
   web
   web-redirect
+  workers
 )
 
 # Individual files to sync (relative to repo root)

@@ -17,7 +17,7 @@ class AetherFlight {
   final String userId; // Who posted this
   final String? userName;
   final String? notes; // Any additional info
-  final bool isActive; // Currently in flight
+  final bool isActive; // Server-managed active flag (may lag behind real time)
   final DateTime createdAt;
   final int receptionCount; // Number of reception reports
 
@@ -147,8 +147,23 @@ class AetherFlight {
   /// Check if flight is upcoming (within next 24 hours)
   bool get isUpcoming {
     final now = DateTime.now();
+    if (now.isAfter(scheduledDeparture)) return false;
     final diff = scheduledDeparture.difference(now);
-    return diff.inHours >= 0 && diff.inHours <= 24;
+    return diff.inHours <= 24;
+  }
+
+  /// Check if flight should currently be in the air based on schedule.
+  ///
+  /// True when scheduled departure is in the past and scheduled arrival
+  /// (or fallback 12-hour window) is in the future.
+  bool get isInFlight {
+    final now = DateTime.now();
+    if (now.isBefore(scheduledDeparture)) return false;
+    if (scheduledArrival != null) {
+      return now.isBefore(scheduledArrival!);
+    }
+    // Assume 12 hours max flight time if no arrival
+    return now.isBefore(scheduledDeparture.add(const Duration(hours: 12)));
   }
 
   /// Check if flight is past
@@ -163,12 +178,12 @@ class AetherFlight {
 
   /// Get flight status string.
   ///
-  /// Time-based checks (`isPast`, `isUpcoming`) take priority over the stored
-  /// `isActive` flag because the flag may lag behind real time (e.g. the
-  /// Aether API only expires flights every 5 minutes).
+  /// Time-based checks (`isPast`, `isInFlight`, `isUpcoming`) take priority
+  /// over the stored `isActive` flag because the flag may lag behind real
+  /// time (e.g. the Aether API only expires flights every 5 minutes).
   String get statusText {
     if (isPast) return 'Completed';
-    if (isActive) return 'In Flight';
+    if (isInFlight || isActive) return 'In Flight';
     if (isUpcoming) return 'Upcoming';
     return 'Scheduled';
   }

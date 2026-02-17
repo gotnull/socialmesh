@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:socialmesh/core/constants.dart';
 import 'package:socialmesh/core/logging.dart';
 
 /// OpenSky Network API service with OAuth2 authentication.
@@ -28,10 +29,6 @@ class OpenSkyService {
   // Token cache
   String? _accessToken;
   DateTime? _tokenExpiry;
-
-  // Rate limiting for search
-  DateTime? _lastSearchTime;
-  static const _searchCooldown = Duration(seconds: 5);
 
   // Singleton instance
   static final OpenSkyService _instance = OpenSkyService._internal();
@@ -116,95 +113,60 @@ class OpenSkyService {
 
   /// Search for active flights matching a query string.
   ///
-  /// Searches callsigns of all currently active flights.
-  /// Returns up to [limit] matching flights sorted by relevance.
-  /// Uses 4 credits (global states query).
-  /// Rate limited to one search per 5 seconds.
+  /// Calls the Aether API server-side search cache — the server polls
+  /// OpenSky /states/all every 15 minutes and caches all flights.
+  /// Client searches are free: zero OpenSky credits consumed regardless
+  /// of how many users or searches happen.
   Future<List<ActiveFlightInfo>> searchActiveFlights(
     String query, {
-    int limit = 20,
+    int limit = 30,
   }) async {
     AppLogging.aether(
-      '[OpenSky] searchActiveFlights() — query="$query" limit=$limit',
+      '[OpenSky] searchActiveFlights() via Aether API — query="$query" limit=$limit',
     );
     if (query.trim().length < 2) {
       return [];
     }
 
-    // Rate limiting - prevent abuse
-    if (_lastSearchTime != null) {
-      final elapsed = DateTime.now().difference(_lastSearchTime!);
-      if (elapsed < _searchCooldown) {
+    final baseUrl = AppUrls.aetherApiUrl;
+    final uri = Uri.parse(
+      '$baseUrl/api/flights/search?q=${Uri.encodeComponent(query)}&limit=$limit',
+    );
+
+    try {
+      final response = await http.get(uri).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode != 200) {
         AppLogging.aether(
-          '[OpenSky] Search rate limited, ${_searchCooldown.inSeconds - elapsed.inSeconds}s remaining',
+          '[OpenSky] Aether search failed: ${response.statusCode}',
         );
         return [];
       }
-    }
-    _lastSearchTime = DateTime.now();
 
-    final response = await _authenticatedGet('/states/all');
-
-    if (response == null || response.statusCode != 200) {
-      return [];
-    }
-
-    try {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
-      final states = json['states'] as List<dynamic>?;
+      final flights = json['flights'] as List<dynamic>? ?? [];
+      final cacheAgeS = json['cache_age_s'] as int?;
 
-      if (states == null || states.isEmpty) {
-        return [];
-      }
+      AppLogging.aether(
+        '[OpenSky] Aether search returned ${flights.length} results '
+        '(server cache age: ${cacheAgeS ?? "unknown"}s)',
+      );
 
-      final normalizedQuery = query.toUpperCase().trim();
-      final results = <ActiveFlightInfo>[];
-
-      for (final state in states) {
-        if (state is! List || state.length < 8) continue;
-
-        final callsign = (state[1] as String?)?.trim().toUpperCase() ?? '';
-        if (callsign.isEmpty) continue;
-
-        // Match if callsign starts with or contains the query
-        if (callsign.startsWith(normalizedQuery) ||
-            callsign.contains(normalizedQuery)) {
-          final icao24 = state[0] as String?;
-          final originCountry = state[2] as String?;
-          final longitude = (state[5] as num?)?.toDouble();
-          final latitude = (state[6] as num?)?.toDouble();
-          final altitude = (state[7] as num?)?.toDouble();
-          final onGround = state[8] as bool? ?? false;
-          final velocity = (state[9] as num?)?.toDouble();
-
-          results.add(
-            ActiveFlightInfo(
-              callsign: callsign,
-              icao24: icao24,
-              originCountry: originCountry,
-              latitude: latitude,
-              longitude: longitude,
-              altitude: altitude,
-              onGround: onGround,
-              velocity: velocity,
-            ),
-          );
-
-          if (results.length >= limit) break;
-        }
-      }
-
-      // Sort by relevance - exact prefix matches first
-      results.sort((a, b) {
-        final aStartsWith = a.callsign.startsWith(normalizedQuery) ? 0 : 1;
-        final bStartsWith = b.callsign.startsWith(normalizedQuery) ? 0 : 1;
-        if (aStartsWith != bStartsWith) return aStartsWith - bStartsWith;
-        return a.callsign.compareTo(b.callsign);
-      });
-
-      return results;
+      return flights.map((f) {
+        final m = f as Map<String, dynamic>;
+        return ActiveFlightInfo(
+          callsign: (m['callsign'] as String? ?? '').trim(),
+          icao24: m['icao24'] as String?,
+          originCountry: m['origin_country'] as String?,
+          latitude: (m['latitude'] as num?)?.toDouble(),
+          longitude: (m['longitude'] as num?)?.toDouble(),
+          altitude: (m['altitude'] as num?)?.toDouble(),
+          onGround: m['on_ground'] as bool? ?? false,
+          velocity: (m['velocity'] as num?)?.toDouble(),
+        );
+      }).toList();
     } catch (e) {
-      AppLogging.aether('[OpenSky] Search flights error: $e');
+      AppLogging.aether('[OpenSky] Aether search error: $e');
       return [];
     }
   }
@@ -658,6 +620,41 @@ class OpenSkyService {
       );
     } catch (e) {
       AppLogging.aether('[OpenSky] Error parsing state vector: $e');
+      return null;
+    }
+  }
+
+  /// Lightweight position-only fetch — returns just the state vector.
+  ///
+  /// Unlike [validateFlightByCallsign], this does NOT call
+  /// [lookupAircraftRoute], saving 1 credit per invocation.
+  /// Use this for periodic position polling where departure/arrival
+  /// airports are already known from the stored [AetherFlight].
+  ///
+  /// Cost: 4 credits (single `/states/all?callsign=` query).
+  Future<FlightPositionData?> getFlightPosition(String callsign) async {
+    final cleanCallsign = _normalizeCallsign(callsign);
+    AppLogging.aether(
+      '[OpenSky] getFlightPosition() — callsign="$cleanCallsign"',
+    );
+
+    final response = await _authenticatedGet(
+      '/states/all?callsign=$cleanCallsign',
+    );
+
+    if (response == null || response.statusCode != 200) {
+      return null;
+    }
+
+    try {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final states = json['states'] as List<dynamic>?;
+      if (states == null || states.isEmpty) return null;
+
+      final state = states.first as List<dynamic>;
+      return _parseStateVector(state, cleanCallsign);
+    } catch (e) {
+      AppLogging.aether('[OpenSky] getFlightPosition parse error: $e');
       return null;
     }
   }

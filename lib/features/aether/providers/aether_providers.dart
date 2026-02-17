@@ -9,7 +9,6 @@ import '../../../providers/auth_providers.dart';
 import '../models/aether_flight.dart';
 import '../services/aether_service.dart';
 import '../services/aether_share_service.dart';
-import '../services/opensky_service.dart';
 
 /// Current user UID for Aether lifecycle operations.
 ///
@@ -27,11 +26,6 @@ final aetherServiceProvider = Provider<AetherService>((ref) {
 /// Provider for AetherShareService (sharing flights to aether.socialmesh.app)
 final aetherShareServiceProvider = Provider<AetherShareService>((ref) {
   return AetherShareService();
-});
-
-/// Provider for OpenSkyService (authenticated flight lookups)
-final openSkyServiceProvider = Provider<OpenSkyService>((ref) {
-  return OpenSkyService();
 });
 
 /// Provider for all flights (upcoming and active)
@@ -105,42 +99,40 @@ class FlightPositionState {
   }
 }
 
-/// Provider for live flight position tracking using FutureProvider
-/// Auto-refreshes periodically while watched.
-/// Uses authenticated OpenSky API for better rate limits.
+/// Provider for live flight position tracking.
+///
+/// Reads cached positions from the Aether API's server-side OpenSky cache.
+/// The server polls OpenSky once per active flight every 60s and caches
+/// results — clients never call OpenSky directly, so zero OpenSky credits
+/// are consumed by the app regardless of user count.
+///
+/// Auto-refreshes every 30 seconds (cheap — just a GET to our own API).
 final aetherFlightPositionProvider = FutureProvider.autoDispose
     .family<FlightPositionState, String>((ref, callsign) async {
       AppLogging.aether('aetherFlightPositionProvider — tracking $callsign');
-      final openSky = ref.watch(openSkyServiceProvider);
+      final shareService = ref.watch(aetherShareServiceProvider);
 
-      // Set up periodic refresh every 30 seconds
+      // Poll our own API every 30 seconds — this is free (no OpenSky credits).
+      // The server-side cache updates every 60s from OpenSky, so 30s client
+      // polls give near-instant pickup of new data without waste.
       final timer = Timer.periodic(const Duration(seconds: 30), (_) {
         ref.invalidateSelf();
       });
       ref.onDispose(timer.cancel);
 
       try {
-        final result = await openSky.validateFlightByCallsign(callsign);
+        final cached = await shareService.fetchFlightPosition(callsign);
 
-        if (result.isActive && result.position != null) {
-          final pos = result.position!;
+        if (cached != null) {
+          final pos = cached.position;
           AppLogging.aether(
-            'Position update for $callsign: '
+            'Position update for $callsign (cached ${cached.stale ? "STALE" : "fresh"}): '
             'lat=${pos.latitude} lon=${pos.longitude} alt=${pos.altitude}m',
           );
           return FlightPositionState(
-            position: FlightPosition(
-              callsign: pos.callsign,
-              latitude: pos.latitude ?? 0,
-              longitude: pos.longitude ?? 0,
-              altitude: pos.altitude ?? 0,
-              onGround: pos.onGround,
-              velocity: pos.velocity ?? 0,
-              heading: pos.heading ?? 0,
-              lastUpdate: pos.lastContact ?? DateTime.now(),
-            ),
+            position: pos,
             isLoading: false,
-            lastFetch: DateTime.now(),
+            lastFetch: cached.cachedAt,
           );
         }
 

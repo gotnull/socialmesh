@@ -359,6 +359,20 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   void _populateFromValidation(FlightValidationResult result) {
     if (!result.isValid) return;
 
+    // OpenSky's lastSeen is the most recent tracking ping — for active
+    // flights this is essentially "right now", NOT the actual arrival time.
+    // Only populate arrival time for completed / verified flights.
+    final isActive = result.status == FlightValidationStatus.active;
+    final bool arrivalIsRecentTracking;
+    if (result.arrivalTime != null) {
+      final elapsed = DateTime.now().difference(result.arrivalTime!).abs();
+      arrivalIsRecentTracking = elapsed < const Duration(minutes: 10);
+    } else {
+      arrivalIsRecentTracking = false;
+    }
+    final hasValidArrival =
+        result.arrivalTime != null && !isActive && !arrivalIsRecentTracking;
+
     safeSetState(() {
       // Populate departure airport if empty
       if (_departureController.text.isEmpty &&
@@ -377,8 +391,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
         _departureTime = TimeOfDay.fromDateTime(result.departureTime!);
       }
 
-      // Populate arrival date/time if we have it
-      if (result.arrivalTime != null) {
+      // Populate arrival date/time ONLY for completed flights.
+      // For active flights, arrivalTime is derived from lastSeen which is
+      // just the latest tracking ping (≈ now), not the real arrival.
+      if (hasValidArrival) {
         _arrivalDate = result.arrivalTime;
         _arrivalTime = TimeOfDay.fromDateTime(result.arrivalTime!);
       }
@@ -1442,12 +1458,44 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
         return;
       }
 
+      // OpenSky's firstSeen/lastSeen are TRACKING timestamps, not scheduled
+      // airline times. For an active (in-progress) flight:
+      //   firstSeen  = when the transponder was first detected  (≈ takeoff)
+      //   lastSeen   = the most recent tracking data point      (≈ NOW)
+      // So lastSeen is only a meaningful "arrival time" for COMPLETED flights
+      // where the aircraft has landed and tracking stopped.
+      final isActive =
+          _validationResult?.status == FlightValidationStatus.active;
+
+      // Determine whether lastSeen is a real arrival or just "now".
+      // If lastSeen is within 10 minutes of the current time, the flight is
+      // still being tracked — lastSeen is NOT an arrival time.
+      final bool lastSeenIsRecentTracking;
+      if (routeInfo.lastSeen != null) {
+        final lastSeenDt = DateTime.fromMillisecondsSinceEpoch(
+          routeInfo.lastSeen! * 1000,
+        );
+        final elapsed = DateTime.now().difference(lastSeenDt).abs();
+        lastSeenIsRecentTracking = elapsed < const Duration(minutes: 10);
+      } else {
+        lastSeenIsRecentTracking = false;
+      }
+
+      // Only treat lastSeen as a valid arrival time when the flight is NOT
+      // active and lastSeen is NOT just the current tracking timestamp.
+      final bool hasValidArrivalTime =
+          routeInfo.arrivalTime != null &&
+          !isActive &&
+          !lastSeenIsRecentTracking;
+
       AppLogging.aether(
         'Schedule: processing route data — '
         'dep=${routeInfo.estDepartureAirport} '
         'arr=${routeInfo.estArrivalAirport} '
         'depTime=${routeInfo.departureTime} '
-        'arrTime=${routeInfo.arrivalTime}',
+        'arrTime=${routeInfo.arrivalTime} '
+        'isActive=$isActive lastSeenIsRecentTracking=$lastSeenIsRecentTracking '
+        'hasValidArrivalTime=$hasValidArrivalTime',
       );
 
       safeSetState(() {
@@ -1467,7 +1515,8 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
           AppLogging.aether('Schedule: populated arrival airport');
         }
 
-        // Populate departure date/time
+        // Populate departure date/time from firstSeen (≈ takeoff time).
+        // This is generally reliable for both active and completed flights.
         if (routeInfo.departureTime != null) {
           _departureDate = routeInfo.departureTime;
           _departureTime = TimeOfDay.fromDateTime(routeInfo.departureTime!);
@@ -1478,8 +1527,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
           AppLogging.aether('Schedule: no departure time available');
         }
 
-        // Populate arrival date/time
-        if (routeInfo.arrivalTime != null) {
+        // Populate arrival date/time ONLY for completed flights.
+        // For active flights, lastSeen is just the latest tracking ping
+        // (basically "right now"), NOT the actual arrival time.
+        if (hasValidArrivalTime) {
           _arrivalDate = routeInfo.arrivalTime;
           _arrivalTime = TimeOfDay.fromDateTime(routeInfo.arrivalTime!);
           AppLogging.aether(
@@ -1487,7 +1538,8 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
           );
         } else {
           AppLogging.aether(
-            'Schedule: no arrival time (flight may still be in progress)',
+            'Schedule: skipping arrival time — flight is '
+            '${isActive ? "active (lastSeen is just current tracking)" : "missing arrival data"}',
           );
         }
 
@@ -1507,8 +1559,11 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                 _validationResult!.arrivalAirport,
             departureTime:
                 routeInfo.departureTime ?? _validationResult!.departureTime,
-            arrivalTime:
-                routeInfo.arrivalTime ?? _validationResult!.arrivalTime,
+            // Only propagate arrival time if it's a real arrival, not a
+            // tracking timestamp masquerading as one.
+            arrivalTime: hasValidArrivalTime
+                ? routeInfo.arrivalTime
+                : _validationResult!.arrivalTime,
           );
         }
       });
