@@ -1,28 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+
+// Airport Picker Screen — searchable full-screen airport selector.
+//
+// Full-screen route (same pattern as FlightSearchSheet).
+// Displays all 1,173 large airports from the OurAirports dataset.
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/theme.dart';
-import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../data/airports.dart';
 
 /// Maximum search query length for airport search.
 const int _maxSearchLength = 40;
 
-/// A bottom sheet that lets the user search and pick an airport.
-///
-/// Returns the selected [Airport], or `null` if dismissed.
-///
-/// Usage:
-/// ```dart
-/// final airport = await AirportPickerSheet.show(
-///   context,
-///   title: 'Departure Airport',
-/// );
-/// if (airport != null) {
-///   _departureController.text = airport.iata;
-/// }
-/// ```
+/// Full-screen airport picker. Returns a selected [Airport] or null.
 class AirportPickerSheet extends StatefulWidget {
   final String title;
   final String? initialCode;
@@ -39,10 +32,11 @@ class AirportPickerSheet extends StatefulWidget {
     String title = 'Select Airport',
     String? initialCode,
   }) {
-    return AppBottomSheet.show<Airport>(
-      context: context,
-      padding: EdgeInsets.zero,
-      child: AirportPickerSheet(title: title, initialCode: initialCode),
+    return Navigator.of(context).push<Airport>(
+      MaterialPageRoute(
+        builder: (_) =>
+            AirportPickerSheet(title: title, initialCode: initialCode),
+      ),
     );
   }
 
@@ -54,15 +48,15 @@ class _AirportPickerSheetState extends State<AirportPickerSheet> {
   final _searchController = TextEditingController();
   final _focusNode = FocusNode();
   List<Airport> _filtered = [];
+  bool _hasQuery = false;
 
   @override
   void initState() {
     super.initState();
     _filtered = kAirports;
     _searchController.addListener(_onSearchChanged);
-    // Auto-focus search after sheet animation
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (mounted) _focusNode.requestFocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
     });
   }
 
@@ -76,6 +70,7 @@ class _AirportPickerSheetState extends State<AirportPickerSheet> {
   void _onSearchChanged() {
     final query = _searchController.text.trim();
     setState(() {
+      _hasQuery = query.isNotEmpty;
       if (query.isEmpty) {
         _filtered = kAirports;
       } else {
@@ -84,137 +79,104 @@ class _AirportPickerSheetState extends State<AirportPickerSheet> {
     });
   }
 
+  void _clearSearch() {
+    _searchController.clear();
+    _focusNode.requestFocus();
+  }
+
+  void _selectAirport(Airport airport) {
+    HapticFeedback.selectionClick();
+    Navigator.of(context).pop(airport);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.7,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 12, 0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: context.textPrimary,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.opaque,
+      child: GlassScaffold(
+        title: widget.title,
+        slivers: [
+          // Search bar
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  focusNode: _focusNode,
+                  maxLength: _maxSearchLength,
+                  textCapitalization: TextCapitalization.characters,
+                  textInputAction: TextInputAction.search,
+                  style: TextStyle(color: context.textPrimary),
+                  decoration: InputDecoration(
+                    hintText: 'Search by code, city, or name',
+                    hintStyle: TextStyle(color: context.textTertiary),
+                    prefixIcon: Icon(Icons.search, color: context.textTertiary),
+                    suffixIcon: _hasQuery
+                        ? IconButton(
+                            icon: Icon(
+                              Icons.clear,
+                              color: context.textTertiary,
+                            ),
+                            onPressed: _clearSearch,
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    counterText: '',
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
                     ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: Icon(Icons.close, color: context.textTertiary),
-                ),
-              ],
-            ),
-          ),
-
-          // Search field
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: TextField(
-              controller: _searchController,
-              focusNode: _focusNode,
-              maxLength: _maxSearchLength,
-              textCapitalization: TextCapitalization.characters,
-              style: TextStyle(color: context.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Search by code, city, or name',
-                hintStyle: TextStyle(color: context.textTertiary),
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: context.textTertiary,
-                  size: 20,
-                ),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        onPressed: () {
-                          _searchController.clear();
-                        },
-                        icon: Icon(
-                          Icons.clear,
-                          color: context.textTertiary,
-                          size: 20,
-                        ),
-                      )
-                    : null,
-                filled: true,
-                fillColor: context.card,
-                counterText: '',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: context.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: context.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: context.accentColor),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
                 ),
               ),
             ),
           ),
 
           // Results count
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Row(
-              children: [
-                Text(
-                  _searchController.text.isEmpty
-                      ? '${kAirports.length} airports'
-                      : '${_filtered.length} result${_filtered.length == 1 ? '' : 's'}',
-                  style: TextStyle(fontSize: 12, color: context.textTertiary),
-                ),
-              ],
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              child: Text(
+                _hasQuery
+                    ? '${_filtered.length} result${_filtered.length == 1 ? '' : 's'}'
+                    : '${kAirports.length} airports',
+                style: TextStyle(fontSize: 12, color: context.textTertiary),
+              ),
             ),
           ),
 
           // Divider
-          Divider(height: 1, color: context.border),
-
-          // Airport list
-          Expanded(
-            child: _filtered.isEmpty
-                ? _buildEmptyState()
-                : GestureDetector(
-                    onTap: () => FocusScope.of(context).unfocus(),
-                    child: ListView.builder(
-                      itemCount: _filtered.length,
-                      padding: const EdgeInsets.only(bottom: 16),
-                      itemBuilder: (context, index) {
-                        final airport = _filtered[index];
-                        final isSelected =
-                            widget.initialCode != null &&
-                            (airport.iata ==
-                                    widget.initialCode!.toUpperCase() ||
-                                airport.icao ==
-                                    widget.initialCode!.toUpperCase());
-                        return _AirportTile(
-                          airport: airport,
-                          isSelected: isSelected,
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            Navigator.of(context).pop(airport);
-                          },
-                        );
-                      },
-                    ),
-                  ),
+          SliverToBoxAdapter(
+            child: Container(
+              height: 1,
+              color: context.border.withValues(alpha: 0.3),
+            ),
           ),
+
+          // Content
+          if (_filtered.isEmpty)
+            SliverFillRemaining(hasScrollBody: false, child: _buildEmptyState())
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final airport = _filtered[index];
+                final isSelected =
+                    widget.initialCode != null &&
+                    (airport.iata == widget.initialCode!.toUpperCase() ||
+                        airport.icao == widget.initialCode!.toUpperCase());
+                return _AirportTile(
+                  airport: airport,
+                  isSelected: isSelected,
+                  onTap: () => _selectAirport(airport),
+                );
+              }, childCount: _filtered.length),
+            ),
         ],
       ),
     );
