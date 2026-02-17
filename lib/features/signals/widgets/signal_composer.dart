@@ -21,7 +21,7 @@ class SignalComposer extends ConsumerStatefulWidget {
 }
 
 class _SignalComposerState extends ConsumerState<SignalComposer>
-    with LifecycleSafeMixin {
+    with LifecycleSafeMixin<SignalComposer> {
   final TextEditingController _controller = TextEditingController();
   int _ttlMinutes = SignalTTL.defaultTTL;
   bool _isSubmitting = false;
@@ -78,6 +78,7 @@ class _SignalComposerState extends ConsumerState<SignalComposer>
             child: TextField(
               controller: _controller,
               enabled: !_isSubmitting,
+              maxLength: 140,
               style: TextStyle(color: context.textPrimary),
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
@@ -85,6 +86,7 @@ class _SignalComposerState extends ConsumerState<SignalComposer>
                 hintStyle: TextStyle(color: context.textTertiary),
                 border: InputBorder.none,
                 isDense: true,
+                counterText: '',
                 contentPadding: EdgeInsets.zero,
               ),
               onChanged: (_) => setState(() {}),

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/gradient_border_container.dart';
+import '../data/airports.dart';
 import '../providers/aether_flight_matcher_provider.dart';
 import '../screens/aether_flight_detail_screen.dart';
 
@@ -106,33 +107,67 @@ class AetherFlightMatchCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     // Route
-                    Row(
-                      children: [
-                        Text(
-                          flight.departure,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: context.textPrimary,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          child: Icon(
-                            Icons.arrow_forward,
-                            size: 14,
-                            color: context.textTertiary,
-                          ),
-                        ),
-                        Text(
-                          flight.arrival,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: context.textPrimary,
-                          ),
-                        ),
-                      ],
+                    Builder(
+                      builder: (context) {
+                        final depAirport = lookupAirport(flight.departure);
+                        final arrAirport = lookupAirport(flight.arrival);
+                        return Row(
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  flight.departure,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: context.textPrimary,
+                                  ),
+                                ),
+                                if (depAirport != null)
+                                  Text(
+                                    depAirport.city,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: context.textSecondary,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
+                              child: Icon(
+                                Icons.arrow_forward,
+                                size: 14,
+                                color: context.textTertiary,
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  flight.arrival,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: context.textPrimary,
+                                  ),
+                                ),
+                                if (arrAirport != null)
+                                  Text(
+                                    arrAirport.city,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: context.textSecondary,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: 4),
                     // Node name

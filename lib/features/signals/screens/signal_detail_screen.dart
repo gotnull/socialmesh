@@ -2,6 +2,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/features/settings/account_subscriptions_screen.dart';
 
@@ -286,6 +287,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   }
 
   Future<void> _handleVote(SignalResponse response, int value) async {
+    HapticFeedback.selectionClick();
     // Auth gating check
     final isAuthenticated = ref.read(isSignedInProvider);
     if (!isAuthenticated) {
@@ -375,6 +377,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   Future<void> _submitReply() async {
     final content = _replyController.text.trim();
     if (content.isEmpty) return;
+    HapticFeedback.mediumImpact();
 
     // Capture all providers before any await
     final isAuthenticated = ref.read(isSignedInProvider);
@@ -738,37 +741,17 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
     final feedNotifier = ref.read(signalFeedProvider.notifier);
     final navigator = Navigator.of(context);
 
-    final confirm = await showDialog<bool>(
+    final confirm = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        title: Text(
-          'Delete Signal?',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Text(
-          'This signal will fade immediately.',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Signal?',
+      message: 'This signal will fade immediately.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
 
     if (!mounted) return;
     if (confirm == true) {
+      HapticFeedback.mediumImpact();
       await feedNotifier.deleteSignal(signal.id);
       if (mounted) {
         navigator.pop();
@@ -911,6 +894,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                           controller: _replyController,
                           focusNode: _replyFocusNode,
                           enabled: !_isSubmittingReply,
+                          maxLength: 140,
                           style: TextStyle(color: context.textPrimary),
                           decoration: InputDecoration(
                             hintText: _replyingToAuthor != null
@@ -923,6 +907,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                             ),
                             filled: true,
                             fillColor: context.background,
+                            counterText: '',
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 10,
@@ -972,119 +957,124 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       );
     }
 
-    return HelpTourController(
-      topicId: 'signal_detail',
-      stepKeys: const {},
-      child: GlassScaffold(
-        title: 'Signal',
-        actions: [
-          IcoHelpAppBarButton(topicId: 'signal_detail'),
-          _buildSignalMenu(context, signal),
-        ],
-        controller: _scrollController,
-        resizeToAvoidBottomInset:
-            false, // We handle keyboard insets manually in buildReplyInput
-        bottomNavigationBar: buildReplyInput(),
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // Animated signal card
-                SlideTransition(
-                  position: _cardSlideAnimation,
-                  child: FadeTransition(
-                    opacity: _cardFadeAnimation,
-                    child: SignalCard(signal: signal, showActions: false),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.opaque,
+      child: HelpTourController(
+        topicId: 'signal_detail',
+        stepKeys: const {},
+        child: GlassScaffold(
+          title: 'Signal',
+          actions: [
+            IcoHelpAppBarButton(topicId: 'signal_detail'),
+            _buildSignalMenu(context, signal),
+          ],
+          controller: _scrollController,
+          resizeToAvoidBottomInset:
+              false, // We handle keyboard insets manually in buildReplyInput
+          bottomNavigationBar: buildReplyInput(),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  // Animated signal card
+                  SlideTransition(
+                    position: _cardSlideAnimation,
+                    child: FadeTransition(
+                      opacity: _cardFadeAnimation,
+                      child: SignalCard(signal: signal, showActions: false),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // Animated responses header
-                SlideTransition(
-                  position: _headerSlideAnimation,
-                  child: FadeTransition(
-                    opacity: _headerFadeAnimation,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: context.accentColor.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: context.accentColor.withValues(alpha: 0.1),
+                  // Animated responses header
+                  SlideTransition(
+                    position: _headerSlideAnimation,
+                    child: FadeTransition(
+                      opacity: _headerFadeAnimation,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: context.accentColor.withValues(
-                                alpha: 0.15,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.forum_rounded,
-                              size: 16,
-                              color: context.accentColor,
-                            ),
+                        decoration: BoxDecoration(
+                          color: context.accentColor.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: context.accentColor.withValues(alpha: 0.1),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Conversation',
-                                  style: TextStyle(
-                                    color: context.textPrimary,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: context.accentColor.withValues(
+                                  alpha: 0.15,
                                 ),
-                                if (_comments != null && _comments!.isNotEmpty)
-                                  Text(
-                                    '${_comments!.length} ${_comments!.length == 1 ? 'comment' : 'comments'}',
-                                    style: TextStyle(
-                                      color: context.textTertiary,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          if (_isLoadingComments)
-                            SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.forum_rounded,
+                                size: 16,
                                 color: context.accentColor,
                               ),
                             ),
-                        ],
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Conversation',
+                                    style: TextStyle(
+                                      color: context.textPrimary,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  if (_comments != null &&
+                                      _comments!.isNotEmpty)
+                                    Text(
+                                      '${_comments!.length} ${_comments!.length == 1 ? 'comment' : 'comments'}',
+                                      style: TextStyle(
+                                        color: context.textTertiary,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            if (_isLoadingComments)
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: context.accentColor,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                // Animated responses list
-                FadeTransition(
-                  opacity: _headerFadeAnimation,
-                  child: _buildCommentsList(context),
-                ),
-              ]),
+                  // Animated responses list
+                  FadeTransition(
+                    opacity: _headerFadeAnimation,
+                    child: _buildCommentsList(context),
+                  ),
+                ]),
+              ),
             ),
-          ),
-          // Add some space at bottom to not be hidden by sticky header
-          const SliverToBoxAdapter(child: SizedBox(height: 60)),
-        ],
+            // Add some space at bottom to not be hidden by sticky header
+            const SliverToBoxAdapter(child: SizedBox(height: 60)),
+          ],
+        ),
       ),
     );
   }

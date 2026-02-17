@@ -18,6 +18,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/local_image_gallery.dart';
 import '../../../core/widgets/status_banner.dart';
@@ -233,33 +234,13 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     _dismissKeyboard();
     if (_contentController.text.trim().isNotEmpty ||
         _imageLocalPaths.isNotEmpty) {
-      final shouldDiscard = await showDialog<bool>(
+      final shouldDiscard = await AppBottomSheet.showConfirm(
         context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: context.card,
-          title: Text(
-            'Discard signal?',
-            style: TextStyle(color: context.textPrimary),
-          ),
-          content: Text(
-            'Your draft will be lost.',
-            style: TextStyle(color: context.textSecondary),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(
-                'Keep editing',
-                style: TextStyle(color: context.textSecondary),
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Discard'),
-            ),
-          ],
-        ),
+        title: 'Discard signal?',
+        message: 'Your draft will be lost.',
+        confirmLabel: 'Discard',
+        cancelLabel: 'Keep editing',
+        isDestructive: true,
       );
 
       if (shouldDiscard != true) return;

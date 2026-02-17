@@ -46,6 +46,7 @@ import '../../../providers/auth_providers.dart';
 import '../models/aether_flight.dart';
 import '../providers/aether_providers.dart';
 import '../services/aether_share_service.dart';
+import '../data/airports.dart';
 import 'schedule_flight_screen.dart';
 import 'aether_flight_detail_screen.dart';
 import '../../settings/settings_screen.dart';
@@ -677,9 +678,15 @@ class _FlightsTabContent extends StatelessWidget {
     if (searchQuery.isNotEmpty) {
       final query = searchQuery.toLowerCase();
       filteredFlights = filteredFlights.where((flight) {
+        final depAirport = lookupAirport(flight.departure);
+        final arrAirport = lookupAirport(flight.arrival);
         return flight.flightNumber.toLowerCase().contains(query) ||
             flight.departure.toLowerCase().contains(query) ||
             flight.arrival.toLowerCase().contains(query) ||
+            (depAirport?.city.toLowerCase().contains(query) ?? false) ||
+            (depAirport?.name.toLowerCase().contains(query) ?? false) ||
+            (arrAirport?.city.toLowerCase().contains(query) ?? false) ||
+            (arrAirport?.name.toLowerCase().contains(query) ?? false) ||
             (flight.nodeName?.toLowerCase().contains(query) ?? false) ||
             flight.nodeId.toLowerCase().contains(query);
       }).toList();
@@ -1551,6 +1558,7 @@ class _AirportCode extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final airport = lookupAirport(code);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -1558,14 +1566,27 @@ class _AirportCode extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: context.border.withValues(alpha: 0.5)),
       ),
-      child: Text(
-        code,
-        style: TextStyle(
-          color: context.textPrimary,
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            code,
+            style: TextStyle(
+              color: context.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
+          if (airport != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                airport.city,
+                style: TextStyle(color: context.textSecondary, fontSize: 10),
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -33,7 +33,7 @@ class AetherFlightDetailScreen extends ConsumerStatefulWidget {
 
 class _AetherFlightDetailScreenState
     extends ConsumerState<AetherFlightDetailScreen>
-    with LifecycleSafeMixin {
+    with LifecycleSafeMixin<AetherFlightDetailScreen> {
   final _dateFormat = DateFormat('EEEE, MMM d, yyyy');
   final _timeFormat = DateFormat('h:mm a');
   bool _isSharing = false;
@@ -818,7 +818,7 @@ class _ReportBottomSheet extends ConsumerStatefulWidget {
 }
 
 class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
-    with LifecycleSafeMixin {
+    with LifecycleSafeMixin<_ReportBottomSheet> {
   final _notesController = TextEditingController();
   bool _isSaving = false;
   final DateTime _receivedAt = DateTime.now();

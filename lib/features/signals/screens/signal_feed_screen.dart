@@ -417,6 +417,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                   child: TextField(
                     controller: _searchController,
                     onChanged: (value) => setState(() => _searchQuery = value),
+                    maxLength: 100,
                     style: TextStyle(color: context.textPrimary),
                     decoration: InputDecoration(
                       hintText: 'Search signals',
@@ -438,6 +439,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                             )
                           : null,
                       border: InputBorder.none,
+                      counterText: '',
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 14,
@@ -1219,37 +1221,17 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
     // Capture provider before any await
     final feedNotifier = ref.read(signalFeedProvider.notifier);
 
-    final confirm = await showDialog<bool>(
+    final confirm = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        title: Text(
-          'Delete Signal?',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Text(
-          'This signal will fade immediately.',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Signal?',
+      message: 'This signal will fade immediately.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
 
     if (!mounted) return;
     if (confirm == true) {
+      HapticFeedback.mediumImpact();
       await feedNotifier.deleteSignal(signal.id);
     }
   }

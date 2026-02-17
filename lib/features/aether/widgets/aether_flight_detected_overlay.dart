@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../data/airports.dart';
 import '../providers/aether_flight_matcher_provider.dart';
 import '../screens/aether_flight_detail_screen.dart';
 
@@ -144,12 +145,25 @@ class _OverlayCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Row(
                         children: [
-                          Text(
-                            '${flight.departure} → ${flight.arrival}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.textSecondary,
-                            ),
+                          Builder(
+                            builder: (context) {
+                              final depCity = lookupAirport(
+                                flight.departure,
+                              )?.city;
+                              final arrCity = lookupAirport(
+                                flight.arrival,
+                              )?.city;
+                              final route = depCity != null && arrCity != null
+                                  ? '${flight.departure} ($depCity) → ${flight.arrival} ($arrCity)'
+                                  : '${flight.departure} → ${flight.arrival}';
+                              return Text(
+                                route,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: context.textSecondary,
+                                ),
+                              );
+                            },
                           ),
                           if (node.rssi != null) ...[
                             const SizedBox(width: 8),

@@ -82,7 +82,7 @@ class SignalGalleryView extends ConsumerStatefulWidget {
 }
 
 class _SignalGalleryViewState extends ConsumerState<SignalGalleryView>
-    with SingleTickerProviderStateMixin, LifecycleSafeMixin {
+    with SingleTickerProviderStateMixin, LifecycleSafeMixin<SignalGalleryView> {
   late PageController _pageController;
   late int _currentIndex;
   int _currentImageIndex = 0; // Track current image within signal
