@@ -12,6 +12,11 @@ import 'aether_providers.dart';
 const _kNotifiedNodeIds = 'aether_notified_node_ids';
 const _kDismissedOverlayNodeIds = 'aether_dismissed_overlay_node_ids';
 
+/// Grace period after a flight is activated before it can produce a match.
+/// Prevents false positives when Device A schedules a flight and Device B
+/// is still physically next to it on the ground.
+const Duration _kMinAirborneGrace = Duration(minutes: 10);
+
 /// A match between a mesh node in your node list and an active Aether flight.
 class AetherFlightMatch {
   /// The Aether flight that the node is on.
@@ -230,10 +235,35 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
     }
 
     // Find matches
+    final now = DateTime.now();
+    final currentUid = ref.read(aetherCurrentUserIdProvider);
+    final myNodeNum = ref.read(myNodeNumProvider);
+    final myNodeHex = myNodeNum?.toRadixString(16).toLowerCase();
     final newMatches = <AetherFlightMatch>[];
     for (final flight in allFlights.values) {
       if (flight.nodeId.isEmpty) continue;
+
+      // Skip the current user's own flights — they already know about them.
+      if (currentUid != null &&
+          flight.userId.isNotEmpty &&
+          flight.userId == currentUid) {
+        continue;
+      }
+
+      // Skip flights whose own node is this device — can't receive yourself.
       final normalizedFlightNode = _normalizeNodeId(flight.nodeId);
+      if (myNodeHex != null && normalizedFlightNode == myNodeHex) {
+        continue;
+      }
+
+      // Grace period: skip flights that were activated less than 10 minutes
+      // ago. This avoids false matches when the flight node is still on the
+      // ground near the reporting device.
+      final airborneAt = flight.scheduledDeparture;
+      if (now.difference(airborneAt) < _kMinAirborneGrace) {
+        continue;
+      }
+
       final matchedNode = nodesByHex[normalizedFlightNode];
       if (matchedNode != null) {
         // Preserve the original detection time if this is an existing match

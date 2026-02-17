@@ -178,6 +178,7 @@ class ReceptionReport {
   final String reporterId; // User who received
   final String? reporterName;
   final String? reporterNodeId; // Their Meshtastic node
+  final String? reporterNodeName; // Their node's display name
   final double? latitude;
   final double? longitude;
   final double? altitude; // Ground station altitude
@@ -195,6 +196,7 @@ class ReceptionReport {
     required this.reporterId,
     this.reporterName,
     this.reporterNodeId,
+    this.reporterNodeName,
     this.latitude,
     this.longitude,
     this.altitude,
@@ -214,6 +216,7 @@ class ReceptionReport {
       reporterId: json['reporterId'] as String,
       reporterName: json['reporterName'] as String?,
       reporterNodeId: json['reporterNodeId'] as String?,
+      reporterNodeName: json['reporterNodeName'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
       altitude: (json['altitude'] as num?)?.toDouble(),
@@ -233,6 +236,7 @@ class ReceptionReport {
       'reporterId': reporterId,
       'reporterName': reporterName,
       'reporterNodeId': reporterNodeId,
+      'reporterNodeName': reporterNodeName,
       'latitude': latitude,
       'longitude': longitude,
       'altitude': altitude,

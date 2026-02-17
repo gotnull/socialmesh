@@ -1929,7 +1929,8 @@ class _ReportCard extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        if (report.reporterName != null) ...[
+                        if (report.reporterNodeName != null ||
+                            report.reporterNodeId != null) ...[
                           const SizedBox(width: 8),
                           Icon(
                             Icons.arrow_forward,
@@ -1939,7 +1940,9 @@ class _ReportCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              report.reporterName!,
+                              report.reporterNodeName ??
+                                  report.reporterNodeId ??
+                                  '',
                               style: TextStyle(
                                 color: context.textSecondary,
                                 fontSize: 13,

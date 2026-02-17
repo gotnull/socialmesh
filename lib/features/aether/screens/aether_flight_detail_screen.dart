@@ -46,10 +46,23 @@ class _AetherFlightDetailScreenState
       aetherFlightPositionProvider(widget.flight.flightNumber),
     );
 
+    // Watch live flight list so isActive updates in real time.
+    // Fall back to the widget snapshot if the flight is no longer in the list
+    // (12-hour cutoff passed).
+    final liveFlight =
+        ref
+            .watch(aetherFlightsProvider)
+            .asData
+            ?.value
+            .where((f) => f.id == widget.flight.id)
+            .firstOrNull ??
+        widget.flight;
+    final canReport = liveFlight.isActive && !liveFlight.isPast;
+
     return GlassScaffold(
       title: widget.flight.flightNumber,
       actions: [
-        if (widget.flight.isActive)
+        if (canReport)
           IconButton(
             icon: Icon(Icons.refresh, color: context.accentColor),
             onPressed: () => ref.invalidate(
@@ -84,7 +97,7 @@ class _AetherFlightDetailScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Live position card
-              if (widget.flight.isActive)
+              if (canReport)
                 _buildLivePositionCard(context, positionAsync)
               else
                 const SizedBox(height: 16),
@@ -93,7 +106,7 @@ class _AetherFlightDetailScreenState
               _buildDetailsCard(context),
 
               // Report button
-              if (widget.flight.isActive)
+              if (canReport)
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: ElevatedButton.icon(
@@ -583,7 +596,7 @@ class _AetherFlightDetailScreenState
               color: context.accentColor.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.person, color: context.accentColor, size: 20),
+            child: Icon(Icons.sensors, color: context.accentColor, size: 20),
           ),
           SizedBox(width: 12),
           Expanded(
@@ -591,7 +604,9 @@ class _AetherFlightDetailScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  report.reporterName ?? 'Anonymous',
+                  report.reporterNodeName ??
+                      report.reporterNodeId ??
+                      'Unknown node',
                   style: TextStyle(
                     color: context.textPrimary,
                     fontWeight: FontWeight.w500,
@@ -831,6 +846,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
   double? _longitude;
   double? _estimatedDistance;
   String? _reporterNodeId;
+  String? _reporterNodeName;
 
   @override
   void initState() {
@@ -879,6 +895,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
     if (myNode != null) {
       _reporterNodeId = myNode.userId ?? '!${myNode.nodeNum.toRadixString(16)}';
+      _reporterNodeName = myNode.displayName;
       if (myNode.latitude != null && myNode.longitude != null) {
         _latitude = myNode.latitude;
         _longitude = myNode.longitude;
@@ -905,6 +922,23 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
   }
 
   Future<void> _submit() async {
+    // Check if flight is still active (may have ended while sheet was open)
+    final liveFlight =
+        ref
+            .read(aetherFlightsProvider)
+            .asData
+            ?.value
+            .where((f) => f.id == widget.flight.id)
+            .firstOrNull ??
+        widget.flight;
+    if (!liveFlight.isActive || liveFlight.isPast) {
+      if (mounted) {
+        showErrorSnackBar(context, 'This flight has ended');
+        safeNavigatorPop();
+      }
+      return;
+    }
+
     final user = ref.read(currentUserProvider);
     if (user == null) {
       AppLogging.aether('Submit report: user not signed in');
@@ -936,6 +970,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
         reporterId: user.uid,
         reporterName: user.displayName,
         reporterNodeId: _reporterNodeId,
+        reporterNodeName: _reporterNodeName,
         latitude: _latitude,
         longitude: _longitude,
         rssi: _detectedRssi,

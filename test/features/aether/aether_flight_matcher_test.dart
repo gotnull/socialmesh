@@ -23,6 +23,12 @@ class _TestNodesNotifier extends NodesNotifier {
   }
 }
 
+/// Test notifier that returns null for myNodeNum (no connected device).
+class _TestMyNodeNumNotifier extends MyNodeNumNotifier {
+  @override
+  int? build() => null;
+}
+
 /// Fake share service that returns canned active flights without
 /// making HTTP requests.
 class _FakeShareService extends AetherShareService {
@@ -112,6 +118,10 @@ _createContainer({
         AsyncValue.data(firestoreFlights),
       ),
       aetherShareServiceProvider.overrideWithValue(shareService),
+      // Provide a test user ID so the matcher can filter own flights.
+      aetherCurrentUserIdProvider.overrideWithValue('test-user'),
+      // No connected node in tests — avoids self-exclusion side effects.
+      myNodeNumProvider.overrideWith(_TestMyNodeNumNotifier.new),
     ],
   );
 

@@ -56,6 +56,7 @@ AetherFlight _makeFlight({
     overrides: [
       aetherFlightStatusUpdaterProvider.overrideWithValue(tracker.call),
       aetherFlightsProvider.overrideWithValue(AsyncValue.data(flights)),
+      aetherCurrentUserIdProvider.overrideWithValue('user-1'),
     ],
   );
 

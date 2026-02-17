@@ -5,10 +5,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
 
+import '../../../providers/auth_providers.dart';
 import '../models/aether_flight.dart';
 import '../services/aether_service.dart';
 import '../services/aether_share_service.dart';
 import '../services/opensky_service.dart';
+
+/// Current user UID for Aether lifecycle operations.
+///
+/// Derived from [currentUserProvider]. Tests can override this with a
+/// simple string value instead of mocking [FirebaseAuth.User].
+final aetherCurrentUserIdProvider = Provider<String?>((ref) {
+  return ref.watch(currentUserProvider)?.uid;
+});
 
 /// Provider for AetherService
 final aetherServiceProvider = Provider<AetherService>((ref) {

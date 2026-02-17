@@ -159,6 +159,7 @@ class AetherService {
     required String reporterId,
     String? reporterName,
     String? reporterNodeId,
+    String? reporterNodeName,
     double? latitude,
     double? longitude,
     double? altitude,
@@ -175,6 +176,7 @@ class AetherService {
     AppLogging.aether('  reporterId: $reporterId');
     AppLogging.aether('  reporterName: $reporterName');
     AppLogging.aether('  reporterNodeId: $reporterNodeId');
+    AppLogging.aether('  reporterNodeName: $reporterNodeName');
     AppLogging.aether('  lat/lon: $latitude, $longitude');
     AppLogging.aether('  rssi: $rssi, snr: $snr');
     AppLogging.aether('  estimatedDistance: $estimatedDistance km');
@@ -187,6 +189,7 @@ class AetherService {
       'reporterId': reporterId,
       'reporterName': reporterName,
       'reporterNodeId': reporterNodeId,
+      'reporterNodeName': reporterNodeName,
       'latitude': latitude,
       'longitude': longitude,
       'altitude': altitude,

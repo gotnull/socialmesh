@@ -127,13 +127,23 @@ class AetherFlightLifecycleNotifier extends Notifier<FlightLifecycleState> {
   }
 
   /// Core logic: scan flights and toggle isActive as needed.
+  ///
+  /// Only updates flights owned by the current user to avoid
+  /// Firestore PERMISSION_DENIED errors on other users' flights.
   Future<void> _checkFlights() async {
     final flightsAsync = ref.read(aetherFlightsProvider);
     final flights = flightsAsync.value;
     if (flights == null || flights.isEmpty) return;
 
+    final currentUid = ref.read(aetherCurrentUserIdProvider);
+    if (currentUid == null) return;
+
+    final myFlights = flights.where((f) => f.userId == currentUid).toList();
+    if (myFlights.isEmpty) return;
+
     AppLogging.aether(
-      'Lifecycle: _checkFlights() — scanning ${flights.length} flights',
+      'Lifecycle: _checkFlights() — scanning ${myFlights.length} of '
+      '${flights.length} flights (own only)',
     );
 
     final now = DateTime.now();
@@ -142,7 +152,7 @@ class AetherFlightLifecycleNotifier extends Notifier<FlightLifecycleState> {
     var activatedIds = Set<String>.from(state.activatedIds);
     var deactivatedIds = Set<String>.from(state.deactivatedIds);
 
-    for (final flight in flights) {
+    for (final flight in myFlights) {
       final shouldBeActive = _shouldBeActive(flight, now);
 
       if (shouldBeActive && !flight.isActive) {
