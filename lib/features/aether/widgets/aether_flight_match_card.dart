@@ -64,12 +64,15 @@ class AetherFlightMatchCard extends StatelessWidget {
                     // Flight number + "IN FLIGHT" badge
                     Row(
                       children: [
-                        Text(
-                          flight.flightNumber,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: context.textPrimary,
+                        Flexible(
+                          child: Text(
+                            flight.flightNumber,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: context.textPrimary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 8),

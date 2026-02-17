@@ -643,6 +643,31 @@ class _FlightsTabContent extends StatelessWidget {
   }
 
   Widget _buildFlightsList(BuildContext context) {
+    // Show skeleton cards while data is loading for the first time.
+    if (isLoading && !flightsAsync.hasValue) {
+      return SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => Skeletonizer(
+            enabled: true,
+            effect: AppSkeletonConfig.effect(context),
+            child: _AetherFlightCard(
+              flight: AetherFlight(
+                id: 'skeleton_$index',
+                nodeId: '!12345678',
+                flightNumber: 'AA1234',
+                departure: 'LAX',
+                arrival: 'JFK',
+                scheduledDeparture: DateTime.now(),
+                userId: 'skeleton',
+                createdAt: DateTime.now(),
+              ),
+            ),
+          ),
+          childCount: 5,
+        ),
+      );
+    }
+
     final allFlights = flightsAsync.value ?? [];
     List<AetherFlight> filteredFlights;
 
@@ -690,34 +715,6 @@ class _FlightsTabContent extends StatelessWidget {
             (flight.nodeName?.toLowerCase().contains(query) ?? false) ||
             flight.nodeId.toLowerCase().contains(query);
       }).toList();
-    }
-
-    // Only show skeletons if we're loading AND we had data before (not first visit)
-    // This prevents a skeleton flash on first visit when there's no data
-    final hasExistingData =
-        flightsAsync.hasValue && flightsAsync.value!.isNotEmpty;
-    if (isLoading && hasExistingData && filteredFlights.isEmpty) {
-      return SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) => Skeletonizer(
-            enabled: true,
-            effect: AppSkeletonConfig.effect(context),
-            child: _AetherFlightCard(
-              flight: AetherFlight(
-                id: 'skeleton_$index',
-                nodeId: '!12345678',
-                flightNumber: 'AA1234',
-                departure: 'LAX',
-                arrival: 'JFK',
-                scheduledDeparture: DateTime.now(),
-                userId: 'skeleton',
-                createdAt: DateTime.now(),
-              ),
-            ),
-          ),
-          childCount: 5,
-        ),
-      );
     }
 
     if (AppLogging.forceEmptyStates || filteredFlights.isEmpty) {

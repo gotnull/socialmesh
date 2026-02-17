@@ -112,12 +112,15 @@ class _OverlayCard extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            flight.flightNumber,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: context.textPrimary,
+                          Flexible(
+                            child: Text(
+                              flight.flightNumber,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: context.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -145,25 +148,28 @@ class _OverlayCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Row(
                         children: [
-                          Builder(
-                            builder: (context) {
-                              final depCity = lookupAirport(
-                                flight.departure,
-                              )?.city;
-                              final arrCity = lookupAirport(
-                                flight.arrival,
-                              )?.city;
-                              final route = depCity != null && arrCity != null
-                                  ? '${flight.departure} ($depCity) → ${flight.arrival} ($arrCity)'
-                                  : '${flight.departure} → ${flight.arrival}';
-                              return Text(
-                                route,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: context.textSecondary,
-                                ),
-                              );
-                            },
+                          Flexible(
+                            child: Builder(
+                              builder: (context) {
+                                final depCity = lookupAirport(
+                                  flight.departure,
+                                )?.city;
+                                final arrCity = lookupAirport(
+                                  flight.arrival,
+                                )?.city;
+                                final route = depCity != null && arrCity != null
+                                    ? '${flight.departure} ($depCity) → ${flight.arrival} ($arrCity)'
+                                    : '${flight.departure} → ${flight.arrival}';
+                                return Text(
+                                  route,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: context.textSecondary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                );
+                              },
+                            ),
                           ),
                           if (node.rssi != null) ...[
                             const SizedBox(width: 8),

@@ -494,6 +494,55 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       return;
     }
 
+    // --- Time validations ---
+    final now = DateTime.now();
+
+    // Departure must not be in the past (allow 5 min grace for form filling)
+    const departureGrace = Duration(minutes: 5);
+    if (departureDateTime.isBefore(now.subtract(departureGrace))) {
+      showWarningSnackBar(context, 'Departure time is in the past');
+      return;
+    }
+
+    // Departure must not be more than 365 days in the future
+    if (departureDateTime.isAfter(now.add(const Duration(days: 365)))) {
+      showWarningSnackBar(
+        context,
+        'Departure cannot be more than a year from now',
+      );
+      return;
+    }
+
+    final arrivalDateTime = _buildArrivalDateTime();
+
+    if (arrivalDateTime != null) {
+      // Arrival must be after departure
+      if (!arrivalDateTime.isAfter(departureDateTime)) {
+        showWarningSnackBar(context, 'Arrival must be after departure');
+        return;
+      }
+
+      // Flight duration must be reasonable (max 24 hours)
+      final flightDuration = arrivalDateTime.difference(departureDateTime);
+      if (flightDuration > const Duration(hours: 24)) {
+        showWarningSnackBar(
+          context,
+          'Flight duration exceeds 24 hours '
+          '(${flightDuration.inHours}h ${flightDuration.inMinutes % 60}m)',
+        );
+        return;
+      }
+
+      // Flight must be at least 5 minutes
+      if (flightDuration < const Duration(minutes: 5)) {
+        showWarningSnackBar(
+          context,
+          'Flight duration must be at least 5 minutes',
+        );
+        return;
+      }
+    }
+
     final user = ref.read(currentUserProvider);
     if (user == null) {
       showSignInRequiredSnackBar(context, 'Sign in to schedule a flight');
@@ -511,7 +560,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
         departure: _departureController.text.trim().toUpperCase(),
         arrival: _arrivalController.text.trim().toUpperCase(),
         scheduledDeparture: departureDateTime,
-        scheduledArrival: _buildArrivalDateTime(),
+        scheduledArrival: arrivalDateTime,
         userId: user.uid,
         userName: user.displayName,
         notes: _notesController.text.trim().isEmpty
