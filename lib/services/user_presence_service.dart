@@ -48,27 +48,32 @@ class UserPresenceService {
 
   /// Stream of user's online status
   Stream<bool> userOnlineStatus(String userId) {
-    return _firestore.collection('presence').doc(userId).snapshots().map((
-      snapshot,
-    ) {
-      if (!snapshot.exists) return false;
+    return _firestore
+        .collection('presence')
+        .doc(userId)
+        .snapshots()
+        .map((snapshot) {
+          if (!snapshot.exists) return false;
 
-      final data = snapshot.data();
-      if (data == null) return false;
+          final data = snapshot.data();
+          if (data == null) return false;
 
-      final isOnline = data['isOnline'] as bool? ?? false;
-      final lastSeen = data['lastSeen'] as Timestamp?;
+          final isOnline = data['isOnline'] as bool? ?? false;
+          final lastSeen = data['lastSeen'] as Timestamp?;
 
-      // Consider online if marked online AND last seen within 5 minutes
-      if (!isOnline) return false;
-      if (lastSeen == null) return false;
+          // Consider online if marked online AND last seen within 5 minutes
+          if (!isOnline) return false;
+          if (lastSeen == null) return false;
 
-      final lastSeenDate = lastSeen.toDate();
-      final now = DateTime.now();
-      final difference = now.difference(lastSeenDate);
+          final lastSeenDate = lastSeen.toDate();
+          final now = DateTime.now();
+          final difference = now.difference(lastSeenDate);
 
-      return difference.inMinutes < 5;
-    });
+          return difference.inMinutes < 5;
+        })
+        .handleError((Object e) {
+          AppLogging.auth('User presence stream error: $e');
+        });
   }
 }
 

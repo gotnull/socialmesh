@@ -31,7 +31,10 @@ class AetherService {
           (snapshot) => snapshot.docs
               .map((doc) => AetherFlight.fromJson(doc.data(), doc.id))
               .toList(),
-        );
+        )
+        .handleError((Object e) {
+          AppLogging.aether('Flights stream error: $e');
+        });
   }
 
   /// Get active flights (in progress)
@@ -45,7 +48,10 @@ class AetherService {
           (snapshot) => snapshot.docs
               .map((doc) => AetherFlight.fromJson(doc.data(), doc.id))
               .toList(),
-        );
+        )
+        .handleError((Object e) {
+          AppLogging.aether('Active flights stream error: $e');
+        });
   }
 
   /// Create a new flight schedule
@@ -118,7 +124,10 @@ class AetherService {
           (snapshot) => snapshot.docs
               .map((doc) => ReceptionReport.fromJson(doc.data(), doc.id))
               .toList(),
-        );
+        )
+        .handleError((Object e) {
+          AppLogging.aether('Reports stream error: $e');
+        });
   }
 
   /// Get global leaderboard — all-time top distances
@@ -137,7 +146,10 @@ class AetherService {
           (snapshot) => snapshot.docs
               .map((doc) => ReceptionReport.fromJson(doc.data(), doc.id))
               .toList(),
-        );
+        )
+        .handleError((Object e) {
+          AppLogging.aether('Leaderboard stream error: $e');
+        });
   }
 
   /// Create a reception report

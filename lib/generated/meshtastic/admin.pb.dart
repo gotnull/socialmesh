@@ -262,6 +262,7 @@ enum AdminMessage_PayloadVariant {
   factoryResetConfig,
   nodedbReset,
   otaRequest,
+  sensorConfig,
   notSet
 }
 
@@ -328,6 +329,7 @@ class AdminMessage extends $pb.GeneratedMessage {
     $core.bool? nodedbReset,
     $core.List<$core.int>? sessionPasskey,
     AdminMessage_OTAEvent? otaRequest,
+    SensorConfig? sensorConfig,
   }) {
     final result = create();
     if (getChannelRequest != null) result.getChannelRequest = getChannelRequest;
@@ -418,6 +420,7 @@ class AdminMessage extends $pb.GeneratedMessage {
     if (nodedbReset != null) result.nodedbReset = nodedbReset;
     if (sessionPasskey != null) result.sessionPasskey = sessionPasskey;
     if (otaRequest != null) result.otaRequest = otaRequest;
+    if (sensorConfig != null) result.sensorConfig = sensorConfig;
     return result;
   }
 
@@ -488,6 +491,7 @@ class AdminMessage extends $pb.GeneratedMessage {
     99: AdminMessage_PayloadVariant.factoryResetConfig,
     100: AdminMessage_PayloadVariant.nodedbReset,
     102: AdminMessage_PayloadVariant.otaRequest,
+    103: AdminMessage_PayloadVariant.sensorConfig,
     0: AdminMessage_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -550,7 +554,8 @@ class AdminMessage extends $pb.GeneratedMessage {
       98,
       99,
       100,
-      102
+      102,
+      103
     ])
     ..aI(1, _omitFieldNames ? '' : 'getChannelRequest',
         fieldType: $pb.PbFieldType.OU3)
@@ -649,6 +654,8 @@ class AdminMessage extends $pb.GeneratedMessage {
         101, _omitFieldNames ? '' : 'sessionPasskey', $pb.PbFieldType.OY)
     ..aOM<AdminMessage_OTAEvent>(102, _omitFieldNames ? '' : 'otaRequest',
         subBuilder: AdminMessage_OTAEvent.create)
+    ..aOM<SensorConfig>(103, _omitFieldNames ? '' : 'sensorConfig',
+        subBuilder: SensorConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -726,6 +733,7 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(99)
   @$pb.TagNumber(100)
   @$pb.TagNumber(102)
+  @$pb.TagNumber(103)
   AdminMessage_PayloadVariant whichPayloadVariant() =>
       _AdminMessage_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -784,6 +792,7 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(99)
   @$pb.TagNumber(100)
   @$pb.TagNumber(102)
+  @$pb.TagNumber(103)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -1484,6 +1493,19 @@ class AdminMessage extends $pb.GeneratedMessage {
   void clearOtaRequest() => $_clearField(102);
   @$pb.TagNumber(102)
   AdminMessage_OTAEvent ensureOtaRequest() => $_ensure(56);
+
+  ///
+  ///  Parameters and sensor configuration
+  @$pb.TagNumber(103)
+  SensorConfig get sensorConfig => $_getN(57);
+  @$pb.TagNumber(103)
+  set sensorConfig(SensorConfig value) => $_setField(103, value);
+  @$pb.TagNumber(103)
+  $core.bool hasSensorConfig() => $_has(57);
+  @$pb.TagNumber(103)
+  void clearSensorConfig() => $_clearField(103);
+  @$pb.TagNumber(103)
+  SensorConfig ensureSensorConfig() => $_ensure(57);
 }
 
 ///
@@ -1849,6 +1871,298 @@ class KeyVerificationAdmin extends $pb.GeneratedMessage {
   $core.bool hasSecurityNumber() => $_has(3);
   @$pb.TagNumber(4)
   void clearSecurityNumber() => $_clearField(4);
+}
+
+class SensorConfig extends $pb.GeneratedMessage {
+  factory SensorConfig({
+    SCD4X_config? scd4xConfig,
+    SEN5X_config? sen5xConfig,
+  }) {
+    final result = create();
+    if (scd4xConfig != null) result.scd4xConfig = scd4xConfig;
+    if (sen5xConfig != null) result.sen5xConfig = sen5xConfig;
+    return result;
+  }
+
+  SensorConfig._();
+
+  factory SensorConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SensorConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SensorConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOM<SCD4X_config>(1, _omitFieldNames ? '' : 'scd4xConfig',
+        subBuilder: SCD4X_config.create)
+    ..aOM<SEN5X_config>(2, _omitFieldNames ? '' : 'sen5xConfig',
+        subBuilder: SEN5X_config.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SensorConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SensorConfig copyWith(void Function(SensorConfig) updates) =>
+      super.copyWith((message) => updates(message as SensorConfig))
+          as SensorConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SensorConfig create() => SensorConfig._();
+  @$core.override
+  SensorConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SensorConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SensorConfig>(create);
+  static SensorConfig? _defaultInstance;
+
+  ///
+  ///  SCD4X CO2 Sensor configuration
+  @$pb.TagNumber(1)
+  SCD4X_config get scd4xConfig => $_getN(0);
+  @$pb.TagNumber(1)
+  set scd4xConfig(SCD4X_config value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasScd4xConfig() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearScd4xConfig() => $_clearField(1);
+  @$pb.TagNumber(1)
+  SCD4X_config ensureScd4xConfig() => $_ensure(0);
+
+  ///
+  ///  SEN5X PM Sensor configuration
+  @$pb.TagNumber(2)
+  SEN5X_config get sen5xConfig => $_getN(1);
+  @$pb.TagNumber(2)
+  set sen5xConfig(SEN5X_config value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSen5xConfig() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSen5xConfig() => $_clearField(2);
+  @$pb.TagNumber(2)
+  SEN5X_config ensureSen5xConfig() => $_ensure(1);
+}
+
+class SCD4X_config extends $pb.GeneratedMessage {
+  factory SCD4X_config({
+    $core.bool? setAsc,
+    $core.int? setTargetCo2Conc,
+    $core.double? setTemperature,
+    $core.int? setAltitude,
+    $core.int? setAmbientPressure,
+    $core.bool? factoryReset,
+    $core.bool? setPowerMode,
+  }) {
+    final result = create();
+    if (setAsc != null) result.setAsc = setAsc;
+    if (setTargetCo2Conc != null) result.setTargetCo2Conc = setTargetCo2Conc;
+    if (setTemperature != null) result.setTemperature = setTemperature;
+    if (setAltitude != null) result.setAltitude = setAltitude;
+    if (setAmbientPressure != null)
+      result.setAmbientPressure = setAmbientPressure;
+    if (factoryReset != null) result.factoryReset = factoryReset;
+    if (setPowerMode != null) result.setPowerMode = setPowerMode;
+    return result;
+  }
+
+  SCD4X_config._();
+
+  factory SCD4X_config.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SCD4X_config.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SCD4X_config',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'setAsc')
+    ..aI(2, _omitFieldNames ? '' : 'setTargetCo2Conc',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aD(3, _omitFieldNames ? '' : 'setTemperature',
+        fieldType: $pb.PbFieldType.OF)
+    ..aI(4, _omitFieldNames ? '' : 'setAltitude',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'setAmbientPressure',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOB(6, _omitFieldNames ? '' : 'factoryReset')
+    ..aOB(7, _omitFieldNames ? '' : 'setPowerMode')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SCD4X_config clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SCD4X_config copyWith(void Function(SCD4X_config) updates) =>
+      super.copyWith((message) => updates(message as SCD4X_config))
+          as SCD4X_config;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SCD4X_config create() => SCD4X_config._();
+  @$core.override
+  SCD4X_config createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SCD4X_config getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SCD4X_config>(create);
+  static SCD4X_config? _defaultInstance;
+
+  ///
+  ///  Set Automatic self-calibration enabled
+  @$pb.TagNumber(1)
+  $core.bool get setAsc => $_getBF(0);
+  @$pb.TagNumber(1)
+  set setAsc($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSetAsc() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSetAsc() => $_clearField(1);
+
+  ///
+  ///  Recalibration target CO2 concentration in ppm (FRC or ASC)
+  @$pb.TagNumber(2)
+  $core.int get setTargetCo2Conc => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set setTargetCo2Conc($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSetTargetCo2Conc() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSetTargetCo2Conc() => $_clearField(2);
+
+  ///
+  ///  Reference temperature in degC
+  @$pb.TagNumber(3)
+  $core.double get setTemperature => $_getN(2);
+  @$pb.TagNumber(3)
+  set setTemperature($core.double value) => $_setFloat(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSetTemperature() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSetTemperature() => $_clearField(3);
+
+  ///
+  ///  Altitude of sensor in meters above sea level. 0 - 3000m (overrides ambient pressure)
+  @$pb.TagNumber(4)
+  $core.int get setAltitude => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set setAltitude($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSetAltitude() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSetAltitude() => $_clearField(4);
+
+  ///
+  ///  Sensor ambient pressure in Pa. 70000 - 120000 Pa (overrides altitude)
+  @$pb.TagNumber(5)
+  $core.int get setAmbientPressure => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set setAmbientPressure($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSetAmbientPressure() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSetAmbientPressure() => $_clearField(5);
+
+  ///
+  ///  Perform a factory reset of the sensor
+  @$pb.TagNumber(6)
+  $core.bool get factoryReset => $_getBF(5);
+  @$pb.TagNumber(6)
+  set factoryReset($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasFactoryReset() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearFactoryReset() => $_clearField(6);
+
+  ///
+  ///  Power mode for sensor (true for low power, false for normal)
+  @$pb.TagNumber(7)
+  $core.bool get setPowerMode => $_getBF(6);
+  @$pb.TagNumber(7)
+  set setPowerMode($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasSetPowerMode() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearSetPowerMode() => $_clearField(7);
+}
+
+class SEN5X_config extends $pb.GeneratedMessage {
+  factory SEN5X_config({
+    $core.double? setTemperature,
+    $core.bool? setOneShotMode,
+  }) {
+    final result = create();
+    if (setTemperature != null) result.setTemperature = setTemperature;
+    if (setOneShotMode != null) result.setOneShotMode = setOneShotMode;
+    return result;
+  }
+
+  SEN5X_config._();
+
+  factory SEN5X_config.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SEN5X_config.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SEN5X_config',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aD(1, _omitFieldNames ? '' : 'setTemperature',
+        fieldType: $pb.PbFieldType.OF)
+    ..aOB(2, _omitFieldNames ? '' : 'setOneShotMode')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SEN5X_config clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SEN5X_config copyWith(void Function(SEN5X_config) updates) =>
+      super.copyWith((message) => updates(message as SEN5X_config))
+          as SEN5X_config;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SEN5X_config create() => SEN5X_config._();
+  @$core.override
+  SEN5X_config createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SEN5X_config getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SEN5X_config>(create);
+  static SEN5X_config? _defaultInstance;
+
+  ///
+  ///  Reference temperature in degC
+  @$pb.TagNumber(1)
+  $core.double get setTemperature => $_getN(0);
+  @$pb.TagNumber(1)
+  set setTemperature($core.double value) => $_setFloat(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSetTemperature() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSetTemperature() => $_clearField(1);
+
+  ///
+  ///  One-shot mode (true for low power - one-shot mode, false for normal - continuous mode)
+  @$pb.TagNumber(2)
+  $core.bool get setOneShotMode => $_getBF(1);
+  @$pb.TagNumber(2)
+  set setOneShotMode($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSetOneShotMode() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSetOneShotMode() => $_clearField(2);
 }
 
 const $core.bool _omitFieldNames =

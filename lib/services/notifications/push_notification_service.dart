@@ -12,7 +12,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../core/logging.dart';
 
-import '../storage/storage_service.dart';
+import '../storage/message_database.dart';
 import '../messaging/message_utils.dart';
 
 /// Background message handler - must be a top-level function
@@ -27,7 +27,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       (data['type'] == 'direct_message' || data['type'] == 'channel_message')) {
     try {
       // Initialize storage service and save the message
-      final storage = MessageStorageService();
+      final storage = MessageDatabase();
       await storage.init();
 
       final parsed = parsePushMessagePayload(data.cast<String, dynamic>());
@@ -413,7 +413,7 @@ class PushNotificationService {
           final payload = message.data.cast<String, dynamic>();
           final parsed = parsePushMessagePayload(payload);
           if (parsed != null) {
-            final storage = MessageStorageService();
+            final storage = MessageDatabase();
             await storage.init();
             await storage.saveMessage(parsed);
             AppLogging.notifications(

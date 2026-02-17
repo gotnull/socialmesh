@@ -39,6 +39,8 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
   bool _compassNorthTop = false;
   config_pbenum.Config_DisplayConfig_OledType? _oledType;
   config_pbenum.Config_DisplayConfig_CompassOrientation? _compassOrientation;
+  bool _useLongNodeName = false;
+  bool _enableMessageBubbles = false;
   StreamSubscription<config_pb.Config_DisplayConfig>? _configSubscription;
 
   @override
@@ -67,6 +69,8 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
       _compassNorthTop = config.compassNorthTop;
       _oledType = config.oled;
       _compassOrientation = config.compassOrientation;
+      _useLongNodeName = config.useLongNodeName;
+      _enableMessageBubbles = config.enableMessageBubbles;
     });
   }
 
@@ -124,6 +128,8 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
             _compassOrientation ??
             config_pbenum.Config_DisplayConfig_CompassOrientation.DEGREES_0,
         compassNorthTop: _compassNorthTop,
+        useLongNodeName: _useLongNodeName,
+        enableMessageBubbles: _enableMessageBubbles,
       );
 
       if (mounted) {
@@ -286,6 +292,32 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
               onChanged: (value) {
                 HapticFeedback.selectionClick();
                 setState(() => _wakeOnTapOrMotion = value);
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          _SettingsTile(
+            icon: Icons.badge,
+            title: 'Long Node Names',
+            subtitle: 'Show full node names on device screen',
+            trailing: ThemedSwitch(
+              value: _useLongNodeName,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                setState(() => _useLongNodeName = value);
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          _SettingsTile(
+            icon: Icons.chat_bubble_outline,
+            title: 'Message Bubbles',
+            subtitle: 'Display messages in bubble format on screen',
+            trailing: ThemedSwitch(
+              value: _enableMessageBubbles,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                setState(() => _enableMessageBubbles = value);
               },
             ),
           ),

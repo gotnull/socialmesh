@@ -93,6 +93,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
       topicId: 'device_shop_overview',
       stepKeys: const {},
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: context.background,
         body: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),

@@ -938,6 +938,271 @@ class ModuleConfig_PaxcounterConfig extends $pb.GeneratedMessage {
 }
 
 ///
+///  Config for the Traffic Management module.
+///  Provides packet inspection and traffic shaping to help reduce channel utilization
+class ModuleConfig_TrafficManagementConfig extends $pb.GeneratedMessage {
+  factory ModuleConfig_TrafficManagementConfig({
+    $core.bool? enabled,
+    $core.bool? positionDedupEnabled,
+    $core.int? positionPrecisionBits,
+    $core.int? positionMinIntervalSecs,
+    $core.bool? nodeinfoDirectResponse,
+    $core.int? nodeinfoDirectResponseMaxHops,
+    $core.bool? rateLimitEnabled,
+    $core.int? rateLimitWindowSecs,
+    $core.int? rateLimitMaxPackets,
+    $core.bool? dropUnknownEnabled,
+    $core.int? unknownPacketThreshold,
+    $core.bool? exhaustHopTelemetry,
+    $core.bool? exhaustHopPosition,
+    $core.bool? routerPreserveHops,
+  }) {
+    final result = create();
+    if (enabled != null) result.enabled = enabled;
+    if (positionDedupEnabled != null)
+      result.positionDedupEnabled = positionDedupEnabled;
+    if (positionPrecisionBits != null)
+      result.positionPrecisionBits = positionPrecisionBits;
+    if (positionMinIntervalSecs != null)
+      result.positionMinIntervalSecs = positionMinIntervalSecs;
+    if (nodeinfoDirectResponse != null)
+      result.nodeinfoDirectResponse = nodeinfoDirectResponse;
+    if (nodeinfoDirectResponseMaxHops != null)
+      result.nodeinfoDirectResponseMaxHops = nodeinfoDirectResponseMaxHops;
+    if (rateLimitEnabled != null) result.rateLimitEnabled = rateLimitEnabled;
+    if (rateLimitWindowSecs != null)
+      result.rateLimitWindowSecs = rateLimitWindowSecs;
+    if (rateLimitMaxPackets != null)
+      result.rateLimitMaxPackets = rateLimitMaxPackets;
+    if (dropUnknownEnabled != null)
+      result.dropUnknownEnabled = dropUnknownEnabled;
+    if (unknownPacketThreshold != null)
+      result.unknownPacketThreshold = unknownPacketThreshold;
+    if (exhaustHopTelemetry != null)
+      result.exhaustHopTelemetry = exhaustHopTelemetry;
+    if (exhaustHopPosition != null)
+      result.exhaustHopPosition = exhaustHopPosition;
+    if (routerPreserveHops != null)
+      result.routerPreserveHops = routerPreserveHops;
+    return result;
+  }
+
+  ModuleConfig_TrafficManagementConfig._();
+
+  factory ModuleConfig_TrafficManagementConfig.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleConfig_TrafficManagementConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleConfig.TrafficManagementConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'enabled')
+    ..aOB(2, _omitFieldNames ? '' : 'positionDedupEnabled')
+    ..aI(3, _omitFieldNames ? '' : 'positionPrecisionBits',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(4, _omitFieldNames ? '' : 'positionMinIntervalSecs',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOB(5, _omitFieldNames ? '' : 'nodeinfoDirectResponse')
+    ..aI(6, _omitFieldNames ? '' : 'nodeinfoDirectResponseMaxHops',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOB(7, _omitFieldNames ? '' : 'rateLimitEnabled')
+    ..aI(8, _omitFieldNames ? '' : 'rateLimitWindowSecs',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(9, _omitFieldNames ? '' : 'rateLimitMaxPackets',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOB(10, _omitFieldNames ? '' : 'dropUnknownEnabled')
+    ..aI(11, _omitFieldNames ? '' : 'unknownPacketThreshold',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOB(12, _omitFieldNames ? '' : 'exhaustHopTelemetry')
+    ..aOB(13, _omitFieldNames ? '' : 'exhaustHopPosition')
+    ..aOB(14, _omitFieldNames ? '' : 'routerPreserveHops')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_TrafficManagementConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_TrafficManagementConfig copyWith(
+          void Function(ModuleConfig_TrafficManagementConfig) updates) =>
+      super.copyWith((message) =>
+              updates(message as ModuleConfig_TrafficManagementConfig))
+          as ModuleConfig_TrafficManagementConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_TrafficManagementConfig create() =>
+      ModuleConfig_TrafficManagementConfig._();
+  @$core.override
+  ModuleConfig_TrafficManagementConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_TrafficManagementConfig getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          ModuleConfig_TrafficManagementConfig>(create);
+  static ModuleConfig_TrafficManagementConfig? _defaultInstance;
+
+  ///
+  ///  Master enable for traffic management module
+  @$pb.TagNumber(1)
+  $core.bool get enabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set enabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEnabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEnabled() => $_clearField(1);
+
+  ///
+  ///  Enable position deduplication to drop redundant position broadcasts
+  @$pb.TagNumber(2)
+  $core.bool get positionDedupEnabled => $_getBF(1);
+  @$pb.TagNumber(2)
+  set positionDedupEnabled($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPositionDedupEnabled() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPositionDedupEnabled() => $_clearField(2);
+
+  ///
+  ///  Number of bits of precision for position deduplication (0-32)
+  @$pb.TagNumber(3)
+  $core.int get positionPrecisionBits => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set positionPrecisionBits($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPositionPrecisionBits() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPositionPrecisionBits() => $_clearField(3);
+
+  ///
+  ///  Minimum interval in seconds between position updates from the same node
+  @$pb.TagNumber(4)
+  $core.int get positionMinIntervalSecs => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set positionMinIntervalSecs($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasPositionMinIntervalSecs() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearPositionMinIntervalSecs() => $_clearField(4);
+
+  ///
+  ///  Enable direct response to NodeInfo requests from local cache
+  @$pb.TagNumber(5)
+  $core.bool get nodeinfoDirectResponse => $_getBF(4);
+  @$pb.TagNumber(5)
+  set nodeinfoDirectResponse($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasNodeinfoDirectResponse() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearNodeinfoDirectResponse() => $_clearField(5);
+
+  ///
+  ///  Minimum hop distance from requestor before responding to NodeInfo requests
+  @$pb.TagNumber(6)
+  $core.int get nodeinfoDirectResponseMaxHops => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set nodeinfoDirectResponseMaxHops($core.int value) =>
+      $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasNodeinfoDirectResponseMaxHops() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearNodeinfoDirectResponseMaxHops() => $_clearField(6);
+
+  ///
+  ///  Enable per-node rate limiting to throttle chatty nodes
+  @$pb.TagNumber(7)
+  $core.bool get rateLimitEnabled => $_getBF(6);
+  @$pb.TagNumber(7)
+  set rateLimitEnabled($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasRateLimitEnabled() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearRateLimitEnabled() => $_clearField(7);
+
+  ///
+  ///  Time window in seconds for rate limiting calculations
+  @$pb.TagNumber(8)
+  $core.int get rateLimitWindowSecs => $_getIZ(7);
+  @$pb.TagNumber(8)
+  set rateLimitWindowSecs($core.int value) => $_setUnsignedInt32(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasRateLimitWindowSecs() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearRateLimitWindowSecs() => $_clearField(8);
+
+  ///
+  ///  Maximum packets allowed per node within the rate limit window
+  @$pb.TagNumber(9)
+  $core.int get rateLimitMaxPackets => $_getIZ(8);
+  @$pb.TagNumber(9)
+  set rateLimitMaxPackets($core.int value) => $_setUnsignedInt32(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasRateLimitMaxPackets() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearRateLimitMaxPackets() => $_clearField(9);
+
+  ///
+  ///  Enable dropping of unknown/undecryptable packets per rate_limit_window_secs
+  @$pb.TagNumber(10)
+  $core.bool get dropUnknownEnabled => $_getBF(9);
+  @$pb.TagNumber(10)
+  set dropUnknownEnabled($core.bool value) => $_setBool(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasDropUnknownEnabled() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearDropUnknownEnabled() => $_clearField(10);
+
+  ///
+  ///  Number of unknown packets before dropping from a node
+  @$pb.TagNumber(11)
+  $core.int get unknownPacketThreshold => $_getIZ(10);
+  @$pb.TagNumber(11)
+  set unknownPacketThreshold($core.int value) => $_setUnsignedInt32(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasUnknownPacketThreshold() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearUnknownPacketThreshold() => $_clearField(11);
+
+  ///
+  ///  Set hop_limit to 0 for relayed telemetry broadcasts (own packets unaffected)
+  @$pb.TagNumber(12)
+  $core.bool get exhaustHopTelemetry => $_getBF(11);
+  @$pb.TagNumber(12)
+  set exhaustHopTelemetry($core.bool value) => $_setBool(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasExhaustHopTelemetry() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearExhaustHopTelemetry() => $_clearField(12);
+
+  ///
+  ///  Set hop_limit to 0 for relayed position broadcasts (own packets unaffected)
+  @$pb.TagNumber(13)
+  $core.bool get exhaustHopPosition => $_getBF(12);
+  @$pb.TagNumber(13)
+  set exhaustHopPosition($core.bool value) => $_setBool(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasExhaustHopPosition() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearExhaustHopPosition() => $_clearField(13);
+
+  ///
+  ///  Preserve hop_limit for router-to-router traffic
+  @$pb.TagNumber(14)
+  $core.bool get routerPreserveHops => $_getBF(13);
+  @$pb.TagNumber(14)
+  set routerPreserveHops($core.bool value) => $_setBool(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasRouterPreserveHops() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearRouterPreserveHops() => $_clearField(14);
+}
+
+///
 ///  Serial Config
 class ModuleConfig_SerialConfig extends $pb.GeneratedMessage {
   factory ModuleConfig_SerialConfig({
@@ -2332,6 +2597,7 @@ enum ModuleConfig_PayloadVariant {
   detectionSensor,
   paxcounter,
   statusmessage,
+  trafficManagement,
   notSet
 }
 
@@ -2353,6 +2619,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
     ModuleConfig_DetectionSensorConfig? detectionSensor,
     ModuleConfig_PaxcounterConfig? paxcounter,
     ModuleConfig_StatusMessageConfig? statusmessage,
+    ModuleConfig_TrafficManagementConfig? trafficManagement,
   }) {
     final result = create();
     if (mqtt != null) result.mqtt = mqtt;
@@ -2370,6 +2637,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
     if (detectionSensor != null) result.detectionSensor = detectionSensor;
     if (paxcounter != null) result.paxcounter = paxcounter;
     if (statusmessage != null) result.statusmessage = statusmessage;
+    if (trafficManagement != null) result.trafficManagement = trafficManagement;
     return result;
   }
 
@@ -2398,13 +2666,14 @@ class ModuleConfig extends $pb.GeneratedMessage {
     12: ModuleConfig_PayloadVariant.detectionSensor,
     13: ModuleConfig_PayloadVariant.paxcounter,
     14: ModuleConfig_PayloadVariant.statusmessage,
+    15: ModuleConfig_PayloadVariant.trafficManagement,
     0: ModuleConfig_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ModuleConfig',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
     ..aOM<ModuleConfig_MQTTConfig>(1, _omitFieldNames ? '' : 'mqtt',
         subBuilder: ModuleConfig_MQTTConfig.create)
     ..aOM<ModuleConfig_SerialConfig>(2, _omitFieldNames ? '' : 'serial',
@@ -2442,6 +2711,9 @@ class ModuleConfig extends $pb.GeneratedMessage {
     ..aOM<ModuleConfig_StatusMessageConfig>(
         14, _omitFieldNames ? '' : 'statusmessage',
         subBuilder: ModuleConfig_StatusMessageConfig.create)
+    ..aOM<ModuleConfig_TrafficManagementConfig>(
+        15, _omitFieldNames ? '' : 'trafficManagement',
+        subBuilder: ModuleConfig_TrafficManagementConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2477,6 +2749,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(12)
   @$pb.TagNumber(13)
   @$pb.TagNumber(14)
+  @$pb.TagNumber(15)
   ModuleConfig_PayloadVariant whichPayloadVariant() =>
       _ModuleConfig_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -2493,6 +2766,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(12)
   @$pb.TagNumber(13)
   @$pb.TagNumber(14)
+  @$pb.TagNumber(15)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -2685,6 +2959,21 @@ class ModuleConfig extends $pb.GeneratedMessage {
   void clearStatusmessage() => $_clearField(14);
   @$pb.TagNumber(14)
   ModuleConfig_StatusMessageConfig ensureStatusmessage() => $_ensure(13);
+
+  ///
+  ///  Traffic management module config for mesh network optimization
+  @$pb.TagNumber(15)
+  ModuleConfig_TrafficManagementConfig get trafficManagement => $_getN(14);
+  @$pb.TagNumber(15)
+  set trafficManagement(ModuleConfig_TrafficManagementConfig value) =>
+      $_setField(15, value);
+  @$pb.TagNumber(15)
+  $core.bool hasTrafficManagement() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearTrafficManagement() => $_clearField(15);
+  @$pb.TagNumber(15)
+  ModuleConfig_TrafficManagementConfig ensureTrafficManagement() =>
+      $_ensure(14);
 }
 
 ///

@@ -1454,6 +1454,160 @@ class LocalStats extends $pb.GeneratedMessage {
 }
 
 ///
+///  Traffic management statistics for mesh network optimization
+class TrafficManagementStats extends $pb.GeneratedMessage {
+  factory TrafficManagementStats({
+    $core.int? packetsInspected,
+    $core.int? positionDedupDrops,
+    $core.int? nodeinfoCacheHits,
+    $core.int? rateLimitDrops,
+    $core.int? unknownPacketDrops,
+    $core.int? hopExhaustedPackets,
+    $core.int? routerHopsPreserved,
+  }) {
+    final result = create();
+    if (packetsInspected != null) result.packetsInspected = packetsInspected;
+    if (positionDedupDrops != null)
+      result.positionDedupDrops = positionDedupDrops;
+    if (nodeinfoCacheHits != null) result.nodeinfoCacheHits = nodeinfoCacheHits;
+    if (rateLimitDrops != null) result.rateLimitDrops = rateLimitDrops;
+    if (unknownPacketDrops != null)
+      result.unknownPacketDrops = unknownPacketDrops;
+    if (hopExhaustedPackets != null)
+      result.hopExhaustedPackets = hopExhaustedPackets;
+    if (routerHopsPreserved != null)
+      result.routerHopsPreserved = routerHopsPreserved;
+    return result;
+  }
+
+  TrafficManagementStats._();
+
+  factory TrafficManagementStats.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TrafficManagementStats.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TrafficManagementStats',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'packetsInspected',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(2, _omitFieldNames ? '' : 'positionDedupDrops',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(3, _omitFieldNames ? '' : 'nodeinfoCacheHits',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(4, _omitFieldNames ? '' : 'rateLimitDrops',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'unknownPacketDrops',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(6, _omitFieldNames ? '' : 'hopExhaustedPackets',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(7, _omitFieldNames ? '' : 'routerHopsPreserved',
+        fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TrafficManagementStats clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TrafficManagementStats copyWith(
+          void Function(TrafficManagementStats) updates) =>
+      super.copyWith((message) => updates(message as TrafficManagementStats))
+          as TrafficManagementStats;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TrafficManagementStats create() => TrafficManagementStats._();
+  @$core.override
+  TrafficManagementStats createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TrafficManagementStats getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TrafficManagementStats>(create);
+  static TrafficManagementStats? _defaultInstance;
+
+  ///
+  ///  Total number of packets inspected by traffic management
+  @$pb.TagNumber(1)
+  $core.int get packetsInspected => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set packetsInspected($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPacketsInspected() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPacketsInspected() => $_clearField(1);
+
+  ///
+  ///  Number of position packets dropped due to deduplication
+  @$pb.TagNumber(2)
+  $core.int get positionDedupDrops => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set positionDedupDrops($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPositionDedupDrops() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPositionDedupDrops() => $_clearField(2);
+
+  ///
+  ///  Number of NodeInfo requests answered from cache
+  @$pb.TagNumber(3)
+  $core.int get nodeinfoCacheHits => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set nodeinfoCacheHits($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasNodeinfoCacheHits() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearNodeinfoCacheHits() => $_clearField(3);
+
+  ///
+  ///  Number of packets dropped due to rate limiting
+  @$pb.TagNumber(4)
+  $core.int get rateLimitDrops => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set rateLimitDrops($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasRateLimitDrops() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearRateLimitDrops() => $_clearField(4);
+
+  ///
+  ///  Number of unknown/undecryptable packets dropped
+  @$pb.TagNumber(5)
+  $core.int get unknownPacketDrops => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set unknownPacketDrops($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasUnknownPacketDrops() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearUnknownPacketDrops() => $_clearField(5);
+
+  ///
+  ///  Number of packets with hop_limit exhausted for local-only broadcast
+  @$pb.TagNumber(6)
+  $core.int get hopExhaustedPackets => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set hopExhaustedPackets($core.int value) => $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasHopExhaustedPackets() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearHopExhaustedPackets() => $_clearField(6);
+
+  ///
+  ///  Number of times router hop preservation was applied
+  @$pb.TagNumber(7)
+  $core.int get routerHopsPreserved => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set routerHopsPreserved($core.int value) => $_setUnsignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasRouterHopsPreserved() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearRouterHopsPreserved() => $_clearField(7);
+}
+
+///
 ///  Health telemetry metrics
 class HealthMetrics extends $pb.GeneratedMessage {
   factory HealthMetrics({
@@ -1728,6 +1882,7 @@ enum Telemetry_Variant {
   localStats,
   healthMetrics,
   hostMetrics,
+  trafficManagementStats,
   notSet
 }
 
@@ -1743,6 +1898,7 @@ class Telemetry extends $pb.GeneratedMessage {
     LocalStats? localStats,
     HealthMetrics? healthMetrics,
     HostMetrics? hostMetrics,
+    TrafficManagementStats? trafficManagementStats,
   }) {
     final result = create();
     if (time != null) result.time = time;
@@ -1754,6 +1910,8 @@ class Telemetry extends $pb.GeneratedMessage {
     if (localStats != null) result.localStats = localStats;
     if (healthMetrics != null) result.healthMetrics = healthMetrics;
     if (hostMetrics != null) result.hostMetrics = hostMetrics;
+    if (trafficManagementStats != null)
+      result.trafficManagementStats = trafficManagementStats;
     return result;
   }
 
@@ -1775,13 +1933,14 @@ class Telemetry extends $pb.GeneratedMessage {
     6: Telemetry_Variant.localStats,
     7: Telemetry_Variant.healthMetrics,
     8: Telemetry_Variant.hostMetrics,
+    9: Telemetry_Variant.trafficManagementStats,
     0: Telemetry_Variant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'Telemetry',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 5, 6, 7, 8])
+    ..oo(0, [2, 3, 4, 5, 6, 7, 8, 9])
     ..aI(1, _omitFieldNames ? '' : 'time', fieldType: $pb.PbFieldType.OF3)
     ..aOM<DeviceMetrics>(2, _omitFieldNames ? '' : 'deviceMetrics',
         subBuilder: DeviceMetrics.create)
@@ -1797,6 +1956,9 @@ class Telemetry extends $pb.GeneratedMessage {
         subBuilder: HealthMetrics.create)
     ..aOM<HostMetrics>(8, _omitFieldNames ? '' : 'hostMetrics',
         subBuilder: HostMetrics.create)
+    ..aOM<TrafficManagementStats>(
+        9, _omitFieldNames ? '' : 'trafficManagementStats',
+        subBuilder: TrafficManagementStats.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1824,6 +1986,7 @@ class Telemetry extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
   Telemetry_Variant whichVariant() => _Telemetry_VariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
@@ -1832,6 +1995,7 @@ class Telemetry extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
   void clearVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -1935,6 +2099,20 @@ class Telemetry extends $pb.GeneratedMessage {
   void clearHostMetrics() => $_clearField(8);
   @$pb.TagNumber(8)
   HostMetrics ensureHostMetrics() => $_ensure(7);
+
+  ///
+  ///  Traffic management statistics
+  @$pb.TagNumber(9)
+  TrafficManagementStats get trafficManagementStats => $_getN(8);
+  @$pb.TagNumber(9)
+  set trafficManagementStats(TrafficManagementStats value) =>
+      $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasTrafficManagementStats() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearTrafficManagementStats() => $_clearField(9);
+  @$pb.TagNumber(9)
+  TrafficManagementStats ensureTrafficManagementStats() => $_ensure(8);
 }
 
 ///
@@ -2008,6 +2186,137 @@ class Nau7802Config extends $pb.GeneratedMessage {
   $core.bool hasCalibrationFactor() => $_has(1);
   @$pb.TagNumber(2)
   void clearCalibrationFactor() => $_clearField(2);
+}
+
+///
+///  SEN5X State, for saving to flash
+class SEN5XState extends $pb.GeneratedMessage {
+  factory SEN5XState({
+    $core.int? lastCleaningTime,
+    $core.bool? lastCleaningValid,
+    $core.bool? oneShotMode,
+    $core.int? vocStateTime,
+    $core.bool? vocStateValid,
+    $fixnum.Int64? vocStateArray,
+  }) {
+    final result = create();
+    if (lastCleaningTime != null) result.lastCleaningTime = lastCleaningTime;
+    if (lastCleaningValid != null) result.lastCleaningValid = lastCleaningValid;
+    if (oneShotMode != null) result.oneShotMode = oneShotMode;
+    if (vocStateTime != null) result.vocStateTime = vocStateTime;
+    if (vocStateValid != null) result.vocStateValid = vocStateValid;
+    if (vocStateArray != null) result.vocStateArray = vocStateArray;
+    return result;
+  }
+
+  SEN5XState._();
+
+  factory SEN5XState.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SEN5XState.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SEN5XState',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'lastCleaningTime',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOB(2, _omitFieldNames ? '' : 'lastCleaningValid')
+    ..aOB(3, _omitFieldNames ? '' : 'oneShotMode')
+    ..aI(4, _omitFieldNames ? '' : 'vocStateTime',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOB(5, _omitFieldNames ? '' : 'vocStateValid')
+    ..a<$fixnum.Int64>(
+        6, _omitFieldNames ? '' : 'vocStateArray', $pb.PbFieldType.OF6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SEN5XState clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SEN5XState copyWith(void Function(SEN5XState) updates) =>
+      super.copyWith((message) => updates(message as SEN5XState)) as SEN5XState;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SEN5XState create() => SEN5XState._();
+  @$core.override
+  SEN5XState createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SEN5XState getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SEN5XState>(create);
+  static SEN5XState? _defaultInstance;
+
+  ///
+  ///  Last cleaning time for SEN5X
+  @$pb.TagNumber(1)
+  $core.int get lastCleaningTime => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set lastCleaningTime($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasLastCleaningTime() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearLastCleaningTime() => $_clearField(1);
+
+  ///
+  ///  Last cleaning time for SEN5X - valid flag
+  @$pb.TagNumber(2)
+  $core.bool get lastCleaningValid => $_getBF(1);
+  @$pb.TagNumber(2)
+  set lastCleaningValid($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLastCleaningValid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLastCleaningValid() => $_clearField(2);
+
+  ///
+  ///  Config flag for one-shot mode (see admin.proto)
+  @$pb.TagNumber(3)
+  $core.bool get oneShotMode => $_getBF(2);
+  @$pb.TagNumber(3)
+  set oneShotMode($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasOneShotMode() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearOneShotMode() => $_clearField(3);
+
+  ///
+  ///  Last VOC state time for SEN55
+  @$pb.TagNumber(4)
+  $core.int get vocStateTime => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set vocStateTime($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasVocStateTime() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearVocStateTime() => $_clearField(4);
+
+  ///
+  ///  Last VOC state validity flag for SEN55
+  @$pb.TagNumber(5)
+  $core.bool get vocStateValid => $_getBF(4);
+  @$pb.TagNumber(5)
+  set vocStateValid($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasVocStateValid() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearVocStateValid() => $_clearField(5);
+
+  ///
+  ///  VOC state array (8x uint8t) for SEN55
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get vocStateArray => $_getI64(5);
+  @$pb.TagNumber(6)
+  set vocStateArray($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasVocStateArray() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearVocStateArray() => $_clearField(6);
 }
 
 const $core.bool _omitFieldNames =

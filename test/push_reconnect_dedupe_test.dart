@@ -1,14 +1,17 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/models/mesh_models.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 import 'package:socialmesh/providers/connection_providers.dart';
 import 'package:socialmesh/providers/app_providers.dart';
-import 'package:socialmesh/services/storage/storage_service.dart';
+import 'package:socialmesh/services/storage/message_database.dart';
 import 'package:socialmesh/services/messaging/message_utils.dart';
 
 class _FakeTransport extends DeviceTransport {
@@ -72,8 +75,20 @@ class _TestProtocolService extends ProtocolService {
   void emit(Message m) => controller.add(m);
 }
 
+int _testDbSeq = 0;
+final _testPid = pid;
+
+String _uniqueTestDbPath() {
+  final dir = Directory.systemTemp.path;
+  return p.join(dir, 'msg_push_${_testPid}_${_testDbSeq++}.db');
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() {
+    databaseFactory = databaseFactoryFfi;
+  });
 
   test(
     'push_persisted_message_survives_reconnect_and_dedupes_with_device_message',
@@ -81,7 +96,7 @@ void main() {
       SharedPreferences.setMockInitialValues({});
 
       // Prepare storage and persist a push-parsed message
-      final storage = MessageStorageService();
+      final storage = MessageDatabase(testDbPath: _uniqueTestDbPath());
       await storage.init();
 
       final payload = {

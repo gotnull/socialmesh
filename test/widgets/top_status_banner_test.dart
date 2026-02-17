@@ -14,17 +14,15 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          home: Scaffold(
-            body: TopStatusBanner(
-              autoReconnectState: AutoReconnectState.failed,
-              autoReconnectEnabled: true,
-              onRetry: () => fail('Retry should not be shown'),
-              onGoToScanner: () => wentToScanner = true,
-              deviceState: const DeviceConnectionState2(
-                state: DevicePairingState.pairedDeviceInvalidated,
-                reason: DisconnectReason.deviceNotFound,
-                errorMessage: 'Device was reset or replaced. Set it up again.',
-              ),
+          home: TopStatusBanner(
+            autoReconnectState: AutoReconnectState.failed,
+            autoReconnectEnabled: true,
+            onRetry: () => fail('Retry should not be shown'),
+            onGoToScanner: () => wentToScanner = true,
+            deviceState: const DeviceConnectionState2(
+              state: DevicePairingState.pairedDeviceInvalidated,
+              reason: DisconnectReason.deviceNotFound,
+              errorMessage: 'Device was reset or replaced. Set it up again.',
             ),
           ),
         ),
@@ -55,19 +53,17 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          home: Scaffold(
-            body: TopStatusBanner(
-              autoReconnectState: AutoReconnectState.failed,
-              autoReconnectEnabled: true,
-              onRetry: () =>
-                  fail('Retry should not be callable for auth failure'),
-              onGoToScanner: () => wentToScanner = true,
-              deviceState: const DeviceConnectionState2(
-                state: DevicePairingState.disconnected,
-                reason: DisconnectReason.authFailed,
-                errorMessage:
-                    'Protocol configuration failed: Configuration timed out - device may require pairing or PIN was cancelled',
-              ),
+          home: TopStatusBanner(
+            autoReconnectState: AutoReconnectState.failed,
+            autoReconnectEnabled: true,
+            onRetry: () =>
+                fail('Retry should not be callable for auth failure'),
+            onGoToScanner: () => wentToScanner = true,
+            deviceState: const DeviceConnectionState2(
+              state: DevicePairingState.disconnected,
+              reason: DisconnectReason.authFailed,
+              errorMessage:
+                  'Protocol configuration failed: Configuration timed out - device may require pairing or PIN was cancelled',
             ),
           ),
         ),
@@ -101,17 +97,15 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          home: Scaffold(
-            body: TopStatusBanner(
-              autoReconnectState: AutoReconnectState.failed,
-              autoReconnectEnabled: true,
-              onRetry: () => retryTapped = true,
-              onGoToScanner: () {},
-              deviceState: const DeviceConnectionState2(
-                state: DevicePairingState.disconnected,
-                reason: DisconnectReason.deviceNotFound,
-                errorMessage: 'Device not found',
-              ),
+          home: TopStatusBanner(
+            autoReconnectState: AutoReconnectState.failed,
+            autoReconnectEnabled: true,
+            onRetry: () => retryTapped = true,
+            onGoToScanner: () {},
+            deviceState: const DeviceConnectionState2(
+              state: DevicePairingState.disconnected,
+              reason: DisconnectReason.deviceNotFound,
+              errorMessage: 'Device not found',
             ),
           ),
         ),

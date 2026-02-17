@@ -399,7 +399,10 @@ class SocialActivityService {
         .map(
           (snapshot) =>
               snapshot.docs.map(SocialActivity.fromFirestore).toList(),
-        );
+        )
+        .handleError((Object e) {
+          AppLogging.social('Activities stream error: $e');
+        });
   }
 
   /// Get count of unread activities.
@@ -416,7 +419,10 @@ class SocialActivityService {
         .collection('activities')
         .where('isRead', isEqualTo: false)
         .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+        .map((snapshot) => snapshot.docs.length)
+        .handleError((Object e) {
+          AppLogging.social('Unread count stream error: $e');
+        });
   }
 
   // ===========================================================================

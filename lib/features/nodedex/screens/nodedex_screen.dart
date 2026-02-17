@@ -110,6 +110,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
       child: GestureDetector(
         onTap: _dismissKeyboard,
         child: GlassScaffold(
+          resizeToAvoidBottomInset: false,
           title: 'NodeDex',
           actions: [
             // View mode toggle (list ↔ album).

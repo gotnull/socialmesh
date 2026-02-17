@@ -691,12 +691,14 @@ void main() {
         var state = ctx.container.read(nodeDexProvider);
         expect(state[100]!.coSeenNodes.containsKey(200), isTrue);
 
-        // Re-discover to add back to session (session was cleared after flush)
+        // Re-discover to add back to session (session was cleared after flush).
+        // The Riverpod listener fires synchronously, so _handleNodesUpdate runs
+        // immediately — no pump needed. Pumping gives the periodic flush timer
+        // a chance to fire and clear _sessionSeenNodes before recordMessage.
         ctx.nodesNotifier.setNodes({
           100: _makeNode(100, snr: 15),
           200: _makeNode(200, snr: 20),
         });
-        await _pumpEventQueue();
 
         // Now record a message for node 100
         ctx.container.read(nodeDexProvider.notifier).recordMessage(100);
@@ -717,9 +719,10 @@ void main() {
 
         await _initProvider(ctx.container);
 
-        // Discover two nodes
+        // Discover two nodes. No pump after — listener fires synchronously,
+        // and pumping gives the periodic flush timer a chance to create
+        // unwanted co-seen relationships.
         ctx.nodesNotifier.setNodes({100: _makeNode(100), 200: _makeNode(200)});
-        await _pumpEventQueue();
 
         // Do NOT flush co-seen — no relationships exist yet
 
@@ -769,12 +772,11 @@ void main() {
         ctx.container.read(nodeDexProvider.notifier).flushCoSeenForTest();
         await _waitForSave();
 
-        // Re-add to session
+        // Re-add to session. No pump — listener fires synchronously.
         ctx.nodesNotifier.setNodes({
           100: _makeNode(100, snr: 20),
           200: _makeNode(200, snr: 25),
         });
-        await _pumpEventQueue();
 
         // Record message for 100
         ctx.container.read(nodeDexProvider.notifier).recordMessage(100);
@@ -1280,13 +1282,14 @@ void main() {
         expect(state[200]!.coSeenNodes.length, equals(2));
         expect(state[300]!.coSeenNodes.length, equals(2));
 
-        // Step 3: Re-enter session (session was cleared after flush)
+        // Step 3: Re-enter session (session was cleared after flush).
+        // No pump — listener fires synchronously. Pumping gives the periodic
+        // flush timer a chance to clear _sessionSeenNodes before recordMessage.
         ctx.nodesNotifier.setNodes({
           100: _makeNode(100, snr: 12),
           200: _makeNode(200, snr: 10),
           300: _makeNode(300, snr: 18),
         });
-        await _pumpEventQueue();
 
         // Step 4: Record messages
         final notifier = ctx.container.read(nodeDexProvider.notifier);

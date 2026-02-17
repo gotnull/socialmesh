@@ -80,9 +80,14 @@ class SignalBookmarksNotifier extends AsyncNotifier<Set<String>> {
         .doc(user.uid)
         .collection('saved_signals')
         .snapshots()
-        .listen((snapshot) {
-          state = AsyncData(snapshot.docs.map((d) => d.id).toSet());
-        });
+        .listen(
+          (snapshot) {
+            state = AsyncData(snapshot.docs.map((d) => d.id).toSet());
+          },
+          onError: (Object e) {
+            AppLogging.social('Bookmark stream error: $e');
+          },
+        );
 
     // Return initial value from snapshot
     final snapshot = await FirebaseFirestore.instance
@@ -243,5 +248,8 @@ final signalViewCountProvider = StreamProvider.family<int, String>((
       .collection('stats')
       .doc('views')
       .snapshots()
-      .map((doc) => doc.data()?['count'] as int? ?? 0);
+      .map((doc) => doc.data()?['count'] as int? ?? 0)
+      .handleError((Object e) {
+        AppLogging.social('View count stream error: $e');
+      });
 });

@@ -8,7 +8,7 @@ import '../models/mesh_models.dart';
 import '../models/telemetry_log.dart';
 import '../models/route.dart';
 import '../models/tapback.dart';
-import '../services/storage/telemetry_storage_service.dart';
+import '../services/storage/telemetry_database.dart';
 import '../services/storage/traceroute_database.dart';
 import '../services/storage/traceroute_repository.dart';
 import '../services/storage/route_storage_service.dart';
@@ -23,12 +23,12 @@ final sharedPreferencesProvider = FutureProvider<SharedPreferences>((
   return SharedPreferences.getInstance();
 });
 
-// Telemetry storage service
-final telemetryStorageProvider = FutureProvider<TelemetryStorageService>((
-  ref,
-) async {
-  final prefs = await ref.watch(sharedPreferencesProvider.future);
-  return TelemetryStorageService(prefs);
+// Telemetry storage service (SQLite-backed)
+final telemetryStorageProvider = FutureProvider<TelemetryDatabase>((ref) async {
+  final db = TelemetryDatabase();
+  await db.init();
+  ref.onDispose(() => db.close());
+  return db;
 });
 
 // Route storage service (SQLite-backed)
@@ -536,7 +536,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
 
   ProtocolService get _protocol => ref.read(protocolServiceProvider);
 
-  void _startLogging(TelemetryStorageService storage) {
+  void _startLogging(TelemetryDatabase storage) {
     // Cancel any existing subscriptions first
     _nodeSubscription?.cancel();
     _traceRouteSubscription?.cancel();

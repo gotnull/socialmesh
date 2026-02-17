@@ -108,6 +108,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
         topicId: 'traceroute_overview',
         stepKeys: const {},
         child: GlassScaffold(
+          resizeToAvoidBottomInset: false,
           titleWidget: widget.nodeNum != null && nodeName != null
               ? Column(
                   mainAxisSize: MainAxisSize.min,

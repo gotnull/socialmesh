@@ -1,15 +1,28 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:socialmesh/services/storage/storage_service.dart';
+import 'package:path/path.dart' as p;
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:socialmesh/services/storage/message_database.dart';
 import 'package:socialmesh/services/messaging/message_utils.dart';
+
+int _testDbSeq = 0;
+final _testPid = pid;
+
+String _uniqueTestDbPath() {
+  final dir = Directory.systemTemp.path;
+  return p.join(dir, 'msg_storage_${_testPid}_${_testDbSeq++}.db');
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('MessageStorageService saves and loads parsed push message', () async {
-    SharedPreferences.setMockInitialValues({});
+  setUpAll(() {
+    databaseFactory = databaseFactoryFfi;
+  });
 
-    final storage = MessageStorageService();
+  test('MessageDatabase saves and loads parsed push message', () async {
+    final storage = MessageDatabase(testDbPath: _uniqueTestDbPath());
     await storage.init();
 
     final payload = {

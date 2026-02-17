@@ -65,6 +65,7 @@ import 'account_subscriptions_screen.dart';
 import 'linked_devices_screen.dart';
 import 'data_export_screen.dart';
 import '../device/serial_config_screen.dart';
+import 'traffic_management_config_screen.dart';
 import '../device/gps_status_screen.dart';
 import '../device/firmware_update_screen.dart';
 import '../device/ambient_lighting_config_screen.dart';
@@ -803,6 +804,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const SerialConfigScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.traffic,
+          title: 'Traffic Management',
+          subtitle: 'Mesh traffic optimization and filtering',
+          keywords: ['traffic', 'management', 'rate', 'limit', 'dedup', 'hop'],
+          section: 'MODULES',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const TrafficManagementConfigScreen(),
+            ),
           ),
         ),
 
@@ -2503,6 +2517,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               context,
                               MaterialPageRoute(
                                 builder: (_) => const SerialConfigScreen(),
+                              ),
+                            ),
+                          ),
+                          _SettingsTile(
+                            icon: Icons.traffic,
+                            title: 'Traffic Management',
+                            subtitle: 'Mesh traffic optimization and filtering',
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const TrafficManagementConfigScreen(),
                               ),
                             ),
                           ),

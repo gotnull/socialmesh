@@ -318,6 +318,8 @@ class ProtocolService {
   _externalNotificationConfigController;
   final StreamController<module_pb.ModuleConfig_CannedMessageConfig>
   _cannedMessageConfigController;
+  final StreamController<module_pb.ModuleConfig_TrafficManagementConfig>
+  _trafficManagementConfigController;
   final StreamController<pb.ClientNotification> _clientNotificationController;
   final StreamController<pb.User> _userConfigController;
   final StreamController<DetectionSensorEvent> _detectionSensorEventController;
@@ -353,6 +355,8 @@ class ProtocolService {
   module_pb.ModuleConfig_ExternalNotificationConfig?
   _currentExternalNotificationConfig;
   module_pb.ModuleConfig_CannedMessageConfig? _currentCannedMessageConfig;
+  module_pb.ModuleConfig_TrafficManagementConfig?
+  _currentTrafficManagementConfig;
   pb.User? _currentUserConfig;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
@@ -459,6 +463,10 @@ class ProtocolService {
        _cannedMessageConfigController =
            StreamController<
              module_pb.ModuleConfig_CannedMessageConfig
+           >.broadcast(),
+       _trafficManagementConfigController =
+           StreamController<
+             module_pb.ModuleConfig_TrafficManagementConfig
            >.broadcast(),
        _clientNotificationController =
            StreamController<pb.ClientNotification>.broadcast(),
@@ -672,6 +680,15 @@ class ProtocolService {
   /// Current canned message config
   module_pb.ModuleConfig_CannedMessageConfig? get currentCannedMessageConfig =>
       _currentCannedMessageConfig;
+
+  /// Stream of traffic management config updates
+  Stream<module_pb.ModuleConfig_TrafficManagementConfig>
+  get trafficManagementConfigStream =>
+      _trafficManagementConfigController.stream;
+
+  /// Current traffic management config
+  module_pb.ModuleConfig_TrafficManagementConfig?
+  get currentTrafficManagementConfig => _currentTrafficManagementConfig;
 
   /// Stream of user (owner) config updates
   Stream<pb.User> get userConfigStream => _userConfigController.stream;
@@ -1646,6 +1663,16 @@ class ProtocolService {
           _currentCannedMessageConfig = cannedConfig;
           _cannedMessageConfigController.add(cannedConfig);
         }
+
+        // Handle Traffic Management config (v2.7.19)
+        if (moduleConfig.hasTrafficManagement()) {
+          final tmConfig = moduleConfig.trafficManagement;
+          AppLogging.protocol(
+            'Received Traffic Management config - enabled: ${tmConfig.enabled}',
+          );
+          _currentTrafficManagementConfig = tmConfig;
+          _trafficManagementConfigController.add(tmConfig);
+        }
       } else if (adminMsg.hasGetChannelResponse()) {
         // Handle channel response - update local channel list
         final channel = adminMsg.getChannelResponse;
@@ -2350,6 +2377,51 @@ class ProtocolService {
         case telemetry.Telemetry_Variant.hostMetrics:
           if (ProtocolDebugFlags.logTelemetry) {
             AppLogging.protocol('HostMetrics from ${packet.from}');
+          }
+          return;
+
+        case telemetry.Telemetry_Variant.trafficManagementStats:
+          final stats = telem.trafficManagementStats;
+          if (ProtocolDebugFlags.logTelemetry) {
+            AppLogging.protocol(
+              'TrafficManagementStats from ${packet.from}: '
+              'inspected=${stats.packetsInspected} '
+              'posDedup=${stats.positionDedupDrops} '
+              'cacheHits=${stats.nodeinfoCacheHits} '
+              'rateDrops=${stats.rateLimitDrops} '
+              'unknownDrops=${stats.unknownPacketDrops} '
+              'hopExhausted=${stats.hopExhaustedPackets} '
+              'hopsPreserved=${stats.routerHopsPreserved}',
+            );
+          }
+          final tmNode = _nodes[packet.from];
+          if (tmNode != null) {
+            final updatedTmNode = tmNode.copyWith(
+              tmPacketsInspected: stats.hasPacketsInspected()
+                  ? stats.packetsInspected
+                  : null,
+              tmPositionDedupDrops: stats.hasPositionDedupDrops()
+                  ? stats.positionDedupDrops
+                  : null,
+              tmNodeinfoCacheHits: stats.hasNodeinfoCacheHits()
+                  ? stats.nodeinfoCacheHits
+                  : null,
+              tmRateLimitDrops: stats.hasRateLimitDrops()
+                  ? stats.rateLimitDrops
+                  : null,
+              tmUnknownPacketDrops: stats.hasUnknownPacketDrops()
+                  ? stats.unknownPacketDrops
+                  : null,
+              tmHopExhaustedPackets: stats.hasHopExhaustedPackets()
+                  ? stats.hopExhaustedPackets
+                  : null,
+              tmRouterHopsPreserved: stats.hasRouterHopsPreserved()
+                  ? stats.routerHopsPreserved
+                  : null,
+              lastHeard: DateTime.now(),
+            );
+            _nodes[packet.from] = updatedTmNode;
+            _nodeController.add(updatedTmNode);
           }
           return;
 
@@ -5270,6 +5342,8 @@ class ProtocolService {
     config_pb.Config_DisplayConfig_CompassOrientation compassOrientation =
         config_pb.Config_DisplayConfig_CompassOrientation.DEGREES_0,
     bool compassNorthTop = false,
+    bool useLongNodeName = false,
+    bool enableMessageBubbles = false,
     AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting display config');
@@ -5285,7 +5359,9 @@ class ProtocolService {
       ..use12hClock = use12hClock
       ..oled = oledType
       ..compassOrientation = compassOrientation
-      ..compassNorthTop = compassNorthTop;
+      ..compassNorthTop = compassNorthTop
+      ..useLongNodeName = useLongNodeName
+      ..enableMessageBubbles = enableMessageBubbles;
 
     final config = config_pb.Config()..display = displayConfig;
     await setConfig(config, target: target);
@@ -5512,6 +5588,10 @@ class ProtocolService {
       _currentCannedMessageConfig = moduleConfig.cannedMessage;
       _cannedMessageConfigController.add(moduleConfig.cannedMessage);
     }
+    if (moduleConfig.hasTrafficManagement()) {
+      _currentTrafficManagementConfig = moduleConfig.trafficManagement;
+      _trafficManagementConfigController.add(moduleConfig.trafficManagement);
+    }
   }
 
   /// Set MQTT module configuration
@@ -5590,6 +5670,46 @@ class ProtocolService {
       ..inputbrokerEventPress = inputbrokerEventPress;
 
     final moduleConfig = module_pb.ModuleConfig()..cannedMessage = cannedConfig;
+    await setModuleConfig(moduleConfig, target: target);
+  }
+
+  /// Set traffic management module configuration (v2.7.19)
+  Future<void> setTrafficManagementConfig({
+    required bool enabled,
+    required bool positionDedupEnabled,
+    required int positionPrecisionBits,
+    required int positionMinIntervalSecs,
+    required bool nodeinfoDirectResponse,
+    required int nodeinfoDirectResponseMaxHops,
+    required bool rateLimitEnabled,
+    required int rateLimitWindowSecs,
+    required int rateLimitMaxPackets,
+    required bool dropUnknownEnabled,
+    required int unknownPacketThreshold,
+    required bool exhaustHopTelemetry,
+    required bool exhaustHopPosition,
+    required bool routerPreserveHops,
+    AdminTarget? target,
+  }) async {
+    AppLogging.protocol('Setting traffic management config');
+
+    final tmConfig = module_pb.ModuleConfig_TrafficManagementConfig()
+      ..enabled = enabled
+      ..positionDedupEnabled = positionDedupEnabled
+      ..positionPrecisionBits = positionPrecisionBits
+      ..positionMinIntervalSecs = positionMinIntervalSecs
+      ..nodeinfoDirectResponse = nodeinfoDirectResponse
+      ..nodeinfoDirectResponseMaxHops = nodeinfoDirectResponseMaxHops
+      ..rateLimitEnabled = rateLimitEnabled
+      ..rateLimitWindowSecs = rateLimitWindowSecs
+      ..rateLimitMaxPackets = rateLimitMaxPackets
+      ..dropUnknownEnabled = dropUnknownEnabled
+      ..unknownPacketThreshold = unknownPacketThreshold
+      ..exhaustHopTelemetry = exhaustHopTelemetry
+      ..exhaustHopPosition = exhaustHopPosition
+      ..routerPreserveHops = routerPreserveHops;
+
+    final moduleConfig = module_pb.ModuleConfig()..trafficManagement = tmConfig;
     await setModuleConfig(moduleConfig, target: target);
   }
 

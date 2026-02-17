@@ -166,6 +166,7 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
     final reportsAsync = ref.watch(myBugReportsProvider);
 
     return GlassScaffold(
+      resizeToAvoidBottomInset: false,
       title: 'My Bug Reports',
       slivers: [
         ...reportsAsync.when(

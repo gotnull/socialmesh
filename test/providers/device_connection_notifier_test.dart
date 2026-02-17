@@ -9,10 +9,28 @@ import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/connection_providers.dart';
 import 'package:socialmesh/providers/telemetry_providers.dart';
 import 'package:socialmesh/services/mesh_packet_dedupe_store.dart';
+import 'package:socialmesh/services/storage/message_database.dart';
 import 'package:socialmesh/services/storage/storage_service.dart';
-import 'package:socialmesh/services/storage/telemetry_storage_service.dart';
+import 'package:socialmesh/services/storage/telemetry_database.dart';
 import 'package:socialmesh/services/storage/route_storage_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+import 'dart:io';
+import 'package:path/path.dart' as p;
+
+int _testDbSeq = 0;
+final _testPid = pid;
+
+String _uniqueTestDbPath() {
+  final dir = Directory.systemTemp.path;
+  return p.join(dir, 'msg_devconn_${_testPid}_${_testDbSeq++}.db');
+}
+
+int _telemDbSeq = 0;
+String _uniqueTelemDbPath() {
+  final dir = Directory.systemTemp.path;
+  return p.join(dir, 'telem_devconn_${_testPid}_${_telemDbSeq++}.db');
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -37,16 +55,17 @@ void main() {
     final s = SettingsService();
     await s.init();
 
-    final prefs = await SharedPreferences.getInstance();
-
     // Initialize storage services with in-memory databases
-    final messageStorage = MessageStorageService();
+    final messageStorage = MessageDatabase(testDbPath: _uniqueTestDbPath());
     await messageStorage.init();
 
     final nodeStorage = NodeStorageService();
     await nodeStorage.init();
 
-    final telemetryStorage = TelemetryStorageService(prefs);
+    final telemetryStorage = TelemetryDatabase(
+      testDbPath: _uniqueTelemDbPath(),
+    );
+    await telemetryStorage.init();
 
     final routeStorage = RouteStorageService(testDbPath: inMemoryDatabasePath);
     await routeStorage.init();
@@ -101,16 +120,17 @@ void main() {
       final s = SettingsService();
       await s.init();
 
-      final prefs = await SharedPreferences.getInstance();
-
       // Initialize storage services with in-memory databases
-      final messageStorage = MessageStorageService();
+      final messageStorage = MessageDatabase(testDbPath: _uniqueTestDbPath());
       await messageStorage.init();
 
       final nodeStorage = NodeStorageService();
       await nodeStorage.init();
 
-      final telemetryStorage = TelemetryStorageService(prefs);
+      final telemetryStorage = TelemetryDatabase(
+        testDbPath: _uniqueTelemDbPath(),
+      );
+      await telemetryStorage.init();
 
       final routeStorage = RouteStorageService(
         testDbPath: inMemoryDatabasePath,
@@ -276,16 +296,18 @@ void _protocolAwareMarkAsPairedTests() {
         final s = SettingsService();
         await s.init();
 
-        final prefs = await SharedPreferences.getInstance();
         final testTransport = _TestTransport();
 
-        final messageStorage = MessageStorageService();
+        final messageStorage = MessageDatabase(testDbPath: _uniqueTestDbPath());
         await messageStorage.init();
 
         final nodeStorage = NodeStorageService();
         await nodeStorage.init();
 
-        final telemetryStorage = TelemetryStorageService(prefs);
+        final telemetryStorage = TelemetryDatabase(
+          testDbPath: _uniqueTelemDbPath(),
+        );
+        await telemetryStorage.init();
 
         final routeStorage = RouteStorageService(
           testDbPath: inMemoryDatabasePath,
@@ -351,16 +373,18 @@ void _protocolAwareMarkAsPairedTests() {
         final s = SettingsService();
         await s.init();
 
-        final prefs = await SharedPreferences.getInstance();
         final testTransport = _TestTransport();
 
-        final messageStorage = MessageStorageService();
+        final messageStorage = MessageDatabase(testDbPath: _uniqueTestDbPath());
         await messageStorage.init();
 
         final nodeStorage = NodeStorageService();
         await nodeStorage.init();
 
-        final telemetryStorage = TelemetryStorageService(prefs);
+        final telemetryStorage = TelemetryDatabase(
+          testDbPath: _uniqueTelemDbPath(),
+        );
+        await telemetryStorage.init();
 
         final routeStorage = RouteStorageService(
           testDbPath: inMemoryDatabasePath,
@@ -436,16 +460,19 @@ void _protocolAwareMarkAsPairedTests() {
         final s = SettingsService();
         await s.init();
 
-        final prefs = await SharedPreferences.getInstance();
+        await SharedPreferences.getInstance();
         final testTransport = _TestTransport();
 
-        final messageStorage = MessageStorageService();
+        final messageStorage = MessageDatabase(testDbPath: _uniqueTestDbPath());
         await messageStorage.init();
 
         final nodeStorage = NodeStorageService();
         await nodeStorage.init();
 
-        final telemetryStorage = TelemetryStorageService(prefs);
+        final telemetryStorage = TelemetryDatabase(
+          testDbPath: _uniqueTelemDbPath(),
+        );
+        await telemetryStorage.init();
 
         final routeStorage = RouteStorageService(
           testDbPath: inMemoryDatabasePath,

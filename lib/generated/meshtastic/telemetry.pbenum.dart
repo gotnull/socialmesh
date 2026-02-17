@@ -247,6 +247,21 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
   static const TelemetrySensorType BH1750 =
       TelemetrySensorType._(45, _omitEnumNames ? '' : 'BH1750');
 
+  ///
+  ///  HDC1080 Temperature and Humidity Sensor
+  static const TelemetrySensorType HDC1080 =
+      TelemetrySensorType._(46, _omitEnumNames ? '' : 'HDC1080');
+
+  ///
+  ///  STH21 Temperature and R. Humidity sensor
+  static const TelemetrySensorType SHT21 =
+      TelemetrySensorType._(47, _omitEnumNames ? '' : 'SHT21');
+
+  ///
+  ///  Sensirion STC31 CO2 sensor
+  static const TelemetrySensorType STC31 =
+      TelemetrySensorType._(48, _omitEnumNames ? '' : 'STC31');
+
   static const $core.List<TelemetrySensorType> values = <TelemetrySensorType>[
     SENSOR_UNSET,
     BME280,
@@ -294,10 +309,13 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
     SEN5X,
     TSL2561,
     BH1750,
+    HDC1080,
+    SHT21,
+    STC31,
   ];
 
   static final $core.List<TelemetrySensorType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 45);
+      $pb.ProtobufEnum.$_initByValueList(values, 48);
   static TelemetrySensorType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

@@ -17,6 +17,7 @@ import '../services/transport/ble_transport.dart';
 import '../services/transport/usb_transport.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/storage/storage_service.dart';
+import '../services/storage/message_database.dart';
 import '../services/mesh_packet_dedupe_store.dart';
 import '../services/notifications/notification_service.dart';
 import '../services/messaging/offline_queue_service.dart';
@@ -510,11 +511,9 @@ final showAllBleDevicesProvider = Provider<bool>((ref) {
   );
 });
 
-// Message storage service
-final messageStorageProvider = FutureProvider<MessageStorageService>((
-  ref,
-) async {
-  final service = MessageStorageService();
+// Message storage service (SQLite-backed)
+final messageStorageProvider = FutureProvider<MessageDatabase>((ref) async {
+  final service = MessageDatabase();
   await service.init();
   return service;
 });
@@ -2443,7 +2442,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// Push timestamps may be seconds-level while device timestamps are
   /// packet-level, so allow up to 60 seconds of drift.
   static const Duration _contentDedupeWindow = Duration(seconds: 60);
-  MessageStorageService? _storage;
+  MessageDatabase? _storage;
   StreamSubscription<Message>? _messageSubscription;
   StreamSubscription<MessageDeliveryUpdate>? _deliverySubscription;
 
@@ -2452,6 +2451,13 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
   StreamSubscription<ContentRefreshEvent>? _pushSubscription;
   bool _storageLoaded = false;
+
+  /// Completer for the initial storage load. Tests can await this to ensure
+  /// _loadFromStorage() has finished before adding messages.
+  final Completer<void> _storageLoadCompleter = Completer<void>();
+
+  /// Await this in tests to ensure the initial storage load has completed.
+  Future<void> get storageReady => _storageLoadCompleter.future;
 
   @override
   List<Message> build() {
@@ -2490,23 +2496,46 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// Only runs once per provider lifetime; subsequent protocol changes
   /// do not reload (messages remain in memory).
   Future<void> _loadFromStorage() async {
-    if (_storageLoaded) return;
-    if (_storage == null) return;
+    if (_storageLoaded) {
+      if (!_storageLoadCompleter.isCompleted) {
+        _storageLoadCompleter.complete();
+      }
+      return;
+    }
+    if (_storage == null) {
+      if (!_storageLoadCompleter.isCompleted) {
+        _storageLoadCompleter.complete();
+      }
+      return;
+    }
 
     // Demo mode: seed sample messages if enabled and storage is empty
     if (DemoConfig.isEnabled) {
       final existing = await _storage!.loadMessages();
       if (existing.isEmpty) {
         AppLogging.debug('${DemoConfig.modeLabel} Seeding demo messages');
-        if (!ref.mounted) return;
+        if (!ref.mounted) {
+          if (!_storageLoadCompleter.isCompleted) {
+            _storageLoadCompleter.complete();
+          }
+          return;
+        }
         state = DemoData.sampleMessages;
         _storageLoaded = true;
+        if (!_storageLoadCompleter.isCompleted) {
+          _storageLoadCompleter.complete();
+        }
         return;
       }
     }
 
     final savedMessages = await _storage!.loadMessages();
-    if (!ref.mounted) return;
+    if (!ref.mounted) {
+      if (!_storageLoadCompleter.isCompleted) {
+        _storageLoadCompleter.complete();
+      }
+      return;
+    }
     _storageLoaded = true;
 
     if (savedMessages.isNotEmpty) {
@@ -2524,6 +2553,10 @@ class MessagesNotifier extends Notifier<List<Message>> {
           'channel=${m.channel}, text="${m.text.substring(0, m.text.length.clamp(0, 20))}"',
         );
       }
+    }
+
+    if (!_storageLoadCompleter.isCompleted) {
+      _storageLoadCompleter.complete();
     }
   }
 
@@ -2876,13 +2909,16 @@ class MessagesNotifier extends Notifier<List<Message>> {
     return false;
   }
 
-  /// Returns true if [message] has the same sender, recipient, text, and
+  /// Returns true if [message] has the same sender, text, and
   /// channel as an existing message in state whose timestamp is within
   /// [_contentDedupeWindow].
+  ///
+  /// For channel messages, the `to` field is NOT compared because push
+  /// notifications may use the local node num as the recipient while the
+  /// actual mesh packet uses the broadcast address (0xFFFFFFFF).
   bool _isContentDuplicate(Message message) {
     for (final m in state) {
       if (m.from != message.from) continue;
-      if (m.to != message.to) continue;
       if (m.text != message.text) continue;
       // Treat null and 0 as equivalent (primary channel)
       final mCh = (m.channel == null || m.channel == 0) ? 0 : m.channel;
@@ -2890,6 +2926,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
           ? 0
           : message.channel;
       if (mCh != msgCh) continue;
+      // For DM messages (channel 0 / null), also compare the recipient.
+      // For channel messages, skip the `to` comparison — push notifications
+      // may set `to` to the local node num while the mesh packet uses
+      // 0xFFFFFFFF (broadcast).
+      if (mCh == 0 && m.to != message.to) continue;
       final diff = m.timestamp.difference(message.timestamp).abs();
       if (diff <= _contentDedupeWindow) {
         return true;

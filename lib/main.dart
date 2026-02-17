@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -143,6 +146,64 @@ Future<void> main() async {
   runApp(const ProviderScope(child: SocialmeshApp()));
 }
 
+/// SharedPreferences key tracking Firestore initialization success.
+/// Set to `false` before the first Firestore access, set to `true` after
+/// success. On next startup, if still `false`, we know the previous
+/// init crashed (typically LevelDB cache corruption) and clear the
+/// persistence cache before retrying.
+const String _kFirestoreInitOk = 'firestore_init_ok';
+
+/// Detect whether Firestore crashed during the previous app session
+/// and proactively repair the corrupted LevelDB persistence cache
+/// before any Firestore operation triggers [FirestoreClient::Initialize].
+///
+/// `clearPersistence()` deletes the cache directory without initializing
+/// the native client, so it is safe to call even when the cache is corrupt.
+/// If that also fails, falls back to manual directory deletion.
+Future<void> _repairFirestoreCacheIfNeeded() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final previousInitOk = prefs.getBool(_kFirestoreInitOk) ?? true;
+    if (previousInitOk) return;
+
+    AppLogging.debug(
+      'Firestore init failed last session — clearing persistence cache',
+    );
+
+    try {
+      // clearPersistence() works before the native client is started,
+      // so it won't trigger the same crash.
+      await FirebaseFirestore.instance.clearPersistence();
+      AppLogging.debug('Firestore persistence cleared via SDK');
+    } catch (e) {
+      AppLogging.debug('clearPersistence() failed ($e) — deleting manually');
+      await _deleteFirestoreCacheDirectory();
+    }
+
+    // Reset the flag so we don't clear on every startup.
+    await prefs.setBool(_kFirestoreInitOk, true);
+  } catch (e) {
+    AppLogging.debug('Firestore cache repair check failed: $e');
+  }
+}
+
+/// Fallback: manually delete the Firestore LevelDB directory when
+/// `clearPersistence()` itself throws (deeply corrupted state).
+Future<void> _deleteFirestoreCacheDirectory() async {
+  try {
+    final appSupportDir = await getApplicationSupportDirectory();
+    final firestoreDir = Directory(
+      '${appSupportDir.path}/google-cloud-firestore',
+    );
+    if (await firestoreDir.exists()) {
+      await firestoreDir.delete(recursive: true);
+      AppLogging.debug('Deleted Firestore cache directory manually');
+    }
+  } catch (e) {
+    AppLogging.debug('Manual Firestore cache deletion failed: $e');
+  }
+}
+
 /// Initialize ancillary Firebase services in background.
 /// Firebase core is already initialized in main(). These are best-effort
 /// and must never block the app, sign-in, or crash on failure.
@@ -152,11 +213,24 @@ Future<void> _initializeFirebaseServices() async {
     return;
   }
 
+  // Before ANY Firestore access, repair corrupted cache from a previous crash.
+  // Must happen before setLoggingEnabled / settings / any snapshot listener.
+  await _repairFirestoreCacheIfNeeded();
+
   try {
     await FirebaseFirestore.setLoggingEnabled(false);
   } catch (e) {
     AppLogging.debug('Firestore logging config failed: $e');
   }
+
+  // Mark init as "in progress" — cleared to true after success.
+  // If the app crashes during the block below, the flag stays false and
+  // the next startup will call _repairFirestoreCacheIfNeeded().
+  SharedPreferences? prefs;
+  try {
+    prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kFirestoreInitOk, false);
+  } catch (_) {}
 
   // Configure Firestore settings to prevent cache corruption crashes
   // See: https://github.com/firebase/flutterfire/issues/9661
@@ -175,6 +249,13 @@ Future<void> _initializeFirebaseServices() async {
       AppLogging.debug('Firestore unavailable: $e2');
     }
   }
+
+  // Firestore initialized successfully — mark flag so next startup
+  // skips the cache repair step.
+  try {
+    prefs ??= await SharedPreferences.getInstance();
+    await prefs.setBool(_kFirestoreInitOk, true);
+  } catch (_) {}
 
   try {
     await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);

@@ -1,14 +1,16 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/models/mesh_models.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 import 'package:socialmesh/providers/app_providers.dart';
-import 'package:socialmesh/services/storage/storage_service.dart';
+import 'package:socialmesh/services/storage/message_database.dart';
 import 'package:socialmesh/services/messaging/message_utils.dart';
 
 // ---------------------------------------------------------------------------
@@ -79,19 +81,27 @@ class _TestProtocolService extends ProtocolService {
 // Helpers
 // ---------------------------------------------------------------------------
 
+int _testDbSeq = 0;
+final _testPid = pid;
+
+String _uniqueTestDbPath() {
+  final dir = Directory.systemTemp.path;
+  return p.join(dir, 'msg_dedupe_${_testPid}_${_testDbSeq++}.db');
+}
+
 /// Creates a [ProviderContainer] wired with in-memory storage and a test
 /// protocol, seeds myNodeNum, and returns everything the test needs.
 Future<
   ({
     ProviderContainer container,
     _TestProtocolService protocol,
-    MessageStorageService storage,
+    MessageDatabase storage,
   })
 >
 _createTestHarness({int myNodeNum = 20}) async {
   SharedPreferences.setMockInitialValues({});
 
-  final storage = MessageStorageService();
+  final storage = MessageDatabase(testDbPath: _uniqueTestDbPath());
   await storage.init();
 
   final testProtocol = _TestProtocolService();
@@ -103,8 +113,17 @@ _createTestHarness({int myNodeNum = 20}) async {
     ],
   );
 
-  // Ensure the notifier is alive with a clean slate.
-  container.read(messagesProvider.notifier).state = [];
+  // Trigger the notifier build (which starts async _loadFromStorage).
+  final notifier = container.read(messagesProvider.notifier);
+
+  // Wait for the async _loadFromStorage to complete against the empty DB
+  // before any test code adds messages. Without this, _loadFromStorage
+  // may resolve after test messages have been saved, reading them back
+  // and corrupting state.
+  await notifier.storageReady;
+
+  // Reset state to a clean slate after _loadFromStorage has finished.
+  notifier.state = [];
   container.read(myNodeNumProvider.notifier).state = myNodeNum;
 
   return (container: container, protocol: testProtocol, storage: storage);
@@ -116,6 +135,10 @@ _createTestHarness({int myNodeNum = 20}) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() {
+    databaseFactory = databaseFactoryFfi;
+  });
 
   // -----------------------------------------------------------------------
   // Dedupe edge-case 1: push-delivered message then device replay with a

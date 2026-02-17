@@ -165,123 +165,159 @@ class DeviceShopService {
       query = query.where('sellerId', isEqualTo: sellerId);
     }
 
-    return query.snapshots().asyncMap((snapshot) async {
-      final activeSellerIds = await _getActiveSellerIds();
-      var products = snapshot.docs
-          .map((doc) => ShopProduct.fromFirestore(doc))
-          .toList();
+    return query
+        .snapshots()
+        .asyncMap((snapshot) async {
+          final activeSellerIds = await _getActiveSellerIds();
+          var products = snapshot.docs
+              .map((doc) => ShopProduct.fromFirestore(doc))
+              .toList();
 
-      // Client-side filters for fields that might be missing in old documents
-      // Model defaults: isActive=true, isFeatured=false, isInStock=true
-      // Also filter by active sellers
-      products = products
-          .where((p) => p.isActive && activeSellerIds.contains(p.sellerId))
-          .toList();
+          // Client-side filters for fields that might be missing in old documents
+          // Model defaults: isActive=true, isFeatured=false, isInStock=true
+          // Also filter by active sellers
+          products = products
+              .where((p) => p.isActive && activeSellerIds.contains(p.sellerId))
+              .toList();
 
-      if (featuredOnly == true) {
-        products = products.where((p) => p.isFeatured).toList();
-      }
+          if (featuredOnly == true) {
+            products = products.where((p) => p.isFeatured).toList();
+          }
 
-      if (inStockOnly == true) {
-        products = products.where((p) => p.isInStock).toList();
-      }
+          if (inStockOnly == true) {
+            products = products.where((p) => p.isInStock).toList();
+          }
 
-      // Client-side search filter (Firestore doesn't support full-text search)
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        final lowerQuery = searchQuery.toLowerCase();
-        products = products.where((p) {
-          return p.name.toLowerCase().contains(lowerQuery) ||
-              p.description.toLowerCase().contains(lowerQuery) ||
-              p.sellerName.toLowerCase().contains(lowerQuery) ||
-              p.tags.any((t) => t.toLowerCase().contains(lowerQuery));
-        }).toList();
-      }
+          // Client-side search filter (Firestore doesn't support full-text search)
+          if (searchQuery != null && searchQuery.isNotEmpty) {
+            final lowerQuery = searchQuery.toLowerCase();
+            products = products.where((p) {
+              return p.name.toLowerCase().contains(lowerQuery) ||
+                  p.description.toLowerCase().contains(lowerQuery) ||
+                  p.sellerName.toLowerCase().contains(lowerQuery) ||
+                  p.tags.any((t) => t.toLowerCase().contains(lowerQuery));
+            }).toList();
+          }
 
-      return products;
-    });
+          return products;
+        })
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] Products stream error: $e');
+        });
   }
 
   /// Watch featured products (from active sellers only)
   /// Note: Filters client-side for backward compatibility with old documents
   Stream<List<ShopProduct>> watchFeaturedProducts({int limit = 10}) {
-    return _productsCollection.snapshots().asyncMap((snapshot) async {
-      final activeSellerIds = await _getActiveSellerIds();
-      final products = snapshot.docs
-          .map((doc) => ShopProduct.fromFirestore(doc))
-          .where(
-            (p) =>
-                p.isActive &&
-                p.isFeatured &&
-                activeSellerIds.contains(p.sellerId),
-          )
-          .take(limit)
-          .toList();
-      return products;
-    });
+    return _productsCollection
+        .snapshots()
+        .asyncMap((snapshot) async {
+          final activeSellerIds = await _getActiveSellerIds();
+          final products = snapshot.docs
+              .map((doc) => ShopProduct.fromFirestore(doc))
+              .where(
+                (p) =>
+                    p.isActive &&
+                    p.isFeatured &&
+                    activeSellerIds.contains(p.sellerId),
+              )
+              .take(limit)
+              .toList();
+          return products;
+        })
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] Featured products stream error: $e');
+        });
   }
 
   /// Watch new arrivals (from active sellers only)
   /// Note: Filters client-side for backward compatibility with old documents
   Stream<List<ShopProduct>> watchNewArrivals({int limit = 20}) {
-    return _productsCollection.snapshots().asyncMap((snapshot) async {
-      final activeSellerIds = await _getActiveSellerIds();
-      final products =
-          snapshot.docs
-              .map((doc) => ShopProduct.fromFirestore(doc))
-              .where((p) => p.isActive && activeSellerIds.contains(p.sellerId))
-              .toList()
-            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return products.take(limit).toList();
-    });
+    return _productsCollection
+        .snapshots()
+        .asyncMap((snapshot) async {
+          final activeSellerIds = await _getActiveSellerIds();
+          final products =
+              snapshot.docs
+                  .map((doc) => ShopProduct.fromFirestore(doc))
+                  .where(
+                    (p) => p.isActive && activeSellerIds.contains(p.sellerId),
+                  )
+                  .toList()
+                ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return products.take(limit).toList();
+        })
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] New arrivals stream error: $e');
+        });
   }
 
   /// Watch best sellers (from active sellers only)
   /// Note: Filters client-side for backward compatibility with old documents
   Stream<List<ShopProduct>> watchBestSellers({int limit = 20}) {
-    return _productsCollection.snapshots().asyncMap((snapshot) async {
-      final activeSellerIds = await _getActiveSellerIds();
-      final products =
-          snapshot.docs
-              .map((doc) => ShopProduct.fromFirestore(doc))
-              .where((p) => p.isActive && activeSellerIds.contains(p.sellerId))
-              .toList()
-            ..sort((a, b) => b.salesCount.compareTo(a.salesCount));
-      return products.take(limit).toList();
-    });
+    return _productsCollection
+        .snapshots()
+        .asyncMap((snapshot) async {
+          final activeSellerIds = await _getActiveSellerIds();
+          final products =
+              snapshot.docs
+                  .map((doc) => ShopProduct.fromFirestore(doc))
+                  .where(
+                    (p) => p.isActive && activeSellerIds.contains(p.sellerId),
+                  )
+                  .toList()
+                ..sort((a, b) => b.salesCount.compareTo(a.salesCount));
+          return products.take(limit).toList();
+        })
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] Best sellers stream error: $e');
+        });
   }
 
   /// Watch trending products by view count (from active sellers only)
   /// Used for "Popular" section - safe because it's based on product data, not user input
   Stream<List<ShopProduct>> watchTrendingProducts({int limit = 8}) {
-    return _productsCollection.snapshots().asyncMap((snapshot) async {
-      final activeSellerIds = await _getActiveSellerIds();
-      final products =
-          snapshot.docs
-              .map((doc) => ShopProduct.fromFirestore(doc))
-              .where((p) => p.isActive && activeSellerIds.contains(p.sellerId))
-              .toList()
-            ..sort((a, b) => b.viewCount.compareTo(a.viewCount));
-      return products.take(limit).toList();
-    });
+    return _productsCollection
+        .snapshots()
+        .asyncMap((snapshot) async {
+          final activeSellerIds = await _getActiveSellerIds();
+          final products =
+              snapshot.docs
+                  .map((doc) => ShopProduct.fromFirestore(doc))
+                  .where(
+                    (p) => p.isActive && activeSellerIds.contains(p.sellerId),
+                  )
+                  .toList()
+                ..sort((a, b) => b.viewCount.compareTo(a.viewCount));
+          return products.take(limit).toList();
+        })
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] Trending products stream error: $e');
+        });
   }
 
   /// Watch products on sale (from active sellers only)
   /// Note: Filters client-side for backward compatibility with old documents
   Stream<List<ShopProduct>> watchOnSale({int limit = 20}) {
-    return _productsCollection.snapshots().asyncMap((snapshot) async {
-      final activeSellerIds = await _getActiveSellerIds();
-      final products = snapshot.docs
-          .map((doc) => ShopProduct.fromFirestore(doc))
-          .where(
-            (p) =>
-                p.isActive &&
-                (p.compareAtPrice ?? 0) > 0 &&
-                activeSellerIds.contains(p.sellerId),
-          )
-          .take(limit)
-          .toList();
-      return products;
-    });
+    return _productsCollection
+        .snapshots()
+        .asyncMap((snapshot) async {
+          final activeSellerIds = await _getActiveSellerIds();
+          final products = snapshot.docs
+              .map((doc) => ShopProduct.fromFirestore(doc))
+              .where(
+                (p) =>
+                    p.isActive &&
+                    (p.compareAtPrice ?? 0) > 0 &&
+                    activeSellerIds.contains(p.sellerId),
+              )
+              .take(limit)
+              .toList();
+          return products;
+        })
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] On sale stream error: $e');
+        });
   }
 
   /// Watch products by category (from active sellers only)
@@ -297,6 +333,9 @@ class DeviceShopService {
               .where((p) => p.isActive && activeSellerIds.contains(p.sellerId))
               .toList()
             ..sort((a, b) => b.salesCount.compareTo(a.salesCount));
+        })
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] Category stream error: $e');
         });
   }
 
@@ -309,10 +348,16 @@ class DeviceShopService {
 
   /// Watch a single product
   Stream<ShopProduct?> watchProduct(String productId) {
-    return _productsCollection.doc(productId).snapshots().map((doc) {
-      if (!doc.exists) return null;
-      return ShopProduct.fromFirestore(doc);
-    });
+    return _productsCollection
+        .doc(productId)
+        .snapshots()
+        .map((doc) {
+          if (!doc.exists) return null;
+          return ShopProduct.fromFirestore(doc);
+        })
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] Product stream error: $e');
+        });
   }
 
   /// Increment view count for analytics
@@ -359,31 +404,41 @@ class DeviceShopService {
   /// Watch all verified sellers
   /// Note: Filters client-side for backward compatibility with old documents
   Stream<List<ShopSeller>> watchSellers() {
-    return _sellersCollection.snapshots().map(
-      (snapshot) =>
-          snapshot.docs
-              .map((doc) => ShopSeller.fromFirestore(doc))
-              .where((s) => s.isActive)
-              .toList()
-            ..sort((a, b) {
-              // Sort official partners first
-              if (a.isOfficialPartner != b.isOfficialPartner) {
-                return a.isOfficialPartner ? -1 : 1;
-              }
-              return a.name.compareTo(b.name);
-            }),
-    );
+    return _sellersCollection
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs
+                  .map((doc) => ShopSeller.fromFirestore(doc))
+                  .where((s) => s.isActive)
+                  .toList()
+                ..sort((a, b) {
+                  // Sort official partners first
+                  if (a.isOfficialPartner != b.isOfficialPartner) {
+                    return a.isOfficialPartner ? -1 : 1;
+                  }
+                  return a.name.compareTo(b.name);
+                }),
+        )
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] Sellers stream error: $e');
+        });
   }
 
   /// Watch official partners
   /// Note: Filters client-side for backward compatibility with old documents
   Stream<List<ShopSeller>> watchOfficialPartners() {
-    return _sellersCollection.snapshots().map(
-      (snapshot) => snapshot.docs
-          .map((doc) => ShopSeller.fromFirestore(doc))
-          .where((s) => s.isActive && s.isOfficialPartner)
-          .toList(),
-    );
+    return _sellersCollection
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ShopSeller.fromFirestore(doc))
+              .where((s) => s.isActive && s.isOfficialPartner)
+              .toList(),
+        )
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] Official partners stream error: $e');
+        });
   }
 
   /// Get a seller
@@ -395,10 +450,16 @@ class DeviceShopService {
 
   /// Watch a seller
   Stream<ShopSeller?> watchSeller(String oderId) {
-    return _sellersCollection.doc(oderId).snapshots().map((doc) {
-      if (!doc.exists) return null;
-      return ShopSeller.fromFirestore(doc);
-    });
+    return _sellersCollection
+        .doc(oderId)
+        .snapshots()
+        .map((doc) {
+          if (!doc.exists) return null;
+          return ShopSeller.fromFirestore(doc);
+        })
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] Seller stream error: $e');
+        });
   }
 
   // ============ REVIEW OPERATIONS ============
@@ -423,6 +484,9 @@ class DeviceShopService {
                   .toList()
                 ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return reviews;
+        })
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] Product reviews stream error: $e');
         });
   }
 
@@ -437,7 +501,10 @@ class DeviceShopService {
                   .map((doc) => ProductReview.fromFirestore(doc))
                   .toList()
                 ..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
-        );
+        )
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] All product reviews stream error: $e');
+        });
   }
 
   /// Watch all pending reviews (admin moderation)
@@ -451,35 +518,45 @@ class DeviceShopService {
                   .map((doc) => ProductReview.fromFirestore(doc))
                   .toList()
                 ..sort((a, b) => a.createdAt.compareTo(b.createdAt)),
-        );
+        )
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] Pending reviews stream error: $e');
+        });
   }
 
   /// Watch ALL reviews for admin management (including those without status)
   Stream<List<ProductReview>> watchAllReviews() {
-    return _reviewsCollection.snapshots().map((snapshot) {
-      final reviews = snapshot.docs.map((doc) {
-        try {
-          return ProductReview.fromFirestore(doc);
-        } catch (e) {
-          // Handle old reviews without status field
-          AppLogging.app('Error parsing review ${doc.id}: $e');
-          // Return a review with pending status as fallback
-          final data = doc.data();
-          return ProductReview(
-            id: doc.id,
-            productId: data['productId'] as String? ?? '',
-            userId: data['userId'] as String? ?? '',
-            userName: data['userName'] as String? ?? 'Unknown',
-            rating: data['rating'] as int? ?? 0,
-            body: data['body'] as String?,
-            createdAt:
-                (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-            status: data['status'] as String? ?? 'legacy', // Mark old reviews
-          );
-        }
-      }).toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return reviews;
-    });
+    return _reviewsCollection
+        .snapshots()
+        .map((snapshot) {
+          final reviews = snapshot.docs.map((doc) {
+            try {
+              return ProductReview.fromFirestore(doc);
+            } catch (e) {
+              // Handle old reviews without status field
+              AppLogging.app('Error parsing review ${doc.id}: $e');
+              // Return a review with pending status as fallback
+              final data = doc.data();
+              return ProductReview(
+                id: doc.id,
+                productId: data['productId'] as String? ?? '',
+                userId: data['userId'] as String? ?? '',
+                userName: data['userName'] as String? ?? 'Unknown',
+                rating: data['rating'] as int? ?? 0,
+                body: data['body'] as String?,
+                createdAt:
+                    (data['createdAt'] as Timestamp?)?.toDate() ??
+                    DateTime.now(),
+                status:
+                    data['status'] as String? ?? 'legacy', // Mark old reviews
+              );
+            }
+          }).toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return reviews;
+        })
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] All reviews stream error: $e');
+        });
   }
 
   /// Get review stats for a product
@@ -624,7 +701,10 @@ class DeviceShopService {
                   .map((doc) => ProductFavorite.fromFirestore(doc))
                   .toList()
                 ..sort((a, b) => b.addedAt.compareTo(a.addedAt)),
-        );
+        )
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] User favorites stream error: $e');
+        });
   }
 
   /// Watch user's favorite product IDs (for quick lookup)
@@ -636,7 +716,10 @@ class DeviceShopService {
           (snapshot) => snapshot.docs
               .map((doc) => doc.data()['productId'] as String)
               .toSet(),
-        );
+        )
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] User favorite IDs stream error: $e');
+        });
   }
 
   /// Check if product is favorited
@@ -898,32 +981,51 @@ class DeviceShopService {
   /// Watch featured products ordered by featuredOrder
   /// Note: Filters client-side for backward compatibility with old documents
   Stream<List<ShopProduct>> watchFeaturedProductsOrdered() {
-    return _productsCollection.snapshots().map(
-      (snapshot) =>
-          snapshot.docs
-              .map((doc) => ShopProduct.fromFirestore(doc))
-              .where((p) => p.isActive && p.isFeatured)
-              .toList()
-            ..sort((a, b) => a.featuredOrder.compareTo(b.featuredOrder)),
-    );
+    return _productsCollection
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs
+                  .map((doc) => ShopProduct.fromFirestore(doc))
+                  .where((p) => p.isActive && p.isFeatured)
+                  .toList()
+                ..sort((a, b) => a.featuredOrder.compareTo(b.featuredOrder)),
+        )
+        .handleError((Object e) {
+          AppLogging.app(
+            '[DeviceShop] Featured products ordered stream error: $e',
+          );
+        });
   }
 
   /// Watch all sellers (including inactive) for admin
   Stream<List<ShopSeller>> watchAllSellersAdmin() {
-    return _sellersCollection.snapshots().map(
-      (snapshot) =>
-          snapshot.docs.map((doc) => ShopSeller.fromFirestore(doc)).toList()
-            ..sort((a, b) => b.joinedAt.compareTo(a.joinedAt)),
-    );
+    return _sellersCollection
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => ShopSeller.fromFirestore(doc)).toList()
+                ..sort((a, b) => b.joinedAt.compareTo(a.joinedAt)),
+        )
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] All sellers admin stream error: $e');
+        });
   }
 
   /// Watch all products (including inactive) for admin
   Stream<List<ShopProduct>> watchAllProductsAdmin() {
-    return _productsCollection.snapshots().map(
-      (snapshot) =>
-          snapshot.docs.map((doc) => ShopProduct.fromFirestore(doc)).toList()
-            ..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
-    );
+    return _productsCollection
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs
+                  .map((doc) => ShopProduct.fromFirestore(doc))
+                  .toList()
+                ..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
+        )
+        .handleError((Object e) {
+          AppLogging.app('[DeviceShop] All products admin stream error: $e');
+        });
   }
 
   // ============ ANALYTICS ============

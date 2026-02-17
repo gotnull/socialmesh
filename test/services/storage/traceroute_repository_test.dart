@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path/path.dart' as p;
 import 'package:socialmesh/models/telemetry_log.dart';
-import 'package:socialmesh/services/storage/telemetry_storage_service.dart';
+import 'package:socialmesh/services/storage/telemetry_database.dart';
 import 'package:socialmesh/services/storage/traceroute_database.dart';
 import 'package:socialmesh/services/storage/traceroute_repository.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+int _testDbSeq = 0;
+final _testPid = pid;
+
+String _uniqueDbPath(String prefix) {
+  final dir = Directory.systemTemp.path;
+  return p.join(dir, '${prefix}_${_testPid}_${_testDbSeq++}.db');
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -671,9 +681,8 @@ void main() {
   // =========================================================================
   group('SqliteTracerouteRepository — migrateFromSharedPreferences', () {
     test('migrates legacy data from SharedPreferences', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final legacy = TelemetryStorageService(prefs);
+      final legacy = TelemetryDatabase(testDbPath: _uniqueDbPath('telem_mig'));
+      await legacy.init();
 
       // Write some legacy data
       await legacy.addTraceRouteLog(
@@ -724,9 +733,8 @@ void main() {
     });
 
     test('migration is skipped when DB already has data', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final legacy = TelemetryStorageService(prefs);
+      final legacy = TelemetryDatabase(testDbPath: _uniqueDbPath('telem_mig'));
+      await legacy.init();
 
       // Write legacy data
       await legacy.addTraceRouteLog(
@@ -756,9 +764,8 @@ void main() {
     });
 
     test('migration handles empty legacy gracefully', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final legacy = TelemetryStorageService(prefs);
+      final legacy = TelemetryDatabase(testDbPath: _uniqueDbPath('telem_mig'));
+      await legacy.init();
 
       final (db, repo) = await createRepo();
 

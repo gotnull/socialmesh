@@ -150,7 +150,7 @@ UI (ref.watch)
 
 SQLite databases handle offline persistence:
 
-- **NodeDex** — Discovered nodes, encounter history, social tags
+- **Messages** -- Chat messages (channel and DM) with per-conversation 500-message retention, indexed by conversation key and packet ID- **NodeDex** — Discovered nodes, encounter history, social tags
 - **Signals** — Ephemeral mesh content with TTL
 - **Routes** — Discovered packet routes
 - **Traceroute** — Route discovery history with per-hop SNR (500 global / 100 per-node retention)

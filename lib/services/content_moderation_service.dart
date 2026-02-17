@@ -71,24 +71,32 @@ class ContentModerationService {
       return Stream.value(null);
     }
 
-    return _firestore.collection('users').doc(userId).snapshots().map((doc) {
-      if (!doc.exists) return null;
-      final data = doc.data();
-      final modStatus = data?['moderationStatus'] as Map<String, dynamic>?;
-      if (modStatus == null) return ModerationStatus.clear();
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .map((doc) {
+          if (!doc.exists) return null;
+          final data = doc.data();
+          final modStatus = data?['moderationStatus'] as Map<String, dynamic>?;
+          if (modStatus == null) return ModerationStatus.clear();
 
-      return ModerationStatus(
-        activeStrikes: modStatus['activeStrikes'] as int? ?? 0,
-        activeWarnings: modStatus['activeWarnings'] as int? ?? 0,
-        isSuspended: modStatus['isSuspended'] as bool? ?? false,
-        suspendedUntil: modStatus['suspendedUntil'] != null
-            ? (modStatus['suspendedUntil'] as Timestamp).toDate()
-            : null,
-        isPermanentlyBanned: modStatus['isPermanentlyBanned'] as bool? ?? false,
-        strikes:
-            [], // Not included in snapshot, use getModerationStatus() for full data
-      );
-    });
+          return ModerationStatus(
+            activeStrikes: modStatus['activeStrikes'] as int? ?? 0,
+            activeWarnings: modStatus['activeWarnings'] as int? ?? 0,
+            isSuspended: modStatus['isSuspended'] as bool? ?? false,
+            suspendedUntil: modStatus['suspendedUntil'] != null
+                ? (modStatus['suspendedUntil'] as Timestamp).toDate()
+                : null,
+            isPermanentlyBanned:
+                modStatus['isPermanentlyBanned'] as bool? ?? false,
+            strikes:
+                [], // Not included in snapshot, use getModerationStatus() for full data
+          );
+        })
+        .handleError((Object e) {
+          AppLogging.social('Moderation status stream error: $e');
+        });
   }
 
   /// Get unacknowledged strikes for the current user
@@ -295,14 +303,21 @@ class ContentModerationService {
       return Stream.value(SensitiveContentSettings.defaultSettings());
     }
 
-    return _firestore.collection('users').doc(userId).snapshots().map((doc) {
-      final settings =
-          doc.data()?['sensitiveContentSettings'] as Map<String, dynamic>?;
-      if (settings == null) {
-        return SensitiveContentSettings.defaultSettings();
-      }
-      return SensitiveContentSettings.fromMap(settings);
-    });
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .map((doc) {
+          final settings =
+              doc.data()?['sensitiveContentSettings'] as Map<String, dynamic>?;
+          if (settings == null) {
+            return SensitiveContentSettings.defaultSettings();
+          }
+          return SensitiveContentSettings.fromMap(settings);
+        })
+        .handleError((Object e) {
+          AppLogging.social('Sensitive content settings stream error: $e');
+        });
   }
 
   // ===========================================================================

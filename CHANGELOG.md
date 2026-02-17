@@ -21,12 +21,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive unit and widget tests for accessibility layer
 - Traceroute help topic with guided tour (8 steps covering sending, cooldowns, results, history, and export)
 - Help menu integration on the Traceroute History screen
+- SQLite-backed message persistence (`MessageDatabase`) replacing SharedPreferences JSON blob
+- Per-conversation message retention (500 messages per conversation, up from global 100)
+- Full message field serialization (status, packetId, routingError, errorMessage)
+- Automatic one-time migration from legacy SharedPreferences storage on first launch
+- Indexed queries by conversation key, node number, and packet ID
 
 ### Changed
 
 - MaterialApp now applies accessibility theme preferences via AccessibilityThemeAdapter
 - Theme integration includes font family, visual density, and high contrast adjustments
 - Animation durations respect reduce motion preference throughout the app
+
+### Fixed
+
+- Chat messages no longer disappear across app restarts (SQLite replaces lossy SharedPreferences blob)
+- Channel message deduplication no longer fails when push notification `to` field differs from mesh broadcast address
+- Removed dead `MessageStorageService` class (replaced by `MessageDatabase`)
 
 ## [1.2.0] - 2026-02-01
 

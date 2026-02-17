@@ -206,6 +206,9 @@ class BugReportRepository {
             'Streamed ${reports.length} bug reports for user ${user.uid}',
           );
           return reports;
+        })
+        .handleError((Object e) {
+          AppLogging.bugReport('Bug reports stream error: $e');
         });
   }
 

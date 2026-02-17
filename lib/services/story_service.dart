@@ -345,7 +345,10 @@ class StoryService {
         .orderBy('expiresAt')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map(Story.fromFirestore).toList());
+        .map((snapshot) => snapshot.docs.map(Story.fromFirestore).toList())
+        .handleError((Object e) {
+          AppLogging.social('My stories stream error: $e');
+        });
   }
 
   /// Get stories from users the current user follows
@@ -384,6 +387,9 @@ class StoryService {
           // Sort by creation time, newest first
           stories.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return stories;
+        })
+        .handleError((Object e) {
+          AppLogging.social('Following stories stream error: $e');
         });
   }
 
@@ -479,7 +485,10 @@ class StoryService {
         .orderBy('viewedAt', descending: true)
         .limit(500)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map(StoryView.fromFirestore).toList());
+        .map((snapshot) => snapshot.docs.map(StoryView.fromFirestore).toList())
+        .handleError((Object e) {
+          AppLogging.social('Story viewers stream error: $e');
+        });
   }
 
   /// Check if current user has viewed a story
@@ -630,7 +639,10 @@ class StoryService {
         .where('expiresAt', isGreaterThan: Timestamp.now())
         .orderBy('expiresAt')
         .snapshots()
-        .asyncMap((_) => getStoryGroups());
+        .asyncMap((_) => getStoryGroups())
+        .handleError((Object e) {
+          AppLogging.social('Story groups stream error: $e');
+        });
   }
 
   // ===========================================================================
@@ -738,7 +750,10 @@ class StoryService {
         .collection('likes')
         .doc(currentUserId)
         .snapshots()
-        .map((doc) => doc.exists);
+        .map((doc) => doc.exists)
+        .handleError((Object e) {
+          AppLogging.social('Story like status stream error: $e');
+        });
   }
 
   /// Get list of users who liked a story

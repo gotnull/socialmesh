@@ -294,6 +294,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: GlassScaffold(
+        resizeToAvoidBottomInset: false,
         title: 'Position',
         actions: [
           // Date range selector

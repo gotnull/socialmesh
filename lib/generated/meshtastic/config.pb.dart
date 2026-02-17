@@ -1022,6 +1022,7 @@ class Config_DisplayConfig extends $pb.GeneratedMessage {
     Config_DisplayConfig_CompassOrientation? compassOrientation,
     $core.bool? use12hClock,
     $core.bool? useLongNodeName,
+    $core.bool? enableMessageBubbles,
   }) {
     final result = create();
     if (screenOnSecs != null) result.screenOnSecs = screenOnSecs;
@@ -1039,6 +1040,8 @@ class Config_DisplayConfig extends $pb.GeneratedMessage {
       result.compassOrientation = compassOrientation;
     if (use12hClock != null) result.use12hClock = use12hClock;
     if (useLongNodeName != null) result.useLongNodeName = useLongNodeName;
+    if (enableMessageBubbles != null)
+      result.enableMessageBubbles = enableMessageBubbles;
     return result;
   }
 
@@ -1078,6 +1081,7 @@ class Config_DisplayConfig extends $pb.GeneratedMessage {
         enumValues: Config_DisplayConfig_CompassOrientation.values)
     ..aOB(12, _omitFieldNames ? '' : 'use12hClock', protoName: 'use_12h_clock')
     ..aOB(13, _omitFieldNames ? '' : 'useLongNodeName')
+    ..aOB(14, _omitFieldNames ? '' : 'enableMessageBubbles')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1258,6 +1262,17 @@ class Config_DisplayConfig extends $pb.GeneratedMessage {
   $core.bool hasUseLongNodeName() => $_has(12);
   @$pb.TagNumber(13)
   void clearUseLongNodeName() => $_clearField(13);
+
+  ///
+  ///  If true, the device will display message bubbles on screen.
+  @$pb.TagNumber(14)
+  $core.bool get enableMessageBubbles => $_getBF(13);
+  @$pb.TagNumber(14)
+  set enableMessageBubbles($core.bool value) => $_setBool(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasEnableMessageBubbles() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearEnableMessageBubbles() => $_clearField(14);
 }
 
 ///

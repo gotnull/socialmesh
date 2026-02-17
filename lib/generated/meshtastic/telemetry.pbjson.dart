@@ -65,6 +65,9 @@ const TelemetrySensorType$json = {
     {'1': 'SEN5X', '2': 43},
     {'1': 'TSL2561', '2': 44},
     {'1': 'BH1750', '2': 45},
+    {'1': 'HDC1080', '2': 46},
+    {'1': 'SHT21', '2': 47},
+    {'1': 'STC31', '2': 48},
   ],
 };
 
@@ -81,7 +84,8 @@ final $typed_data.Uint8List telemetrySensorTypeDescriptor = $convert.base64Decod
     'NjE0EB8SCQoFU0NENFgQIBILCgdSQURTRU5TECESCgoGSU5BMjI2ECISEAoMREZST0JPVF9SQU'
     'lOECMSCgoGRFBTMzEwECQSDAoIUkFLMTIwMzUQJRIMCghNQVgxNzI2MRAmEgsKB1BDVDIwNzUQ'
     'JxILCgdBRFMxWDE1ECgSDwoLQURTMVgxNV9BTFQQKRIJCgVTRkEzMBAqEgkKBVNFTjVYECsSCw'
-    'oHVFNMMjU2MRAsEgoKBkJIMTc1MBAt');
+    'oHVFNMMjU2MRAsEgoKBkJIMTc1MBAtEgsKB0hEQzEwODAQLhIJCgVTSFQyMRAvEgkKBVNUQzMx'
+    'EDA=');
 
 @$core.Deprecated('Use deviceMetricsDescriptor instead')
 const DeviceMetrics$json = {
@@ -913,6 +917,66 @@ final $typed_data.Uint8List localStatsDescriptor = $convert.base64Decode(
     'VhcF9mcmVlX2J5dGVzGA0gASgNUg1oZWFwRnJlZUJ5dGVzEiQKDm51bV90eF9kcm9wcGVkGA4g'
     'ASgNUgxudW1UeERyb3BwZWQSHwoLbm9pc2VfZmxvb3IYDyABKAVSCm5vaXNlRmxvb3I=');
 
+@$core.Deprecated('Use trafficManagementStatsDescriptor instead')
+const TrafficManagementStats$json = {
+  '1': 'TrafficManagementStats',
+  '2': [
+    {
+      '1': 'packets_inspected',
+      '3': 1,
+      '4': 1,
+      '5': 13,
+      '10': 'packetsInspected'
+    },
+    {
+      '1': 'position_dedup_drops',
+      '3': 2,
+      '4': 1,
+      '5': 13,
+      '10': 'positionDedupDrops'
+    },
+    {
+      '1': 'nodeinfo_cache_hits',
+      '3': 3,
+      '4': 1,
+      '5': 13,
+      '10': 'nodeinfoCacheHits'
+    },
+    {'1': 'rate_limit_drops', '3': 4, '4': 1, '5': 13, '10': 'rateLimitDrops'},
+    {
+      '1': 'unknown_packet_drops',
+      '3': 5,
+      '4': 1,
+      '5': 13,
+      '10': 'unknownPacketDrops'
+    },
+    {
+      '1': 'hop_exhausted_packets',
+      '3': 6,
+      '4': 1,
+      '5': 13,
+      '10': 'hopExhaustedPackets'
+    },
+    {
+      '1': 'router_hops_preserved',
+      '3': 7,
+      '4': 1,
+      '5': 13,
+      '10': 'routerHopsPreserved'
+    },
+  ],
+};
+
+/// Descriptor for `TrafficManagementStats`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List trafficManagementStatsDescriptor = $convert.base64Decode(
+    'ChZUcmFmZmljTWFuYWdlbWVudFN0YXRzEisKEXBhY2tldHNfaW5zcGVjdGVkGAEgASgNUhBwYW'
+    'NrZXRzSW5zcGVjdGVkEjAKFHBvc2l0aW9uX2RlZHVwX2Ryb3BzGAIgASgNUhJwb3NpdGlvbkRl'
+    'ZHVwRHJvcHMSLgoTbm9kZWluZm9fY2FjaGVfaGl0cxgDIAEoDVIRbm9kZWluZm9DYWNoZUhpdH'
+    'MSKAoQcmF0ZV9saW1pdF9kcm9wcxgEIAEoDVIOcmF0ZUxpbWl0RHJvcHMSMAoUdW5rbm93bl9w'
+    'YWNrZXRfZHJvcHMYBSABKA1SEnVua25vd25QYWNrZXREcm9wcxIyChVob3BfZXhoYXVzdGVkX3'
+    'BhY2tldHMYBiABKA1SE2hvcEV4aGF1c3RlZFBhY2tldHMSMgoVcm91dGVyX2hvcHNfcHJlc2Vy'
+    'dmVkGAcgASgNUhNyb3V0ZXJIb3BzUHJlc2VydmVk');
+
 @$core.Deprecated('Use healthMetricsDescriptor instead')
 const HealthMetrics$json = {
   '1': 'HealthMetrics',
@@ -1073,6 +1137,15 @@ const Telemetry$json = {
       '9': 0,
       '10': 'hostMetrics'
     },
+    {
+      '1': 'traffic_management_stats',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.TrafficManagementStats',
+      '9': 0,
+      '10': 'trafficManagementStats'
+    },
   ],
   '8': [
     {'1': 'variant'},
@@ -1090,7 +1163,9 @@ final $typed_data.Uint8List telemetryDescriptor = $convert.base64Decode(
     'b2NhbF9zdGF0cxgGIAEoCzIWLm1lc2h0YXN0aWMuTG9jYWxTdGF0c0gAUgpsb2NhbFN0YXRzEk'
     'IKDmhlYWx0aF9tZXRyaWNzGAcgASgLMhkubWVzaHRhc3RpYy5IZWFsdGhNZXRyaWNzSABSDWhl'
     'YWx0aE1ldHJpY3MSPAoMaG9zdF9tZXRyaWNzGAggASgLMhcubWVzaHRhc3RpYy5Ib3N0TWV0cm'
-    'ljc0gAUgtob3N0TWV0cmljc0IJCgd2YXJpYW50');
+    'ljc0gAUgtob3N0TWV0cmljcxJeChh0cmFmZmljX21hbmFnZW1lbnRfc3RhdHMYCSABKAsyIi5t'
+    'ZXNodGFzdGljLlRyYWZmaWNNYW5hZ2VtZW50U3RhdHNIAFIWdHJhZmZpY01hbmFnZW1lbnRTdG'
+    'F0c0IJCgd2YXJpYW50');
 
 @$core.Deprecated('Use nau7802ConfigDescriptor instead')
 const Nau7802Config$json = {
@@ -1111,3 +1186,67 @@ const Nau7802Config$json = {
 final $typed_data.Uint8List nau7802ConfigDescriptor = $convert.base64Decode(
     'Cg1OYXU3ODAyQ29uZmlnEh4KCnplcm9PZmZzZXQYASABKAVSCnplcm9PZmZzZXQSLAoRY2FsaW'
     'JyYXRpb25GYWN0b3IYAiABKAJSEWNhbGlicmF0aW9uRmFjdG9y');
+
+@$core.Deprecated('Use sEN5XStateDescriptor instead')
+const SEN5XState$json = {
+  '1': 'SEN5XState',
+  '2': [
+    {
+      '1': 'last_cleaning_time',
+      '3': 1,
+      '4': 1,
+      '5': 13,
+      '10': 'lastCleaningTime'
+    },
+    {
+      '1': 'last_cleaning_valid',
+      '3': 2,
+      '4': 1,
+      '5': 8,
+      '10': 'lastCleaningValid'
+    },
+    {'1': 'one_shot_mode', '3': 3, '4': 1, '5': 8, '10': 'oneShotMode'},
+    {
+      '1': 'voc_state_time',
+      '3': 4,
+      '4': 1,
+      '5': 13,
+      '9': 0,
+      '10': 'vocStateTime',
+      '17': true
+    },
+    {
+      '1': 'voc_state_valid',
+      '3': 5,
+      '4': 1,
+      '5': 8,
+      '9': 1,
+      '10': 'vocStateValid',
+      '17': true
+    },
+    {
+      '1': 'voc_state_array',
+      '3': 6,
+      '4': 1,
+      '5': 6,
+      '9': 2,
+      '10': 'vocStateArray',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_voc_state_time'},
+    {'1': '_voc_state_valid'},
+    {'1': '_voc_state_array'},
+  ],
+};
+
+/// Descriptor for `SEN5XState`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sEN5XStateDescriptor = $convert.base64Decode(
+    'CgpTRU41WFN0YXRlEiwKEmxhc3RfY2xlYW5pbmdfdGltZRgBIAEoDVIQbGFzdENsZWFuaW5nVG'
+    'ltZRIuChNsYXN0X2NsZWFuaW5nX3ZhbGlkGAIgASgIUhFsYXN0Q2xlYW5pbmdWYWxpZBIiCg1v'
+    'bmVfc2hvdF9tb2RlGAMgASgIUgtvbmVTaG90TW9kZRIpCg52b2Nfc3RhdGVfdGltZRgEIAEoDU'
+    'gAUgx2b2NTdGF0ZVRpbWWIAQESKwoPdm9jX3N0YXRlX3ZhbGlkGAUgASgISAFSDXZvY1N0YXRl'
+    'VmFsaWSIAQESKwoPdm9jX3N0YXRlX2FycmF5GAYgASgGSAJSDXZvY1N0YXRlQXJyYXmIAQFCEQ'
+    'oPX3ZvY19zdGF0ZV90aW1lQhIKEF92b2Nfc3RhdGVfdmFsaWRCEgoQX3ZvY19zdGF0ZV9hcnJh'
+    'eQ==');

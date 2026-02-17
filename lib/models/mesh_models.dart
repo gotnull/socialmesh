@@ -329,6 +329,15 @@ class MeshNode {
   // Node Status (v2.7.18)
   final String? nodeStatus; // Status message from NODE_STATUS_APP
 
+  // Traffic Management Stats (v2.7.19)
+  final int? tmPacketsInspected;
+  final int? tmPositionDedupDrops;
+  final int? tmNodeinfoCacheHits;
+  final int? tmRateLimitDrops;
+  final int? tmUnknownPacketDrops;
+  final int? tmHopExhaustedPackets;
+  final int? tmRouterHopsPreserved;
+
   // GPS/Position Extended Fields
   final int? satsInView; // Number of satellites in view
   final double? gpsAccuracy; // GPS accuracy in meters
@@ -422,6 +431,14 @@ class MeshNode {
     this.noiseFloor,
     // Node Status (v2.7.18)
     this.nodeStatus,
+    // Traffic Management Stats (v2.7.19)
+    this.tmPacketsInspected,
+    this.tmPositionDedupDrops,
+    this.tmNodeinfoCacheHits,
+    this.tmRateLimitDrops,
+    this.tmUnknownPacketDrops,
+    this.tmHopExhaustedPackets,
+    this.tmRouterHopsPreserved,
     // GPS/Position Extended Fields
     this.satsInView,
     this.gpsAccuracy,
@@ -517,6 +534,14 @@ class MeshNode {
     int? noiseFloor,
     // Node Status (v2.7.18)
     String? nodeStatus,
+    // Traffic Management Stats (v2.7.19)
+    int? tmPacketsInspected,
+    int? tmPositionDedupDrops,
+    int? tmNodeinfoCacheHits,
+    int? tmRateLimitDrops,
+    int? tmUnknownPacketDrops,
+    int? tmHopExhaustedPackets,
+    int? tmRouterHopsPreserved,
     // GPS/Position Extended Fields
     int? satsInView,
     double? gpsAccuracy,
@@ -609,6 +634,16 @@ class MeshNode {
       noiseFloor: noiseFloor ?? this.noiseFloor,
       // Node Status (v2.7.18)
       nodeStatus: nodeStatus ?? this.nodeStatus,
+      // Traffic Management Stats (v2.7.19)
+      tmPacketsInspected: tmPacketsInspected ?? this.tmPacketsInspected,
+      tmPositionDedupDrops: tmPositionDedupDrops ?? this.tmPositionDedupDrops,
+      tmNodeinfoCacheHits: tmNodeinfoCacheHits ?? this.tmNodeinfoCacheHits,
+      tmRateLimitDrops: tmRateLimitDrops ?? this.tmRateLimitDrops,
+      tmUnknownPacketDrops: tmUnknownPacketDrops ?? this.tmUnknownPacketDrops,
+      tmHopExhaustedPackets:
+          tmHopExhaustedPackets ?? this.tmHopExhaustedPackets,
+      tmRouterHopsPreserved:
+          tmRouterHopsPreserved ?? this.tmRouterHopsPreserved,
       // GPS/Position Extended Fields
       satsInView: satsInView ?? this.satsInView,
       gpsAccuracy: gpsAccuracy ?? this.gpsAccuracy,

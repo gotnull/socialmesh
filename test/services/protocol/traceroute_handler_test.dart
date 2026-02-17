@@ -1,12 +1,28 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path/path.dart' as p;
 import 'package:socialmesh/generated/meshtastic/mesh.pb.dart' as pb;
 import 'package:socialmesh/models/telemetry_log.dart';
-import 'package:socialmesh/services/storage/telemetry_storage_service.dart';
+import 'package:socialmesh/services/storage/telemetry_database.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+int _testDbSeq = 0;
+final _testPid = pid;
+
+String _uniqueTelemDbPath() {
+  final dir = Directory.systemTemp.path;
+  return p.join(dir, 'telem_trh_${_testPid}_${_testDbSeq++}.db');
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
 
   group('Traceroute RouteDiscovery parsing', () {
     test(
@@ -253,13 +269,15 @@ void main() {
   });
 
   group('Traceroute storage integration', () {
-    late SharedPreferences prefs;
-    late TelemetryStorageService storage;
+    late TelemetryDatabase storage;
 
     setUp(() async {
-      SharedPreferences.setMockInitialValues({});
-      prefs = await SharedPreferences.getInstance();
-      storage = TelemetryStorageService(prefs);
+      storage = TelemetryDatabase(testDbPath: _uniqueTelemDbPath());
+      await storage.init();
+    });
+
+    tearDown(() async {
+      await storage.close();
     });
 
     test('addTraceRouteLog stores and retrieves a single traceroute', () async {
@@ -423,11 +441,10 @@ void main() {
     test(
       'exported CSV has correct header and data for stored traceroutes',
       () async {
-        SharedPreferences.setMockInitialValues({});
-        final prefs = await SharedPreferences.getInstance();
-        final storage = TelemetryStorageService(prefs);
+        final csvStorage = TelemetryDatabase(testDbPath: _uniqueTelemDbPath());
+        await csvStorage.init();
 
-        await storage.addTraceRouteLog(
+        await csvStorage.addTraceRouteLog(
           TraceRouteLog(
             nodeNum: 0xAABBCCDD,
             targetNode: 0xAABBCCDD,
@@ -445,7 +462,7 @@ void main() {
         );
 
         // Simulate the CSV export logic from data_export_screen.dart
-        final logs = await storage.getTraceRouteLogs(0xAABBCCDD);
+        final logs = await csvStorage.getTraceRouteLogs(0xAABBCCDD);
         final buffer = StringBuffer();
         buffer.writeln('timestamp,target_node,hops,route,snr_values');
         for (final log in logs) {
@@ -493,11 +510,10 @@ void main() {
     });
 
     test('CSV export handles hops with missing SNR as N/A', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final storage = TelemetryStorageService(prefs);
+      final storage3 = TelemetryDatabase(testDbPath: _uniqueTelemDbPath());
+      await storage3.init();
 
-      await storage.addTraceRouteLog(
+      await storage3.addTraceRouteLog(
         TraceRouteLog(
           nodeNum: 0xDEADBEEF,
           targetNode: 0xDEADBEEF,
@@ -512,7 +528,7 @@ void main() {
         ),
       );
 
-      final logs = await storage.getTraceRouteLogs(0xDEADBEEF);
+      final logs = await storage3.getTraceRouteLogs(0xDEADBEEF);
       final snrValues = logs.first.hops.map((h) => h.snr ?? 'N/A').join(',');
 
       expect(snrValues, '10.0,N/A');
@@ -523,9 +539,8 @@ void main() {
     test(
       'simulated inbound RouteDiscovery produces correct TraceRouteLog in storage',
       () async {
-        SharedPreferences.setMockInitialValues({});
-        final prefs = await SharedPreferences.getInstance();
-        final storage = TelemetryStorageService(prefs);
+        final e2eStorage = TelemetryDatabase(testDbPath: _uniqueTelemDbPath());
+        await e2eStorage.init();
 
         // Simulate what _handleTracerouteMessage does:
         // 1. Parse RouteDiscovery from protobuf payload
@@ -581,10 +596,10 @@ void main() {
           snr: 7.5,
         );
 
-        await storage.addTraceRouteLog(log);
+        await e2eStorage.addTraceRouteLog(log);
 
         // 5. Verify storage
-        final storedLogs = await storage.getTraceRouteLogs(targetNode);
+        final storedLogs = await e2eStorage.getTraceRouteLogs(targetNode);
         expect(storedLogs.length, 1);
 
         final stored = storedLogs.first;
@@ -604,16 +619,15 @@ void main() {
         expect(stored.hops[2].back, true);
 
         // 6. Verify it also shows up in getAllTraceRouteLogs
-        final allLogs = await storage.getAllTraceRouteLogs();
+        final allLogs = await e2eStorage.getAllTraceRouteLogs();
         expect(allLogs.length, 1);
         expect(allLogs.first.targetNode, targetNode);
       },
     );
 
     test('direct-path traceroute (zero hops) stores correctly', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final storage = TelemetryStorageService(prefs);
+      final storage5 = TelemetryDatabase(testDbPath: _uniqueTelemDbPath());
+      await storage5.init();
 
       // Direct path: no intermediate hops
       final routeDiscovery = pb.RouteDiscovery();
@@ -633,8 +647,8 @@ void main() {
         snr: 12.0,
       );
 
-      await storage.addTraceRouteLog(log);
-      final stored = await storage.getTraceRouteLogs(targetNode);
+      await storage5.addTraceRouteLog(log);
+      final stored = await storage5.getTraceRouteLogs(targetNode);
 
       expect(stored.length, 1);
       expect(stored.first.hopsTowards, 0);
@@ -646,13 +660,15 @@ void main() {
   });
 
   group('Outbound placeholder and replace-on-response', () {
-    late SharedPreferences prefs;
-    late TelemetryStorageService storage;
+    late TelemetryDatabase storage;
 
     setUp(() async {
-      SharedPreferences.setMockInitialValues({});
-      prefs = await SharedPreferences.getInstance();
-      storage = TelemetryStorageService(prefs);
+      storage = TelemetryDatabase(testDbPath: _uniqueTelemDbPath());
+      await storage.init();
+    });
+
+    tearDown(() async {
+      await storage.close();
     });
 
     test(

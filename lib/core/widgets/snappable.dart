@@ -6,7 +6,7 @@
 
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -304,14 +304,25 @@ class SnappableState extends State<Snappable>
   Future<image.Image?> _getImageFromWidget() async {
     final boundary =
         _globalKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) return null;
+    if (boundary == null || !boundary.hasSize) return null;
+
+    // Guard against zero-size boundaries (offscreen, not yet laid out)
+    final boundarySize = boundary.size;
+    if (boundarySize.isEmpty) return null;
 
     // Cache image for later
-    size = boundary.size;
-    final img = await boundary.toImage();
+    size = boundarySize;
+
+    final ui.Image img;
+    try {
+      img = await boundary.toImage();
+    } on FlutterError {
+      // toImage() throws when the boundary has never painted or is detached
+      return null;
+    }
 
     // Get raw RGBA bytes directly from Flutter (more reliable than PNG encode/decode)
-    final byteData = await img.toByteData(format: ImageByteFormat.rawRgba);
+    final byteData = await img.toByteData(format: ui.ImageByteFormat.rawRgba);
     if (byteData == null) return null;
 
     // Create image directly from RGBA bytes - this preserves exact pixel colors

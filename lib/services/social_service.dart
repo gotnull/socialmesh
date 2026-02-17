@@ -224,7 +224,10 @@ class SocialService {
         .collection('follow_requests')
         .doc(requestId)
         .snapshots()
-        .map((doc) => doc.exists && doc.data()?['status'] == 'pending');
+        .map((doc) => doc.exists && doc.data()?['status'] == 'pending')
+        .handleError((Object e) {
+          AppLogging.social('Follow request status stream error: $e');
+        });
   }
 
   /// Get pending follow requests for the current user (requests TO approve).
@@ -282,7 +285,10 @@ class SocialService {
         .where('targetId', isEqualTo: currentUserId)
         .where('status', isEqualTo: 'pending')
         .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+        .map((snapshot) => snapshot.docs.length)
+        .handleError((Object e) {
+          AppLogging.social('Pending follow requests count stream error: $e');
+        });
   }
 
   /// Stream of pending follow requests for the current user.
@@ -311,6 +317,9 @@ class SocialService {
             }),
           );
           return items;
+        })
+        .handleError((Object e) {
+          AppLogging.social('Pending follow requests stream error: $e');
         });
   }
 
@@ -380,7 +389,10 @@ class SocialService {
         .collection('follows')
         .doc(followId)
         .snapshots()
-        .map((doc) => doc.exists);
+        .map((doc) => doc.exists)
+        .handleError((Object e) {
+          AppLogging.social('Follow status stream error: $e');
+        });
   }
 
   /// Batch check if current user follows multiple target users.
@@ -554,7 +566,10 @@ class SocialService {
         .collection('signalSubscriptions')
         .doc(authorId)
         .snapshots()
-        .map((doc) => doc.exists);
+        .map((doc) => doc.exists)
+        .handleError((Object e) {
+          AppLogging.social('Signal subscription stream error: $e');
+        });
   }
 
   /// Get paginated list of followers for a user.
@@ -873,15 +888,20 @@ class SocialService {
 
   /// Stream a single post by ID for real-time updates.
   Stream<Post?> watchPost(String postId) {
-    return _firestore.collection('posts').doc(postId).snapshots().asyncMap((
-      doc,
-    ) async {
-      if (!doc.exists) return null;
-      final post = Post.fromFirestore(doc);
-      // Enrich with author data if missing
-      final enriched = await _enrichPostsWithAuthors([post]);
-      return enriched.first;
-    });
+    return _firestore
+        .collection('posts')
+        .doc(postId)
+        .snapshots()
+        .asyncMap((doc) async {
+          if (!doc.exists) return null;
+          final post = Post.fromFirestore(doc);
+          // Enrich with author data if missing
+          final enriched = await _enrichPostsWithAuthors([post]);
+          return enriched.first;
+        })
+        .handleError((Object e) {
+          AppLogging.social('Post watch stream error: $e');
+        });
   }
 
   /// Get paginated posts by a specific user.
@@ -930,6 +950,9 @@ class SocialService {
               .map((doc) => Post.fromFirestore(doc))
               .toList();
           return _enrichPostsWithAuthors(posts);
+        })
+        .handleError((Object e) {
+          AppLogging.social('User posts stream error: $e');
         });
   }
 
@@ -979,6 +1002,9 @@ class SocialService {
               .toList();
           // Enrich posts that are missing author snapshots
           return _enrichPostsWithAuthors(posts);
+        })
+        .handleError((Object e) {
+          AppLogging.social('Explore posts stream error: $e');
         });
   }
 
@@ -1066,7 +1092,10 @@ class SocialService {
         .map(
           (snapshot) =>
               snapshot.docs.map((doc) => FeedItem.fromFirestore(doc)).toList(),
-        );
+        )
+        .handleError((Object e) {
+          AppLogging.social('Feed stream error: $e');
+        });
   }
 
   // ===========================================================================
@@ -1288,6 +1317,9 @@ class SocialService {
             }),
           );
           return items;
+        })
+        .handleError((Object e) {
+          AppLogging.social('Comments stream error: $e');
         });
   }
 
@@ -1454,7 +1486,10 @@ class SocialService {
         .collection('likes')
         .doc(likeId)
         .snapshots()
-        .map((doc) => doc.exists);
+        .map((doc) => doc.exists)
+        .handleError((Object e) {
+          AppLogging.social('Like status stream error: $e');
+        });
   }
 
   // ===========================================================================
@@ -1510,7 +1545,10 @@ class SocialService {
             final data = doc.data();
             return {'id': doc.id, ...data};
           }).toList(),
-        );
+        )
+        .handleError((Object e) {
+          AppLogging.social('Pending reports stream error: $e');
+        });
   }
 
   /// Dismiss a report (admin only).
@@ -1567,7 +1605,10 @@ class SocialService {
             final data = doc.data();
             return {'id': doc.id, ...data};
           }).toList(),
-        );
+        )
+        .handleError((Object e) {
+          AppLogging.social('Moderation queue stream error: $e');
+        });
   }
 
   /// Approve content from moderation queue (admin only).
@@ -1951,23 +1992,35 @@ class SocialService {
       return Stream.value([]);
     }
 
-    return _firestore.collection('profiles').doc(currentUserId).snapshots().map(
-      (doc) {
-        if (!doc.exists) return <int>[];
-        return (doc.data()?['linkedNodeIds'] as List<dynamic>?)
-                ?.map((e) => e as int)
-                .toList() ??
-            <int>[];
-      },
-    );
+    return _firestore
+        .collection('profiles')
+        .doc(currentUserId)
+        .snapshots()
+        .map((doc) {
+          if (!doc.exists) return <int>[];
+          return (doc.data()?['linkedNodeIds'] as List<dynamic>?)
+                  ?.map((e) => e as int)
+                  .toList() ??
+              <int>[];
+        })
+        .handleError((Object e) {
+          AppLogging.social('Linked node IDs stream error: $e');
+        });
   }
 
   /// Stream a user's public profile with real-time updates from server.
   Stream<PublicProfile?> watchPublicProfile(String userId) {
-    return _firestore.collection('profiles').doc(userId).snapshots().map((doc) {
-      if (!doc.exists) return null;
-      return PublicProfile.fromFirestore(doc);
-    });
+    return _firestore
+        .collection('profiles')
+        .doc(userId)
+        .snapshots()
+        .map((doc) {
+          if (!doc.exists) return null;
+          return PublicProfile.fromFirestore(doc);
+        })
+        .handleError((Object e) {
+          AppLogging.social('Public profile stream error: $e');
+        });
   }
 
   /// Update the current user's public profile.

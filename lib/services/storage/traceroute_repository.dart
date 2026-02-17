@@ -15,7 +15,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/logging.dart';
 import '../../models/telemetry_log.dart';
-import 'telemetry_storage_service.dart';
+import 'telemetry_database.dart';
 import 'traceroute_database.dart';
 
 /// Retention limits for traceroute history pruning.
@@ -51,7 +51,7 @@ abstract class TracerouteHistoryRepository {
 
   /// One-time migration from SharedPreferences-based storage.
   /// Returns the number of runs migrated, or 0 if already migrated / empty.
-  Future<int> migrateFromSharedPreferences(TelemetryStorageService legacy);
+  Future<int> migrateFromSharedPreferences(TelemetryDatabase legacy);
 }
 
 /// SQLite-backed implementation of [TracerouteHistoryRepository].
@@ -318,9 +318,7 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
   // ---------------------------------------------------------------------------
 
   @override
-  Future<int> migrateFromSharedPreferences(
-    TelemetryStorageService legacy,
-  ) async {
+  Future<int> migrateFromSharedPreferences(TelemetryDatabase legacy) async {
     try {
       // Check if migration was already done
       final existing = await _db.query(TracerouteTables.runs, limit: 1);
