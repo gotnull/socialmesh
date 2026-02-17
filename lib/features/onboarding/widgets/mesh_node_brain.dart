@@ -494,6 +494,12 @@ class MeshNodeBrain extends StatefulWidget {
   /// Whether to show expression overlay (eyes, mouth)
   final bool showExpression;
 
+  /// Whether to render filled triangular faces on the icosahedron
+  final bool showFaces;
+
+  /// Opacity of the filled triangular faces (0.0 = invisible, 1.0 = fully opaque)
+  final double faceOpacity;
+
   const MeshNodeBrain({
     super.key,
     this.size = 180,
@@ -506,6 +512,8 @@ class MeshNodeBrain extends StatefulWidget {
     this.onTap,
     this.showThoughtParticles = true,
     this.showExpression = true,
+    this.showFaces = false,
+    this.faceOpacity = 0.0,
   });
 
   @override
@@ -1576,6 +1584,8 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           tiltAngle: personality.tiltAngle,
           edgeThicknessMult: personality.edgeThicknessMult,
           breathePhase: _pulse.value,
+          showFaces: widget.showFaces,
+          faceOpacity: widget.faceOpacity,
         ),
       ),
     );

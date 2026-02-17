@@ -134,6 +134,13 @@ class AnimatedMeshNode extends StatefulWidget {
   /// Edge shimmer effect (traveling light along edges)
   final double edgeShimmer;
 
+  // === FACE (TRIANGLE) RENDERING PARAMETERS ===
+  /// Whether to render filled triangular faces on the icosahedron
+  final bool showFaces;
+
+  /// Opacity of the filled triangular faces (0.0 = invisible, 1.0 = fully opaque)
+  final double faceOpacity;
+
   // === GHOST-LIKE PERSONALITY PARAMETERS ===
   /// Squash/stretch ratio (1.0 = normal, <1 = squashed, >1 = stretched)
   final double squashStretch;
@@ -180,6 +187,8 @@ class AnimatedMeshNode extends StatefulWidget {
     this.nodePulsePhase = 0.0,
     this.nodePulseIntensity = 0.0,
     this.edgeShimmer = 0.0,
+    this.showFaces = false,
+    this.faceOpacity = 0.0,
     this.squashStretch = 1.0,
     this.shellOpenness = 1.0,
     this.nodeJitter = 0.0,
@@ -432,6 +441,8 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
         nodePulsePhase: widget.nodePulsePhase,
         nodePulseIntensity: widget.nodePulseIntensity,
         edgeShimmer: widget.edgeShimmer,
+        showFaces: widget.showFaces,
+        faceOpacity: widget.faceOpacity,
         squashStretch: widget.squashStretch,
         shellOpenness: widget.shellOpenness,
         nodeJitter: widget.nodeJitter,
@@ -564,6 +575,13 @@ class _IcosahedronPainter extends CustomPainter {
   /// Shimmer effect traveling along edges (0-1 position of shimmer)
   final double edgeShimmer;
 
+  // === FACE (TRIANGLE) RENDERING PARAMETERS ===
+  /// Whether to render filled triangular faces on the icosahedron
+  final bool showFaces;
+
+  /// Opacity of the filled triangular faces (0.0 = invisible, 1.0 = fully opaque)
+  final double faceOpacity;
+
   // === GHOST-LIKE PERSONALITY PARAMETERS ===
   /// Squash/stretch ratio for expressive deformation
   final double squashStretch;
@@ -604,6 +622,8 @@ class _IcosahedronPainter extends CustomPainter {
     this.nodePulsePhase = 0.0,
     this.nodePulseIntensity = 0.0,
     this.edgeShimmer = 0.0,
+    this.showFaces = false,
+    this.faceOpacity = 0.0,
     this.squashStretch = 1.0,
     this.shellOpenness = 1.0,
     this.nodeJitter = 0.0,
@@ -663,6 +683,30 @@ class _IcosahedronPainter extends CustomPainter {
     [6, 7], [6, 8], [6, 10],
     [7, 8], [7, 10],
     [10, 11],
+  ];
+
+  // Icosahedron has exactly 20 triangular faces
+  static const List<List<int>> _faces = [
+    [0, 1, 5],
+    [0, 1, 7],
+    [0, 5, 11],
+    [0, 7, 10],
+    [0, 10, 11],
+    [1, 5, 9],
+    [1, 7, 8],
+    [1, 8, 9],
+    [2, 3, 4],
+    [2, 3, 6],
+    [2, 4, 11],
+    [2, 6, 10],
+    [2, 10, 11],
+    [3, 4, 9],
+    [3, 6, 8],
+    [3, 8, 9],
+    [4, 5, 9],
+    [4, 5, 11],
+    [6, 7, 8],
+    [6, 7, 10],
   ];
 
   @override
@@ -756,6 +800,61 @@ class _IcosahedronPainter extends CustomPainter {
 
     // Apply touch deformation to projected points (Mario 64 style pull)
     final deformedPoints = _applyDeformation(projectedPoints, size);
+
+    // Draw filled triangular faces (behind edges and nodes)
+    if (showFaces && faceOpacity > 0) {
+      final facesWithDepth = <MapEntry<int, double>>[];
+      for (var i = 0; i < _faces.length; i++) {
+        final face = _faces[i];
+        final avgZ =
+            (transformedPoints[face[0]].z +
+                transformedPoints[face[1]].z +
+                transformedPoints[face[2]].z) /
+            3;
+        facesWithDepth.add(MapEntry(i, avgZ));
+      }
+      facesWithDepth.sort((a, b) => a.value.compareTo(b.value));
+
+      for (final entry in facesWithDepth) {
+        final face = _faces[entry.key];
+        final fp0 = deformedPoints[face[0]];
+        final fp1 = deformedPoints[face[1]];
+        final fp2 = deformedPoints[face[2]];
+
+        final avgZ = entry.value;
+        final depthFactor = ((avgZ + 0.5) * 0.45 + 0.55).clamp(0.4, 1.0);
+
+        final centroidX = (fp0.dx + fp1.dx + fp2.dx) / 3;
+        final t = centroidX / size.width;
+        final color = _getGradientColor(t);
+
+        final facePath = Path()
+          ..moveTo(fp0.dx, fp0.dy)
+          ..lineTo(fp1.dx, fp1.dy)
+          ..lineTo(fp2.dx, fp2.dy)
+          ..close();
+
+        final faceAlpha = (faceOpacity * depthFactor * 255).round().clamp(
+          0,
+          255,
+        );
+
+        if (glowIntensity > 0) {
+          final faceGlowPaint = Paint()
+            ..color = color.withAlpha(
+              (faceAlpha * 0.3 * glowIntensity).round().clamp(0, 255),
+            )
+            ..style = PaintingStyle.fill
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+          canvas.drawPath(facePath, faceGlowPaint);
+        }
+
+        final facePaint = Paint()
+          ..color = color.withAlpha(faceAlpha)
+          ..style = PaintingStyle.fill;
+        canvas.drawPath(facePath, facePaint);
+      }
+    }
 
     // Sort edges by average Z depth (back to front)
     final edgesWithDepth = <MapEntry<int, double>>[];
@@ -1127,6 +1226,8 @@ class _IcosahedronPainter extends CustomPainter {
         oldDelegate.nodePulsePhase != nodePulsePhase ||
         oldDelegate.nodePulseIntensity != nodePulseIntensity ||
         oldDelegate.edgeShimmer != edgeShimmer ||
+        oldDelegate.showFaces != showFaces ||
+        oldDelegate.faceOpacity != faceOpacity ||
         oldDelegate.squashStretch != squashStretch ||
         oldDelegate.shellOpenness != shellOpenness ||
         oldDelegate.nodeJitter != nodeJitter ||
