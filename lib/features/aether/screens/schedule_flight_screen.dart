@@ -18,8 +18,10 @@ import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
+import '../data/airports.dart';
 import '../providers/aether_providers.dart';
 import '../services/opensky_service.dart';
+import '../widgets/airport_picker_sheet.dart';
 import '../widgets/flight_search_sheet.dart';
 
 // =============================================================================
@@ -71,6 +73,12 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   final _departureController = TextEditingController();
   final _arrivalController = TextEditingController();
   final _notesController = TextEditingController();
+  final _departureFocusNode = FocusNode();
+  final _arrivalFocusNode = FocusNode();
+
+  // Resolved airport objects for display feedback
+  Airport? _resolvedDeparture;
+  Airport? _resolvedArrival;
 
   DateTime? _departureDate;
   TimeOfDay? _departureTime;
@@ -87,12 +95,37 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   List<String> _missingFields = [];
 
   @override
+  void initState() {
+    super.initState();
+    _departureController.addListener(_onDepartureChanged);
+    _arrivalController.addListener(_onArrivalChanged);
+  }
+
+  @override
   void dispose() {
+    _departureController.removeListener(_onDepartureChanged);
+    _arrivalController.removeListener(_onArrivalChanged);
     _flightNumberController.dispose();
     _departureController.dispose();
     _arrivalController.dispose();
     _notesController.dispose();
+    _departureFocusNode.dispose();
+    _arrivalFocusNode.dispose();
     super.dispose();
+  }
+
+  void _onDepartureChanged() {
+    final resolved = lookupAirport(_departureController.text);
+    if (resolved != _resolvedDeparture) {
+      safeSetState(() => _resolvedDeparture = resolved);
+    }
+  }
+
+  void _onArrivalChanged() {
+    final resolved = lookupAirport(_arrivalController.text);
+    if (resolved != _resolvedArrival) {
+      safeSetState(() => _resolvedArrival = resolved);
+    }
   }
 
   // ===========================================================================
@@ -588,28 +621,29 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
 
                 // Airports row
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: _buildTextField(
+                      child: _buildAirportAutocomplete(
                         controller: _departureController,
+                        focusNode: _departureFocusNode,
                         label: 'From',
                         hint: 'LAX',
                         icon: Icons.flight_takeoff,
-                        maxLength: _maxAirportCodeLength,
-                        textCapitalization: TextCapitalization.characters,
-                        validator: (v) => _validateAirportCode(v, 'departure'),
+                        pickerTitle: 'Departure Airport',
+                        resolvedAirport: _resolvedDeparture,
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: _buildTextField(
+                      child: _buildAirportAutocomplete(
                         controller: _arrivalController,
+                        focusNode: _arrivalFocusNode,
                         label: 'To',
                         hint: 'JFK',
                         icon: Icons.flight_land,
-                        maxLength: _maxAirportCodeLength,
-                        textCapitalization: TextCapitalization.characters,
-                        validator: (v) => _validateAirportCode(v, 'arrival'),
+                        pickerTitle: 'Arrival Airport',
+                        resolvedAirport: _resolvedArrival,
                       ),
                     ),
                   ],
@@ -891,6 +925,155 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
         fontWeight: FontWeight.w600,
       ),
     );
+  }
+
+  /// Builds an airport field with inline autocomplete suggestions.
+  ///
+  /// As the user types (2+ chars), matching airports appear in a dropdown.
+  /// A resolved airport name is shown below the field as helper text.
+  /// The browse button opens the full scrollable picker sheet.
+  Widget _buildAirportAutocomplete({
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required String label,
+    required String hint,
+    required IconData icon,
+    required String pickerTitle,
+    Airport? resolvedAirport,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return RawAutocomplete<Airport>(
+              textEditingController: controller,
+              focusNode: focusNode,
+              displayStringForOption: (airport) => airport.iata,
+              optionsBuilder: (textEditingValue) {
+                final query = textEditingValue.text.trim();
+                if (query.length < 2) return const Iterable<Airport>.empty();
+                return kAirports.where((a) => a.matches(query)).take(5);
+              },
+              optionsViewBuilder: (ctx, onSelected, options) {
+                return _AirportOptionsOverlay(
+                  options: options.toList(),
+                  onSelected: onSelected,
+                  fieldWidth: constraints.maxWidth,
+                );
+              },
+              fieldViewBuilder:
+                  (ctx, textController, fieldFocusNode, onFieldSubmitted) {
+                    return TextFormField(
+                      controller: textController,
+                      focusNode: fieldFocusNode,
+                      maxLength: _maxAirportCodeLength,
+                      textCapitalization: TextCapitalization.characters,
+                      style: TextStyle(color: this.context.textPrimary),
+                      validator: (v) =>
+                          _validateAirportCode(v, label.toLowerCase()),
+                      onFieldSubmitted: (_) => onFieldSubmitted(),
+                      decoration: InputDecoration(
+                        labelText: label,
+                        hintText: hint,
+                        labelStyle: TextStyle(
+                          color: this.context.textSecondary,
+                        ),
+                        hintStyle: TextStyle(color: this.context.textTertiary),
+                        prefixIcon: Icon(
+                          icon,
+                          color: this.context.textTertiary,
+                          size: 20,
+                        ),
+                        suffixIcon: IconButton(
+                          onPressed: () =>
+                              _openAirportPicker(controller, pickerTitle),
+                          icon: Icon(
+                            Icons.list_alt,
+                            color: this.context.textTertiary,
+                            size: 20,
+                          ),
+                          tooltip: 'Browse airports',
+                        ),
+                        filled: true,
+                        fillColor: this.context.card,
+                        counterText: '',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: this.context.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: this.context.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: this.context.accentColor,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: AppTheme.errorRed),
+                        ),
+                      ),
+                    );
+                  },
+            );
+          },
+        ),
+        // Resolved airport name feedback
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          alignment: Alignment.topLeft,
+          child: resolvedAirport != null
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 4, left: 4),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        size: 12,
+                        color: context.accentColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          resolvedAirport.city,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: context.accentColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openAirportPicker(
+    TextEditingController controller,
+    String title,
+  ) async {
+    // Capture context before async gap
+    final ctx = context;
+    final airport = await AirportPickerSheet.show(
+      ctx,
+      title: title,
+      initialCode: controller.text,
+    );
+    if (!mounted) return;
+    if (airport != null) {
+      controller.text = airport.iata;
+    }
   }
 
   Widget _buildTextField({
@@ -1506,6 +1689,126 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
             child: Icon(Icons.close, color: context.textTertiary, size: 18),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Airport Autocomplete Overlay
+// =============================================================================
+
+/// Dropdown overlay for airport autocomplete suggestions.
+///
+/// Positioned directly below the text field. Shows up to 5 matching airports
+/// with IATA badge, city name, and full airport name.
+class _AirportOptionsOverlay extends StatelessWidget {
+  final List<Airport> options;
+  final ValueChanged<Airport> onSelected;
+  final double fieldWidth;
+
+  const _AirportOptionsOverlay({
+    required this.options,
+    required this.onSelected,
+    required this.fieldWidth,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.topLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Material(
+          elevation: 8,
+          borderRadius: BorderRadius.circular(12),
+          color: context.card,
+          child: Container(
+            width: fieldWidth,
+            constraints: const BoxConstraints(maxHeight: 260),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: ListView.separated(
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                itemCount: options.length,
+                separatorBuilder: (_, _) =>
+                    Divider(height: 1, color: context.border),
+                itemBuilder: (context, index) {
+                  final airport = options[index];
+                  return InkWell(
+                    onTap: () => onSelected(airport),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        children: [
+                          // IATA badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: context.accentColor.withValues(
+                                alpha: 0.15,
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              airport.iata,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: AppTheme.fontFamily,
+                                color: context.accentColor,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // City + airport name
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  airport.city,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: context.textPrimary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  airport.name,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: context.textTertiary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
