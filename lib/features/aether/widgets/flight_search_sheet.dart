@@ -6,6 +6,7 @@
 // Single debounced search path — no duplicate calls, no race conditions.
 
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -46,6 +47,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
   final _focus = FocusNode();
   final _openSky = OpenSkyService();
   final Map<String, OpenSkyFlight?> _routeCache = {};
+  final Set<String> _routeLoading = {};
 
   Timer? _debounce;
   _SearchState _state = _SearchState.idle;
@@ -149,8 +151,9 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
     if (toFetch.isEmpty) return;
 
     for (final f in toFetch) {
-      _routeCache[f.icao24!] = null;
+      _routeLoading.add(f.icao24!);
     }
+    if (mounted) setState(() {});
 
     const batchSize = 3;
     for (var i = 0; i < toFetch.length; i += batchSize) {
@@ -160,8 +163,17 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
         batch.map((f) async {
           try {
             final route = await _openSky.lookupAircraftRoute(f.icao24!);
-            if (mounted) setState(() => _routeCache[f.icao24!] = route);
-          } catch (_) {}
+            if (mounted) {
+              setState(() {
+                _routeCache[f.icao24!] = route;
+                _routeLoading.remove(f.icao24!);
+              });
+            }
+          } catch (_) {
+            if (mounted) {
+              setState(() => _routeLoading.remove(f.icao24!));
+            }
+          }
         }),
       );
     }
@@ -317,9 +329,13 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
               final route = flight.icao24 != null
                   ? _routeCache[flight.icao24]
                   : null;
+              final routeLoading =
+                  flight.icao24 != null &&
+                  _routeLoading.contains(flight.icao24);
               return _FlightTile(
                 flight: flight,
                 route: route,
+                routeLoading: routeLoading,
                 onTap: () => _selectFlight(flight),
               );
             },
@@ -387,9 +403,15 @@ class _CenteredMessage extends StatelessWidget {
 class _FlightTile extends StatelessWidget {
   final ActiveFlightInfo flight;
   final OpenSkyFlight? route;
+  final bool routeLoading;
   final VoidCallback onTap;
 
-  const _FlightTile({required this.flight, this.route, required this.onTap});
+  const _FlightTile({
+    required this.flight,
+    this.route,
+    this.routeLoading = false,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -445,29 +467,38 @@ class _FlightTile extends StatelessWidget {
                       ),
                     ),
 
-                    // Route — own row
+                    // Route — own row (with loading skeleton)
                     if (hasRoute) ...[
                       const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.route,
-                            size: 13,
-                            color: context.accentColor.withValues(alpha: 0.7),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        child: Row(
+                          key: ValueKey(
+                            'route-${route?.estDepartureAirport}-${route?.estArrivalAirport}',
                           ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              _routeString,
-                              style: TextStyle(
-                                color: context.textPrimary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
+                          children: [
+                            Icon(
+                              Icons.route,
+                              size: 13,
+                              color: context.accentColor.withValues(alpha: 0.7),
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                _routeString,
+                                style: TextStyle(
+                                  color: context.textPrimary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                    ] else if (routeLoading) ...[
+                      const SizedBox(height: 4),
+                      _RouteSkeletonLine(),
                     ],
 
                     // Metadata chips — wrapping, never truncated
@@ -542,5 +573,64 @@ class _FlightTile extends StatelessWidget {
     if (dep != null) return 'From $dep';
     if (arr != null) return 'To $arr';
     return '';
+  }
+}
+
+// =============================================================================
+// Route skeleton shimmer (while route data is loading)
+// =============================================================================
+
+class _RouteSkeletonLine extends StatefulWidget {
+  @override
+  State<_RouteSkeletonLine> createState() => _RouteSkeletonLineState();
+}
+
+class _RouteSkeletonLineState extends State<_RouteSkeletonLine>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shimmer;
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmer = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _shimmer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _shimmer,
+      builder: (context, child) {
+        final t = _shimmer.value;
+        final shimmerOpacity =
+            0.08 + 0.08 * (0.5 + 0.5 * math.cos(t * 2 * math.pi));
+        return Row(
+          children: [
+            Icon(
+              Icons.route,
+              size: 13,
+              color: context.textTertiary.withValues(alpha: 0.3),
+            ),
+            const SizedBox(width: 4),
+            Container(
+              width: 100,
+              height: 13,
+              decoration: BoxDecoration(
+                color: context.textTertiary.withValues(alpha: shimmerOpacity),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
