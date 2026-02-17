@@ -103,7 +103,7 @@ class _AetherFlightDetailScreenState
                 const SizedBox(height: 16),
 
               // Flight details
-              _buildDetailsCard(context),
+              _buildDetailsCard(context, liveFlight),
 
               // Report button
               if (canReport)
@@ -409,7 +409,7 @@ class _AetherFlightDetailScreenState
     );
   }
 
-  Widget _buildDetailsCard(BuildContext context) {
+  Widget _buildDetailsCard(BuildContext context, AetherFlight liveFlight) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       padding: const EdgeInsets.all(16),
@@ -461,7 +461,7 @@ class _AetherFlightDetailScreenState
           _buildDetailRow(
             Icons.signal_cellular_alt,
             'Receptions',
-            '${widget.flight.receptionCount} reported',
+            '${liveFlight.receptionCount} reported',
           ),
         ],
       ),

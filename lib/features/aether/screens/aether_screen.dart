@@ -1379,9 +1379,9 @@ class _AetherFlightCard extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         child: GradientBorderContainer(
           borderRadius: 16,
-          borderWidth: flight.isActive ? 2 : 1,
-          accentOpacity: flight.isActive ? 0.6 : 0.3,
-          enableDepthBlend: flight.isActive,
+          borderWidth: (flight.isActive && !flight.isPast) ? 2 : 1,
+          accentOpacity: (flight.isActive && !flight.isPast) ? 0.6 : 0.3,
+          enableDepthBlend: flight.isActive && !flight.isPast,
           depthBlendOpacity: 0.1,
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -1436,7 +1436,7 @@ class _AetherFlightCard extends ConsumerWidget {
                             ),
                             child: Icon(
                               Icons.flight,
-                              color: flight.isActive
+                              color: (flight.isActive && !flight.isPast)
                                   ? context.accentColor
                                   : context.textTertiary,
                               size: 18,
@@ -1526,7 +1526,7 @@ class _StatusBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (flight.isActive) ...[
+          if (flight.isActive && !flight.isPast) ...[
             _PulsingDot(color: color),
             const SizedBox(width: 6),
           ],
@@ -1544,8 +1544,8 @@ class _StatusBadge extends StatelessWidget {
   }
 
   Color _getStatusColor(BuildContext context) {
-    if (flight.isActive) return context.accentColor;
     if (flight.isPast) return context.textTertiary;
+    if (flight.isActive) return context.accentColor;
     if (flight.isUpcoming) return AppTheme.warningYellow;
     return context.textSecondary;
   }

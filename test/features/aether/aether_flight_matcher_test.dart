@@ -29,6 +29,15 @@ class _TestMyNodeNumNotifier extends MyNodeNumNotifier {
   int? build() => null;
 }
 
+/// Test notifier that returns a specific myNodeNum value.
+class _TestMyNodeNumNotifierWithValue extends MyNodeNumNotifier {
+  final int _value;
+  _TestMyNodeNumNotifierWithValue(this._value);
+
+  @override
+  int? build() => _value;
+}
+
 /// Fake share service that returns canned active flights without
 /// making HTTP requests.
 class _FakeShareService extends AetherShareService {
@@ -86,6 +95,8 @@ MeshNode _makeNode({
   String? longName = 'Flight Node',
   int? rssi = -80,
   int? snr = 5,
+  double? latitude,
+  double? longitude,
 }) {
   return MeshNode(
     nodeNum: nodeNum,
@@ -93,6 +104,8 @@ MeshNode _makeNode({
     longName: longName,
     rssi: rssi,
     snr: snr,
+    latitude: latitude,
+    longitude: longitude,
     lastHeard: DateTime.now(),
   );
 }
@@ -107,6 +120,7 @@ MeshNode _makeNode({
 _createContainer({
   List<AetherFlight> firestoreFlights = const [],
   List<AetherFlight> apiFlights = const [],
+  int? myNodeNum,
 }) {
   final nodesNotifier = _TestNodesNotifier();
   final shareService = _FakeShareService(activeFlights: apiFlights);
@@ -120,8 +134,13 @@ _createContainer({
       aetherShareServiceProvider.overrideWithValue(shareService),
       // Provide a test user ID so the matcher can filter own flights.
       aetherCurrentUserIdProvider.overrideWithValue('test-user'),
-      // No connected node in tests — avoids self-exclusion side effects.
-      myNodeNumProvider.overrideWith(_TestMyNodeNumNotifier.new),
+      // Connected node — null by default, set via myNodeNum parameter.
+      if (myNodeNum != null)
+        myNodeNumProvider.overrideWith(
+          () => _TestMyNodeNumNotifierWithValue(myNodeNum),
+        )
+      else
+        myNodeNumProvider.overrideWith(_TestMyNodeNumNotifier.new),
     ],
   );
 
@@ -511,6 +530,116 @@ void main() {
 
       final matches = h.container.read(aetherFlightMatchesProvider);
       expect(matches, isEmpty);
+    });
+  });
+
+  group('Departure-proximity filter', () {
+    test('skips match when local device is near departure airport', () async {
+      // Flight departs LAX (33.94, -118.41).  The local device (myNodeNum)
+      // is at LAX coordinates — well within 15 km.
+      // scheduledDeparture is 1 hour ago so the time-based grace period
+      // alone would NOT block it.
+      const myNum = 0xdeadbeef;
+      final flight = _makeFlight(nodeId: '!a1b2c3d4', departure: 'LAX');
+      final h = _createContainer(firestoreFlights: [flight], myNodeNum: myNum);
+      addTearDown(h.container.dispose);
+
+      final notifier =
+          h.container.read(nodesProvider.notifier) as _TestNodesNotifier;
+      notifier.setNodes({
+        // Flight node — the one we would match.
+        0xa1b2c3d4: _makeNode(nodeNum: 0xa1b2c3d4, userId: '!a1b2c3d4'),
+        // Our own node, sitting at LAX.
+        myNum: _makeNode(
+          nodeNum: myNum,
+          userId: '!deadbeef',
+          longName: 'My Node',
+          latitude: 33.942501,
+          longitude: -118.407997,
+        ),
+      });
+
+      await Future<void>.delayed(Duration.zero);
+
+      // Should be filtered out by proximity.
+      expect(h.container.read(aetherFlightMatcherProvider).matches, isEmpty);
+    });
+
+    test(
+      'allows match when local device is far from departure airport',
+      () async {
+        // Flight departs LAX but the local device is in New York (~3,950 km).
+        const myNum = 0xdeadbeef;
+        final flight = _makeFlight(nodeId: '!a1b2c3d4', departure: 'LAX');
+        final h = _createContainer(
+          firestoreFlights: [flight],
+          myNodeNum: myNum,
+        );
+        addTearDown(h.container.dispose);
+
+        final notifier =
+            h.container.read(nodesProvider.notifier) as _TestNodesNotifier;
+        notifier.setNodes({
+          0xa1b2c3d4: _makeNode(nodeNum: 0xa1b2c3d4, userId: '!a1b2c3d4'),
+          myNum: _makeNode(
+            nodeNum: myNum,
+            userId: '!deadbeef',
+            longName: 'My Node',
+            latitude: 40.6413, // JFK area
+            longitude: -73.7781,
+          ),
+        });
+
+        await Future<void>.delayed(Duration.zero);
+
+        // Far from LAX — match should be allowed.
+        expect(
+          h.container.read(aetherFlightMatcherProvider).matches,
+          hasLength(1),
+        );
+      },
+    );
+
+    test('falls back to time-based grace when GPS unavailable', () async {
+      // Local device has no GPS (latitude/longitude = null).
+      // Flight scheduledDeparture is only 5 minutes ago — inside the
+      // 10-minute grace window, so time-based guard blocks it.
+      const myNum = 0xdeadbeef;
+      final now = DateTime.now();
+      final recentFlight = AetherFlight(
+        id: 'flight-recent',
+        nodeId: '!a1b2c3d4',
+        flightNumber: 'UA123',
+        departure: 'LAX',
+        arrival: 'JFK',
+        scheduledDeparture: now.subtract(const Duration(minutes: 5)),
+        scheduledArrival: now.add(const Duration(hours: 4)),
+        userId: 'user-1',
+        isActive: true,
+        createdAt: now,
+      );
+      final h = _createContainer(
+        firestoreFlights: [recentFlight],
+        myNodeNum: myNum,
+      );
+      addTearDown(h.container.dispose);
+
+      final notifier =
+          h.container.read(nodesProvider.notifier) as _TestNodesNotifier;
+      notifier.setNodes({
+        0xa1b2c3d4: _makeNode(nodeNum: 0xa1b2c3d4, userId: '!a1b2c3d4'),
+        // No lat/lon — GPS unavailable.
+        myNum: _makeNode(
+          nodeNum: myNum,
+          userId: '!deadbeef',
+          longName: 'My Node',
+        ),
+      });
+
+      await Future<void>.delayed(Duration.zero);
+
+      // Time-based grace period should still block it.
+      expect(h.container.read(aetherFlightMatcherProvider).matches, isEmpty);
     });
   });
 

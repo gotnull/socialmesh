@@ -5,7 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/logging.dart';
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
+import '../data/airports.dart';
 import '../models/aether_flight.dart';
+import '../services/aether_service.dart';
 import 'aether_providers.dart';
 
 /// SharedPreferences keys for persisting flight notification state.
@@ -16,6 +18,12 @@ const _kDismissedOverlayNodeIds = 'aether_dismissed_overlay_node_ids';
 /// Prevents false positives when Device A schedules a flight and Device B
 /// is still physically next to it on the ground.
 const Duration _kMinAirborneGrace = Duration(minutes: 10);
+
+/// If the local device has GPS and is within this distance of the departure
+/// airport, skip the match.  The flight node is almost certainly still on the
+/// ground next to us.  When GPS is unavailable the time-based grace period
+/// above acts as fallback.
+const double _kDepartureProximityKm = 15.0;
 
 /// A match between a mesh node in your node list and an active Aether flight.
 class AetherFlightMatch {
@@ -256,9 +264,30 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
         continue;
       }
 
-      // Grace period: skip flights that were activated less than 10 minutes
-      // ago. This avoids false matches when the flight node is still on the
-      // ground near the reporting device.
+      // ---- Departure-proximity filter (strongest guard) ----
+      // If the local device has GPS and is near the departure airport the
+      // flight node is almost certainly still on the ground next to us.
+      final departureAirport = lookupAirport(flight.departure);
+      if (departureAirport != null && myNodeNum != null) {
+        final myNode = nodes[myNodeNum];
+        if (myNode != null &&
+            myNode.latitude != null &&
+            myNode.longitude != null) {
+          final distKm = AetherService.calculateDistance(
+            myNode.latitude!,
+            myNode.longitude!,
+            departureAirport.latitude,
+            departureAirport.longitude,
+          );
+          if (distKm < _kDepartureProximityKm) {
+            continue;
+          }
+        }
+      }
+
+      // ---- Time-based grace period (fallback when GPS unavailable) ----
+      // Skip flights activated less than 10 min ago — the plane is likely
+      // still taxiing and the flight node could be in LoRa range.
       final airborneAt = flight.scheduledDeparture;
       if (now.difference(airborneAt) < _kMinAirborneGrace) {
         continue;

@@ -161,10 +161,14 @@ class AetherFlight {
     return now.isAfter(scheduledDeparture.add(const Duration(hours: 12)));
   }
 
-  /// Get flight status string
+  /// Get flight status string.
+  ///
+  /// Time-based checks (`isPast`, `isUpcoming`) take priority over the stored
+  /// `isActive` flag because the flag may lag behind real time (e.g. the
+  /// Aether API only expires flights every 5 minutes).
   String get statusText {
-    if (isActive) return 'In Flight';
     if (isPast) return 'Completed';
+    if (isActive) return 'In Flight';
     if (isUpcoming) return 'Upcoming';
     return 'Scheduled';
   }
