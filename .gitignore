@@ -31,6 +31,7 @@ android/.kotlin/sessions/
 
 # Firebase Hosting content (landing page, legal docs, admin tools)
 /web/
+/web-redirect/
 
 # Environment files
 .env
@@ -64,6 +65,7 @@ firebase-service-account.json
 **/*-service-account.json
 /scripts/*.json
 /scripts/run.sh
+/scripts/verify_hosting_headers.sh
 
 # IntelliJ related
 *.iml

@@ -35,6 +35,7 @@ SYNC_DIRS=(
   sigil-api
   tools
   web
+  web-redirect
 )
 
 # Individual files to sync (relative to repo root)
