@@ -677,12 +677,16 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(top: 12),
+                      padding: const EdgeInsets.only(
+                        top: 12,
+                        left: 5,
+                        right: 5,
+                      ),
                       child: IconButton(
                         onPressed: _swapAirports,
                         icon: Icon(
                           Icons.swap_horiz,
-                          color: context.textTertiary,
+                          color: context.accentColor,
                           size: 22,
                         ),
                         tooltip: 'Swap airports',
