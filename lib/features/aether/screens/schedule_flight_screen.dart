@@ -234,6 +234,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       return 'Use 3-4 letter code';
     }
 
+    if (lookupAirport(cleaned) == null) {
+      return 'Unknown airport';
+    }
+
     return null;
   }
 
@@ -437,6 +441,36 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Cross-field route validation
+    final depAirport = _resolvedDeparture;
+    final arrAirport = _resolvedArrival;
+    if (depAirport != null && arrAirport != null) {
+      if (depAirport.iata == arrAirport.iata) {
+        showWarningSnackBar(
+          context,
+          'Departure and arrival cannot be the same airport',
+        );
+        return;
+      }
+      final distKm = depAirport.distanceToKm(arrAirport);
+      if (distKm < kMinRoutDistanceKm) {
+        showWarningSnackBar(
+          context,
+          '${depAirport.iata} and ${arrAirport.iata} are only '
+          '${distKm.round()} km apart — no commercial routes exist',
+        );
+        return;
+      }
+      if (distKm > kMaxRouteDistanceKm) {
+        showWarningSnackBar(
+          context,
+          '${depAirport.iata} to ${arrAirport.iata} is '
+          '${_formatDistance(distKm)} — exceeds maximum aircraft range',
+        );
+        return;
+      }
+    }
 
     AppLogging.aether('Schedule: _save() — saving flight');
 
@@ -648,6 +682,9 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                     ),
                   ],
                 ),
+
+                // Route info / warnings
+                _buildRouteInfo(),
                 const SizedBox(height: 24),
 
                 // Departure Time Section
@@ -1056,6 +1093,93 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
               : const SizedBox.shrink(),
         ),
       ],
+    );
+  }
+
+  /// Formats distance in km, or thousands of km for large values.
+  static String _formatDistance(double km) {
+    if (km >= 1000) {
+      return '${(km / 1000).toStringAsFixed(1)}k km';
+    }
+    return '${km.round()} km';
+  }
+
+  /// Estimates flight time from great-circle distance.
+  /// Uses 850 km/h cruise speed + 30 min for taxi/climb/descent.
+  static String _estimateFlightTime(double km) {
+    const cruiseSpeedKmh = 850.0;
+    const overheadMinutes = 30;
+    final totalMinutes = (km / cruiseSpeedKmh * 60).round() + overheadMinutes;
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+    if (hours == 0) return '${minutes}min';
+    return '${hours}h ${minutes}min';
+  }
+
+  /// Builds route info feedback shown below the airport fields.
+  Widget _buildRouteInfo() {
+    final dep = _resolvedDeparture;
+    final arr = _resolvedArrival;
+    if (dep == null || arr == null) return const SizedBox.shrink();
+    if (dep.iata == arr.iata) {
+      return _buildRouteChip(
+        icon: Icons.error_outline,
+        color: AppTheme.errorRed,
+        text: 'Same airport',
+      );
+    }
+
+    final distKm = dep.distanceToKm(arr);
+
+    if (distKm < kMinRoutDistanceKm) {
+      return _buildRouteChip(
+        icon: Icons.error_outline,
+        color: AppTheme.errorRed,
+        text:
+            '${dep.iata} and ${arr.iata} are ${distKm.round()} km apart — '
+            'too close for a commercial flight',
+      );
+    }
+
+    if (distKm > kMaxRouteDistanceKm) {
+      return _buildRouteChip(
+        icon: Icons.error_outline,
+        color: AppTheme.errorRed,
+        text: '${_formatDistance(distKm)} — exceeds maximum aircraft range',
+      );
+    }
+
+    // Valid route — show distance + estimated flight time
+    return _buildRouteChip(
+      icon: Icons.route,
+      color: context.accentColor,
+      text: '${_formatDistance(distKm)} · ~${_estimateFlightTime(distKm)}',
+    );
+  }
+
+  Widget _buildRouteChip({
+    required IconData icon,
+    required Color color,
+    required String text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 12,
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
