@@ -1858,7 +1858,6 @@ class _DrawerNodeHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final accentColor = theme.colorScheme.primary;
     final myNodeNum = ref.watch(myNodeNumProvider);
     final nodes = ref.watch(nodesProvider);
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
