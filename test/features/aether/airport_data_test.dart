@@ -104,6 +104,46 @@ void main() {
       expect(lookupAirport('XXXX'), isNull);
       expect(lookupAirport(''), isNull);
     });
+
+    test('finds ICAO-only military airfield (EGDM)', () {
+      final egdm = lookupAirport('EGDM');
+      expect(egdm, isNotNull);
+      expect(egdm!.icao, 'EGDM');
+      expect(egdm.iata, '');
+      expect(egdm.name, 'MoD Boscombe Down');
+      expect(egdm.city, 'Amesbury');
+      expect(egdm.country, 'GB');
+    });
+
+    test('finds other ICAO-only military airfields', () {
+      expect(lookupAirport('EGVN'), isNotNull); // RAF Brize Norton
+      expect(lookupAirport('EGVA'), isNotNull); // RAF Fairford
+      expect(lookupAirport('EGUN'), isNotNull); // RAF Mildenhall
+      expect(lookupAirport('ETAR'), isNotNull); // Ramstein
+    });
+
+    test('ICAO-only airports are case-insensitive', () {
+      expect(lookupAirport('egdm'), isNotNull);
+      expect(lookupAirport('Egdm'), isNotNull);
+    });
+  });
+
+  group('Airport display labels (ICAO-only)', () {
+    test('displayLabel uses ICAO when IATA is empty', () {
+      final egdm = lookupAirport('EGDM')!;
+      expect(egdm.displayLabel, 'EGDM - Amesbury');
+    });
+
+    test('compactLabel uses ICAO when IATA is empty', () {
+      final egdm = lookupAirport('EGDM')!;
+      expect(egdm.compactLabel, 'EGDM - Amesbury');
+    });
+
+    test('displayLabel uses IATA for civilian airports', () {
+      final lhr = lookupAirport('LHR')!;
+      expect(lhr.displayLabel, contains('LHR'));
+      expect(lhr.displayLabel, contains('EGLL'));
+    });
   });
 
   group('Airport.matches', () {

@@ -23,10 +23,14 @@ class Airport {
   });
 
   /// Display label for the picker: "LAX - Los Angeles (KLAX)"
-  String get displayLabel => '$iata - $city ($icao)';
+  /// For ICAO-only airports: "EGDM - Amesbury"
+  String get displayLabel =>
+      iata.isNotEmpty ? '$iata - $city ($icao)' : '$icao - $city';
 
   /// Compact label: "LAX - Los Angeles"
-  String get compactLabel => '$iata - $city';
+  /// For ICAO-only airports: "EGDM - Amesbury"
+  String get compactLabel =>
+      iata.isNotEmpty ? '$iata - $city' : '$icao - $city';
 
   /// Search across all fields (case-insensitive).
   bool matches(String query) {
@@ -10643,17 +10647,165 @@ const List<Airport> kAirports = [
   ),
 ];
 
-/// Index for quick IATA code lookup.
+// ---------------------------------------------------------------------------
+// Military and ICAO-only airfields
+// ---------------------------------------------------------------------------
+// These airfields have no IATA code but appear frequently on OpenSky and
+// other flight tracking services. They are separated from the main list
+// (which is sourced from OurAirports large_airport dataset) so the
+// provenance of each list is clear.
+
+/// Military and notable ICAO-only airfields that appear on flight trackers.
+const List<Airport> kMilitaryAirfields = [
+  // -- United Kingdom --
+  Airport(
+    iata: '',
+    icao: 'EGDM',
+    name: 'MoD Boscombe Down',
+    city: 'Amesbury',
+    country: 'GB',
+    latitude: 51.152197,
+    longitude: -1.747414,
+  ),
+  Airport(
+    iata: '',
+    icao: 'EGVN',
+    name: 'RAF Brize Norton',
+    city: 'Carterton',
+    country: 'GB',
+    latitude: 51.749964,
+    longitude: -1.583617,
+  ),
+  Airport(
+    iata: '',
+    icao: 'EGVA',
+    name: 'RAF Fairford',
+    city: 'Fairford',
+    country: 'GB',
+    latitude: 51.682102,
+    longitude: -1.790028,
+  ),
+  Airport(
+    iata: '',
+    icao: 'EGDY',
+    name: 'RNAS Yeovilton',
+    city: 'Yeovil',
+    country: 'GB',
+    latitude: 51.009399,
+    longitude: -2.638814,
+  ),
+  Airport(
+    iata: '',
+    icao: 'EGDR',
+    name: 'RNAS Culdrose',
+    city: 'Helston',
+    country: 'GB',
+    latitude: 50.086101,
+    longitude: -5.255710,
+  ),
+  Airport(
+    iata: '',
+    icao: 'EGXC',
+    name: 'RAF Coningsby',
+    city: 'Coningsby',
+    country: 'GB',
+    latitude: 53.093002,
+    longitude: -0.166014,
+  ),
+  Airport(
+    iata: '',
+    icao: 'EGVO',
+    name: 'RAF Odiham',
+    city: 'Odiham',
+    country: 'GB',
+    latitude: 51.234100,
+    longitude: -0.942825,
+  ),
+  Airport(
+    iata: '',
+    icao: 'EGLF',
+    name: 'Farnborough',
+    city: 'Farnborough',
+    country: 'GB',
+    latitude: 51.275799,
+    longitude: -0.776333,
+  ),
+  Airport(
+    iata: '',
+    icao: 'EGXE',
+    name: 'RAF Leeming',
+    city: 'Leeming',
+    country: 'GB',
+    latitude: 54.292198,
+    longitude: -1.535420,
+  ),
+  Airport(
+    iata: '',
+    icao: 'EGVP',
+    name: 'Middle Wallop',
+    city: 'Middle Wallop',
+    country: 'GB',
+    latitude: 51.150002,
+    longitude: -1.570000,
+  ),
+  // -- United States (USAF in Europe) --
+  Airport(
+    iata: '',
+    icao: 'EGUN',
+    name: 'RAF Mildenhall',
+    city: 'Mildenhall',
+    country: 'GB',
+    latitude: 52.361900,
+    longitude: 0.486406,
+  ),
+  Airport(
+    iata: '',
+    icao: 'EGUL',
+    name: 'RAF Lakenheath',
+    city: 'Lakenheath',
+    country: 'GB',
+    latitude: 52.409302,
+    longitude: 0.561000,
+  ),
+  Airport(
+    iata: '',
+    icao: 'ETAR',
+    name: 'Ramstein Air Base',
+    city: 'Ramstein',
+    country: 'DE',
+    latitude: 49.436901,
+    longitude: -7.600279,
+  ),
+  Airport(
+    iata: '',
+    icao: 'ETAD',
+    name: 'Spangdahlem Air Base',
+    city: 'Spangdahlem',
+    country: 'DE',
+    latitude: 49.972599,
+    longitude: 6.692500,
+  ),
+];
+
+/// Index for quick IATA code lookup (skips ICAO-only airports with empty IATA).
 final Map<String, Airport> kAirportsByIata = {
-  for (final airport in kAirports) airport.iata: airport,
+  for (final airport in kAirports)
+    if (airport.iata.isNotEmpty) airport.iata: airport,
 };
+
+/// Combined list of all airports (civilian + military).
+final List<Airport> kAllAirports = [...kAirports, ...kMilitaryAirfields];
 
 /// Index for quick ICAO code lookup.
 final Map<String, Airport> kAirportsByIcao = {
-  for (final airport in kAirports) airport.icao: airport,
+  for (final airport in kAllAirports) airport.icao: airport,
 };
 
 /// Look up an airport by either IATA or ICAO code.
+///
+/// Searches the IATA index first (3-letter codes like LAX, JFK), then falls
+/// back to the ICAO index (4-letter codes like KLAX, EGLL, EGDM). Military
+/// and ICAO-only airfields are only in the ICAO index.
 Airport? lookupAirport(String code) {
   final upper = code.toUpperCase().trim();
   return kAirportsByIata[upper] ?? kAirportsByIcao[upper];
