@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// Aether Main Screen — track and discover Meshtastic nodes at altitude.
+// Aether Main Screen — track Meshtastic nodes at altitude.
 //
 // Enables users to schedule flights with their mesh nodes, track active flights,
 // view reception reports, and compete on a leaderboard for longest range contacts.
 //
 // Layout:
 // - Glass app bar with title, schedule button, leaderboard button, overflow menu
-// - Tab bar for Flights / Discover navigation
-// - Flights tab: detected flights section, stats card, filter chips, searchable
-//   flight list (Firestore)
-// - Discover tab: community-shared flights from the Aether API
+// - Stats card, filter chips, searchable flight list (Firestore)
 // - Leaderboard: accessible via app bar trophy button as scrollable modal
 //
 // Firebase-backed with real-time streams and OpenSky Network integration
@@ -42,10 +39,11 @@ import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton_config.dart';
 import '../../../providers/accessibility_providers.dart';
+import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../utils/snackbar.dart';
 import '../models/aether_flight.dart';
 import '../providers/aether_providers.dart';
-import '../services/aether_share_service.dart';
 import '../data/airports.dart';
 import 'schedule_flight_screen.dart';
 import 'aether_flight_detail_screen.dart';
@@ -99,22 +97,19 @@ class AetherScreen extends ConsumerStatefulWidget {
 }
 
 class _AetherScreenState extends ConsumerState<AetherScreen>
-    with LifecycleSafeMixin<AetherScreen>, SingleTickerProviderStateMixin {
+    with LifecycleSafeMixin<AetherScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   AetherFilter _currentFilter = AetherFilter.all;
-  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -135,6 +130,75 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
   }
 
   void _scheduleFlight() {
+    // Check if connected node already has an active or upcoming flight.
+    final myNodeNum = ref.read(myNodeNumProvider);
+    AppLogging.aether('Schedule gate: myNodeNum=$myNodeNum');
+    if (myNodeNum != null) {
+      final nodes = ref.read(nodesProvider);
+      final myNode = nodes[myNodeNum];
+      AppLogging.aether(
+        'Schedule gate: myNode=${myNode?.displayName}, '
+        'userId=${myNode?.userId}, nodeNum=${myNode?.nodeNum}',
+      );
+      if (myNode != null) {
+        final nodeId = myNode.userId ?? '!${myNode.nodeNum.toRadixString(16)}';
+        final normalizedNodeId = nodeId.trim().toLowerCase().replaceFirst(
+          '!',
+          '',
+        );
+        AppLogging.aether(
+          'Schedule gate: nodeId=$nodeId, normalized=$normalizedNodeId',
+        );
+
+        // Merge both providers: aetherFlightsProvider has a 12h cutoff,
+        // aetherActiveFlightsProvider has no cutoff but only isActive.
+        // A flight that departed >12h ago only appears in the active provider.
+        final recentFlights =
+            ref.read(aetherFlightsProvider).asData?.value ?? [];
+        final activeFlights =
+            ref.read(aetherActiveFlightsProvider).asData?.value ?? [];
+        final mergedById = <String, AetherFlight>{};
+        for (final f in recentFlights) {
+          mergedById[f.id] = f;
+        }
+        for (final f in activeFlights) {
+          mergedById.putIfAbsent(f.id, () => f);
+        }
+        final flights = mergedById.values.toList();
+        AppLogging.aether(
+          'Schedule gate: ${recentFlights.length} recent + '
+          '${activeFlights.length} active = ${flights.length} merged',
+        );
+        for (final f in flights) {
+          final n = f.nodeId.trim().toLowerCase().replaceFirst('!', '');
+          AppLogging.aether(
+            'Schedule gate: flight=${f.flightNumber}, '
+            'nodeId="${f.nodeId}", normalized="$n", '
+            'isPast=${f.isPast}, isActive=${f.isActive}, '
+            'match=${n == normalizedNodeId}',
+          );
+        }
+
+        final conflicting = flights.where((f) {
+          final n = f.nodeId.trim().toLowerCase().replaceFirst('!', '');
+          return n == normalizedNodeId && !f.isPast;
+        });
+        AppLogging.aether(
+          'Schedule gate: ${conflicting.length} conflicting flights',
+        );
+        if (conflicting.isNotEmpty) {
+          final existing = conflicting.first;
+          HapticFeedback.heavyImpact();
+          showWarningSnackBar(
+            context,
+            '${myNode.displayName} already has a flight '
+            '(${existing.flightNumber} — ${existing.statusText})',
+          );
+          return;
+        }
+      }
+    }
+
     AppLogging.aether('Navigating to schedule flight screen');
     HapticFeedback.mediumImpact();
     Navigator.push(
@@ -289,12 +353,9 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
   Widget build(BuildContext context) {
     final flightsAsync = ref.watch(aetherFlightsProvider);
     final activeFlightsAsync = ref.watch(aetherActiveFlightsProvider);
-    final discoveryAsync = ref.watch(aetherDiscoveryProvider);
     final stats = ref.watch(aetherStatsProvider);
     final user = ref.watch(currentUserProvider);
     final reduceMotion = ref.watch(reduceMotionEnabledProvider);
-
-    final discoveryTotal = discoveryAsync.value?.total ?? 0;
 
     final isLoading =
         flightsAsync is AsyncLoading || activeFlightsAsync is AsyncLoading;
@@ -398,131 +459,27 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
               ),
               const SizedBox(width: 8),
             ],
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(48),
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: context.border.withValues(alpha: 0.3),
-                    ),
-                  ),
-                ),
-                child: TabBar(
-                  controller: _tabController,
-                  indicatorColor: context.accentColor,
-                  indicatorWeight: 3,
-                  labelColor: context.accentColor,
-                  unselectedLabelColor: context.textSecondary,
-                  labelStyle: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  tabs: [
-                    Tab(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.flight, size: 16),
-                          const SizedBox(width: 2),
-                          const Flexible(
-                            child: Text(
-                              'Flights',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 2),
-                          _TabBadge(count: stats.totalScheduled),
-                        ],
-                      ),
-                    ),
-                    Tab(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.explore_outlined, size: 16),
-                          const SizedBox(width: 2),
-                          const Flexible(
-                            child: Text(
-                              'Discover',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 2),
-                          _TabBadge(count: discoveryTotal),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ),
-          body: TabBarView(
-            controller: _tabController,
-            children: [
-              // Flights Tab (Firestore — your flights)
-              _FlightsTabContent(
-                flightsAsync: flightsAsync,
-                activeFlightsAsync: activeFlightsAsync,
-                stats: stats,
-                user: user,
-                reduceMotion: reduceMotion,
-                isLoading: isLoading,
-                searchController: _searchController,
-                searchQuery: _searchQuery,
-                currentFilter: _currentFilter,
-                onSearchChanged: (value) {
-                  safeSetState(() => _searchQuery = value);
-                },
-                onFilterChanged: (filter) {
-                  HapticFeedback.selectionClick();
-                  safeSetState(() => _currentFilter = filter);
-                },
-                onScheduleFlight: _scheduleFlight,
-                onOpenDetail: _openFlightDetail,
-              ),
-              // Discover Tab (Aether API — community flights)
-              _DiscoverTabContent(
-                reduceMotion: reduceMotion,
-                onScheduleFlight: _scheduleFlight,
-              ),
-            ],
+          body: _FlightsTabContent(
+            flightsAsync: flightsAsync,
+            activeFlightsAsync: activeFlightsAsync,
+            stats: stats,
+            user: user,
+            reduceMotion: reduceMotion,
+            isLoading: isLoading,
+            searchController: _searchController,
+            searchQuery: _searchQuery,
+            currentFilter: _currentFilter,
+            onSearchChanged: (value) {
+              safeSetState(() => _searchQuery = value);
+            },
+            onFilterChanged: (filter) {
+              HapticFeedback.selectionClick();
+              safeSetState(() => _currentFilter = filter);
+            },
+            onScheduleFlight: _scheduleFlight,
+            onOpenDetail: _openFlightDetail,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// Tab Badge
-// =============================================================================
-
-/// Tab badge showing count
-class _TabBadge extends StatelessWidget {
-  final int count;
-
-  const _TabBadge({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: context.border.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        count.toString(),
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: context.textSecondary,
         ),
       ),
     );
@@ -566,7 +523,20 @@ class _FlightsTabContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final allFlights = flightsAsync.value ?? [];
+    // Merge Firestore flights (12h window) with active flights so flights
+    // that exceed the 12h departure cutoff still appear when active.
+    final recentFlights = flightsAsync.value ?? [];
+    final activeFlights = activeFlightsAsync.value ?? [];
+    final mergedById = <String, AetherFlight>{};
+    for (final f in recentFlights) {
+      mergedById[f.id] = f;
+    }
+    for (final f in activeFlights) {
+      mergedById.putIfAbsent(f.id, () => f);
+    }
+    final allFlights = mergedById.values.toList()
+      ..sort((a, b) => a.scheduledDeparture.compareTo(b.scheduledDeparture));
+
     final upcomingCount = allFlights
         .where((f) => !f.isActive && !f.isPast)
         .length;
@@ -596,13 +566,13 @@ class _FlightsTabContent extends StatelessWidget {
             onSearchChanged: onSearchChanged,
             rebuildKey: Object.hashAll([
               currentFilter,
-              stats.totalScheduled,
+              allFlights.length,
               stats.activeFlights,
             ]),
             filterChips: [
               SectionFilterChip(
                 label: 'All',
-                count: stats.totalScheduled,
+                count: allFlights.length,
                 isSelected: currentFilter == AetherFilter.all,
                 onTap: () => onFilterChanged(AetherFilter.all),
               ),
@@ -668,7 +638,19 @@ class _FlightsTabContent extends StatelessWidget {
       );
     }
 
-    final allFlights = flightsAsync.value ?? [];
+    // Merge recent + active flights (same dedup as build())
+    final recentFlights = flightsAsync.value ?? [];
+    final activeFlightsList = activeFlightsAsync.value ?? [];
+    final mergedById = <String, AetherFlight>{};
+    for (final f in recentFlights) {
+      mergedById[f.id] = f;
+    }
+    for (final f in activeFlightsList) {
+      mergedById.putIfAbsent(f.id, () => f);
+    }
+    final allFlights = mergedById.values.toList()
+      ..sort((a, b) => a.scheduledDeparture.compareTo(b.scheduledDeparture));
+
     List<AetherFlight> filteredFlights;
 
     switch (currentFilter) {
@@ -806,309 +788,6 @@ class _FlightsTabContent extends StatelessWidget {
       case AetherFilter.myFlights:
         return "You haven't scheduled any flights yet.\nTap the button above to add one!";
     }
-  }
-}
-
-// =============================================================================
-// Leaderboard Tab Content
-// =============================================================================
-
-// =============================================================================
-// Discover Tab Content (Aether API)
-// =============================================================================
-
-/// Filter options for the Discover tab.
-enum _DiscoverFilter { all, active, completed }
-
-class _DiscoverTabContent extends ConsumerStatefulWidget {
-  final bool reduceMotion;
-  final VoidCallback onScheduleFlight;
-
-  const _DiscoverTabContent({
-    required this.reduceMotion,
-    required this.onScheduleFlight,
-  });
-
-  @override
-  ConsumerState<_DiscoverTabContent> createState() =>
-      _DiscoverTabContentState();
-}
-
-class _DiscoverTabContentState extends ConsumerState<_DiscoverTabContent> {
-  final _searchController = TextEditingController();
-  String _searchQuery = '';
-  _DiscoverFilter _filter = _DiscoverFilter.all;
-  final _scrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      AppLogging.aether('Discover tab: triggering loadMore on scroll');
-      ref.read(aetherDiscoveryProvider.notifier).loadMore();
-    }
-  }
-
-  void _onSearchChanged(String value) {
-    AppLogging.aether('Discover tab: search changed to "$value"');
-    setState(() => _searchQuery = value);
-    ref.read(aetherDiscoveryProvider.notifier).search(value);
-  }
-
-  void _onFilterChanged(_DiscoverFilter filter) {
-    AppLogging.aether('Discover tab: filter changed to ${filter.name}');
-    HapticFeedback.selectionClick();
-    setState(() => _filter = filter);
-
-    bool? activeOnly;
-    if (filter == _DiscoverFilter.active) activeOnly = true;
-    if (filter == _DiscoverFilter.completed) activeOnly = false;
-
-    ref.read(aetherDiscoveryProvider.notifier).filterByActive(activeOnly);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final discoveryAsync = ref.watch(aetherDiscoveryProvider);
-    final apiStatsAsync = ref.watch(aetherApiStatsProvider);
-
-    return CustomScrollView(
-      controller: _scrollController,
-      slivers: [
-        // API stats summary
-        SliverToBoxAdapter(
-          child: apiStatsAsync.when(
-            data: (stats) => _ApiStatsCard(stats: stats),
-            loading: () => Skeletonizer(
-              enabled: true,
-              effect: AppSkeletonConfig.effect(context),
-              child: _ApiStatsCard(
-                stats: const AetherApiStats(
-                  totalFlights: 0,
-                  activeFlights: 0,
-                  uniqueDepartures: 0,
-                  uniqueArrivals: 0,
-                  uniqueFlightNumbers: 0,
-                  totalReceptions: 0,
-                ),
-              ),
-            ),
-            error: (_, _) => const SizedBox.shrink(),
-          ),
-        ),
-
-        // Pinned search + filter controls
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: SearchFilterHeaderDelegate(
-            textScaler: MediaQuery.textScalerOf(context),
-            searchController: _searchController,
-            searchQuery: _searchQuery,
-            hintText: 'Search community flights...',
-            onSearchChanged: _onSearchChanged,
-            rebuildKey: Object.hashAll([
-              _filter,
-              discoveryAsync.value?.total ?? 0,
-            ]),
-            filterChips: [
-              SectionFilterChip(
-                label: 'All',
-                count: discoveryAsync.value?.total ?? 0,
-                isSelected: _filter == _DiscoverFilter.all,
-                onTap: () => _onFilterChanged(_DiscoverFilter.all),
-              ),
-              SectionFilterChip(
-                label: 'In Flight',
-                count: 0,
-                isSelected: _filter == _DiscoverFilter.active,
-                color: Colors.green,
-                icon: Icons.flight_takeoff,
-                onTap: () => _onFilterChanged(_DiscoverFilter.active),
-              ),
-              SectionFilterChip(
-                label: 'Completed',
-                count: 0,
-                isSelected: _filter == _DiscoverFilter.completed,
-                color: context.textTertiary,
-                icon: Icons.flight_land,
-                onTap: () => _onFilterChanged(_DiscoverFilter.completed),
-              ),
-            ],
-          ),
-        ),
-
-        // Flight list
-        discoveryAsync.when(
-          data: (state) {
-            if (state.flights.isEmpty) {
-              if (state.error != null) {
-                return SliverFillRemaining(
-                  child: _EmptyState(
-                    icon: Icons.cloud_off,
-                    title: 'Connection Error',
-                    subtitle:
-                        'Could not reach the Aether API.\nCheck your internet connection and try again.',
-                  ),
-                );
-              }
-              return SliverFillRemaining(
-                child: AnimatedEmptyState(
-                  config: AnimatedEmptyStateConfig(
-                    icons: const [
-                      Icons.explore_outlined,
-                      Icons.public,
-                      Icons.flight,
-                      Icons.radar,
-                      Icons.language,
-                      Icons.travel_explore,
-                    ],
-                    taglines: const [
-                      'No community flights yet.\nBe the first to share yours!',
-                      'Discover Meshtastic nodes at altitude.\nShared flights from around the world.',
-                      'The community feed is waiting.\nSchedule a flight and share it here.',
-                    ],
-                    titlePrefix: 'No ',
-                    titleKeyword: 'shared flights',
-                    titleSuffix: ' yet',
-                    actionLabel: 'Schedule Flight',
-                    actionIcon: Icons.flight_takeoff,
-                    onAction: widget.onScheduleFlight,
-                    actionEnabled: true,
-                  ),
-                ),
-              );
-            }
-
-            return SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                // Show a loading indicator at the bottom when paginating
-                if (index == state.flights.length) {
-                  if (state.isLoadingMore) {
-                    return Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: context.accentColor,
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-                  // Bottom padding
-                  return const SizedBox(height: 32);
-                }
-
-                final flight = state.flights[index];
-                return _StaggeredListTile(
-                  index: index,
-                  reduceMotion: widget.reduceMotion,
-                  child: _AetherFlightCard(flight: flight),
-                );
-              }, childCount: state.flights.length + 1),
-            );
-          },
-          loading: () => SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => Skeletonizer(
-                enabled: true,
-                effect: AppSkeletonConfig.effect(context),
-                child: _AetherFlightCard(
-                  flight: AetherFlight(
-                    id: 'skeleton_$index',
-                    nodeId: '!12345678',
-                    flightNumber: 'AA1234',
-                    departure: 'LAX',
-                    arrival: 'JFK',
-                    scheduledDeparture: DateTime.now(),
-                    userId: 'skeleton',
-                    createdAt: DateTime.now(),
-                  ),
-                ),
-              ),
-              childCount: 5,
-            ),
-          ),
-          error: (error, _) => SliverFillRemaining(
-            child: _EmptyState(
-              icon: Icons.cloud_off,
-              title: 'Connection Error',
-              subtitle: 'Could not reach the Aether API.\n$error',
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// =============================================================================
-// API Stats Card (for Discover tab)
-// =============================================================================
-
-class _ApiStatsCard extends StatelessWidget {
-  final AetherApiStats stats;
-
-  const _ApiStatsCard({required this.stats});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: GradientBorderContainer(
-        borderRadius: 16,
-        borderWidth: 1,
-        accentOpacity: 0.3,
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _StatItem(
-              icon: Icons.flight,
-              value: NumberFormat.compact().format(stats.totalFlights),
-              label: 'Shared',
-              color: context.accentColor,
-            ),
-            _VerticalDivider(),
-            _StatItem(
-              icon: Icons.flight_takeoff,
-              value: stats.activeFlights.toString(),
-              label: 'In Flight',
-              color: Colors.green,
-            ),
-            _VerticalDivider(),
-            _StatItem(
-              icon: Icons.public,
-              value: stats.uniqueDepartures.toString(),
-              label: 'Airports',
-              color: AccentColors.cyan,
-            ),
-            _VerticalDivider(),
-            _StatItem(
-              icon: Icons.signal_cellular_alt,
-              value: NumberFormat.compact().format(stats.totalReceptions),
-              label: 'Receptions',
-              color: AccentColors.purple,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 

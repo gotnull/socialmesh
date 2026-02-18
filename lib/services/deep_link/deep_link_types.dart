@@ -31,6 +31,10 @@ enum DeepLinkType {
   /// or https://socialmesh.app/share/channel/{inviteId}#t={secret}
   channelInvite,
 
+  /// Aether flight: socialmesh://aether/flight/{shareId}
+  /// or https://socialmesh.app/aether/flight/{shareId}
+  aetherFlight,
+
   /// Legal document: https://socialmesh.app/terms or https://socialmesh.app/privacy
   /// or socialmesh://legal/terms or socialmesh://legal/privacy
   legal,
@@ -68,6 +72,7 @@ class ParsedDeepLink {
     this.automationFirestoreId,
     this.channelInviteId,
     this.channelInviteSecret,
+    this.aetherFlightShareId,
     this.legalDocument,
     this.legalSectionAnchor,
     this.validationErrors = const [],
@@ -126,6 +131,10 @@ class ParsedDeepLink {
   /// Invite secret from the URL fragment (#t=...)
   final String? channelInviteSecret;
 
+  // Aether flight fields
+  /// Share ID for the Aether flight (e.g. 'ae_cf31d1ccc6faef3a')
+  final String? aetherFlightShareId;
+
   // Legal document fields
   /// Which legal document: 'terms' or 'privacy'
   final String? legalDocument;
@@ -168,6 +177,10 @@ class ParsedDeepLink {
       type == DeepLinkType.channelInvite &&
       channelInviteId != null &&
       channelInviteSecret != null;
+
+  /// Whether this is a valid Aether flight link.
+  bool get hasAetherFlightShareId =>
+      type == DeepLinkType.aetherFlight && aetherFlightShareId != null;
 
   /// Whether this is a legal document link.
   bool get isLegalLink => type == DeepLinkType.legal && legalDocument != null;
@@ -217,6 +230,7 @@ class ParsedDeepLink {
       automationFirestoreId: automationFirestoreId,
       channelInviteId: channelInviteId,
       channelInviteSecret: channelInviteSecret,
+      aetherFlightShareId: aetherFlightShareId,
       legalDocument: legalDocument,
       legalSectionAnchor: legalSectionAnchor,
       locationLongitude: locationLongitude,

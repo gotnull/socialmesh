@@ -21,6 +21,7 @@ import '../../../utils/snackbar.dart';
 import '../data/airports.dart';
 import '../providers/aether_providers.dart';
 import '../services/opensky_service.dart';
+import '../../nodedex/widgets/sigil_painter.dart';
 import '../widgets/airport_picker_sheet.dart';
 import '../widgets/flight_search_sheet.dart';
 
@@ -501,6 +502,44 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     final myNode = _getMyNode();
     if (myNode == null) {
       showWarningSnackBar(context, 'Connect your Meshtastic device first');
+      return;
+    }
+
+    // Check if this node already has an active or upcoming flight.
+    // Merge both providers: aetherFlightsProvider has a 12h departure cutoff,
+    // aetherActiveFlightsProvider catches flights that departed >12h ago.
+    final nodeId = myNode.userId ?? '!${myNode.nodeNum.toRadixString(16)}';
+    final normalizedNodeId = nodeId.trim().toLowerCase().replaceFirst('!', '');
+    final recentState = ref.read(aetherFlightsProvider);
+    final activeState = ref.read(aetherActiveFlightsProvider);
+    if (recentState is AsyncLoading && activeState is AsyncLoading) {
+      showWarningSnackBar(context, 'Loading flights, please try again');
+      return;
+    }
+    final recentFlights = recentState.asData?.value ?? [];
+    final activeFlights = activeState.asData?.value ?? [];
+    final mergedById = <String, AetherFlight>{};
+    for (final f in recentFlights) {
+      mergedById[f.id] = f;
+    }
+    for (final f in activeFlights) {
+      mergedById.putIfAbsent(f.id, () => f);
+    }
+    final existingFlights = mergedById.values.toList();
+    final conflicting = existingFlights.where((f) {
+      final normalizedFlightNode = f.nodeId.trim().toLowerCase().replaceFirst(
+        '!',
+        '',
+      );
+      return normalizedFlightNode == normalizedNodeId && !f.isPast;
+    });
+    if (conflicting.isNotEmpty) {
+      final existing = conflicting.first;
+      showWarningSnackBar(
+        context,
+        '${myNode.displayName} already has an active flight '
+        '(${existing.flightNumber})',
+      );
       return;
     }
 
@@ -990,21 +1029,22 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       ),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color:
-                  (isConnected ? context.accentColor : AppTheme.warningYellow)
-                      .withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+          if (isConnected)
+            SigilAvatar(nodeNum: myNode.nodeNum, size: 40)
+          else
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppTheme.warningYellow.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.bluetooth_disabled,
+                color: AppTheme.warningYellow,
+                size: 20,
+              ),
             ),
-            child: Icon(
-              isConnected ? Icons.memory : Icons.bluetooth_disabled,
-              color: isConnected ? context.accentColor : AppTheme.warningYellow,
-              size: 20,
-            ),
-          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

@@ -386,7 +386,7 @@ class _ConfiguredSplashMeshNodeState
             touchIntensity: config.touchIntensity,
             stretchIntensity: config.stretchIntensity,
             showFaces: true,
-            faceOpacity: 0.25,
+            faceOpacity: 0.15,
           );
 
     return SizedBox(
@@ -846,7 +846,7 @@ class ScreenLoadingIndicator extends ConsumerWidget {
               showThoughtParticles: true,
               showExpression: true,
               showFaces: true,
-              faceOpacity: 0.25,
+              faceOpacity: 0.15,
             ),
             if (message != null) ...[
               const SizedBox(height: 16),

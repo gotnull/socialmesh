@@ -149,6 +149,9 @@ class DeepLinkParser {
       case 'channel-invite':
         AppLogging.qr('🔗 Parser: Processing channel invite link');
         return _parseChannelInviteLink(data, uri.fragment, original);
+      case 'aether':
+        AppLogging.qr('🔗 Parser: Processing aether flight link');
+        return _parseAetherFlightLink(segments, original);
       case 'legal':
         // socialmesh://legal/terms or socialmesh://legal/privacy
         AppLogging.qr('🔗 Parser: Processing legal document link');
@@ -192,6 +195,12 @@ class DeepLinkParser {
         legalDocument: document,
         legalSectionAnchor: anchor,
       );
+    }
+
+    // Handle Aether flight links: /aether/flight/{shareId}
+    if (segments.isNotEmpty && segments[0] == 'aether') {
+      AppLogging.qr('🔗 Parser: Aether flight universal link');
+      return _parseAetherFlightLink(segments.sublist(1), original);
     }
 
     // Expect: /share/{type}/{id} or /share/{type}?params
@@ -341,6 +350,46 @@ class DeepLinkParser {
         'Failed to decode channel data: $e',
       ]);
     }
+  }
+
+  /// Parse an Aether flight deep link.
+  ///
+  /// Handles both:
+  /// - Custom scheme: `socialmesh://aether/flight/{shareId}` (segments = ['flight', '{shareId}'])
+  /// - Universal link: `https://socialmesh.app/aether/flight/{shareId}` (segments = ['flight', '{shareId}'])
+  ParsedDeepLink _parseAetherFlightLink(
+    List<String> segments,
+    String original,
+  ) {
+    // Expect: flight/{shareId}
+    if (segments.isEmpty || segments[0] != 'flight') {
+      AppLogging.qr(
+        '\ud83d\udd17 Parser: ERROR - Expected aether/flight/{id}, '
+        'got segments=$segments',
+      );
+      return ParsedDeepLink.invalid(original, [
+        'Invalid Aether link path, expected /aether/flight/{shareId}',
+      ]);
+    }
+
+    final shareId = segments.length > 1 ? segments[1] : null;
+    if (shareId == null || shareId.isEmpty) {
+      AppLogging.qr(
+        '\ud83d\udd17 Parser: ERROR - Missing Aether flight share ID',
+      );
+      return ParsedDeepLink.invalid(original, [
+        'Missing Aether flight share ID',
+      ]);
+    }
+
+    AppLogging.qr(
+      '\ud83d\udd17 Parser: Returning Aether flight link with shareId=$shareId',
+    );
+    return ParsedDeepLink(
+      type: DeepLinkType.aetherFlight,
+      originalUri: original,
+      aetherFlightShareId: shareId,
+    );
   }
 
   /// Parse a node deep link from path data.

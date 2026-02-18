@@ -6,6 +6,14 @@ import 'package:socialmesh/core/logging.dart';
 
 import '../models/aether_flight.dart';
 
+/// Thrown when a user tries to submit a duplicate reception report.
+class AetherDuplicateReportException implements Exception {
+  const AetherDuplicateReportException();
+
+  @override
+  String toString() => 'You have already reported this flight';
+}
+
 /// Service for Aether flight tracking functionality
 class AetherService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -202,6 +210,20 @@ class AetherService {
     };
 
     try {
+      // Check for existing report by this user on this flight
+      final existing = await _reportsCollection
+          .where('aetherFlightId', isEqualTo: flightId)
+          .where('reporterId', isEqualTo: reporterId)
+          .limit(1)
+          .get();
+      if (existing.docs.isNotEmpty) {
+        AppLogging.aether(
+          'Duplicate report blocked — user $reporterId already reported '
+          'on flight $flightId (doc ${existing.docs.first.id})',
+        );
+        throw const AetherDuplicateReportException();
+      }
+
       AppLogging.aether('Writing report to Firestore...');
       final docRef = await _reportsCollection.add(data);
       AppLogging.aether('Report created: ${docRef.id}');

@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 
+import '../constants.dart';
+
 /// A single feature item within a What's New payload.
 ///
 /// Each item describes one new feature or notable change introduced
@@ -97,7 +99,7 @@ class WhatsNewRegistry {
   // PAYLOADS — add new versions at the bottom
   // ===========================================================================
 
-  static const List<WhatsNewPayload> _payloads = [
+  static final List<WhatsNewPayload> _payloads = [
     // v1.9.0 — Reachability introduction
     WhatsNewPayload(
       version: '1.9.0',
@@ -232,31 +234,32 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.15.0 — Aether introduction
-    WhatsNewPayload(
-      version: '1.15.0',
-      headline: "What's New in Socialmesh",
-      subtitle: 'Version 1.15.0',
-      items: [
-        WhatsNewItem(
-          id: 'aether_intro',
-          title: 'Aether',
-          description:
-              'Track Meshtastic nodes at altitude! Schedule your flight with '
-              'your mesh node and let ground stations around the world '
-              'listen for your signal.\n\n'
-              'At 35,000 ft, LoRa can reach 400+ km. Report receptions, '
-              'compete on the distance leaderboard, and set new range '
-              'records. Find it in the drawer menu under Social.',
-          icon: Icons.flight_takeoff_outlined,
-          iconColor: Color(0xFF29B6F6), // Colors.lightBlue.shade400
-          deepLinkRoute: '/aether',
-          helpTopicId: 'aether_overview',
-          badgeKey: 'aether',
-          ctaLabel: 'Open Aether',
-        ),
-      ],
-    ),
+    // v1.15.0 — Aether introduction (gated behind AETHER_ENABLED)
+    if (AppFeatureFlags.isAetherEnabled)
+      WhatsNewPayload(
+        version: '1.15.0',
+        headline: "What's New in Socialmesh",
+        subtitle: 'Version 1.15.0',
+        items: [
+          WhatsNewItem(
+            id: 'aether_intro',
+            title: 'Aether',
+            description:
+                'Track Meshtastic nodes at altitude! Schedule your flight with '
+                'your mesh node and let ground stations around the world '
+                'listen for your signal.\n\n'
+                'At 35,000 ft, LoRa can reach 400+ km. Report receptions, '
+                'compete on the distance leaderboard, and set new range '
+                'records. Find it in the drawer menu under Social.',
+            icon: Icons.flight_takeoff_outlined,
+            iconColor: Color(0xFF29B6F6), // Colors.lightBlue.shade400
+            deepLinkRoute: '/aether',
+            helpTopicId: 'aether_overview',
+            badgeKey: 'aether',
+            ctaLabel: 'Open Aether',
+          ),
+        ],
+      ),
   ];
 
   // ===========================================================================

@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/features/aether/models/aether_flight.dart';
 import 'package:socialmesh/features/aether/providers/aether_flight_matcher_provider.dart';
 import 'package:socialmesh/features/aether/providers/aether_providers.dart';
-import 'package:socialmesh/features/aether/services/aether_share_service.dart';
 import 'package:socialmesh/models/mesh_models.dart';
 import 'package:socialmesh/providers/app_providers.dart';
 
@@ -36,34 +35,6 @@ class _TestMyNodeNumNotifierWithValue extends MyNodeNumNotifier {
 
   @override
   int? build() => _value;
-}
-
-/// Fake share service that returns canned active flights without
-/// making HTTP requests.
-class _FakeShareService extends AetherShareService {
-  List<AetherFlight> activeFlights;
-
-  _FakeShareService({this.activeFlights = const []});
-
-  @override
-  Future<AetherFlightsPage> fetchFlights({
-    String? query,
-    String? departure,
-    String? arrival,
-    String? flightNumber,
-    bool? activeOnly,
-    AetherSortOption sort = AetherSortOption.newest,
-    int page = 1,
-    int limit = 20,
-  }) async {
-    return AetherFlightsPage(
-      flights: activeFlights,
-      page: 1,
-      limit: limit,
-      total: activeFlights.length,
-      totalPages: 1,
-    );
-  }
 }
 
 AetherFlight _makeFlight({
@@ -112,18 +83,12 @@ MeshNode _makeNode({
 
 /// Create a [ProviderContainer] with the standard overrides needed for
 /// the flight matcher tests. Returns the container and the test helpers.
-({
-  ProviderContainer container,
-  _TestNodesNotifier nodesNotifier,
-  _FakeShareService shareService,
-})
+({ProviderContainer container, _TestNodesNotifier nodesNotifier})
 _createContainer({
   List<AetherFlight> firestoreFlights = const [],
-  List<AetherFlight> apiFlights = const [],
   int? myNodeNum,
 }) {
   final nodesNotifier = _TestNodesNotifier();
-  final shareService = _FakeShareService(activeFlights: apiFlights);
 
   final container = ProviderContainer(
     overrides: [
@@ -131,7 +96,6 @@ _createContainer({
       aetherActiveFlightsProvider.overrideWithValue(
         AsyncValue.data(firestoreFlights),
       ),
-      aetherShareServiceProvider.overrideWithValue(shareService),
       // Provide a test user ID so the matcher can filter own flights.
       aetherCurrentUserIdProvider.overrideWithValue('test-user'),
       // Connected node — null by default, set via myNodeNum parameter.
@@ -148,11 +112,7 @@ _createContainer({
   // registered before any test mutates node state.
   container.read(aetherFlightMatcherProvider);
 
-  return (
-    container: container,
-    nodesNotifier: nodesNotifier,
-    shareService: shareService,
-  );
+  return (container: container, nodesNotifier: nodesNotifier);
 }
 
 // ---------------------------------------------------------------------------
@@ -233,16 +193,16 @@ void main() {
       expect(state.matches.first.node.nodeNum, 0xa1b2c3d4);
     });
 
-    test('matches node in mesh to active API flight', () async {
+    test('matches node in mesh to active Firestore flight', () async {
       final flight = _makeFlight(
-        id: 'api-1',
+        id: 'fs-1',
         nodeId: '!deadbeef',
         flightNumber: 'BA456',
       );
-      final h = _createContainer(apiFlights: [flight]);
+      final h = _createContainer(firestoreFlights: [flight]);
       addTearDown(h.container.dispose);
 
-      // Read the provider to trigger build() and _fetchApiFlights()
+      // Read the provider to trigger build() and _recheckMatches()
       h.container.read(aetherFlightMatcherProvider);
 
       // Set matching node
@@ -311,15 +271,16 @@ void main() {
       expect(state.matches, hasLength(1));
     });
 
-    test('deduplicates when same flight is in Firestore and API', () async {
-      final flight = _makeFlight(id: 'same-id', nodeId: '!a1b2c3d4');
-      final h = _createContainer(
-        firestoreFlights: [flight],
-        apiFlights: [flight],
+    test('deduplicates flights with same ID', () async {
+      // Same flight object appearing twice in the list (edge case)
+      final flight = _makeFlight(
+        id: 'same-id',
+        nodeId: '!a1b2c3d4',
+        flightNumber: 'UA123',
       );
+      final h = _createContainer(firestoreFlights: [flight, flight]);
       addTearDown(h.container.dispose);
 
-      // Read provider to trigger build + API fetch
       h.container.read(aetherFlightMatcherProvider);
 
       final notifier =

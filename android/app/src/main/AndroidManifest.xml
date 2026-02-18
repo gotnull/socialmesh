@@ -107,6 +107,7 @@
                 <data android:pathPrefix="/share/post" />
                 <data android:pathPrefix="/share/node" />
                 <data android:pathPrefix="/share/channel" />
+                <data android:pathPrefix="/aether" />
                 <data android:pathPrefix="/terms" />
                 <data android:pathPrefix="/privacy" />
             </intent-filter>

@@ -48,6 +48,7 @@ class DeepLinkRouter {
       DeepLinkType.post => _routePost(link),
       DeepLinkType.location => _routeLocation(link),
       DeepLinkType.automation => _routeAutomation(link),
+      DeepLinkType.aetherFlight => _routeAetherFlight(link),
       DeepLinkType.legal => _routeLegal(link),
       DeepLinkType.invalid => DeepLinkRouteResult.fallback,
     };
@@ -235,6 +236,22 @@ class DeepLinkRouter {
         'base64Data': link.automationBase64Data,
         'firestoreId': link.automationFirestoreId,
       },
+      requiresDevice: false,
+    );
+  }
+
+  /// Route an Aether flight deep link.
+  DeepLinkRouteResult _routeAetherFlight(ParsedDeepLink link) {
+    if (!link.hasAetherFlightShareId) {
+      return const DeepLinkRouteResult(
+        routeName: '/main',
+        fallbackMessage: 'Invalid Aether flight link',
+      );
+    }
+
+    return DeepLinkRouteResult(
+      routeName: '/aether-flight',
+      arguments: {'shareId': link.aetherFlightShareId},
       requiresDevice: false,
     );
   }

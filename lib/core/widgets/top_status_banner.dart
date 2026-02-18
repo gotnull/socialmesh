@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/logging.dart';
@@ -109,22 +110,30 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
         // avoiding a sudden safe-area jump when the banner disappears.
         if (_actuallyVisible) {
           setState(() => _actuallyVisible = false);
-          widget.onVisibilityChanged?.call(false);
+          _notifyVisibility(false);
         }
       case AnimationStatus.dismissed:
         // Safety net: ensure we're marked hidden when animation completes.
         if (_actuallyVisible) {
           setState(() => _actuallyVisible = false);
-          widget.onVisibilityChanged?.call(false);
+          _notifyVisibility(false);
         }
       case AnimationStatus.forward:
         if (!_actuallyVisible) {
           setState(() => _actuallyVisible = true);
-          widget.onVisibilityChanged?.call(true);
+          _notifyVisibility(true);
         }
       case AnimationStatus.completed:
         break;
     }
+  }
+
+  /// Notify the parent of visibility changes via a post-frame callback
+  /// to avoid calling setState on the parent during the build phase.
+  void _notifyVisibility(bool visible) {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onVisibilityChanged?.call(visible);
+    });
   }
 
   /// Evaluate whether a dismiss timer should be running based on the

@@ -191,6 +191,9 @@ class DeepLinkManager {
       case DeepLinkType.legal:
         final doc = link.legalDocument;
         return doc != null ? 'legal:$doc' : null;
+      case DeepLinkType.aetherFlight:
+        final shareId = link.aetherFlightShareId;
+        return shareId != null ? 'aether-flight:$shareId' : null;
       case DeepLinkType.invalid:
         return null;
     }

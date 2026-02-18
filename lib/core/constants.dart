@@ -236,6 +236,25 @@ class NodeDexConfig {
   }
 }
 
+/// App-level feature flags read from `.env`.
+///
+/// These gate entire features that may be in testing or not yet released.
+/// Default values are safe: features are disabled unless explicitly enabled.
+class AppFeatureFlags {
+  AppFeatureFlags._();
+
+  /// Whether the Aether flight tracking feature is enabled.
+  /// Set `AETHER_ENABLED=true` in `.env` to enable.
+  static bool get isAetherEnabled {
+    try {
+      final raw = dotenv.env['AETHER_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+}
+
 /// Privacy level for content visibility
 enum PrivacyLevel {
   public('Public', 'Visible to all nodes in radius'),

@@ -69,24 +69,44 @@ class WhatsNewSheet {
   ///
   /// Safe to call during startup: uses [addPostFrameCallback] and
   /// verifies the navigator context is available before presenting.
-  static void showIfNeeded(WidgetRef ref) {
+  ///
+  /// Important: The [WidgetRef] is NOT captured in deferred callbacks
+  /// (addPostFrameCallback, Future.delayed). Instead we resolve a
+  /// [ProviderContainer] from [navigatorKey] at the point of use,
+  /// which outlives any individual widget element and avoids the
+  /// "ConsumerStatefulElement was disposed" crash.
+  static void showIfNeeded() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final state = ref.read(whatsNewProvider);
+      final container = _containerOrNull();
+      if (container == null) return;
+
+      final state = container.read(whatsNewProvider);
 
       if (!state.isLoaded) {
         // State hasn't loaded yet — schedule a retry after a short delay
         Future<void>.delayed(const Duration(milliseconds: 500), () {
-          _tryShow(ref);
+          _tryShow();
         });
         return;
       }
 
-      _tryShow(ref);
+      _tryShow();
     });
   }
 
-  static void _tryShow(WidgetRef ref) {
-    final state = ref.read(whatsNewProvider);
+  /// Resolve the root [ProviderContainer] from the navigator context.
+  /// Returns null when the navigator is not yet mounted (safe no-op).
+  static ProviderContainer? _containerOrNull() {
+    final context = navigatorKey.currentContext;
+    if (context == null) return null;
+    return ProviderScope.containerOf(context, listen: false);
+  }
+
+  static void _tryShow() {
+    final container = _containerOrNull();
+    if (container == null) return;
+
+    final state = container.read(whatsNewProvider);
     if (state.shownThisSession) return;
     if (!state.hasPending) return;
 
@@ -94,12 +114,15 @@ class WhatsNewSheet {
     if (context == null) return;
 
     // Mark as shown immediately to prevent duplicate triggers from rebuilds
-    ref.read(whatsNewProvider.notifier).markShownThisSession();
+    container.read(whatsNewProvider.notifier).markShownThisSession();
 
-    _present(context, ref);
+    _present(context, container);
   }
 
-  static Future<void> _present(BuildContext context, WidgetRef ref) async {
+  static Future<void> _present(
+    BuildContext context,
+    ProviderContainer container,
+  ) async {
     HapticFeedback.mediumImpact();
 
     await showModalBottomSheet<void>(
@@ -116,7 +139,7 @@ class WhatsNewSheet {
       builder: (sheetContext) => _WhatsNewCarousel(
         readOnly: false,
         onDismiss: () {
-          ref.read(whatsNewProvider.notifier).markSeen();
+          container.read(whatsNewProvider.notifier).markSeen();
           Navigator.of(sheetContext).pop();
         },
       ),
@@ -124,7 +147,7 @@ class WhatsNewSheet {
 
     // If the user swiped down or tapped outside (sheet closed without
     // the dismiss button), still mark as seen.
-    ref.read(whatsNewProvider.notifier).markSeen();
+    container.read(whatsNewProvider.notifier).markSeen();
   }
 }
 

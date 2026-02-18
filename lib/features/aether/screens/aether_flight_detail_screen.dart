@@ -23,6 +23,7 @@ import '../data/airports.dart';
 import '../models/aether_flight.dart';
 import '../providers/aether_providers.dart';
 import '../services/aether_service.dart';
+import '../widgets/flight_route_map.dart';
 
 /// Detail screen for an Aether flight with live tracking and report submission
 class AetherFlightDetailScreen extends ConsumerStatefulWidget {
@@ -58,10 +59,24 @@ class _AetherFlightDetailScreenState
             .where((f) => f.id == widget.flight.id)
             .firstOrNull ??
         widget.flight;
-    // Only allow reporting when the flight is actually airborne:
-    // either the server says active AND departure time has passed,
-    // or the schedule says it should be in flight right now.
+    // Ownership check — you cannot report a reception on your own flight.
+    // Compare Firebase UID (for Firestore flights) and node hex ID (for
+    // API-shared flights where userId is empty).
+    final currentUser = ref.watch(currentUserProvider);
+    final myNodeNum = ref.watch(myNodeNumProvider);
+    final myNodeHex = myNodeNum != null
+        ? '!${myNodeNum.toRadixString(16)}'
+        : null;
+    final isOwnFlight =
+        (currentUser != null &&
+            liveFlight.userId.isNotEmpty &&
+            liveFlight.userId == currentUser.uid) ||
+        (myNodeHex != null && liveFlight.nodeId == myNodeHex);
+
+    // Only allow reporting when the flight is actually airborne AND
+    // it's not your own flight (you can't receive your own signal).
     final canReport =
+        !isOwnFlight &&
         !liveFlight.isPast &&
         (liveFlight.isInFlight ||
             (liveFlight.isActive && !liveFlight.isUpcoming));
@@ -106,8 +121,21 @@ class _AetherFlightDetailScreenState
               ),
       ],
       slivers: [
-        // Route header - always visible, no collapse
+        // Route header - airport codes and distance
         SliverToBoxAdapter(child: _buildRouteHeader(context)),
+        // Route map — dark-themed map with great-circle arc
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: FlightRouteMap(
+              departure: widget.flight.departure,
+              arrival: widget.flight.arrival,
+              isActive: shouldTrackPosition,
+              livePosition: positionAsync?.value?.position,
+              height: 200,
+            ),
+          ),
+        ),
         // Content
         SliverToBoxAdapter(
           child: Column(
@@ -689,6 +717,13 @@ class _AetherFlightDetailScreenState
   }
 
   void _reportReception(BuildContext context) {
+    // Gate on auth — navigate to account screen if not signed in.
+    final user = ref.read(currentUserProvider);
+    if (user == null) {
+      Navigator.of(context).pushNamed('/account');
+      return;
+    }
+
     AppLogging.aether(
       'Opening report reception sheet for ${widget.flight.flightNumber}',
     );
@@ -979,6 +1014,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
   bool _showNotes = false;
 
   // Auto-detected values
+  bool _flightNodeDetected = false;
   double? _detectedRssi;
   double? _detectedSnr;
   double? _latitude;
@@ -1023,6 +1059,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
 
     // Get signal data from the flight's node.
     if (flightNode != null) {
+      _flightNodeDetected = true;
       _detectedRssi = flightNode.rssi?.toDouble();
       _detectedSnr = flightNode.snr?.toDouble();
       AppLogging.aether(
@@ -1062,6 +1099,17 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
 
   Future<void> _submit() async {
     // Check if flight is still active (may have ended while sheet was open)
+    if (!_flightNodeDetected) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          'Flight node not detected in your mesh network',
+        );
+      }
+      return;
+    }
+
+    // Check if flight is still active (may have ended while sheet was open)
     final liveFlight =
         ref
             .read(aetherFlightsProvider)
@@ -1081,10 +1129,10 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
     final user = ref.read(currentUserProvider);
     if (user == null) {
       AppLogging.aether('Submit report: user not signed in');
-      showSignInRequiredSnackBar(
-        context,
-        'Sign in to submit a reception report',
-      );
+      if (mounted) {
+        Navigator.of(context).pushNamed('/account');
+        safeNavigatorPop();
+      }
       return;
     }
 
@@ -1132,6 +1180,11 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
       AppLogging.aether('Submit report: FAILED - $e');
       AppLogging.aether('Stack trace: $st');
       if (mounted) {
+        if (e is AetherDuplicateReportException) {
+          showErrorSnackBar(context, 'You have already reported this flight');
+          safeNavigatorPop();
+          return;
+        }
         showErrorSnackBar(context, 'Error: $e');
       }
     } finally {
@@ -1175,6 +1228,38 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
               style: TextStyle(color: context.textSecondary),
             ),
             const SizedBox(height: 24),
+
+            // Not-on-mesh warning
+            if (!_flightNodeDetected)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.orange.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.wifi_off, color: Colors.orange, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'This flight\'s node is not in your mesh network. '
+                        'You can only report a reception when the node is '
+                        'visible to your device.',
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            if (!_flightNodeDetected) const SizedBox(height: 12),
 
             // Auto-detected signal info (read-only)
             if (hasSignalData)
@@ -1426,7 +1511,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
 
             // Submit button
             ElevatedButton(
-              onPressed: _isSaving ? null : _submit,
+              onPressed: (_isSaving || !_flightNodeDetected) ? null : _submit,
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.accentColor,
                 minimumSize: const Size(double.infinity, 52),

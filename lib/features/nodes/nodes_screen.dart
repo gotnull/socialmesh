@@ -26,6 +26,7 @@ import '../../providers/help_providers.dart';
 import '../../providers/presence_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../utils/presence_utils.dart';
+import '../../core/constants.dart';
 import '../aether/providers/aether_flight_matcher_provider.dart';
 import '../aether/widgets/aether_flight_match_card.dart';
 import '../navigation/main_shell.dart';
@@ -351,7 +352,8 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
             else ...[
               // Aether Flights Nearby — show matched active flights
               // above the regular node list so they're impossible to miss.
-              ..._buildAetherFlightSlivers(context),
+              if (AppFeatureFlags.isAetherEnabled)
+                ..._buildAetherFlightSlivers(context),
               ..._buildNodeSlivers(
                 nodesList,
                 myNodeNum,

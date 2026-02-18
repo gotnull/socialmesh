@@ -244,7 +244,7 @@ class ReceptionReport {
       estimatedDistance: (json['estimatedDistance'] as num?)?.toDouble(),
       notes: json['notes'] as String?,
       receivedAt: (json['receivedAt'] as Timestamp).toDate(),
-      createdAt: (json['createdAt'] as Timestamp).toDate(),
+      createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 

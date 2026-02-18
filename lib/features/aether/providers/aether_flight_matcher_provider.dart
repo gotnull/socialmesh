@@ -115,7 +115,22 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
       _recheckMatches();
     });
 
-    // Restore persisted notification state, then fetch flights
+    // Watch myNodeNum so self-flight filtering rechecks when identity arrives.
+    // On cold start, myNodeNum may be null while cached nodes are already
+    // loaded — without this listener a self-flight match could slip through
+    // and fire a spurious notification before BLE syncs our node number.
+    ref.listen(myNodeNumProvider, (previous, next) {
+      if (previous != next) {
+        AppLogging.aether(
+          'Flight matcher: myNodeNum changed '
+          '(${previous?.toRadixString(16)} → ${next?.toRadixString(16)}), '
+          'rechecking matches',
+        );
+        _recheckMatches();
+      }
+    });
+
+    // Restore persisted notification state
     _restorePersistedState();
 
     return const AetherFlightMatcherState();
@@ -144,8 +159,8 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
         'Flight matcher: failed to restore persisted state: $e',
       );
     }
-    // Now safe to fetch flights
-    await _fetchApiFlights();
+    // Now safe to recheck matches with Firestore data
+    _recheckMatches();
   }
 
   /// Persist the notified set to disk.
@@ -174,33 +189,9 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
     }
   }
 
-  /// Active flights from the REST API (community-shared).
-  List<AetherFlight> _apiFlights = [];
-
-  /// Fetch active flights from the Aether API so we can detect
-  /// community-shared flights too, not just the user's own.
-  Future<void> _fetchApiFlights() async {
-    try {
-      final shareService = ref.read(aetherShareServiceProvider);
-      final page = await shareService.fetchFlights(
-        activeOnly: true,
-        limit: 100,
-      );
-      _apiFlights = page.flights;
-      AppLogging.aether(
-        'Flight matcher: fetched ${_apiFlights.length} active API flights',
-      );
-      _recheckMatches();
-    } catch (e) {
-      AppLogging.aether(
-        'Flight matcher: API fetch failed (will use Firestore only): $e',
-      );
-    }
-  }
-
-  /// Refresh API flights. Called periodically or on user action.
-  Future<void> refresh() async {
-    await _fetchApiFlights();
+  /// Refresh flight matches. Called on user action.
+  void refresh() {
+    _recheckMatches();
   }
 
   /// Cross-reference all known active flights against discovered nodes.
@@ -214,15 +205,12 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
       return;
     }
 
-    // Combine Firestore and API active flights, deduplicate by flight ID
+    // Get all active flights from Firestore (single source of truth).
     final firestoreFlights =
         ref.read(aetherActiveFlightsProvider).asData?.value ?? [];
     final allFlights = <String, AetherFlight>{};
     for (final f in firestoreFlights) {
       allFlights[f.id] = f;
-    }
-    for (final f in _apiFlights) {
-      allFlights.putIfAbsent(f.id, () => f);
     }
 
     if (allFlights.isEmpty) {
@@ -261,6 +249,22 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
       // Skip flights whose own node is this device — can't receive yourself.
       final normalizedFlightNode = _normalizeNodeId(flight.nodeId);
       if (myNodeHex != null && normalizedFlightNode == myNodeHex) {
+        continue;
+      }
+
+      // Guard against race conditions on cold start: if myNodeNum hasn't
+      // arrived from BLE yet we cannot reliably detect self-flights.
+      // API flights carry nodeId but empty userId, so the Firebase UID
+      // guard above is ineffective for them. Rather than risk a spurious
+      // "Flight Detected" notification for the user's own flight, defer
+      // ALL matches until myNodeNum is available. The myNodeNumProvider
+      // listener added in build() will recheck as soon as it arrives.
+      if (myNodeHex == null && flight.userId.isEmpty) {
+        AppLogging.aether(
+          'Flight matcher: deferring ${flight.flightNumber} '
+          '(node=${flight.nodeId}) — myNodeNum not yet available, '
+          'cannot rule out self-flight',
+        );
         continue;
       }
 
@@ -312,12 +316,12 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
     }
 
     state = state.copyWith(matches: newMatches, hasFetched: true);
-    if (newMatches.isNotEmpty) {
-      AppLogging.aether(
-        'Flight matcher: ${newMatches.length} match(es) found — '
-        '${newMatches.map((m) => m.flight.flightNumber).join(', ')}',
-      );
-    }
+    // if (newMatches.isNotEmpty) {
+    //   AppLogging.aether(
+    //     'Flight matcher: ${newMatches.length} match(es) found — '
+    //     '${newMatches.map((m) => m.flight.flightNumber).join(', ')}',
+    //   );
+    // }
 
     // Prune persisted state for flights that are no longer active
     // so stale entries don't accumulate across sessions.

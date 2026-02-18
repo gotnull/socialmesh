@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:ui';
 
+import '../../core/constants.dart';
 import '../../core/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -346,7 +347,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         if (needsRegion && !regionConfigured) {
           AppLogging.app('WhatsNew: suppressed — region setup still needed');
         } else {
-          WhatsNewSheet.showIfNeeded(ref);
+          WhatsNewSheet.showIfNeeded();
         }
       }
     });
@@ -380,14 +381,15 @@ class _MainShellState extends ConsumerState<MainShell> {
       requiresConnection: false,
       whatsNewBadgeKey: 'nodedex',
     ),
-    _DrawerMenuItem(
-      icon: Icons.flight_takeoff_outlined,
-      label: 'Aether',
-      screen: const AetherScreen(),
-      iconColor: Colors.lightBlue.shade400,
-      requiresConnection: false,
-      whatsNewBadgeKey: 'aether',
-    ),
+    if (AppFeatureFlags.isAetherEnabled)
+      _DrawerMenuItem(
+        icon: Icons.flight_takeoff_outlined,
+        label: 'Aether',
+        screen: const AetherScreen(),
+        iconColor: Colors.lightBlue.shade400,
+        requiresConnection: false,
+        whatsNewBadgeKey: 'aether',
+      ),
     _DrawerMenuItem(
       icon: Icons.favorite_border,
       label: 'Activity',
@@ -1073,60 +1075,62 @@ class _MainShellState extends ConsumerState<MainShell> {
       });
     });
 
-    // Aether flight detection — cross-reference mesh nodes with active
-    // flights and alert the user when a match is found so they can
-    // report their reception immediately. The in-app floating overlay
-    // is handled by AetherFlightDetectedOverlay in the body Stack.
-    ref.listen<AetherFlightMatcherState>(aetherFlightMatcherProvider, (
-      previous,
-      next,
-    ) {
-      if (!mounted) return;
-      final matcher = ref.read(aetherFlightMatcherProvider.notifier);
-      final unnotified = matcher.unnotifiedMatches;
-      for (final match in unnotified) {
-        matcher.markNotified(match.flight.nodeId);
-        // Push notification (visible if app is backgrounded)
-        NotificationService().showAetherFlightDetectedNotification(
-          flightNumber: match.flight.flightNumber,
-          departure: match.flight.departure,
-          arrival: match.flight.arrival,
-          nodeName: match.node.displayName,
-        );
-        AppLogging.aether(
-          'Flight match detected: ${match.flight.flightNumber} '
-          'node ${match.flight.nodeId} = ${match.node.displayName}',
-        );
-      }
-    });
-
-    // Aether flight lifecycle — auto-activate flights when departure
-    // time passes and auto-deactivate when arrival time passes.
-    ref.listen<FlightLifecycleState>(aetherFlightLifecycleProvider, (
-      previous,
-      next,
-    ) {
-      if (!mounted) return;
-      final notifier = ref.read(aetherFlightLifecycleProvider.notifier);
-      for (final event in next.pendingEvents) {
-        notifier.acknowledgeEvent(event);
-        final flight = event.flight;
-        final route = '${flight.departure} → ${flight.arrival}';
-        if (event.activated) {
-          showInfoSnackBar(
-            context,
-            '${flight.flightNumber} ($route) is now in flight!',
+    // Aether flight detection and lifecycle — only when feature is enabled.
+    if (AppFeatureFlags.isAetherEnabled) {
+      // Cross-reference mesh nodes with active flights and alert the user
+      // when a match is found so they can report their reception immediately.
+      // The in-app floating overlay is handled by AetherFlightDetectedOverlay.
+      ref.listen<AetherFlightMatcherState>(aetherFlightMatcherProvider, (
+        previous,
+        next,
+      ) {
+        if (!mounted) return;
+        final matcher = ref.read(aetherFlightMatcherProvider.notifier);
+        final unnotified = matcher.unnotifiedMatches;
+        for (final match in unnotified) {
+          matcher.markNotified(match.flight.nodeId);
+          // Push notification (visible if app is backgrounded)
+          NotificationService().showAetherFlightDetectedNotification(
+            flightNumber: match.flight.flightNumber,
+            departure: match.flight.departure,
+            arrival: match.flight.arrival,
+            nodeName: match.node.displayName,
           );
-          AppLogging.aether('Lifecycle: activated ${flight.flightNumber}');
-        } else {
-          showInfoSnackBar(
-            context,
-            '${flight.flightNumber} ($route) flight completed',
+          AppLogging.aether(
+            'Flight match detected: ${match.flight.flightNumber} '
+            'node ${match.flight.nodeId} = ${match.node.displayName}',
           );
-          AppLogging.aether('Lifecycle: deactivated ${flight.flightNumber}');
         }
-      }
-    });
+      });
+
+      // Auto-activate flights when departure time passes and
+      // auto-deactivate when arrival time passes.
+      ref.listen<FlightLifecycleState>(aetherFlightLifecycleProvider, (
+        previous,
+        next,
+      ) {
+        if (!mounted) return;
+        final notifier = ref.read(aetherFlightLifecycleProvider.notifier);
+        for (final event in next.pendingEvents) {
+          notifier.acknowledgeEvent(event);
+          final flight = event.flight;
+          final route = '${flight.departure} → ${flight.arrival}';
+          if (event.activated) {
+            showInfoSnackBar(
+              context,
+              '${flight.flightNumber} ($route) is now in flight!',
+            );
+            AppLogging.aether('Lifecycle: activated ${flight.flightNumber}');
+          } else {
+            showInfoSnackBar(
+              context,
+              '${flight.flightNumber} ($route) flight completed',
+            );
+            AppLogging.aether('Lifecycle: deactivated ${flight.flightNumber}');
+          }
+        }
+      });
+    }
 
     // Check if we need to show the "Connect Device" screen
     // ONLY show scanner on first launch (never paired before) AND auto-reconnect disabled
@@ -1248,12 +1252,13 @@ class _MainShellState extends ConsumerState<MainShell> {
                       ),
                     ),
                     // Aether flight match floating overlay — flush to bottom
-                    const Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: AetherFlightDetectedOverlay(),
-                    ),
+                    if (AppFeatureFlags.isAetherEnabled)
+                      const Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: AetherFlightDetectedOverlay(),
+                      ),
                   ],
                 ),
               ),
@@ -1901,28 +1906,38 @@ class _DrawerNodeHeader extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Name and status on same row
+                // Node name — full width, no competing chip
+                Text(
+                  nodeName,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: AppTheme.fontFamily,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                // Node ID + connection status chip on same row
                 Row(
                   children: [
-                    Flexible(
-                      child: Text(
-                        nodeName,
+                    if (nodeId.isNotEmpty)
+                      Text(
+                        nodeId,
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
                           fontFamily: AppTheme.fontFamily,
-                          color: theme.colorScheme.onSurface,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    // Connection status indicator (compact)
+                    if (nodeId.isNotEmpty) const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
-                        vertical: 4,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
                         color: isConnected
@@ -1960,17 +1975,6 @@ class _DrawerNodeHeader extends ConsumerWidget {
                     ),
                   ],
                 ),
-                if (isConnected && nodeId.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    nodeId,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontFamily: AppTheme.fontFamily,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),

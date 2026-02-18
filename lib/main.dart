@@ -96,6 +96,9 @@ import 'services/user_presence_service.dart';
 import 'services/accessibility_preferences_service.dart';
 import 'services/channel_crypto_service.dart';
 import 'services/channel_invite_service.dart';
+import 'features/aether/screens/aether_flight_detail_screen.dart';
+import 'features/aether/providers/aether_providers.dart';
+import 'features/aether/models/aether_flight.dart';
 // import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
 import 'core/navigation.dart';
@@ -1586,6 +1589,16 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
               );
             }
           }
+          if (settings.name == '/aether-flight') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            final shareId = args?['shareId'] as String?;
+            if (shareId != null) {
+              return MaterialPageRoute(
+                builder: (context) =>
+                    _AetherFlightDeepLinkLoader(shareId: shareId),
+              );
+            }
+          }
           return null;
         },
       ),
@@ -1684,6 +1697,65 @@ class _SignalDetailLoader extends ConsumerWidget {
             navigator.pushReplacement(
               MaterialPageRoute(
                 builder: (context) => SignalDetailScreen(signal: signal),
+              ),
+            );
+          });
+
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
+  }
+}
+
+/// Loader widget that fetches an Aether flight by share ID and navigates
+/// to [AetherFlightDetailScreen].
+class _AetherFlightDeepLinkLoader extends ConsumerWidget {
+  final String shareId;
+
+  const _AetherFlightDeepLinkLoader({required this.shareId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Loading Flight')),
+      body: FutureBuilder<AetherFlight>(
+        future: ref.read(aetherShareServiceProvider).fetchFlight(shareId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError || !snapshot.hasData) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(
+                    snapshot.hasError
+                        ? 'Error loading flight: ${snapshot.error}'
+                        : 'Flight not found',
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final flight = snapshot.data!;
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final navigator = navigatorKey.currentState;
+            if (navigator == null) return;
+            navigator.pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => AetherFlightDetailScreen(flight: flight),
               ),
             );
           });
