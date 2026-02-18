@@ -23,6 +23,7 @@ import '../core/logging.dart';
 import '../core/safety/error_handler.dart';
 import '../core/transport.dart';
 import '../services/meshcore/connection_coordinator.dart' show ConnectionResult;
+import '../services/transport/background_ble_service.dart';
 import 'app_providers.dart';
 import 'connectivity_providers.dart';
 import 'meshcore_providers.dart';
@@ -1601,6 +1602,48 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       '🔌 markAsPaired: device=${device.id}, myNodeNum=$myNodeNum, isMeshCore=$isMeshCore',
     );
 
+    // Prompt for battery optimization exemption on first BLE connection
+    // (Android only, Meshtastic only). Fire-and-forget — the prompt is
+    // non-blocking and stores its own "shown" flag.
+    if (!isMeshCore) {
+      Future.microtask(() async {
+        try {
+          await BackgroundBleService.instance
+              .promptBatteryOptimizationIfNeeded();
+        } catch (e) {
+          AppLogging.connection('🔌 Battery optimization prompt error: $e');
+        }
+      });
+    }
+
+    // Wire the background reconnect manager for Meshtastic devices.
+    // This provides exponential-backoff BLE reconnection when the app is
+    // backgrounded and the OS drops the BLE link. The callbacks close over
+    // the provider-layer state so the manager remains Riverpod-free.
+    if (!isMeshCore) {
+      final transport = ref.read(transportProvider);
+      BackgroundBleService.instance.reconnectManager.observe(
+        transportStateStream: transport.stateStream,
+        reconnect: () async {
+          // Guard against double-connect if the provider-layer reconnect
+          // is already handling it.
+          if (transport.isConnected ||
+              transport.state == DeviceConnectionState.connecting) {
+            return true;
+          }
+          try {
+            await transport.connect(device);
+            return true;
+          } catch (e) {
+            AppLogging.connection('🔌 BackgroundReconnect callback error: $e');
+            return false;
+          }
+        },
+        isUserDisconnected: () => _userDisconnected,
+        deviceName: device.name,
+      );
+    }
+
     // Run one-shot reconciliation for this node on connect (Meshtastic only)
     // MeshCore doesn't use the same message storage/reconciliation
     if (!isMeshCore && !_reconciledThisSession && myNodeNum != null) {
@@ -1866,3 +1909,18 @@ final featureUnavailabilityReasonProvider = Provider.family<String?, FeatureId>(
         .getUnavailabilityReason(feature);
   },
 );
+
+// =============================================================================
+// BACKGROUND SERVICE STATE
+// =============================================================================
+
+/// Whether the Android foreground service that keeps BLE alive in background
+/// is currently running. UI can use this to show status indicators.
+final isBackgroundServiceRunningProvider = Provider<bool>((ref) {
+  // Re-evaluate when the device connection changes.
+  final deviceState = ref.watch(deviceConnectionProvider);
+  // The service is started automatically by BleTransport on connect and
+  // stopped on disconnect. Reading the singleton's flag is sufficient.
+  if (!deviceState.isConnected) return false;
+  return BackgroundBleService.instance.isRunning;
+});

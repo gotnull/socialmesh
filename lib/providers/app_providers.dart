@@ -3091,6 +3091,31 @@ class MessagesNotifier extends Notifier<List<Message>> {
     AppLogging.messages('🔧 Force rehydrate: total=$total, inserted=$inserted');
     return {'total': total, 'inserted': inserted};
   }
+
+  /// Merge messages persisted by the background processor into the in-memory
+  /// state. Called on foreground resume so the UI picks up any messages that
+  /// arrived while the app was backgrounded.
+  ///
+  /// Unlike [forceRehydrateAllFromStorage], this only inserts messages whose
+  /// IDs are in [backgroundIds], keeping the merge targeted and fast.
+  Future<int> mergeBackgroundMessages(Set<String> backgroundIds) async {
+    if (_storage == null || backgroundIds.isEmpty) return 0;
+    final all = await _storage!.loadMessages();
+    var inserted = 0;
+    for (final m in all) {
+      if (backgroundIds.contains(m.id) && !state.any((s) => s.id == m.id)) {
+        state = [...state, m];
+        _recordMessageSignature(m);
+        inserted++;
+      }
+    }
+    if (inserted > 0) {
+      AppLogging.messages(
+        '📨 Merged $inserted background messages into UI state',
+      );
+    }
+    return inserted;
+  }
 }
 
 final messagesProvider = NotifierProvider<MessagesNotifier, List<Message>>(

@@ -22,6 +22,8 @@ import 'core/theme.dart';
 import 'core/widgets/glass_scaffold.dart';
 import 'core/widgets/loading_indicator.dart';
 import 'core/transport.dart';
+import 'services/transport/background_ble_service.dart';
+import 'services/transport/background_message_processor.dart';
 import 'core/accessibility_theme_adapter.dart';
 import 'core/logging.dart';
 import 'core/safety/error_handler.dart';
@@ -120,6 +122,10 @@ Future<void> main() async {
   await dotenv.load(fileName: '.env');
 
   FlutterBluePlus.setLogLevel(LogLevel.none);
+
+  // Initialize Android foreground service configuration for background BLE.
+  // Must be called before any FlutterForegroundTask.start() call.
+  BackgroundBleService.instance.init();
 
   // Initialize profanity checker (load banned words from assets)
   await ProfanityChecker.instance.load();
@@ -370,6 +376,9 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     if (state == AppLifecycleState.resumed) {
       // Mark app as active for lifecycle-aware commands
       ref.read(lifecycleCommandManagerProvider).setAppActive(true);
+      // Foreground/background handoff (W2.3): stop background notification
+      // dispatch and merge background-persisted messages into the UI.
+      _handleBackgroundToForegroundHandoff();
       _handleAppResumed();
       // Set user online when app returns to foreground
       ref.read(userPresenceServiceProvider).setOnline();
@@ -380,6 +389,9 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         state == AppLifecycleState.detached) {
       // Mark app as inactive - prevents device commands from background
       ref.read(lifecycleCommandManagerProvider).setAppActive(false);
+      // Foreground/background handoff (W2.3): enable background notification
+      // dispatch so messages received in the background produce notifications.
+      _handleForegroundToBackgroundHandoff();
       // Set user offline when app goes to background
       ref.read(userPresenceServiceProvider).setOffline();
       // Sync scheduled automations to platform scheduler for background execution
@@ -413,6 +425,59 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     } catch (e) {
       AppLogging.automations('Failed to process schedules on resume: $e');
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Foreground / background handoff (W2.3)
+  // ---------------------------------------------------------------------------
+
+  /// Called when the app transitions to the background.
+  ///
+  /// Enables the background message processor's notification dispatch so
+  /// messages received while the UI is inactive still produce notifications.
+  void _handleForegroundToBackgroundHandoff() {
+    final processor = BackgroundMessageProcessor.instance;
+    processor.notificationsEnabled = true;
+    AppLogging.ble(
+      'Handoff: app backgrounded, background notifications enabled',
+    );
+  }
+
+  /// Called when the app returns to the foreground.
+  ///
+  /// 1. Stops the background processor from dispatching notifications.
+  /// 2. Merges background-persisted messages into the UI state.
+  /// 3. Drains buffered non-message packets for foreground processing.
+  void _handleBackgroundToForegroundHandoff() {
+    final processor = BackgroundMessageProcessor.instance;
+
+    // Stop background notification dispatch so the foreground path takes over.
+    processor.notificationsEnabled = false;
+
+    // Merge any messages persisted by the background processor.
+    final bgIds = Set<String>.from(processor.persistedMessageIds);
+    if (bgIds.isNotEmpty) {
+      AppLogging.ble(
+        'Handoff: merging ${bgIds.length} background messages into UI',
+      );
+      ref.read(messagesProvider.notifier).mergeBackgroundMessages(bgIds);
+      processor.persistedMessageIds.clear();
+    }
+
+    // Drain buffered non-message packets. These will be fully processed by the
+    // foreground ProtocolService on the next data cycle. For now we just clear
+    // the buffer to prevent unbounded growth; full packet replay is deferred
+    // to a future iteration.
+    final bufferedCount = processor.pendingPackets.length;
+    if (bufferedCount > 0) {
+      AppLogging.ble(
+        'Handoff: discarding $bufferedCount buffered non-message packets '
+        '(foreground processing on resume is not yet wired)',
+      );
+      processor.pendingPackets.clear();
+    }
+
+    AppLogging.ble('Handoff: app foregrounded, background notifications off');
   }
 
   /// Handle app returning to foreground.

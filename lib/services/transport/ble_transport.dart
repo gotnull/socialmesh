@@ -7,6 +7,7 @@ import '../../core/logging.dart';
 import '../../core/meshcore_constants.dart';
 import '../../core/transport.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import 'background_ble_service.dart';
 
 /// Exception thrown when Meshtastic BLE service is not found on a device.
 ///
@@ -38,6 +39,10 @@ class BleTransport implements DeviceTransport {
   Timer? _pollingTimer;
 
   DeviceConnectionState _state = DeviceConnectionState.disconnected;
+
+  /// Name of the currently-connected device, used for the foreground
+  /// service notification and logging.
+  String _connectedDeviceName = '';
 
   // Meshtastic BLE service and characteristic UUIDs (from official docs)
   // https://meshtastic.org/docs/development/device/client-api/
@@ -96,6 +101,12 @@ class BleTransport implements DeviceTransport {
       _state = newState;
       _stateController.add(newState);
       AppLogging.ble('BLE state changed to: $newState');
+
+      // Start the Android foreground service when BLE connects so the OS
+      // keeps the Dart isolate (and therefore the BLE link) alive.
+      if (newState == DeviceConnectionState.connected) {
+        _startBackgroundService();
+      }
     }
   }
 
@@ -380,6 +391,7 @@ class BleTransport implements DeviceTransport {
     }
 
     _updateState(DeviceConnectionState.connecting);
+    _connectedDeviceName = device.name;
 
     try {
       AppLogging.ble('Connecting to ${device.name}...');
@@ -709,6 +721,14 @@ class BleTransport implements DeviceTransport {
     }
   }
 
+  /// Start a polling-based fallback for reading fromRadio.
+  ///
+  /// This is only used when the `fromNum` characteristic is not available
+  /// on the device (rare). On iOS, [Timer.periodic] is suspended when the
+  /// app is backgrounded; incoming data then relies entirely on the
+  /// `fromNum` characteristic notification path (see [enableNotifications]).
+  /// Since standard Meshtastic radios expose `fromNum`, background data
+  /// delivery is unaffected.
   void _startPolling() {
     AppLogging.ble('Starting polling for fromRadio characteristic');
 
@@ -853,6 +873,9 @@ class BleTransport implements DeviceTransport {
       _logRadioSubscription = null;
       _consecutiveAuthErrors = 0;
 
+      // Stop the Android foreground service on disconnect.
+      await BackgroundBleService.instance.stop();
+
       if (!wasDisconnected) {
         _updateState(DeviceConnectionState.disconnected);
         AppLogging.ble('Disconnected');
@@ -863,8 +886,25 @@ class BleTransport implements DeviceTransport {
       _device = null;
       _txCharacteristic = null;
       _rxCharacteristic = null;
+      await BackgroundBleService.instance.stop();
       _updateState(DeviceConnectionState.disconnected);
     }
+  }
+
+  /// Start the Android foreground service if the user has not disabled
+  /// background BLE in settings.
+  Future<void> _startBackgroundService() async {
+    final enabled = await BackgroundBleService.isBackgroundBleEnabled();
+    if (!enabled) {
+      AppLogging.ble(
+        'Background BLE disabled by user, skipping foreground service',
+      );
+      return;
+    }
+    await BackgroundBleService.instance.start(
+      deviceName: _connectedDeviceName,
+      transport: this,
+    );
   }
 
   @override

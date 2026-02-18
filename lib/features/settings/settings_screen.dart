@@ -24,6 +24,7 @@ import '../../models/subscription_models.dart';
 import '../../services/storage/storage_service.dart';
 import '../../services/notifications/push_notification_service.dart';
 import '../../services/haptic_service.dart';
+import 'background_connection_screen.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
@@ -330,6 +331,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           keywords: ['bluetooth', 'connect', 'device', 'auto'],
           section: 'CONNECTION',
           hasSwitch: true,
+        ),
+        _SearchableSettingItem(
+          icon: Icons.bluetooth_connected,
+          title: 'Background connection',
+          subtitle: 'Background BLE, notifications, and power settings',
+          keywords: [
+            'background',
+            'ble',
+            'foreground',
+            'service',
+            'notification',
+            'battery',
+          ],
+          section: 'CONNECTION',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const BackgroundConnectionScreen(),
+            ),
+          ),
         ),
 
         // Haptic Feedback
@@ -1893,6 +1914,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 await settingsService.setAutoReconnect(value);
                                 safeSetState(() {});
                               },
+                            ),
+                          ),
+                          _SettingsTile(
+                            icon: Icons.bluetooth_connected,
+                            title: 'Background connection',
+                            subtitle:
+                                'Background BLE, notifications, and power settings',
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const BackgroundConnectionScreen(),
+                              ),
                             ),
                           ),
 
