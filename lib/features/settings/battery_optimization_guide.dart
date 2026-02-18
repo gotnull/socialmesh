@@ -203,54 +203,67 @@ class _BatteryGuideContent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Description
-          Text(
-            'Your device manufacturer may aggressively limit background apps. '
-            'Follow these steps to keep the mesh connection alive:',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
-          ),
-          const SizedBox(height: 16),
-
-          // Steps
-          ...guide.steps.asMap().entries.map((entry) {
-            final index = entry.key + 1;
-            final step = entry.value;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
+          // Scrollable description + steps
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      '$index',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: context.accentColor,
-                      ),
+                  // Description
+                  Text(
+                    'Your device manufacturer may aggressively limit background apps. '
+                    'Follow these steps to keep the mesh connection alive:',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: context.textSecondary,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      step,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: context.textPrimary,
+                  const SizedBox(height: 16),
+
+                  // Steps
+                  ...guide.steps.asMap().entries.map((entry) {
+                    final index = entry.key + 1;
+                    final step = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: context.accentColor.withValues(
+                                alpha: 0.15,
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '$index',
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: context.accentColor,
+                                  ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              step,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: context.textPrimary),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
+                    );
+                  }),
                 ],
               ),
-            );
-          }),
+            ),
+          ),
 
           const SizedBox(height: 8),
 
