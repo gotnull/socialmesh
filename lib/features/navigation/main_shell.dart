@@ -28,6 +28,7 @@ import '../../providers/social_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/notifications/notification_service.dart';
+import '../settings/battery_optimization_guide.dart';
 import '../../utils/snackbar.dart';
 import '../messaging/messages_container_screen.dart';
 import '../nodes/nodes_screen.dart';
@@ -350,7 +351,28 @@ class _MainShellState extends ConsumerState<MainShell> {
         } else {
           WhatsNewSheet.showIfNeeded();
         }
+
+        // Listen for first connection to show OEM battery optimization guide
+        // (Android only, once per install).
+        ref.listenManual(deviceConnectionProvider, (previous, next) {
+          if (next.state == DevicePairingState.connected &&
+              previous?.state != DevicePairingState.connected) {
+            _showBatteryGuideIfNeeded();
+          }
+        });
       }
+    });
+  }
+
+  /// Show the OEM battery optimization guide after a short delay.
+  ///
+  /// This gives the system-level battery prompt (fired from
+  /// [BackgroundBleService.promptBatteryOptimizationIfNeeded]) time to resolve
+  /// before stacking another bottom sheet.
+  void _showBatteryGuideIfNeeded() {
+    Future.delayed(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      showBatteryOptimizationGuide(context);
     });
   }
 

@@ -14,6 +14,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/connection_providers.dart';
 import '../../services/transport/background_ble_service.dart';
+import 'battery_optimization_guide.dart';
 
 /// SharedPreferences keys for background notification settings.
 ///
@@ -253,6 +254,23 @@ class _BackgroundConnectionScreenState
                   enabled: _bgBleEnabled,
                   onChanged: _bgBleEnabled ? _setNotifStyle : null,
                 ),
+                const SizedBox(height: 24),
+                _SectionHeader(title: 'BATTERY'),
+                _SettingTile(
+                  icon: Icons.battery_alert,
+                  title: 'Battery optimization guide',
+                  subtitle:
+                      'OEM-specific instructions for reliable background '
+                      'operation',
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: context.textTertiary,
+                  ),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    showBatteryOptimizationGuide(context, force: true);
+                  },
+                ),
               ],
 
               SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
@@ -294,12 +312,14 @@ class _SettingTile extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.trailing,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String? subtitle;
   final Widget? trailing;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -314,6 +334,7 @@ class _SettingTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
