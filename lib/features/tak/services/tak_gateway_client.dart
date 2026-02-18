@@ -87,14 +87,23 @@ class TakGatewayClient {
   Future<void> connect() async {
     if (_state == TakConnectionState.connected ||
         _state == TakConnectionState.connecting) {
+      AppLogging.tak('connect() called but already ${_state.name}, ignoring');
       return;
     }
 
     _setState(TakConnectionState.connecting);
+    AppLogging.tak('Connecting to gateway: $gatewayUrl');
 
     try {
+      AppLogging.tak('Requesting auth token...');
       final token = await getAuthToken();
+      AppLogging.tak(
+        'Auth token ${token != null ? 'obtained (${token.length} chars)' : 'is null (anonymous)'}',
+      );
       final wsUrl = _buildWsUrl(token);
+      AppLogging.tak(
+        'WebSocket URL: ${wsUrl.replaceAll(RegExp(r'token=[^&]+'), 'token=***')}',
+      );
 
       _socket = await WebSocket.connect(
         wsUrl,
@@ -105,7 +114,7 @@ class TakGatewayClient {
       _connectedSince = DateTime.now();
       _setState(TakConnectionState.connected);
 
-      AppLogging.protocol('[TAK] Connected to gateway');
+      AppLogging.tak('Connected to gateway successfully');
 
       _socket!.listen(
         _onMessage,
@@ -115,7 +124,7 @@ class TakGatewayClient {
       );
     } catch (e) {
       _lastError = e.toString();
-      AppLogging.protocol('[TAK] Connection failed: $e');
+      AppLogging.tak('Connection failed: $e');
       _setState(TakConnectionState.disconnected);
       _scheduleReconnect();
     }
@@ -123,6 +132,7 @@ class TakGatewayClient {
 
   /// Disconnect from the gateway.
   void disconnect() {
+    AppLogging.tak('Disconnecting from gateway (manual)');
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
     _reconnectAttempts = 0;
@@ -130,15 +140,19 @@ class TakGatewayClient {
     _socket = null;
     _connectedSince = null;
     _setState(TakConnectionState.disconnected);
-    AppLogging.protocol('[TAK] Disconnected from gateway');
+    AppLogging.tak(
+      'Disconnected. Total events received this session: $_totalEventsReceived',
+    );
   }
 
   /// Clean up all resources.
   void dispose() {
+    AppLogging.tak('Disposing TakGatewayClient');
     disconnect();
     _eventController.close();
     _snapshotController.close();
     _stateController.close();
+    AppLogging.tak('TakGatewayClient disposed');
   }
 
   // ---------------------------------------------------------------------------
@@ -162,13 +176,24 @@ class TakGatewayClient {
 
   void _onMessage(dynamic data) {
     try {
-      final json = jsonDecode(data as String) as Map<String, dynamic>;
+      final raw = data as String;
+      final json = jsonDecode(raw) as Map<String, dynamic>;
       final msgType = json['type'] as String?;
+      AppLogging.tak(
+        'WS message received: type=$msgType, size=${raw.length} bytes',
+      );
 
       if (msgType == 'event') {
         final eventJson = json['event'] as Map<String, dynamic>;
         final event = TakEvent.fromJson(eventJson);
         _totalEventsReceived++;
+        AppLogging.tak(
+          'Event: uid=${event.uid}, type=${event.type}, '
+          'callsign=${event.callsign ?? "none"}, '
+          'lat=${event.lat.toStringAsFixed(4)}, '
+          'lon=${event.lon.toStringAsFixed(4)}, '
+          'total=$_totalEventsReceived',
+        );
         _eventController.add(event);
       } else if (msgType == 'snapshot') {
         final eventsJson = json['events'] as List<dynamic>;
@@ -176,32 +201,39 @@ class TakGatewayClient {
             .map((e) => TakEvent.fromJson(e as Map<String, dynamic>))
             .toList();
         _totalEventsReceived += events.length;
+        AppLogging.tak(
+          'Snapshot backfill: ${events.length} events, total=$_totalEventsReceived',
+        );
         _snapshotController.add(events);
+      } else {
+        AppLogging.tak('Unknown message type: $msgType');
       }
     } catch (e) {
-      AppLogging.protocol('[TAK] Failed to parse message: $e');
+      AppLogging.tak('Failed to parse message: $e');
     }
   }
 
   void _onError(Object error) {
     _lastError = error.toString();
-    AppLogging.protocol('[TAK] WebSocket error: $error');
+    AppLogging.tak('WebSocket error: $error');
   }
 
   void _onDone() {
     _socket = null;
     _connectedSince = null;
     if (_state != TakConnectionState.disconnected) {
-      AppLogging.protocol('[TAK] Connection closed, scheduling reconnect');
+      AppLogging.tak('Connection closed unexpectedly, scheduling reconnect');
       _scheduleReconnect();
+    } else {
+      AppLogging.tak('Connection closed (expected)');
     }
   }
 
   void _scheduleReconnect() {
     if (maxReconnectAttempts > 0 &&
         _reconnectAttempts >= maxReconnectAttempts) {
-      AppLogging.protocol(
-        '[TAK] Max reconnect attempts reached ($maxReconnectAttempts)',
+      AppLogging.tak(
+        'Max reconnect attempts reached ($maxReconnectAttempts), giving up',
       );
       _setState(TakConnectionState.disconnected);
       return;
@@ -213,8 +245,9 @@ class TakGatewayClient {
 
     // Exponential backoff: 1s, 2s, 4s, 8s, 16s, max 30s
     final delaySeconds = min(pow(2, _reconnectAttempts - 1).toInt(), 30);
-    AppLogging.protocol(
-      '[TAK] Reconnecting in ${delaySeconds}s (attempt $_reconnectAttempts)',
+    AppLogging.tak(
+      'Reconnecting in ${delaySeconds}s '
+      '(attempt $_reconnectAttempts, total reconnects: $_totalReconnects)',
     );
 
     _reconnectTimer?.cancel();
@@ -223,6 +256,7 @@ class TakGatewayClient {
 
   void _setState(TakConnectionState newState) {
     if (_state != newState) {
+      AppLogging.tak('State: ${_state.name} -> ${newState.name}');
       _state = newState;
       _stateController.add(newState);
     }

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../models/tak_event.dart';
 
@@ -13,6 +14,11 @@ class TakEventDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppLogging.tak(
+      'TakEventDetailScreen build: uid=${event.uid}, '
+      'type=${event.type}, callsign=${event.callsign ?? "none"}, '
+      'isStale=${event.isStale}',
+    );
     final theme = Theme.of(context);
     final dimStyle = theme.textTheme.bodyMedium?.copyWith(
       color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
@@ -27,6 +33,7 @@ class TakEventDetailScreen extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.copy),
           onPressed: () {
+            AppLogging.tak('Copied event JSON to clipboard: uid=${event.uid}');
             Clipboard.setData(ClipboardData(text: event.toJsonString()));
             ScaffoldMessenger.of(
               context,

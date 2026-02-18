@@ -28,8 +28,12 @@ class TakDatabase {
 
   /// Initialize the database and create tables if needed.
   Future<void> init() async {
-    if (_db != null) return;
+    if (_db != null) {
+      AppLogging.tak('Database already initialized, skipping');
+      return;
+    }
 
+    AppLogging.tak('Initializing TAK database...');
     final String dbPath;
     if (_testDbPath != null) {
       dbPath = _testDbPath;
@@ -37,20 +41,23 @@ class TakDatabase {
       final dir = await getApplicationDocumentsDirectory();
       dbPath = p.join(dir.path, _dbName);
     }
+    AppLogging.tak('Database path: $dbPath');
 
     _db = await openDatabase(
       dbPath,
       version: _dbVersion,
       onCreate: (db, version) async {
-        AppLogging.storage('Creating TAK events database v$version');
+        AppLogging.tak('Creating TAK events database v$version');
         await _createTables(db);
+        AppLogging.tak('TAK events database tables created');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        AppLogging.storage(
+        AppLogging.tak(
           'Upgrading TAK events database v$oldVersion -> v$newVersion',
         );
       },
     );
+    AppLogging.tak('TAK database initialized successfully');
   }
 
   Database get _database {
@@ -112,13 +119,21 @@ class TakDatabase {
         where: 'uid = ? AND type = ?',
         whereArgs: [event.uid, event.type],
       );
+      AppLogging.tak(
+        'DB upsert (update): uid=${event.uid}, type=${event.type}',
+      );
     } else {
       await db.insert(_tableName, event.toDbRow());
+      AppLogging.tak(
+        'DB upsert (insert): uid=${event.uid}, type=${event.type}, '
+        'callsign=${event.callsign ?? "none"}',
+      );
     }
   }
 
   /// Insert a batch of events (used for snapshot backfill).
   Future<void> insertBatch(List<TakEvent> events) async {
+    AppLogging.tak('DB insertBatch: ${events.length} events');
     final db = _database;
     final batch = db.batch();
     for (final event in events) {
@@ -140,6 +155,7 @@ class TakDatabase {
       );
     }
     await batch.commit(noResult: true);
+    AppLogging.tak('DB insertBatch committed: ${events.length} events');
   }
 
   /// Get the latest events, ordered by received time descending.
@@ -149,6 +165,7 @@ class TakDatabase {
       orderBy: 'received_utc DESC',
       limit: limit,
     );
+    AppLogging.tak('DB getLatestEvents: ${rows.length} rows (limit=$limit)');
     return rows.map(TakEvent.fromDbRow).toList();
   }
 
@@ -175,11 +192,15 @@ class TakDatabase {
   /// Remove events whose stale time + grace period has passed.
   Future<int> cleanupStale() async {
     final cutoff = DateTime.now().millisecondsSinceEpoch - staleGracePeriodMs;
-    return _database.delete(
+    final removed = await _database.delete(
       _tableName,
       where: 'stale_utc < ?',
       whereArgs: [cutoff],
     );
+    if (removed > 0) {
+      AppLogging.tak('DB cleanupStale: removed $removed stale events');
+    }
+    return removed;
   }
 
   /// Remove oldest events if count exceeds [maxEvents].
@@ -188,6 +209,9 @@ class TakDatabase {
     if (total <= maxEvents) return 0;
 
     final excess = total - maxEvents;
+    AppLogging.tak(
+      'DB enforceMaxEvents: total=$total, max=$maxEvents, removing $excess',
+    );
     return _database.rawDelete(
       '''
       DELETE FROM $_tableName WHERE id IN (
@@ -200,11 +224,14 @@ class TakDatabase {
 
   /// Clear all events.
   Future<void> clear() async {
+    AppLogging.tak('DB clearing all events');
     await _database.delete(_tableName);
+    AppLogging.tak('DB cleared');
   }
 
   /// Close the database connection.
   Future<void> close() async {
+    AppLogging.tak('Closing TAK database');
     await _db?.close();
     _db = null;
   }

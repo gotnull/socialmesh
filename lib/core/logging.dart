@@ -55,6 +55,7 @@ class AppLogging {
   static bool? _syncLoggingEnabled;
   static bool? _mfaLoggingEnabled;
   static bool? _aetherLoggingEnabled;
+  static bool? _takLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -246,6 +247,12 @@ class AppLogging {
     return _aetherLoggingEnabled!;
   }
 
+  static bool get takLoggingEnabled {
+    _takLoggingEnabled ??=
+        _safeGetEnv('TAK_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _takLoggingEnabled!;
+  }
+
   /// Cloud Sync logging — always enabled by default for debugging sync issues.
   /// Disable with SYNC_LOGGING_ENABLED=false if needed.
   static bool get syncLoggingEnabled {
@@ -420,6 +427,10 @@ class AppLogging {
     if (aetherLoggingEnabled) debugPrint('Aether: $message');
   }
 
+  static void tak(String message) {
+    if (takLoggingEnabled) debugPrint('TAK: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -452,6 +463,7 @@ class AppLogging {
     _syncLoggingEnabled = null;
     _mfaLoggingEnabled = null;
     _aetherLoggingEnabled = null;
+    _takLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }
