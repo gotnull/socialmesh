@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Aether flight time validation on the scheduling form
 - Aether enhanced flight detail screen with airport data and route information
 - Aether server-side OpenSky search cache (GET /api/flights/search) -- zero client-side credit cost
+- Aether server-side route cache (GET /api/flights/route/:icao24) -- 30-min TTL, zero client-side credit cost
+- Aether server-side validate endpoint (GET /api/flights/validate/:callsign) -- search cache first, zero credits
 - Cloudflare Worker proxy (opensky-proxy) for OpenSky API routing from Railway
 - Telegram bot /opensky_cache command for monitoring search cache freshness
 
@@ -44,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Theme integration includes font family, visual density, and high contrast adjustments
 - Animation durations respect reduce motion preference throughout the app
 - Aether flight search uses server-side cache instead of direct OpenSky calls (zero credit burn)
+- Aether flight validation proxied through Aether API (search cache + server-side fallback)
+- Aether route enrichment proxied through Aether API route cache (zero client-side credits)
 - Aether flight search changed from auto-search-on-keystroke to explicit submit
 - Aether flight status logic prioritizes time-based checks over GPS proximity
 - Aether flight lifecycle checks scoped to current user's flights only

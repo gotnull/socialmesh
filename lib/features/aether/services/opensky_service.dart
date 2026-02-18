@@ -173,88 +173,104 @@ class OpenSkyService {
 
   /// Check if a flight is currently active by callsign.
   ///
-  /// Returns [FlightValidationResult] with flight status and position if found.
-  /// Uses 1-4 credits depending on area (we use global search = 4 credits).
+  /// Calls the Aether API server-side validate endpoint which checks
+  /// the search cache first (zero credits), then falls back to a direct
+  /// OpenSky query on the server side if needed. The Flutter client
+  /// never calls OpenSky directly for validation.
   Future<FlightValidationResult> validateFlightByCallsign(
     String callsign,
   ) async {
     AppLogging.aether(
-      '[OpenSky] validateFlightByCallsign() — callsign="$callsign"',
-    );
-    final cleanCallsign = _normalizeCallsign(callsign);
-
-    final response = await _authenticatedGet(
-      '/states/all?callsign=$cleanCallsign',
+      '[OpenSky] validateFlightByCallsign() via Aether API — '
+      'callsign="$callsign"',
     );
 
-    if (response == null) {
-      return FlightValidationResult(
-        status: FlightValidationStatus.error,
-        message: 'Unable to connect to OpenSky Network',
-      );
-    }
-
-    if (response.statusCode == 429) {
-      return FlightValidationResult(
-        status: FlightValidationStatus.rateLimited,
-        message: 'Rate limit exceeded. Try again later.',
-      );
-    }
-
-    if (response.statusCode == 401) {
-      // Token expired, clear cache and retry once
-      _accessToken = null;
-      _tokenExpiry = null;
-      return FlightValidationResult(
-        status: FlightValidationStatus.error,
-        message: 'Authentication failed. Please try again.',
-      );
-    }
-
-    if (response.statusCode != 200) {
-      return FlightValidationResult(
-        status: FlightValidationStatus.error,
-        message: 'API error: ${response.statusCode}',
-      );
-    }
+    final baseUrl = AppUrls.aetherApiUrl;
+    final uri = Uri.parse(
+      '$baseUrl/api/flights/validate/${Uri.encodeComponent(callsign.trim())}',
+    );
 
     try {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-      final states = json['states'] as List<dynamic>?;
+      final response = await http.get(uri).timeout(const Duration(seconds: 15));
 
-      if (states == null || states.isEmpty) {
+      if (response.statusCode != 200) {
+        AppLogging.aether(
+          '[OpenSky] Aether validate failed: ${response.statusCode}',
+        );
         return FlightValidationResult(
-          status: FlightValidationStatus.notFound,
-          message: 'Flight $cleanCallsign not currently in the air',
+          status: FlightValidationStatus.error,
+          message: 'API error: ${response.statusCode}',
         );
       }
 
-      // Parse the first matching state vector
-      final state = states.first as List<dynamic>;
-      final position = _parseStateVector(state, cleanCallsign);
-      final icao24 = state[0] as String?;
-      final originCountry = state[2] as String?;
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final status = json['status'] as String?;
 
-      // Try to get route info (departure/arrival airports and times)
-      // via the aircraft flights endpoint using the icao24 transponder ID.
+      if (status == 'not_found') {
+        return FlightValidationResult(
+          status: FlightValidationStatus.notFound,
+          message:
+              json['message'] as String? ?? 'Flight not currently in the air',
+        );
+      }
+
+      if (status != 'active') {
+        return FlightValidationResult(
+          status: FlightValidationStatus.error,
+          message: json['message'] as String? ?? 'Unknown status',
+        );
+      }
+
+      // Parse position data
+      final posJson = json['position'] as Map<String, dynamic>?;
+      FlightPositionData? position;
+      String? icao24;
+      String? originCountry;
+
+      if (posJson != null) {
+        icao24 = posJson['icao24'] as String?;
+        originCountry = posJson['origin_country'] as String?;
+        position = FlightPositionData(
+          callsign: (posJson['callsign'] as String? ?? callsign).trim(),
+          icao24: icao24,
+          originCountry: originCountry,
+          latitude: (posJson['latitude'] as num?)?.toDouble(),
+          longitude: (posJson['longitude'] as num?)?.toDouble(),
+          altitude: (posJson['altitude'] as num?)?.toDouble(),
+          onGround: posJson['on_ground'] as bool? ?? false,
+          velocity: (posJson['velocity'] as num?)?.toDouble(),
+          heading: (posJson['heading'] as num?)?.toDouble(),
+          verticalRate: (posJson['vertical_rate'] as num?)?.toDouble(),
+          lastContact: posJson['last_contact'] != null
+              ? DateTime.tryParse(posJson['last_contact'] as String)
+              : null,
+        );
+      }
+
+      // Parse route data if available
+      final routeJson = json['route'] as Map<String, dynamic>?;
       String? departureAirport;
       String? arrivalAirport;
       DateTime? departureTime;
       DateTime? arrivalTime;
 
-      if (icao24 != null) {
-        try {
-          final routeInfo = await lookupAircraftRoute(icao24);
-          if (routeInfo != null) {
-            departureAirport = routeInfo.estDepartureAirport;
-            arrivalAirport = routeInfo.estArrivalAirport;
-            departureTime = routeInfo.departureTime;
-            arrivalTime = routeInfo.arrivalTime;
-          }
-        } catch (e) {
-          AppLogging.aether('[OpenSky] Route lookup failed (non-fatal): $e');
+      if (routeJson != null) {
+        departureAirport = routeJson['estDepartureAirport'] as String?;
+        arrivalAirport = routeJson['estArrivalAirport'] as String?;
+        final firstSeen = routeJson['firstSeen'] as int?;
+        final lastSeen = routeJson['lastSeen'] as int?;
+        if (firstSeen != null) {
+          departureTime = DateTime.fromMillisecondsSinceEpoch(firstSeen * 1000);
+        }
+        if (lastSeen != null) {
+          arrivalTime = DateTime.fromMillisecondsSinceEpoch(lastSeen * 1000);
         }
       }
+
+      AppLogging.aether(
+        '[OpenSky] Validate result: active, '
+        'icao24=$icao24, dep=$departureAirport, arr=$arrivalAirport',
+      );
 
       return FlightValidationResult(
         status: FlightValidationStatus.active,
@@ -268,10 +284,10 @@ class OpenSkyService {
         arrivalTime: arrivalTime,
       );
     } catch (e) {
-      AppLogging.aether('[OpenSky] Parse error: $e');
+      AppLogging.aether('[OpenSky] Aether validate error: $e');
       return FlightValidationResult(
         status: FlightValidationStatus.error,
-        message: 'Failed to parse flight data',
+        message: 'Validation failed: $e',
       );
     }
   }
@@ -313,53 +329,68 @@ class OpenSkyService {
   }
 
   /// Look up the current route for a specific aircraft by its ICAO24
-  /// transponder address. Queries the last 2 hours of flight data.
+  /// transponder address.
+  ///
+  /// Calls the Aether API server-side route cache — the server caches
+  /// OpenSky /flights/aircraft responses for 30 minutes. Cache hits
+  /// cost zero OpenSky credits. Cache misses cost 4 credits on the
+  /// server side (not the client).
   ///
   /// Returns the most recent [OpenSkyFlight] for the aircraft, or null
   /// if no route data is available (common for flights that just departed
   /// — OpenSky batch-processes route data with some delay).
   Future<OpenSkyFlight?> lookupAircraftRoute(String icao24) async {
-    AppLogging.aether('[OpenSky] lookupAircraftRoute() — icao24=$icao24');
-    final now = DateTime.now();
-    // Extended window to 12 hours to catch flights that departed hours ago
-    // Most commercial flights are under 12 hours, and we need the departure
-    // data even for in-progress flights.
-    final begin = now.subtract(const Duration(hours: 12));
-    final beginTs = begin.millisecondsSinceEpoch ~/ 1000;
-    final endTs = now.millisecondsSinceEpoch ~/ 1000;
-
-    final response = await _authenticatedGet(
-      '/flights/aircraft?icao24=${icao24.toLowerCase()}&begin=$beginTs&end=$endTs',
+    AppLogging.aether(
+      '[OpenSky] lookupAircraftRoute() via Aether API — icao24=$icao24',
     );
 
-    if (response == null || response.statusCode != 200) {
-      return null;
-    }
+    final baseUrl = AppUrls.aetherApiUrl;
+    final uri = Uri.parse(
+      '$baseUrl/api/flights/route/${Uri.encodeComponent(icao24.toLowerCase().trim())}',
+    );
 
     try {
-      final json = jsonDecode(response.body) as List<dynamic>;
-      if (json.isEmpty) return null;
+      final response = await http.get(uri).timeout(const Duration(seconds: 15));
 
-      // Return the most recent flight for this aircraft
-      final flights = json
-          .map((f) => OpenSkyFlight.fromJson(f as Map<String, dynamic>))
-          .toList();
+      if (response.statusCode != 200) {
+        AppLogging.aether(
+          '[OpenSky] Aether route lookup failed: ${response.statusCode}',
+        );
+        return null;
+      }
 
-      // Sort by firstSeen descending so we get the latest
-      flights.sort((a, b) => (b.firstSeen ?? 0).compareTo(a.firstSeen ?? 0));
-      final flight = flights.first;
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final routeJson = json['route'] as Map<String, dynamic>?;
+      final cached = json['cached'] as bool? ?? false;
+      final cacheAgeS = json['cache_age_s'] as int?;
 
-      // Log what data we got to help diagnose issues
+      if (routeJson == null) {
+        AppLogging.aether(
+          '[OpenSky] Route not found for $icao24 '
+          '(cached=$cached, age=${cacheAgeS ?? "n/a"}s)',
+        );
+        return null;
+      }
+
+      final flight = OpenSkyFlight(
+        icao24: routeJson['icao24'] as String?,
+        callsign: routeJson['callsign'] as String?,
+        estDepartureAirport: routeJson['estDepartureAirport'] as String?,
+        estArrivalAirport: routeJson['estArrivalAirport'] as String?,
+        firstSeen: routeJson['firstSeen'] as int?,
+        lastSeen: routeJson['lastSeen'] as int?,
+      );
+
       AppLogging.aether(
-        '[OpenSky] Route found: dep=${flight.estDepartureAirport ?? "null"} '
+        '[OpenSky] Route found: '
+        'dep=${flight.estDepartureAirport ?? "null"} '
         'arr=${flight.estArrivalAirport ?? "null"} '
-        'firstSeen=${flight.firstSeen != null ? "${DateTime.fromMillisecondsSinceEpoch(flight.firstSeen! * 1000)}" : "null"} '
-        'lastSeen=${flight.lastSeen != null ? "${DateTime.fromMillisecondsSinceEpoch(flight.lastSeen! * 1000)}" : "null"}',
+        '(cached=$cached, age=${cacheAgeS ?? "n/a"}s)',
       );
 
       return flight;
     } catch (e) {
-      AppLogging.aether('[OpenSky] Aircraft route parse error: $e');
+      AppLogging.aether('[OpenSky] Aether route lookup error: $e');
       return null;
     }
   }
