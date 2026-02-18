@@ -43,9 +43,9 @@ class AppUrls {
   static String get aetherApiKey => dotenv.env['AETHER_API_KEY'] ?? '';
 
   /// TAK Gateway URL — CoT event streaming.
-  /// Default: api.socialmesh.app. Override via .env to tak.socialmesh.app.
+  /// Default: tak.socialmesh.app (dedicated TAK subdomain).
   static String get takGatewayUrl =>
-      dotenv.env['TAK_GATEWAY_URL'] ?? 'https://api.socialmesh.app';
+      dotenv.env['TAK_GATEWAY_URL'] ?? 'https://tak.socialmesh.app';
 
   // Legal & Documentation URLs
   static String get termsUrl => '$baseUrl/terms';
