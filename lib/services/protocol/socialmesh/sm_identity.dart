@@ -54,7 +54,7 @@ class SmIdentity {
   ///
   /// This is the `mix()` function from the sigil generator,
   /// identical to the hash used in web/sigil.html and
-  /// sigil-api/src/sigil-svg.ts.
+  /// backend/sigil-api/src/sigil-svg.ts.
   static int computeSigilHash(int nodeNum) {
     var h = nodeNum & 0xFFFFFFFF;
     h ^= h >>> 16;

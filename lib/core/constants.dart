@@ -42,6 +42,11 @@ class AppUrls {
   /// Aether API key (authenticates POST requests)
   static String get aetherApiKey => dotenv.env['AETHER_API_KEY'] ?? '';
 
+  /// TAK Gateway URL — CoT event streaming.
+  /// Default: api.socialmesh.app. Override via .env to tak.socialmesh.app.
+  static String get takGatewayUrl =>
+      dotenv.env['TAK_GATEWAY_URL'] ?? 'https://api.socialmesh.app';
+
   // Legal & Documentation URLs
   static String get termsUrl => '$baseUrl/terms';
   static String get privacyUrl => '$baseUrl/privacy';
@@ -248,6 +253,18 @@ class AppFeatureFlags {
   static bool get isAetherEnabled {
     try {
       final raw = dotenv.env['AETHER_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the TAK Gateway feature is enabled.
+  /// Set `TAK_GATEWAY_ENABLED=true` in `.env` to enable.
+  /// Default: false — all TAK features are off unless explicitly enabled.
+  static bool get isTakGatewayEnabled {
+    try {
+      final raw = dotenv.env['TAK_GATEWAY_ENABLED']?.toLowerCase().trim();
       return raw == 'true' || raw == '1';
     } catch (_) {
       return false;
