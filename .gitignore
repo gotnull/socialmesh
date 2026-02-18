@@ -59,6 +59,7 @@ firebase-service-account.json
 **/*-service-account.json
 /scripts/*.json
 /scripts/run.sh
+/scripts/build-sprints-data.sh
 /scripts/verify_hosting_headers.sh
 /scripts/tak/
 
