@@ -1,6 +1,7 @@
 package com.gotnull.socialmesh
 
 import android.content.Intent
+import android.net.Uri
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -24,6 +25,25 @@ class MainActivity : FlutterActivity() {
                         result.success(true)
                     } catch (e: Exception) {
                         result.error("UNAVAILABLE", "Could not open Bluetooth settings", e.message)
+                    }
+                }
+                "openBatterySettings" -> {
+                    try {
+                        // Try the battery optimization whitelist first
+                        val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                        startActivity(intent)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        try {
+                            // Fallback: app-specific battery usage screen
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.parse("package:${packageName}")
+                            }
+                            startActivity(intent)
+                            result.success(true)
+                        } catch (e2: Exception) {
+                            result.error("UNAVAILABLE", "Could not open battery settings", e2.message)
+                        }
                     }
                 }
                 else -> result.notImplemented()

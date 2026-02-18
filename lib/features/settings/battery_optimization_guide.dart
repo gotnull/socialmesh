@@ -5,7 +5,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/logging.dart';
 import '../../core/theme.dart';
@@ -168,20 +167,11 @@ class _BatteryGuideContent extends StatelessWidget {
   }
 
   Future<void> _openBatterySettings() async {
-    // Attempt to open the system battery settings. On failure, this is a
-    // no-op — the user can navigate manually using the instructions.
+    if (!Platform.isAndroid) return;
+
     try {
-      const action = 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS';
-      final uri = Uri.parse('android-app://com.android.settings#$action');
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      } else {
-        // Fallback: open the generic app settings page.
-        await launchUrl(
-          Uri.parse('package:app.socialmesh.meshtastic'),
-          mode: LaunchMode.externalApplication,
-        );
-      }
+      const platform = MethodChannel('com.socialmesh/settings');
+      await platform.invokeMethod('openBatterySettings');
     } catch (e) {
       AppLogging.ble('BatteryOptimizationGuide: failed to open settings: $e');
     }
