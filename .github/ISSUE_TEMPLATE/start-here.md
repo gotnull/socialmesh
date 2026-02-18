@@ -26,7 +26,7 @@ This repository does NOT cover:
 - Payment processing or subscription infrastructure
 - Server deployment or hosting
 - The Meshtastic firmware itself
-- The mesh-observer backend service
+- The mesh-observer-api backend service
 
 PRs that attempt to reimplement backend services or add new cloud dependencies will not be accepted.
 

@@ -24,19 +24,12 @@ PRIVATE_REMOTE="https://github.com/gotnull/socialmesh-private.git"
 # Directories to sync (relative to repo root)
 SYNC_DIRS=(
   .github
-  aether-api
-  api-gateway
-  blog
-  deploy
+  backend
   docs
-  functions
-  mesh-observer
   scripts
-  sigil-api
   tools
   web
   web-redirect
-  workers
 )
 
 # Individual files to sync (relative to repo root)

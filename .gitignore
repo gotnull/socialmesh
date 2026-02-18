@@ -20,15 +20,8 @@ android/.kotlin/sessions/
 .github/copilot-instructions.md
 
 # Backend services (proprietary, not part of public repo)
-/mesh-observer/
-/functions/
-/sigil-api/
-/deploy/
-/aether-api/
-/api-gateway/
+/backend/
 /tools/
-/blog/
-/workers/
 
 # Firebase Hosting content (landing page, legal docs, admin tools)
 /web/
