@@ -384,10 +384,12 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       ref.read(userPresenceServiceProvider).setOnline();
       // Process any due scheduled automations on resume
       _processScheduledAutomationsOnResume();
-    } else if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.detached) {
-      // Mark app as inactive - prevents device commands from background
+    } else if (state == AppLifecycleState.paused) {
+      // Only trigger background handoff when the app is *truly* paused
+      // (i.e. no longer visible). `inactive` (notification shade, system
+      // dialog) must NOT enable the BackgroundMessageProcessor because the
+      // foreground ProtocolService is still the primary data handler; both
+      // listening to the same broadcast BLE stream would create duplicates.
       ref.read(lifecycleCommandManagerProvider).setAppActive(false);
       // Foreground/background handoff (W2.3): enable background notification
       // dispatch so messages received in the background produce notifications.
@@ -396,6 +398,11 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       ref.read(userPresenceServiceProvider).setOffline();
       // Sync scheduled automations to platform scheduler for background execution
       _syncScheduledAutomationsToPlatform();
+    } else if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      // Mark lifecycle as inactive but do NOT enable the background message
+      // processor — the foreground ProtocolService is still handling data.
+      ref.read(lifecycleCommandManagerProvider).setAppActive(false);
     }
   }
 
@@ -431,27 +438,31 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   // Foreground / background handoff (W2.3)
   // ---------------------------------------------------------------------------
 
-  /// Called when the app transitions to the background.
+  /// Called when the app transitions to the background (`paused`).
   ///
-  /// Enables the background message processor's notification dispatch so
-  /// messages received while the UI is inactive still produce notifications.
+  /// Enables the background message processor so messages received while the
+  /// UI is paused are persisted and produce local notifications.
   void _handleForegroundToBackgroundHandoff() {
     final processor = BackgroundMessageProcessor.instance;
+    processor.processingEnabled = true;
     processor.notificationsEnabled = true;
     AppLogging.ble(
-      'Handoff: app backgrounded, background notifications enabled',
+      'Handoff: app paused, background processing & notifications enabled',
     );
   }
 
   /// Called when the app returns to the foreground.
   ///
-  /// 1. Stops the background processor from dispatching notifications.
+  /// 1. Stops the background processor's data processing and notification
+  ///    dispatch so only the foreground ProtocolService handles BLE data.
   /// 2. Merges background-persisted messages into the UI state.
   /// 3. Drains buffered non-message packets for foreground processing.
   void _handleBackgroundToForegroundHandoff() {
     final processor = BackgroundMessageProcessor.instance;
 
-    // Stop background notification dispatch so the foreground path takes over.
+    // Stop background processing and notification dispatch so only the
+    // foreground ProtocolService handles BLE data.
+    processor.processingEnabled = false;
     processor.notificationsEnabled = false;
 
     // Merge any messages persisted by the background processor.
@@ -477,7 +488,9 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       processor.pendingPackets.clear();
     }
 
-    AppLogging.ble('Handoff: app foregrounded, background notifications off');
+    AppLogging.ble(
+      'Handoff: app foregrounded, background processing & notifications off',
+    );
   }
 
   /// Handle app returning to foreground.

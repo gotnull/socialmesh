@@ -3098,16 +3098,30 @@ class MessagesNotifier extends Notifier<List<Message>> {
   ///
   /// Unlike [forceRehydrateAllFromStorage], this only inserts messages whose
   /// IDs are in [backgroundIds], keeping the merge targeted and fast.
+  ///
+  /// Uses both ID-based and content-based dedup to prevent a background-
+  /// persisted message from duplicating a foreground-delivered copy that
+  /// arrived under a different UUID (e.g. race between ProtocolService and
+  /// BackgroundMessageProcessor on the same broadcast BLE stream).
   Future<int> mergeBackgroundMessages(Set<String> backgroundIds) async {
     if (_storage == null || backgroundIds.isEmpty) return 0;
     final all = await _storage!.loadMessages();
     var inserted = 0;
     for (final m in all) {
-      if (backgroundIds.contains(m.id) && !state.any((s) => s.id == m.id)) {
-        state = [...state, m];
-        _recordMessageSignature(m);
-        inserted++;
+      if (!backgroundIds.contains(m.id)) continue;
+      // ID-based dedup
+      if (state.any((s) => s.id == m.id)) continue;
+      // Content-based dedup (same sender, text, channel within 60 s)
+      if (_isContentDuplicate(m)) {
+        AppLogging.messages(
+          '📨 Skipped background merge (content duplicate): id=${m.id}, '
+          'from=${m.from}, channel=${m.channel}',
+        );
+        continue;
       }
+      state = [...state, m];
+      _recordMessageSignature(m);
+      inserted++;
     }
     if (inserted > 0) {
       AppLogging.messages(

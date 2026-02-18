@@ -147,11 +147,20 @@ class BackgroundMessageProcessor {
   /// foreground resume.
   final Set<String> notifiedMessageIds = {};
 
-  /// Whether notification dispatch is enabled. Defaults to `true`.
+  /// Whether background packet processing is enabled.
   ///
-  /// Set to `false` when the app is in the foreground so the foreground
-  /// notification pipeline handles dispatch instead (W2.3 handoff).
-  bool notificationsEnabled = true;
+  /// Defaults to `false` so that the foreground [ProtocolService] is the
+  /// sole processor after connection. Set to `true` only when the app
+  /// transitions to the background (`paused`) so incoming BLE data is
+  /// persisted independently of Riverpod.
+  bool processingEnabled = false;
+
+  /// Whether notification dispatch is enabled.
+  ///
+  /// Defaults to `false`. Set to `true` together with [processingEnabled]
+  /// when the app is in the background so messages produce local
+  /// notifications (W2.3 handoff).
+  bool notificationsEnabled = false;
 
   // ---------------------------------------------------------------------------
   // Lifecycle
@@ -238,7 +247,8 @@ class BackgroundMessageProcessor {
     pendingPackets.clear();
     persistedMessageIds.clear();
     notifiedMessageIds.clear();
-    notificationsEnabled = true;
+    processingEnabled = false;
+    notificationsEnabled = false;
     AppLogging.ble('BackgroundMessageProcessor: disposed');
   }
 
@@ -261,6 +271,7 @@ class BackgroundMessageProcessor {
   }
 
   Future<void> _processPacketAsync(List<int> rawBytes) async {
+    if (!processingEnabled) return;
     try {
       final fromRadio = pb.FromRadio.fromBuffer(rawBytes);
 

@@ -139,6 +139,7 @@ void main() {
       final processor = BackgroundMessageProcessor.instance;
       processor.initForTest(messageDb: msgDb, dedupeStore: dedupeStore);
       processor.start(transport);
+      processor.processingEnabled = true;
 
       // Emit a text message packet.
       const senderNode = 0x12345678;
@@ -186,6 +187,7 @@ void main() {
       final processor = BackgroundMessageProcessor.instance;
       processor.initForTest(messageDb: msgDb, dedupeStore: dedupeStore);
       processor.start(transport);
+      processor.processingEnabled = true;
 
       const senderNode = 0xAABBCCDD;
       const destNode = 0xFFFFFFFF;
@@ -215,6 +217,7 @@ void main() {
       final processor = BackgroundMessageProcessor.instance;
       processor.initForTest(messageDb: msgDb, dedupeStore: dedupeStore);
       processor.start(transport);
+      processor.processingEnabled = true;
 
       // Build a FromRadio with nodeInfo (not a text message).
       final fromRadio = pb.FromRadio(id: 2, nodeInfo: pb.NodeInfo(num: 12345));

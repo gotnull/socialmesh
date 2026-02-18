@@ -2000,6 +2000,7 @@ class ProtocolService {
         text: text,
         channel: packet.channel,
         received: true,
+        packetId: packet.id,
         senderLongName: senderLongName,
         senderShortName: senderShortName,
         senderAvatarColor: senderAvatarColor,
