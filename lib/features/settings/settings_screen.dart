@@ -3420,6 +3420,20 @@ class _PremiumFeatureTile extends ConsumerWidget {
     final accentColor = context.accentColor;
     final purchase = OneTimePurchases.getByFeature(feature);
 
+    // Use live store price (localized) when available, fall back to hardcoded
+    final storeProductsAsync = ref.watch(storeProductsProvider);
+    final storeProducts = storeProductsAsync.when(
+      data: (data) => data,
+      loading: () => <String, StoreProductInfo>{},
+      error: (e, s) => <String, StoreProductInfo>{},
+    );
+    final storeProduct = purchase != null
+        ? storeProducts[purchase.productId]
+        : null;
+    final priceLabel =
+        storeProduct?.priceString ??
+        (purchase != null ? '\$${purchase.price.toStringAsFixed(2)}' : null);
+
     // When upsell is enabled, non-owned features should look explorable (not locked)
     final isExplorable = hasFeature || upsellEnabled;
 
@@ -3480,9 +3494,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
                         Icon(Icons.lock, size: 12, color: context.textTertiary),
                         SizedBox(width: 4),
                         Text(
-                          purchase != null
-                              ? '\$${purchase.price.toStringAsFixed(2)}'
-                              : 'LOCKED',
+                          priceLabel ?? 'LOCKED',
                           style: context.captionStyle!.copyWith(
                             fontWeight: FontWeight.bold,
                             color: context.textTertiary,

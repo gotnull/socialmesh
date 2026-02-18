@@ -40,7 +40,7 @@ class OneTimePurchases {
     name: 'Theme Pack',
     description:
         'Unlock 12 stunning accent colors to personalize every screen, button, and highlight throughout the app — make it truly yours',
-    price: 1.99,
+    price: 4.99,
     productId: RevenueCatConfig.themePackProductId,
     unlocksFeature: PremiumFeature.premiumThemes,
   );
@@ -50,7 +50,7 @@ class OneTimePurchases {
     name: 'Ringtone Pack',
     description:
         'Access a massive searchable library of thousands of RTTTL ringtones — from classic melodies to TV themes, movie scores, and video game soundtracks',
-    price: 0.99,
+    price: 1.99,
     productId: RevenueCatConfig.ringtonePackProductId,
     unlocksFeature: PremiumFeature.customRingtones,
   );
@@ -60,7 +60,7 @@ class OneTimePurchases {
     name: 'Widgets',
     description:
         'Build your own custom dashboard widgets with live data bindings, real-time charts, gauges, graphs, and status indicators — monitor battery, telemetry, environment sensors, and more at a glance',
-    price: 2.99,
+    price: 4.99,
     productId: RevenueCatConfig.widgetPackProductId,
     unlocksFeature: PremiumFeature.homeWidgets,
   );
@@ -70,7 +70,7 @@ class OneTimePurchases {
     name: 'Automations',
     description:
         'Create powerful automation rules: auto-reply to messages, schedule broadcasts at specific times, trigger actions based on location or device events, and set up custom notification flows',
-    price: 3.99,
+    price: 4.99,
     productId: RevenueCatConfig.automationsPackProductId,
     unlocksFeature: PremiumFeature.automations,
   );
@@ -86,7 +86,7 @@ class OneTimePurchases {
   );
 
   /// Complete Pack - all features bundled at 25% off
-  static const double bundlePrice = 9.99;
+  static const double bundlePrice = 14.99;
   static double get bundleSavings {
     final total = allIndividualPurchases.fold<double>(
       0,

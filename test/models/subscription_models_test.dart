@@ -60,7 +60,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
     test('themePack has correct properties', () {
       expect(OneTimePurchases.themePack.id, 'theme_pack');
       expect(OneTimePurchases.themePack.name, 'Theme Pack');
-      expect(OneTimePurchases.themePack.price, 1.99);
+      expect(OneTimePurchases.themePack.price, 4.99);
       expect(
         OneTimePurchases.themePack.unlocksFeature,
         PremiumFeature.premiumThemes,
@@ -70,7 +70,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
     test('ringtonePack has correct properties', () {
       expect(OneTimePurchases.ringtonePack.id, 'ringtone_pack');
       expect(OneTimePurchases.ringtonePack.name, 'Ringtone Pack');
-      expect(OneTimePurchases.ringtonePack.price, 0.99);
+      expect(OneTimePurchases.ringtonePack.price, 1.99);
       expect(
         OneTimePurchases.ringtonePack.unlocksFeature,
         PremiumFeature.customRingtones,
@@ -80,7 +80,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
     test('widgetPack has correct properties', () {
       expect(OneTimePurchases.widgetPack.id, 'widget_pack');
       expect(OneTimePurchases.widgetPack.name, 'Widgets');
-      expect(OneTimePurchases.widgetPack.price, 2.99);
+      expect(OneTimePurchases.widgetPack.price, 4.99);
       expect(
         OneTimePurchases.widgetPack.unlocksFeature,
         PremiumFeature.homeWidgets,
@@ -90,7 +90,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
     test('automationsPack has correct properties', () {
       expect(OneTimePurchases.automationsPack.id, 'automations_pack');
       expect(OneTimePurchases.automationsPack.name, 'Automations');
-      expect(OneTimePurchases.automationsPack.price, 3.99);
+      expect(OneTimePurchases.automationsPack.price, 4.99);
       expect(
         OneTimePurchases.automationsPack.unlocksFeature,
         PremiumFeature.automations,
