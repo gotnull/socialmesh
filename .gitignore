@@ -60,6 +60,7 @@ firebase-service-account.json
 /scripts/*.json
 /scripts/run.sh
 /scripts/verify_hosting_headers.sh
+/scripts/tak/
 
 # IntelliJ related
 *.iml
