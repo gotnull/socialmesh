@@ -618,7 +618,7 @@ class _FlightTile extends StatelessWidget {
     final dep = route?.estDepartureAirport;
     final arr = route?.estArrivalAirport;
     if (dep != null && arr != null) return '$dep \u2192 $arr';
-    if (dep != null) return 'From $dep';
+    if (dep != null) return 'From $dep \u00b7 En route';
     if (arr != null) return 'To $arr';
     return '';
   }

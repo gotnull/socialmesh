@@ -12,6 +12,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../core/widgets/datetime_picker_sheet.dart';
 import '../../../core/widgets/glass_app_bar.dart';
+import '../../../core/widgets/info_chip.dart';
 import '../../../core/widgets/legal_document_sheet.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../../../models/mesh_models.dart';
@@ -748,6 +749,14 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                 // Tips — right below the intro card
                 _buildTipsCard(),
                 const SizedBox(height: 16),
+
+                // Live flight details card (when we have validation data)
+                if (_validationResult != null &&
+                    _validationResult!.isActive &&
+                    _validationResult!.position != null) ...[
+                  _buildLiveFlightCard(),
+                  const SizedBox(height: 16),
+                ],
 
                 // Incomplete route data notice (if applicable)
                 if (_showIncompleteDataNotice) ...[
@@ -1929,6 +1938,148 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildLiveFlightCard() {
+    final pos = _validationResult!.position!;
+    final result = _validationResult!;
+    final numFmt = NumberFormat('#,##0');
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row
+          Row(
+            children: [
+              Icon(
+                pos.onGround ? Icons.flight_land : Icons.flight_takeoff,
+                color: context.accentColor,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Live Flight Data',
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              // Status pill
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  pos.onGround ? 'On Ground' : 'In Flight',
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Route line (if we have airport data)
+          if (result.departureAirport != null ||
+              result.arrivalAirport != null) ...[
+            Row(
+              children: [
+                Icon(
+                  Icons.route,
+                  size: 14,
+                  color: context.accentColor.withValues(alpha: 0.7),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    _liveRouteString(result),
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
+
+          // Data chips — wrapping, never truncated
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              if (pos.originCountry != null)
+                InfoChip(icon: Icons.public, label: pos.originCountry!),
+              if (!pos.onGround && pos.altitudeFeet != null)
+                InfoChip(
+                  icon: Icons.height,
+                  label: '${numFmt.format(pos.altitudeFeet!.round())} ft',
+                ),
+              if (pos.velocityKnots != null && !pos.onGround)
+                InfoChip(
+                  icon: Icons.speed,
+                  label: '${numFmt.format(pos.velocityKnots!.round())} kts',
+                ),
+              if (pos.onGround)
+                InfoChip(icon: Icons.flight_land, label: 'On ground'),
+              if (pos.heading != null && !pos.onGround)
+                InfoChip(
+                  icon: Icons.explore,
+                  label: '${pos.heading!.round()}\u00b0',
+                ),
+              if (pos.verticalRate != null && !pos.onGround) ...[
+                if (pos.verticalRate! > 0.5)
+                  InfoChip(
+                    icon: Icons.trending_up,
+                    label:
+                        '${numFmt.format((pos.verticalRate! * 196.85).round())} fpm',
+                  )
+                else if (pos.verticalRate! < -0.5)
+                  InfoChip(
+                    icon: Icons.trending_down,
+                    label:
+                        '${numFmt.format((pos.verticalRate!.abs() * 196.85).round())} fpm',
+                  ),
+              ],
+              if (pos.icao24 != null)
+                InfoChip(icon: Icons.radar, label: pos.icao24!.toUpperCase()),
+              if (pos.hasPosition)
+                InfoChip(
+                  icon: Icons.location_on,
+                  label:
+                      '${pos.latitude!.toStringAsFixed(2)}, ${pos.longitude!.toStringAsFixed(2)}',
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _liveRouteString(FlightValidationResult result) {
+    final dep = result.departureAirport;
+    final arr = result.arrivalAirport;
+    if (dep != null && arr != null) return '$dep \u2192 $arr';
+    if (dep != null) return 'From $dep \u00b7 En route';
+    if (arr != null) return 'To $arr';
+    return '';
   }
 
   Widget _buildIncompleteDataNotice() {
