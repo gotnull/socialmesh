@@ -26,18 +26,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Full message field serialization (status, packetId, routingError, errorMessage)
 - Automatic one-time migration from legacy SharedPreferences storage on first launch
 - Indexed queries by conversation key, node number, and packet ID
+- Aether full-screen airport picker with 900+ airports including military airfields
+- Aether airport search by name, IATA/ICAO code, and country with GPS distance sorting
+- Aether live flight data sticky header on the schedule screen (frosted-glass overlay with slide/fade/blur animations)
+- Aether flight search "En route" indicator when arrival airport is unavailable
+- Aether flight conflict detection warning for overlapping schedules
+- Aether skeleton loading shimmer for initial flight list
+- Aether flight time validation on the scheduling form
+- Aether enhanced flight detail screen with airport data and route information
+- Aether server-side OpenSky search cache (GET /api/flights/search) -- zero client-side credit cost
+- Cloudflare Worker proxy (opensky-proxy) for OpenSky API routing from Railway
+- Telegram bot /opensky_cache command for monitoring search cache freshness
 
 ### Changed
 
 - MaterialApp now applies accessibility theme preferences via AccessibilityThemeAdapter
 - Theme integration includes font family, visual density, and high contrast adjustments
 - Animation durations respect reduce motion preference throughout the app
+- Aether flight search uses server-side cache instead of direct OpenSky calls (zero credit burn)
+- Aether flight search changed from auto-search-on-keystroke to explicit submit
+- Aether flight status logic prioritizes time-based checks over GPS proximity
+- Aether flight lifecycle checks scoped to current user's flights only
 
 ### Fixed
 
 - Chat messages no longer disappear across app restarts (SQLite replaces lossy SharedPreferences blob)
 - Channel message deduplication no longer fails when push notification `to` field differs from mesh broadcast address
 - Removed dead `MessageStorageService` class (replaced by `MessageDatabase`)
+- Aether departure/arrival time handling: lastSeen is no longer used as arrival time for active flights
+- Aether skeleton shimmer transitions use AnimatedSwitcher with proper keyed children
+- Aether stale partial-match search results no longer overwrite newer results (generation counter)
 
 ## [1.2.0] - 2026-02-01
 

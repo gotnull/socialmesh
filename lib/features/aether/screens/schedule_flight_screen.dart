@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -77,6 +79,11 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   final _notesController = TextEditingController();
   final _departureFocusNode = FocusNode();
   final _arrivalFocusNode = FocusNode();
+  final _scrollController = ScrollController();
+
+  // Sticky flight data overlay (slides in when scrolling past flight info)
+  bool _showStickyFlightData = false;
+  static const double _stickyScrollThreshold = 200.0;
 
   // Resolved airport objects for display feedback
   Airport? _resolvedDeparture;
@@ -101,10 +108,13 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     super.initState();
     _departureController.addListener(_onDepartureChanged);
     _arrivalController.addListener(_onArrivalChanged);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _departureController.removeListener(_onDepartureChanged);
     _arrivalController.removeListener(_onArrivalChanged);
     _flightNumberController.dispose();
@@ -114,6 +124,13 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     _departureFocusNode.dispose();
     _arrivalFocusNode.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    final shouldShow = _scrollController.offset > _stickyScrollThreshold;
+    if (shouldShow != _showStickyFlightData) {
+      setState(() => _showStickyFlightData = shouldShow);
+    }
   }
 
   void _onDepartureChanged() {
@@ -727,208 +744,219 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       body: GestureDetector(
         onTap: _dismissKeyboard,
         behavior: HitTestBehavior.opaque,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics(),
-          ),
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Info card
-                StatusBanner.accent(
-                  title:
-                      'Schedule your flight and share it on aether.socialmesh.app so the community can try to receive your signal!',
-                  icon: Icons.flight,
-                  margin: EdgeInsets.zero,
-                ),
-                const SizedBox(height: 16),
-
-                // Tips — right below the intro card
-                _buildTipsCard(),
-                const SizedBox(height: 16),
-
-                // Live flight details card (when we have validation data)
-                if (_validationResult != null &&
-                    _validationResult!.isActive &&
-                    _validationResult!.position != null) ...[
-                  _buildLiveFlightCard(),
-                  const SizedBox(height: 16),
-                ],
-
-                // Incomplete route data notice (if applicable)
-                if (_showIncompleteDataNotice) ...[
-                  _buildIncompleteDataNotice(),
-                  const SizedBox(height: 16),
-                ],
-
-                const SizedBox(height: 8),
-
-                // Flight Info Section
-                _buildSectionHeader('Flight Information'),
-                const SizedBox(height: 12),
-
-                // Flight Number with Validation
-                _buildFlightNumberField(),
-                const SizedBox(height: 16),
-
-                // Airports row with swap button
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: _buildAirportAutocomplete(
-                        controller: _departureController,
-                        focusNode: _departureFocusNode,
-                        label: 'From',
-                        hint: 'LAX',
-                        icon: Icons.flight_takeoff,
-                        pickerTitle: 'Departure Airport',
-                        resolvedAirport: _resolvedDeparture,
-                      ),
+                    // Info card
+                    StatusBanner.accent(
+                      title:
+                          'Schedule your flight and share it on aether.socialmesh.app so the community can try to receive your signal!',
+                      icon: Icons.flight,
+                      margin: EdgeInsets.zero,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        top: 12,
-                        left: 5,
-                        right: 5,
-                      ),
-                      child: IconButton(
-                        onPressed: _swapAirports,
-                        icon: Icon(
-                          Icons.swap_horiz,
-                          color: context.accentColor,
-                          size: 22,
+                    const SizedBox(height: 16),
+
+                    // Tips — right below the intro card
+                    _buildTipsCard(),
+                    const SizedBox(height: 16),
+
+                    // Incomplete route data notice (if applicable)
+                    if (_showIncompleteDataNotice) ...[
+                      _buildIncompleteDataNotice(),
+                      const SizedBox(height: 16),
+                    ],
+
+                    const SizedBox(height: 8),
+
+                    // Flight Info Section
+                    _buildSectionHeader('Flight Information'),
+                    const SizedBox(height: 12),
+
+                    // Flight Number with Validation
+                    _buildFlightNumberField(),
+                    const SizedBox(height: 16),
+
+                    // Airports row with swap button
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _buildAirportAutocomplete(
+                            controller: _departureController,
+                            focusNode: _departureFocusNode,
+                            label: 'From',
+                            hint: 'LAX',
+                            icon: Icons.flight_takeoff,
+                            pickerTitle: 'Departure Airport',
+                            resolvedAirport: _resolvedDeparture,
+                          ),
                         ),
-                        tooltip: 'Swap airports',
-                        visualDensity: VisualDensity.compact,
-                      ),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            top: 12,
+                            left: 5,
+                            right: 5,
+                          ),
+                          child: IconButton(
+                            onPressed: _swapAirports,
+                            icon: Icon(
+                              Icons.swap_horiz,
+                              color: context.accentColor,
+                              size: 22,
+                            ),
+                            tooltip: 'Swap airports',
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildAirportAutocomplete(
+                            controller: _arrivalController,
+                            focusNode: _arrivalFocusNode,
+                            label: 'To',
+                            hint: 'JFK',
+                            icon: Icons.flight_land,
+                            pickerTitle: 'Arrival Airport',
+                            resolvedAirport: _resolvedArrival,
+                          ),
+                        ),
+                      ],
                     ),
-                    Expanded(
-                      child: _buildAirportAutocomplete(
-                        controller: _arrivalController,
-                        focusNode: _arrivalFocusNode,
-                        label: 'To',
-                        hint: 'JFK',
-                        icon: Icons.flight_land,
-                        pickerTitle: 'Arrival Airport',
-                        resolvedAirport: _resolvedArrival,
-                      ),
+
+                    // Route info / warnings
+                    _buildRouteInfo(),
+                    const SizedBox(height: 24),
+
+                    // Departure Time Section
+                    _buildSectionHeader('Departure Time'),
+                    const SizedBox(height: 12),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDateButton(
+                            label: 'Date',
+                            value: _departureDate != null
+                                ? dateFormat.format(_departureDate!)
+                                : 'Select',
+                            icon: Icons.calendar_today,
+                            onTap: _selectDepartureDate,
+                            onClear: _departureDate != null
+                                ? _clearDepartureDate
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildDateButton(
+                            label: 'Time',
+                            value: _departureTime != null
+                                ? timeFormat.format(
+                                    DateTime(
+                                      2000,
+                                      1,
+                                      1,
+                                      _departureTime!.hour,
+                                      _departureTime!.minute,
+                                    ),
+                                  )
+                                : 'Select',
+                            icon: Icons.access_time,
+                            onTap: _selectDepartureTime,
+                            onClear: _departureTime != null
+                                ? _clearDepartureTime
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Arrival Time Section (optional)
+                    _buildSectionHeader('Arrival Time (Optional)'),
+                    const SizedBox(height: 12),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDateButton(
+                            label: 'Date',
+                            value: _arrivalDate != null
+                                ? dateFormat.format(_arrivalDate!)
+                                : 'Select',
+                            icon: Icons.calendar_today,
+                            onTap: _selectArrivalDate,
+                            onClear: _arrivalDate != null
+                                ? _clearArrivalDate
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildDateButton(
+                            label: 'Time',
+                            value: _arrivalTime != null
+                                ? timeFormat.format(
+                                    DateTime(
+                                      2000,
+                                      1,
+                                      1,
+                                      _arrivalTime!.hour,
+                                      _arrivalTime!.minute,
+                                    ),
+                                  )
+                                : 'Select',
+                            icon: Icons.access_time,
+                            onTap: _selectArrivalTime,
+                            onClear: _arrivalTime != null
+                                ? _clearArrivalTime
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Notes Section
+                    _buildSectionHeader('Additional Notes (Optional)'),
+                    const SizedBox(height: 12),
+
+                    _buildTextField(
+                      controller: _notesController,
+                      label: 'Notes',
+                      hint: 'Window seat, left side. Running at 20dBm.',
+                      icon: Icons.notes,
+                      maxLines: 3,
+                      maxLength: _maxNotesLength,
                     ),
                   ],
                 ),
-
-                // Route info / warnings
-                _buildRouteInfo(),
-                const SizedBox(height: 24),
-
-                // Departure Time Section
-                _buildSectionHeader('Departure Time'),
-                const SizedBox(height: 12),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildDateButton(
-                        label: 'Date',
-                        value: _departureDate != null
-                            ? dateFormat.format(_departureDate!)
-                            : 'Select',
-                        icon: Icons.calendar_today,
-                        onTap: _selectDepartureDate,
-                        onClear: _departureDate != null
-                            ? _clearDepartureDate
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildDateButton(
-                        label: 'Time',
-                        value: _departureTime != null
-                            ? timeFormat.format(
-                                DateTime(
-                                  2000,
-                                  1,
-                                  1,
-                                  _departureTime!.hour,
-                                  _departureTime!.minute,
-                                ),
-                              )
-                            : 'Select',
-                        icon: Icons.access_time,
-                        onTap: _selectDepartureTime,
-                        onClear: _departureTime != null
-                            ? _clearDepartureTime
-                            : null,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Arrival Time Section (optional)
-                _buildSectionHeader('Arrival Time (Optional)'),
-                const SizedBox(height: 12),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildDateButton(
-                        label: 'Date',
-                        value: _arrivalDate != null
-                            ? dateFormat.format(_arrivalDate!)
-                            : 'Select',
-                        icon: Icons.calendar_today,
-                        onTap: _selectArrivalDate,
-                        onClear: _arrivalDate != null
-                            ? _clearArrivalDate
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildDateButton(
-                        label: 'Time',
-                        value: _arrivalTime != null
-                            ? timeFormat.format(
-                                DateTime(
-                                  2000,
-                                  1,
-                                  1,
-                                  _arrivalTime!.hour,
-                                  _arrivalTime!.minute,
-                                ),
-                              )
-                            : 'Select',
-                        icon: Icons.access_time,
-                        onTap: _selectArrivalTime,
-                        onClear: _arrivalTime != null
-                            ? _clearArrivalTime
-                            : null,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Notes Section
-                _buildSectionHeader('Additional Notes (Optional)'),
-                const SizedBox(height: 12),
-
-                _buildTextField(
-                  controller: _notesController,
-                  label: 'Notes',
-                  hint: 'Window seat, left side. Running at 20dBm.',
-                  icon: Icons.notes,
-                  maxLines: 3,
-                  maxLength: _maxNotesLength,
-                ),
-              ],
+              ),
             ),
-          ),
+
+            // Sticky live flight data overlay
+            if (_validationResult != null &&
+                _validationResult!.isActive &&
+                _validationResult!.position != null)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: _LiveFlightStickyHeader(
+                  result: _validationResult!,
+                  isVisible: _showStickyFlightData,
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -1940,148 +1968,6 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     );
   }
 
-  Widget _buildLiveFlightCard() {
-    final pos = _validationResult!.position!;
-    final result = _validationResult!;
-    final numFmt = NumberFormat('#,##0');
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header row
-          Row(
-            children: [
-              Icon(
-                pos.onGround ? Icons.flight_land : Icons.flight_takeoff,
-                color: context.accentColor,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Live Flight Data',
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              // Status pill
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  pos.onGround ? 'On Ground' : 'In Flight',
-                  style: const TextStyle(
-                    color: Colors.green,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Route line (if we have airport data)
-          if (result.departureAirport != null ||
-              result.arrivalAirport != null) ...[
-            Row(
-              children: [
-                Icon(
-                  Icons.route,
-                  size: 14,
-                  color: context.accentColor.withValues(alpha: 0.7),
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    _liveRouteString(result),
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-          ],
-
-          // Data chips — wrapping, never truncated
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              if (pos.originCountry != null)
-                InfoChip(icon: Icons.public, label: pos.originCountry!),
-              if (!pos.onGround && pos.altitudeFeet != null)
-                InfoChip(
-                  icon: Icons.height,
-                  label: '${numFmt.format(pos.altitudeFeet!.round())} ft',
-                ),
-              if (pos.velocityKnots != null && !pos.onGround)
-                InfoChip(
-                  icon: Icons.speed,
-                  label: '${numFmt.format(pos.velocityKnots!.round())} kts',
-                ),
-              if (pos.onGround)
-                InfoChip(icon: Icons.flight_land, label: 'On ground'),
-              if (pos.heading != null && !pos.onGround)
-                InfoChip(
-                  icon: Icons.explore,
-                  label: '${pos.heading!.round()}\u00b0',
-                ),
-              if (pos.verticalRate != null && !pos.onGround) ...[
-                if (pos.verticalRate! > 0.5)
-                  InfoChip(
-                    icon: Icons.trending_up,
-                    label:
-                        '${numFmt.format((pos.verticalRate! * 196.85).round())} fpm',
-                  )
-                else if (pos.verticalRate! < -0.5)
-                  InfoChip(
-                    icon: Icons.trending_down,
-                    label:
-                        '${numFmt.format((pos.verticalRate!.abs() * 196.85).round())} fpm',
-                  ),
-              ],
-              if (pos.icao24 != null)
-                InfoChip(icon: Icons.radar, label: pos.icao24!.toUpperCase()),
-              if (pos.hasPosition)
-                InfoChip(
-                  icon: Icons.location_on,
-                  label:
-                      '${pos.latitude!.toStringAsFixed(2)}, ${pos.longitude!.toStringAsFixed(2)}',
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _liveRouteString(FlightValidationResult result) {
-    final dep = result.departureAirport;
-    final arr = result.arrivalAirport;
-    if (dep != null && arr != null) return '$dep \u2192 $arr';
-    if (dep != null) return 'From $dep \u00b7 En route';
-    if (arr != null) return 'To $arr';
-    return '';
-  }
-
   Widget _buildIncompleteDataNotice() {
     final missingText = _missingFields.length == 1
         ? _missingFields.first
@@ -2248,6 +2134,226 @@ class _AirportOptionsOverlay extends StatelessWidget {
                     ),
                   );
                 },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Live Flight Sticky Header
+// =============================================================================
+
+/// Frosted-glass sticky header that slides in from the top as the user scrolls
+/// past the flight info section. Shows live flight data (altitude, speed,
+/// route, country) in a compact bar — same pattern as the Signals feed's
+/// _ActiveAuthorsHeader.
+class _LiveFlightStickyHeader extends StatefulWidget {
+  const _LiveFlightStickyHeader({
+    required this.result,
+    required this.isVisible,
+  });
+
+  final FlightValidationResult result;
+  final bool isVisible;
+
+  @override
+  State<_LiveFlightStickyHeader> createState() =>
+      _LiveFlightStickyHeaderState();
+}
+
+class _LiveFlightStickyHeaderState extends State<_LiveFlightStickyHeader>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _slideController;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _slideController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
+
+    if (widget.isVisible) {
+      _slideController.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(_LiveFlightStickyHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isVisible != oldWidget.isVisible) {
+      if (widget.isVisible) {
+        _slideController.forward();
+      } else {
+        _slideController.reverse();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _slideController.dispose();
+    super.dispose();
+  }
+
+  String _routeString() {
+    final dep = widget.result.departureAirport;
+    final arr = widget.result.arrivalAirport;
+    if (dep != null && arr != null) return '$dep \u2192 $arr';
+    if (dep != null) return 'From $dep \u00b7 En route';
+    if (arr != null) return 'To $arr';
+    return '';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pos = widget.result.position!;
+    final numFmt = NumberFormat('#,##0');
+    final accentColor = context.accentColor;
+
+    return IgnorePointer(
+      ignoring: !widget.isVisible,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: ClipRRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: context.card.withValues(alpha: 0.7),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: accentColor.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Top row: icon + title + status pill
+                    Row(
+                      children: [
+                        Icon(
+                          pos.onGround
+                              ? Icons.flight_land
+                              : Icons.flight_takeoff,
+                          color: accentColor,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Live Flight Data',
+                            style: TextStyle(
+                              color: context.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        // Route (if available)
+                        if (widget.result.departureAirport != null ||
+                            widget.result.arrivalAirport != null) ...[
+                          Icon(
+                            Icons.route,
+                            size: 12,
+                            color: accentColor.withValues(alpha: 0.7),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _routeString(),
+                            style: TextStyle(
+                              color: context.textPrimary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        // Status pill
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            pos.onGround ? 'On Ground' : 'In Flight',
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Bottom row: data chips
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        if (pos.originCountry != null)
+                          InfoChip(
+                            icon: Icons.public,
+                            label: pos.originCountry!,
+                          ),
+                        if (!pos.onGround && pos.altitudeFeet != null)
+                          InfoChip(
+                            icon: Icons.height,
+                            label:
+                                '${numFmt.format(pos.altitudeFeet!.round())} ft',
+                          ),
+                        if (pos.velocityKnots != null && !pos.onGround)
+                          InfoChip(
+                            icon: Icons.speed,
+                            label:
+                                '${numFmt.format(pos.velocityKnots!.round())} kts',
+                          ),
+                        if (pos.onGround)
+                          InfoChip(icon: Icons.flight_land, label: 'On ground'),
+                        if (pos.hasPosition)
+                          InfoChip(
+                            icon: Icons.location_on,
+                            label:
+                                '${pos.latitude!.toStringAsFixed(2)}, ${pos.longitude!.toStringAsFixed(2)}',
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
