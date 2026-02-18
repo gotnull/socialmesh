@@ -2264,36 +2264,36 @@ class SignalService {
     var updatedCount = 0;
 
     for (final row in rows) {
-      final signal = _postFromDbMap(row);
-      // Skip if already has a post listener
-      if (_postListeners.containsKey(signal.id)) {
-        continue;
-      }
-
-      // For sm- signals, resolve the Firestore-matching UUID from
-      // the persisted cloudSignalId column. posts/sm-{hex} does not exist
-      // in Firestore; the actual doc uses the UUID from the legacy send.
-      final isSmId = SmPacketRouter.isSmSignalId(signal.id);
-      String? cloudId;
-      if (isSmId) {
-        cloudId = row['cloudSignalId'] as String?;
-        if (cloudId == null || cloudId.isEmpty) {
-          AppLogging.social(
-            '📡 Cloud retry: skipping sm- signal ${signal.id} '
-            '(no cloudSignalId yet)',
-          );
+      try {
+        final signal = _postFromDbMap(row);
+        // Skip if already has a post listener
+        if (_postListeners.containsKey(signal.id)) {
           continue;
         }
-      }
-      final lookupId = cloudId ?? signal.id;
 
-      // Skip if already has a post listener on the resolved ID
-      if (cloudId != null && _postListeners.containsKey(cloudId)) {
-        continue;
-      }
+        // For sm- signals, resolve the Firestore-matching UUID from
+        // the persisted cloudSignalId column. posts/sm-{hex} does not exist
+        // in Firestore; the actual doc uses the UUID from the legacy send.
+        final isSmId = SmPacketRouter.isSmSignalId(signal.id);
+        String? cloudId;
+        if (isSmId) {
+          cloudId = row['cloudSignalId'] as String?;
+          if (cloudId == null || cloudId.isEmpty) {
+            AppLogging.social(
+              '📡 Cloud retry: skipping sm- signal ${signal.id} '
+              '(no cloudSignalId yet)',
+            );
+            continue;
+          }
+        }
+        final lookupId = cloudId ?? signal.id;
 
-      // Attempt cloud lookup
-      try {
+        // Skip if already has a post listener on the resolved ID
+        if (cloudId != null && _postListeners.containsKey(cloudId)) {
+          continue;
+        }
+
+        // Attempt cloud lookup
         final cloudSignal = await _lookupCloudSignal(lookupId);
 
         if (cloudSignal != null && cloudSignal.mediaUrls.isNotEmpty) {
@@ -2340,7 +2340,8 @@ class SignalService {
           }
         }
       } catch (e) {
-        AppLogging.social('📡 Cloud retry: failed for ${signal.id}: $e');
+        final rowId = row['id'] as String? ?? 'unknown';
+        AppLogging.social('📡 Cloud retry: failed for $rowId: $e');
       }
     }
 
