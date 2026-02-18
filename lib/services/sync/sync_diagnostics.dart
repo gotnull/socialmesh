@@ -151,9 +151,8 @@ class SyncDiagnostics {
   bool get isEnabled => _diagnosticsEnabled;
 
   /// Enable or disable diagnostics at runtime (for debug panels).
-  // ignore: use_setters_to_change_properties
-  void setEnabled(bool enabled) {
-    _diagnosticsEnabled = enabled;
+  set enabled(bool value) {
+    _diagnosticsEnabled = value;
   }
 
   /// Record that the entitlement state changed.
