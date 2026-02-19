@@ -29,6 +29,11 @@ import '../../utils/presence_utils.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/constants.dart';
+import '../../core/logging.dart';
+import '../tak/providers/tak_providers.dart';
+import '../tak/providers/tak_tracking_provider.dart';
+import '../tak/widgets/tak_map_layer.dart';
 
 /// Node filter options
 enum NodeFilter {
@@ -78,6 +83,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _measureMode = false;
   bool _showRangeCircles = false;
   bool _showConnectionLines = false;
+  bool _showTakLayer = true;
   double _connectionMaxDistance =
       15.0; // km - max distance for connection lines
   String _searchQuery = '';
@@ -640,6 +646,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       _measureEnd = null;
                     });
                     break;
+                  case 'tak_layer':
+                    setState(() => _showTakLayer = !_showTakLayer);
+                    AppLogging.tak(
+                      'Map TAK layer toggled: visible=$_showTakLayer',
+                    );
+                    break;
                   case 'globe':
                     Navigator.of(context).pushNamed('/globe');
                     break;
@@ -870,6 +882,30 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     ],
                   ),
                 ),
+                if (AppFeatureFlags.isTakGatewayEnabled &&
+                    !widget.locationOnlyMode)
+                  PopupMenuItem(
+                    value: 'tak_layer',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _showTakLayer
+                              ? Icons.military_tech
+                              : Icons.military_tech_outlined,
+                          size: 18,
+                          color: _showTakLayer
+                              ? context.accentColor
+                              : context.textSecondary,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          _showTakLayer
+                              ? 'Hide TAK entities'
+                              : 'Show TAK entities',
+                        ),
+                      ],
+                    ),
+                  ),
                 const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'help',
@@ -1109,6 +1145,28 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ),
                             );
                           }).toList(),
+                        ),
+                      // TAK entity markers - separate layer from mesh nodes
+                      if (_showTakLayer &&
+                          !widget.locationOnlyMode &&
+                          AppFeatureFlags.isTakGatewayEnabled)
+                        Builder(
+                          builder: (context) {
+                            final takEvents = ref.watch(
+                              takActiveEventsProvider,
+                            );
+                            final trackedUids = ref.watch(
+                              takTrackedUidsProvider,
+                            );
+                            return TakMapLayer(
+                              events: takEvents,
+                              trackedUids: trackedUids,
+                              onMarkerTap: (event) {
+                                // Deselect any mesh node when TAK marker is tapped
+                                setState(() => _selectedNode = null);
+                              },
+                            );
+                          },
                         ),
                       // Measurement markers
                       if (_measureStart != null)
