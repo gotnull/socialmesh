@@ -9,6 +9,10 @@
 #
 # The private repo lives at ../socialmesh-private (sibling directory).
 # It mirrors the directory structure of the public repo for gitignored files only.
+#
+# Auto-deploy: When `push` detects changes in web hosting directories, it
+# automatically runs `firebase deploy --only hosting:<target>` for each
+# changed target. Requires the Firebase CLI to be installed and authenticated.
 
 set -euo pipefail
 
@@ -67,6 +71,16 @@ EXCLUDE_PATTERNS=(
   "workflows"
 )
 
+# Mapping from sync directory names to Firebase hosting target names.
+# Only directories listed here trigger an auto-deploy on push.
+declare -A HOSTING_TARGETS=(
+  [web]="app"
+  [web-redirect]="www-redirect"
+  [web-admin-redirect]="admin-redirect"
+  [web-bugs-redirect]="bugs-redirect"
+  [web-sprints-redirect]="sprints-redirect"
+)
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -98,6 +112,21 @@ check_private_repo() {
     echo "Or:   git clone $PRIVATE_REMOTE $PRIVATE_REPO"
     exit 1
   fi
+}
+
+# Check if a directory has changes by doing a dry-run rsync with itemized output.
+# Returns 0 (true) if changes detected, 1 (false) if identical.
+dir_has_changes() {
+  local src="$1"
+  local dst="$2"
+  local excludes
+  excludes=$(build_excludes)
+
+  # shellcheck disable=SC2086
+  local changes
+  changes=$(rsync -a --delete --dry-run --itemize-changes $excludes "$src/" "$dst/" 2>/dev/null || true)
+
+  [ -n "$changes" ]
 }
 
 # ---------------------------------------------------------------------------
@@ -176,10 +205,21 @@ cmd_push() {
   local excludes
   excludes=$(build_excludes)
 
+  # Track which hosting directories changed so we can auto-deploy.
+  local changed_hosting_dirs=()
+
   # Sync directories
   for dir in "${SYNC_DIRS[@]}"; do
     if [ -d "$PUBLIC_REPO/$dir" ]; then
       mkdir -p "$PRIVATE_REPO/$dir"
+
+      # Detect changes before syncing (for hosting auto-deploy).
+      if [[ -v "HOSTING_TARGETS[$dir]" ]]; then
+        if dir_has_changes "$PUBLIC_REPO/$dir" "$PRIVATE_REPO/$dir"; then
+          changed_hosting_dirs+=("$dir")
+        fi
+      fi
+
       # shellcheck disable=SC2086
       rsync -a --delete $excludes "$PUBLIC_REPO/$dir/" "$PRIVATE_REPO/$dir/"
       ok "  $dir/"
@@ -199,10 +239,81 @@ cmd_push() {
     fi
   done
 
+  # ---------------------------------------------------------------------------
+  # Auto-deploy changed hosting targets
+  # ---------------------------------------------------------------------------
+
+  local deployed_targets=()
+  local deploy_failed=false
+
+  if [ ${#changed_hosting_dirs[@]} -gt 0 ]; then
+    echo ""
+
+    # Check for Firebase CLI
+    if ! command -v firebase &>/dev/null; then
+      warn "Firebase CLI not found. Skipping auto-deploy for changed hosting targets:"
+      for dir in "${changed_hosting_dirs[@]}"; do
+        local target="${HOSTING_TARGETS[$dir]}"
+        warn "  hosting:$target ($dir/)"
+      done
+      echo ""
+      warn "Install Firebase CLI and run manually:"
+      # Build the --only flag for all targets
+      local manual_targets=()
+      for dir in "${changed_hosting_dirs[@]}"; do
+        manual_targets+=("hosting:${HOSTING_TARGETS[$dir]}")
+      done
+      local joined
+      joined=$(IFS=,; echo "${manual_targets[*]}")
+      warn "  firebase deploy --only $joined"
+    else
+      # Build the list of hosting targets to deploy
+      local deploy_targets=()
+      for dir in "${changed_hosting_dirs[@]}"; do
+        deploy_targets+=("hosting:${HOSTING_TARGETS[$dir]}")
+      done
+      local deploy_spec
+      deploy_spec=$(IFS=,; echo "${deploy_targets[*]}")
+
+      info "Web hosting changes detected. Deploying: $deploy_spec"
+
+      if (cd "$PUBLIC_REPO" && firebase deploy --only "$deploy_spec" 2>&1); then
+        for dir in "${changed_hosting_dirs[@]}"; do
+          deployed_targets+=("${HOSTING_TARGETS[$dir]}")
+          ok "  Deployed hosting:${HOSTING_TARGETS[$dir]} ($dir/)"
+        done
+      else
+        deploy_failed=true
+        error "Firebase deploy failed. Deploy manually after committing:"
+        error "  cd $PUBLIC_REPO"
+        error "  firebase deploy --only $deploy_spec"
+      fi
+    fi
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Final summary
+  # ---------------------------------------------------------------------------
+
   echo ""
-  ok "Push complete. Now commit in the private repo:"
-  echo "  cd $PRIVATE_REPO"
-  echo "  git add -A && git commit -m 'sync: $(date +%Y-%m-%d)' && git push"
+
+  if [ ${#deployed_targets[@]} -gt 0 ]; then
+    local target_list
+    target_list=$(IFS=', '; echo "${deployed_targets[*]}")
+    ok "Push complete. Firebase hosting deployed: $target_list"
+    echo ""
+    ok "Now commit in the private repo (deploy already done):"
+    echo "  cd $PRIVATE_REPO"
+    echo "  git add -A && git commit -m 'sync: $(date +%Y-%m-%d) (deployed $target_list)' && git push"
+  elif [ "$deploy_failed" = true ]; then
+    ok "Push complete. Firebase deploy FAILED -- retry manually before committing."
+    echo "  cd $PRIVATE_REPO"
+    echo "  git add -A && git commit -m 'sync: $(date +%Y-%m-%d)' && git push"
+  else
+    ok "Push complete. Now commit in the private repo:"
+    echo "  cd $PRIVATE_REPO"
+    echo "  git add -A && git commit -m 'sync: $(date +%Y-%m-%d)' && git push"
+  fi
 }
 
 cmd_pull() {
@@ -255,7 +366,13 @@ cmd_status() {
         -not -path "*/.venv/*" \
         -not -name "*.pyc" \
         -not -name ".DS_Store" | wc -l | tr -d ' ')
-      echo -e "  ${GREEN}$dir/${NC}  ($count files)"
+
+      local suffix=""
+      if [[ -v "HOSTING_TARGETS[$dir]" ]]; then
+        suffix="  -> hosting:${HOSTING_TARGETS[$dir]}"
+      fi
+
+      echo -e "  ${GREEN}$dir/${NC}  ($count files)$suffix"
     else
       echo -e "  ${YELLOW}$dir/${NC}  (missing)"
     fi
@@ -270,6 +387,34 @@ cmd_status() {
       echo -e "  ${YELLOW}$file${NC}  (missing)"
     fi
   done
+
+  # Show pending hosting changes if private repo exists
+  if [ -d "$PRIVATE_REPO/.git" ]; then
+    echo ""
+
+    local pending_deploys=()
+    local excludes
+    excludes=$(build_excludes)
+
+    for dir in "${!HOSTING_TARGETS[@]}"; do
+      if [ -d "$PUBLIC_REPO/$dir" ] && [ -d "$PRIVATE_REPO/$dir" ]; then
+        if dir_has_changes "$PUBLIC_REPO/$dir" "$PRIVATE_REPO/$dir"; then
+          pending_deploys+=("hosting:${HOSTING_TARGETS[$dir]} ($dir/)")
+        fi
+      elif [ -d "$PUBLIC_REPO/$dir" ] && [ ! -d "$PRIVATE_REPO/$dir" ]; then
+        pending_deploys+=("hosting:${HOSTING_TARGETS[$dir]} ($dir/) [new]")
+      fi
+    done
+
+    if [ ${#pending_deploys[@]} -gt 0 ]; then
+      echo -e "${YELLOW}Pending hosting deploys (will auto-deploy on push):${NC}"
+      for item in "${pending_deploys[@]}"; do
+        echo -e "  ${YELLOW}$item${NC}"
+      done
+    else
+      echo "No pending hosting changes."
+    fi
+  fi
 
   echo ""
   if [ -d "$PRIVATE_REPO/.git" ]; then
@@ -294,9 +439,9 @@ case "${1:-help}" in
     echo "Usage: $0 {push|pull|status|init}"
     echo ""
     echo "  init    Clone or create the private companion repo"
-    echo "  push    Copy sensitive files TO private repo"
+    echo "  push    Copy sensitive files TO private repo (auto-deploys changed hosting)"
     echo "  pull    Copy sensitive files FROM private repo"
-    echo "  status  Show what would be synced"
+    echo "  status  Show what would be synced (and pending hosting deploys)"
     exit 1
     ;;
 esac
