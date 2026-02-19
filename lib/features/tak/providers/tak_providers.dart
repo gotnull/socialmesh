@@ -5,10 +5,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/logging.dart';
+import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../services/notifications/notification_service.dart';
 import '../models/tak_event.dart';
+import '../models/tak_publish_config.dart';
 import '../services/tak_database.dart';
 import '../services/tak_gateway_client.dart';
+import '../services/tak_position_publisher.dart';
+import '../services/tak_stale_monitor.dart';
+import 'tak_tracking_provider.dart';
 
 /// Whether the TAK Gateway feature is enabled.
 final isTakEnabledProvider = Provider<bool>((ref) {
@@ -30,7 +36,7 @@ final takDatabaseProvider = Provider<TakDatabase>((ref) {
 
 /// TAK Gateway WebSocket client.
 final takGatewayClientProvider = Provider<TakGatewayClient>((ref) {
-  final authService = ref.watch(authServiceProvider);
+  final authService = ref.read(authServiceProvider);
   AppLogging.tak(
     'Creating TakGatewayClient provider: url=${AppUrls.takGatewayUrl}',
   );
@@ -122,6 +128,15 @@ class TakPersistenceNotifier extends AsyncNotifier<List<TakEvent>> {
 
   Future<void> _onEvent(TakEvent event) async {
     final db = ref.read(takDatabaseProvider);
+
+    // Record position history before upserting (preserves trail data)
+    await db.insertPositionHistory(
+      uid: event.uid,
+      lat: event.lat,
+      lon: event.lon,
+      timeUtcMs: event.timeUtcMs,
+    );
+
     await db.upsert(event);
 
     // Update in-memory list
@@ -194,4 +209,90 @@ final takActiveEventsProvider = Provider<List<TakEvent>>((ref) {
     '($staleCount stale filtered)',
   );
   return events;
+});
+
+// ---------------------------------------------------------------------------
+// Position publishing
+// ---------------------------------------------------------------------------
+
+/// TAK position publisher instance.
+///
+/// Publishes the local node's position as a CoT SA event to the TAK Gateway
+/// REST endpoint. Gated by [AppFeatureFlags.isTakPublishEnabled].
+final takPositionPublisherProvider = Provider<TakPositionPublisher?>((ref) {
+  if (!AppFeatureFlags.isTakPublishEnabled) {
+    AppLogging.tak('takPositionPublisherProvider: publishing disabled');
+    return null;
+  }
+
+  final client = ref.watch(takGatewayClientProvider);
+  final myNodeNum = ref.watch(myNodeNumProvider);
+  final nodes = ref.watch(nodesProvider);
+
+  String? getNodeHex() {
+    if (myNodeNum == null) return null;
+    return myNodeNum.toRadixString(16).toUpperCase();
+  }
+
+  double? getLat() {
+    if (myNodeNum == null) return null;
+    return nodes[myNodeNum]?.latitude;
+  }
+
+  double? getLon() {
+    if (myNodeNum == null) return null;
+    return nodes[myNodeNum]?.longitude;
+  }
+
+  String getNodeName() {
+    if (myNodeNum == null) return 'Unknown';
+    return nodes[myNodeNum]?.displayName ?? 'Unknown';
+  }
+
+  final publisher = TakPositionPublisher(
+    client: client,
+    getNodeHex: getNodeHex,
+    getLat: getLat,
+    getLon: getLon,
+    getNodeName: getNodeName,
+    config: const TakPublishConfig(enabled: true, intervalSeconds: 60),
+  );
+
+  AppLogging.tak('takPositionPublisherProvider: created');
+
+  ref.onDispose(() {
+    AppLogging.tak('takPositionPublisherProvider: disposing');
+    publisher.dispose();
+  });
+
+  return publisher;
+});
+
+// ---------------------------------------------------------------------------
+// Stale entity monitoring
+// ---------------------------------------------------------------------------
+
+/// Monitors tracked TAK entities for stale transitions and fires local
+/// notifications via [NotificationService].
+final takStaleMonitorProvider = Provider<TakStaleMonitor>((ref) {
+  final trackedUids = ref.watch(takTrackedUidsProvider);
+  final events = ref.watch(takActiveEventsProvider);
+
+  final monitor = TakStaleMonitor(
+    notificationService: NotificationService(),
+    getTrackedUids: () => trackedUids,
+    getEvents: () => events,
+  );
+
+  // Auto-start when there are tracked entities.
+  if (trackedUids.isNotEmpty) {
+    monitor.start();
+  }
+
+  ref.onDispose(() {
+    AppLogging.tak('takStaleMonitorProvider: disposing');
+    monitor.dispose();
+  });
+
+  return monitor;
 });

@@ -155,6 +155,60 @@ class TakGatewayClient {
     AppLogging.tak('TakGatewayClient disposed');
   }
 
+  /// Publish local node position to the TAK Gateway via REST POST.
+  ///
+  /// Returns `true` on success (HTTP 200/201), `false` otherwise.
+  Future<bool> publishPosition({
+    required String uid,
+    required String type,
+    required String callsign,
+    required double lat,
+    required double lon,
+    double hae = 0.0,
+    double ce = 10.0,
+    double le = 10.0,
+  }) async {
+    final httpBase = gatewayUrl
+        .replaceFirst('wss://', 'https://')
+        .replaceFirst('ws://', 'http://');
+    final url = Uri.parse('$httpBase/v1/tak/publish');
+
+    try {
+      final token = await getAuthToken();
+      final client = HttpClient();
+      final request = await client.postUrl(url);
+      request.headers.set('Content-Type', 'application/json');
+      if (token != null) {
+        request.headers.set('Authorization', 'Bearer $token');
+      }
+
+      final body = jsonEncode({
+        'uid': uid,
+        'type': type,
+        'callsign': callsign,
+        'lat': lat,
+        'lon': lon,
+        'hae': hae,
+        'ce': ce,
+        'le': le,
+      });
+      request.write(body);
+
+      final response = await request.close();
+      client.close(force: false);
+
+      final success = response.statusCode == 200 || response.statusCode == 201;
+      AppLogging.tak(
+        'PositionPublisher: POST /v1/tak/publish -> '
+        '${response.statusCode} ${success ? "OK" : "FAILED"}',
+      );
+      return success;
+    } catch (e) {
+      AppLogging.tak('PositionPublisher: POST /v1/tak/publish failed: $e');
+      return false;
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Private
   // ---------------------------------------------------------------------------

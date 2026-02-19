@@ -493,6 +493,65 @@ class NotificationService {
     );
   }
 
+  /// Show notification when a tracked TAK entity goes stale.
+  Future<void> showTakStaleNotification({
+    required String uid,
+    required String callsign,
+    required double lat,
+    required double lon,
+    required String timeAgo,
+    bool playSound = true,
+    bool vibrate = true,
+  }) async {
+    if (!_initialized) {
+      AppLogging.notifications(
+        '🔔 NotificationService not initialized, skipping TAK stale notification',
+      );
+      return;
+    }
+
+    final androidDetails = AndroidNotificationDetails(
+      'tak_entity',
+      'TAK Entities',
+      channelDescription: 'Notifications when tracked TAK entities go stale',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'tak_entities',
+      playSound: playSound,
+      enableVibration: vibrate,
+    );
+
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: playSound,
+      threadIdentifier: 'tak_entities',
+    );
+
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    final notificationId = uid.hashCode.abs() % 100000000;
+
+    await _notifications.show(
+      id: notificationId,
+      title: 'Entity Stale: $callsign',
+      body:
+          'Last position: ${lat.toStringAsFixed(4)}, '
+          '${lon.toStringAsFixed(4)} — $timeAgo',
+      notificationDetails: notificationDetails,
+      payload: 'tak:$uid',
+    );
+
+    AppLogging.notifications(
+      '🔔 Showed TAK stale notification for $callsign ($uid)',
+    );
+  }
+
   /// Show notification for new message
   Future<void> showNewMessageNotification({
     required String senderName,

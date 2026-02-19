@@ -13,7 +13,8 @@ import '../models/tak_event.dart';
 class TakDatabase {
   static const _dbName = 'tak_events.db';
   static const _tableName = 'tak_cot_events';
-  static const _dbVersion = 1;
+  static const _positionHistoryTable = 'tak_position_history';
+  static const _dbVersion = 2;
 
   /// Maximum events retained in the database.
   static const int maxEvents = 5000;
@@ -55,6 +56,10 @@ class TakDatabase {
         AppLogging.tak(
           'Upgrading TAK events database v$oldVersion -> v$newVersion',
         );
+        if (oldVersion < 2) {
+          await _createPositionHistoryTable(db);
+          AppLogging.tak('Migration v1->v2: created position history table');
+        }
       },
     );
     AppLogging.tak('TAK database initialized successfully');
@@ -97,6 +102,26 @@ class TakDatabase {
 
     await db.execute('''
       CREATE INDEX idx_tak_stale ON $_tableName (stale_utc)
+    ''');
+
+    // Position history table (added in v2, also created for fresh installs)
+    await _createPositionHistoryTable(db);
+  }
+
+  Future<void> _createPositionHistoryTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $_positionHistoryTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        uid TEXT NOT NULL,
+        lat REAL NOT NULL,
+        lon REAL NOT NULL,
+        time_utc INTEGER NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_tph_uid_time
+      ON $_positionHistoryTable (uid, time_utc DESC)
     ''');
   }
 
@@ -246,10 +271,95 @@ class TakDatabase {
     AppLogging.tak('DB cleared');
   }
 
+  // ---------------------------------------------------------------------------
+  // Position history (v2)
+  // ---------------------------------------------------------------------------
+
+  /// Maximum position history points per entity.
+  static const int maxPositionHistoryPerUid = 500;
+
+  /// Record a position snapshot for trail rendering.
+  Future<void> insertPositionHistory({
+    required String uid,
+    required double lat,
+    required double lon,
+    required int timeUtcMs,
+  }) async {
+    if (lat == 0.0 && lon == 0.0) return;
+
+    await _database.insert(_positionHistoryTable, {
+      'uid': uid,
+      'lat': lat,
+      'lon': lon,
+      'time_utc': timeUtcMs,
+    });
+
+    // Enforce max points per UID
+    await _trimPositionHistory(uid);
+  }
+
+  /// Get position history for an entity, newest first.
+  Future<List<PositionHistoryPoint>> getPositionHistory(
+    String uid, {
+    int limit = 50,
+  }) async {
+    final rows = await _database.query(
+      _positionHistoryTable,
+      where: 'uid = ?',
+      whereArgs: [uid],
+      orderBy: 'time_utc DESC',
+      limit: limit,
+    );
+    return rows.map(PositionHistoryPoint.fromRow).toList();
+  }
+
+  Future<void> _trimPositionHistory(String uid) async {
+    final countResult = await _database.rawQuery(
+      'SELECT COUNT(*) as cnt FROM $_positionHistoryTable WHERE uid = ?',
+      [uid],
+    );
+    final total = Sqflite.firstIntValue(countResult) ?? 0;
+    if (total <= maxPositionHistoryPerUid) return;
+
+    final excess = total - maxPositionHistoryPerUid;
+    await _database.rawDelete(
+      '''DELETE FROM $_positionHistoryTable WHERE id IN (
+        SELECT id FROM $_positionHistoryTable
+        WHERE uid = ? ORDER BY time_utc ASC LIMIT ?
+      )''',
+      [uid, excess],
+    );
+    AppLogging.tak(
+      'Position history trimmed for uid=$uid: '
+      'kept $maxPositionHistoryPerUid of $total points',
+    );
+  }
+
   /// Close the database connection.
   Future<void> close() async {
     AppLogging.tak('Closing TAK database');
     await _db?.close();
     _db = null;
+  }
+}
+
+/// A single position snapshot in the movement trail.
+class PositionHistoryPoint {
+  final double lat;
+  final double lon;
+  final int timeUtcMs;
+
+  const PositionHistoryPoint({
+    required this.lat,
+    required this.lon,
+    required this.timeUtcMs,
+  });
+
+  factory PositionHistoryPoint.fromRow(Map<String, dynamic> row) {
+    return PositionHistoryPoint(
+      lat: (row['lat'] as num).toDouble(),
+      lon: (row['lon'] as num).toDouble(),
+      timeUtcMs: row['time_utc'] as int,
+    );
   }
 }

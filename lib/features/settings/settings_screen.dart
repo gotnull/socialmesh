@@ -86,6 +86,8 @@ import 'screens/help_center_screen.dart';
 import '../../core/whats_new/whats_new_sheet.dart';
 // import '../social/screens/follow_requests_screen.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/constants.dart';
+import '../tak/screens/tak_settings_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -352,6 +354,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ),
           ),
         ),
+
+        // TAK Gateway (feature-gated)
+        if (AppFeatureFlags.isTakGatewayEnabled)
+          _SearchableSettingItem(
+            icon: Icons.military_tech,
+            title: 'TAK Gateway',
+            subtitle: 'Gateway URL, position publishing, callsign',
+            keywords: [
+              'tak',
+              'gateway',
+              'cot',
+              'atak',
+              'military',
+              'publish',
+              'callsign',
+            ],
+            section: 'CONNECTION',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TakSettingsScreen()),
+            ),
+          ),
 
         // Haptic Feedback
         _SearchableSettingItem(

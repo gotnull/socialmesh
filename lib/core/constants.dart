@@ -270,6 +270,19 @@ class AppFeatureFlags {
       return false;
     }
   }
+
+  /// Whether TAK position publishing is enabled.
+  /// Set `TAK_PUBLISH_ENABLED=true` in `.env` to enable.
+  /// Requires [isTakGatewayEnabled] to be true. Default: false.
+  static bool get isTakPublishEnabled {
+    if (!isTakGatewayEnabled) return false;
+    try {
+      final raw = dotenv.env['TAK_PUBLISH_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
 /// Privacy level for content visibility

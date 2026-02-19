@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../services/haptic_service.dart';
 import '../models/tak_event.dart';
+import '../providers/tak_tracking_provider.dart';
 import '../utils/cot_affiliation.dart';
 
 /// Detail view for a single TAK/CoT event.
-class TakEventDetailScreen extends StatelessWidget {
+class TakEventDetailScreen extends ConsumerWidget {
   final TakEvent event;
 
   const TakEventDetailScreen({super.key, required this.event});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     AppLogging.tak(
       'TakEventDetailScreen build: uid=${event.uid}, '
       'type=${event.type}, callsign=${event.callsign ?? "none"}, '
@@ -30,9 +33,23 @@ class TakEventDetailScreen extends StatelessWidget {
       fontFamily: 'monospace',
     );
 
+    final trackedUids = ref.watch(takTrackedUidsProvider);
+    final isTracked = trackedUids.contains(event.uid);
+
     return GlassScaffold.body(
       title: event.displayName,
       actions: [
+        IconButton(
+          icon: Icon(
+            isTracked ? Icons.push_pin : Icons.push_pin_outlined,
+            color: affiliationColor,
+          ),
+          onPressed: () async {
+            await ref.read(takTrackingProvider.notifier).toggle(event.uid);
+            ref.haptics.toggle();
+          },
+          tooltip: isTracked ? 'Untrack' : 'Track',
+        ),
         IconButton(
           icon: const Icon(Icons.copy),
           onPressed: () {
