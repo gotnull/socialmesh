@@ -29,7 +29,10 @@ SYNC_DIRS=(
   scripts
   tools
   web
+  web-admin-redirect
+  web-bugs-redirect
   web-redirect
+  web-sprints-redirect
 )
 
 # Individual files to sync (relative to repo root)

@@ -25,7 +25,10 @@ android/.kotlin/sessions/
 
 # Firebase Hosting content (landing page, legal docs, admin tools)
 /web/
+/web-admin-redirect/
+/web-bugs-redirect/
 /web-redirect/
+/web-sprints-redirect/
 
 # Environment files
 .env

@@ -94,8 +94,38 @@ class _UserPurchasesAdminScreenState
   /// Number of users currently excluded from revenue.
   int get _excludedCount => _excludedUserIds.length;
 
+  /// Free (non-paying) users.
+  int get _freeUsers => _users.where((u) => u.purchases.isEmpty).length;
+
+  /// Conversion rate (paying / total).
+  double get _conversionRate =>
+      _totalUsers > 0 ? (_netPayingUsers / _totalUsers) * 100 : 0;
+
+  /// Average revenue per user (net revenue / total users).
+  double get _arpu => _totalUsers > 0 ? _netRevenue / _totalUsers : 0;
+
   /// Whether any exclusions are active.
   bool get _hasExclusions => _excludedUserIds.isNotEmpty;
+
+  /// Helper to build a stat card row with consistent padding.
+  Widget _buildStatRow(List<Widget> children) {
+    final spaced = <Widget>[];
+    for (var i = 0; i < children.length; i++) {
+      spaced.add(Expanded(child: children[i]));
+      if (i < children.length - 1) {
+        spaced.add(const SizedBox(width: 12));
+      }
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: spaced,
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -375,95 +405,151 @@ class _UserPurchasesAdminScreenState
   @override
   Widget build(BuildContext context) {
     return GlassScaffold(
-      title: 'User Purchases',
-      slivers: [
-        // Stats cards — row 1: users overview
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: _StatCard(
-                      label: 'Total Users',
-                      value: _totalUsers.toString(),
-                      icon: Icons.people,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _StatCard(
-                      label: 'Paying',
-                      value: _hasExclusions
-                          ? '$_netPayingUsers'
-                          : '$_totalPayingUsers',
-                      icon: Icons.shopping_bag,
-                      color: Colors.green,
-                      subtitle: _hasExclusions
-                          ? '$_excludedCount excluded'
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _StatCard(
-                      label: _hasExclusions ? 'Net Revenue' : 'Gross Revenue',
-                      value: _hasExclusions
-                          ? 'A\$${_netRevenue.toStringAsFixed(2)}'
-                          : 'A\$${_grossRevenue.toStringAsFixed(2)}',
-                      icon: Icons.attach_money,
-                      color: _hasExclusions ? Colors.green : Colors.orange,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      titleWidget: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'User Purchases',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
           ),
-        ),
-
-        // Stats cards — row 2: revenue breakdown (only when exclusions active)
-        if (_hasExclusions)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+          if (!_isLoading && _error == null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text.rich(
+                TextSpan(
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.3,
+                  ),
                   children: [
-                    Expanded(
-                      child: _StatCard(
-                        label: 'Gross Revenue',
-                        value: 'A\$${_grossRevenue.toStringAsFixed(2)}',
-                        icon: Icons.account_balance_wallet,
-                        color: Colors.orange,
-                      ),
+                    TextSpan(
+                      text: '$_totalUsers',
+                      style: const TextStyle(color: Colors.blue),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatCard(
-                        label: 'Excluded',
-                        value: '-A\$${_excludedRevenue.toStringAsFixed(2)}',
-                        icon: Icons.money_off,
-                        color: Colors.red,
-                      ),
+                    TextSpan(
+                      text: ' TOTAL · ',
+                      style: TextStyle(color: context.textTertiary),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatCard(
-                        label: 'Net Revenue',
-                        value: 'A\$${_netRevenue.toStringAsFixed(2)}',
-                        icon: Icons.trending_up,
-                        color: Colors.green,
-                      ),
+                    TextSpan(
+                      text: '$_netPayingUsers',
+                      style: const TextStyle(color: Colors.green),
                     ),
+                    TextSpan(
+                      text: ' PAYING · ',
+                      style: TextStyle(color: context.textTertiary),
+                    ),
+                    TextSpan(
+                      text: '$_freeUsers',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    TextSpan(
+                      text: ' FREE · ',
+                      style: TextStyle(color: context.textTertiary),
+                    ),
+                    TextSpan(
+                      text: 'A\$${_netRevenue.toStringAsFixed(2)}',
+                      style: const TextStyle(color: Colors.green),
+                    ),
+                    TextSpan(
+                      text: ' REVENUE',
+                      style: TextStyle(color: context.textTertiary),
+                    ),
+                    if (_hasExclusions) ...[
+                      TextSpan(
+                        text: ' · ',
+                        style: TextStyle(color: context.textTertiary),
+                      ),
+                      TextSpan(
+                        text: '$_excludedCount',
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                      TextSpan(
+                        text: ' EXCLUDED',
+                        style: TextStyle(color: context.textTertiary),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
+        ],
+      ),
+      slivers: [
+        // Stats — Row 1: User counts
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: _buildStatRow([
+              _StatCard(
+                label: 'Total Users',
+                value: _totalUsers.toString(),
+                icon: Icons.people,
+                color: Colors.blue,
+              ),
+              _StatCard(
+                label: 'Paying',
+                value: _hasExclusions
+                    ? '$_netPayingUsers'
+                    : '$_totalPayingUsers',
+                icon: Icons.shopping_bag,
+                color: Colors.green,
+                subtitle: _hasExclusions ? '$_excludedCount excluded' : null,
+              ),
+              _StatCard(
+                label: 'Free',
+                value: '$_freeUsers',
+                icon: Icons.person_outline,
+                color: Colors.grey,
+              ),
+            ]),
           ),
+        ),
+
+        // Stats — Row 2: Conversion & ARPU
+        SliverToBoxAdapter(
+          child: _buildStatRow([
+            _StatCard(
+              label: 'Conversion',
+              value: '${_conversionRate.toStringAsFixed(1)}%',
+              icon: Icons.trending_up,
+              color: Colors.purple,
+            ),
+            _StatCard(
+              label: 'ARPU',
+              value: 'A\$${_arpu.toStringAsFixed(2)}',
+              icon: Icons.bar_chart,
+              color: Colors.teal,
+              tooltip: 'Average Revenue Per User',
+            ),
+          ]),
+        ),
+
+        // Stats — Row 3: Revenue (always shown)
+        SliverToBoxAdapter(
+          child: _buildStatRow([
+            _StatCard(
+              label: 'Gross Revenue',
+              value: 'A\$${_grossRevenue.toStringAsFixed(2)}',
+              icon: Icons.account_balance_wallet,
+              color: Colors.orange,
+            ),
+            if (_hasExclusions)
+              _StatCard(
+                label: 'Excluded',
+                value: '-A\$${_excludedRevenue.toStringAsFixed(2)}',
+                icon: Icons.money_off,
+                color: Colors.red,
+              ),
+            _StatCard(
+              label: 'Net Revenue',
+              value: 'A\$${_netRevenue.toStringAsFixed(2)}',
+              icon: Icons.attach_money,
+              color: Colors.green,
+            ),
+          ]),
+        ),
 
         // Search bar
         SliverToBoxAdapter(
@@ -698,6 +784,7 @@ class _StatCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String? subtitle;
+  final String? tooltip;
 
   const _StatCard({
     required this.label,
@@ -705,11 +792,12 @@ class _StatCard extends StatelessWidget {
     required this.icon,
     required this.color,
     this.subtitle,
+    this.tooltip,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    Widget card = Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: context.surface,
@@ -737,16 +825,14 @@ class _StatCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: context.textPrimary,
-              ),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
           ),
           if (subtitle != null) ...[
@@ -763,6 +849,12 @@ class _StatCard extends StatelessWidget {
         ],
       ),
     );
+
+    if (tooltip != null) {
+      card = Tooltip(message: tooltip!, preferBelow: false, child: card);
+    }
+
+    return card;
   }
 }
 
