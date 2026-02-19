@@ -471,7 +471,7 @@ class _BleTaskHandler extends TaskHandler {
   }
 
   @override
-  Future<void> onDestroy(DateTime timestamp) async {
+  Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
     // Service destroyed by OS or explicit stop.
   }
 }

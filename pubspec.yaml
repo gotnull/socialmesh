@@ -16,7 +16,7 @@ dependencies:
   riverpod_annotation: ^4.0.0
 
   # BLE Communication
-  flutter_blue_plus: ^2.0.2
+  flutter_blue_plus: ^2.1.1
 
   # USB Serial Communication
   usb_serial: ^0.5.2
@@ -36,7 +36,7 @@ dependencies:
   photo_manager: ^3.6.3
 
   # QR Code
-  mobile_scanner: ^7.0.0
+  mobile_scanner: ^7.2.0
 
   # UI/UX
   cupertino_icons: ^1.0.8
@@ -55,28 +55,28 @@ dependencies:
   logger: ^2.5.0
   uuid: ^4.5.1
   permission_handler: ^12.0.1
-  image: ^4.3.0
+  image: ^4.8.0
   sensors_plus: ^7.0.0
   fl_chart: ^1.1.1
   url_launcher: ^6.3.1
   connectivity_plus: ^7.0.0
   http: ^1.2.2
   flutter_dotenv: ^6.0.0
-  flutter_local_notifications: ^20.0.0
+  flutter_local_notifications: ^20.1.0
   just_audio: ^0.10.5
   live_activities: ^2.4.3
   package_info_plus: ^9.0.0
   device_info_plus: ^11.2.0
 
   # In-App Purchases (RevenueCat)
-  purchases_flutter: ^9.9.10
+  purchases_flutter: ^9.12.0
 
   # 3D Globe (CesiumJS via WebView - flutter_inappwebview already included)
   three_js: ^0.2.6
 
   # Animations
   animations: ^2.1.1
-  skeletonizer: ^2.1.2
+  skeletonizer: ^2.1.3
   lottie: ^3.3.1
   flutter_map_marker_cluster: ^8.2.2
   firebase_crashlytics: ^5.0.5
@@ -97,7 +97,7 @@ dependencies:
   cryptography: ^2.9.0
 
   # Camera for AR
-  camera: ^0.11.0
+  camera: ^0.11.4
 
   # Deep linking
   app_links: ^7.0.0
@@ -110,22 +110,11 @@ dependencies:
   timezone: ^0.10.0
 
   # Background BLE foreground service (Android)
-  flutter_foreground_task: ^8.13.0
+  flutter_foreground_task: ^9.2.0
 
   # In-app review
   in_app_review: ^2.0.10
   pretty_qr_code: ^3.6.0
-
-dependency_overrides:
-  # Patched flutter_blue_plus_darwin 8.1.0 — fixes NSInvalidArgumentException
-  # crash in didReadRSSI:error: when CoreBluetooth returns nil rssi on error.
-  # Upstream PR: https://github.com/chipweinberger/flutter_blue_plus/pull/1318
-  # Remove this override when upstream publishes a fix.
-  flutter_blue_plus_darwin:
-    git:
-      url: https://github.com/gotnull/flutter_blue_plus.git
-      ref: fix/nil-rssi-crash-didReadRSSI
-      path: packages/flutter_blue_plus_darwin
 
 dev_dependencies:
   flutter_test:
