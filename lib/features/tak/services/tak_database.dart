@@ -14,7 +14,7 @@ class TakDatabase {
   static const _dbName = 'tak_events.db';
   static const _tableName = 'tak_cot_events';
   static const _positionHistoryTable = 'tak_position_history';
-  static const _dbVersion = 2;
+  static const _dbVersion = 3;
 
   /// Maximum events retained in the database.
   static const int maxEvents = 5000;
@@ -60,6 +60,12 @@ class TakDatabase {
           await _createPositionHistoryTable(db);
           AppLogging.tak('Migration v1->v2: created position history table');
         }
+        if (oldVersion < 3) {
+          await _migrateV2ToV3(db);
+          AppLogging.tak(
+            'Migration v2->v3: deduplicated rows, added UNIQUE(uid, type)',
+          );
+        }
       },
     );
     AppLogging.tak('TAK database initialized successfully');
@@ -84,7 +90,8 @@ class TakDatabase {
         time_utc INTEGER NOT NULL,
         stale_utc INTEGER NOT NULL,
         received_utc INTEGER NOT NULL,
-        raw_payload_json TEXT
+        raw_payload_json TEXT,
+        UNIQUE(uid, type)
       )
     ''');
 
@@ -106,6 +113,64 @@ class TakDatabase {
 
     // Position history table (added in v2, also created for fresh installs)
     await _createPositionHistoryTable(db);
+  }
+
+  /// Migration v2 -> v3: deduplicate existing rows and add UNIQUE constraint.
+  ///
+  /// SQLite does not support ADD CONSTRAINT, so we recreate the table.
+  Future<void> _migrateV2ToV3(Database db) async {
+    // 1. Create a clean table with the UNIQUE constraint
+    await db.execute('''
+      CREATE TABLE ${_tableName}_v3 (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        uid TEXT NOT NULL,
+        type TEXT NOT NULL,
+        callsign TEXT,
+        lat REAL NOT NULL,
+        lon REAL NOT NULL,
+        time_utc INTEGER NOT NULL,
+        stale_utc INTEGER NOT NULL,
+        received_utc INTEGER NOT NULL,
+        raw_payload_json TEXT,
+        UNIQUE(uid, type)
+      )
+    ''');
+
+    // 2. Copy deduplicated rows (keep the newest received_utc per uid+type)
+    await db.execute('''
+      INSERT OR REPLACE INTO ${_tableName}_v3
+        (uid, type, callsign, lat, lon, time_utc, stale_utc, received_utc, raw_payload_json)
+      SELECT uid, type, callsign, lat, lon, time_utc, stale_utc, received_utc, raw_payload_json
+      FROM $_tableName
+      WHERE id IN (
+        SELECT id FROM $_tableName t1
+        WHERE t1.received_utc = (
+          SELECT MAX(t2.received_utc) FROM $_tableName t2
+          WHERE t2.uid = t1.uid AND t2.type = t1.type
+        )
+        GROUP BY t1.uid, t1.type
+      )
+    ''');
+
+    // 3. Drop old table and rename
+    await db.execute('DROP TABLE $_tableName');
+    await db.execute('ALTER TABLE ${_tableName}_v3 RENAME TO $_tableName');
+
+    // 4. Recreate indexes
+    await db.execute('CREATE INDEX idx_tak_uid ON $_tableName (uid)');
+    await db.execute('CREATE INDEX idx_tak_type ON $_tableName (type)');
+    await db.execute(
+      'CREATE INDEX idx_tak_received ON $_tableName (received_utc DESC)',
+    );
+    await db.execute('CREATE INDEX idx_tak_stale ON $_tableName (stale_utc)');
+
+    final countResult = await db.rawQuery(
+      'SELECT COUNT(*) as cnt FROM $_tableName',
+    );
+    final remaining = Sqflite.firstIntValue(countResult) ?? 0;
+    AppLogging.tak(
+      'v2->v3 migration complete: $remaining deduplicated rows remain',
+    );
   }
 
   Future<void> _createPositionHistoryTable(Database db) async {
@@ -157,6 +222,9 @@ class TakDatabase {
   }
 
   /// Insert a batch of events (used for snapshot backfill).
+  ///
+  /// Uses INSERT OR REPLACE which triggers on the UNIQUE(uid, type)
+  /// constraint, ensuring no duplicate rows accumulate.
   Future<void> insertBatch(List<TakEvent> events) async {
     AppLogging.tak('DB insertBatch: ${events.length} events');
     final db = _database;
