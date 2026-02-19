@@ -129,6 +129,93 @@ dir_has_changes() {
   [ -n "$changes" ]
 }
 
+# Check if an individual file has changes (missing or different in destination).
+# Returns 0 (true) if changed, 1 (false) if identical.
+file_has_changes() {
+  local src="$1"
+  local dst="$2"
+  [ ! -f "$dst" ] || ! diff -q "$src" "$dst" >/dev/null 2>&1
+}
+
+# ---------------------------------------------------------------------------
+# cmd_check -- machine-readable change detection for bot consumption
+# ---------------------------------------------------------------------------
+# Outputs structured markers (one per line, no ANSI):
+#   CHECK:DIRS:<space-separated list of changed dirs>
+#   CHECK:HOSTING:<space-separated hosting targets>
+#   CHECK:NO_CHANGES
+#   CHECK:ERROR:<message>
+cmd_check() {
+  if [ ! -d "$PRIVATE_REPO/.git" ]; then
+    echo "CHECK:ERROR:Private repo not found at $PRIVATE_REPO"
+    exit 0
+  fi
+
+  local excludes
+  excludes=$(build_excludes)
+  local changed_dirs=()
+  local hosting_targets=()
+
+  # Check directories for changes
+  for dir in "${SYNC_DIRS[@]}"; do
+    if [ -d "$PUBLIC_REPO/$dir" ]; then
+      if [ ! -d "$PRIVATE_REPO/$dir" ]; then
+        # New directory -- definitely changed
+        changed_dirs+=("$dir")
+        if [[ -v "HOSTING_TARGETS[$dir]" ]]; then
+          hosting_targets+=("hosting:${HOSTING_TARGETS[$dir]}")
+        fi
+      elif dir_has_changes "$PUBLIC_REPO/$dir" "$PRIVATE_REPO/$dir"; then
+        changed_dirs+=("$dir")
+        if [[ -v "HOSTING_TARGETS[$dir]" ]]; then
+          hosting_targets+=("hosting:${HOSTING_TARGETS[$dir]}")
+        fi
+      fi
+    fi
+  done
+
+  # Check individual files for changes
+  for file in "${SYNC_FILES[@]}"; do
+    if [ -f "$PUBLIC_REPO/$file" ]; then
+      if file_has_changes "$PUBLIC_REPO/$file" "$PRIVATE_REPO/$file"; then
+        local fdir
+        fdir=$(dirname "$file")
+        # Dedupe: only add if parent dir not already listed
+        local already=false
+        for d in "${changed_dirs[@]}"; do
+          if [ "$d" = "$fdir" ] || [ "$fdir" = "." ]; then
+            already=true
+            break
+          fi
+        done
+        if [ "$already" = false ]; then
+          changed_dirs+=("$fdir")
+        fi
+        # Root-level files show as "."
+        if [ "$fdir" = "." ]; then
+          # Add a synthetic "root" marker if not already present
+          local has_root=false
+          for d in "${changed_dirs[@]}"; do
+            [ "$d" = "." ] && has_root=true && break
+          done
+          if [ "$has_root" = false ]; then
+            changed_dirs+=(".")
+          fi
+        fi
+      fi
+    fi
+  done
+
+  if [ ${#changed_dirs[@]} -eq 0 ]; then
+    echo "CHECK:NO_CHANGES"
+  else
+    echo "CHECK:DIRS:${changed_dirs[*]}"
+    if [ ${#hosting_targets[@]} -gt 0 ]; then
+      echo "CHECK:HOSTING:${hosting_targets[*]}"
+    fi
+  fi
+}
+
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
@@ -434,14 +521,16 @@ case "${1:-help}" in
   push)   cmd_push ;;
   pull)   cmd_pull ;;
   status) cmd_status ;;
+  check)  cmd_check ;;
   init)   cmd_init ;;
   *)
-    echo "Usage: $0 {push|pull|status|init}"
+    echo "Usage: $0 {push|pull|status|check|init}"
     echo ""
     echo "  init    Clone or create the private companion repo"
     echo "  push    Copy sensitive files TO private repo (auto-deploys changed hosting)"
     echo "  pull    Copy sensitive files FROM private repo"
     echo "  status  Show what would be synced (and pending hosting deploys)"
+    echo "  check   Machine-readable change detection (for bot/CI consumption)"
     exit 1
     ;;
 esac
