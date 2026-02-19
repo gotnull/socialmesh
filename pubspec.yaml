@@ -62,7 +62,7 @@ dependencies:
   connectivity_plus: ^7.0.0
   http: ^1.2.2
   flutter_dotenv: ^6.0.0
-  flutter_local_notifications: ^20.0.0
+  flutter_local_notifications: ^20.1.0
   just_audio: ^0.10.5
   live_activities: ^2.4.3
   package_info_plus: ^9.0.0
