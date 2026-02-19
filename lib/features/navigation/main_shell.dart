@@ -63,6 +63,7 @@ import '../aether/providers/aether_flight_matcher_provider.dart';
 import '../aether/providers/aether_flight_lifecycle_provider.dart';
 import '../aether/widgets/aether_flight_detected_overlay.dart';
 // import '../global_layer/screens/global_layer_hub_screen.dart';
+import '../tak/screens/tak_map_screen.dart';
 import '../tak/screens/tak_screen.dart';
 import '../../providers/activity_providers.dart';
 import '../../providers/whats_new_providers.dart';
@@ -421,6 +422,14 @@ class _MainShellState extends ConsumerState<MainShell> {
         iconColor: Colors.orange.shade400,
         requiresConnection: false,
         whatsNewBadgeKey: 'tak',
+      ),
+    if (AppFeatureFlags.isTakGatewayEnabled)
+      _DrawerMenuItem(
+        icon: Icons.military_tech,
+        label: 'TAK Map',
+        screen: const TakMapScreen(),
+        iconColor: Colors.orange.shade400,
+        requiresConnection: false,
       ),
     _DrawerMenuItem(
       icon: Icons.favorite_border,

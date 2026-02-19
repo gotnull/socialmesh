@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/tak_event.dart';
+import '../utils/cot_affiliation.dart';
 
 /// List tile for a single TAK/CoT event in the event list.
 ///
@@ -17,6 +18,8 @@ class TakEventTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isStale = event.isStale;
+    final affiliation = parseAffiliation(event.type);
+    final affiliationColor = affiliation.color;
     final age = _formatAge(event.receivedUtcMs);
 
     return Padding(
@@ -37,20 +40,24 @@ class TakEventTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                // Leading icon
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: (isStale ? Colors.grey : Colors.orange).withValues(
-                      alpha: 0.15,
+                // Leading icon — uses MIL-STD-2525 affiliation color
+                Opacity(
+                  opacity: isStale ? 0.4 : 1.0,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: affiliationColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: affiliationColor.withValues(alpha: 0.4),
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.gps_fixed,
-                    size: 20,
-                    color: isStale ? Colors.grey : Colors.orange.shade400,
+                    child: Icon(
+                      Icons.gps_fixed,
+                      size: 20,
+                      color: affiliationColor,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -89,6 +96,11 @@ class TakEventTile extends StatelessWidget {
                         spacing: 6,
                         runSpacing: 4,
                         children: [
+                          _affiliationChip(
+                            context,
+                            affiliation.label,
+                            affiliationColor,
+                          ),
                           _chip(context, Icons.access_time, age),
                           _chip(
                             context,
@@ -136,6 +148,33 @@ class TakEventTile extends StatelessWidget {
             style: theme.textTheme.labelSmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Affiliation chip with color-tinted background matching map markers.
+  Widget _affiliationChip(BuildContext context, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.shield, size: 12, color: color),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

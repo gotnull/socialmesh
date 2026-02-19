@@ -8,7 +8,6 @@ import '../../../core/constants.dart';
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/glass_scaffold.dart';
-import '../models/tak_event.dart';
 import '../providers/tak_providers.dart';
 import '../services/tak_gateway_client.dart';
 import '../widgets/tak_event_tile.dart';
@@ -26,12 +25,8 @@ class TakScreen extends ConsumerStatefulWidget {
 }
 
 class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
-  final List<TakEvent> _events = [];
-  StreamSubscription<TakEvent>? _eventSub;
-  StreamSubscription<List<TakEvent>>? _snapshotSub;
   StreamSubscription<TakConnectionState>? _stateSub;
   TakConnectionState _connectionState = TakConnectionState.disconnected;
-  int _totalReceived = 0;
 
   @override
   void initState() {
@@ -52,54 +47,8 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
       });
     });
 
-    _eventSub = client.eventStream.listen((event) {
-      if (!mounted) return;
-      _totalReceived++;
-      AppLogging.tak(
-        'TakScreen event received: uid=${event.uid}, '
-        'callsign=${event.callsign ?? "none"}, '
-        'total=$_totalReceived, inMemory=${_events.length}',
-      );
-      safeSetState(() {
-        // Update or insert by uid+type
-        final idx = _events.indexWhere(
-          (e) => e.uid == event.uid && e.type == event.type,
-        );
-        if (idx >= 0) {
-          _events[idx] = event;
-        } else {
-          _events.insert(0, event);
-        }
-        // Cap at 200 in-memory
-        if (_events.length > 200) {
-          _events.removeLast();
-        }
-      });
-    });
-
-    _snapshotSub = client.snapshotStream.listen((snapshot) {
-      if (!mounted) return;
-      AppLogging.tak('TakScreen snapshot received: ${snapshot.length} events');
-      safeSetState(() {
-        _totalReceived += snapshot.length;
-        for (final event in snapshot) {
-          final idx = _events.indexWhere(
-            (e) => e.uid == event.uid && e.type == event.type,
-          );
-          if (idx >= 0) {
-            _events[idx] = event;
-          } else {
-            _events.add(event);
-          }
-        }
-        // Sort: most recent first
-        _events.sort((a, b) => b.receivedUtcMs.compareTo(a.receivedUtcMs));
-      });
-      AppLogging.tak(
-        'TakScreen snapshot applied: inMemory=${_events.length}, '
-        'totalReceived=$_totalReceived',
-      );
-    });
+    // Ensure persistence notifier is alive (loads DB, subscribes to streams)
+    ref.read(takPersistenceNotifierProvider);
 
     // Auto-connect
     AppLogging.tak('TakScreen auto-connecting...');
@@ -109,8 +58,6 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
   @override
   void dispose() {
     AppLogging.tak('TakScreen dispose');
-    _eventSub?.cancel();
-    _snapshotSub?.cancel();
     _stateSub?.cancel();
     super.dispose();
   }
@@ -129,6 +76,8 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final events = ref.watch(takActiveEventsProvider);
+    final client = ref.read(takGatewayClientProvider);
 
     return GlassScaffold.body(
       title: 'TAK Gateway',
@@ -153,15 +102,15 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
         children: [
           TakStatusCard(
             connectionState: _connectionState,
-            totalReceived: _totalReceived,
-            activeEntities: _events.length,
+            totalReceived: client.totalEventsReceived,
+            activeEntities: events.length,
             gatewayUrl: AppUrls.takGatewayUrl,
-            connectedSince: ref.read(takGatewayClientProvider).connectedSince,
-            lastError: ref.read(takGatewayClientProvider).lastError,
+            connectedSince: client.connectedSince,
+            lastError: client.lastError,
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: _events.isEmpty
+            child: events.isEmpty
                 ? Center(
                     child: Text(
                       _connectionState == TakConnectionState.connected
@@ -175,12 +124,12 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
                     ),
                   )
                 : ListView.builder(
-                    itemCount: _events.length,
+                    itemCount: events.length,
                     padding: const EdgeInsets.symmetric(
                       horizontal: UiConstants.defaultPadding,
                     ),
                     itemBuilder: (context, index) {
-                      final event = _events[index];
+                      final event = events[index];
                       return TakEventTile(
                         event: event,
                         onTap: () => Navigator.of(context).push(

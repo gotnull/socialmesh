@@ -169,6 +169,23 @@ class TakDatabase {
     return rows.map(TakEvent.fromDbRow).toList();
   }
 
+  /// Get non-stale events ordered by received time descending.
+  ///
+  /// Returns events whose stale time has not yet passed, useful for
+  /// populating the active entity list on startup.
+  Future<List<TakEvent>> getActiveEvents({int limit = 500}) async {
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final rows = await _database.query(
+      _tableName,
+      where: 'stale_utc > ?',
+      whereArgs: [nowMs],
+      orderBy: 'received_utc DESC',
+      limit: limit,
+    );
+    AppLogging.tak('DB getActiveEvents: ${rows.length} rows (limit=$limit)');
+    return rows.map(TakEvent.fromDbRow).toList();
+  }
+
   /// Get a single event by uid and type.
   Future<TakEvent?> getByUidAndType(String uid, String type) async {
     final rows = await _database.query(

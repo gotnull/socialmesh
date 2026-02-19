@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../../../core/logging.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../models/tak_event.dart';
+import '../utils/cot_affiliation.dart';
 
 /// Detail view for a single TAK/CoT event.
 class TakEventDetailScreen extends StatelessWidget {
@@ -20,6 +21,8 @@ class TakEventDetailScreen extends StatelessWidget {
       'isStale=${event.isStale}',
     );
     final theme = Theme.of(context);
+    final affiliation = parseAffiliation(event.type);
+    final affiliationColor = affiliation.color;
     final dimStyle = theme.textTheme.bodyMedium?.copyWith(
       color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
     );
@@ -45,9 +48,14 @@ class TakEventDetailScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _HeaderCard(event: event, theme: theme),
+          _HeaderCard(
+            event: event,
+            theme: theme,
+            affiliationColor: affiliationColor,
+            affiliationLabel: affiliation.label,
+          ),
           const SizedBox(height: 16),
-          _buildSection(theme, 'Identity', [
+          _buildSection(theme, affiliationColor, 'Identity', [
             _row('UID', event.uid, dimStyle, valueStyle),
             _row('Type', event.type, dimStyle, valueStyle),
             _row('Description', event.typeDescription, dimStyle, valueStyle),
@@ -55,7 +63,7 @@ class TakEventDetailScreen extends StatelessWidget {
               _row('Callsign', event.callsign!, dimStyle, valueStyle),
           ]),
           const SizedBox(height: 8),
-          _buildSection(theme, 'Position', [
+          _buildSection(theme, affiliationColor, 'Position', [
             _row(
               'Latitude',
               event.lat.toStringAsFixed(6),
@@ -70,7 +78,7 @@ class TakEventDetailScreen extends StatelessWidget {
             ),
           ]),
           const SizedBox(height: 8),
-          _buildSection(theme, 'Timestamps', [
+          _buildSection(theme, affiliationColor, 'Timestamps', [
             _row(
               'Event Time',
               _formatTimestamp(event.timeUtcMs),
@@ -100,7 +108,7 @@ class TakEventDetailScreen extends StatelessWidget {
           ]),
           if (event.rawPayloadJson != null) ...[
             const SizedBox(height: 8),
-            _buildSection(theme, 'Raw Payload', [
+            _buildSection(theme, affiliationColor, 'Raw Payload', [
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: SelectableText(
@@ -118,7 +126,12 @@ class TakEventDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSection(ThemeData theme, String title, List<Widget> children) {
+  Widget _buildSection(
+    ThemeData theme,
+    Color accentColor,
+    String title,
+    List<Widget> children,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.5),
@@ -135,7 +148,7 @@ class TakEventDetailScreen extends StatelessWidget {
             child: Text(
               title.toUpperCase(),
               style: theme.textTheme.labelSmall?.copyWith(
-                color: Colors.orange.shade400,
+                color: accentColor,
                 letterSpacing: 1.2,
               ),
             ),
@@ -173,35 +186,43 @@ class TakEventDetailScreen extends StatelessWidget {
 class _HeaderCard extends StatelessWidget {
   final TakEvent event;
   final ThemeData theme;
+  final Color affiliationColor;
+  final String affiliationLabel;
 
-  const _HeaderCard({required this.event, required this.theme});
+  const _HeaderCard({
+    required this.event,
+    required this.theme,
+    required this.affiliationColor,
+    required this.affiliationLabel,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isStale = event.isStale;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: (event.isStale ? Colors.red : Colors.green).withValues(
-            alpha: 0.3,
-          ),
-        ),
+        border: Border.all(color: affiliationColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.orange.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.gps_fixed,
-              color: Colors.orange.shade400,
-              size: 24,
+          // Icon matching map marker affiliation color
+          Opacity(
+            opacity: isStale ? 0.4 : 1.0,
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: affiliationColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: affiliationColor.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Icon(Icons.gps_fixed, color: affiliationColor, size: 24),
             ),
           ),
           const SizedBox(width: 12),
@@ -219,21 +240,44 @@ class _HeaderCard extends StatelessWidget {
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
+                const SizedBox(height: 4),
+                // Affiliation badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: affiliationColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: affiliationColor.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Text(
+                    affiliationLabel,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: affiliationColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: (event.isStale ? Colors.red : Colors.green).withValues(
+              color: (isStale ? Colors.red : Colors.green).withValues(
                 alpha: 0.15,
               ),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              event.isStale ? 'STALE' : 'ACTIVE',
+              isStale ? 'STALE' : 'ACTIVE',
               style: theme.textTheme.labelSmall?.copyWith(
-                color: event.isStale ? Colors.red : Colors.green,
+                color: isStale ? Colors.red : Colors.green,
                 fontWeight: FontWeight.bold,
               ),
             ),
