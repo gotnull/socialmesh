@@ -110,7 +110,7 @@ dependencies:
   timezone: ^0.10.0
 
   # Background BLE foreground service (Android)
-  flutter_foreground_task: ^8.13.0
+  flutter_foreground_task: ^9.2.0
 
   # In-app review
   in_app_review: ^2.0.10
