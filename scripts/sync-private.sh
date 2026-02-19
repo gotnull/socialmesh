@@ -364,7 +364,14 @@ cmd_push() {
 
       info "Web hosting changes detected. Deploying: $deploy_spec"
 
-      if (cd "$PUBLIC_REPO" && firebase deploy --only "$deploy_spec" 2>&1); then
+      local deploy_output
+      deploy_output=$(cd "$PUBLIC_REPO" && firebase deploy --only "$deploy_spec" 2>&1) || true
+      echo "$deploy_output"
+
+      # Firebase CLI sometimes exits non-zero after a successful deploy
+      # ("Error: An unexpected error has occurred.").  Check the output for
+      # "Deploy complete!" to detect actual success regardless of exit code.
+      if echo "$deploy_output" | grep -q "Deploy complete!"; then
         for dir in "${changed_hosting_dirs[@]}"; do
           deployed_targets+=("${HOSTING_TARGETS[$dir]}")
           ok "  Deployed hosting:${HOSTING_TARGETS[$dir]} ($dir/)"
