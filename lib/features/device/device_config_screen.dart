@@ -321,15 +321,21 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     final nodes = ref.read(nodesProvider);
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
 
+    // When remote, use the target node's cached data for initial display.
+    // When local, use myNode as before.
+    final displayNode = isRemote ? nodes[targetNodeNum] : myNode;
+
     AppLogging.protocol(
       'DeviceConfigScreen: _loadCurrentConfig - myNodeNum=$myNodeNum, '
-      'myNode=${myNode != null ? "found" : "null"}',
+      'myNode=${myNode != null ? "found" : "null"}, '
+      'isRemote=$isRemote, targetNodeNum=$targetNodeNum, '
+      'displayNode=${displayNode != null ? "found" : "null"}',
     );
 
-    if (myNode != null) {
-      // Load names
-      _originalLongName = myNode.longName ?? '';
-      _originalShortName = myNode.shortName ?? '';
+    if (displayNode != null) {
+      // Load names from the relevant node (local or remote target)
+      _originalLongName = displayNode.longName ?? '';
+      _originalShortName = displayNode.shortName ?? '';
       _longNameController.text = _originalLongName!;
       _shortNameController.text = _originalShortName!;
 
@@ -338,8 +344,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
       );
 
       // Load role
-      if (myNode.role != null) {
-        final roleString = myNode.role!.toUpperCase().replaceAll(' ', '_');
+      if (displayNode.role != null) {
+        final roleString = displayNode.role!.toUpperCase().replaceAll(' ', '_');
         try {
           _selectedRole = config_pbenum.Config_DeviceConfig_Role.values
               .firstWhere(
