@@ -97,7 +97,7 @@ dependencies:
   cryptography: ^2.9.0
 
   # Camera for AR
-  camera: ^0.11.0
+  camera: ^0.11.4
 
   # Deep linking
   app_links: ^7.0.0
