@@ -2300,7 +2300,6 @@ class _NodeListPanel extends StatelessWidget {
             // Tab bar (only when TAK tab is available)
             if (showTakTab)
               Container(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
@@ -2310,14 +2309,13 @@ class _NodeListPanel extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    _PanelTabButton(
+                    _PanelTab(
                       label: 'Nodes',
                       count: sortedNodes.length,
                       isActive: activeTab == 0,
                       onTap: () => onTabChanged(0),
                     ),
-                    const SizedBox(width: 8),
-                    _PanelTabButton(
+                    _PanelTab(
                       label: 'TAK',
                       count: takEvents.length,
                       isActive: activeTab == 1,
@@ -2916,14 +2914,14 @@ class _MeasurementCard extends StatelessWidget {
   }
 }
 
-/// Tab button for the node list panel (Nodes / TAK)
-class _PanelTabButton extends StatelessWidget {
+/// Tab for the node list panel (Nodes / TAK) — underlined tab style
+class _PanelTab extends StatelessWidget {
   final String label;
   final int count;
   final bool isActive;
   final VoidCallback onTap;
 
-  const _PanelTabButton({
+  const _PanelTab({
     required this.label,
     required this.count,
     required this.isActive,
@@ -2935,44 +2933,48 @@ class _PanelTabButton extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isActive
-                ? context.accentColor.withValues(alpha: 0.15)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: isActive
-                  ? context.accentColor.withValues(alpha: 0.5)
-                  : context.border.withValues(alpha: 0.3),
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                      color: isActive
+                          ? context.accentColor
+                          : context.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$count',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: isActive
+                          ? context.accentColor.withValues(alpha: 0.7)
+                          : context.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                  color: isActive ? context.accentColor : context.textSecondary,
-                ),
+            // Active indicator bar (like a TabBar underline)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 2,
+              decoration: BoxDecoration(
+                color: isActive ? context.accentColor : Colors.transparent,
+                borderRadius: BorderRadius.circular(1),
               ),
-              const SizedBox(width: 4),
-              Text(
-                '$count',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: isActive
-                      ? context.accentColor.withValues(alpha: 0.7)
-                      : context.textTertiary,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

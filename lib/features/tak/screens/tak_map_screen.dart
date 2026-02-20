@@ -11,7 +11,6 @@ import '../../../core/map_config.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
-import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/map_controls.dart';
 import '../../navigation/main_shell.dart';
 import '../../../services/haptic_service.dart';
@@ -116,79 +115,91 @@ class _TakMapScreenState extends ConsumerState<TakMapScreen>
     final route = ModalRoute.of(context);
     final canPop = route != null ? !route.isFirst : Navigator.canPop(context);
 
-    return GlassScaffold.body(
-      title: 'TAK Map',
-      leading: canPop ? const BackButton() : const HamburgerMenuButton(),
-      actions: [
-        // Connection toggle
-        IconButton(
-          icon: Icon(
-            connectionState == TakConnectionState.connected
-                ? Icons.link
-                : Icons.link_off,
-            color: connectionState == TakConnectionState.connected
-                ? Colors.green
-                : Colors.grey,
+    return Scaffold(
+      backgroundColor: context.background,
+      appBar: AppBar(
+        backgroundColor: context.background,
+        leading: canPop ? const BackButton() : const HamburgerMenuButton(),
+        centerTitle: true,
+        title: Text(
+          'TAK Map',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: context.textPrimary,
           ),
-          onPressed: _toggleConnection,
-          tooltip: connectionState == TakConnectionState.connected
-              ? 'Disconnect'
-              : 'Connect',
         ),
-        // Map style picker
-        PopupMenuButton<MapTileStyle>(
-          icon: Icon(Icons.map, color: context.textSecondary),
-          tooltip: 'Map style',
-          onSelected: (style) => setState(() => _mapStyle = style),
-          itemBuilder: (context) => MapTileStyle.values.map((style) {
-            return PopupMenuItem(
-              value: style,
-              child: Row(
-                children: [
-                  Icon(
-                    _mapStyle == style ? Icons.check : Icons.map_outlined,
-                    size: 18,
-                    color: _mapStyle == style
-                        ? context.accentColor
-                        : context.textSecondary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(style.label),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-        // Overflow menu
-        AppBarOverflowMenu<String>(
-          onSelected: (value) {
-            switch (value) {
-              case 'fit_all':
-                _fitAllEntities(events);
-                break;
-            }
-          },
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'fit_all',
-              enabled: events.isNotEmpty,
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.fit_screen,
-                    size: 18,
-                    color: events.isNotEmpty
-                        ? context.textSecondary
-                        : context.textTertiary,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text('Fit all entities'),
-                ],
-              ),
+        actions: [
+          // Connection toggle
+          IconButton(
+            icon: Icon(
+              connectionState == TakConnectionState.connected
+                  ? Icons.link
+                  : Icons.link_off,
+              color: connectionState == TakConnectionState.connected
+                  ? Colors.green
+                  : Colors.grey,
             ),
-          ],
-        ),
-      ],
+            onPressed: _toggleConnection,
+            tooltip: connectionState == TakConnectionState.connected
+                ? 'Disconnect'
+                : 'Connect',
+          ),
+          // Map style picker
+          PopupMenuButton<MapTileStyle>(
+            icon: Icon(Icons.map, color: context.textSecondary),
+            tooltip: 'Map style',
+            onSelected: (style) => setState(() => _mapStyle = style),
+            itemBuilder: (context) => MapTileStyle.values.map((style) {
+              return PopupMenuItem(
+                value: style,
+                child: Row(
+                  children: [
+                    Icon(
+                      _mapStyle == style ? Icons.check : Icons.map_outlined,
+                      size: 18,
+                      color: _mapStyle == style
+                          ? context.accentColor
+                          : context.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(style.label),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          // Overflow menu
+          AppBarOverflowMenu<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'fit_all':
+                  _fitAllEntities(events);
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'fit_all',
+                enabled: events.isNotEmpty,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.fit_screen,
+                      size: 18,
+                      color: events.isNotEmpty
+                          ? context.textSecondary
+                          : context.textTertiary,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text('Fit all entities'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: events.isEmpty
           ? _buildEmptyState(context, connectionState)
           : Stack(
@@ -267,7 +278,7 @@ class _TakMapScreenState extends ConsumerState<TakMapScreen>
                         );
                       },
                     ),
-                    // Attribution
+                    // Attribution (matches mesh map style)
                     Positioned(
                       left: 8,
                       bottom: 8,
@@ -298,7 +309,7 @@ class _TakMapScreenState extends ConsumerState<TakMapScreen>
                                 : '\u00A9 OSM \u00A9 CARTO',
                             style: const TextStyle(
                               color: Colors.white70,
-                              fontSize: 10,
+                              fontSize: 9,
                             ),
                           ),
                         ),
