@@ -167,6 +167,12 @@ class TakPersistenceNotifier extends AsyncNotifier<List<TakEvent>> {
       (e) => e.uid == event.uid && e.type == event.type,
     );
     if (idx >= 0) {
+      // Skip state emission when the event content is identical — avoids
+      // a full provider-chain cascade (filter → map layer → marker rebuild)
+      // for duplicate or unchanged updates.
+      if (current[idx].contentEquals(event)) {
+        return;
+      }
       current[idx] = event;
     } else {
       current.insert(0, event);
@@ -181,18 +187,36 @@ class TakPersistenceNotifier extends AsyncNotifier<List<TakEvent>> {
     final db = ref.read(takDatabaseProvider);
     await db.insertBatch(snapshot);
 
-    // Merge into in-memory list
+    // Merge into in-memory list, tracking whether anything actually changed.
+    // On initial connect the gateway snapshot is usually identical to the
+    // events we just loaded from SQLite — emitting a new state for the same
+    // data triggers a full cascade: takActiveEventsProvider →
+    // filteredTakEventsProvider → TakMapLayer rebuild (27+ markers).
     final current = List<TakEvent>.of(state.value ?? []);
+    var changed = false;
     for (final event in snapshot) {
       final idx = current.indexWhere(
         (e) => e.uid == event.uid && e.type == event.type,
       );
       if (idx >= 0) {
-        current[idx] = event;
+        if (!current[idx].contentEquals(event)) {
+          current[idx] = event;
+          changed = true;
+        }
       } else {
         current.add(event);
+        changed = true;
       }
     }
+
+    if (!changed) {
+      AppLogging.tak(
+        'TakPersistenceNotifier: snapshot identical to in-memory state, '
+        'skipping rebuild',
+      );
+      return;
+    }
+
     current.sort((a, b) => b.receivedUtcMs.compareTo(a.receivedUtcMs));
     state = AsyncData(current);
   }

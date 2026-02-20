@@ -118,6 +118,16 @@ final takFilterProvider = NotifierProvider<TakFilterNotifier, TakFilterState>(
   TakFilterNotifier.new,
 );
 
+/// Cached reference for [filteredTakEventsProvider] memoization.
+///
+/// When the provider re-evaluates but the filtered output is content-equal
+/// to the previous emission, the same list reference is returned. This
+/// prevents downstream widget rebuilds (TakMapLayer marker recreation,
+/// heading vector layer, trail layer) when the visible entity set has not
+/// actually changed — e.g. after a snapshot backfill that contains the same
+/// events already loaded from SQLite.
+List<TakEvent> _previousFilteredEvents = const [];
+
 /// Filtered TAK events applying all active filters to [takActiveEventsProvider].
 ///
 /// Used by both TakScreen and TakMapScreen.
@@ -155,9 +165,38 @@ final filteredTakEventsProvider = Provider<List<TakEvent>>((ref) {
     }).toList();
   }
 
+  // Memoize: return the previous list reference when content is unchanged.
+  // This is the critical gate that prevents TakMapLayer from recreating
+  // 27+ Marker widgets and re-running the clustering algorithm on every
+  // upstream provider evaluation that produces identical output.
+  if (_previousFilteredEvents.length == filtered.length &&
+      _takEventListContentEquals(_previousFilteredEvents, filtered)) {
+    AppLogging.tak(
+      'filteredEventsProvider: ${filtered.length} of ${events.length} '
+      'events match filters (unchanged, reusing previous list)',
+    );
+    return _previousFilteredEvents;
+  }
+
   AppLogging.tak(
     'filteredEventsProvider: ${filtered.length} of ${events.length} '
     'events match filters',
   );
+  _previousFilteredEvents = filtered;
   return filtered;
 });
+
+/// Deep list equality using [TakEvent.contentEquals] instead of the default
+/// [TakEvent.==] (which only compares uid+type+timeUtcMs identity keys).
+///
+/// This ensures position, callsign, motion data, and stale-time changes are
+/// detected, while still allowing the memoization to short-circuit when the
+/// full content is truly unchanged.
+bool _takEventListContentEquals(List<TakEvent> a, List<TakEvent> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (!a[i].contentEquals(b[i])) return false;
+  }
+  return true;
+}

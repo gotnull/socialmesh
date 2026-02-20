@@ -167,6 +167,25 @@ class TakEvent {
     return '$meters m ($feet ft)';
   }
 
+  /// Deep equality check covering all mutable fields.
+  ///
+  /// Unlike [operator ==] (which only compares identity keys uid+type+timeUtcMs
+  /// for Set/Map membership), this method compares every field that could
+  /// trigger a UI rebuild — position, staleness, motion data, and callsign.
+  /// Used by persistence notifiers to skip redundant state emissions.
+  bool contentEquals(TakEvent other) =>
+      uid == other.uid &&
+      type == other.type &&
+      timeUtcMs == other.timeUtcMs &&
+      staleUtcMs == other.staleUtcMs &&
+      receivedUtcMs == other.receivedUtcMs &&
+      lat == other.lat &&
+      lon == other.lon &&
+      callsign == other.callsign &&
+      speed == other.speed &&
+      course == other.course &&
+      hae == other.hae;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
