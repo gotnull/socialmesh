@@ -24,6 +24,7 @@ import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/presence_providers.dart';
 import '../../providers/help_providers.dart';
+import '../../services/haptic_service.dart';
 import '../../services/share_link_service.dart';
 import '../../utils/presence_utils.dart';
 import '../messaging/messaging_screen.dart';
@@ -35,6 +36,7 @@ import '../tak/models/tak_event.dart';
 import '../tak/providers/tak_providers.dart';
 import '../tak/providers/tak_tracking_provider.dart';
 import '../tak/utils/cot_affiliation.dart';
+import '../tak/screens/tak_event_detail_screen.dart';
 import '../tak/widgets/tak_map_layer.dart';
 
 /// Node filter options
@@ -119,8 +121,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // Trail history for moving nodes
   final Map<int, List<_TrailPoint>> _nodeTrails = {};
 
-  // Search controller
+  // Search controllers
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _takSearchController = TextEditingController();
 
   // Track if initial node centering has been done
   bool _initialCenteringDone = false;
@@ -135,6 +138,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _animationController?.dispose();
     _mapController.dispose();
     _searchController.dispose();
+    _takSearchController.dispose();
     super.dispose();
   }
 
@@ -1191,6 +1195,22 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                   _selectedTakEntity = event;
                                 });
                               },
+                              onMarkerLongPress: (event) async {
+                                final tracking = ref.read(
+                                  takTrackingProvider.notifier,
+                                );
+                                final nowTracked = await tracking.toggle(
+                                  event.uid,
+                                );
+                                if (!mounted) return;
+                                ref.haptics.longPress();
+                                AppLogging.tak(
+                                  'Map TAK entity '
+                                  '${nowTracked ? "tracked" : "untracked"}: '
+                                  'uid=${event.uid}, '
+                                  'callsign=${event.displayName}',
+                                );
+                              },
                             );
                           },
                         ),
@@ -1466,6 +1486,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       bottom: _mapPadding,
                       child: _TakEntityInfoCard(
                         event: _selectedTakEntity!,
+                        isTracked: ref
+                            .watch(takTrackedUidsProvider)
+                            .contains(_selectedTakEntity!.uid),
                         onClose: () =>
                             setState(() => _selectedTakEntity = null),
                         onCopyCoordinates: () => _copyCoordinates(
@@ -1474,6 +1497,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             _selectedTakEntity!.lon,
                           ),
                         ),
+                        onTapDetail: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => TakEventDetailScreen(
+                                event: _selectedTakEntity!,
+                              ),
+                            ),
+                          );
+                        },
+                        onToggleTracking: () async {
+                          final tracking = ref.read(
+                            takTrackingProvider.notifier,
+                          );
+                          await tracking.toggle(_selectedTakEntity!.uid);
+                          if (!mounted) return;
+                          ref.haptics.toggle();
+                        },
                       ),
                     ),
                   // Node list panel - hide in location only mode
@@ -1500,6 +1540,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         searchController: _searchController,
                         onSearchChanged: (query) =>
                             setState(() => _searchQuery = query),
+                        takSearchController: _takSearchController,
+                        onTakSearchChanged: (_) => setState(() {}),
                         presenceMap: presenceMap,
                         showTakTab:
                             _showTakLayer &&
@@ -1552,15 +1594,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.successGreen,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
                                   Text(
                                     '${nodesWithPosition.length}${nodesWithPosition.length != allNodesWithPosition.length ? '/${allNodesWithPosition.length}' : ''} nodes',
                                     style: TextStyle(
@@ -1572,11 +1605,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                   if (takCount > 0) ...[
                                     const SizedBox(width: 6),
                                     Text(
-                                      '\u2022 $takCount TAK',
+                                      '\u2022 $takCount entities',
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
-                                        color: context.textSecondary,
+                                        color: context.textPrimary,
                                       ),
                                     ),
                                   ],
@@ -2213,6 +2246,8 @@ class _NodeListPanel extends StatelessWidget {
   final double? Function(_NodeWithPosition) calculateDistanceFromMe;
   final TextEditingController searchController;
   final void Function(String) onSearchChanged;
+  final TextEditingController takSearchController;
+  final void Function(String) onTakSearchChanged;
   final Map<int, NodePresence> presenceMap;
   final bool showTakTab;
   final int activeTab;
@@ -2229,6 +2264,8 @@ class _NodeListPanel extends StatelessWidget {
     required this.calculateDistanceFromMe,
     required this.searchController,
     required this.onSearchChanged,
+    required this.takSearchController,
+    required this.onTakSearchChanged,
     required this.presenceMap,
     this.showTakTab = false,
     this.activeTab = 0,
@@ -2283,7 +2320,7 @@ class _NodeListPanel extends StatelessWidget {
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      activeTab == 0 ? 'Nodes' : 'TAK Entities',
+                      activeTab == 0 ? 'Nodes' : 'Entities',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -2329,7 +2366,7 @@ class _NodeListPanel extends StatelessWidget {
                       onTap: () => onTabChanged(0),
                     ),
                     _PanelTab(
-                      label: 'TAK',
+                      label: 'Entities',
                       count: takEvents.length,
                       isActive: activeTab == 1,
                       onTap: () => onTabChanged(1),
@@ -2347,7 +2384,7 @@ class _NodeListPanel extends StatelessWidget {
                   ),
                 ),
               ),
-            // Search field (nodes tab only)
+            // Search field
             if (activeTab == 0)
               Padding(
                 padding: const EdgeInsets.all(12),
@@ -2432,41 +2469,100 @@ class _NodeListPanel extends StatelessWidget {
                       ),
               ),
             if (activeTab == 1)
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: TextField(
+                  controller: takSearchController,
+                  style: TextStyle(color: context.textPrimary, fontSize: 14),
+                  maxLength: 64,
+                  decoration: InputDecoration(
+                    hintText: 'Search entities...',
+                    hintStyle: TextStyle(
+                      color: context.textTertiary,
+                      fontSize: 14,
+                    ),
+                    counterText: '',
+                    prefixIcon: Icon(
+                      Icons.search,
+                      size: 20,
+                      color: context.textSecondary,
+                    ),
+                    suffixIcon: takSearchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(Icons.clear, size: 18),
+                            color: context.textSecondary,
+                            onPressed: () {
+                              takSearchController.clear();
+                              onTakSearchChanged('');
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: context.background,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  onChanged: onTakSearchChanged,
+                ),
+              ),
+            if (activeTab == 1)
               Expanded(
-                child: takEvents.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.military_tech_outlined,
-                              size: 48,
-                              color: context.textTertiary.withValues(
-                                alpha: 0.5,
-                              ),
+                child: () {
+                  final query = takSearchController.text.toLowerCase();
+                  final filtered = query.isEmpty
+                      ? takEvents
+                      : takEvents
+                            .where(
+                              (e) =>
+                                  e.displayName.toLowerCase().contains(query) ||
+                                  e.typeDescription.toLowerCase().contains(
+                                    query,
+                                  ) ||
+                                  e.uid.toLowerCase().contains(query),
+                            )
+                            .toList();
+                  if (filtered.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.military_tech_outlined,
+                            size: 48,
+                            color: context.textTertiary.withValues(alpha: 0.5),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            query.isEmpty
+                                ? 'No entities'
+                                : 'No matching entities',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: context.textTertiary,
                             ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'No TAK entities',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: context.textTertiary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        itemCount: takEvents.length,
-                        itemBuilder: (context, index) {
-                          final event = takEvents[index];
-                          return _TakEntityListItem(
-                            event: event,
-                            onTap: () => onTakEntitySelected(event),
-                          );
-                        },
+                          ),
+                        ],
                       ),
+                    );
+                  }
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, index) {
+                      final event = filtered[index];
+                      return _TakEntityListItem(
+                        event: event,
+                        onTap: () => onTakEntitySelected(event),
+                      );
+                    },
+                  );
+                }(),
               ),
           ],
         ),
@@ -3117,13 +3213,19 @@ class _TakEntityListItem extends StatelessWidget {
 /// TAK entity info card shown at the bottom of the mesh map
 class _TakEntityInfoCard extends StatelessWidget {
   final TakEvent event;
+  final bool isTracked;
   final VoidCallback onClose;
   final VoidCallback onCopyCoordinates;
+  final VoidCallback onTapDetail;
+  final VoidCallback onToggleTracking;
 
   const _TakEntityInfoCard({
     required this.event,
+    required this.isTracked,
     required this.onClose,
     required this.onCopyCoordinates,
+    required this.onTapDetail,
+    required this.onToggleTracking,
   });
 
   @override
@@ -3133,136 +3235,196 @@ class _TakEntityInfoCard extends StatelessWidget {
     final isStale = event.isStale;
     final age = _formatAge(event.receivedUtcMs);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.card.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: affiliationColor.withValues(alpha: 0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Opacity(
-            opacity: isStale ? 0.4 : 1.0,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: affiliationColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: affiliationColor.withValues(alpha: 0.4),
-                ),
-              ),
-              child: Icon(Icons.gps_fixed, color: affiliationColor, size: 22),
+    return GestureDetector(
+      onTap: onTapDetail,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.card.withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: affiliationColor.withValues(alpha: 0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  event.displayName,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: context.textPrimary,
+          ],
+        ),
+        child: Row(
+          children: [
+            Opacity(
+              opacity: isStale ? 0.4 : 1.0,
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: affiliationColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: affiliationColor.withValues(alpha: 0.4),
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '${event.typeDescription}  \u2022  '
-                  '${event.lat.toStringAsFixed(4)}, '
-                  '${event.lon.toStringAsFixed(4)}',
-                  style: TextStyle(fontSize: 12, color: context.textSecondary),
+                child: Icon(Icons.gps_fixed, color: affiliationColor, size: 22),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    event.displayName,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${event.typeDescription}  \u2022  '
+                    '${event.lat.toStringAsFixed(4)}, '
+                    '${event.lon.toStringAsFixed(4)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: affiliationColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: affiliationColor.withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: Text(
+                          affiliation.label,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: affiliationColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: (isStale ? Colors.red : Colors.green)
+                              .withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          isStale ? 'STALE' : 'ACTIVE',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isStale ? Colors.red : Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        age,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: onToggleTracking,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isTracked
+                          ? affiliationColor.withValues(alpha: 0.15)
+                          : context.card.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: affiliationColor.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isTracked ? Icons.push_pin : Icons.push_pin_outlined,
+                          size: 12,
+                          color: affiliationColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isTracked ? 'Tracked' : 'Track',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: affiliationColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: affiliationColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: affiliationColor.withValues(alpha: 0.4),
-                        ),
-                      ),
-                      child: Text(
-                        affiliation.label,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: affiliationColor,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    IconButton(
+                      icon: Icon(Icons.copy, size: 16),
+                      color: context.textSecondary,
+                      onPressed: onCopyCoordinates,
+                      visualDensity: VisualDensity.compact,
+                      tooltip: 'Copy coordinates',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: (isStale ? Colors.red : Colors.green).withValues(
-                          alpha: 0.15,
-                        ),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        isStale ? 'STALE' : 'ACTIVE',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: isStale ? Colors.red : Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      age,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: context.textTertiary,
+                    IconButton(
+                      icon: Icon(Icons.close, size: 16),
+                      color: context.textTertiary,
+                      onPressed: onClose,
+                      visualDensity: VisualDensity.compact,
+                      tooltip: 'Dismiss',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
                       ),
                     ),
                   ],
                 ),
               ],
             ),
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: Icon(Icons.copy, size: 18),
-                color: context.textSecondary,
-                onPressed: onCopyCoordinates,
-                visualDensity: VisualDensity.compact,
-                tooltip: 'Copy coordinates',
-              ),
-              IconButton(
-                icon: Icon(Icons.close, size: 18),
-                color: context.textTertiary,
-                onPressed: onClose,
-                visualDensity: VisualDensity.compact,
-                tooltip: 'Dismiss',
-              ),
-            ],
-          ),
-        ],
+            const SizedBox(width: 4),
+            Icon(Icons.chevron_right, size: 20, color: context.textTertiary),
+          ],
+        ),
       ),
     );
   }
