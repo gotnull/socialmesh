@@ -48,6 +48,7 @@ import '../widgets/animated_sigil_container.dart';
 import '../widgets/field_note_widget.dart';
 import '../widgets/identity_overlay_painter.dart';
 import '../widgets/observation_timeline.dart';
+import '../widgets/node_activity_timeline.dart';
 import '../widgets/patina_stamp.dart';
 import '../atmosphere/atmosphere_overlay.dart';
 import '../widgets/sigil_card_sheet.dart';
@@ -102,6 +103,11 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     final patinaResult = ref.watch(nodeDexPatinaProvider(widget.nodeNum));
     final scoredTraits = ref.watch(nodeDexScoredTraitsProvider(widget.nodeNum));
     final reduceMotion = ref.watch(reduceMotionEnabledProvider);
+    final timelineEventCount = ref
+        .watch(nodeActivityTimelineProvider(widget.nodeNum))
+        .asData
+        ?.value
+        .length;
 
     if (entry == null) {
       return GlassScaffold.body(
@@ -361,6 +367,31 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
 
+          // Node activity timeline — unified chronological feed
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _NodeDexStickyHeaderDelegate(
+              title: 'Activity Timeline',
+              icon: Icons.timeline,
+              helpKey: 'activity_timeline',
+              trailing: timelineEventCount != null
+                  ? '$timelineEventCount total'
+                  : null,
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: _DetailEntrance(
+              index: 13,
+              reduceMotion: reduceMotion,
+              child: _StickyCardBody(
+                child: NodeActivityTimeline(
+                  nodeNum: widget.nodeNum,
+                  accentColor: entry.sigil?.primaryColor ?? context.accentColor,
+                ),
+              ),
+            ),
+          ),
+
           // Co-seen nodes — pinned header + body
           if (entry.coSeenNodes.isNotEmpty) ...[
             SliverPersistentHeader(
@@ -374,7 +405,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
             ),
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 13,
+                index: 15,
                 reduceMotion: reduceMotion,
                 child: _CoSeenNodesBody(entry: entry),
               ),
@@ -2777,6 +2808,8 @@ class _SectionInfoButton extends StatelessWidget {
         return 'Region History';
       case 'encounters':
         return 'Recent Encounters';
+      case 'activity_timeline':
+        return 'Activity Timeline';
       case 'constellation':
         return 'Constellation Links';
       case 'device':

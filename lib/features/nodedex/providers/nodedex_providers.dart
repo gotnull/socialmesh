@@ -28,9 +28,12 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/logging.dart';
 import '../../../models/mesh_models.dart';
+import '../../../models/presence_confidence.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/cloud_sync_entitlement_providers.dart';
+import '../../../providers/signal_providers.dart';
 import '../models/import_preview.dart';
+import '../models/node_activity_event.dart';
 import '../models/nodedex_entry.dart';
 import '../services/nodedex_database.dart';
 import '../services/nodedex_sqlite_store.dart';
@@ -971,6 +974,198 @@ final nodeDexFieldNoteProvider = Provider.family<String, int>((ref, nodeNum) {
   final trait = ref.watch(nodeDexTraitProvider(nodeNum));
   return FieldNoteGenerator.generate(entry: entry, trait: trait.primary);
 });
+
+// =============================================================================
+// Node Activity Timeline Provider
+// =============================================================================
+
+/// Aggregates all observable events for a single node into a unified
+/// chronological feed sorted by timestamp descending.
+///
+/// Data sources:
+///   - Encounter records (SQLite via NodeDexEntry)
+///   - Messages to/from the node (in-memory via messagesProvider)
+///   - Presence transitions (SQLite via presence_transitions table)
+///   - Signals from the node (in-memory via signalsFromNodeProvider)
+///   - First-seen milestone (NodeDexEntry.firstSeen)
+///
+/// Returns the complete event list. Pagination (how many events to
+/// reveal at once) is handled on the widget side via display count.
+final nodeActivityTimelineProvider =
+    FutureProvider.family<List<NodeActivityEvent>, int>((ref, nodeNum) async {
+      return _buildTimeline(ref, nodeNum);
+    });
+
+/// Maximum gap between consecutive encounters before a new session starts.
+const Duration _kSessionGap = Duration(minutes: 30);
+
+/// Groups consecutive [EncounterRecord]s into session-level events.
+///
+/// Encounters separated by less than [_kSessionGap] are merged into a
+/// single [EncounterActivityEvent] whose [timestamp] is the newest
+/// encounter, [sessionStart] is the oldest, and metric fields hold the
+/// best values from the session.
+List<EncounterActivityEvent> _groupEncounters(List<EncounterRecord> records) {
+  if (records.isEmpty) return const [];
+
+  // Sort ascending (oldest first) so we can iterate forward.
+  final sorted = records.toList()
+    ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+  final sessions = <EncounterActivityEvent>[];
+  var sessionRecords = <EncounterRecord>[sorted.first];
+
+  for (int i = 1; i < sorted.length; i++) {
+    final gap = sorted[i].timestamp.difference(sessionRecords.last.timestamp);
+    if (gap <= _kSessionGap) {
+      sessionRecords.add(sorted[i]);
+    } else {
+      sessions.add(_collapseSession(sessionRecords));
+      sessionRecords = [sorted[i]];
+    }
+  }
+  sessions.add(_collapseSession(sessionRecords));
+  return sessions;
+}
+
+EncounterActivityEvent _collapseSession(List<EncounterRecord> records) {
+  assert(records.isNotEmpty);
+
+  // Latest encounter = timestamp (sorts newest-first in the timeline).
+  final newest = records.last;
+  final oldest = records.first;
+
+  // Best metrics across the session.
+  double? bestDistance;
+  int? bestSnr;
+  int? bestRssi;
+
+  for (final r in records) {
+    if (r.distanceMeters != null) {
+      if (bestDistance == null || r.distanceMeters! < bestDistance) {
+        bestDistance = r.distanceMeters;
+      }
+    }
+    if (r.snr != null) {
+      if (bestSnr == null || r.snr! > bestSnr) {
+        bestSnr = r.snr;
+      }
+    }
+    if (r.rssi != null) {
+      if (bestRssi == null || r.rssi! > bestRssi) {
+        bestRssi = r.rssi;
+      }
+    }
+  }
+
+  return EncounterActivityEvent(
+    timestamp: newest.timestamp,
+    sessionStart: oldest.timestamp,
+    count: records.length,
+    distanceMeters: bestDistance,
+    snr: bestSnr,
+    rssi: bestRssi,
+    latitude: newest.latitude,
+    longitude: newest.longitude,
+  );
+}
+
+Future<List<NodeActivityEvent>> _buildTimeline(Ref ref, int nodeNum) async {
+  final events = <NodeActivityEvent>[];
+
+  // Watch all reactive in-memory sources before the async gap so that
+  // the provider recomputes when underlying data changes.
+  final entry = ref.watch(nodeDexEntryProvider(nodeNum));
+  final myNodeNum = ref.watch(myNodeNumProvider);
+  final messages = ref.watch(messagesProvider);
+  final signals = ref.watch(signalsFromNodeProvider(nodeNum));
+  final storeAsync = ref.watch(nodeDexStoreProvider);
+
+  // 1. Encounters from the NodeDex entry — grouped into sessions.
+  if (entry != null) {
+    events.addAll(_groupEncounters(entry.encounters));
+
+    // 2. First-seen milestone.
+    events.add(
+      MilestoneActivityEvent(
+        timestamp: entry.firstSeen,
+        kind: MilestoneKind.firstSeen,
+        label: 'First discovered',
+      ),
+    );
+
+    // Encounter count milestones.
+    for (final m in [10, 25, 50, 100, 250, 500, 1000]) {
+      if (entry.encounterCount >= m && entry.encounters.length >= m) {
+        final milestone = entry.encounters[m - 1];
+        events.add(
+          MilestoneActivityEvent(
+            timestamp: milestone.timestamp,
+            kind: MilestoneKind.encounterMilestone,
+            label: 'Encounter #$m',
+          ),
+        );
+      }
+    }
+  }
+
+  // 3. Messages to/from this node.
+  for (final msg in messages) {
+    if (msg.from == nodeNum || msg.to == nodeNum) {
+      events.add(
+        MessageActivityEvent(
+          timestamp: msg.timestamp,
+          text: msg.text,
+          outgoing: msg.from == myNodeNum,
+          channel: msg.channel,
+        ),
+      );
+    }
+  }
+
+  // 4. Signals from this node.
+  for (final signal in signals) {
+    events.add(
+      SignalActivityEvent(
+        timestamp: signal.createdAt,
+        content: signal.content,
+        signalId: signal.id,
+      ),
+    );
+  }
+
+  // 5. Presence transitions from SQLite.
+  final store = storeAsync.asData?.value;
+  if (store != null) {
+    final rows = await store.loadPresenceTransitions(nodeNum: nodeNum);
+    for (final row in rows) {
+      final fromName = row[NodeDexTables.colPtFromState] as String;
+      final toName = row[NodeDexTables.colPtToState] as String;
+      final tsMs = row[NodeDexTables.colPtTsMs] as int;
+
+      final from = PresenceConfidence.values.firstWhere(
+        (e) => e.name == fromName,
+        orElse: () => PresenceConfidence.unknown,
+      );
+      final to = PresenceConfidence.values.firstWhere(
+        (e) => e.name == toName,
+        orElse: () => PresenceConfidence.unknown,
+      );
+
+      events.add(
+        PresenceChangeActivityEvent(
+          timestamp: DateTime.fromMillisecondsSinceEpoch(tsMs),
+          fromState: from,
+          toState: to,
+        ),
+      );
+    }
+  }
+
+  // Sort descending by timestamp.
+  events.sort();
+  return events;
+}
 
 /// Aggregate statistics across all NodeDex entries.
 ///

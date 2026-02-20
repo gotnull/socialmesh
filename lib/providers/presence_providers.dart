@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/logging.dart';
+import '../features/nodedex/providers/nodedex_providers.dart';
 import '../models/mesh_models.dart';
 import '../models/node_encounter.dart';
 import '../models/presence_confidence.dart';
@@ -331,6 +332,20 @@ class PresenceNotifier extends Notifier<Map<int, NodePresence>> {
     PresenceConfidence previous,
     PresenceConfidence current,
   ) async {
+    // Persist the transition to SQLite for the activity timeline.
+    final storeAsync = ref.read(nodeDexStoreProvider);
+    final store = storeAsync.asData?.value;
+    if (store != null) {
+      unawaited(
+        store.insertPresenceTransition(
+          nodeNum: node.nodeNum,
+          fromState: previous.name,
+          toState: current.name,
+          timestamp: ref.read(presenceClockProvider)(),
+        ),
+      );
+    }
+
     final ifttt = ref.read(iftttServiceProvider);
     await ifttt.processPresenceUpdate(
       node,

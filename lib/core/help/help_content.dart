@@ -1674,6 +1674,12 @@ class HelpContent {
         'Each encounter records the timestamp, signal quality (SNR/RSSI), '
         'and distance if GPS coordinates were available on both sides. '
         'The most recent 10 encounters are shown.',
+    'activity_timeline':
+        'A unified chronological feed of everything observed about this node: '
+        'encounters, messages, presence state changes, signals, and milestones. '
+        'Scroll through the full narrative of your interaction history with '
+        'this node. The timeline loads the most recent 50 events and can '
+        'expand to show the complete history.',
     'coseen':
         'Nodes that are frequently observed in the same session as this node. '
         'A higher count means these nodes tend to appear together — they may '

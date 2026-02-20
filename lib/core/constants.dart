@@ -221,10 +221,14 @@ class NodeDexConfig {
   /// Number of co-seen nodes to display per page in the detail screen.
   /// Override via .env with NODEDEX_COSEEN_PAGE_SIZE.
   static int get coSeenPageSize {
-    final env = dotenv.env['NODEDEX_COSEEN_PAGE_SIZE'];
-    if (env != null) {
-      final parsed = int.tryParse(env);
-      if (parsed != null && parsed > 0) return parsed;
+    try {
+      final env = dotenv.env['NODEDEX_COSEEN_PAGE_SIZE'];
+      if (env != null) {
+        final parsed = int.tryParse(env);
+        if (parsed != null && parsed > 0) return parsed;
+      }
+    } on Error {
+      // dotenv not yet loaded (e.g. in unit tests).
     }
     return 20;
   }
@@ -232,10 +236,29 @@ class NodeDexConfig {
   /// Number of recent encounters to display per page in the detail screen.
   /// Override via .env with NODEDEX_ENCOUNTER_PAGE_SIZE.
   static int get encounterPageSize {
-    final env = dotenv.env['NODEDEX_ENCOUNTER_PAGE_SIZE'];
-    if (env != null) {
-      final parsed = int.tryParse(env);
-      if (parsed != null && parsed > 0) return parsed;
+    try {
+      final env = dotenv.env['NODEDEX_ENCOUNTER_PAGE_SIZE'];
+      if (env != null) {
+        final parsed = int.tryParse(env);
+        if (parsed != null && parsed > 0) return parsed;
+      }
+    } on Error {
+      // dotenv not yet loaded (e.g. in unit tests).
+    }
+    return 10;
+  }
+
+  /// Number of activity timeline events to display per page.
+  /// Override via .env with NODEDEX_TIMELINE_PAGE_SIZE.
+  static int get timelinePageSize {
+    try {
+      final env = dotenv.env['NODEDEX_TIMELINE_PAGE_SIZE'];
+      if (env != null) {
+        final parsed = int.tryParse(env);
+        if (parsed != null && parsed > 0) return parsed;
+      }
+    } on Error {
+      // dotenv not yet loaded (e.g. in unit tests).
     }
     return 10;
   }

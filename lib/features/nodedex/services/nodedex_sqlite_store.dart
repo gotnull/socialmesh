@@ -835,4 +835,50 @@ class NodeDexSqliteStore {
       syncEnabled = prevSync;
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Presence transitions
+  // ---------------------------------------------------------------------------
+
+  /// Record a presence state transition for a node.
+  Future<void> insertPresenceTransition({
+    required int nodeNum,
+    required String fromState,
+    required String toState,
+    required DateTime timestamp,
+  }) async {
+    await _db.insert(NodeDexTables.presenceTransitions, {
+      NodeDexTables.colPtNodeNum: nodeNum,
+      NodeDexTables.colPtFromState: fromState,
+      NodeDexTables.colPtToState: toState,
+      NodeDexTables.colPtTsMs: timestamp.millisecondsSinceEpoch,
+    });
+  }
+
+  /// Load presence transitions for a specific node, newest first.
+  ///
+  /// When [limit] is non-null it caps the result set size.
+  /// [beforeMs] enables keyset pagination — pass the oldest timestamp
+  /// from the previous page to fetch the next page.
+  Future<List<Map<String, dynamic>>> loadPresenceTransitions({
+    required int nodeNum,
+    int? limit,
+    int? beforeMs,
+  }) async {
+    final where = StringBuffer('${NodeDexTables.colPtNodeNum} = ?');
+    final args = <dynamic>[nodeNum];
+
+    if (beforeMs != null) {
+      where.write(' AND ${NodeDexTables.colPtTsMs} < ?');
+      args.add(beforeMs);
+    }
+
+    return _db.query(
+      NodeDexTables.presenceTransitions,
+      where: where.toString(),
+      whereArgs: args,
+      orderBy: '${NodeDexTables.colPtTsMs} DESC',
+      limit: limit,
+    );
+  }
 }

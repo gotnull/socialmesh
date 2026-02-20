@@ -21,7 +21,7 @@ import '../../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int nodedexSchemaVersion = 4;
+const int nodedexSchemaVersion = 5;
 
 /// Table and column name constants for NodeDex SQLite schema.
 abstract final class NodeDexTables {
@@ -76,6 +76,14 @@ abstract final class NodeDexTables {
   static const colEdgeLastSeenMs = 'last_seen_ms';
   static const colEdgeCount = 'count';
   static const colEdgeMessageCount = 'message_count';
+
+  // -- presence_transitions --
+  static const presenceTransitions = 'presence_transitions';
+  static const colPtId = 'id';
+  static const colPtNodeNum = 'node_num';
+  static const colPtFromState = 'from_state';
+  static const colPtToState = 'to_state';
+  static const colPtTsMs = 'ts_ms';
 
   // -- sync_state --
   static const syncState = 'sync_state';
@@ -268,6 +276,22 @@ class NodeDexDatabase {
       'ON ${NodeDexTables.coSeenEdges}(${NodeDexTables.colEdgeB})',
     );
 
+    // -- presence_transitions --
+    batch.execute('''
+      CREATE TABLE ${NodeDexTables.presenceTransitions} (
+        ${NodeDexTables.colPtId} INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${NodeDexTables.colPtNodeNum} INTEGER NOT NULL,
+        ${NodeDexTables.colPtFromState} TEXT NOT NULL,
+        ${NodeDexTables.colPtToState} TEXT NOT NULL,
+        ${NodeDexTables.colPtTsMs} INTEGER NOT NULL
+      )
+    ''');
+    batch.execute(
+      'CREATE INDEX idx_presence_transitions_node_ts '
+      'ON ${NodeDexTables.presenceTransitions}'
+      '(${NodeDexTables.colPtNodeNum}, ${NodeDexTables.colPtTsMs})',
+    );
+
     // -- sync_state --
     batch.execute('''
       CREATE TABLE ${NodeDexTables.syncState} (
@@ -355,6 +379,27 @@ class NodeDexDatabase {
         'NodeDexDatabase: v4 migration — added hardware/role/firmware columns',
       );
     }
+    if (oldVersion < 5) {
+      // v5: Add presence_transitions table to persist presence state
+      // changes for the node activity timeline.
+      await db.execute('''
+        CREATE TABLE ${NodeDexTables.presenceTransitions} (
+          ${NodeDexTables.colPtId} INTEGER PRIMARY KEY AUTOINCREMENT,
+          ${NodeDexTables.colPtNodeNum} INTEGER NOT NULL,
+          ${NodeDexTables.colPtFromState} TEXT NOT NULL,
+          ${NodeDexTables.colPtToState} TEXT NOT NULL,
+          ${NodeDexTables.colPtTsMs} INTEGER NOT NULL
+        )
+      ''');
+      await db.execute(
+        'CREATE INDEX idx_presence_transitions_node_ts '
+        'ON ${NodeDexTables.presenceTransitions}'
+        '(${NodeDexTables.colPtNodeNum}, ${NodeDexTables.colPtTsMs})',
+      );
+      AppLogging.storage(
+        'NodeDexDatabase: v5 migration — added presence_transitions table',
+      );
+    }
   }
 
   /// Handle downgrades by recreating.
@@ -412,6 +457,7 @@ class NodeDexDatabase {
     NodeDexTables.encounters,
     NodeDexTables.seenRegions,
     NodeDexTables.coSeenEdges,
+    NodeDexTables.presenceTransitions,
     NodeDexTables.syncState,
     NodeDexTables.syncOutbox,
   ];
