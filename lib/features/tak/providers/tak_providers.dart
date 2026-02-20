@@ -35,19 +35,29 @@ final takDatabaseProvider = Provider<TakDatabase>((ref) {
   return db;
 });
 
+/// Derived gateway URL that only changes when the actual URL string changes.
+///
+/// This prevents [takGatewayClientProvider] from rebuilding when
+/// [takSettingsProvider] transitions from AsyncLoading → AsyncData with the
+/// same effective URL (the default). Without this, the provider rebuild race
+/// disposes the in-flight client and causes "Cannot add new events after
+/// calling close".
+final _takGatewayUrlProvider = Provider<String>((ref) {
+  final settings = ref.watch(takSettingsProvider).value;
+  if (settings != null && settings.gatewayUrl.isNotEmpty) {
+    return settings.gatewayUrl;
+  }
+  return AppUrls.takGatewayUrl;
+});
+
 /// TAK Gateway WebSocket client.
 ///
-/// Reads the custom gateway URL from [takSettingsProvider]. When the user
-/// changes the URL in settings the provider rebuilds, disposing the old
-/// client and creating a new one pointed at the updated URL.
+/// Watches [_takGatewayUrlProvider] so it only rebuilds (and re-creates the
+/// client) when the effective gateway URL actually changes — not on every
+/// settings async-state transition.
 final takGatewayClientProvider = Provider<TakGatewayClient>((ref) {
   final authService = ref.read(authServiceProvider);
-
-  // Use custom URL from settings when available, fall back to env default.
-  final settings = ref.watch(takSettingsProvider).value;
-  final gatewayUrl = (settings != null && settings.gatewayUrl.isNotEmpty)
-      ? settings.gatewayUrl
-      : AppUrls.takGatewayUrl;
+  final gatewayUrl = ref.watch(_takGatewayUrlProvider);
 
   AppLogging.tak('Creating TakGatewayClient provider: url=$gatewayUrl');
   final client = TakGatewayClient(

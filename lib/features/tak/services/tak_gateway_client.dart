@@ -45,6 +45,7 @@ class TakGatewayClient {
   final _stateController = StreamController<TakConnectionState>.broadcast();
 
   TakConnectionState _state = TakConnectionState.disconnected;
+  bool _disposed = false;
 
   // Counters
   int _totalEventsReceived = 0;
@@ -85,6 +86,10 @@ class TakGatewayClient {
 
   /// Connect to the TAK Gateway WebSocket.
   Future<void> connect() async {
+    if (_disposed) {
+      AppLogging.tak('connect() called on disposed client, ignoring');
+      return;
+    }
     if (_state == TakConnectionState.connected ||
         _state == TakConnectionState.connecting) {
       AppLogging.tak('connect() called but already ${_state.name}, ignoring');
@@ -97,6 +102,13 @@ class TakGatewayClient {
     try {
       AppLogging.tak('Requesting auth token...');
       final token = await getAuthToken();
+
+      // Guard: client may have been disposed while awaiting the token.
+      if (_disposed) {
+        AppLogging.tak('Client disposed during auth token request, aborting');
+        return;
+      }
+
       AppLogging.tak(
         'Auth token ${token != null ? 'obtained (${token.length} chars)' : 'is null (anonymous)'}',
       );
@@ -109,6 +121,14 @@ class TakGatewayClient {
         wsUrl,
         headers: token != null ? {'Authorization': 'Bearer $token'} : null,
       );
+
+      // Guard: client may have been disposed while awaiting the connection.
+      if (_disposed) {
+        AppLogging.tak('Client disposed during WebSocket connect, closing');
+        _socket?.close(WebSocketStatus.normalClosure, 'Client disposed');
+        _socket = null;
+        return;
+      }
 
       // Enable WebSocket-level keepalive pings every 30 seconds so the
       // connection is not silently dropped by intermediaries (load balancers,
@@ -153,6 +173,7 @@ class TakGatewayClient {
   /// Clean up all resources.
   void dispose() {
     AppLogging.tak('Disposing TakGatewayClient');
+    _disposed = true;
     disconnect();
     _eventController.close();
     _snapshotController.close();
@@ -234,6 +255,7 @@ class TakGatewayClient {
   }
 
   void _onMessage(dynamic data) {
+    if (_disposed) return;
     try {
       final raw = data as String;
       final json = jsonDecode(raw) as Map<String, dynamic>;
@@ -289,6 +311,7 @@ class TakGatewayClient {
   }
 
   void _scheduleReconnect() {
+    if (_disposed) return;
     if (maxReconnectAttempts > 0 &&
         _reconnectAttempts >= maxReconnectAttempts) {
       AppLogging.tak(
@@ -314,10 +337,9 @@ class TakGatewayClient {
   }
 
   void _setState(TakConnectionState newState) {
-    if (_state != newState) {
-      AppLogging.tak('State: ${_state.name} -> ${newState.name}');
-      _state = newState;
-      _stateController.add(newState);
-    }
+    if (_disposed || _state == newState) return;
+    AppLogging.tak('State: ${_state.name} -> ${newState.name}');
+    _state = newState;
+    _stateController.add(newState);
   }
 }
