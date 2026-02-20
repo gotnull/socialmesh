@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:socialmesh/features/tak/utils/cot_affiliation.dart';
@@ -124,6 +125,84 @@ void main() {
 
     test('hostile and suspect are different', () {
       expect(CotAffiliationColors.hostile, isNot(CotAffiliationColors.suspect));
+    });
+  });
+
+  group('cotTypeIcon', () {
+    test('b- prefix returns data_object icon', () {
+      expect(cotTypeIcon('b-f-some-thing'), Icons.data_object);
+    });
+
+    test('b- prefix with minimal string returns data_object', () {
+      expect(cotTypeIcon('b-'), Icons.data_object);
+    });
+
+    test('t- prefix returns assignment icon', () {
+      expect(cotTypeIcon('t-u-something'), Icons.assignment);
+    });
+
+    test('t- prefix with minimal string returns assignment', () {
+      expect(cotTypeIcon('t-'), Icons.assignment);
+    });
+
+    test('ground unit returns groups icon', () {
+      expect(cotTypeIcon('a-f-G-U-C'), Icons.groups);
+    });
+
+    test('ground equipment returns local_shipping icon', () {
+      expect(cotTypeIcon('a-f-G-E'), Icons.local_shipping);
+    });
+
+    test('ground installation returns business icon', () {
+      expect(cotTypeIcon('a-n-G-I'), Icons.business);
+    });
+
+    test('ground civilian returns person icon', () {
+      expect(cotTypeIcon('a-f-G-C'), Icons.person);
+    });
+
+    test('ground generic returns terrain icon', () {
+      expect(cotTypeIcon('a-f-G'), Icons.terrain);
+    });
+
+    test('air dimension returns flight icon', () {
+      expect(cotTypeIcon('a-h-A'), Icons.flight);
+    });
+
+    test('air UAV returns flight_takeoff icon', () {
+      expect(cotTypeIcon('a-h-A-U'), Icons.flight_takeoff);
+    });
+
+    test('sea surface returns sailing icon', () {
+      expect(cotTypeIcon('a-n-S'), Icons.sailing);
+    });
+
+    test('subsurface returns scuba_diving icon', () {
+      expect(cotTypeIcon('a-n-U'), Icons.scuba_diving);
+    });
+
+    test('space returns satellite_alt icon', () {
+      expect(cotTypeIcon('a-f-P'), Icons.satellite_alt);
+    });
+
+    test('SOF returns shield icon', () {
+      expect(cotTypeIcon('a-f-F'), Icons.shield);
+    });
+
+    test('electronic warfare returns cell_tower icon', () {
+      expect(cotTypeIcon('a-f-E'), Icons.cell_tower);
+    });
+
+    test('malformed type returns gps_fixed icon', () {
+      expect(cotTypeIcon('a-f'), Icons.gps_fixed);
+    });
+
+    test('empty string returns gps_fixed icon', () {
+      expect(cotTypeIcon(''), Icons.gps_fixed);
+    });
+
+    test('unknown dimension returns gps_fixed icon', () {
+      expect(cotTypeIcon('a-f-Z'), Icons.gps_fixed);
     });
   });
 }
