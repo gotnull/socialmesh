@@ -31,8 +31,10 @@ import '../navigation/main_shell.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/constants.dart';
 import '../../core/logging.dart';
+import '../tak/models/tak_event.dart';
 import '../tak/providers/tak_providers.dart';
 import '../tak/providers/tak_tracking_provider.dart';
+import '../tak/utils/cot_affiliation.dart';
 import '../tak/widgets/tak_map_layer.dart';
 
 /// Node filter options
@@ -87,6 +89,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
   double _connectionMaxDistance =
       15.0; // km - max distance for connection lines
   String _searchQuery = '';
+
+  // TAK entity state
+  TakEvent? _selectedTakEntity;
+  int _panelTab = 0; // 0 = Nodes, 1 = TAK Entities
 
   // Map style
   MapTileStyle _mapStyle = MapTileStyle.dark;
@@ -970,6 +976,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         } else {
                           setState(() {
                             _selectedNode = null;
+                            _selectedTakEntity = null;
                             _showNodeList = false;
                             _showFilters = false;
                           });
@@ -1130,7 +1137,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               child: GestureDetector(
                                 onTap: () {
                                   HapticFeedback.selectionClick();
-                                  setState(() => _selectedNode = n.node);
+                                  setState(() {
+                                    _selectedNode = n.node;
+                                    _selectedTakEntity = null;
+                                  });
                                 },
                                 child: _NodeMarker(
                                   node: n.node,
@@ -1162,8 +1172,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               events: takEvents,
                               trackedUids: trackedUids,
                               onMarkerTap: (event) {
-                                // Deselect any mesh node when TAK marker is tapped
-                                setState(() => _selectedNode = null);
+                                HapticFeedback.selectionClick();
+                                setState(() {
+                                  _selectedNode = null;
+                                  _selectedTakEntity = event;
+                                });
                               },
                             );
                           },
@@ -1432,6 +1445,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         },
                       ),
                     ),
+                  // TAK entity info card
+                  if (_selectedTakEntity != null && !widget.locationOnlyMode)
+                    Positioned(
+                      left: _mapPadding,
+                      right: _mapPadding,
+                      bottom: _mapPadding,
+                      child: _TakEntityInfoCard(
+                        event: _selectedTakEntity!,
+                        onClose: () =>
+                            setState(() => _selectedTakEntity = null),
+                        onCopyCoordinates: () => _copyCoordinates(
+                          LatLng(
+                            _selectedTakEntity!.lat,
+                            _selectedTakEntity!.lon,
+                          ),
+                        ),
+                      ),
+                    ),
                   // Node list panel - hide in location only mode
                   if (!widget.locationOnlyMode)
                     AnimatedPositioned(
@@ -1457,6 +1488,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         onSearchChanged: (query) =>
                             setState(() => _searchQuery = query),
                         presenceMap: presenceMap,
+                        showTakTab:
+                            _showTakLayer &&
+                            AppFeatureFlags.isTakGatewayEnabled,
+                        activeTab: _panelTab,
+                        onTabChanged: (tab) => setState(() => _panelTab = tab),
+                        takEvents:
+                            _showTakLayer && AppFeatureFlags.isTakGatewayEnabled
+                            ? ref.watch(takActiveEventsProvider)
+                            : const [],
+                        onTakEntitySelected: (event) {
+                          setState(() {
+                            _selectedTakEntity = event;
+                            _selectedNode = null;
+                            _showNodeList = false;
+                          });
+                          _animatedMove(LatLng(event.lat, event.lon), 15.0);
+                          HapticFeedback.selectionClick();
+                        },
                       ),
                     ),
                   // Node count indicator - hide in location only mode
@@ -1468,46 +1517,66 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       top: _mapPadding,
                       child: GestureDetector(
                         onTap: () => setState(() => _showNodeList = true),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: context.card.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: context.border.withValues(alpha: 0.5),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.successGreen,
-                                  shape: BoxShape.circle,
+                        child: Builder(
+                          builder: (context) {
+                            final takCount =
+                                _showTakLayer &&
+                                    AppFeatureFlags.isTakGatewayEnabled
+                                ? ref.watch(takActiveEventsProvider).length
+                                : 0;
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: context.card.withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: context.border.withValues(alpha: 0.5),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${nodesWithPosition.length}${nodesWithPosition.length != allNodesWithPosition.length ? '/${allNodesWithPosition.length}' : ''} nodes',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: context.textPrimary,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.successGreen,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${nodesWithPosition.length}${nodesWithPosition.length != allNodesWithPosition.length ? '/${allNodesWithPosition.length}' : ''} nodes',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: context.textPrimary,
+                                    ),
+                                  ),
+                                  if (takCount > 0) ...[
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '\u2022 $takCount TAK',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: context.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.chevron_right,
+                                    size: 16,
+                                    color: context.textTertiary,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                Icons.chevron_right,
-                                size: 16,
-                                color: context.textTertiary,
-                              ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -2132,6 +2201,11 @@ class _NodeListPanel extends StatelessWidget {
   final TextEditingController searchController;
   final void Function(String) onSearchChanged;
   final Map<int, NodePresence> presenceMap;
+  final bool showTakTab;
+  final int activeTab;
+  final void Function(int) onTabChanged;
+  final List<TakEvent> takEvents;
+  final void Function(TakEvent) onTakEntitySelected;
 
   const _NodeListPanel({
     required this.nodesWithPosition,
@@ -2143,6 +2217,11 @@ class _NodeListPanel extends StatelessWidget {
     required this.searchController,
     required this.onSearchChanged,
     required this.presenceMap,
+    this.showTakTab = false,
+    this.activeTab = 0,
+    required this.onTabChanged,
+    this.takEvents = const [],
+    required this.onTakEntitySelected,
   });
 
   @override
@@ -2182,23 +2261,16 @@ class _NodeListPanel extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Header
+            // Header with close button
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: context.border.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
               child: Row(
                 children: [
                   Icon(Icons.list, size: 20, color: context.accentColor),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Nodes',
+                      activeTab == 0 ? 'Nodes' : 'TAK Entities',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -2207,7 +2279,9 @@ class _NodeListPanel extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${sortedNodes.length}',
+                    activeTab == 0
+                        ? '${sortedNodes.length}'
+                        : '${takEvents.length}',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -2223,85 +2297,166 @@ class _NodeListPanel extends StatelessWidget {
                 ],
               ),
             ),
-            // Search field
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: TextField(
-                controller: searchController,
-                style: TextStyle(color: context.textPrimary, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'Search nodes...',
-                  hintStyle: TextStyle(
-                    color: context.textTertiary,
-                    fontSize: 14,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    size: 20,
-                    color: context.textSecondary,
-                  ),
-                  suffixIcon: searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.clear, size: 18),
-                          color: context.textSecondary,
-                          onPressed: () {
-                            searchController.clear();
-                            onSearchChanged('');
-                          },
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: context.background,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
+            // Tab bar (only when TAK tab is available)
+            if (showTakTab)
+              Container(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: context.border.withValues(alpha: 0.5),
+                    ),
                   ),
                 ),
-                onChanged: onSearchChanged,
+                child: Row(
+                  children: [
+                    _PanelTabButton(
+                      label: 'Nodes',
+                      count: sortedNodes.length,
+                      isActive: activeTab == 0,
+                      onTap: () => onTabChanged(0),
+                    ),
+                    const SizedBox(width: 8),
+                    _PanelTabButton(
+                      label: 'TAK',
+                      count: takEvents.length,
+                      isActive: activeTab == 1,
+                      onTap: () => onTabChanged(1),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            // Node list
-            Expanded(
-              child: sortedNodes.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No nodes found',
-                        style: TextStyle(color: context.textTertiary),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      itemCount: sortedNodes.length,
-                      itemBuilder: (context, index) {
-                        final nodeWithPos = sortedNodes[index];
-                        final isMyNode = nodeWithPos.node.nodeNum == myNodeNum;
-                        final isSelected =
-                            selectedNode?.nodeNum == nodeWithPos.node.nodeNum;
-                        final distance = calculateDistanceFromMe(nodeWithPos);
+            if (!showTakTab)
+              Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: context.border.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ),
+              ),
+            // Search field (nodes tab only)
+            if (activeTab == 0)
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: TextField(
+                  controller: searchController,
+                  style: TextStyle(color: context.textPrimary, fontSize: 14),
+                  maxLength: 64,
+                  decoration: InputDecoration(
+                    hintText: 'Search nodes...',
+                    hintStyle: TextStyle(
+                      color: context.textTertiary,
+                      fontSize: 14,
+                    ),
+                    counterText: '',
+                    prefixIcon: Icon(
+                      Icons.search,
+                      size: 20,
+                      color: context.textSecondary,
+                    ),
+                    suffixIcon: searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(Icons.clear, size: 18),
+                            color: context.textSecondary,
+                            onPressed: () {
+                              searchController.clear();
+                              onSearchChanged('');
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: context.background,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  onChanged: onSearchChanged,
+                ),
+              ),
+            // Content: node list or TAK entity list
+            if (activeTab == 0)
+              Expanded(
+                child: sortedNodes.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No nodes found',
+                          style: TextStyle(color: context.textTertiary),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        itemCount: sortedNodes.length,
+                        itemBuilder: (context, index) {
+                          final nodeWithPos = sortedNodes[index];
+                          final isMyNode =
+                              nodeWithPos.node.nodeNum == myNodeNum;
+                          final isSelected =
+                              selectedNode?.nodeNum == nodeWithPos.node.nodeNum;
+                          final distance = calculateDistanceFromMe(nodeWithPos);
 
-                        final presence = presenceConfidenceFor(
-                          presenceMap,
-                          nodeWithPos.node,
-                        );
-                        return _NodeListItem(
-                          nodeWithPos: nodeWithPos,
-                          isMyNode: isMyNode,
-                          isSelected: isSelected,
-                          distance: distance,
-                          presence: presence,
-                          lastHeardAge: lastHeardAgeFor(
+                          final presence = presenceConfidenceFor(
                             presenceMap,
                             nodeWithPos.node,
-                          ),
-                          onTap: () => onNodeSelected(nodeWithPos),
-                        );
-                      },
-                    ),
-            ),
+                          );
+                          return _NodeListItem(
+                            nodeWithPos: nodeWithPos,
+                            isMyNode: isMyNode,
+                            isSelected: isSelected,
+                            distance: distance,
+                            presence: presence,
+                            lastHeardAge: lastHeardAgeFor(
+                              presenceMap,
+                              nodeWithPos.node,
+                            ),
+                            onTap: () => onNodeSelected(nodeWithPos),
+                          );
+                        },
+                      ),
+              ),
+            if (activeTab == 1)
+              Expanded(
+                child: takEvents.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.military_tech_outlined,
+                              size: 48,
+                              color: context.textTertiary.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No TAK entities',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: context.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        itemCount: takEvents.length,
+                        itemBuilder: (context, index) {
+                          final event = takEvents[index];
+                          return _TakEntityListItem(
+                            event: event,
+                            onTap: () => onTakEntitySelected(event),
+                          );
+                        },
+                      ),
+              ),
           ],
         ),
       ),
@@ -2758,5 +2913,349 @@ class _MeasurementCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Tab button for the node list panel (Nodes / TAK)
+class _PanelTabButton extends StatelessWidget {
+  final String label;
+  final int count;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _PanelTabButton({
+    required this.label,
+    required this.count,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isActive
+                ? context.accentColor.withValues(alpha: 0.15)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isActive
+                  ? context.accentColor.withValues(alpha: 0.5)
+                  : context.border.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                  color: isActive ? context.accentColor : context.textSecondary,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: isActive
+                      ? context.accentColor.withValues(alpha: 0.7)
+                      : context.textTertiary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// TAK entity list item for the node panel TAK tab
+class _TakEntityListItem extends StatelessWidget {
+  final TakEvent event;
+  final VoidCallback onTap;
+
+  const _TakEntityListItem({required this.event, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final affiliation = parseAffiliation(event.type);
+    final affiliationColor = affiliation.color;
+    final isStale = event.isStale;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              // Affiliation indicator
+              Opacity(
+                opacity: isStale ? 0.4 : 1.0,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: affiliationColor.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: affiliationColor.withValues(alpha: 0.5),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.gps_fixed,
+                    size: 16,
+                    color: affiliationColor,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Entity info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      event.displayName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: isStale
+                            ? context.textSecondary
+                            : context.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: isStale
+                                ? context.textTertiary
+                                : Colors.green,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isStale ? 'Stale' : 'Active',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isStale
+                                ? context.textTertiary
+                                : AppTheme.successGreen,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: affiliationColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: Text(
+                            affiliation.label,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              color: affiliationColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.my_location,
+                size: 16,
+                color: context.textTertiary.withValues(alpha: 0.5),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// TAK entity info card shown at the bottom of the mesh map
+class _TakEntityInfoCard extends StatelessWidget {
+  final TakEvent event;
+  final VoidCallback onClose;
+  final VoidCallback onCopyCoordinates;
+
+  const _TakEntityInfoCard({
+    required this.event,
+    required this.onClose,
+    required this.onCopyCoordinates,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final affiliation = parseAffiliation(event.type);
+    final affiliationColor = affiliation.color;
+    final isStale = event.isStale;
+    final age = _formatAge(event.receivedUtcMs);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.card.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: affiliationColor.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Opacity(
+            opacity: isStale ? 0.4 : 1.0,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: affiliationColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: affiliationColor.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Icon(Icons.gps_fixed, color: affiliationColor, size: 22),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  event.displayName,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${event.typeDescription}  \u2022  '
+                  '${event.lat.toStringAsFixed(4)}, '
+                  '${event.lon.toStringAsFixed(4)}',
+                  style: TextStyle(fontSize: 12, color: context.textSecondary),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: affiliationColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: affiliationColor.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Text(
+                        affiliation.label,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: affiliationColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: (isStale ? Colors.red : Colors.green).withValues(
+                          alpha: 0.15,
+                        ),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        isStale ? 'STALE' : 'ACTIVE',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: isStale ? Colors.red : Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      age,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: Icon(Icons.copy, size: 18),
+                color: context.textSecondary,
+                onPressed: onCopyCoordinates,
+                visualDensity: VisualDensity.compact,
+                tooltip: 'Copy coordinates',
+              ),
+              IconButton(
+                icon: Icon(Icons.close, size: 18),
+                color: context.textTertiary,
+                onPressed: onClose,
+                visualDensity: VisualDensity.compact,
+                tooltip: 'Dismiss',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _formatAge(int receivedUtcMs) {
+    final age = DateTime.now().millisecondsSinceEpoch - receivedUtcMs;
+    if (age < 60000) return '${(age / 1000).round()}s ago';
+    if (age < 3600000) return '${(age / 60000).round()}m ago';
+    return '${(age / 3600000).round()}h ago';
   }
 }

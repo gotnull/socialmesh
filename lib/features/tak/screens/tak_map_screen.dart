@@ -13,6 +13,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/map_controls.dart';
+import '../../navigation/main_shell.dart';
 import '../../../services/haptic_service.dart';
 import '../models/tak_event.dart';
 import '../providers/tak_filter_provider.dart';
@@ -111,8 +112,13 @@ class _TakMapScreenState extends ConsumerState<TakMapScreen>
     // Determine initial center from events
     final center = _calculateCenter(events);
 
+    // Check if this screen was pushed (can pop) or is a root drawer screen.
+    final route = ModalRoute.of(context);
+    final canPop = route != null ? !route.isFirst : Navigator.canPop(context);
+
     return GlassScaffold.body(
       title: 'TAK Map',
+      leading: canPop ? const BackButton() : const HamburgerMenuButton(),
       actions: [
         // Connection toggle
         IconButton(
@@ -288,8 +294,8 @@ class _TakMapScreenState extends ConsumerState<TakMapScreen>
                             _mapStyle == MapTileStyle.satellite
                                 ? '\u00A9 Esri'
                                 : _mapStyle == MapTileStyle.terrain
-                                ? '\u00A9 OpenTopoMap'
-                                : '\u00A9 CARTO',
+                                ? '\u00A9 OpenTopoMap \u00A9 OSM'
+                                : '\u00A9 OSM \u00A9 CARTO',
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 10,
@@ -398,12 +404,6 @@ class _TakMapScreenState extends ConsumerState<TakMapScreen>
   ) {
     final staleCount = events.where((e) => e.isStale).length;
     final activeCount = events.length - staleCount;
-    final stateLabel = switch (connectionState) {
-      TakConnectionState.connected => 'Connected',
-      TakConnectionState.connecting => 'Connecting...',
-      TakConnectionState.reconnecting => 'Reconnecting...',
-      TakConnectionState.disconnected => 'Disconnected',
-    };
     final stateColor = switch (connectionState) {
       TakConnectionState.connected => Colors.green,
       TakConnectionState.connecting ||
@@ -418,8 +418,8 @@ class _TakMapScreenState extends ConsumerState<TakMapScreen>
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: context.card.withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: stateColor.withValues(alpha: 0.3)),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: context.border.withValues(alpha: 0.5)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -434,23 +434,22 @@ class _TakMapScreenState extends ConsumerState<TakMapScreen>
             ),
             const SizedBox(width: 8),
             Text(
-              stateLabel,
+              '$activeCount active',
               style: TextStyle(
-                fontSize: 12,
-                color: stateColor,
-                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: context.textPrimary,
               ),
             ),
-            const SizedBox(width: 12),
-            Text(
-              '$activeCount active',
-              style: TextStyle(fontSize: 12, color: context.textSecondary),
-            ),
             if (staleCount > 0) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Text(
-                '$staleCount stale',
-                style: TextStyle(fontSize: 12, color: context.textTertiary),
+                '• $staleCount stale',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: context.textTertiary,
+                ),
               ),
             ],
           ],

@@ -186,11 +186,15 @@ class ProfileCloudSyncService {
     final docRef = _publicProfileDoc(uid);
     final doc = await docRef.get();
 
+    // Only write HTTP(S) URLs to Firestore — local file paths must not leak
+    final safeAvatarUrl = _sanitizeUrlForCloud(profile.avatarUrl);
+    final safeBannerUrl = _sanitizeUrlForCloud(profile.bannerUrl);
+
     final publicData = <String, dynamic>{
       'displayName': profile.displayName,
       'displayNameLower': profile.displayName.toLowerCase(),
-      'avatarUrl': profile.avatarUrl,
-      'bannerUrl': profile.bannerUrl,
+      'avatarUrl': safeAvatarUrl,
+      'bannerUrl': safeBannerUrl,
       'bio': profile.bio,
       'callsign': profile.callsign,
       'website': profile.website,
@@ -664,6 +668,19 @@ class ProfileCloudSyncService {
 
   // --- Helper Methods ---
 
+  /// Returns the URL only if it is an HTTP(S) URL, otherwise null.
+  /// Prevents local file paths (e.g. /var/mobile/...) from being written
+  /// to Firestore where they would be meaningless to other clients.
+  static String? _sanitizeUrlForCloud(String? url) {
+    if (url == null) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    AppLogging.auth(
+      'ProfileSync: Blocked local path from Firestore write: '
+      '${url.length > 60 ? '${url.substring(0, 60)}...' : url}',
+    );
+    return null;
+  }
+
   /// Convert UserProfile to Firestore-compatible map
   /// Note: Social counters (followerCount, followingCount, postCount) are NOT included
   /// because they are managed by Cloud Functions triggers and should never be
@@ -675,8 +692,8 @@ class ProfileCloudSyncService {
       'callsign': profile.callsign,
       'email': profile.email,
       'website': profile.website,
-      'avatarUrl': profile.avatarUrl,
-      'bannerUrl': profile.bannerUrl,
+      'avatarUrl': _sanitizeUrlForCloud(profile.avatarUrl),
+      'bannerUrl': _sanitizeUrlForCloud(profile.bannerUrl),
       'socialLinks': profile.socialLinks?.toJson(),
       'primaryNodeId': profile.primaryNodeId,
       'linkedNodeIds': profile.linkedNodeIds,
