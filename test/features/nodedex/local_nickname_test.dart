@@ -9,7 +9,10 @@ import 'package:socialmesh/features/nodedex/models/nodedex_entry.dart';
 /// round-trip (toJson/fromJson), mergeWith (last-write-wins), and
 /// equality / hashCode.
 void main() {
-  NodeDexEntry _base({String? localNickname, int? localNicknameUpdatedAtMs}) {
+  NodeDexEntry makeEntry({
+    String? localNickname,
+    int? localNicknameUpdatedAtMs,
+  }) {
     return NodeDexEntry(
       nodeNum: 42,
       firstSeen: DateTime(2024, 1, 1),
@@ -25,13 +28,13 @@ void main() {
 
   group('constructor', () {
     test('localNickname defaults to null', () {
-      final entry = _base();
+      final entry = makeEntry();
       expect(entry.localNickname, isNull);
       expect(entry.localNicknameUpdatedAtMs, isNull);
     });
 
     test('localNickname can be set in constructor', () {
-      final entry = _base(
+      final entry = makeEntry(
         localNickname: 'MyRadio',
         localNicknameUpdatedAtMs: 1700000000000,
       );
@@ -46,7 +49,7 @@ void main() {
 
   group('copyWith', () {
     test('sets localNickname via copyWith', () {
-      final entry = _base();
+      final entry = makeEntry();
       final copy = entry.copyWith(localNickname: 'BobsNode');
 
       expect(copy.localNickname, equals('BobsNode'));
@@ -55,7 +58,7 @@ void main() {
 
     test('auto-stamps localNicknameUpdatedAtMs on set', () {
       final before = DateTime.now().millisecondsSinceEpoch;
-      final entry = _base();
+      final entry = makeEntry();
       final copy = entry.copyWith(localNickname: 'Stamped');
       final after = DateTime.now().millisecondsSinceEpoch;
 
@@ -64,7 +67,7 @@ void main() {
     });
 
     test('explicit timestamp overrides auto-stamp', () {
-      final entry = _base();
+      final entry = makeEntry();
       final copy = entry.copyWith(
         localNickname: 'Explicit',
         localNicknameUpdatedAtMs: 1600000000000,
@@ -74,7 +77,7 @@ void main() {
     });
 
     test('clearLocalNickname clears the nickname', () {
-      final entry = _base(
+      final entry = makeEntry(
         localNickname: 'ToBeCleared',
         localNicknameUpdatedAtMs: 1700000000000,
       );
@@ -87,7 +90,7 @@ void main() {
 
     test('auto-stamps on clearLocalNickname', () {
       final before = DateTime.now().millisecondsSinceEpoch;
-      final entry = _base(
+      final entry = makeEntry(
         localNickname: 'Old',
         localNicknameUpdatedAtMs: 1600000000000,
       );
@@ -99,7 +102,7 @@ void main() {
     });
 
     test('copyWith without nickname preserves existing', () {
-      final entry = _base(
+      final entry = makeEntry(
         localNickname: 'Preserved',
         localNicknameUpdatedAtMs: 1700000000000,
       );
@@ -116,7 +119,7 @@ void main() {
 
   group('serialization', () {
     test('toJson includes localNickname when set', () {
-      final entry = _base(
+      final entry = makeEntry(
         localNickname: 'Rocket',
         localNicknameUpdatedAtMs: 1700000000000,
       );
@@ -127,7 +130,7 @@ void main() {
     });
 
     test('toJson omits localNickname when null', () {
-      final entry = _base();
+      final entry = makeEntry();
       final json = entry.toJson();
 
       expect(json.containsKey('ln'), isFalse);
@@ -161,7 +164,7 @@ void main() {
     });
 
     test('round-trip preserves localNickname', () {
-      final original = _base(
+      final original = makeEntry(
         localNickname: 'RoundTrip',
         localNicknameUpdatedAtMs: 1700000000000,
       );
@@ -181,11 +184,11 @@ void main() {
 
   group('mergeWith localNickname', () {
     test('remote wins when remote timestamp is newer', () {
-      final local = _base(
+      final local = makeEntry(
         localNickname: 'LocalName',
         localNicknameUpdatedAtMs: 1000,
       );
-      final remote = _base(
+      final remote = makeEntry(
         localNickname: 'RemoteName',
         localNicknameUpdatedAtMs: 2000,
       );
@@ -196,11 +199,11 @@ void main() {
     });
 
     test('local wins when local timestamp is newer', () {
-      final local = _base(
+      final local = makeEntry(
         localNickname: 'LocalName',
         localNicknameUpdatedAtMs: 3000,
       );
-      final remote = _base(
+      final remote = makeEntry(
         localNickname: 'RemoteName',
         localNicknameUpdatedAtMs: 1000,
       );
@@ -211,8 +214,8 @@ void main() {
     });
 
     test('only one side has timestamp — that side wins', () {
-      final local = _base(localNickname: 'NoTimestamp');
-      final remote = _base(
+      final local = makeEntry(localNickname: 'NoTimestamp');
+      final remote = makeEntry(
         localNickname: 'HasTimestamp',
         localNicknameUpdatedAtMs: 1000,
       );
@@ -223,20 +226,20 @@ void main() {
     });
 
     test('both null timestamps — prefers local non-null', () {
-      final local = _base(localNickname: 'FallbackLocal');
-      final remote = _base();
+      final local = makeEntry(localNickname: 'FallbackLocal');
+      final remote = makeEntry();
       final merged = local.mergeWith(remote);
 
       expect(merged.localNickname, equals('FallbackLocal'));
     });
 
     test('merging null nickname clears when remote is newer', () {
-      final local = _base(
+      final local = makeEntry(
         localNickname: 'Existing',
         localNicknameUpdatedAtMs: 1000,
       );
       // Remote explicitly cleared (null value, newer timestamp)
-      final remote = _base(localNicknameUpdatedAtMs: 2000);
+      final remote = makeEntry(localNicknameUpdatedAtMs: 2000);
       final merged = local.mergeWith(remote);
 
       expect(merged.localNickname, isNull);
@@ -250,26 +253,26 @@ void main() {
 
   group('equality', () {
     test('entries with same localNickname are equal', () {
-      final a = _base(localNickname: 'Same');
-      final b = _base(localNickname: 'Same');
+      final a = makeEntry(localNickname: 'Same');
+      final b = makeEntry(localNickname: 'Same');
       expect(a, equals(b));
     });
 
     test('entries with different localNickname are not equal', () {
-      final a = _base(localNickname: 'Alpha');
-      final b = _base(localNickname: 'Beta');
+      final a = makeEntry(localNickname: 'Alpha');
+      final b = makeEntry(localNickname: 'Beta');
       expect(a, isNot(equals(b)));
     });
 
     test('entry with and without localNickname are not equal', () {
-      final a = _base(localNickname: 'HasOne');
-      final b = _base();
+      final a = makeEntry(localNickname: 'HasOne');
+      final b = makeEntry();
       expect(a, isNot(equals(b)));
     });
 
     test('hashCode differs when localNickname differs', () {
-      final a = _base(localNickname: 'X');
-      final b = _base(localNickname: 'Y');
+      final a = makeEntry(localNickname: 'X');
+      final b = makeEntry(localNickname: 'Y');
       // Different hash codes are expected but not guaranteed; at minimum
       // they should not throw.
       expect(a.hashCode, isA<int>());
