@@ -1193,40 +1193,26 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       if (_showTakLayer &&
                           !widget.locationOnlyMode &&
                           AppFeatureFlags.isTakGatewayEnabled)
-                        Builder(
-                          builder: (context) {
-                            final takEvents = ref.watch(
-                              takActiveEventsProvider,
+                        _TakMarkerLayer(
+                          onMarkerTap: (event) {
+                            HapticFeedback.selectionClick();
+                            setState(() {
+                              _selectedNode = null;
+                              _selectedTakEntity = event;
+                            });
+                          },
+                          onMarkerLongPress: (event) async {
+                            final tracking = ref.read(
+                              takTrackingProvider.notifier,
                             );
-                            final trackedUids = ref.watch(
-                              takTrackedUidsProvider,
-                            );
-                            return TakMapLayer(
-                              events: takEvents,
-                              trackedUids: trackedUids,
-                              onMarkerTap: (event) {
-                                HapticFeedback.selectionClick();
-                                setState(() {
-                                  _selectedNode = null;
-                                  _selectedTakEntity = event;
-                                });
-                              },
-                              onMarkerLongPress: (event) async {
-                                final tracking = ref.read(
-                                  takTrackingProvider.notifier,
-                                );
-                                final nowTracked = await tracking.toggle(
-                                  event.uid,
-                                );
-                                if (!mounted) return;
-                                ref.haptics.longPress();
-                                AppLogging.tak(
-                                  'Map TAK entity '
-                                  '${nowTracked ? "tracked" : "untracked"}: '
-                                  'uid=${event.uid}, '
-                                  'callsign=${event.displayName}',
-                                );
-                              },
+                            final nowTracked = await tracking.toggle(event.uid);
+                            if (!mounted) return;
+                            ref.haptics.longPress();
+                            AppLogging.tak(
+                              'Map TAK entity '
+                              '${nowTracked ? "tracked" : "untracked"}: '
+                              'uid=${event.uid}, '
+                              'callsign=${event.displayName}',
                             );
                           },
                         ),
@@ -3454,5 +3440,30 @@ class _TakEntityInfoCard extends StatelessWidget {
     if (age < 60000) return '${(age / 1000).round()}s ago';
     if (age < 3600000) return '${(age / 60000).round()}m ago';
     return '${(age / 3600000).round()}h ago';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Isolated TAK marker layer — ConsumerWidget so it only rebuilds when
+// takActiveEventsProvider or takTrackedUidsProvider change, not on every
+// parent map build.
+// ---------------------------------------------------------------------------
+
+class _TakMarkerLayer extends ConsumerWidget {
+  final ValueChanged<TakEvent>? onMarkerTap;
+  final ValueChanged<TakEvent>? onMarkerLongPress;
+
+  const _TakMarkerLayer({this.onMarkerTap, this.onMarkerLongPress});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final takEvents = ref.watch(takActiveEventsProvider);
+    final trackedUids = ref.watch(takTrackedUidsProvider);
+    return TakMapLayer(
+      events: takEvents,
+      trackedUids: trackedUids,
+      onMarkerTap: onMarkerTap,
+      onMarkerLongPress: onMarkerLongPress,
+    );
   }
 }
