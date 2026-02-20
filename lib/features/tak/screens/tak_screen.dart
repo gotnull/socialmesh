@@ -44,12 +44,15 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
   bool _autoConnectDone = false;
   late final TextEditingController _searchController;
 
-  /// Primary affiliations shown as filter chips.
+  /// All affiliations shown as filter chips.
   static const _primaryAffiliations = [
     CotAffiliation.friendly,
     CotAffiliation.hostile,
     CotAffiliation.neutral,
     CotAffiliation.unknown,
+    CotAffiliation.assumedFriend,
+    CotAffiliation.suspect,
+    CotAffiliation.pending,
   ];
 
   @override

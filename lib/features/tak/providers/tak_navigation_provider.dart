@@ -25,6 +25,39 @@ class TakNavigationState {
   final double? userLat;
   final double? userLon;
 
+  /// Estimated time of arrival if the user (or target) is closing distance.
+  ///
+  /// Computed only when the target has a non-zero speed *and* is moving
+  /// generally toward the user (bearing difference < 90°). Returns `null`
+  /// when ETA cannot be meaningfully estimated.
+  String? get formattedEta {
+    if (distanceKm == null || distanceKm == 0) return null;
+    final speed = target.speed; // m/s
+    if (speed == null || speed <= 0) return null;
+    final course = target.course;
+    if (course == null || bearingDegrees == null) return null;
+
+    // Reverse bearing: direction from target back to user.
+    final reverseBearing = (bearingDegrees! + 180) % 360;
+    // Angular difference between target's course and the approach bearing.
+    var diff = (course - reverseBearing).abs();
+    if (diff > 180) diff = 360 - diff;
+    // Only show ETA when target is broadly approaching (< 90° off).
+    if (diff >= 90) return null;
+
+    // Closing speed = speed * cos(diff).
+    final closingSpeedKmh = speed * 3.6 * math.cos(diff * math.pi / 180);
+    if (closingSpeedKmh <= 0) return null;
+
+    final hoursToArrival = distanceKm! / closingSpeedKmh;
+    final minutes = (hoursToArrival * 60).round();
+    if (minutes < 1) return '< 1 min';
+    if (minutes < 60) return '$minutes min';
+    final h = minutes ~/ 60;
+    final m = minutes % 60;
+    return '${h}h ${m}m';
+  }
+
   /// The target's speed text, or "Stationary" if none.
   String get targetSpeedText {
     if (target.speed == null || target.speed == 0.0) {

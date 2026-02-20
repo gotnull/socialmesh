@@ -13,6 +13,7 @@ import '../models/tak_publish_config.dart';
 import '../services/tak_database.dart';
 import '../services/tak_gateway_client.dart';
 import '../services/tak_position_publisher.dart';
+import '../widgets/tak_trail_layer.dart';
 import '../services/tak_proximity_monitor.dart';
 import 'tak_settings_provider.dart';
 import '../services/tak_stale_monitor.dart';
@@ -408,3 +409,35 @@ final takPositionHistoryProvider =
       );
       return history;
     });
+
+// ---------------------------------------------------------------------------
+// Trail data for tracked entities on the map
+// ---------------------------------------------------------------------------
+
+/// Builds [TakTrailData] for every tracked entity that has position history.
+///
+/// Returns a `Future<Map<String, TakTrailData>>` consumed by the map's
+/// trail layer overlay.
+final takTrailDataProvider = FutureProvider<Map<String, TakTrailData>>((
+  ref,
+) async {
+  final trackedUids = ref.watch(takTrackedUidsProvider);
+  final events = ref.watch(takActiveEventsProvider);
+  final db = ref.watch(takDatabaseProvider);
+
+  if (trackedUids.isEmpty) return {};
+
+  final result = <String, TakTrailData>{};
+  for (final uid in trackedUids) {
+    final event = events.where((e) => e.uid == uid).firstOrNull;
+    if (event == null) continue;
+    final history = await db.getPositionHistory(uid, limit: 50);
+    if (history.isEmpty) continue;
+    result[uid] = TakTrailData.fromHistory(event, history);
+  }
+
+  AppLogging.tak(
+    'takTrailDataProvider: built trails for ${result.length} tracked entities',
+  );
+  return result;
+});

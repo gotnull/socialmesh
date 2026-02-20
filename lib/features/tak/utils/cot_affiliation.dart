@@ -134,6 +134,10 @@ CotAffiliation parseAffiliation(String cotType) {
 ///
 /// Returns [Icons.gps_fixed] for unrecognized or malformed types.
 IconData cotTypeIcon(String cotType) {
+  // Handle non-atom type prefixes (b-, t-) before atom parsing.
+  if (cotType.startsWith('b-')) return Icons.data_object;
+  if (cotType.startsWith('t-')) return Icons.assignment;
+
   final atoms = cotType.split('-');
   if (atoms.length < 3) return Icons.gps_fixed;
 

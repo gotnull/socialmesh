@@ -39,8 +39,10 @@ import '../tak/providers/tak_tracking_provider.dart';
 import '../tak/utils/cot_affiliation.dart';
 import '../tak/screens/tak_dashboard_screen.dart';
 import '../tak/screens/tak_event_detail_screen.dart';
+import '../tak/screens/tak_navigate_screen.dart';
 import '../tak/widgets/tak_map_layer.dart';
 import '../tak/widgets/tak_heading_vector_layer.dart';
+import '../tak/widgets/tak_trail_layer.dart';
 
 /// Node filter options
 enum NodeFilter {
@@ -1067,6 +1069,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         if (_measureMode) {
                           _handleMeasureTap(point);
                         } else {
+                          if (_selectedTakEntity != null) {
+                            AppLogging.tak('Map entity deselected');
+                          }
                           setState(() {
                             _selectedNode = null;
                             _selectedTakEntity = null;
@@ -1249,6 +1254,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             );
                           }).toList(),
                         ),
+                      // TAK movement trails for tracked entities
+                      if (_showTakLayer &&
+                          !widget.locationOnlyMode &&
+                          AppFeatureFlags.isTakGatewayEnabled)
+                        _TakTrailOverlay(),
                       // TAK entity markers - separate layer from mesh nodes
                       if (_showTakLayer &&
                           !widget.locationOnlyMode &&
@@ -1256,6 +1266,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         _TakMarkerLayer(
                           onMarkerTap: (event) {
                             HapticFeedback.selectionClick();
+                            AppLogging.tak(
+                              'Map entity selected: uid=${event.uid}, '
+                              'callsign=${event.displayName}',
+                            );
                             setState(() {
                               _selectedNode = null;
                               _selectedTakEntity = event;
@@ -1565,6 +1579,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           ),
                         ),
                         onTapDetail: () {
+                          AppLogging.tak(
+                            'Map popup tap-through to detail: '
+                            'uid=${_selectedTakEntity!.uid}',
+                          );
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (_) => TakEventDetailScreen(
@@ -1580,6 +1598,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           await tracking.toggle(_selectedTakEntity!.uid);
                           if (!mounted) return;
                           ref.haptics.toggle();
+                        },
+                        onNavigateTo: () {
+                          AppLogging.tak(
+                            'Map navigate-to: uid=${_selectedTakEntity!.uid}',
+                          );
+                          ref.haptics.itemSelect();
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => TakNavigateScreen(
+                                targetUid: _selectedTakEntity!.uid,
+                                initialCallsign:
+                                    _selectedTakEntity!.displayName,
+                              ),
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -3289,6 +3322,7 @@ class _TakEntityInfoCard extends StatelessWidget {
   final VoidCallback onCopyCoordinates;
   final VoidCallback onTapDetail;
   final VoidCallback onToggleTracking;
+  final VoidCallback? onNavigateTo;
 
   const _TakEntityInfoCard({
     required this.event,
@@ -3297,6 +3331,7 @@ class _TakEntityInfoCard extends StatelessWidget {
     required this.onCopyCoordinates,
     required this.onTapDetail,
     required this.onToggleTracking,
+    this.onNavigateTo,
   });
 
   @override
@@ -3469,6 +3504,18 @@ class _TakEntityInfoCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
+                      icon: Icon(Icons.navigation_outlined, size: 16),
+                      color: context.textSecondary,
+                      onPressed: onNavigateTo,
+                      visualDensity: VisualDensity.compact,
+                      tooltip: 'Navigate to',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                    ),
+                    IconButton(
                       icon: Icon(Icons.copy, size: 16),
                       color: context.textSecondary,
                       onPressed: onCopyCoordinates,
@@ -3549,5 +3596,24 @@ class _TakHeadingVectorOverlay extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final takEvents = ref.watch(filteredTakEventsProvider);
     return TakHeadingVectorLayer(events: takEvents);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Isolated TAK trail overlay — ConsumerWidget so it only rebuilds when
+// trail data changes.
+// ---------------------------------------------------------------------------
+
+class _TakTrailOverlay extends ConsumerWidget {
+  const _TakTrailOverlay();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trailData = ref.watch(takTrailDataProvider);
+    return trailData.when(
+      data: (trails) => TakTrailLayer(trails: trails),
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+    );
   }
 }

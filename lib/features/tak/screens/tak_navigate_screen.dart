@@ -75,6 +75,17 @@ class TakNavigateScreen extends ConsumerWidget {
                 nav.targetSpeedText,
                 style: TextStyle(fontSize: 14, color: context.textTertiary),
               ),
+              if (nav.formattedEta != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'ETA: ${nav.formattedEta}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: context.textSecondary,
+                  ),
+                ),
+              ],
             ],
             const Spacer(),
             // Target info card at the bottom.

@@ -57,6 +57,15 @@ class TakTrackingNotifier extends AsyncNotifier<Set<String>> {
     AppLogging.tak('Entity untracked: uid=$uid');
   }
 
+  /// Untrack all entities at once.
+  Future<void> untrackAll() async {
+    final current = state.value ?? {};
+    if (current.isEmpty) return;
+    state = const AsyncData({});
+    await _persist({});
+    AppLogging.tak('All entities untracked (was ${current.length})');
+  }
+
   /// Whether a UID is currently tracked.
   bool isTracked(String uid) {
     return (state.value ?? {}).contains(uid);
