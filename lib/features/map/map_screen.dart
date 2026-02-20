@@ -459,6 +459,19 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   @override
   Widget build(BuildContext context) {
+    // When the drawer's "TAK Map" item is tapped, it switches to this tab
+    // and requests TAK mode via the provider. Consume and reset it here.
+    ref.listen<bool>(mapTakModeProvider, (prev, next) {
+      if (next) {
+        ref.read(mapTakModeProvider.notifier).consume();
+        safeSetState(() {
+          _showTakLayer = true;
+          _panelTab = 1;
+          _showNodeList = true;
+        });
+      }
+    });
+
     final nodes = ref.watch(nodesProvider);
     final presenceMap = ref.watch(presenceMapProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);

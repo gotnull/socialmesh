@@ -63,7 +63,6 @@ import '../aether/providers/aether_flight_matcher_provider.dart';
 import '../aether/providers/aether_flight_lifecycle_provider.dart';
 import '../aether/widgets/aether_flight_detected_overlay.dart';
 // import '../global_layer/screens/global_layer_hub_screen.dart';
-import '../tak/screens/tak_map_screen.dart';
 import '../tak/screens/tak_screen.dart';
 import '../../providers/activity_providers.dart';
 import '../../providers/whats_new_providers.dart';
@@ -120,6 +119,20 @@ class MainShellIndexNotifier extends Notifier<int> {
 
 final mainShellIndexProvider = NotifierProvider<MainShellIndexNotifier, int>(
   MainShellIndexNotifier.new,
+);
+
+/// When `true`, the Map tab should activate its TAK overlay layer.
+/// Set by the "TAK Map" drawer item, consumed (and reset) by MapScreen.
+class _MapTakModeNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void request() => state = true;
+  void consume() => state = false;
+}
+
+final mapTakModeProvider = NotifierProvider<_MapTakModeNotifier, bool>(
+  _MapTakModeNotifier.new,
 );
 
 /// Widget to create a hamburger menu button for app bars
@@ -275,6 +288,9 @@ class _DrawerMenuItem {
   /// is shown next to this drawer item.
   final String? whatsNewBadgeKey;
 
+  /// When true and [tabIndex] is set, the map tab activates TAK layer.
+  final bool requestsTakMode;
+
   const _DrawerMenuItem({
     required this.icon,
     required this.label,
@@ -286,6 +302,7 @@ class _DrawerMenuItem {
     this.requiresConnection = false,
     this.badgeProviderKey,
     this.whatsNewBadgeKey,
+    this.requestsTakMode = false,
   });
 }
 
@@ -427,7 +444,8 @@ class _MainShellState extends ConsumerState<MainShell> {
       _DrawerMenuItem(
         icon: Icons.military_tech,
         label: 'TAK Map',
-        screen: const TakMapScreen(),
+        tabIndex: 1,
+        requestsTakMode: true,
         iconColor: Colors.orange.shade400,
         requiresConnection: false,
       ),
@@ -739,6 +757,9 @@ class _MainShellState extends ConsumerState<MainShell> {
                             if (item.tabIndex != null) {
                               // Tab-based item — switch bottom-nav index
                               Navigator.of(context).pop(); // close drawer
+                              if (item.requestsTakMode) {
+                                ref.read(mapTakModeProvider.notifier).request();
+                              }
                               ref
                                   .read(mainShellIndexProvider.notifier)
                                   .setIndex(item.tabIndex!);
