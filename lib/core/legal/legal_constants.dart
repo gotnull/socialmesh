@@ -11,11 +11,11 @@ class LegalConstants {
 
   /// Current Terms of Service version (matches "Last Updated" on website).
   /// Bump this value when Terms content changes materially.
-  static const String termsVersion = '2026-02-14';
+  static const String termsVersion = '2026-02-20';
 
   /// Current Privacy Policy version (matches "Last Updated" on website).
   /// Bump this value when Privacy Policy content changes materially.
-  static const String privacyVersion = '2026-02-18';
+  static const String privacyVersion = '2026-02-20';
 
   // ---------------------------------------------------------------------------
   // SharedPreferences keys

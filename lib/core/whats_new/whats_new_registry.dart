@@ -124,7 +124,7 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.10.0 — World Map, Signals, and Presence
+    // v1.10.0 — World Map and Presence
     WhatsNewPayload(
       version: '1.10.0',
       headline: "What's New in Socialmesh",
@@ -147,6 +147,30 @@ class WhatsNewRegistry {
           ctaLabel: 'Open World Map',
         ),
         WhatsNewItem(
+          id: 'presence_intro',
+          title: 'Presence',
+          description:
+              'See who is active on your mesh at a glance. Presence shows '
+              'real-time node activity with intent indicators — whether '
+              'someone is monitoring, mobile, or at a fixed base station.\n\n'
+              'Filter by activity level, search by name, and tap any node '
+              'to see their full profile. Find it in the drawer under Social.',
+          icon: Icons.people_alt_outlined,
+          iconColor: Color(0xFF66BB6A), // Colors.green.shade400
+          deepLinkRoute: '/presence',
+          helpTopicId: 'presence_overview',
+          ctaLabel: 'Open Presence',
+        ),
+      ],
+    ),
+
+    // v1.11.0 — Signals introduction
+    WhatsNewPayload(
+      version: '1.11.0',
+      headline: "What's New in Socialmesh",
+      subtitle: 'Version 1.11.0',
+      items: [
+        WhatsNewItem(
           id: 'signals_intro',
           title: 'Signals',
           description:
@@ -161,21 +185,6 @@ class WhatsNewRegistry {
           deepLinkRoute: '/signals',
           helpTopicId: 'signals_overview',
           ctaLabel: 'Open Signals',
-        ),
-        WhatsNewItem(
-          id: 'presence_intro',
-          title: 'Presence',
-          description:
-              'See who is active on your mesh at a glance. Presence shows '
-              'real-time node activity with intent indicators — whether '
-              'someone is monitoring, mobile, or at a fixed base station.\n\n'
-              'Filter by activity level, search by name, and tap any node '
-              'to see their full profile. Find it in the drawer under Social.',
-          icon: Icons.people_alt_outlined,
-          iconColor: Color(0xFF66BB6A), // Colors.green.shade400
-          deepLinkRoute: '/presence',
-          helpTopicId: 'presence_overview',
-          ctaLabel: 'Open Presence',
         ),
       ],
     ),
@@ -198,34 +207,6 @@ class WhatsNewRegistry {
               'full profile — signal history, discovery timeline, and more.',
           icon: Icons.auto_stories_outlined,
           iconColor: Color(0xFFFFCA28), // Colors.amber.shade400
-          deepLinkRoute: '/nodedex',
-          helpTopicId: 'nodedex_overview',
-          badgeKey: 'nodedex',
-          ctaLabel: 'Open NodeDex',
-        ),
-      ],
-    ),
-
-    // v1.14.1 — Collector Album for NodeDex
-    WhatsNewPayload(
-      version: '1.14.1',
-      headline: "What's New in Socialmesh",
-      subtitle: 'Version 1.14.1',
-      items: [
-        WhatsNewItem(
-          id: 'collector_album',
-          title: 'Collector Album',
-          description:
-              'Your NodeDex is now a collector album. Tap the album icon '
-              'in the NodeDex toolbar to switch from list view to a card '
-              'grid — every discovered node displayed as a collectible '
-              'card with rarity borders and holographic shimmer.\n\n'
-              'Group pages by Trait, Rarity, or Region. Long-press any '
-              'card to open the full-screen gallery — swipe to browse, '
-              'tap to flip and reveal stats on the back. Mystery slots '
-              'hint at nodes still waiting to be found.',
-          icon: Icons.collections_bookmark_outlined,
-          iconColor: Color(0xFFD4AF37), // Gold
           deepLinkRoute: '/nodedex',
           helpTopicId: 'nodedex_overview',
           badgeKey: 'nodedex',
@@ -257,6 +238,35 @@ class WhatsNewRegistry {
             helpTopicId: 'aether_overview',
             badgeKey: 'aether',
             ctaLabel: 'Open Aether',
+          ),
+        ],
+      ),
+
+    // v1.16.0 — TAK Gateway integration (gated behind TAK_GATEWAY_ENABLED)
+    if (AppFeatureFlags.isTakGatewayEnabled)
+      WhatsNewPayload(
+        version: '1.16.0',
+        headline: "What's New in Socialmesh",
+        subtitle: 'Version 1.16.0',
+        items: [
+          WhatsNewItem(
+            id: 'tak_gateway_intro',
+            title: 'TAK Gateway',
+            description:
+                'Bridge your mesh into the Tactical Awareness Kit ecosystem. '
+                'Socialmesh now connects to a TAK Gateway via WebSocket and '
+                'streams live Cursor-on-Target entities onto your map.\n\n'
+                'Every entity is colored by MIL-STD-2525 affiliation and '
+                'given a dimension-specific icon. Filter by affiliation, '
+                'search callsigns, track entities with a long-press, and '
+                'tap any marker for full CoT details. Find it in the drawer '
+                'menu under Mesh.',
+            icon: Icons.shield_outlined,
+            iconColor: Color(0xFF4A90D9), // CotAffiliationColors.friendly
+            deepLinkRoute: '/tak',
+            helpTopicId: 'tak_gateway_overview',
+            badgeKey: 'tak',
+            ctaLabel: 'Open TAK Gateway',
           ),
         ],
       ),

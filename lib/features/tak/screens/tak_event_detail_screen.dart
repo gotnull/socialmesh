@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/help/help_content.dart';
 import '../../../core/logging.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/ico_help_system.dart';
 import '../../../services/haptic_service.dart';
 import '../../navigation/main_shell.dart';
 import '../models/tak_event.dart';
@@ -38,124 +41,130 @@ class TakEventDetailScreen extends ConsumerWidget {
     final trackedUids = ref.watch(takTrackedUidsProvider);
     final isTracked = trackedUids.contains(event.uid);
 
-    return GlassScaffold.body(
-      title: event.displayName,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.map_outlined),
-          onPressed: () {
-            AppLogging.tak(
-              'Show on map: uid=${event.uid}, '
-              'lat=${event.lat}, lon=${event.lon}',
-            );
-            ref.read(takShowOnMapProvider.notifier).request(event);
-            ref.read(mapTakModeProvider.notifier).request();
-            ref.read(mainShellIndexProvider.notifier).setIndex(1);
-            Navigator.of(context).popUntil((route) => route.isFirst);
-            ref.haptics.itemSelect();
-          },
-          tooltip: 'Show on Map',
-        ),
-        IconButton(
-          icon: Icon(
-            isTracked ? Icons.push_pin : Icons.push_pin_outlined,
-            color: affiliationColor,
+    return HelpTourController(
+      topicId: 'tak_gateway_overview',
+      stepKeys: const {},
+      child: GlassScaffold.body(
+        title: event.displayName,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.map_outlined),
+            onPressed: () {
+              AppLogging.tak(
+                'Show on map: uid=${event.uid}, '
+                'lat=${event.lat}, lon=${event.lon}',
+              );
+              ref.read(takShowOnMapProvider.notifier).request(event);
+              ref.read(mapTakModeProvider.notifier).request();
+              ref.read(mainShellIndexProvider.notifier).setIndex(1);
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              ref.haptics.itemSelect();
+            },
+            tooltip: 'Show on Map',
           ),
-          onPressed: () async {
-            await ref.read(takTrackingProvider.notifier).toggle(event.uid);
-            ref.haptics.toggle();
-          },
-          tooltip: isTracked ? 'Untrack' : 'Track',
-        ),
-        IconButton(
-          icon: const Icon(Icons.copy),
-          onPressed: () {
-            AppLogging.tak('Copied event JSON to clipboard: uid=${event.uid}');
-            Clipboard.setData(ClipboardData(text: event.toJsonString()));
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Event JSON copied')));
-          },
-          tooltip: 'Copy JSON',
-        ),
-      ],
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _HeaderCard(
-            event: event,
-            theme: theme,
-            affiliationColor: affiliationColor,
-            affiliationLabel: affiliation.label,
+          IconButton(
+            icon: Icon(
+              isTracked ? Icons.push_pin : Icons.push_pin_outlined,
+              color: affiliationColor,
+            ),
+            onPressed: () async {
+              await ref.read(takTrackingProvider.notifier).toggle(event.uid);
+              ref.haptics.toggle();
+            },
+            tooltip: isTracked ? 'Untrack' : 'Track',
           ),
-          const SizedBox(height: 16),
-          _buildSection(theme, affiliationColor, 'Identity', [
-            _row('UID', event.uid, dimStyle, valueStyle),
-            _row('Type', event.type, dimStyle, valueStyle),
-            _row('Description', event.typeDescription, dimStyle, valueStyle),
-            if (event.callsign != null)
-              _row('Callsign', event.callsign!, dimStyle, valueStyle),
-          ]),
-          const SizedBox(height: 8),
-          _buildSection(theme, affiliationColor, 'Position', [
-            _row(
-              'Latitude',
-              event.lat.toStringAsFixed(6),
-              dimStyle,
-              valueStyle,
+          IconButton(
+            icon: const Icon(Icons.copy),
+            onPressed: () {
+              AppLogging.tak(
+                'Copied event JSON to clipboard: uid=${event.uid}',
+              );
+              Clipboard.setData(ClipboardData(text: event.toJsonString()));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Event JSON copied')),
+              );
+            },
+            tooltip: 'Copy JSON',
+          ),
+        ],
+        body: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _HeaderCard(
+              event: event,
+              theme: theme,
+              affiliationColor: affiliationColor,
+              affiliationLabel: affiliation.label,
             ),
-            _row(
-              'Longitude',
-              event.lon.toStringAsFixed(6),
-              dimStyle,
-              valueStyle,
-            ),
-          ]),
-          const SizedBox(height: 8),
-          _buildSection(theme, affiliationColor, 'Timestamps', [
-            _row(
-              'Event Time',
-              _formatTimestamp(event.timeUtcMs),
-              dimStyle,
-              valueStyle,
-            ),
-            _row(
-              'Stale Time',
-              _formatTimestamp(event.staleUtcMs),
-              dimStyle,
-              valueStyle,
-            ),
-            _row(
-              'Received',
-              _formatTimestamp(event.receivedUtcMs),
-              dimStyle,
-              valueStyle,
-            ),
-            _row(
-              'Status',
-              event.isStale ? 'STALE' : 'ACTIVE',
-              dimStyle,
-              valueStyle?.copyWith(
-                color: event.isStale ? Colors.red : Colors.green,
-              ),
-            ),
-          ]),
-          if (event.rawPayloadJson != null) ...[
+            const SizedBox(height: 16),
+            _buildSection(theme, affiliationColor, 'Identity', [
+              _row('UID', event.uid, dimStyle, valueStyle),
+              _row('Type', event.type, dimStyle, valueStyle),
+              _row('Description', event.typeDescription, dimStyle, valueStyle),
+              if (event.callsign != null)
+                _row('Callsign', event.callsign!, dimStyle, valueStyle),
+            ], helpKey: 'identity'),
             const SizedBox(height: 8),
-            _buildSection(theme, affiliationColor, 'Raw Payload', [
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: SelectableText(
-                  event.rawPayloadJson!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace',
-                    fontSize: 11,
-                  ),
+            _buildSection(theme, affiliationColor, 'Position', [
+              _row(
+                'Latitude',
+                event.lat.toStringAsFixed(6),
+                dimStyle,
+                valueStyle,
+              ),
+              _row(
+                'Longitude',
+                event.lon.toStringAsFixed(6),
+                dimStyle,
+                valueStyle,
+              ),
+            ], helpKey: 'position'),
+            const SizedBox(height: 8),
+            _buildSection(theme, affiliationColor, 'Timestamps', [
+              _row(
+                'Event Time',
+                _formatTimestamp(event.timeUtcMs),
+                dimStyle,
+                valueStyle,
+              ),
+              _row(
+                'Stale Time',
+                _formatTimestamp(event.staleUtcMs),
+                dimStyle,
+                valueStyle,
+              ),
+              _row(
+                'Received',
+                _formatTimestamp(event.receivedUtcMs),
+                dimStyle,
+                valueStyle,
+              ),
+              _row(
+                'Status',
+                event.isStale ? 'STALE' : 'ACTIVE',
+                dimStyle,
+                valueStyle?.copyWith(
+                  color: event.isStale ? Colors.red : Colors.green,
                 ),
               ),
-            ]),
+            ], helpKey: 'timestamps'),
+            if (event.rawPayloadJson != null) ...[
+              const SizedBox(height: 8),
+              _buildSection(theme, affiliationColor, 'Raw Payload', [
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: SelectableText(
+                    event.rawPayloadJson!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: 'monospace',
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ], helpKey: 'raw_payload'),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -164,8 +173,9 @@ class TakEventDetailScreen extends ConsumerWidget {
     ThemeData theme,
     Color accentColor,
     String title,
-    List<Widget> children,
-  ) {
+    List<Widget> children, {
+    String? helpKey,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.5),
@@ -179,12 +189,20 @@ class TakEventDetailScreen extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Text(
-              title.toUpperCase(),
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: accentColor,
-                letterSpacing: 1.2,
-              ),
+            child: Row(
+              children: [
+                Text(
+                  title.toUpperCase(),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: accentColor,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                if (helpKey != null) ...[
+                  const SizedBox(width: 4),
+                  _TakSectionInfoButton(helpKey: helpKey),
+                ],
+              ],
             ),
           ),
           ...children,
@@ -323,5 +341,101 @@ class _HeaderCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// =============================================================================
+// Section Info Button — inline contextual help for TAK detail sections
+// =============================================================================
+
+class _TakSectionInfoButton extends StatelessWidget {
+  final String helpKey;
+
+  const _TakSectionInfoButton({required this.helpKey});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showHelp(context),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Icon(
+          Icons.info_outline,
+          size: 14,
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+        ),
+      ),
+    );
+  }
+
+  void _showHelp(BuildContext context) {
+    final helpText = HelpContent.takSectionHelp[helpKey];
+    if (helpText == null) return;
+
+    HapticFeedback.selectionClick();
+    AppBottomSheet.show<void>(
+      context: context,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.lightbulb_outline,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _titleForKey(helpKey),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              helpText,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _titleForKey(String key) {
+    switch (key) {
+      case 'status':
+        return 'Connection Status';
+      case 'affiliation':
+        return 'Affiliation';
+      case 'cot_type':
+        return 'CoT Type String';
+      case 'identity':
+        return 'Identity';
+      case 'position':
+        return 'Position';
+      case 'timestamps':
+        return 'Timestamps';
+      case 'tracking':
+        return 'Tracking';
+      case 'raw_payload':
+        return 'Raw Payload';
+      case 'filters':
+        return 'Filters';
+      case 'settings':
+        return 'Settings';
+      default:
+        return 'Info';
+    }
   }
 }

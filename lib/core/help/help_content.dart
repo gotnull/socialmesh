@@ -1946,6 +1946,134 @@ class HelpContent {
   );
 
   // ============================================================================
+  // TAK GATEWAY
+  // ============================================================================
+
+  static final HelpTopic takGatewayOverview = HelpTopic(
+    id: 'tak_gateway_overview',
+    title: 'TAK Gateway',
+    description: 'Bridge your mesh into the TAK ecosystem',
+    icon: Icons.shield_outlined,
+    category: catNetwork,
+    priority: 12,
+    steps: [
+      HelpStep(
+        id: 'tak_intro',
+        bubbleText:
+            "**TAK Gateway** bridges your mesh into the Tactical Awareness "
+            "Kit (TAK) ecosystem. It streams live **Cursor-on-Target** "
+            "entities from a TAK server straight onto your map.",
+        icoMood: MeshBrainMood.speaking,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'tak_connect',
+        bubbleText:
+            "Tap the **link icon** in the app bar to connect or disconnect. "
+            "The status card shows your gateway URL, connection uptime, "
+            "and total events received.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'tak_affiliations',
+        bubbleText:
+            "Every entity is colored by **MIL-STD-2525 affiliation** — "
+            "blue for friendly, red for hostile, green for neutral, "
+            "yellow for unknown. The icon changes by dimension too: "
+            "ground, air, sea, or space.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'tak_filter',
+        bubbleText:
+            "Use the **filter chips** to narrow the list by affiliation, "
+            "or type a callsign in the **search bar**. The stale-mode "
+            "chip cycles between all, active-only, and stale-only.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'tak_detail',
+        bubbleText:
+            "Tap any entity to open its **detail screen** — full CoT "
+            "fields, coordinates, speed, course, and raw XML. Use the "
+            "map icon to jump straight to its position on the map.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'tak_tracking',
+        bubbleText:
+            "**Long-press** an entity tile to toggle tracking. Tracked "
+            "entities are highlighted on the map and stay visible even "
+            "when the TAK screen is closed.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'tak_settings',
+        bubbleText:
+            "Open **TAK Settings** from the overflow menu to change the "
+            "gateway URL, toggle auto-connect, and adjust the stale "
+            "timeout. All settings persist between sessions.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+    ],
+  );
+
+  /// Section-level help text for TAK detail screens.
+  ///
+  /// Used by the section info buttons to show contextual help
+  /// without starting a full guided tour.
+  static const Map<String, String> takSectionHelp = {
+    'status':
+        'The status card shows whether the WebSocket connection to the TAK '
+        'Gateway is active, the gateway URL, how long the connection has been '
+        'up, and how many CoT events have been received since connecting.',
+    'affiliation':
+        'MIL-STD-2525 affiliation describes the relationship of an entity to '
+        'the force: Friendly (blue), Hostile (red), Neutral (green), or '
+        'Unknown (yellow). Affiliation is parsed from the second character '
+        'of the CoT type string (e.g. a-f-G = friendly ground).',
+    'cot_type':
+        'The CoT type string encodes an entity\'s affiliation, dimension, '
+        'and function using MIL-STD-2525 atoms separated by hyphens. For '
+        'example, "a-f-G-U-C-I" is an atom (a), friendly (f), ground (G), '
+        'combat unit (U-C), infantry (I). The icon and color are derived '
+        'from this string.',
+    'identity':
+        'The UID uniquely identifies this entity across all CoT messages. '
+        'The callsign is a human-readable label assigned by the TAK server. '
+        'The type string determines the entity\'s icon, color, and '
+        'classification.',
+    'position':
+        'Latitude and longitude in WGS-84 decimal degrees as reported in '
+        'the CoT event. Tap the "Show on Map" icon in the app bar to center '
+        'the map on this position.',
+    'timestamps':
+        'Event Time is when the CoT event was generated. Stale Time is when '
+        'the entity should be considered outdated if no update arrives. '
+        'Received is when Socialmesh received the event from the gateway. '
+        'An entity is marked STALE when the current time exceeds Stale Time.',
+    'tracking':
+        'Tracked entities are pinned and highlighted on the map with a '
+        'distinct marker ring. They remain visible even when you navigate '
+        'away from the TAK screen. Long-press a tile to toggle tracking, '
+        'or use the pin icon in the detail screen.',
+    'raw_payload':
+        'The raw JSON payload as received from the TAK Gateway WebSocket. '
+        'This includes all CoT fields, XML attributes, and any extension '
+        'data attached to the event. Useful for debugging or verifying '
+        'what the gateway is sending.',
+    'filters':
+        'Filter chips let you narrow the entity list by affiliation. The '
+        'stale-mode chip cycles through All (show everything), Active Only '
+        '(hide stale entities), and Stale Only (show only expired entities). '
+        'The search bar matches against callsign and UID.',
+    'settings':
+        'TAK Settings let you configure the gateway URL, toggle auto-connect '
+        'on screen open, and set the stale timeout duration. All settings '
+        'persist locally between app sessions.',
+  };
+
+  // ============================================================================
   // LEGAL & COMPLIANCE
   // ============================================================================
 
@@ -2124,6 +2252,7 @@ class HelpContent {
     cloudSyncOverview,
     tracerouteOverview,
     aetherOverview,
+    takGatewayOverview,
   ];
 
   /// Get a topic by ID

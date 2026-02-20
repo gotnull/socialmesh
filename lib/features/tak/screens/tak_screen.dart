@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/help/help_content.dart';
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/section_header.dart';
 import '../models/tak_event.dart';
@@ -91,6 +95,62 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
     return events.where((e) => parseAffiliation(e.type) == target).length;
   }
 
+  void _showSectionHelp(BuildContext context, String key) {
+    final helpText = HelpContent.takSectionHelp[key];
+    if (helpText == null) return;
+
+    HapticFeedback.selectionClick();
+    AppBottomSheet.show<void>(
+      context: context,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.lightbulb_outline,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _helpTitleForKey(key),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              helpText,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _helpTitleForKey(String key) {
+    switch (key) {
+      case 'status':
+        return 'Connection Status';
+      case 'filters':
+        return 'Filters';
+      case 'settings':
+        return 'Settings';
+      default:
+        return 'Info';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -133,133 +193,139 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
       TakStaleMode.staleOnly => allEvents.where((e) => e.isStale).length,
     };
 
-    return GlassScaffold.body(
-      title: 'TAK Gateway',
-      actions: [
-        IconButton(
-          icon: Icon(
-            connectionState == TakConnectionState.connected
-                ? Icons.link
-                : Icons.link_off,
-            color: connectionState == TakConnectionState.connected
-                ? Colors.green
-                : Colors.grey,
+    return HelpTourController(
+      topicId: 'tak_gateway_overview',
+      stepKeys: const {},
+      child: GlassScaffold.body(
+        title: 'TAK Gateway',
+        actions: [
+          IconButton(
+            icon: Icon(
+              connectionState == TakConnectionState.connected
+                  ? Icons.link
+                  : Icons.link_off,
+              color: connectionState == TakConnectionState.connected
+                  ? Colors.green
+                  : Colors.grey,
+            ),
+            onPressed: _toggleConnection,
+            tooltip: connectionState == TakConnectionState.connected
+                ? 'Disconnect'
+                : 'Connect',
           ),
-          onPressed: _toggleConnection,
-          tooltip: connectionState == TakConnectionState.connected
-              ? 'Disconnect'
-              : 'Connect',
-        ),
-        AppBarOverflowMenu<String>(
-          onSelected: (value) {
-            switch (value) {
-              case 'settings':
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const TakSettingsScreen(),
+          IcoHelpAppBarButton(topicId: 'tak_gateway_overview'),
+          AppBarOverflowMenu<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'settings':
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const TakSettingsScreen(),
+                    ),
+                  );
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(Icons.settings, size: 18),
+                    SizedBox(width: 8),
+                    Text('TAK Settings'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.translucent,
+          child: Column(
+            children: [
+              TakStatusCard(
+                connectionState: connectionState,
+                totalReceived: client.totalEventsReceived,
+                activeEntities: allEvents.length,
+                gatewayUrl: client.gatewayUrl,
+                connectedSince: client.connectedSince,
+                lastError: client.lastError,
+                onInfoTap: () => _showSectionHelp(context, 'status'),
+              ),
+              const SizedBox(height: 8),
+              SearchFilterHeader(
+                searchController: _searchController,
+                searchQuery: filter.searchQuery,
+                onSearchChanged: (value) {
+                  ref.read(takFilterProvider.notifier).setSearchQuery(value);
+                },
+                hintText: 'Search callsign or UID',
+                filterChips: [
+                  SectionFilterChip(
+                    label: 'All',
+                    count: allEvents.length,
+                    isSelected: !filter.isActive,
+                    onTap: () {
+                      ref.read(takFilterProvider.notifier).clearAll();
+                      _searchController.clear();
+                    },
                   ),
-                );
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'settings',
-              child: Row(
-                children: [
-                  Icon(Icons.settings, size: 18),
-                  SizedBox(width: 8),
-                  Text('TAK Settings'),
+                  for (final aff in _primaryAffiliations)
+                    SectionFilterChip(
+                      label: aff.label,
+                      count: _countByAffiliation(allEvents, aff),
+                      isSelected: filter.affiliations.contains(aff),
+                      color: aff.color,
+                      onTap: () => ref
+                          .read(takFilterProvider.notifier)
+                          .toggleAffiliation(aff),
+                    ),
+                  SectionFilterChip(
+                    label: staleModeLabel,
+                    count: staleModeCount,
+                    isSelected: filter.staleMode != TakStaleMode.all,
+                    icon: staleModeIcon,
+                    onTap: () =>
+                        ref.read(takFilterProvider.notifier).cycleStaleMode(),
+                  ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ],
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        behavior: HitTestBehavior.translucent,
-        child: Column(
-          children: [
-            TakStatusCard(
-              connectionState: connectionState,
-              totalReceived: client.totalEventsReceived,
-              activeEntities: allEvents.length,
-              gatewayUrl: client.gatewayUrl,
-              connectedSince: client.connectedSince,
-              lastError: client.lastError,
-            ),
-            const SizedBox(height: 8),
-            SearchFilterHeader(
-              searchController: _searchController,
-              searchQuery: filter.searchQuery,
-              onSearchChanged: (value) {
-                ref.read(takFilterProvider.notifier).setSearchQuery(value);
-              },
-              hintText: 'Search callsign or UID',
-              filterChips: [
-                SectionFilterChip(
-                  label: 'All',
-                  count: allEvents.length,
-                  isSelected: !filter.isActive,
-                  onTap: () {
-                    ref.read(takFilterProvider.notifier).clearAll();
-                    _searchController.clear();
-                  },
-                ),
-                for (final aff in _primaryAffiliations)
-                  SectionFilterChip(
-                    label: aff.label,
-                    count: _countByAffiliation(allEvents, aff),
-                    isSelected: filter.affiliations.contains(aff),
-                    color: aff.color,
-                    onTap: () => ref
-                        .read(takFilterProvider.notifier)
-                        .toggleAffiliation(aff),
-                  ),
-                SectionFilterChip(
-                  label: staleModeLabel,
-                  count: staleModeCount,
-                  isSelected: filter.staleMode != TakStaleMode.all,
-                  icon: staleModeIcon,
-                  onTap: () =>
-                      ref.read(takFilterProvider.notifier).cycleStaleMode(),
-                ),
-              ],
-            ),
-            Expanded(
-              child: filteredEvents.isEmpty
-                  ? Center(
-                      child: Text(
-                        connectionState == TakConnectionState.connected
-                            ? 'Waiting for CoT events...'
-                            : 'Not connected to TAK Gateway',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.5,
-                          ),
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: filteredEvents.length,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: UiConstants.defaultPadding,
-                      ),
-                      itemBuilder: (context, index) {
-                        final event = filteredEvents[index];
-                        return TakEventTile(
-                          event: event,
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) =>
-                                  TakEventDetailScreen(event: event),
+              Expanded(
+                child: filteredEvents.isEmpty
+                    ? Center(
+                        child: Text(
+                          connectionState == TakConnectionState.connected
+                              ? 'Waiting for CoT events...'
+                              : 'Not connected to TAK Gateway',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.5,
                             ),
                           ),
-                        );
-                      },
-                    ),
-            ),
-          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: filteredEvents.length,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: UiConstants.defaultPadding,
+                        ),
+                        itemBuilder: (context, index) {
+                          final event = filteredEvents[index];
+                          return TakEventTile(
+                            event: event,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) =>
+                                    TakEventDetailScreen(event: event),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );

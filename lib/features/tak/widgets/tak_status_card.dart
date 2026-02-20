@@ -11,6 +11,7 @@ class TakStatusCard extends StatelessWidget {
   final String gatewayUrl;
   final DateTime? connectedSince;
   final String? lastError;
+  final VoidCallback? onInfoTap;
 
   const TakStatusCard({
     super.key,
@@ -20,6 +21,7 @@ class TakStatusCard extends StatelessWidget {
     required this.gatewayUrl,
     this.connectedSince,
     this.lastError,
+    this.onInfoTap,
   });
 
   @override
@@ -65,6 +67,21 @@ class TakStatusCard extends StatelessWidget {
                   letterSpacing: 1.0,
                 ),
               ),
+              if (onInfoTap != null) ...[
+                const SizedBox(width: 4),
+                GestureDetector(
+                  onTap: onInfoTap,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.info_outline,
+                      size: 14,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 12),

@@ -412,6 +412,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   void _selectNodeAndCenter(_NodeWithPosition nodeWithPos) {
     setState(() {
       _selectedNode = nodeWithPos.node;
+      _selectedTakEntity = null;
       _showNodeList = false;
     });
     _animatedMove(LatLng(nodeWithPos.latitude, nodeWithPos.longitude), 15.0);
@@ -483,8 +484,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
         ref.read(takShowOnMapProvider.notifier).consume();
         safeSetState(() {
           _showTakLayer = true;
-          _panelTab = 1;
-          _showNodeList = true;
+          _selectedTakEntity = next;
+          _selectedNode = null;
+          _showNodeList = false;
         });
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _animatedMove(LatLng(next.lat, next.lon), 15.0);
@@ -1573,7 +1575,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       left: _mapPadding,
                       top: _mapPadding,
                       child: GestureDetector(
-                        onTap: () => setState(() => _showNodeList = true),
+                        onTap: () => setState(() {
+                          _showNodeList = true;
+                          _selectedNode = null;
+                          _selectedTakEntity = null;
+                        }),
                         child: Builder(
                           builder: (context) {
                             final takCount =
