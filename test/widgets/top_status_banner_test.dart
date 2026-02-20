@@ -129,4 +129,65 @@ void main() {
     await tester.tap(find.text('Retry'));
     expect(retryTapped, isTrue);
   });
+
+  testWidgets('reconnecting banner shows Cancel action', (tester) async {
+    var wentToScanner = false;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: TopStatusBanner(
+            autoReconnectState: AutoReconnectState.scanning,
+            autoReconnectEnabled: true,
+            onRetry: () {},
+            onGoToScanner: () => wentToScanner = true,
+            deviceState: const DeviceConnectionState2(
+              state: DevicePairingState.scanning,
+              reason: DisconnectReason.none,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Let the slide-in animation complete.
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // Should show searching text and Cancel action.
+    expect(find.text('Searching for device...'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+
+    // Retry should NOT be shown during active reconnecting.
+    expect(find.text('Retry'), findsNothing);
+
+    // Tapping the banner should navigate to scanner.
+    await tester.tap(find.byType(InkWell));
+    expect(wentToScanner, isTrue);
+  });
+
+  testWidgets('reconnecting banner shows Cancel for connecting state too', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: TopStatusBanner(
+            autoReconnectState: AutoReconnectState.connecting,
+            autoReconnectEnabled: true,
+            onRetry: () {},
+            onGoToScanner: () {},
+            deviceState: const DeviceConnectionState2(
+              state: DevicePairingState.connecting,
+              reason: DisconnectReason.none,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Reconnecting...'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+  });
 }

@@ -274,9 +274,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   /// [AutoReconnectState] to [AutoReconnectState.failed] so the banner
   /// shows actionable options (Retry / Go to Scanner).
   void cancelAutoReconnect() {
-    AppLogging.connection(
-      '🔌 cancelAutoReconnect: Cancelling reconnect cycle',
-    );
+    AppLogging.connection('🔌 cancelAutoReconnect: Cancelling reconnect cycle');
     _retryTimer?.cancel();
     _retryTimer = null;
     _backgroundScanInProgress = false;
