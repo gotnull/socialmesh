@@ -128,6 +128,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // Track if initial node centering has been done
   bool _initialCenteringDone = false;
 
+  // One-shot flag: consume TAK provider values that were set before
+  // this widget built (ref.listen only fires on *changes*, not
+  // the current value at subscription time).
+  bool _takInitialCheckDone = false;
+
   // Layout constants for consistent spacing
   static const double _mapPadding = 16.0;
   static const double _controlSpacing = 8.0;
@@ -493,6 +498,34 @@ class _MapScreenState extends ConsumerState<MapScreen>
         });
       }
     });
+
+    // One-shot: pick up TAK provider values that were set before this
+    // widget built (e.g. "Show on Map" in TakEventDetailScreen sets the
+    // providers, pops the stack, and MainShell then builds MapScreen
+    // fresh — ref.listen misses the already-set value).
+    if (!_takInitialCheckDone) {
+      _takInitialCheckDone = true;
+
+      final pendingTakMode = ref.read(mapTakModeProvider);
+      if (pendingTakMode) {
+        ref.read(mapTakModeProvider.notifier).consume();
+        _showTakLayer = true;
+        _panelTab = 1;
+        _showNodeList = true;
+      }
+
+      final pendingEvent = ref.read(takShowOnMapProvider);
+      if (pendingEvent != null) {
+        ref.read(takShowOnMapProvider.notifier).consume();
+        _showTakLayer = true;
+        _selectedTakEntity = pendingEvent;
+        _selectedNode = null;
+        _showNodeList = false;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _animatedMove(LatLng(pendingEvent.lat, pendingEvent.lon), 15.0);
+        });
+      }
+    }
 
     final nodes = ref.watch(nodesProvider);
     final presenceMap = ref.watch(presenceMapProvider);
