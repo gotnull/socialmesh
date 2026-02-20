@@ -21,7 +21,7 @@ import '../../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int nodedexSchemaVersion = 5;
+const int nodedexSchemaVersion = 6;
 
 /// Table and column name constants for NodeDex SQLite schema.
 abstract final class NodeDexTables {
@@ -39,6 +39,8 @@ abstract final class NodeDexTables {
   static const colSocialTagUpdatedAtMs = 'social_tag_updated_at_ms';
   static const colUserNote = 'user_note';
   static const colUserNoteUpdatedAtMs = 'user_note_updated_at_ms';
+  static const colLocalNickname = 'local_nickname';
+  static const colLocalNicknameUpdatedAtMs = 'local_nickname_updated_at_ms';
   static const colSigilJson = 'sigil_json';
   static const colLastKnownName = 'last_known_name';
   static const colLastKnownHardware = 'last_known_hardware';
@@ -201,6 +203,8 @@ class NodeDexDatabase {
         ${NodeDexTables.colSocialTagUpdatedAtMs} INTEGER,
         ${NodeDexTables.colUserNote} TEXT,
         ${NodeDexTables.colUserNoteUpdatedAtMs} INTEGER,
+        ${NodeDexTables.colLocalNickname} TEXT,
+        ${NodeDexTables.colLocalNicknameUpdatedAtMs} INTEGER,
         ${NodeDexTables.colSigilJson} TEXT NOT NULL,
         ${NodeDexTables.colLastKnownName} TEXT,
         ${NodeDexTables.colLastKnownHardware} TEXT,
@@ -398,6 +402,22 @@ class NodeDexDatabase {
       );
       AppLogging.storage(
         'NodeDexDatabase: v5 migration — added presence_transitions table',
+      );
+    }
+    if (oldVersion < 6) {
+      // v6: Add local_nickname for user-assigned nicknames that override
+      // all other name resolution sources. Per-field timestamp supports
+      // last-write-wins conflict resolution during Cloud Sync.
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} '
+        'ADD COLUMN ${NodeDexTables.colLocalNickname} TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} '
+        'ADD COLUMN ${NodeDexTables.colLocalNicknameUpdatedAtMs} INTEGER',
+      );
+      AppLogging.storage(
+        'NodeDexDatabase: v6 migration — added local_nickname columns',
       );
     }
   }

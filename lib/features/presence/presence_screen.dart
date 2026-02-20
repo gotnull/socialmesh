@@ -16,7 +16,10 @@ import '../../models/presence_confidence.dart';
 import '../../providers/presence_providers.dart';
 import '../../utils/presence_utils.dart';
 import '../nodedex/screens/nodedex_detail_screen.dart';
+import '../nodedex/providers/nodedex_providers.dart';
+import '../nodedex/services/trust_score.dart';
 import '../nodedex/widgets/sigil_painter.dart';
+import '../nodedex/widgets/trust_indicator.dart';
 
 /// Filter options for the Presence screen.
 enum PresenceFilter { all, active, fading, inactive, unknown, familiar }
@@ -628,6 +631,25 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                 // Role badge
                 if (presence.node.role != null)
                   _RoleBadge(role: presence.node.role!),
+                // Trust indicator (computed, distinct from tags)
+                Builder(
+                  builder: (context) {
+                    final disclosure = ref.watch(
+                      nodeDexDisclosureProvider(node.nodeNum),
+                    );
+                    final trustResult = ref.watch(
+                      nodeDexTrustProvider(node.nodeNum),
+                    );
+                    if (disclosure.showPrimaryTrait &&
+                        trustResult.level != TrustLevel.unknown) {
+                      return TrustIndicator(
+                        level: trustResult.level,
+                        size: TrustIndicatorSize.compact,
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
               ],
             ),
             // Encounter history

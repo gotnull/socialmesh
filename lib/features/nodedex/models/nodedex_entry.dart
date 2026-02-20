@@ -647,6 +647,15 @@ class NodeDexEntry {
   /// MeshNode.firmwareVersion. Updated on every encounter.
   final String? lastKnownFirmware;
 
+  /// User-assigned local nickname that overrides all other name resolution
+  /// sources (live mesh, cached name, hex fallback). Persisted in SQLite
+  /// and synced via Cloud Sync with last-write-wins semantics.
+  final String? localNickname;
+
+  /// Epoch-ms timestamp of the last localNickname edit.
+  /// Used for last-write-wins conflict resolution during Cloud Sync.
+  final int? localNicknameUpdatedAtMs;
+
   /// Maximum number of encounter records to retain.
   static const int maxEncounterRecords = 50;
 
@@ -681,6 +690,8 @@ class NodeDexEntry {
     this.lastKnownHardware,
     this.lastKnownRole,
     this.lastKnownFirmware,
+    this.localNickname,
+    this.localNicknameUpdatedAtMs,
   });
 
   /// Create a new entry for a freshly discovered node.
@@ -786,6 +797,9 @@ class NodeDexEntry {
     String? userNote,
     bool clearUserNote = false,
     int? userNoteUpdatedAtMs,
+    String? localNickname,
+    bool clearLocalNickname = false,
+    int? localNicknameUpdatedAtMs,
     List<EncounterRecord>? encounters,
     List<SeenRegion>? seenRegions,
     Map<int, CoSeenRelationship>? coSeenNodes,
@@ -804,6 +818,11 @@ class NodeDexEntry {
     final effectiveUnMs = clearUserNote || userNote != null
         ? (userNoteUpdatedAtMs ?? DateTime.now().millisecondsSinceEpoch)
         : (userNoteUpdatedAtMs ?? this.userNoteUpdatedAtMs);
+
+    // Auto-stamp when localNickname changes via copyWith.
+    final effectiveLnMs = clearLocalNickname || localNickname != null
+        ? (localNicknameUpdatedAtMs ?? DateTime.now().millisecondsSinceEpoch)
+        : (localNicknameUpdatedAtMs ?? this.localNicknameUpdatedAtMs);
 
     return NodeDexEntry(
       nodeNum: nodeNum ?? this.nodeNum,
@@ -826,6 +845,10 @@ class NodeDexEntry {
       lastKnownHardware: lastKnownHardware ?? this.lastKnownHardware,
       lastKnownRole: lastKnownRole ?? this.lastKnownRole,
       lastKnownFirmware: lastKnownFirmware ?? this.lastKnownFirmware,
+      localNickname: clearLocalNickname
+          ? null
+          : (localNickname ?? this.localNickname),
+      localNicknameUpdatedAtMs: effectiveLnMs,
     );
   }
 
@@ -1062,6 +1085,12 @@ class NodeDexEntry {
       remoteValue: other.userNote,
       remoteTimestamp: other.userNoteUpdatedAtMs,
     );
+    final mergedNicknameResult = _mergeUserField<String>(
+      localValue: localNickname,
+      localTimestamp: localNicknameUpdatedAtMs,
+      remoteValue: other.localNickname,
+      remoteTimestamp: other.localNicknameUpdatedAtMs,
+    );
 
     final mergedSigil = sigil ?? other.sigil;
 
@@ -1131,6 +1160,8 @@ class NodeDexEntry {
       lastKnownHardware: mergedHardware,
       lastKnownRole: mergedRole,
       lastKnownFirmware: mergedFirmware,
+      localNickname: mergedNicknameResult.value,
+      localNicknameUpdatedAtMs: mergedNicknameResult.timestamp,
     );
   }
 
@@ -1222,6 +1253,8 @@ class NodeDexEntry {
       if (lastKnownHardware != null) 'lkh': lastKnownHardware,
       if (lastKnownRole != null) 'lkr': lastKnownRole,
       if (lastKnownFirmware != null) 'lkf': lastKnownFirmware,
+      if (localNickname != null) 'ln': localNickname,
+      if (localNicknameUpdatedAtMs != null) 'ln_ms': localNicknameUpdatedAtMs,
     };
   }
 
@@ -1281,6 +1314,8 @@ class NodeDexEntry {
       lastKnownHardware: json['lkh'] as String?,
       lastKnownRole: json['lkr'] as String?,
       lastKnownFirmware: json['lkf'] as String?,
+      localNickname: json['ln'] as String?,
+      localNicknameUpdatedAtMs: json['ln_ms'] as int?,
     );
   }
 
@@ -1305,6 +1340,7 @@ class NodeDexEntry {
           nodeNum == other.nodeNum &&
           socialTag == other.socialTag &&
           userNote == other.userNote &&
+          localNickname == other.localNickname &&
           encounterCount == other.encounterCount &&
           messageCount == other.messageCount &&
           bestSnr == other.bestSnr &&
@@ -1316,8 +1352,14 @@ class NodeDexEntry {
           coSeenNodes.length == other.coSeenNodes.length;
 
   @override
-  int get hashCode =>
-      Object.hash(nodeNum, socialTag, userNote, encounterCount, messageCount);
+  int get hashCode => Object.hash(
+    nodeNum,
+    socialTag,
+    userNote,
+    localNickname,
+    encounterCount,
+    messageCount,
+  );
 
   @override
   String toString() =>

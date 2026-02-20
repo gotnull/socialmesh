@@ -274,7 +274,7 @@ class _GalleryPage extends ConsumerWidget {
     final sigil = entry.sigil ?? SigilGenerator.generate(entry.nodeNum);
     final hexId =
         '!${entry.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
-    final displayName = entry.lastKnownName ?? hexId;
+    final displayName = entry.localNickname ?? entry.lastKnownName ?? hexId;
     final rarity = CardRarityVisuals.fromNodeData(
       encounterCount: entry.encounterCount,
       trait: trait,
@@ -490,7 +490,7 @@ class _GalleryBottomBar extends ConsumerWidget {
     );
     final hexId =
         '!${entry.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
-    final displayName = entry.lastKnownName ?? hexId;
+    final displayName = entry.localNickname ?? entry.lastKnownName ?? hexId;
 
     return Container(
       height: AlbumConstants.galleryBottomBarHeight,

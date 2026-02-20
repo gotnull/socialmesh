@@ -66,6 +66,10 @@ class ObservationTimeline extends StatelessWidget {
 
         // Date row
         _buildDateRow(context),
+        const SizedBox(height: 2),
+
+        // Relative time row
+        _buildRelativeRow(context),
       ],
     );
   }
@@ -160,6 +164,46 @@ class ObservationTimeline extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Widget _buildRelativeRow(BuildContext context) {
+    final firstAgo = _formatRelative(
+      DateTime.now().difference(entry.firstSeen),
+    );
+    final lastAgo = _formatRelative(DateTime.now().difference(entry.lastSeen));
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          firstAgo,
+          style: TextStyle(
+            fontSize: 9,
+            color: context.textTertiary.withValues(alpha: 0.6),
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        Text(
+          lastAgo,
+          style: TextStyle(
+            fontSize: 9,
+            color: context.textTertiary.withValues(alpha: 0.6),
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Formats a duration as a compact relative label.
+  static String _formatRelative(Duration duration) {
+    if (duration.inMinutes < 1) return 'just now';
+    if (duration.inMinutes < 60) return '${duration.inMinutes}m ago';
+    if (duration.inHours < 24) return '${duration.inHours}h ago';
+    if (duration.inDays < 7) return '${duration.inDays}d ago';
+    if (duration.inDays < 30) return '${duration.inDays ~/ 7}w ago';
+    if (duration.inDays < 365) return '${duration.inDays ~/ 30}mo ago';
+    return '${duration.inDays ~/ 365}y ago';
   }
 
   static String _formatDuration(Duration duration) {

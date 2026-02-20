@@ -61,8 +61,9 @@ class BackgroundIdentityResolver {
 
     try {
       final entry = await _store!.getEntry(nodeNum);
-      if (entry != null && entry.lastKnownName != null) {
-        return entry.lastKnownName!;
+      if (entry != null) {
+        if (entry.localNickname != null) return entry.localNickname!;
+        if (entry.lastKnownName != null) return entry.lastKnownName!;
       }
     } catch (e) {
       AppLogging.ble('BackgroundIdentityResolver: resolve($nodeNum) error: $e');

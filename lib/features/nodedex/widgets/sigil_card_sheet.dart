@@ -60,6 +60,7 @@ void showSigilCardSheet({
   MeshNode? node,
 }) {
   final displayName =
+      entry.localNickname ??
       node?.displayName ??
       entry.lastKnownName ??
       NodeDisplayNameResolver.defaultName(entry.nodeNum);

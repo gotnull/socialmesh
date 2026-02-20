@@ -407,6 +407,8 @@ class NodeDexSqliteStore {
       NodeDexTables.colSocialTagUpdatedAtMs: entry.socialTagUpdatedAtMs,
       NodeDexTables.colUserNote: entry.userNote,
       NodeDexTables.colUserNoteUpdatedAtMs: entry.userNoteUpdatedAtMs,
+      NodeDexTables.colLocalNickname: entry.localNickname,
+      NodeDexTables.colLocalNicknameUpdatedAtMs: entry.localNicknameUpdatedAtMs,
       NodeDexTables.colSigilJson: entry.sigil != null
           ? jsonEncode(entry.sigil!.toJson())
           : jsonEncode(SigilGenerator.generate(entry.nodeNum).toJson()),
@@ -513,6 +515,9 @@ class NodeDexSqliteStore {
       lastKnownHardware: row[NodeDexTables.colLastKnownHardware] as String?,
       lastKnownRole: row[NodeDexTables.colLastKnownRole] as String?,
       lastKnownFirmware: row[NodeDexTables.colLastKnownFirmware] as String?,
+      localNickname: row[NodeDexTables.colLocalNickname] as String?,
+      localNicknameUpdatedAtMs:
+          row[NodeDexTables.colLocalNicknameUpdatedAtMs] as int?,
     );
   }
 

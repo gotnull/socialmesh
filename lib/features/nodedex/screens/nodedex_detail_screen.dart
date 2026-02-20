@@ -43,17 +43,20 @@ import '../providers/nodedex_providers.dart';
 import '../services/patina_score.dart';
 
 import '../services/trait_engine.dart';
+import '../services/trust_score.dart';
 import '../widgets/edge_detail_sheet.dart';
 import '../widgets/animated_sigil_container.dart';
 import '../widgets/field_note_widget.dart';
 import '../widgets/identity_overlay_painter.dart';
 import '../widgets/observation_timeline.dart';
 import '../widgets/node_activity_timeline.dart';
+import '../widgets/node_summary_card.dart';
 import '../widgets/patina_stamp.dart';
 import '../atmosphere/atmosphere_overlay.dart';
 import '../widgets/sigil_card_sheet.dart';
 import '../widgets/sigil_painter.dart';
 import '../widgets/trait_badge.dart';
+import '../widgets/trust_indicator.dart';
 
 /// Detail screen for a single NodeDex entry.
 ///
@@ -103,6 +106,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     final patinaResult = ref.watch(nodeDexPatinaProvider(widget.nodeNum));
     final scoredTraits = ref.watch(nodeDexScoredTraitsProvider(widget.nodeNum));
     final reduceMotion = ref.watch(reduceMotionEnabledProvider);
+    final summary = ref.watch(nodeSummaryProvider(widget.nodeNum));
     final timelineEventCount = ref
         .watch(nodeActivityTimelineProvider(widget.nodeNum))
         .asData
@@ -142,6 +146,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     }
 
     final displayName =
+        entry.localNickname ??
         node?.displayName ??
         entry.lastKnownName ??
         NodeDisplayNameResolver.defaultName(entry.nodeNum);
@@ -203,11 +208,28 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
             ),
           ),
 
+          // Auto summary card — computed encounter insights
+          SliverToBoxAdapter(
+            child: _DetailEntrance(
+              index: 1,
+              reduceMotion: reduceMotion,
+              child: _CardContainer(
+                title: 'Summary',
+                icon: Icons.auto_awesome_outlined,
+                helpKey: 'auto_summary',
+                child: NodeSummaryCard(
+                  summary: summary,
+                  accentColor: entry.sigil?.primaryColor ?? context.accentColor,
+                ),
+              ),
+            ),
+          ),
+
           // Trait card
           if (disclosure.showPrimaryTrait)
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 1,
+                index: 2,
                 reduceMotion: reduceMotion,
                 child: _TraitCard(traitResult: traitResult),
               ),
@@ -217,7 +239,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           if (disclosure.showTraitEvidence && scoredTraits.isNotEmpty)
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 2,
+                index: 3,
                 reduceMotion: reduceMotion,
                 child: TraitEvidenceList(
                   observations: scoredTraits.first.evidence
@@ -233,7 +255,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           if (disclosure.showFieldNote)
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 3,
+                index: 4,
                 reduceMotion: reduceMotion,
                 child: CollapsibleFieldNote(
                   entry: entry,
@@ -248,13 +270,12 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           if (disclosure.showTimeline)
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 4,
+                index: 5,
                 reduceMotion: reduceMotion,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
+                child: _CardContainer(
+                  title: 'Observation Timeline',
+                  icon: Icons.timeline,
+                  helpKey: 'observation_timeline',
                   child: ObservationTimeline(
                     entry: entry,
                     accentColor:
@@ -270,7 +291,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           if (disclosure.showAllTraits && scoredTraits.length > 1)
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 5,
+                index: 6,
                 reduceMotion: reduceMotion,
                 child: _ScoredTraitsList(
                   scoredTraits: scoredTraits,
@@ -282,7 +303,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           // Discovery stats
           SliverToBoxAdapter(
             child: _DetailEntrance(
-              index: 6,
+              index: 7,
               reduceMotion: reduceMotion,
               child: _DiscoveryStatsCard(entry: entry, node: node),
             ),
@@ -291,7 +312,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           // Signal records
           SliverToBoxAdapter(
             child: _DetailEntrance(
-              index: 7,
+              index: 8,
               reduceMotion: reduceMotion,
               child: _SignalRecordsCard(entry: entry),
             ),
@@ -301,7 +322,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           if (node != null)
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 8,
+                index: 9,
                 reduceMotion: reduceMotion,
                 child: _DeviceInfoCard(node: node),
               ),
@@ -310,7 +331,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           // Social tag
           SliverToBoxAdapter(
             child: _DetailEntrance(
-              index: 9,
+              index: 10,
               reduceMotion: reduceMotion,
               child: _SocialTagCard(
                 entry: entry,
@@ -322,7 +343,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           // User note
           SliverToBoxAdapter(
             child: _DetailEntrance(
-              index: 10,
+              index: 11,
               reduceMotion: reduceMotion,
               child: _UserNoteCard(
                 entry: entry,
@@ -351,7 +372,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           if (entry.seenRegions.isNotEmpty)
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 11,
+                index: 12,
                 reduceMotion: reduceMotion,
                 child: _RegionHistoryCard(entry: entry),
               ),
@@ -361,7 +382,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           if (entry.encounters.isNotEmpty)
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 12,
+                index: 13,
                 reduceMotion: reduceMotion,
                 child: _EncounterActivityCard(entry: entry),
               ),
@@ -381,7 +402,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           ),
           SliverToBoxAdapter(
             child: _DetailEntrance(
-              index: 13,
+              index: 14,
               reduceMotion: reduceMotion,
               child: _StickyCardBody(
                 child: NodeActivityTimeline(
@@ -405,7 +426,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
             ),
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 15,
+                index: 16,
                 reduceMotion: reduceMotion,
                 child: _CoSeenNodesBody(entry: entry),
               ),
@@ -592,7 +613,7 @@ class _ScoredTraitsList extends StatelessWidget {
   }
 }
 
-class _SigilHeroSection extends StatelessWidget {
+class _SigilHeroSection extends ConsumerStatefulWidget {
   final NodeDexEntry entry;
   final MeshNode? node;
   final String displayName;
@@ -612,8 +633,65 @@ class _SigilHeroSection extends StatelessWidget {
   });
 
   @override
+  ConsumerState<_SigilHeroSection> createState() => _SigilHeroSectionState();
+}
+
+class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
+  bool _editingNickname = false;
+  late final TextEditingController _nicknameController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nicknameController = TextEditingController(
+      text: widget.entry.localNickname ?? '',
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _SigilHeroSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_editingNickname &&
+        oldWidget.entry.localNickname != widget.entry.localNickname) {
+      _nicknameController.text = widget.entry.localNickname ?? '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _nicknameController.dispose();
+    super.dispose();
+  }
+
+  void _startEditing() {
+    setState(() {
+      _editingNickname = true;
+      _nicknameController.text = widget.entry.localNickname ?? '';
+    });
+  }
+
+  void _saveNickname() {
+    final trimmed = _nicknameController.text.trim();
+    ref
+        .read(nodeDexProvider.notifier)
+        .setLocalNickname(
+          widget.entry.nodeNum,
+          trimmed.isEmpty ? null : trimmed,
+        );
+    HapticFeedback.lightImpact();
+    setState(() => _editingNickname = false);
+  }
+
+  void _cancelEditing() {
+    setState(() {
+      _editingNickname = false;
+      _nicknameController.text = widget.entry.localNickname ?? '';
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isOnline = _isOnline(node);
+    final isOnline = _isOnline(widget.node);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -623,9 +701,8 @@ class _SigilHeroSection extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             context.card,
-            (entry.sigil?.primaryColor ?? context.accentColor).withValues(
-              alpha: 0.04,
-            ),
+            (widget.entry.sigil?.primaryColor ?? context.accentColor)
+                .withValues(alpha: 0.04),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
@@ -650,16 +727,16 @@ class _SigilHeroSection extends StatelessWidget {
                     alignment: Alignment.center,
                     children: [
                       AnimatedSigilContainer(
-                        sigil: entry.sigil,
-                        nodeNum: entry.nodeNum,
+                        sigil: widget.entry.sigil,
+                        nodeNum: widget.entry.nodeNum,
                         size: 120,
                         mode: isOnline
                             ? SigilAnimationMode.full
                             : SigilAnimationMode.ambientOnly,
                         showGlow: isOnline,
                         showTracer: isOnline,
-                        trait: traitResult.primary,
-                        evolution: evolution,
+                        trait: widget.traitResult.primary,
+                        evolution: widget.evolution,
                       ),
                       if (isOnline)
                         Positioned(
@@ -693,7 +770,7 @@ class _SigilHeroSection extends StatelessWidget {
 
                   // Name
                   Text(
-                    displayName,
+                    widget.displayName,
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
@@ -703,9 +780,13 @@ class _SigilHeroSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
 
+                  // Inline nickname editor
+                  _buildNicknameRow(context),
+                  const SizedBox(height: 4),
+
                   // Hex ID
                   Text(
-                    hexId,
+                    widget.hexId,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -717,7 +798,8 @@ class _SigilHeroSection extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   // Role badge (if known)
-                  if (node?.role != null && node!.role!.isNotEmpty)
+                  if (widget.node?.role != null &&
+                      widget.node!.role!.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -728,7 +810,7 @@ class _SigilHeroSection extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        node!.role!,
+                        widget.node!.role!,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -738,24 +820,144 @@ class _SigilHeroSection extends StatelessWidget {
                       ),
                     ),
 
+                  // Trust indicator (shown at disclosure tier 1+)
+                  Builder(
+                    builder: (context) {
+                      final trustResult = ref.watch(
+                        nodeDexTrustProvider(widget.entry.nodeNum),
+                      );
+                      final disclosure = ref.watch(
+                        nodeDexDisclosureProvider(widget.entry.nodeNum),
+                      );
+                      if (disclosure.showPrimaryTrait &&
+                          trustResult.level != TrustLevel.unknown) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: TrustIndicator(
+                            level: trustResult.level,
+                            size: TrustIndicatorSize.standard,
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+
                   // Patina stamp (shown when disclosure permits)
-                  if (patinaResult != null) ...[
+                  if (widget.patinaResult != null) ...[
                     const SizedBox(height: 12),
                     PatinaStamp(
-                      result: patinaResult!,
+                      result: widget.patinaResult!,
                       accentColor:
-                          entry.sigil?.primaryColor ?? const Color(0xFF9CA3AF),
+                          widget.entry.sigil?.primaryColor ??
+                          const Color(0xFF9CA3AF),
                     ),
                   ],
 
                   // Color palette
                   const SizedBox(height: 16),
-                  _ColorPalette(entry: entry),
+                  _ColorPalette(entry: widget.entry),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNicknameRow(BuildContext context) {
+    if (_editingNickname) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 180,
+            child: TextField(
+              controller: _nicknameController,
+              maxLength: 40,
+              autofocus: true,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: context.textSecondary),
+              decoration: InputDecoration(
+                isDense: true,
+                counterText: '',
+                hintText: 'Nickname',
+                hintStyle: TextStyle(
+                  fontSize: 13,
+                  color: context.textTertiary.withValues(alpha: 0.6),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 6,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: context.border.withValues(alpha: 0.3),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: context.border.withValues(alpha: 0.3),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: context.accentColor),
+                ),
+              ),
+              onSubmitted: (_) => _saveNickname(),
+            ),
+          ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: _saveNickname,
+            child: Icon(
+              Icons.check_circle_outline,
+              size: 20,
+              color: context.accentColor,
+            ),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: _cancelEditing,
+            child: Icon(
+              Icons.cancel_outlined,
+              size: 20,
+              color: context.textTertiary,
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Display mode: show nickname or "Set nickname" placeholder
+    final hasNickname = widget.entry.localNickname != null;
+    return GestureDetector(
+      onTap: _startEditing,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.edit_outlined,
+            size: 12,
+            color: context.textTertiary.withValues(alpha: 0.5),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            hasNickname ? widget.entry.localNickname! : 'Set nickname',
+            style: TextStyle(
+              fontSize: 12,
+              fontStyle: hasNickname ? FontStyle.normal : FontStyle.italic,
+              color: hasNickname
+                  ? context.textSecondary
+                  : context.textTertiary.withValues(alpha: 0.6),
+            ),
+          ),
+        ],
       ),
     );
   }

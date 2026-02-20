@@ -13,6 +13,10 @@ import '../providers/app_providers.dart';
 /// source, which informs whether the backfill script needs to be run
 /// and how effective NodeDex caching is.
 enum IdentityResolutionSource {
+  /// Resolved from user-assigned local nickname (highest priority).
+  /// The user explicitly chose this name for the node.
+  localNickname,
+
   /// Resolved from live mesh node data (nodesProvider).
   /// Best case — the node is currently visible on the mesh.
   liveMesh,
@@ -62,6 +66,7 @@ class MeshIdentity {
 class IdentityResolutionTelemetry {
   IdentityResolutionTelemetry._();
 
+  static int _localNicknameCount = 0;
   static int _liveMeshCount = 0;
   static int _nodeDexCachedCount = 0;
   static int _hexFallbackCount = 0;
@@ -76,6 +81,8 @@ class IdentityResolutionTelemetry {
     _totalResolutions++;
 
     switch (source) {
+      case IdentityResolutionSource.localNickname:
+        _localNicknameCount++;
       case IdentityResolutionSource.liveMesh:
         _liveMeshCount++;
       case IdentityResolutionSource.nodeDexCached:
@@ -89,6 +96,7 @@ class IdentityResolutionTelemetry {
       AppLogging.nodeDex(
         'IdentityResolution telemetry '
         '(session total: $_totalResolutions): '
+        'localNickname=$_localNicknameCount, '
         'liveMesh=$_liveMeshCount, '
         'nodeDexCached=$_nodeDexCachedCount, '
         'hexFallback=$_hexFallbackCount',
@@ -100,6 +108,7 @@ class IdentityResolutionTelemetry {
   static Map<String, int> snapshot() {
     return {
       'total': _totalResolutions,
+      'localNickname': _localNicknameCount,
       'liveMesh': _liveMeshCount,
       'nodeDexCached': _nodeDexCachedCount,
       'hexFallback': _hexFallbackCount,
@@ -108,6 +117,7 @@ class IdentityResolutionTelemetry {
 
   /// Reset all counters (used in tests).
   static void reset() {
+    _localNicknameCount = 0;
     _liveMeshCount = 0;
     _nodeDexCachedCount = 0;
     _hexFallbackCount = 0;
@@ -118,9 +128,10 @@ class IdentityResolutionTelemetry {
 /// Resolves the best display name for a mesh node number.
 ///
 /// Resolution chain (first non-null wins):
-/// 1. Live node from [nodesProvider] (longName or shortName)
-/// 2. Cached name from NodeDex [lastKnownName]
-/// 3. Default name fallback (e.g. "Meshtastic 5ED6")
+/// 1. User-assigned local nickname from NodeDex
+/// 2. Live node from [nodesProvider] (longName or shortName)
+/// 3. Cached name from NodeDex [lastKnownName]
+/// 4. Default name fallback (e.g. "Meshtastic 5ED6")
 ///
 /// This function is fully offline — it never makes network requests.
 /// All data sources are local: live mesh telemetry and local SQLite.
@@ -129,6 +140,16 @@ class IdentityResolutionTelemetry {
 /// consistency across Activity, Signals, NodeDex, and any other
 /// screen that shows node identities.
 String resolveMeshNodeName(WidgetRef ref, int nodeNum) {
+  // 0. User-assigned local nickname — always wins when set.
+  final entry = ref.watch(nodeDexEntryProvider(nodeNum));
+  if (entry?.localNickname != null) {
+    IdentityResolutionTelemetry.record(
+      IdentityResolutionSource.localNickname,
+      nodeNum,
+    );
+    return entry!.localNickname!;
+  }
+
   // 1. Live node — most accurate, real-time from the mesh.
   // Use NodeDisplayNameResolver.sanitizeName to filter out placeholder
   // names (hex IDs, firmware defaults, BLE advertising names).
@@ -155,7 +176,6 @@ String resolveMeshNodeName(WidgetRef ref, int nodeNum) {
 
   // 2. NodeDex cached name — persisted from a previous session.
   // Fully local (SQLite), works offline and without sign-in.
-  final entry = ref.watch(nodeDexEntryProvider(nodeNum));
   if (entry?.lastKnownName != null) {
     IdentityResolutionTelemetry.record(
       IdentityResolutionSource.nodeDexCached,
@@ -179,6 +199,21 @@ String resolveMeshNodeName(WidgetRef ref, int nodeNum) {
 ///
 /// This function is fully offline — it never makes network requests.
 MeshIdentity resolveMeshIdentity(WidgetRef ref, int nodeNum) {
+  // 0. User-assigned local nickname — always wins when set.
+  final entry = ref.watch(nodeDexEntryProvider(nodeNum));
+  if (entry?.localNickname != null) {
+    IdentityResolutionTelemetry.record(
+      IdentityResolutionSource.localNickname,
+      nodeNum,
+    );
+    return MeshIdentity(
+      displayName: entry!.localNickname!,
+      nodeNum: nodeNum,
+      isLive: false,
+      source: IdentityResolutionSource.localNickname,
+    );
+  }
+
   final nodes = ref.watch(nodesProvider);
   final node = nodes[nodeNum];
   if (node != null) {
@@ -210,7 +245,6 @@ MeshIdentity resolveMeshIdentity(WidgetRef ref, int nodeNum) {
     }
   }
 
-  final entry = ref.watch(nodeDexEntryProvider(nodeNum));
   if (entry?.lastKnownName != null) {
     IdentityResolutionTelemetry.record(
       IdentityResolutionSource.nodeDexCached,

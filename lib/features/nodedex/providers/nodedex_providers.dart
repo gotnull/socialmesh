@@ -39,10 +39,12 @@ import '../services/nodedex_database.dart';
 import '../services/nodedex_sqlite_store.dart';
 import '../services/nodedex_sync_service.dart';
 import '../services/field_note_generator.dart';
+import '../services/node_summary_engine.dart';
 import '../services/patina_score.dart';
 import '../services/progressive_disclosure.dart';
 import '../services/sigil_generator.dart';
 import '../services/trait_engine.dart';
+import '../services/trust_score.dart';
 
 // =============================================================================
 // Storage Provider
@@ -621,6 +623,43 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     _triggerImmediateSync();
   }
 
+  /// Set a local nickname for a node.
+  ///
+  /// The nickname overrides all other name resolution sources (live mesh
+  /// name, cached name, hex fallback). Pass null or empty to clear.
+  /// Capped at 40 characters.
+  void setLocalNickname(int nodeNum, String? nickname) {
+    final entry = state[nodeNum];
+    if (entry == null) {
+      AppLogging.nodeDex(
+        'setLocalNickname failed — node $nodeNum not found in state',
+      );
+      return;
+    }
+
+    final trimmed = nickname?.trim();
+    final updated = (trimmed == null || trimmed.isEmpty)
+        ? entry.copyWith(clearLocalNickname: true)
+        : entry.copyWith(
+            localNickname: trimmed.length > 40
+                ? trimmed.substring(0, 40)
+                : trimmed,
+          );
+
+    final newState = {...state, nodeNum: updated};
+    state = newState;
+    _lastKnownState = newState;
+    _store?.saveEntry(updated);
+
+    final hexId = '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+    AppLogging.nodeDex(
+      'Local nickname updated for $hexId: '
+      '${(trimmed == null || trimmed.isEmpty) ? "(cleared)" : '"$trimmed"'}',
+    );
+
+    _triggerImmediateSync();
+  }
+
   // ---------------------------------------------------------------------------
   // Cloud sync helpers
   // ---------------------------------------------------------------------------
@@ -936,6 +975,32 @@ final nodeDexPatinaProvider = Provider.family<PatinaResult, int>((
   return PatinaScore.compute(entry);
 });
 
+/// Provider for the computed trust level of a specific node.
+///
+/// Combines encounter frequency, node age, message count, relay role,
+/// and recency into a single trust classification. Only meaningful
+/// at disclosure tier 1+ (>= 2 encounters, >= 1 hour age).
+final nodeDexTrustProvider = Provider.family<TrustResult, int>((ref, nodeNum) {
+  final entry = ref.watch(nodeDexEntryProvider(nodeNum));
+  if (entry == null) {
+    return const TrustResult(
+      score: 0,
+      level: TrustLevel.unknown,
+      frequentlySeen: 0,
+      longLived: 0,
+      directContact: 0,
+      relayUsefulness: 0,
+      networkPresence: 0,
+    );
+  }
+
+  // Use live role from mesh node when available.
+  final nodes = ref.watch(nodesProvider);
+  final node = nodes[nodeNum];
+
+  return TrustScore.compute(entry, role: node?.role);
+});
+
 /// Provider for the progressive disclosure state of a specific node.
 ///
 /// Determines which field journal elements are visible based on
@@ -973,6 +1038,28 @@ final nodeDexFieldNoteProvider = Provider.family<String, int>((ref, nodeNum) {
 
   final trait = ref.watch(nodeDexTraitProvider(nodeNum));
   return FieldNoteGenerator.generate(entry: entry, trait: trait.primary);
+});
+
+// =============================================================================
+// Node Summary Provider
+// =============================================================================
+
+/// Computed summary insights for a specific node.
+///
+/// Returns a deterministic [NodeSummary] derived from the node's
+/// encounter history. Same entry always produces the same summary.
+final nodeSummaryProvider = Provider.family<NodeSummary, int>((ref, nodeNum) {
+  final entry = ref.watch(nodeDexEntryProvider(nodeNum));
+  if (entry == null) {
+    return NodeSummary(
+      timeDistribution: {for (final b in TimeOfDayBucket.values) b: 0},
+      currentStreak: 0,
+      totalEncounters: 0,
+      summaryText: 'Keep observing to build a profile',
+      activeDaysLast14: 0,
+    );
+  }
+  return NodeSummaryEngine.compute(entry);
 });
 
 // =============================================================================
@@ -1401,9 +1488,16 @@ final nodeDexSortedEntriesProvider = Provider<List<(NodeDexEntry, MeshNode?)>>((
       ),
       NodeDexSortOrder.distance => _compareDistance(entryA, entryB),
       NodeDexSortOrder.name =>
-        (nodeA?.displayName ?? entryA.lastKnownName ?? '').compareTo(
-          nodeB?.displayName ?? entryB.lastKnownName ?? '',
-        ),
+        (entryA.localNickname ??
+                nodeA?.displayName ??
+                entryA.lastKnownName ??
+                '')
+            .compareTo(
+              entryB.localNickname ??
+                  nodeB?.displayName ??
+                  entryB.lastKnownName ??
+                  '',
+            ),
     };
   });
 
@@ -1830,6 +1924,7 @@ final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
       ConstellationNode(
         nodeNum: entry.nodeNum,
         displayName:
+            entry.localNickname ??
             node?.displayName ??
             entry.lastKnownName ??
             NodeDisplayNameResolver.defaultName(entry.nodeNum),

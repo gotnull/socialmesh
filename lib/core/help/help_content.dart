@@ -1649,6 +1649,16 @@ class HelpContent {
         'An inferred personality archetype derived from behavioral signals: '
         'movement patterns, encounter frequency, signal consistency, and session '
         'duration. Confidence increases as more data is collected over time.',
+    'auto_summary':
+        'Computed insights from this node\'s encounter history. The time-of-day '
+        'distribution shows when encounters most often occur, the streak tracks '
+        'consecutive observation days, and the busiest day highlights weekly '
+        'patterns. All stats update automatically as new encounters arrive.',
+    'observation_timeline':
+        'A visual timeline of this node\'s observation history. The bar shows '
+        'encounter density over time, with relative labels ("3w ago", "2h ago") '
+        'showing how recently each endpoint was recorded. The sighting count '
+        'reflects total distinct encounters.',
     'discovery':
         'Tracks when this node was first and last seen on your mesh, the total '
         'number of encounters, and the closest recorded range. All values update '

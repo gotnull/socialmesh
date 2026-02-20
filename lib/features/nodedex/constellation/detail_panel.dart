@@ -265,6 +265,7 @@ class _SelectedContent extends ConsumerWidget {
 
     final sigil = entry.sigil ?? SigilGenerator.generate(nodeNum);
     final name =
+        entry.localNickname ??
         node?.displayName ??
         entry.lastKnownName ??
         NodeDisplayNameResolver.defaultName(nodeNum);

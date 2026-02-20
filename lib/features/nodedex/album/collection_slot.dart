@@ -95,7 +95,7 @@ class FilledSlot extends ConsumerWidget {
     final sigil = entry.sigil ?? SigilGenerator.generate(entry.nodeNum);
     final hexId =
         '!${entry.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
-    final name = entry.lastKnownName ?? hexId;
+    final name = entry.localNickname ?? entry.lastKnownName ?? hexId;
 
     return _PressScaleWrapper(
       animate: animate,

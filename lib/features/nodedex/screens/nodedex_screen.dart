@@ -23,6 +23,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/widgets/animated_empty_state.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../providers/accessibility_providers.dart';
 import '../../../providers/app_providers.dart';
 import '../../../core/theme.dart';
@@ -39,12 +40,14 @@ import '../album/card_gallery_screen.dart';
 import '../models/nodedex_entry.dart';
 import '../models/sigil_evolution.dart';
 import '../providers/nodedex_providers.dart';
+import '../services/trust_score.dart';
 
 import '../../settings/settings_screen.dart';
 import '../widgets/identity_overlay_painter.dart';
 import '../widgets/patina_stamp.dart';
 import '../widgets/sigil_painter.dart';
 import '../widgets/trait_badge.dart';
+import '../widgets/trust_indicator.dart';
 import 'nodedex_detail_screen.dart';
 
 /// The main NodeDex screen — a personal mesh field journal.
@@ -1006,7 +1009,9 @@ class _NodeDexListTile extends ConsumerWidget {
     final traitResult = ref.watch(nodeDexTraitProvider(entry.nodeNum));
     final disclosure = ref.watch(nodeDexDisclosureProvider(entry.nodeNum));
     final patinaResult = ref.watch(nodeDexPatinaProvider(entry.nodeNum));
+    final trustResult = ref.watch(nodeDexTrustProvider(entry.nodeNum));
     final displayName =
+        entry.localNickname ??
         node?.displayName ??
         entry.lastKnownName ??
         NodeDisplayNameResolver.defaultName(entry.nodeNum);
@@ -1107,6 +1112,17 @@ class _NodeDexListTile extends ConsumerWidget {
                                   ),
                                 ),
                               ],
+                              if (disclosure.showPrimaryTrait &&
+                                  trustResult.level != TrustLevel.unknown) ...[
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  flex: 0,
+                                  child: TrustIndicator(
+                                    level: trustResult.level,
+                                    size: TrustIndicatorSize.compact,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -1128,6 +1144,9 @@ class _NodeDexListTile extends ConsumerWidget {
                         ],
                       ],
                     ),
+
+                    // Discovery age indicator
+                    _DiscoveryAgeBadge(entry: entry),
 
                     // User note preview
                     if (entry.userNote != null) ...[
@@ -1209,118 +1228,67 @@ class _NodeDexListTile extends ConsumerWidget {
 
   void _showQuickActions(BuildContext context, WidgetRef ref) {
     HapticFeedback.mediumImpact();
-    showModalBottomSheet<void>(
+    final notifier = ref.read(nodeDexProvider.notifier);
+    final nodeNum = entry.nodeNum;
+    final navigator = Navigator.of(context);
+
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: context.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      child: SocialTagSelector(
+        currentTag: entry.socialTag,
+        onTagSelected: (tag) {
+          notifier.setSocialTag(nodeNum, tag);
+          navigator.pop();
+        },
       ),
-      builder: (sheetContext) {
-        final displayName =
-            node?.displayName ??
-            entry.lastKnownName ??
-            NodeDisplayNameResolver.defaultName(entry.nodeNum);
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Drag pill
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: context.textTertiary.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  displayName,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: context.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Quick tag actions
-                ...NodeSocialTag.values.map((tag) {
-                  final isActive = entry.socialTag == tag;
-                  return ListTile(
-                    leading: Icon(
-                      _tagIcon(tag),
-                      color: isActive
-                          ? context.accentColor
-                          : context.textSecondary,
-                    ),
-                    title: Text(
-                      tag.displayLabel,
-                      style: TextStyle(
-                        color: isActive
-                            ? context.accentColor
-                            : context.textPrimary,
-                        fontWeight: isActive
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                      ),
-                    ),
-                    trailing: isActive
-                        ? Icon(
-                            Icons.check_circle,
-                            size: 20,
-                            color: context.accentColor,
-                          )
-                        : null,
-                    onTap: () {
-                      if (isActive) {
-                        ref
-                            .read(nodeDexProvider.notifier)
-                            .setSocialTag(entry.nodeNum, null);
-                      } else {
-                        ref
-                            .read(nodeDexProvider.notifier)
-                            .setSocialTag(entry.nodeNum, tag);
-                      }
-                      Navigator.pop(sheetContext);
-                    },
-                  );
-                }),
-                if (entry.socialTag != null) ...[
-                  const Divider(),
-                  ListTile(
-                    leading: Icon(Icons.clear, color: context.textTertiary),
-                    title: Text(
-                      'Remove Tag',
-                      style: TextStyle(color: context.textSecondary),
-                    ),
-                    onTap: () {
-                      ref
-                          .read(nodeDexProvider.notifier)
-                          .setSocialTag(entry.nodeNum, null);
-                      Navigator.pop(sheetContext);
-                    },
-                  ),
-                ],
-              ],
+    );
+  }
+}
+
+/// Subtle discovery age indicator shown on list tiles.
+///
+/// Shows "new today" for nodes discovered in the last 24 hours,
+/// or "discovered X days/weeks/months ago" for older entries.
+class _DiscoveryAgeBadge extends StatelessWidget {
+  final NodeDexEntry entry;
+
+  const _DiscoveryAgeBadge({required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
+    final age = DateTime.now().difference(entry.firstSeen);
+    final label = _ageLabel(age);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 3),
+      child: Row(
+        children: [
+          Icon(
+            Icons.schedule,
+            size: 10,
+            color: context.textTertiary.withValues(alpha: 0.5),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: context.textTertiary.withValues(alpha: 0.6),
+              fontStyle: FontStyle.italic,
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
-  IconData _tagIcon(NodeSocialTag tag) {
-    return switch (tag) {
-      NodeSocialTag.contact => Icons.person_outline,
-      NodeSocialTag.trustedNode => Icons.verified_user_outlined,
-      NodeSocialTag.knownRelay => Icons.cell_tower,
-      NodeSocialTag.frequentPeer => Icons.people_outline,
-    };
+  static String _ageLabel(Duration age) {
+    if (age.inHours < 24) return 'new today';
+    if (age.inDays == 1) return 'discovered yesterday';
+    if (age.inDays < 7) return 'discovered ${age.inDays}d ago';
+    if (age.inDays < 30) return 'discovered ${age.inDays ~/ 7}w ago';
+    if (age.inDays < 365) return 'discovered ${age.inDays ~/ 30}mo ago';
+    return 'discovered ${age.inDays ~/ 365}y ago';
   }
 }
 
