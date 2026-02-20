@@ -415,119 +415,108 @@ class NodeInfoCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
-          // Action buttons: main actions in their own row, icon buttons placed
-          // below and aligned to the bottom-right of the card
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          // Action buttons: all in a single row — flexible text buttons
+          // followed by fixed-size icon buttons. Flexible ensures the text
+          // buttons shrink gracefully on narrow devices (Nothing Phone,
+          // older iPhones, small Androids) without render overflow.
+          // Position and Message are hidden for our own node since they
+          // serve no purpose there.
+          Row(
             children: [
-              // Main action buttons (Position / Message) on one line
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(minHeight: 40),
-                      child: OutlinedButton.icon(
-                        onPressed: (!isMyNode && onMessage != null)
-                            ? () => _exchangePositions(context, ref)
-                            : null,
-                        icon: const Icon(Icons.swap_horiz, size: 18),
-                        label: const Text(
-                          'Position',
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
+              if (!isMyNode && onMessage != null) ...[
+                Flexible(
+                  child: SizedBox(
+                    height: 40,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _exchangePositions(context, ref),
+                      icon: const Icon(Icons.swap_horiz, size: 18),
+                      label: const Text(
+                        'Position',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: context.accentColor,
+                        side: BorderSide(
+                          color: context.accentColor.withValues(alpha: 0.5),
                         ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: context.accentColor,
-                          side: BorderSide(
-                            color: context.accentColor.withValues(alpha: 0.5),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                     ),
                   ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: SizedBox(
+                    height: 40,
+                    child: ElevatedButton.icon(
+                      onPressed: onMessage,
+                      icon: const Icon(Icons.message, size: 18),
+                      label: const Text(
+                        'Message',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.accentColor,
+                        foregroundColor: SemanticColors.onAccent,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              if (onShareLocation != null) ...[
+                if (!isMyNode && onMessage != null) const SizedBox(width: 8),
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: Material(
+                    color: context.background,
+                    borderRadius: BorderRadius.circular(8),
+                    child: InkWell(
+                      onTap: onShareLocation,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Center(
+                        child: Icon(
+                          Icons.share,
+                          size: 18,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              if (onCopyCoordinates != null) ...[
+                if (onShareLocation != null || (!isMyNode && onMessage != null))
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(minHeight: 40),
-                      child: ElevatedButton.icon(
-                        onPressed: (!isMyNode && onMessage != null)
-                            ? onMessage
-                            : null,
-                        icon: const Icon(Icons.message, size: 18),
-                        label: const Text(
-                          'Message',
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: context.accentColor,
-                          foregroundColor: SemanticColors.onAccent,
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: Material(
+                    color: context.background,
+                    borderRadius: BorderRadius.circular(8),
+                    child: InkWell(
+                      onTap: onCopyCoordinates,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Center(
+                        child: Icon(
+                          Icons.copy,
+                          size: 18,
+                          color: context.textSecondary,
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Icon buttons on their own line, bottom right
-              Row(
-                children: [
-                  const Spacer(),
-                  if (onShareLocation != null)
-                    SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: Material(
-                        color: context.background,
-                        borderRadius: BorderRadius.circular(8),
-                        child: InkWell(
-                          onTap: onShareLocation,
-                          borderRadius: BorderRadius.circular(8),
-                          child: Center(
-                            child: Icon(
-                              Icons.share,
-                              size: 18,
-                              color: context.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (onShareLocation != null && onCopyCoordinates != null)
-                    const SizedBox(width: 8),
-                  if (onCopyCoordinates != null)
-                    SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: Material(
-                        color: context.background,
-                        borderRadius: BorderRadius.circular(8),
-                        child: InkWell(
-                          onTap: onCopyCoordinates,
-                          borderRadius: BorderRadius.circular(8),
-                          child: Center(
-                            child: Icon(
-                              Icons.copy,
-                              size: 18,
-                              color: context.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+                ),
+              ],
             ],
           ),
         ],
