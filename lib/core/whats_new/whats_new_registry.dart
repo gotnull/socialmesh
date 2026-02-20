@@ -124,7 +124,7 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.10.0 — World Map and Presence
+    // v1.10.0 — World Map
     WhatsNewPayload(
       version: '1.10.0',
       headline: "What's New in Socialmesh",
@@ -146,6 +146,15 @@ class WhatsNewRegistry {
           helpTopicId: 'world_mesh_overview',
           ctaLabel: 'Open World Map',
         ),
+      ],
+    ),
+
+    // v1.10.1 — Presence introduction
+    WhatsNewPayload(
+      version: '1.10.1',
+      headline: "What's New in Socialmesh",
+      subtitle: 'Version 1.10.1',
+      items: [
         WhatsNewItem(
           id: 'presence_intro',
           title: 'Presence',
