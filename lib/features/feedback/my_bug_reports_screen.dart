@@ -259,7 +259,7 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.only(top: 4, bottom: 12),
                   sliver: SliverList.separated(
                     itemCount: filtered.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 8),

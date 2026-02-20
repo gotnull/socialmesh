@@ -275,7 +275,9 @@ class TakGatewayClient {
           'lon=${event.lon.toStringAsFixed(4)}, '
           'total=$_totalEventsReceived',
         );
-        _eventController.add(event);
+        if (!_eventController.isClosed) {
+          _eventController.add(event);
+        }
       } else if (msgType == 'snapshot') {
         final eventsJson = json['events'] as List<dynamic>;
         final events = eventsJson
@@ -285,7 +287,9 @@ class TakGatewayClient {
         AppLogging.tak(
           'Snapshot backfill: ${events.length} events, total=$_totalEventsReceived',
         );
-        _snapshotController.add(events);
+        if (!_snapshotController.isClosed) {
+          _snapshotController.add(events);
+        }
       } else {
         AppLogging.tak('Unknown message type: $msgType');
       }
@@ -340,6 +344,8 @@ class TakGatewayClient {
     if (_disposed || _state == newState) return;
     AppLogging.tak('State: ${_state.name} -> ${newState.name}');
     _state = newState;
-    _stateController.add(newState);
+    if (!_stateController.isClosed) {
+      _stateController.add(newState);
+    }
   }
 }

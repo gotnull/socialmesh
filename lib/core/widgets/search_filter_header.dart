@@ -37,6 +37,10 @@ class SearchFilterLayout {
   /// Height of the bottom divider.
   static const double dividerHeight = 1.0;
 
+  /// Gap between the bottom of the header (divider) and the content below.
+  /// Baked into the header so consumers never need to add manual top padding.
+  static const double dividerToContentGap = 8.0;
+
   /// Border radius for the search field container.
   static const double searchFieldRadius = 12.0;
 
@@ -64,13 +68,15 @@ class SearchFilterLayout {
       searchToChipsGap +
       chipRowHeight +
       chipsToBottomGap +
-      dividerHeight;
+      dividerHeight +
+      dividerToContentGap;
 
   /// Total extent for a search-only header (no filter chips).
   static double searchOnlyExtent(TextScaler textScaler) =>
       searchTopPadding +
       searchFieldHeight(textScaler) +
-      chipsToBottomGap; // reuse as bottom pad
+      chipsToBottomGap +
+      dividerToContentGap;
 }
 
 // ---------------------------------------------------------------------------
@@ -374,6 +380,9 @@ class _SearchFilterContent extends StatelessWidget {
             height: SearchFilterLayout.dividerHeight,
             color: context.border.withValues(alpha: 0.3),
           ),
+
+        // -- Gap between header and content below --
+        SizedBox(height: SearchFilterLayout.dividerToContentGap),
       ],
     );
   }

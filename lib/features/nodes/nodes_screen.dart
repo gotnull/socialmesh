@@ -1143,7 +1143,10 @@ class _NodeCard extends StatelessWidget {
               ? BoxDecoration(
                   color: context.card,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: context.border, width: 1),
+                  border: Border(
+                    top: BorderSide(color: context.border, width: 1),
+                    left: BorderSide(color: context.border, width: 1),
+                  ),
                 )
               : null,
           child: isMyNode
@@ -1151,6 +1154,7 @@ class _NodeCard extends StatelessWidget {
                   borderRadius: 12,
                   borderWidth: 2,
                   accentOpacity: 1.0,
+                  defaultBorderColor: Colors.transparent,
                   backgroundColor: context.accentColor.withValues(alpha: 0.08),
                   enableDepthBlend: true,
                   depthBlendOpacity: 0.5,
@@ -1168,6 +1172,7 @@ class _NodeCard extends StatelessWidget {
                   borderWidth: 2,
                   accentOpacity: 1.0,
                   accentColor: AccentColors.yellow,
+                  defaultBorderColor: Colors.transparent,
                   backgroundColor: context.card,
                   padding: const EdgeInsets.all(16),
                   child: _buildCardContent(
