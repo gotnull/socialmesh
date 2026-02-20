@@ -266,6 +266,38 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     state = newState;
   }
 
+  /// Cancel any in-progress auto-reconnect cycle.
+  ///
+  /// Called by [TopStatusBanner] when the user taps Cancel or when the
+  /// reconnect watchdog timer expires. Stops the retry timer, resets
+  /// internal flags, attempts to stop any active BLE scan, and sets
+  /// [AutoReconnectState] to [AutoReconnectState.failed] so the banner
+  /// shows actionable options (Retry / Go to Scanner).
+  void cancelAutoReconnect() {
+    AppLogging.connection(
+      '🔌 cancelAutoReconnect: Cancelling reconnect cycle',
+    );
+    _retryTimer?.cancel();
+    _retryTimer = null;
+    _backgroundScanInProgress = false;
+    _reconnectAttempt = 0;
+
+    // Best-effort stop of any active BLE scan.
+    FlutterBluePlus.stopScan().catchError((_) {});
+
+    // Transition to failed so the banner shows Device not found with
+    // Retry / Connect actions. _performReconnect also checks for
+    // failed as an abort condition.
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.failed);
+
+    state = state.copyWith(
+      state: DevicePairingState.disconnected,
+      reason: DisconnectReason.deviceNotFound,
+    );
+  }
+
   /// Initialize the connection manager.
   /// Call this after app services are ready.
   Future<void> initialize() async {

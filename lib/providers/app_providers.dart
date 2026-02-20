@@ -1632,6 +1632,16 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
       return;
     }
 
+    // If the reconnect was externally cancelled (e.g. TopStatusBanner
+    // watchdog timeout or user tapped Cancel), abort gracefully.
+    if (currentState == AutoReconnectState.failed) {
+      AppLogging.connection(
+        '_performReconnect ABORTED after delay: '
+        'State set to failed externally (watchdog/cancel)',
+      );
+      return;
+    }
+
     // CRITICAL: If the saved device ID changed while we were waiting
     // (user connected to a different device via Scanner), abort.
     final currentSavedDeviceId = ref.read(_lastConnectedDeviceIdProvider);
@@ -1690,6 +1700,16 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         AppLogging.connection(
           '_performReconnect ABORTED in loop (attempt $attempt): '
           'User is manually connecting — yielding to Scanner',
+        );
+        return;
+      }
+
+      // If the reconnect was externally cancelled (e.g. TopStatusBanner
+      // watchdog timeout or user tapped Cancel), abort gracefully.
+      if (loopState == AutoReconnectState.failed) {
+        AppLogging.connection(
+          '_performReconnect ABORTED in loop (attempt $attempt): '
+          'State set to failed externally (watchdog/cancel)',
         );
         return;
       }

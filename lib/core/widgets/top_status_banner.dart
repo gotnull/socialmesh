@@ -55,6 +55,17 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
   late final Animation<double> _animation;
   Timer? _dismissTimer;
 
+  /// Safety-net watchdog that fires after [_kReconnectTimeout] of
+  /// continuous reconnecting state. When it fires, the auto-reconnect
+  /// cycle is cancelled via [DeviceConnectionNotifier.cancelAutoReconnect]
+  /// and the banner transitions to the "Device not found" state with
+  /// actionable Retry / Connect options.
+  Timer? _reconnectWatchdog;
+
+  /// How long the banner tolerates a continuous reconnecting state before
+  /// the watchdog forces a cancel.
+  static const Duration _kReconnectTimeout = Duration(seconds: 90);
+
   /// Tracks whether the banner is taking up space on screen (animation > 0).
   bool _actuallyVisible = false;
 
@@ -72,6 +83,31 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
   void _cancelDismissTimer() {
     _dismissTimer?.cancel();
     _dismissTimer = null;
+  }
+
+  void _cancelReconnectWatchdog() {
+    _reconnectWatchdog?.cancel();
+    _reconnectWatchdog = null;
+  }
+
+  void _startReconnectWatchdog() {
+    _cancelReconnectWatchdog();
+    _reconnectWatchdog = Timer(_kReconnectTimeout, () {
+      if (!mounted) return;
+      AppLogging.connection(
+        '📡 TopStatusBanner: Reconnect watchdog fired after '
+        '${_kReconnectTimeout.inSeconds}s — cancelling auto-reconnect',
+      );
+      _cancelReconnect();
+    });
+  }
+
+  /// Cancel the active auto-reconnect cycle and transition the banner
+  /// to the failed state with actionable options. This is called by
+  /// both the watchdog timer and the user-tapped Cancel button.
+  void _cancelReconnect() {
+    _cancelReconnectWatchdog();
+    ref.read(deviceConnectionProvider.notifier).cancelAutoReconnect();
   }
 
   void _startDismissTimer() {
@@ -137,13 +173,24 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
   }
 
   /// Evaluate whether a dismiss timer should be running based on the
-  /// current widget properties.
+  /// current widget properties. Also manages the reconnect watchdog.
   void _evaluateDismissState({
     required bool wasReconnecting,
     required bool isNowReconnecting,
     required bool wasVisible,
     required bool isNowVisible,
   }) {
+    // ── Reconnect watchdog management ──
+    if (isNowReconnecting && !wasReconnecting) {
+      // Reconnecting just started → arm the watchdog.
+      _startReconnectWatchdog();
+    } else if (!isNowReconnecting && wasReconnecting) {
+      // Reconnecting just stopped → disarm the watchdog.
+      _cancelReconnectWatchdog();
+    }
+
+    // ── Dismiss timer management (unchanged) ──
+
     // Reconnecting just started → cancel any pending dismiss, ensure visible
     if (isNowReconnecting && isNowVisible) {
       _cancelDismissTimer();
@@ -197,6 +244,9 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
       // If NOT reconnecting on first build, schedule dismiss.
       if (!_isReconnecting(widget.autoReconnectState)) {
         _startDismissTimer();
+      } else {
+        // Already reconnecting on first build — arm the watchdog.
+        _startReconnectWatchdog();
       }
     }
   }
@@ -242,6 +292,7 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
   @override
   void dispose() {
     _cancelDismissTimer();
+    _cancelReconnectWatchdog();
     _animController.removeStatusListener(_onAnimationStatusChanged);
     _animController.dispose();
     super.dispose();
@@ -322,8 +373,9 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
     // re-pair (which triggers the system PIN dialog).
     final showRetryButton = isFailed && !isTerminalInvalidated && !isAuthFailed;
 
-    // Connect button is tappable whenever we're NOT actively reconnecting.
-    final connectTappable = !isReconnecting && widget.onGoToScanner != null;
+    // Connect button is tappable whenever we're NOT actively reconnecting,
+    // OR when reconnecting (tapping cancel + navigates to scanner).
+    final connectTappable = widget.onGoToScanner != null;
 
     final topPadding = MediaQuery.of(context).padding.top;
     const double kTopStatusContentHeight = kToolbarHeight;
@@ -357,7 +409,17 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: connectTappable ? widget.onGoToScanner : null,
+                  onTap: connectTappable
+                      ? () {
+                          if (isReconnecting) {
+                            // User tapped during reconnecting — cancel the
+                            // auto-reconnect cycle and navigate to scanner
+                            // so they can manually reconnect.
+                            _cancelReconnect();
+                          }
+                          widget.onGoToScanner!();
+                        }
+                      : null,
                   child: Padding(
                     padding: EdgeInsets.only(
                       left: 12,
@@ -467,6 +529,22 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
                               Icons.chevron_right_rounded,
                               size: 18,
                               color: foregroundColor.withValues(alpha: 0.7),
+                            ),
+                          ] else if (isReconnecting &&
+                              widget.onGoToScanner != null) ...[
+                            Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: foregroundColor.withValues(alpha: 0.7),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              size: 18,
+                              color: foregroundColor.withValues(alpha: 0.5),
                             ),
                           ],
                         ],

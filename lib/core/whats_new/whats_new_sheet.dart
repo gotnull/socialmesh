@@ -7,8 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/navigation/main_shell.dart';
 import '../../features/nodedex/screens/nodedex_screen.dart';
 import '../../features/onboarding/widgets/mesh_node_brain.dart';
+import '../../features/presence/presence_screen.dart';
 import '../../features/reachability/mesh_reachability_screen.dart';
 import '../../features/aether/screens/aether_screen.dart';
+import '../../features/tak/screens/tak_screen.dart';
 import '../../features/world_mesh/world_mesh_screen.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/whats_new_providers.dart';
@@ -722,6 +724,10 @@ class _WhatsNewItemCard extends ConsumerWidget {
         return const MeshReachabilityScreen();
       case '/aether':
         return const AetherScreen();
+      case '/tak':
+        return const TakScreen();
+      case '/presence':
+        return const PresenceScreen();
       default:
         return null;
     }
