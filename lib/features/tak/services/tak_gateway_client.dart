@@ -344,8 +344,13 @@ class TakGatewayClient {
     if (_disposed || _state == newState) return;
     AppLogging.tak('State: ${_state.name} -> ${newState.name}');
     _state = newState;
-    if (!_stateController.isClosed) {
-      _stateController.add(newState);
+    try {
+      if (!_stateController.isClosed) {
+        _stateController.add(newState);
+      }
+    } on StateError catch (e) {
+      // Race: controller closed between the isClosed check and add().
+      AppLogging.tak('State controller closed during add: $e');
     }
   }
 }

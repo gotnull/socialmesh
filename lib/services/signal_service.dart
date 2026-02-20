@@ -4011,6 +4011,7 @@ class SignalService {
     _listenerRetryCounts.clear();
     await _db?.close();
     _db = null;
+    _initCompleter = null;
     AppLogging.social('SignalService database closed');
   }
 }

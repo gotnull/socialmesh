@@ -1035,20 +1035,27 @@ class _MapControlsWithZoomState extends StatefulWidget {
 
 class _MapControlsWithZoomStateState extends State<_MapControlsWithZoomState> {
   late double _currentZoom;
+  StreamSubscription<MapEvent>? _mapEventSubscription;
 
   @override
   void initState() {
     super.initState();
     _currentZoom = widget.initialZoom;
     // Listen to camera changes
-    widget.mapController.mapEventStream.listen((event) {
+    _mapEventSubscription = widget.mapController.mapEventStream.listen((event) {
       if (event is MapEventMove || event is MapEventMoveEnd) {
         final newZoom = widget.mapController.camera.zoom;
-        if ((_currentZoom - newZoom).abs() > 0.05) {
+        if (mounted && (_currentZoom - newZoom).abs() > 0.05) {
           setState(() => _currentZoom = newZoom);
         }
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _mapEventSubscription?.cancel();
+    super.dispose();
   }
 
   @override
