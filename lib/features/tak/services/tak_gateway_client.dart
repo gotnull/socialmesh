@@ -109,9 +109,19 @@ class TakGatewayClient {
         return;
       }
 
-      AppLogging.tak(
-        'Auth token ${token != null ? 'obtained (${token.length} chars)' : 'is null (anonymous)'}',
-      );
+      // Guard: authentication is required for TAK Gateway connections.
+      // The server expects a Firebase ID token; connecting without one
+      // would either fail silently or be rejected. Surface a clear error
+      // so the UI can show an auth-required state.
+      if (token == null) {
+        const msg = 'Authentication required — sign in to use TAK Gateway';
+        AppLogging.tak('Auth token is null, aborting connection: $msg');
+        _lastError = msg;
+        _setState(TakConnectionState.disconnected);
+        return;
+      }
+
+      AppLogging.tak('Auth token obtained (${token.length} chars)');
       final wsUrl = _buildWsUrl(token);
       AppLogging.tak(
         'WebSocket URL: ${wsUrl.replaceAll(RegExp(r'token=[^&]+'), 'token=***')}',
@@ -119,7 +129,7 @@ class TakGatewayClient {
 
       _socket = await WebSocket.connect(
         wsUrl,
-        headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+        headers: {'Authorization': 'Bearer $token'},
       );
 
       // Guard: client may have been disposed while awaiting the connection.
@@ -201,12 +211,14 @@ class TakGatewayClient {
 
     try {
       final token = await getAuthToken();
+      if (token == null) {
+        AppLogging.tak('PositionPublisher: skipping — not authenticated');
+        return false;
+      }
       final client = HttpClient();
       final request = await client.postUrl(url);
       request.headers.set('Content-Type', 'application/json');
-      if (token != null) {
-        request.headers.set('Authorization', 'Bearer $token');
-      }
+      request.headers.set('Authorization', 'Bearer $token');
 
       final body = jsonEncode({
         'uid': uid,

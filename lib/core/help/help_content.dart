@@ -2047,6 +2047,12 @@ class HelpContent {
         'Latitude and longitude in WGS-84 decimal degrees as reported in '
         'the CoT event. Tap the "Show on Map" icon in the app bar to center '
         'the map on this position.',
+    'motion':
+        'Speed, course, and altitude parsed from the CoT event\'s track and '
+        'point elements. Speed is shown in km/h and knots. Course is the '
+        'heading in degrees from true north with a compass direction. '
+        'Altitude is height above ellipsoid in meters and feet. '
+        'This section is hidden when the gateway does not provide motion data.',
     'timestamps':
         'Event Time is when the CoT event was generated. Stale Time is when '
         'the entity should be considered outdated if no update arrives. '

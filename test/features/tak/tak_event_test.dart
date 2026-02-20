@@ -181,5 +181,219 @@ void main() {
         expect(restored.rawPayloadJson, original.rawPayloadJson);
       });
     });
+
+    group('motion data fields', () {
+      test('fromJson parses speed, course, hae when present', () {
+        final json = <String, dynamic>{
+          ...sampleJson,
+          'speed': 12.5,
+          'course': 45.0,
+          'hae': 152.3,
+        };
+        final event = TakEvent.fromJson(json);
+        expect(event.speed, 12.5);
+        expect(event.course, 45.0);
+        expect(event.hae, 152.3);
+      });
+
+      test('fromJson handles null motion fields', () {
+        final event = TakEvent.fromJson(sampleJson);
+        expect(event.speed, isNull);
+        expect(event.course, isNull);
+        expect(event.hae, isNull);
+      });
+
+      test('toJson includes motion fields when present', () {
+        final event = TakEvent(
+          uid: 'TEST',
+          type: 'a-f-G-U-C',
+          lat: 34.0,
+          lon: -118.0,
+          timeUtcMs: 1700000000000,
+          staleUtcMs: 1700000300000,
+          receivedUtcMs: 1700000001000,
+          speed: 25.0,
+          course: 90.0,
+          hae: 300.0,
+        );
+        final json = event.toJson();
+        expect(json['speed'], 25.0);
+        expect(json['course'], 90.0);
+        expect(json['hae'], 300.0);
+      });
+
+      test('toJson omits motion fields when null', () {
+        final event = TakEvent.fromJson(sampleJson);
+        final json = event.toJson();
+        expect(json.containsKey('speed'), isFalse);
+        expect(json.containsKey('course'), isFalse);
+        expect(json.containsKey('hae'), isFalse);
+      });
+
+      test('fromDbRow and toDbRow round-trip motion fields', () {
+        final event = TakEvent(
+          uid: 'MOTION-01',
+          type: 'a-f-A-M-F',
+          lat: 37.0,
+          lon: -122.0,
+          timeUtcMs: 1700000000000,
+          staleUtcMs: 1700000300000,
+          receivedUtcMs: 1700000001000,
+          speed: 50.0,
+          course: 270.0,
+          hae: 5000.0,
+        );
+        final restored = TakEvent.fromDbRow(event.toDbRow());
+        expect(restored.speed, 50.0);
+        expect(restored.course, 270.0);
+        expect(restored.hae, 5000.0);
+      });
+
+      test('fromDbRow handles null motion columns', () {
+        final row = <String, dynamic>{
+          'uid': 'NULL-MOTION',
+          'type': 'a-f-G',
+          'callsign': null,
+          'lat': 0.0,
+          'lon': 0.0,
+          'time_utc': 1700000000000,
+          'stale_utc': 1700000300000,
+          'received_utc': 1700000001000,
+          'raw_payload_json': null,
+          'speed': null,
+          'course': null,
+          'hae': null,
+        };
+        final event = TakEvent.fromDbRow(row);
+        expect(event.speed, isNull);
+        expect(event.course, isNull);
+        expect(event.hae, isNull);
+      });
+
+      test('hasMotionData returns true when any field is set', () {
+        final withSpeed = TakEvent(
+          uid: 'A',
+          type: 'a-f-G',
+          lat: 0,
+          lon: 0,
+          timeUtcMs: 0,
+          staleUtcMs: 0,
+          receivedUtcMs: 0,
+          speed: 10.0,
+        );
+        expect(withSpeed.hasMotionData, isTrue);
+
+        final withHae = TakEvent(
+          uid: 'B',
+          type: 'a-f-G',
+          lat: 0,
+          lon: 0,
+          timeUtcMs: 0,
+          staleUtcMs: 0,
+          receivedUtcMs: 0,
+          hae: 100.0,
+        );
+        expect(withHae.hasMotionData, isTrue);
+      });
+
+      test('hasMotionData returns false when no fields set', () {
+        final noMotion = TakEvent.fromJson(sampleJson);
+        expect(noMotion.hasMotionData, isFalse);
+      });
+
+      test('formattedSpeed returns Stationary for null or zero', () {
+        final event = TakEvent.fromJson(sampleJson);
+        expect(event.formattedSpeed, 'Stationary');
+
+        final zeroSpeed = TakEvent(
+          uid: 'Z',
+          type: 'a-f-G',
+          lat: 0,
+          lon: 0,
+          timeUtcMs: 0,
+          staleUtcMs: 0,
+          receivedUtcMs: 0,
+          speed: 0.0,
+        );
+        expect(zeroSpeed.formattedSpeed, 'Stationary');
+      });
+
+      test('formattedSpeed formats km/h and knots', () {
+        final event = TakEvent(
+          uid: 'S',
+          type: 'a-f-G',
+          lat: 0,
+          lon: 0,
+          timeUtcMs: 0,
+          staleUtcMs: 0,
+          receivedUtcMs: 0,
+          speed: 10.0, // 36 km/h, 19.4 kn
+        );
+        expect(event.formattedSpeed, '36.0 km/h (19.4 kn)');
+      });
+
+      test('formattedCourse returns degrees and compass direction', () {
+        final north = TakEvent(
+          uid: 'N',
+          type: 'a-f-G',
+          lat: 0,
+          lon: 0,
+          timeUtcMs: 0,
+          staleUtcMs: 0,
+          receivedUtcMs: 0,
+          course: 0.0,
+        );
+        expect(north.formattedCourse, '000\u00B0 (N)');
+
+        final east = TakEvent(
+          uid: 'E',
+          type: 'a-f-G',
+          lat: 0,
+          lon: 0,
+          timeUtcMs: 0,
+          staleUtcMs: 0,
+          receivedUtcMs: 0,
+          course: 90.0,
+        );
+        expect(east.formattedCourse, '090\u00B0 (E)');
+
+        final sw = TakEvent(
+          uid: 'SW',
+          type: 'a-f-G',
+          lat: 0,
+          lon: 0,
+          timeUtcMs: 0,
+          staleUtcMs: 0,
+          receivedUtcMs: 0,
+          course: 225.0,
+        );
+        expect(sw.formattedCourse, '225\u00B0 (SW)');
+      });
+
+      test('formattedCourse returns null when course is null', () {
+        final event = TakEvent.fromJson(sampleJson);
+        expect(event.formattedCourse, isNull);
+      });
+
+      test('formattedAltitude formats meters and feet', () {
+        final event = TakEvent(
+          uid: 'A',
+          type: 'a-f-G',
+          lat: 0,
+          lon: 0,
+          timeUtcMs: 0,
+          staleUtcMs: 0,
+          receivedUtcMs: 0,
+          hae: 152.3,
+        );
+        // 152.3 m = ~500 ft
+        expect(event.formattedAltitude, '152 m (500 ft)');
+      });
+
+      test('formattedAltitude returns null when hae is null', () {
+        final event = TakEvent.fromJson(sampleJson);
+        expect(event.formattedAltitude, isNull);
+      });
+    });
   });
 }

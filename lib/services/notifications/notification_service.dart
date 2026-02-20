@@ -552,6 +552,63 @@ class NotificationService {
     );
   }
 
+  /// Show notification when a hostile/unknown TAK entity enters the proximity
+  /// radius.
+  Future<void> showTakProximityNotification({
+    required String uid,
+    required String callsign,
+    required String body,
+    bool playSound = true,
+    bool vibrate = true,
+  }) async {
+    if (!_initialized) {
+      AppLogging.notifications(
+        '🔔 NotificationService not initialized, skipping TAK proximity notification',
+      );
+      return;
+    }
+
+    final androidDetails = AndroidNotificationDetails(
+      'tak_entity',
+      'TAK Entities',
+      channelDescription: 'Notifications for TAK entity proximity alerts',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'tak_entities',
+      playSound: playSound,
+      enableVibration: vibrate,
+    );
+
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: playSound,
+      threadIdentifier: 'tak_entities',
+    );
+
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    // Use a distinct ID range from stale notifications.
+    final notificationId = (uid.hashCode.abs() + 50000000) % 100000000;
+
+    await _notifications.show(
+      id: notificationId,
+      title: 'Proximity Alert: $callsign',
+      body: body,
+      notificationDetails: notificationDetails,
+      payload: 'tak:$uid',
+    );
+
+    AppLogging.notifications(
+      '🔔 Showed TAK proximity notification for $callsign ($uid)',
+    );
+  }
+
   /// Show notification for new message
   Future<void> showNewMessageNotification({
     required String senderName,

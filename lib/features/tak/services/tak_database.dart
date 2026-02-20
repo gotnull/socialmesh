@@ -14,7 +14,7 @@ class TakDatabase {
   static const _dbName = 'tak_events.db';
   static const _tableName = 'tak_cot_events';
   static const _positionHistoryTable = 'tak_position_history';
-  static const _dbVersion = 3;
+  static const _dbVersion = 4;
 
   /// Maximum events retained in the database.
   static const int maxEvents = 5000;
@@ -66,6 +66,10 @@ class TakDatabase {
             'Migration v2->v3: deduplicated rows, added UNIQUE(uid, type)',
           );
         }
+        if (oldVersion < 4) {
+          await _migrateV3ToV4(db);
+          AppLogging.tak('Migration v3->v4: added speed, course, hae columns');
+        }
       },
     );
     AppLogging.tak('TAK database initialized successfully');
@@ -91,6 +95,9 @@ class TakDatabase {
         stale_utc INTEGER NOT NULL,
         received_utc INTEGER NOT NULL,
         raw_payload_json TEXT,
+        speed REAL,
+        course REAL,
+        hae REAL,
         UNIQUE(uid, type)
       )
     ''');
@@ -173,6 +180,17 @@ class TakDatabase {
     );
   }
 
+  /// Migration v3 -> v4: add nullable speed, course, hae columns for motion
+  /// data. Existing data and tables are untouched.
+  Future<void> _migrateV3ToV4(Database db) async {
+    await db.execute('ALTER TABLE $_tableName ADD COLUMN speed REAL');
+    await db.execute('ALTER TABLE $_tableName ADD COLUMN course REAL');
+    await db.execute('ALTER TABLE $_tableName ADD COLUMN hae REAL');
+    AppLogging.tak(
+      'Database migration v3 -> v4: adding speed, course, hae columns',
+    );
+  }
+
   Future<void> _createPositionHistoryTable(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS $_positionHistoryTable (
@@ -232,8 +250,8 @@ class TakDatabase {
     for (final event in events) {
       batch.rawInsert(
         '''INSERT OR REPLACE INTO $_tableName
-           (uid, type, callsign, lat, lon, time_utc, stale_utc, received_utc, raw_payload_json)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+           (uid, type, callsign, lat, lon, time_utc, stale_utc, received_utc, raw_payload_json, speed, course, hae)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
         [
           event.uid,
           event.type,
@@ -244,6 +262,9 @@ class TakDatabase {
           event.staleUtcMs,
           event.receivedUtcMs,
           event.rawPayloadJson,
+          event.speed,
+          event.course,
+          event.hae,
         ],
       );
     }

@@ -33,11 +33,14 @@ import '../../core/widgets/loading_indicator.dart';
 import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../tak/models/tak_event.dart';
+import '../tak/providers/tak_filter_provider.dart';
 import '../tak/providers/tak_providers.dart';
 import '../tak/providers/tak_tracking_provider.dart';
 import '../tak/utils/cot_affiliation.dart';
+import '../tak/screens/tak_dashboard_screen.dart';
 import '../tak/screens/tak_event_detail_screen.dart';
 import '../tak/widgets/tak_map_layer.dart';
+import '../tak/widgets/tak_heading_vector_layer.dart';
 
 /// Node filter options
 enum NodeFilter {
@@ -726,6 +729,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       'Map TAK layer toggled: visible=$_showTakLayer',
                     );
                     break;
+                  case 'tak_dashboard':
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const TakDashboardScreen(),
+                      ),
+                    );
+                    break;
                   case 'globe':
                     Navigator.of(context).pushNamed('/globe');
                     break;
@@ -957,7 +967,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   ),
                 ),
                 if (AppFeatureFlags.isTakGatewayEnabled &&
-                    !widget.locationOnlyMode)
+                    !widget.locationOnlyMode) ...[
                   PopupMenuItem(
                     value: 'tak_layer',
                     child: Row(
@@ -980,6 +990,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ],
                     ),
                   ),
+                  PopupMenuItem(
+                    value: 'tak_dashboard',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.dashboard_outlined,
+                          size: 18,
+                          color: context.textSecondary,
+                        ),
+                        SizedBox(width: 8),
+                        const Text('SA Dashboard'),
+                      ],
+                    ),
+                  ),
+                ],
                 const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'help',
@@ -1251,6 +1276,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             );
                           },
                         ),
+                      // TAK heading vectors - above markers, below popups
+                      if (_showTakLayer &&
+                          !widget.locationOnlyMode &&
+                          AppFeatureFlags.isTakGatewayEnabled)
+                        _TakHeadingVectorOverlay(),
                       // Measurement markers
                       if (_measureStart != null)
                         MarkerLayer(
@@ -1587,7 +1617,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         onTabChanged: (tab) => setState(() => _panelTab = tab),
                         takEvents:
                             _showTakLayer && AppFeatureFlags.isTakGatewayEnabled
-                            ? ref.watch(takActiveEventsProvider)
+                            ? ref.watch(filteredTakEventsProvider)
                             : const [],
                         onTakEntitySelected: (event) {
                           setState(() {
@@ -3496,7 +3526,7 @@ class _TakMarkerLayer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final takEvents = ref.watch(takActiveEventsProvider);
+    final takEvents = ref.watch(filteredTakEventsProvider);
     final trackedUids = ref.watch(takTrackedUidsProvider);
     return TakMapLayer(
       events: takEvents,
@@ -3504,5 +3534,20 @@ class _TakMarkerLayer extends ConsumerWidget {
       onMarkerTap: onMarkerTap,
       onMarkerLongPress: onMarkerLongPress,
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Isolated TAK heading vector overlay — ConsumerWidget so it only rebuilds
+// when filtered events change, not on every parent map build.
+// ---------------------------------------------------------------------------
+
+class _TakHeadingVectorOverlay extends ConsumerWidget {
+  const _TakHeadingVectorOverlay();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final takEvents = ref.watch(filteredTakEventsProvider);
+    return TakHeadingVectorLayer(events: takEvents);
   }
 }

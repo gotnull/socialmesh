@@ -13,6 +13,9 @@ abstract final class TakSettingsKeys {
   static const publishInterval = 'tak_publish_interval';
   static const callsign = 'tak_callsign';
   static const mapLayerVisible = 'tak_map_layer_visible';
+  static const proximityAlertEnabled = 'tak_proximity_alert_enabled';
+  static const proximityRadiusKm = 'tak_proximity_radius_km';
+  static const proximityAffiliations = 'tak_proximity_affiliations';
 }
 
 /// Immutable snapshot of all TAK user-facing settings.
@@ -35,6 +38,15 @@ class TakSettings {
   /// Whether the TAK map layer is visible by default.
   final bool mapLayerVisible;
 
+  /// Whether proximity alerts are enabled.
+  final bool proximityAlertEnabled;
+
+  /// Proximity alert radius in kilometers.
+  final double proximityRadiusKm;
+
+  /// Affiliations that trigger proximity alerts.
+  final Set<String> proximityAffiliations;
+
   const TakSettings({
     this.gatewayUrl = '',
     this.autoConnect = true,
@@ -42,6 +54,9 @@ class TakSettings {
     this.publishInterval = 60,
     this.callsign = '',
     this.mapLayerVisible = true,
+    this.proximityAlertEnabled = false,
+    this.proximityRadiusKm = 5.0,
+    this.proximityAffiliations = const {'hostile', 'unknown'},
   });
 
   /// Build a [TakPublishConfig] from these settings.
@@ -58,6 +73,9 @@ class TakSettings {
     int? publishInterval,
     String? callsign,
     bool? mapLayerVisible,
+    bool? proximityAlertEnabled,
+    double? proximityRadiusKm,
+    Set<String>? proximityAffiliations,
   }) {
     return TakSettings(
       gatewayUrl: gatewayUrl ?? this.gatewayUrl,
@@ -66,6 +84,11 @@ class TakSettings {
       publishInterval: publishInterval ?? this.publishInterval,
       callsign: callsign ?? this.callsign,
       mapLayerVisible: mapLayerVisible ?? this.mapLayerVisible,
+      proximityAlertEnabled:
+          proximityAlertEnabled ?? this.proximityAlertEnabled,
+      proximityRadiusKm: proximityRadiusKm ?? this.proximityRadiusKm,
+      proximityAffiliations:
+          proximityAffiliations ?? this.proximityAffiliations,
     );
   }
 }
@@ -78,6 +101,9 @@ class TakSettingsNotifier extends AsyncNotifier<TakSettings> {
   @override
   Future<TakSettings> build() async {
     final prefs = await SharedPreferences.getInstance();
+    final proximityAffList = prefs.getStringList(
+      TakSettingsKeys.proximityAffiliations,
+    );
     final settings = TakSettings(
       gatewayUrl: prefs.getString(TakSettingsKeys.gatewayUrl) ?? '',
       autoConnect: prefs.getBool(TakSettingsKeys.autoConnect) ?? true,
@@ -85,6 +111,12 @@ class TakSettingsNotifier extends AsyncNotifier<TakSettings> {
       publishInterval: prefs.getInt(TakSettingsKeys.publishInterval) ?? 60,
       callsign: prefs.getString(TakSettingsKeys.callsign) ?? '',
       mapLayerVisible: prefs.getBool(TakSettingsKeys.mapLayerVisible) ?? true,
+      proximityAlertEnabled:
+          prefs.getBool(TakSettingsKeys.proximityAlertEnabled) ?? false,
+      proximityRadiusKm:
+          prefs.getDouble(TakSettingsKeys.proximityRadiusKm) ?? 5.0,
+      proximityAffiliations:
+          proximityAffList?.toSet() ?? const {'hostile', 'unknown'},
     );
     AppLogging.tak(
       'TakSettingsNotifier loaded: '
@@ -152,6 +184,46 @@ class TakSettingsNotifier extends AsyncNotifier<TakSettings> {
     );
     state = AsyncData(
       (state.value ?? const TakSettings()).copyWith(mapLayerVisible: value),
+    );
+  }
+
+  Future<void> setProximityAlertEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(TakSettingsKeys.proximityAlertEnabled, value);
+    AppLogging.tak(
+      'Settings updated: ${TakSettingsKeys.proximityAlertEnabled}=$value',
+    );
+    state = AsyncData(
+      (state.value ?? const TakSettings()).copyWith(
+        proximityAlertEnabled: value,
+      ),
+    );
+  }
+
+  Future<void> setProximityRadiusKm(double value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(TakSettingsKeys.proximityRadiusKm, value);
+    AppLogging.tak(
+      'Settings updated: ${TakSettingsKeys.proximityRadiusKm}=$value',
+    );
+    state = AsyncData(
+      (state.value ?? const TakSettings()).copyWith(proximityRadiusKm: value),
+    );
+  }
+
+  Future<void> setProximityAffiliations(Set<String> value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      TakSettingsKeys.proximityAffiliations,
+      value.toList(),
+    );
+    AppLogging.tak(
+      'Settings updated: ${TakSettingsKeys.proximityAffiliations}=$value',
+    );
+    state = AsyncData(
+      (state.value ?? const TakSettings()).copyWith(
+        proximityAffiliations: value,
+      ),
     );
   }
 }

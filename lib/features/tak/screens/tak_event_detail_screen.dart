@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/help/help_content.dart';
 import '../../../core/logging.dart';
+import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
@@ -13,7 +16,9 @@ import '../../navigation/main_shell.dart';
 import '../models/tak_event.dart';
 import '../providers/tak_providers.dart';
 import '../providers/tak_tracking_provider.dart';
+import '../services/tak_database.dart';
 import '../utils/cot_affiliation.dart';
+import 'tak_navigate_screen.dart';
 
 /// Detail view for a single TAK/CoT event.
 class TakEventDetailScreen extends ConsumerWidget {
@@ -86,6 +91,34 @@ class TakEventDetailScreen extends ConsumerWidget {
             },
             tooltip: 'Copy JSON',
           ),
+          AppBarOverflowMenu<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'navigate':
+                  ref.haptics.itemSelect();
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => TakNavigateScreen(
+                        targetUid: event.uid,
+                        initialCallsign: event.callsign ?? event.uid,
+                      ),
+                    ),
+                  );
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'navigate',
+                child: Row(
+                  children: [
+                    Icon(Icons.navigation_outlined, size: 18),
+                    SizedBox(width: 8),
+                    Text('Navigate to'),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
         body: ListView(
           padding: const EdgeInsets.all(16),
@@ -119,6 +152,21 @@ class TakEventDetailScreen extends ConsumerWidget {
                 valueStyle,
               ),
             ], helpKey: 'position'),
+            if (event.hasMotionData) ...[
+              const SizedBox(height: 8),
+              _buildSection(theme, affiliationColor, 'Motion', [
+                _row('Speed', event.formattedSpeed, dimStyle, valueStyle),
+                if (event.formattedCourse != null)
+                  _row('Course', event.formattedCourse!, dimStyle, valueStyle),
+                if (event.formattedAltitude != null)
+                  _row(
+                    'Altitude',
+                    event.formattedAltitude!,
+                    dimStyle,
+                    valueStyle,
+                  ),
+              ], helpKey: 'motion'),
+            ],
             const SizedBox(height: 8),
             _buildSection(theme, affiliationColor, 'Timestamps', [
               _row(
@@ -148,6 +196,14 @@ class TakEventDetailScreen extends ConsumerWidget {
                 ),
               ),
             ], helpKey: 'timestamps'),
+            const SizedBox(height: 8),
+            _PositionHistorySection(
+              event: event,
+              theme: theme,
+              affiliationColor: affiliationColor,
+              dimStyle: dimStyle,
+              valueStyle: valueStyle,
+            ),
             if (event.rawPayloadJson != null) ...[
               const SizedBox(height: 8),
               _buildSection(theme, affiliationColor, 'Raw Payload', [
@@ -345,6 +401,209 @@ class _HeaderCard extends StatelessWidget {
 }
 
 // =============================================================================
+// Position History Section — shows movement timeline from position_history DB
+// =============================================================================
+
+class _PositionHistorySection extends ConsumerStatefulWidget {
+  final TakEvent event;
+  final ThemeData theme;
+  final Color affiliationColor;
+  final TextStyle? dimStyle;
+  final TextStyle? valueStyle;
+
+  const _PositionHistorySection({
+    required this.event,
+    required this.theme,
+    required this.affiliationColor,
+    required this.dimStyle,
+    required this.valueStyle,
+  });
+
+  @override
+  ConsumerState<_PositionHistorySection> createState() =>
+      _PositionHistorySectionState();
+}
+
+class _PositionHistorySectionState
+    extends ConsumerState<_PositionHistorySection> {
+  bool _expanded = false;
+
+  /// Collapsed view shows this many entries.
+  static const _collapsedCount = 5;
+
+  @override
+  Widget build(BuildContext context) {
+    final historyAsync = ref.watch(
+      takPositionHistoryProvider(widget.event.uid),
+    );
+
+    return historyAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (history) {
+        if (history.isEmpty) return const SizedBox.shrink();
+
+        final entries = _expanded
+            ? history
+            : history.take(_collapsedCount).toList();
+        final hasMore = history.length > _collapsedCount;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: widget.theme.colorScheme.surface.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: widget.theme.colorScheme.outline.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Row(
+                  children: [
+                    Text(
+                      'POSITION HISTORY',
+                      style: widget.theme.textTheme.labelSmall?.copyWith(
+                        color: widget.affiliationColor,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '(${history.length} positions)',
+                      style: widget.theme.textTheme.labelSmall?.copyWith(
+                        color: widget.theme.colorScheme.onSurface.withValues(
+                          alpha: 0.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (history.length == 1)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Text('No movement recorded', style: widget.dimStyle),
+                )
+              else
+                ...entries.asMap().entries.map((mapEntry) {
+                  final idx = mapEntry.key;
+                  final point = mapEntry.value;
+                  // Distance from previous point (next in list since
+                  // newest-first)
+                  final nextIdx = idx + 1;
+                  String? distance;
+                  if (nextIdx < history.length) {
+                    final prev = history[nextIdx];
+                    distance = _formatDistance(
+                      _haversineMeters(
+                        point.lat,
+                        point.lon,
+                        prev.lat,
+                        prev.lon,
+                      ),
+                    );
+                  }
+                  return _buildHistoryEntry(point, distance);
+                }),
+              if (hasMore && !_expanded)
+                TextButton(
+                  onPressed: () => setState(() => _expanded = true),
+                  child: Text(
+                    'Show all ${history.length} positions',
+                    style: TextStyle(
+                      color: widget.affiliationColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              if (_expanded && hasMore)
+                TextButton(
+                  onPressed: () => setState(() => _expanded = false),
+                  child: Text(
+                    'Show less',
+                    style: TextStyle(
+                      color: widget.affiliationColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 4),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHistoryEntry(PositionHistoryPoint point, String? distance) {
+    final age = _formatAge(point.timeUtcMs);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+      child: Row(
+        children: [
+          SizedBox(width: 70, child: Text(age, style: widget.dimStyle)),
+          Expanded(
+            child: Text(
+              '${point.lat.toStringAsFixed(5)}, '
+              '${point.lon.toStringAsFixed(5)}',
+              style: widget.valueStyle?.copyWith(fontSize: 12),
+            ),
+          ),
+          if (distance != null)
+            Text(distance, style: widget.dimStyle?.copyWith(fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
+  static String _formatAge(int utcMs) {
+    final diff = DateTime.now().millisecondsSinceEpoch - utcMs;
+    if (diff < 60000) return '${(diff / 1000).round()}s ago';
+    if (diff < 3600000) return '${(diff / 60000).round()}m ago';
+    if (diff < 86400000) return '${(diff / 3600000).round()}h ago';
+    return '${(diff / 86400000).round()}d ago';
+  }
+
+  static String _formatDistance(double meters) {
+    if (meters >= 1000) {
+      return '${(meters / 1000).toStringAsFixed(1)} km';
+    }
+    return '${meters.round()} m';
+  }
+
+  /// Haversine formula for great-circle distance in meters.
+  static double _haversineMeters(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
+    const r = 6371000.0; // Earth radius in meters
+    final dLat = _toRad(lat2 - lat1);
+    final dLon = _toRad(lon2 - lon1);
+    final a = _sin2(dLat / 2) + _cos(lat1) * _cos(lat2) * _sin2(dLon / 2);
+    return r * 2 * _asin(_sqrt(a));
+  }
+
+  static double _toRad(double deg) => deg * 3.141592653589793 / 180;
+  static double _sin2(double x) {
+    final s = _sin(x);
+    return s * s;
+  }
+
+  static double _sin(double x) => math.sin(x);
+  static double _cos(double x) => math.cos(x);
+  static double _asin(double x) => math.asin(x);
+  static double _sqrt(double x) => math.sqrt(x);
+}
+
+// =============================================================================
 // Section Info Button — inline contextual help for TAK detail sections
 // =============================================================================
 
@@ -424,6 +683,8 @@ class _TakSectionInfoButton extends StatelessWidget {
         return 'Identity';
       case 'position':
         return 'Position';
+      case 'motion':
+        return 'Motion Data';
       case 'timestamps':
         return 'Timestamps';
       case 'tracking':

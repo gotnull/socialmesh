@@ -6,7 +6,8 @@ import 'dart:convert';
 /// Mirrors the JSON shape produced by backend/tak-gateway:
 /// ```json
 /// { "uid": "...", "type": "...", "callsign": "...", "lat": 0.0,
-///   "lon": 0.0, "timeUtcMs": 0, "staleUtcMs": 0, "receivedUtcMs": 0 }
+///   "lon": 0.0, "timeUtcMs": 0, "staleUtcMs": 0, "receivedUtcMs": 0,
+///   "speed": 12.5, "course": 45.0, "hae": 152.3 }
 /// ```
 class TakEvent {
   /// CoT event UID (identifies the entity, e.g. "ANDROID-357...").
@@ -36,6 +37,15 @@ class TakEvent {
   /// Raw JSON payload for debugging (null in production).
   final String? rawPayloadJson;
 
+  /// Speed in meters per second from the CoT `<track>` element.
+  final double? speed;
+
+  /// Course/heading in degrees from true north (0–360).
+  final double? course;
+
+  /// Height above ellipsoid in meters from the CoT `<point>` element.
+  final double? hae;
+
   const TakEvent({
     required this.uid,
     required this.type,
@@ -46,6 +56,9 @@ class TakEvent {
     required this.staleUtcMs,
     required this.receivedUtcMs,
     this.rawPayloadJson,
+    this.speed,
+    this.course,
+    this.hae,
   });
 
   /// Construct from gateway JSON map.
@@ -60,6 +73,9 @@ class TakEvent {
       staleUtcMs: json['staleUtcMs'] as int,
       receivedUtcMs: json['receivedUtcMs'] as int,
       rawPayloadJson: json['rawXml'] as String?,
+      speed: (json['speed'] as num?)?.toDouble(),
+      course: (json['course'] as num?)?.toDouble(),
+      hae: (json['hae'] as num?)?.toDouble(),
     );
   }
 
@@ -74,6 +90,9 @@ class TakEvent {
     'staleUtcMs': staleUtcMs,
     'receivedUtcMs': receivedUtcMs,
     'rawXml': rawPayloadJson,
+    if (speed != null) 'speed': speed,
+    if (course != null) 'course': course,
+    if (hae != null) 'hae': hae,
   };
 
   /// Construct from SQLite row map.
@@ -88,6 +107,9 @@ class TakEvent {
       staleUtcMs: row['stale_utc'] as int,
       receivedUtcMs: row['received_utc'] as int,
       rawPayloadJson: row['raw_payload_json'] as String?,
+      speed: row['speed'] as double?,
+      course: row['course'] as double?,
+      hae: row['hae'] as double?,
     );
   }
 
@@ -102,6 +124,9 @@ class TakEvent {
     'stale_utc': staleUtcMs,
     'received_utc': receivedUtcMs,
     'raw_payload_json': rawPayloadJson,
+    'speed': speed,
+    'course': course,
+    'hae': hae,
   };
 
   /// Whether this event has expired (stale time has passed).
@@ -115,6 +140,32 @@ class TakEvent {
 
   /// Encode the full event as a JSON string.
   String toJsonString() => jsonEncode(toJson());
+
+  /// Whether this entity has motion data (speed, course, or altitude).
+  bool get hasMotionData => speed != null || course != null || hae != null;
+
+  /// Speed formatted as km/h, or "Stationary" if null or zero.
+  String get formattedSpeed {
+    if (speed == null || speed == 0.0) return 'Stationary';
+    final kmh = speed! * 3.6;
+    final knots = speed! * 1.94384;
+    return '${kmh.toStringAsFixed(1)} km/h (${knots.toStringAsFixed(1)} kn)';
+  }
+
+  /// Course formatted as degrees with compass direction.
+  String? get formattedCourse {
+    if (course == null) return null;
+    final deg = course!.round();
+    return '${deg.toString().padLeft(3, '0')}\u00B0 (${_compassDirection(course!)})';
+  }
+
+  /// Altitude formatted as meters and feet.
+  String? get formattedAltitude {
+    if (hae == null) return null;
+    final meters = hae!.round();
+    final feet = (hae! * 3.28084).round();
+    return '$meters m ($feet ft)';
+  }
 
   @override
   bool operator ==(Object other) =>
@@ -130,7 +181,8 @@ class TakEvent {
   @override
   String toString() =>
       'TakEvent(uid=$uid, type=$type, callsign=$callsign, '
-      'lat=$lat, lon=$lon)';
+      'lat=$lat, lon=$lon, '
+      'speed=$speed, course=$course, hae=$hae)';
 }
 
 /// Decode the leading CoT type atoms into a human-readable label.
@@ -143,4 +195,18 @@ String _describeType(String type) {
   if (type.startsWith('b-')) return 'Bits';
   if (type.startsWith('t-')) return 'Tasking';
   return type;
+}
+
+/// Convert a course in degrees to a compass direction string.
+String _compassDirection(double degrees) {
+  // Normalize to 0–360 range
+  final d = degrees % 360;
+  if (d >= 337.5 || d < 22.5) return 'N';
+  if (d < 67.5) return 'NE';
+  if (d < 112.5) return 'E';
+  if (d < 157.5) return 'SE';
+  if (d < 202.5) return 'S';
+  if (d < 247.5) return 'SW';
+  if (d < 292.5) return 'W';
+  return 'NW';
 }

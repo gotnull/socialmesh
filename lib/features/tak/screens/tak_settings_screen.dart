@@ -8,6 +8,7 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../services/haptic_service.dart';
 import '../providers/tak_settings_provider.dart';
+import '../utils/cot_affiliation.dart';
 
 /// Dedicated TAK settings form accessible from the TakScreen overflow menu
 /// and from the main Settings screen.
@@ -171,6 +172,63 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
                   ),
                 ),
               ),
+
+              // ---------------------------------------------------------------
+              // PROXIMITY ALERTS
+              // ---------------------------------------------------------------
+              const SliverToBoxAdapter(
+                child: _SectionHeader(title: 'PROXIMITY ALERTS'),
+              ),
+              SliverToBoxAdapter(
+                child: _SettingsTile(
+                  icon: Icons.radar,
+                  title: 'Enable proximity alerts',
+                  subtitle: 'Notify when hostile/unknown entities enter radius',
+                  trailing: ThemedSwitch(
+                    value: settings.proximityAlertEnabled,
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      ref
+                          .read(takSettingsProvider.notifier)
+                          .setProximityAlertEnabled(value);
+                    },
+                  ),
+                ),
+              ),
+              if (settings.proximityAlertEnabled) ...[
+                SliverToBoxAdapter(
+                  child: _SettingsTile(
+                    icon: Icons.adjust,
+                    title: 'Alert radius',
+                    subtitle: '${settings.proximityRadiusKm.round()} km',
+                    trailing: SizedBox(
+                      width: 160,
+                      child: Slider(
+                        value: settings.proximityRadiusKm,
+                        min: 1,
+                        max: 50,
+                        divisions: 49,
+                        label: '${settings.proximityRadiusKm.round()} km',
+                        onChanged: (value) {
+                          ref
+                              .read(takSettingsProvider.notifier)
+                              .setProximityRadiusKm(value.roundToDouble());
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _ProximityAffiliationCheckboxes(
+                    selected: settings.proximityAffiliations,
+                    onChanged: (value) {
+                      ref
+                          .read(takSettingsProvider.notifier)
+                          .setProximityAffiliations(value);
+                    },
+                  ),
+                ),
+              ],
 
               // Bottom padding
               const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
@@ -472,6 +530,69 @@ class _IntervalSelector extends StatelessWidget {
         final itemLabel = seconds < 60 ? '${seconds}s' : '${seconds ~/ 60}m';
         return PopupMenuItem(value: seconds, child: Text(itemLabel));
       }).toList(),
+    );
+  }
+}
+
+/// Checkbox list for selecting which affiliations trigger proximity alerts.
+class _ProximityAffiliationCheckboxes extends StatelessWidget {
+  const _ProximityAffiliationCheckboxes({
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final Set<String> selected;
+  final ValueChanged<Set<String>> onChanged;
+
+  static const _options = [
+    (key: 'hostile', label: 'Hostile', color: CotAffiliationColors.hostile),
+    (key: 'unknown', label: 'Unknown', color: CotAffiliationColors.unknown),
+    (key: 'suspect', label: 'Suspect', color: CotAffiliationColors.suspect),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Alert on:',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+          ),
+          for (final option in _options)
+            Row(
+              children: [
+                Checkbox(
+                  value: selected.contains(option.key),
+                  activeColor: option.color,
+                  onChanged: (checked) {
+                    HapticFeedback.selectionClick();
+                    final updated = Set<String>.of(selected);
+                    if (checked ?? false) {
+                      updated.add(option.key);
+                    } else {
+                      updated.remove(option.key);
+                    }
+                    onChanged(updated);
+                  },
+                ),
+                Text(
+                  option.label,
+                  style: TextStyle(fontSize: 14, color: context.textPrimary),
+                ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 }

@@ -4,9 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../settings/account_subscriptions_screen.dart';
+
 import '../../../core/constants.dart';
 import '../../../core/help/help_content.dart';
 import '../../../core/logging.dart';
+import '../../../core/theme.dart';
+import '../../../providers/auth_providers.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -22,6 +26,7 @@ import '../services/tak_gateway_client.dart';
 import '../utils/cot_affiliation.dart';
 import '../widgets/tak_event_tile.dart';
 import '../widgets/tak_status_card.dart';
+import 'tak_dashboard_screen.dart';
 import 'tak_event_detail_screen.dart';
 import 'tak_settings_screen.dart';
 
@@ -59,11 +64,14 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
     // Ensure persistence notifier is alive (loads DB, subscribes to streams)
     ref.read(takPersistenceNotifierProvider);
 
-    // Auto-connect on first build (only if enabled in settings)
+    // Auto-connect on first build (only if enabled in settings AND signed in)
+    final isSignedIn = ref.read(isSignedInProvider);
     final settings = ref.read(takSettingsProvider).value;
     final shouldAutoConnect = settings?.autoConnect ?? true;
     final client = ref.read(takGatewayClientProvider);
-    if (shouldAutoConnect && client.state == TakConnectionState.disconnected) {
+    if (isSignedIn &&
+        shouldAutoConnect &&
+        client.state == TakConnectionState.disconnected) {
       AppLogging.tak('TakScreen auto-connecting...');
       client.connect();
       _autoConnectDone = true;
@@ -78,6 +86,11 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
   }
 
   void _toggleConnection() {
+    final isSignedIn = ref.read(isSignedInProvider);
+    if (!isSignedIn) {
+      AppLogging.tak('TakScreen: connect blocked — not signed in');
+      return;
+    }
     final client = ref.read(takGatewayClientProvider);
     final connState =
         ref.read(takConnectionStateProvider).whenOrNull(data: (s) => s) ??
@@ -153,7 +166,7 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isSignedIn = ref.watch(isSignedInProvider);
     final allEvents = ref.watch(takActiveEventsProvider);
     final filteredEvents = ref.watch(filteredTakEventsProvider);
     final filter = ref.watch(takFilterProvider);
@@ -162,8 +175,9 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
     final connectionState =
         connectionAsync.whenOrNull(data: (s) => s) ?? client.state;
 
-    // Auto-connect if provider was rebuilt and client is fresh
-    if (!_autoConnectDone &&
+    // Auto-connect if provider was rebuilt and client is fresh (only if signed in)
+    if (isSignedIn &&
+        !_autoConnectDone &&
         connectionState == TakConnectionState.disconnected) {
       final settings = ref.read(takSettingsProvider).value;
       if (settings?.autoConnect ?? true) {
@@ -206,10 +220,14 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
                   : Icons.link_off,
               color: connectionState == TakConnectionState.connected
                   ? Colors.green
-                  : Colors.grey,
+                  : isSignedIn
+                  ? Colors.grey
+                  : Colors.grey.withValues(alpha: 0.4),
             ),
-            onPressed: _toggleConnection,
-            tooltip: connectionState == TakConnectionState.connected
+            onPressed: isSignedIn ? _toggleConnection : null,
+            tooltip: !isSignedIn
+                ? 'Sign in to connect'
+                : connectionState == TakConnectionState.connected
                 ? 'Disconnect'
                 : 'Connect',
           ),
@@ -217,6 +235,13 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
           AppBarOverflowMenu<String>(
             onSelected: (value) {
               switch (value) {
+                case 'dashboard':
+                  HapticFeedback.selectionClick();
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const TakDashboardScreen(),
+                    ),
+                  );
                 case 'settings':
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
@@ -226,6 +251,16 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
               }
             },
             itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'dashboard',
+                child: Row(
+                  children: [
+                    Icon(Icons.dashboard_outlined, size: 18),
+                    SizedBox(width: 8),
+                    Text('SA Dashboard'),
+                  ],
+                ),
+              ),
               const PopupMenuItem(
                 value: 'settings',
                 child: Row(
@@ -294,14 +329,80 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
               Expanded(
                 child: filteredEvents.isEmpty
                     ? Center(
-                        child: Text(
-                          connectionState == TakConnectionState.connected
-                              ? 'Waiting for CoT events...'
-                              : 'Not connected to TAK Gateway',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.5,
-                            ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 72,
+                                height: 72,
+                                decoration: BoxDecoration(
+                                  color: context.card,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Icon(
+                                  Icons.radar,
+                                  size: 40,
+                                  color: context.textTertiary,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                'No TAK Entities',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: context.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                !isSignedIn
+                                    ? 'Sign in and connect to start '
+                                          'receiving live CoT entities.'
+                                    : connectionState ==
+                                          TakConnectionState.connected
+                                    ? 'Listening for CoT events from '
+                                          'the TAK Gateway...'
+                                    : 'Connect to the TAK Gateway to '
+                                          'start streaming CoT entities.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: context.textTertiary,
+                                  height: 1.4,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              if (!isSignedIn)
+                                FilledButton.icon(
+                                  onPressed: () {
+                                    HapticFeedback.selectionClick();
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) =>
+                                            const AccountSubscriptionsScreen(),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(
+                                    Icons.person_outline,
+                                    size: 18,
+                                  ),
+                                  label: const Text('Sign In to Connect'),
+                                )
+                              else if (connectionState !=
+                                  TakConnectionState.connected)
+                                FilledButton.icon(
+                                  onPressed: () {
+                                    HapticFeedback.selectionClick();
+                                    _toggleConnection();
+                                  },
+                                  icon: const Icon(Icons.link, size: 18),
+                                  label: const Text('Connect'),
+                                ),
+                            ],
                           ),
                         ),
                       )

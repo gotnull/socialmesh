@@ -13,6 +13,7 @@ import '../models/tak_publish_config.dart';
 import '../services/tak_database.dart';
 import '../services/tak_gateway_client.dart';
 import '../services/tak_position_publisher.dart';
+import '../services/tak_proximity_monitor.dart';
 import 'tak_settings_provider.dart';
 import '../services/tak_stale_monitor.dart';
 import 'tak_tracking_provider.dart';
@@ -318,6 +319,53 @@ final takStaleMonitorProvider = Provider<TakStaleMonitor>((ref) {
 });
 
 // ---------------------------------------------------------------------------
+// Proximity alerts
+// ---------------------------------------------------------------------------
+
+/// Monitors TAK entities for proximity to the user's position and fires
+/// local notifications when hostile/unknown entities enter the configured
+/// radius.
+final takProximityMonitorProvider = Provider<TakProximityMonitor>((ref) {
+  final settings = ref.watch(takSettingsProvider).value;
+  final events = ref.watch(takActiveEventsProvider);
+  final connectionState =
+      ref.watch(takConnectionStateProvider).whenOrNull(data: (s) => s) ??
+      TakConnectionState.disconnected;
+  final myNodeNum = ref.watch(myNodeNumProvider);
+  final nodes = ref.watch(nodesProvider);
+
+  final monitor = TakProximityMonitor(
+    notificationService: NotificationService(),
+    getEvents: () => events,
+    getUserLat: () {
+      if (myNodeNum == null) return null;
+      return nodes[myNodeNum]?.latitude;
+    },
+    getUserLon: () {
+      if (myNodeNum == null) return null;
+      return nodes[myNodeNum]?.longitude;
+    },
+    getRadiusKm: () => settings?.proximityRadiusKm ?? 5.0,
+    getAffiliations: () =>
+        settings?.proximityAffiliations ?? const {'hostile', 'unknown'},
+  );
+
+  // Auto-start when enabled and connected.
+  final isEnabled = settings?.proximityAlertEnabled ?? false;
+  final isConnected = connectionState == TakConnectionState.connected;
+  if (isEnabled && isConnected) {
+    monitor.start();
+  }
+
+  ref.onDispose(() {
+    AppLogging.tak('takProximityMonitorProvider: disposing');
+    monitor.dispose();
+  });
+
+  return monitor;
+});
+
+// ---------------------------------------------------------------------------
 // Show on map request
 // ---------------------------------------------------------------------------
 
@@ -341,3 +389,22 @@ class TakShowOnMapNotifier extends Notifier<TakEvent?> {
 final takShowOnMapProvider = NotifierProvider<TakShowOnMapNotifier, TakEvent?>(
   TakShowOnMapNotifier.new,
 );
+
+// ---------------------------------------------------------------------------
+// Position history for detail screen
+// ---------------------------------------------------------------------------
+
+/// Fetches position history for a given entity UID.
+///
+/// Returns up to 50 most recent [PositionHistoryPoint] entries from the
+/// TAK database, used by the detail screen's Position History section.
+final takPositionHistoryProvider =
+    FutureProvider.family<List<PositionHistoryPoint>, String>((ref, uid) async {
+      final db = ref.watch(takDatabaseProvider);
+      final history = await db.getPositionHistory(uid, limit: 50);
+      AppLogging.tak(
+        'takPositionHistoryProvider: loaded ${history.length} position history '
+        'entries for uid=$uid',
+      );
+      return history;
+    });

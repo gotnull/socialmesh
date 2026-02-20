@@ -53,7 +53,7 @@ class _TakFilterBarState extends ConsumerState<TakFilterBar> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  // Affiliation chips for the 4 primary types
+                  // Affiliation chips for all affiliations
                   ..._primaryAffiliations.map(
                     (aff) => _buildAffiliationChip(
                       context,
@@ -217,11 +217,14 @@ class _TakFilterBarState extends ConsumerState<TakFilterBar> {
     );
   }
 
-  /// Primary affiliations shown as filter chips.
+  /// All affiliations shown as filter chips.
   static const _primaryAffiliations = [
     CotAffiliation.friendly,
     CotAffiliation.hostile,
     CotAffiliation.neutral,
     CotAffiliation.unknown,
+    CotAffiliation.assumedFriend,
+    CotAffiliation.suspect,
+    CotAffiliation.pending,
   ];
 }
