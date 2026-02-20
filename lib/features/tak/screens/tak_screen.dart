@@ -8,11 +8,15 @@ import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/search_filter_header.dart';
+import '../../../core/widgets/section_header.dart';
+import '../models/tak_event.dart';
 import '../providers/tak_filter_provider.dart';
 import '../providers/tak_providers.dart';
+import '../providers/tak_settings_provider.dart';
 import '../services/tak_gateway_client.dart';
+import '../utils/cot_affiliation.dart';
 import '../widgets/tak_event_tile.dart';
-import '../widgets/tak_filter_bar.dart';
 import '../widgets/tak_status_card.dart';
 import 'tak_event_detail_screen.dart';
 import 'tak_settings_screen.dart';
@@ -29,18 +33,33 @@ class TakScreen extends ConsumerStatefulWidget {
 
 class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
   bool _autoConnectDone = false;
+  late final TextEditingController _searchController;
+
+  /// Primary affiliations shown as filter chips.
+  static const _primaryAffiliations = [
+    CotAffiliation.friendly,
+    CotAffiliation.hostile,
+    CotAffiliation.neutral,
+    CotAffiliation.unknown,
+  ];
 
   @override
   void initState() {
     super.initState();
     AppLogging.tak('TakScreen initState');
 
+    _searchController = TextEditingController(
+      text: ref.read(takFilterProvider).searchQuery,
+    );
+
     // Ensure persistence notifier is alive (loads DB, subscribes to streams)
     ref.read(takPersistenceNotifierProvider);
 
-    // Auto-connect on first build
+    // Auto-connect on first build (only if enabled in settings)
+    final settings = ref.read(takSettingsProvider).value;
+    final shouldAutoConnect = settings?.autoConnect ?? true;
     final client = ref.read(takGatewayClientProvider);
-    if (client.state == TakConnectionState.disconnected) {
+    if (shouldAutoConnect && client.state == TakConnectionState.disconnected) {
       AppLogging.tak('TakScreen auto-connecting...');
       client.connect();
       _autoConnectDone = true;
@@ -49,6 +68,7 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
 
   @override
   void dispose() {
+    _searchController.dispose();
     AppLogging.tak('TakScreen dispose');
     super.dispose();
   }
@@ -67,11 +87,16 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
     }
   }
 
+  int _countByAffiliation(List<TakEvent> events, CotAffiliation target) {
+    return events.where((e) => parseAffiliation(e.type) == target).length;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final allEvents = ref.watch(takActiveEventsProvider);
     final filteredEvents = ref.watch(filteredTakEventsProvider);
+    final filter = ref.watch(takFilterProvider);
     final client = ref.read(takGatewayClientProvider);
     final connectionAsync = ref.watch(takConnectionStateProvider);
     final connectionState =
@@ -80,13 +105,33 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
     // Auto-connect if provider was rebuilt and client is fresh
     if (!_autoConnectDone &&
         connectionState == TakConnectionState.disconnected) {
-      Future.microtask(() {
-        if (!mounted) return;
-        AppLogging.tak('TakScreen: deferred auto-connect after rebuild');
-        client.connect();
-      });
+      final settings = ref.read(takSettingsProvider).value;
+      if (settings?.autoConnect ?? true) {
+        Future.microtask(() {
+          if (!mounted) return;
+          AppLogging.tak('TakScreen: deferred auto-connect after rebuild');
+          client.connect();
+        });
+      }
       _autoConnectDone = true;
     }
+
+    // Stale mode label and icon for the cycle chip
+    final staleModeLabel = switch (filter.staleMode) {
+      TakStaleMode.all => 'Status: All',
+      TakStaleMode.activeOnly => 'Active Only',
+      TakStaleMode.staleOnly => 'Stale Only',
+    };
+    final staleModeIcon = switch (filter.staleMode) {
+      TakStaleMode.all => Icons.filter_list,
+      TakStaleMode.activeOnly => Icons.timer,
+      TakStaleMode.staleOnly => Icons.timer_off,
+    };
+    final staleModeCount = switch (filter.staleMode) {
+      TakStaleMode.all => allEvents.length,
+      TakStaleMode.activeOnly => allEvents.where((e) => !e.isStale).length,
+      TakStaleMode.staleOnly => allEvents.where((e) => e.isStale).length,
+    };
 
     return GlassScaffold.body(
       title: 'TAK Gateway',
@@ -130,53 +175,92 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
           ],
         ),
       ],
-      body: Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          TakStatusCard(
-            connectionState: connectionState,
-            totalReceived: client.totalEventsReceived,
-            activeEntities: allEvents.length,
-            gatewayUrl: AppUrls.takGatewayUrl,
-            connectedSince: client.connectedSince,
-            lastError: client.lastError,
-          ),
-          const SizedBox(height: 8),
-          const TakFilterBar(),
-          const SizedBox(height: 4),
-          Expanded(
-            child: filteredEvents.isEmpty
-                ? Center(
-                    child: Text(
-                      connectionState == TakConnectionState.connected
-                          ? 'Waiting for CoT events...'
-                          : 'Not connected to TAK Gateway',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.5,
-                        ),
-                      ),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: filteredEvents.length,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: UiConstants.defaultPadding,
-                    ),
-                    itemBuilder: (context, index) {
-                      final event = filteredEvents[index];
-                      return TakEventTile(
-                        event: event,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => TakEventDetailScreen(event: event),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: Column(
+          children: [
+            TakStatusCard(
+              connectionState: connectionState,
+              totalReceived: client.totalEventsReceived,
+              activeEntities: allEvents.length,
+              gatewayUrl: client.gatewayUrl,
+              connectedSince: client.connectedSince,
+              lastError: client.lastError,
+            ),
+            const SizedBox(height: 8),
+            SearchFilterHeader(
+              searchController: _searchController,
+              searchQuery: filter.searchQuery,
+              onSearchChanged: (value) {
+                ref.read(takFilterProvider.notifier).setSearchQuery(value);
+              },
+              hintText: 'Search callsign or UID',
+              filterChips: [
+                SectionFilterChip(
+                  label: 'All',
+                  count: allEvents.length,
+                  isSelected: !filter.isActive,
+                  onTap: () {
+                    ref.read(takFilterProvider.notifier).clearAll();
+                    _searchController.clear();
+                  },
+                ),
+                for (final aff in _primaryAffiliations)
+                  SectionFilterChip(
+                    label: aff.label,
+                    count: _countByAffiliation(allEvents, aff),
+                    isSelected: filter.affiliations.contains(aff),
+                    color: aff.color,
+                    onTap: () => ref
+                        .read(takFilterProvider.notifier)
+                        .toggleAffiliation(aff),
+                  ),
+                SectionFilterChip(
+                  label: staleModeLabel,
+                  count: staleModeCount,
+                  isSelected: filter.staleMode != TakStaleMode.all,
+                  icon: staleModeIcon,
+                  onTap: () =>
+                      ref.read(takFilterProvider.notifier).cycleStaleMode(),
+                ),
+              ],
+            ),
+            Expanded(
+              child: filteredEvents.isEmpty
+                  ? Center(
+                      child: Text(
+                        connectionState == TakConnectionState.connected
+                            ? 'Waiting for CoT events...'
+                            : 'Not connected to TAK Gateway',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.5,
                           ),
                         ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: filteredEvents.length,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: UiConstants.defaultPadding,
+                      ),
+                      itemBuilder: (context, index) {
+                        final event = filteredEvents[index];
+                        return TakEventTile(
+                          event: event,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) =>
+                                  TakEventDetailScreen(event: event),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

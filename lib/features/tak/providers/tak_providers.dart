@@ -13,6 +13,7 @@ import '../models/tak_publish_config.dart';
 import '../services/tak_database.dart';
 import '../services/tak_gateway_client.dart';
 import '../services/tak_position_publisher.dart';
+import 'tak_settings_provider.dart';
 import '../services/tak_stale_monitor.dart';
 import 'tak_tracking_provider.dart';
 
@@ -35,13 +36,22 @@ final takDatabaseProvider = Provider<TakDatabase>((ref) {
 });
 
 /// TAK Gateway WebSocket client.
+///
+/// Reads the custom gateway URL from [takSettingsProvider]. When the user
+/// changes the URL in settings the provider rebuilds, disposing the old
+/// client and creating a new one pointed at the updated URL.
 final takGatewayClientProvider = Provider<TakGatewayClient>((ref) {
   final authService = ref.read(authServiceProvider);
-  AppLogging.tak(
-    'Creating TakGatewayClient provider: url=${AppUrls.takGatewayUrl}',
-  );
+
+  // Use custom URL from settings when available, fall back to env default.
+  final settings = ref.watch(takSettingsProvider).value;
+  final gatewayUrl = (settings != null && settings.gatewayUrl.isNotEmpty)
+      ? settings.gatewayUrl
+      : AppUrls.takGatewayUrl;
+
+  AppLogging.tak('Creating TakGatewayClient provider: url=$gatewayUrl');
   final client = TakGatewayClient(
-    gatewayUrl: AppUrls.takGatewayUrl,
+    gatewayUrl: gatewayUrl,
     getAuthToken: () => authService.getIdToken(),
   );
   ref.onDispose(() {
@@ -296,3 +306,28 @@ final takStaleMonitorProvider = Provider<TakStaleMonitor>((ref) {
 
   return monitor;
 });
+
+// ---------------------------------------------------------------------------
+// Show on map request
+// ---------------------------------------------------------------------------
+
+/// A pending request to center the map on a specific TAK entity.
+///
+/// Set by [TakEventDetailScreen] "Show on Map" action, consumed by
+/// [MapScreen]. The request flow is:
+///   1. Detail screen calls `request(event)`
+///   2. Detail screen pops (Navigator.pop)
+///   3. MapScreen listener sees the non-null value, centers on the location,
+///      calls `consume()` to clear the request.
+class TakShowOnMapNotifier extends Notifier<TakEvent?> {
+  @override
+  TakEvent? build() => null;
+
+  void request(TakEvent event) => state = event;
+  void consume() => state = null;
+}
+
+/// Provider for "show TAK entity on map" navigation requests.
+final takShowOnMapProvider = NotifierProvider<TakShowOnMapNotifier, TakEvent?>(
+  TakShowOnMapNotifier.new,
+);

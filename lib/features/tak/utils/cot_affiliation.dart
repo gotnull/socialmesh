@@ -117,3 +117,71 @@ CotAffiliation parseAffiliation(String cotType) {
       return CotAffiliation.pending;
   }
 }
+
+// ---------------------------------------------------------------------------
+// CoT dimension / function icon mapping
+// ---------------------------------------------------------------------------
+
+/// Resolve an [IconData] from a CoT type string based on its dimension and
+/// function atoms.
+///
+/// The CoT type format is `a-X-D-F-...`:
+///   - Atom 0: `a` (atom category)
+///   - Atom 1: affiliation (f/h/n/u/a/s)
+///   - Atom 2: dimension — G (Ground), A (Air), S (Sea Surface),
+///             U (Subsurface), P (Space), F (SOF), E (Electronic Warfare)
+///   - Atom 3+: function codes refining the entity type
+///
+/// Returns [Icons.gps_fixed] for unrecognized or malformed types.
+IconData cotTypeIcon(String cotType) {
+  final atoms = cotType.split('-');
+  if (atoms.length < 3) return Icons.gps_fixed;
+
+  final dimension = atoms[2].toUpperCase();
+  switch (dimension) {
+    case 'G': // Ground
+      if (atoms.length >= 4) {
+        switch (atoms[3].toUpperCase()) {
+          case 'U': // Unit
+            return Icons.groups;
+          case 'E': // Equipment / vehicle
+            return Icons.local_shipping;
+          case 'I': // Installation
+            return Icons.business;
+          case 'C': // Civilian
+            return Icons.person;
+          case 'N': // Non-combatant
+            return Icons.person_outline;
+          case 'S': // Signals intelligence
+            return Icons.cell_tower;
+        }
+      }
+      return Icons.terrain;
+    case 'A': // Air
+      if (atoms.length >= 4) {
+        switch (atoms[3].toUpperCase()) {
+          case 'M': // Military fixed-wing
+            return Icons.flight;
+          case 'H': // Rotary-wing
+            return Icons.airplanemode_on;
+          case 'W': // Weapon / missile
+            return Icons.rocket_launch;
+          case 'U': // UAV
+            return Icons.flight_takeoff;
+        }
+      }
+      return Icons.flight;
+    case 'S': // Sea Surface
+      return Icons.sailing;
+    case 'U': // Subsurface
+      return Icons.scuba_diving;
+    case 'P': // Space
+      return Icons.satellite_alt;
+    case 'F': // SOF
+      return Icons.shield;
+    case 'E': // Electronic Warfare
+      return Icons.cell_tower;
+    default:
+      return Icons.gps_fixed;
+  }
+}

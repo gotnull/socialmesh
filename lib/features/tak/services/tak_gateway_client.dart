@@ -110,6 +110,11 @@ class TakGatewayClient {
         headers: token != null ? {'Authorization': 'Bearer $token'} : null,
       );
 
+      // Enable WebSocket-level keepalive pings every 30 seconds so the
+      // connection is not silently dropped by intermediaries (load balancers,
+      // NATs, mobile radios). dart:io handles pong responses automatically.
+      _socket!.pingInterval = const Duration(seconds: 30);
+
       _reconnectAttempts = 0;
       _connectedSince = DateTime.now();
       _setState(TakConnectionState.connected);

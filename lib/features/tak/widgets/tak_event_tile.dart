@@ -54,7 +54,7 @@ class TakEventTile extends StatelessWidget {
                       ),
                     ),
                     child: Icon(
-                      Icons.gps_fixed,
+                      cotTypeIcon(event.type),
                       size: 20,
                       color: affiliationColor,
                     ),

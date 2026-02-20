@@ -476,6 +476,22 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     });
 
+    // When "Show on Map" is tapped in the TAK detail screen, consume the
+    // pending event and center the map on its coordinates.
+    ref.listen<TakEvent?>(takShowOnMapProvider, (prev, next) {
+      if (next != null) {
+        ref.read(takShowOnMapProvider.notifier).consume();
+        safeSetState(() {
+          _showTakLayer = true;
+          _panelTab = 1;
+          _showNodeList = true;
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _animatedMove(LatLng(next.lat, next.lon), 15.0);
+        });
+      }
+    });
+
     final nodes = ref.watch(nodesProvider);
     final presenceMap = ref.watch(presenceMapProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
@@ -3126,7 +3142,7 @@ class _TakEntityListItem extends StatelessWidget {
                     ),
                   ),
                   child: Icon(
-                    Icons.gps_fixed,
+                    cotTypeIcon(event.type),
                     size: 16,
                     color: affiliationColor,
                   ),
@@ -3265,7 +3281,11 @@ class _TakEntityInfoCard extends StatelessWidget {
                     color: affiliationColor.withValues(alpha: 0.4),
                   ),
                 ),
-                child: Icon(Icons.gps_fixed, color: affiliationColor, size: 22),
+                child: Icon(
+                  cotTypeIcon(event.type),
+                  color: affiliationColor,
+                  size: 22,
+                ),
               ),
             ),
             const SizedBox(width: 12),

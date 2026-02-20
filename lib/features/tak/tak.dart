@@ -13,7 +13,6 @@ export 'providers/tak_providers.dart';
 export 'providers/tak_settings_provider.dart';
 export 'providers/tak_tracking_provider.dart';
 export 'screens/tak_event_detail_screen.dart';
-export 'screens/tak_map_screen.dart';
 export 'screens/tak_screen.dart';
 export 'screens/tak_settings_screen.dart';
 export 'services/tak_database.dart';

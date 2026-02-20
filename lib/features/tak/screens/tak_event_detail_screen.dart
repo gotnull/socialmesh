@@ -6,7 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/logging.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../services/haptic_service.dart';
+import '../../navigation/main_shell.dart';
 import '../models/tak_event.dart';
+import '../providers/tak_providers.dart';
 import '../providers/tak_tracking_provider.dart';
 import '../utils/cot_affiliation.dart';
 
@@ -39,6 +41,21 @@ class TakEventDetailScreen extends ConsumerWidget {
     return GlassScaffold.body(
       title: event.displayName,
       actions: [
+        IconButton(
+          icon: const Icon(Icons.map_outlined),
+          onPressed: () {
+            AppLogging.tak(
+              'Show on map: uid=${event.uid}, '
+              'lat=${event.lat}, lon=${event.lon}',
+            );
+            ref.read(takShowOnMapProvider.notifier).request(event);
+            ref.read(mapTakModeProvider.notifier).request();
+            ref.read(mainShellIndexProvider.notifier).setIndex(1);
+            Navigator.of(context).popUntil((route) => route.isFirst);
+            ref.haptics.itemSelect();
+          },
+          tooltip: 'Show on Map',
+        ),
         IconButton(
           icon: Icon(
             isTracked ? Icons.push_pin : Icons.push_pin_outlined,
@@ -239,7 +256,11 @@ class _HeaderCard extends StatelessWidget {
                   color: affiliationColor.withValues(alpha: 0.4),
                 ),
               ),
-              child: Icon(Icons.gps_fixed, color: affiliationColor, size: 24),
+              child: Icon(
+                cotTypeIcon(event.type),
+                color: affiliationColor,
+                size: 24,
+              ),
             ),
           ),
           const SizedBox(width: 12),

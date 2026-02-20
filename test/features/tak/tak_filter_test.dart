@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:socialmesh/features/tak/models/tak_event.dart';
@@ -263,6 +264,52 @@ void main() {
         searchQuery: 'alpha',
       );
       expect(_applyFilter(events, filter), isEmpty);
+    });
+  });
+
+  group('cotTypeIcon', () {
+    test('returns ground unit icon for a-f-G-U', () {
+      expect(cotTypeIcon('a-f-G-U-C'), Icons.groups);
+    });
+
+    test('returns ground equipment icon for a-f-G-E', () {
+      expect(cotTypeIcon('a-f-G-E'), Icons.local_shipping);
+    });
+
+    test('returns ground installation icon for a-f-G-I', () {
+      expect(cotTypeIcon('a-h-G-I'), Icons.business);
+    });
+
+    test('returns terrain icon for ground without function', () {
+      expect(cotTypeIcon('a-f-G'), Icons.terrain);
+    });
+
+    test('returns flight icon for air dimension', () {
+      expect(cotTypeIcon('a-h-A-M'), Icons.flight);
+    });
+
+    test('returns rotary icon for air helicopters', () {
+      expect(cotTypeIcon('a-f-A-H'), Icons.airplanemode_on);
+    });
+
+    test('returns sailing icon for sea surface', () {
+      expect(cotTypeIcon('a-n-S'), Icons.sailing);
+    });
+
+    test('returns satellite icon for space', () {
+      expect(cotTypeIcon('a-f-P'), Icons.satellite_alt);
+    });
+
+    test('returns gps_fixed for unknown dimension', () {
+      expect(cotTypeIcon('a-f-Z'), Icons.gps_fixed);
+    });
+
+    test('returns gps_fixed for malformed type', () {
+      expect(cotTypeIcon('a-f'), Icons.gps_fixed);
+    });
+
+    test('returns gps_fixed for short type', () {
+      expect(cotTypeIcon('b'), Icons.gps_fixed);
     });
   });
 }

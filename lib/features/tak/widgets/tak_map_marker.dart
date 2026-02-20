@@ -71,7 +71,11 @@ class TakMapMarker extends StatelessWidget {
                         width: 1.5,
                       ),
                     ),
-                    child: Icon(Icons.gps_fixed, color: color, size: 18),
+                    child: Icon(
+                      cotTypeIcon(event.type),
+                      color: color,
+                      size: 18,
+                    ),
                   ),
                   // Tracking pin indicator
                   if (isTracked)
