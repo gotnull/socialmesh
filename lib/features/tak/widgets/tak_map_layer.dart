@@ -47,7 +47,7 @@ class TakMapLayer extends StatelessWidget {
       markers.add(
         Marker(
           point: LatLng(event.lat, event.lon),
-          width: TakMapMarker.markerSize + 20,
+          width: TakMapMarker.labelWidth,
           height: TakMapMarker.totalHeight,
           child: TakMapMarker(
             event: event,

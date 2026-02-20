@@ -25,11 +25,11 @@ class TakMapMarker extends StatelessWidget {
   /// Marker container size.
   static const double markerSize = 36;
 
+  /// Width for the overall marker including the callsign label area.
+  static const double labelWidth = 120;
+
   /// Total height including the callsign label.
   static const double totalHeight = 56;
-
-  /// Maximum characters for the callsign label.
-  static const int maxCallsignLength = 12;
 
   const TakMapMarker({
     super.key,
@@ -51,7 +51,7 @@ class TakMapMarker extends StatelessWidget {
       child: Opacity(
         opacity: isStale ? 0.4 : 1.0,
         child: SizedBox(
-          width: markerSize + 20, // Extra width for callsign label
+          width: labelWidth,
           height: totalHeight,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -102,7 +102,7 @@ class TakMapMarker extends StatelessWidget {
               const SizedBox(height: 2),
               // Callsign label
               Text(
-                _truncatedCallsign,
+                event.displayName,
                 style: const TextStyle(
                   fontSize: 10,
                   color: Colors.white,
@@ -121,11 +121,5 @@ class TakMapMarker extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String get _truncatedCallsign {
-    final name = event.displayName;
-    if (name.length <= maxCallsignLength) return name;
-    return '${name.substring(0, maxCallsignLength - 1)}\u2026';
   }
 }
