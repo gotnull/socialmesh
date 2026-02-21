@@ -253,7 +253,12 @@ class ProfileCloudSyncService {
   ///
   /// Includes deduplication: if called multiple times within [_syncDebounceWindow]
   /// for the same uid, returns the existing in-flight future.
-  Future<UserProfile?> fullSync(String uid) async {
+  /// Full two-way sync between local profile and Firestore.
+  ///
+  /// [authDisplayName] is the display name from Firebase Auth (e.g. Google
+  /// account name). When a brand-new cloud profile must be created for a
+  /// first-time user, this name is used instead of the default "Guest".
+  Future<UserProfile?> fullSync(String uid, {String? authDisplayName}) async {
     // Check if we're already syncing for this uid
     if (_activeSyncFuture != null && _activeSyncUid == uid) {
       AppLogging.auth(
@@ -276,7 +281,7 @@ class ProfileCloudSyncService {
 
     // Start new sync
     _activeSyncUid = uid;
-    _activeSyncFuture = _doFullSync(uid);
+    _activeSyncFuture = _doFullSync(uid, authDisplayName: authDisplayName);
 
     try {
       final result = await _activeSyncFuture;
@@ -288,7 +293,10 @@ class ProfileCloudSyncService {
   }
 
   /// Internal implementation of full sync (no deduplication)
-  Future<UserProfile?> _doFullSync(String uid) async {
+  Future<UserProfile?> _doFullSync(
+    String uid, {
+    String? authDisplayName,
+  }) async {
     AppLogging.auth('');
     AppLogging.auth(
       '╔══════════════════════════════════════════════════════════════',
@@ -340,14 +348,17 @@ class ProfileCloudSyncService {
         // No cloud profile exists
         AppLogging.auth('║ 📭 NO CLOUD PROFILE EXISTS');
         if (localIsForDifferentUser) {
-          // Local belongs to different user - create fresh profile for this user
+          // Local belongs to different user - create fresh profile for this user.
+          // Use the Firebase Auth display name (e.g. from Google) if available
+          // so the user doesn't end up with "Guest" as their cloud name.
+          final name = authDisplayName;
           AppLogging.auth(
-            '║ 🆕 Creating fresh profile for new user (local was for different user)',
+            '║ 🆕 Creating fresh profile for new user '
+            '(local was for different user, authDisplayName=$name)',
           );
-          final freshProfile = UserProfile.guest().copyWith(
-            id: uid,
-            isSynced: true,
-          );
+          final freshProfile = (name != null && name.isNotEmpty)
+              ? UserProfile.fromFirebaseUser(uid: uid, displayName: name)
+              : UserProfile.guest().copyWith(id: uid, isSynced: true);
           await _userDoc(uid).set(_profileToFirestore(freshProfile));
           await _syncPublicProfile(uid, freshProfile);
           finalProfile = freshProfile;

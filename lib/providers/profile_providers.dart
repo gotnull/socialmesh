@@ -98,7 +98,10 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
           AppLogging.auth(
             '║ ☁️ Calling profileCloudSyncService.fullSync(${user.uid})',
           );
-          final synced = await cloudSync.fullSync(user.uid);
+          final synced = await cloudSync.fullSync(
+            user.uid,
+            authDisplayName: user.displayName,
+          );
           AppLogging.auth(
             '║ ☁️ fullSync returned: ${synced?.displayName ?? "NULL"}',
           );
@@ -707,7 +710,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
   }
 
   /// Full two-way sync with cloud (requires authenticated user)
-  Future<void> fullSync(String uid) async {
+  Future<void> fullSync(String uid, {String? authDisplayName}) async {
     try {
       final cloudSync = profileCloudSyncServiceOrNull;
       if (cloudSync == null) {
@@ -715,7 +718,10 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         return;
       }
       // Sync profile data
-      final synced = await cloudSync.fullSync(uid);
+      final synced = await cloudSync.fullSync(
+        uid,
+        authDisplayName: authDisplayName,
+      );
       if (synced != null) {
         state = AsyncValue.data(synced);
 
@@ -932,7 +938,12 @@ Future<void> _triggerAutoSync(Ref ref, String uid) async {
   ref.read(syncErrorProvider.notifier).setError(null);
 
   try {
-    await ref.read(userProfileProvider.notifier).fullSync(uid);
+    await ref
+        .read(userProfileProvider.notifier)
+        .fullSync(
+          uid,
+          authDisplayName: ref.read(currentUserProvider)?.displayName,
+        );
     ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
     AppLogging.auth('AutoSync: Sync completed successfully');
   } catch (e) {
@@ -951,7 +962,9 @@ Future<void> triggerManualSync(WidgetRef ref) async {
   ref.read(syncErrorProvider.notifier).setError(null);
 
   try {
-    await ref.read(userProfileProvider.notifier).fullSync(user.uid);
+    await ref
+        .read(userProfileProvider.notifier)
+        .fullSync(user.uid, authDisplayName: user.displayName);
     ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
   } catch (e) {
     ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.error);

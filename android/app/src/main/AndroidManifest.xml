@@ -4,6 +4,12 @@
     <!-- Override GlyphMatrix SDK minSdk requirement (34) since we only use it on Phone 3 (API 34+) -->
     <uses-sdk tools:overrideLibrary="com.nothing.ketchum" />
 
+    <!-- Block advertising ID permissions injected by Firebase Analytics SDK
+         (play-services-measurement-api). The app does not use ads or the
+         advertising ID. Removing these zeros out the GAID on Android 13+. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" />
+
     <!-- Nothing Phone 3 GlyphMatrix permission -->
     <uses-permission android:name="com.nothing.ketchum.permission.ENABLE" />
 

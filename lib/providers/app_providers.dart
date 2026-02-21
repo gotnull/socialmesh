@@ -66,12 +66,27 @@ class AppInitNotifier extends Notifier<AppInitState> {
   /// connection and create a cascade of reconnect cycles.
   bool _backgroundServicesStarted = false;
 
+  /// Centralised state setter with logging for every transition.
+  void _transition(AppInitState to, [String caller = '']) {
+    final from = state;
+    state = to;
+    AppLogging.connection(
+      '🎯 AppInitNotifier: $from → $to${caller.isNotEmpty ? ' ($caller)' : ''}',
+    );
+  }
+
   @override
-  AppInitState build() => AppInitState.uninitialized;
+  AppInitState build() {
+    AppLogging.connection(
+      '🎯 AppInitNotifier.build() called '
+      '(backgroundServicesStarted=$_backgroundServicesStarted)',
+    );
+    return AppInitState.uninitialized;
+  }
 
   /// Manually set state to ready (e.g., after successful connection from scanner)
   void setReady() {
-    state = AppInitState.ready;
+    _transition(AppInitState.ready, 'setReady');
   }
 
   /// Alias for backward compatibility
@@ -79,15 +94,20 @@ class AppInitNotifier extends Notifier<AppInitState> {
 
   /// Set state to needsScanner (e.g., first launch after onboarding)
   void setNeedsScanner() {
-    state = AppInitState.needsScanner;
+    _transition(AppInitState.needsScanner, 'setNeedsScanner');
   }
 
   /// Initialize core app services (NO device connection here).
   /// Device connection is handled asynchronously by DeviceConnectionNotifier.
   Future<void> initialize() async {
-    if (state == AppInitState.initializing) return;
+    if (state == AppInitState.initializing) {
+      AppLogging.connection(
+        '🎯 AppInitNotifier.initialize() SKIPPED — already initializing',
+      );
+      return;
+    }
 
-    state = AppInitState.initializing;
+    _transition(AppInitState.initializing, 'initialize');
     try {
       // Phase 1: Critical services (fast, <500ms target)
       // Initialize notification service
@@ -98,7 +118,10 @@ class AppInitNotifier extends Notifier<AppInitState> {
 
       // Check for onboarding completion FIRST
       if (!settings.onboardingComplete) {
-        state = AppInitState.needsOnboarding;
+        _transition(
+          AppInitState.needsOnboarding,
+          'initialize:!onboardingComplete',
+        );
         return;
       }
 
@@ -128,28 +151,22 @@ class AppInitNotifier extends Notifier<AppInitState> {
         // User has paired before - check if auto-reconnect is enabled
         if (settings.autoReconnect) {
           // Auto-reconnect enabled - go to main UI, connection happens in background
-          AppLogging.connection(
-            '🎯 AppInitNotifier: User has paired before, auto-reconnect ON, setting ready',
-          );
-          setReady();
+          _transition(AppInitState.ready, 'initialize:paired+autoReconnect');
         } else {
           // Auto-reconnect disabled - go to scanner so user can manually connect
           // This respects the user's choice to not auto-connect
-          AppLogging.connection(
-            '🎯 AppInitNotifier: User has paired before but auto-reconnect OFF, setting needsScanner',
+          _transition(
+            AppInitState.needsScanner,
+            'initialize:paired+noAutoReconnect',
           );
-          state = AppInitState.needsScanner;
         }
       } else {
         // Never paired - need to go through scanner first
-        AppLogging.connection(
-          '🎯 AppInitNotifier: No previous device, setting needsScanner',
-        );
-        state = AppInitState.needsScanner;
+        _transition(AppInitState.needsScanner, 'initialize:noPreviousDevice');
       }
     } catch (e) {
       AppLogging.debug('App initialization failed: $e');
-      state = AppInitState.error;
+      _transition(AppInitState.error, 'initialize:error($e)');
     }
   }
 
