@@ -40,11 +40,8 @@
     <!-- USB permissions for serial devices -->
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
 
-    <!-- Foreground service for background location tracking -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
-
     <!-- Foreground service for background BLE connection to mesh radio -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
 
     <!-- Vibration for haptic feedback -->
