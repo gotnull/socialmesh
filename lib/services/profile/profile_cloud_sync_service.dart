@@ -10,6 +10,31 @@ import '../../core/logging.dart';
 import '../../models/user_profile.dart';
 import 'profile_service.dart';
 
+/// Sanitise an auth-provider display name so it passes Firestore rules.
+///
+/// Rules require `^[a-zA-Z0-9._]+$`, 2-30 chars, no leading/trailing period,
+/// no consecutive periods, and not all digits.
+/// Returns `null` if the result cannot satisfy those constraints.
+String? _sanitizeDisplayName(String? raw) {
+  if (raw == null || raw.isEmpty) return null;
+  // Replace spaces & hyphens with underscores, strip everything else.
+  var clean = raw
+      .replaceAll(RegExp(r'[\s-]+'), '_')
+      .replaceAll(RegExp(r'[^a-zA-Z0-9._]'), '');
+  // Collapse consecutive periods / underscores.
+  clean = clean
+      .replaceAll(RegExp(r'\.{2,}'), '.')
+      .replaceAll(RegExp(r'_{2,}'), '_');
+  // Trim leading/trailing periods and underscores.
+  clean = clean.replaceAll(RegExp(r'^[._]+|[._]+\$'), '');
+  // Enforce length.
+  if (clean.length > 30) clean = clean.substring(0, 30);
+  if (clean.length < 2) return null;
+  // Must not be all digits.
+  if (RegExp(r'^[0-9]+$').hasMatch(clean)) return null;
+  return clean;
+}
+
 /// Service for syncing user profile data with Firebase.
 ///
 /// Handles:
@@ -351,10 +376,13 @@ class ProfileCloudSyncService {
           // Local belongs to different user - create fresh profile for this user.
           // Use the Firebase Auth display name (e.g. from Google) if available
           // so the user doesn't end up with "Guest" as their cloud name.
-          final name = authDisplayName;
+          // Sanitise first — auth names contain spaces ("Simon Cusa") but
+          // Firestore rules require ^[a-zA-Z0-9._]+$.
+          final name = _sanitizeDisplayName(authDisplayName);
           AppLogging.auth(
             '║ 🆕 Creating fresh profile for new user '
-            '(local was for different user, authDisplayName=$name)',
+            '(local was for different user, authDisplayName=$authDisplayName, '
+            'sanitized=$name)',
           );
           final freshProfile = (name != null && name.isNotEmpty)
               ? UserProfile.fromFirebaseUser(uid: uid, displayName: name)
@@ -391,11 +419,29 @@ class ProfileCloudSyncService {
         AppLogging.auth('║    - isSynced: ${cloudProfile.isSynced}');
 
         if (localIsForDifferentUser) {
-          // Local belongs to different user - just use cloud profile
-          AppLogging.auth(
-            '║ ➡️ Using CLOUD profile (local is for different user)',
-          );
-          finalProfile = cloudProfile;
+          // Local belongs to different user - just use cloud profile.
+          // If the cloud profile still has a stale "Guest" name (e.g. from a
+          // previous app version) but the auth provider has a real name,
+          // patch the cloud doc so the user doesn't stay as "Guest".
+          final patchedName = _sanitizeDisplayName(authDisplayName);
+          if (cloudProfile.displayName == 'Guest' &&
+              patchedName != null &&
+              patchedName.isNotEmpty) {
+            AppLogging.auth(
+              '║ ➡️ Using CLOUD profile, patching stale Guest name '
+              '→ $patchedName (raw=$authDisplayName)',
+            );
+            finalProfile = cloudProfile.copyWith(displayName: patchedName);
+            await _userDoc(
+              uid,
+            ).set(_profileToFirestore(finalProfile), SetOptions(merge: true));
+            await _syncPublicProfile(uid, finalProfile);
+          } else {
+            AppLogging.auth(
+              '║ ➡️ Using CLOUD profile (local is for different user)',
+            );
+            finalProfile = cloudProfile;
+          }
         } else {
           // Local is for this user - merge with cloud
           AppLogging.auth(

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
@@ -8,6 +9,21 @@ import '../models/user_profile.dart';
 import '../services/profile/profile_cloud_sync_service.dart';
 import '../services/profile/profile_service.dart';
 import 'auth_providers.dart';
+
+/// Resolve the best display name from a Firebase [User].
+///
+/// The top-level [User.displayName] is often `null` (e.g. Apple Sign-In
+/// doesn't always populate it). Fall back to the first non-empty name
+/// found in [User.providerData] (Google, GitHub, Twitter, etc.).
+String? _resolveDisplayName(User user) {
+  final top = user.displayName;
+  if (top != null && top.isNotEmpty) return top;
+  for (final info in user.providerData) {
+    final name = info.displayName;
+    if (name != null && name.isNotEmpty) return name;
+  }
+  return null;
+}
 
 /// Provider for the profile service instance
 final profileServiceProvider = Provider<ProfileService>((ref) {
@@ -100,7 +116,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
           );
           final synced = await cloudSync.fullSync(
             user.uid,
-            authDisplayName: user.displayName,
+            authDisplayName: _resolveDisplayName(user),
           );
           AppLogging.auth(
             '║ ☁️ fullSync returned: ${synced?.displayName ?? "NULL"}',
@@ -942,7 +958,9 @@ Future<void> _triggerAutoSync(Ref ref, String uid) async {
         .read(userProfileProvider.notifier)
         .fullSync(
           uid,
-          authDisplayName: ref.read(currentUserProvider)?.displayName,
+          authDisplayName: ref.read(currentUserProvider) != null
+              ? _resolveDisplayName(ref.read(currentUserProvider)!)
+              : null,
         );
     ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
     AppLogging.auth('AutoSync: Sync completed successfully');
@@ -964,7 +982,7 @@ Future<void> triggerManualSync(WidgetRef ref) async {
   try {
     await ref
         .read(userProfileProvider.notifier)
-        .fullSync(user.uid, authDisplayName: user.displayName);
+        .fullSync(user.uid, authDisplayName: _resolveDisplayName(user));
     ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
   } catch (e) {
     ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.error);

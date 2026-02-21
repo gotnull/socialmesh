@@ -67,6 +67,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   /// but the transport hasn't fully torn down by the time Scanner inits.
   ProviderSubscription<conn.DeviceConnectionState2>? _disconnectSub;
 
+  /// Timer that auto-restarts BLE scanning after each scan cycle completes.
+  /// Continuous scanning keeps the device list live instead of showing a
+  /// dead "No devices found" screen with a manual "Scan Again" button.
+  Timer? _rescanTimer;
+
   @override
   void initState() {
     super.initState();
@@ -168,6 +173,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   @override
   void dispose() {
+    _rescanTimer?.cancel();
     _backgroundReconnectSub?.close();
     _disconnectSub?.close();
     // If manualConnecting is still set when Scanner closes (e.g., user
@@ -487,7 +493,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
   }
 
-  Future<void> _startScan() async {
+  /// Start a BLE scan.
+  ///
+  /// [isRescan] — when true this is an automatic background rescan:
+  ///   • the device list is NOT cleared (cumulative discovery)
+  ///   • aggressive BLE cleanup is skipped (already done on first scan)
+  ///   • saved-device metadata is not reloaded
+  Future<void> _startScan({bool isRescan = false}) async {
+    _rescanTimer?.cancel();
+
     if (_scanning) {
       AppLogging.connection(
         '📡 SCANNER: _startScan called but already scanning',
@@ -515,198 +529,195 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     final transport = ref.read(transportProvider);
     final showAllDevices = ref.read(showAllBleDevicesProvider);
     AppLogging.connection(
-      '📡 SCANNER: Starting 10s scan... (userJustDisconnected=$userJustDisconnected)',
+      '📡 SCANNER: Starting 10s scan... '
+      '(isRescan=$isRescan, userJustDisconnected=$userJustDisconnected)',
     );
 
     // Get saved device info before scan to check if it was found afterward
-    try {
-      final settingsService = await settingsFuture;
-      _updateSavedDeviceMeta(
-        savedDeviceId: settingsService.lastDeviceId,
-        savedDeviceName: settingsService.lastDeviceName,
-        savedDeviceType: _transportTypeFromString(
-          settingsService.lastDeviceType,
-        ),
-      );
-    } catch (e) {
-      AppLogging.connection('📡 SCANNER: Failed to load saved device info: $e');
+    if (!isRescan) {
+      try {
+        final settingsService = await settingsFuture;
+        _updateSavedDeviceMeta(
+          savedDeviceId: settingsService.lastDeviceId,
+          savedDeviceName: settingsService.lastDeviceName,
+          savedDeviceType: _transportTypeFromString(
+            settingsService.lastDeviceType,
+          ),
+        );
+      } catch (e) {
+        AppLogging.connection(
+          '📡 SCANNER: Failed to load saved device info: $e',
+        );
+      }
     }
 
     safeSetState(() {
       _scanning = true;
-      _devices.clear();
+      if (!isRescan) _devices.clear();
       _errorMessage = null;
       _showPairingInvalidationHint = false;
     });
 
     try {
-      // Aggressive BLE cleanup to handle devices that were just disconnected
-      // from another app (like Meshtastic). iOS/Android cache BLE state and
-      // may not immediately see newly-available devices.
-      AppLogging.connection('📡 SCANNER: Aggressive BLE cleanup starting...');
+      // On the first scan (not a rescan), perform aggressive BLE cleanup to
+      // handle devices that were just disconnected from another app (like
+      // Meshtastic). Rescans skip this entirely — the BLE stack is already
+      // in a clean state and we just need a fresh discovery pass.
+      if (!isRescan) {
+        AppLogging.connection('📡 SCANNER: Aggressive BLE cleanup starting...');
 
-      // 1. Wait for any active scans to fully complete BEFORE stopping
-      // This is critical because background connection scans may still be running
-      // and their finally blocks call stopScan() which would kill our scan
-      if (userJustDisconnected) {
-        try {
-          // First check if there's an active scan
-          final isCurrentlyScanning = await FlutterBluePlus.isScanning.first;
-          if (isCurrentlyScanning) {
-            AppLogging.connection(
-              '📡 SCANNER: Active scan detected, waiting for it to complete...',
-            );
-            // Wait for the active scan to finish (up to 6 seconds for a 5s scan)
-            await FlutterBluePlus.isScanning
-                .firstWhere((scanning) => !scanning)
-                .timeout(
-                  const Duration(seconds: 6),
-                  onTimeout: () {
-                    AppLogging.connection(
-                      '📡 SCANNER: Timeout waiting for scan, forcing stop',
-                    );
-                    return false;
-                  },
-                );
-            AppLogging.connection(
-              '📡 SCANNER: Previous scan completed naturally',
-            );
-            // Extra delay to let the scan's finally block complete
-            await Future.delayed(const Duration(milliseconds: 500));
-          }
-        } catch (e) {
-          AppLogging.connection(
-            '📡 SCANNER: Error waiting for scan completion: $e',
-          );
-        }
-      }
-
-      // 2. Now stop any lingering scan state
-      try {
-        await FlutterBluePlus.stopScan();
-        AppLogging.connection('📡 SCANNER: Stopped existing scan');
-      } catch (e) {
-        AppLogging.connection('📡 SCANNER: stopScan error (ignoring): $e');
-      }
-
-      // 3. Clean up ALL system devices if user just disconnected
-      // When user manually disconnects, the device we just released may still
-      // have stale BLE state. Clean up everything to ensure fresh scan.
-      if (userJustDisconnected) {
-        AppLogging.connection(
-          '📡 SCANNER: User just disconnected - cleaning all system devices',
-        );
-        try {
-          final systemDevices = await FlutterBluePlus.systemDevices([]);
-          for (final device in systemDevices) {
-            try {
-              if (Platform.isAndroid) {
-                await device.clearGattCache();
-              }
-              if (device.isConnected) {
-                await device.disconnect();
-              }
-            } catch (e) {
-              // Ignore individual device errors
-            }
-          }
-          AppLogging.connection(
-            '📡 SCANNER: Cleaned ${systemDevices.length} system devices',
-          );
-        } catch (e) {
-          AppLogging.connection('📡 SCANNER: System devices cleanup error: $e');
-        }
-      }
-
-      // 4. Try to disconnect any stale connections to our saved device
-      // This helps when the device was connected to another app
-      if (_savedDeviceId != null) {
-        try {
-          // Check system devices (works on both iOS and Android)
-          final systemDevices = await FlutterBluePlus.systemDevices([]);
-          for (final device in systemDevices) {
-            if (device.remoteId.toString() == _savedDeviceId) {
+        // 1. Wait for any active scans to fully complete BEFORE stopping
+        if (userJustDisconnected) {
+          try {
+            final isCurrentlyScanning = await FlutterBluePlus.isScanning.first;
+            if (isCurrentlyScanning) {
               AppLogging.connection(
-                '📡 SCANNER: Found saved device in system devices, forcing cleanup...',
+                '📡 SCANNER: Active scan detected, waiting for it to complete...',
               );
+              await FlutterBluePlus.isScanning
+                  .firstWhere((scanning) => !scanning)
+                  .timeout(
+                    const Duration(seconds: 6),
+                    onTimeout: () {
+                      AppLogging.connection(
+                        '📡 SCANNER: Timeout waiting for scan, forcing stop',
+                      );
+                      return false;
+                    },
+                  );
+              AppLogging.connection(
+                '📡 SCANNER: Previous scan completed naturally',
+              );
+              await Future.delayed(const Duration(milliseconds: 500));
+            }
+          } catch (e) {
+            AppLogging.connection(
+              '📡 SCANNER: Error waiting for scan completion: $e',
+            );
+          }
+        }
+
+        // 2. Now stop any lingering scan state
+        try {
+          await FlutterBluePlus.stopScan();
+          AppLogging.connection('📡 SCANNER: Stopped existing scan');
+        } catch (e) {
+          AppLogging.connection('📡 SCANNER: stopScan error (ignoring): $e');
+        }
+
+        // 3. Clean up ALL system devices if user just disconnected
+        if (userJustDisconnected) {
+          AppLogging.connection(
+            '📡 SCANNER: User just disconnected - cleaning all system devices',
+          );
+          try {
+            final systemDevices = await FlutterBluePlus.systemDevices([]);
+            for (final device in systemDevices) {
               try {
-                // On Android, clear the GATT cache to force fresh discovery
                 if (Platform.isAndroid) {
                   await device.clearGattCache();
-                  AppLogging.connection(
-                    '📡 SCANNER: Cleared GATT cache (Android)',
-                  );
                 }
-                await device.disconnect();
-                AppLogging.connection(
-                  '📡 SCANNER: Disconnected stale connection to saved device',
-                );
+                if (device.isConnected) {
+                  await device.disconnect();
+                }
               } catch (e) {
-                AppLogging.connection(
-                  '📡 SCANNER: Cleanup error (ignoring): $e',
-                );
+                // Ignore individual device errors
               }
             }
+            AppLogging.connection(
+              '📡 SCANNER: Cleaned ${systemDevices.length} system devices',
+            );
+          } catch (e) {
+            AppLogging.connection(
+              '📡 SCANNER: System devices cleanup error: $e',
+            );
           }
+        }
 
-          // Android: Also check bonded devices for stale connections
-          if (Platform.isAndroid) {
-            try {
-              final bondedDevices = await FlutterBluePlus.bondedDevices;
-              for (final device in bondedDevices) {
-                if (device.remoteId.toString() == _savedDeviceId) {
-                  AppLogging.connection(
-                    '📡 SCANNER: Found saved device in bonded devices, cleaning up...',
-                  );
-                  try {
+        // 4. Try to disconnect any stale connections to our saved device
+        if (_savedDeviceId != null) {
+          try {
+            final systemDevices = await FlutterBluePlus.systemDevices([]);
+            for (final device in systemDevices) {
+              if (device.remoteId.toString() == _savedDeviceId) {
+                AppLogging.connection(
+                  '📡 SCANNER: Found saved device in system devices, '
+                  'forcing cleanup...',
+                );
+                try {
+                  if (Platform.isAndroid) {
                     await device.clearGattCache();
-                    if (device.isConnected) {
-                      await device.disconnect();
-                    }
                     AppLogging.connection(
-                      '📡 SCANNER: Cleaned up bonded device',
-                    );
-                  } catch (e) {
-                    AppLogging.connection(
-                      '📡 SCANNER: Bonded device cleanup error (ignoring): $e',
+                      '📡 SCANNER: Cleared GATT cache (Android)',
                     );
                   }
+                  await device.disconnect();
+                  AppLogging.connection(
+                    '📡 SCANNER: Disconnected stale connection to saved device',
+                  );
+                } catch (e) {
+                  AppLogging.connection(
+                    '📡 SCANNER: Cleanup error (ignoring): $e',
+                  );
                 }
               }
-            } catch (e) {
-              AppLogging.connection(
-                '📡 SCANNER: bondedDevices error (ignoring): $e',
-              );
             }
+
+            if (Platform.isAndroid) {
+              try {
+                final bondedDevices = await FlutterBluePlus.bondedDevices;
+                for (final device in bondedDevices) {
+                  if (device.remoteId.toString() == _savedDeviceId) {
+                    AppLogging.connection(
+                      '📡 SCANNER: Found saved device in bonded devices, '
+                      'cleaning up...',
+                    );
+                    try {
+                      await device.clearGattCache();
+                      if (device.isConnected) {
+                        await device.disconnect();
+                      }
+                      AppLogging.connection(
+                        '📡 SCANNER: Cleaned up bonded device',
+                      );
+                    } catch (e) {
+                      AppLogging.connection(
+                        '📡 SCANNER: Bonded device cleanup error (ignoring): $e',
+                      );
+                    }
+                  }
+                }
+              } catch (e) {
+                AppLogging.connection(
+                  '📡 SCANNER: bondedDevices error (ignoring): $e',
+                );
+              }
+            }
+          } catch (e) {
+            AppLogging.connection(
+              '📡 SCANNER: systemDevices error (ignoring): $e',
+            );
           }
-        } catch (e) {
+        }
+
+        // 5. Wait for BLE subsystem to fully reset
+        int resetDelay = Platform.isAndroid ? 1500 : 1000;
+        if (userJustDisconnected) {
+          resetDelay += 1000;
           AppLogging.connection(
-            '📡 SCANNER: systemDevices error (ignoring): $e',
+            '📡 SCANNER: User just disconnected, adding extra delay',
           );
         }
-      }
-
-      // 5. Wait for BLE subsystem to fully reset
-      // - Android needs longer due to GATT cache clearing
-      // - After user manual disconnect, the device needs extra time to start
-      //   advertising again since we just released the BLE connection
-      int resetDelay = Platform.isAndroid ? 1500 : 1000;
-      if (userJustDisconnected) {
-        // Extra time for the device to transition to advertising mode
-        resetDelay += 1000;
         AppLogging.connection(
-          '📡 SCANNER: User just disconnected, adding extra delay',
+          '📡 SCANNER: Waiting ${resetDelay}ms for BLE to fully reset...',
         );
-      }
-      AppLogging.connection(
-        '📡 SCANNER: Waiting ${resetDelay}ms for BLE to fully reset...',
-      );
-      await Future.delayed(Duration(milliseconds: resetDelay));
+        await Future.delayed(Duration(milliseconds: resetDelay));
 
-      if (!mounted) {
-        AppLogging.connection('📡 SCANNER: Widget unmounted during delay');
-        return;
-      }
+        if (!mounted) {
+          AppLogging.connection('📡 SCANNER: Widget unmounted during delay');
+          return;
+        }
+      } // end if (!isRescan)
 
       AppLogging.connection(
         '📡 SCANNER: Starting transport.scan(scanAll: $showAllDevices)...',
@@ -766,7 +777,21 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       safeSetState(() {
         _scanning = false;
       });
+      _scheduleRescan();
     }
+  }
+
+  /// Schedule an automatic rescan after a brief pause. Keeps the device
+  /// list continuously updated so the user never lands on a dead
+  /// "No devices found / Scan Again" screen.
+  void _scheduleRescan() {
+    _rescanTimer?.cancel();
+    if (!mounted || _connecting) return;
+    _rescanTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted && !_connecting && !_scanning) {
+        _startScan(isRescan: true);
+      }
+    });
   }
 
   Future<void> _openBluetoothSettings() async {
@@ -836,6 +861,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   }
 
   Future<void> _connect(DeviceInfo device) async {
+    _rescanTimer?.cancel();
     HapticFeedback.mediumImpact();
     AppLogging.connection(
       '📡 SCANNER: User tapped to connect to ${device.id} (${device.name})',
@@ -1408,9 +1434,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         _showPairingInvalidationHint = pairingInvalidation || isGattError;
       });
 
-      // If auto-reconnect failed, start regular scan
+      // If auto-reconnect failed, start regular scan.
+      // For manual connect failures, schedule a rescan so the device list
+      // stays live (the user can tap a device again or wait for it to
+      // reappear on the next scan cycle).
       if (isAutoReconnect) {
         _startScan();
+      } else {
+        _scheduleRescan();
       }
     }
   }
@@ -1877,14 +1908,17 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                     child: Column(
                       children: [
                         SizedBox(height: 100),
-                        Icon(
-                          Icons.bluetooth_searching,
-                          size: 80,
-                          color: context.textTertiary,
+                        SizedBox(
+                          width: 80,
+                          height: 80,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: context.textTertiary,
+                          ),
                         ),
                         SizedBox(height: 24),
                         Text(
-                          'No devices found',
+                          'Looking for devices\u2026',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w500,
@@ -1899,12 +1933,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                             fontSize: 14,
                             color: context.textTertiary,
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton.icon(
-                          onPressed: _startScan,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Scan Again'),
                         ),
                       ],
                     ),
