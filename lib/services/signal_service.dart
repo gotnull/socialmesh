@@ -487,10 +487,23 @@ class SignalService {
             'Upgrading signals database v$oldVersion → v$newVersion',
           );
           if (oldVersion < 7) {
-            await db.execute(
-              'ALTER TABLE $_tableName ADD COLUMN cloudSignalId TEXT',
-            );
-            AppLogging.social('Added cloudSignalId column to $_tableName');
+            // Check whether the column already exists before adding it.
+            // Users who created the DB when cloudSignalId was already in
+            // the CREATE TABLE but the version was still 6 will already
+            // have the column — ALTER TABLE would fail with "duplicate
+            // column name".
+            final cols = await db.rawQuery('PRAGMA table_info($_tableName)');
+            final hasColumn = cols.any((c) => c['name'] == 'cloudSignalId');
+            if (!hasColumn) {
+              await db.execute(
+                'ALTER TABLE $_tableName ADD COLUMN cloudSignalId TEXT',
+              );
+              AppLogging.social('Added cloudSignalId column to $_tableName');
+            } else {
+              AppLogging.social(
+                'cloudSignalId column already exists, skipping ALTER',
+              );
+            }
           }
         },
       );
