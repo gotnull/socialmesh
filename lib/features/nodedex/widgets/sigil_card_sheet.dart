@@ -251,8 +251,8 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
             ),
           ),
 
-        // --- Add to Apple Wallet button (iOS only) ---
-        if (Platform.isIOS) ...[
+        // --- Add to Apple Wallet button (iOS only, feature-flagged) ---
+        if (Platform.isIOS && AppFeatureFlags.isAppleWalletEnabled) ...[
           const SizedBox(height: 10),
           if (_isAddingToWallet)
             const SizedBox(

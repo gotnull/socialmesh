@@ -294,6 +294,19 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the Apple Wallet sigil card feature is enabled.
+  /// Set `APPLE_WALLET_ENABLED=true` in `.env` to enable.
+  /// Default: false — wallet button is hidden until the Sigil API
+  /// wallet endpoint is production-ready.
+  static bool get isAppleWalletEnabled {
+    try {
+      final raw = dotenv.env['APPLE_WALLET_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether TAK position publishing is enabled.
   /// Set `TAK_PUBLISH_ENABLED=true` in `.env` to enable.
   /// Requires [isTakGatewayEnabled] to be true. Default: false.
