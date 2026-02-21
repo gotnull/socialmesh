@@ -77,7 +77,7 @@ class PrivacyConsentService {
   /// Called when the user accepts terms for the first time or after a version
   /// bump. Enables both analytics and Crashlytics and persists consent.
   Future<void> grantConsentOnAcceptance() async {
-    AppLogging.privacy('terms accepted, enabling analytics and crashlytics');
+    AppLogging.auth('terms accepted, enabling analytics and crashlytics');
     await setAnalyticsConsent(true);
     await setCrashlyticsConsent(true);
   }
@@ -90,7 +90,7 @@ class PrivacyConsentService {
     final crashlytics = isCrashlyticsEnabled;
     final terms = hasAcceptedTerms;
 
-    AppLogging.privacy(
+    AppLogging.auth(
       terms
           ? 'terms accepted, analytics=$analytics, crashlytics=$crashlytics'
           : 'terms not accepted, analytics=false, crashlytics=false',
@@ -107,9 +107,9 @@ class PrivacyConsentService {
   Future<void> _applyAnalytics(bool enabled) async {
     try {
       await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(enabled);
-      AppLogging.privacy('setAnalyticsCollectionEnabled($enabled)');
+      AppLogging.auth('setAnalyticsCollectionEnabled($enabled)');
     } catch (e) {
-      AppLogging.privacy('Analytics consent apply failed: $e');
+      AppLogging.auth('Analytics consent apply failed: $e');
     }
   }
 
@@ -118,9 +118,9 @@ class PrivacyConsentService {
       await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
         enabled,
       );
-      AppLogging.privacy('setCrashlyticsCollectionEnabled($enabled)');
+      AppLogging.auth('setCrashlyticsCollectionEnabled($enabled)');
     } catch (e) {
-      AppLogging.privacy('Crashlytics consent apply failed: $e');
+      AppLogging.auth('Crashlytics consent apply failed: $e');
     }
   }
 }

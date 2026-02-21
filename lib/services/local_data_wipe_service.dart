@@ -57,12 +57,12 @@ class LocalDataWipeService {
     try {
       // Close all open database handles before touching the filesystem.
       if (closeAllDatabases != null) {
-        AppLogging.privacy(
+        AppLogging.auth(
           'LocalDataWipeService: closing all database connections',
         );
         try {
           await closeAllDatabases();
-          AppLogging.privacy(
+          AppLogging.auth(
             'LocalDataWipeService: all database connections closed',
           );
         } catch (e) {
@@ -94,7 +94,7 @@ class LocalDataWipeService {
         deleted += await _deleteDirectory(p.join(dir.path, cacheDir));
       }
 
-      AppLogging.privacy('LocalDataWipeService: deleted $deleted files');
+      AppLogging.auth('LocalDataWipeService: deleted $deleted files');
     } catch (e) {
       AppLogging.debug('LocalDataWipeService.wipeAll error: $e');
     }

@@ -126,29 +126,13 @@ class _AccountSubscriptionsScreenState
     final firebaseUser = ref.watch(currentUserProvider);
     final isOnline = ref.watch(isOnlineProvider);
 
-    AppLogging.auth('');
     AppLogging.auth(
-      '╔══════════════════════════════════════════════════════════════',
-    );
-    AppLogging.auth('║ _buildProfileCard() called');
-    AppLogging.auth('║ profileAsync state:');
-    AppLogging.auth('║    - isLoading: ${profileAsync.isLoading}');
-    AppLogging.auth('║    - hasValue: ${profileAsync.hasValue}');
-    AppLogging.auth('║    - hasError: ${profileAsync.hasError}');
-    AppLogging.auth('║    - isSignedIn: $isSignedIn');
-    AppLogging.auth('║    - isOnline: $isOnline');
-    AppLogging.auth(
-      '║    - firebaseUser: ${firebaseUser?.uid ?? "NULL"} '
-      '(displayName: ${firebaseUser?.displayName ?? "NULL"}, '
-      'email: ${firebaseUser?.email ?? "NULL"})',
-    );
-    if (profileAsync.hasValue && !profileAsync.hasError) {
-      AppLogging.auth(
-        '║    - profileValue: ${profileAsync.value?.displayName ?? "NULL"}',
-      );
-    }
-    AppLogging.auth(
-      '╚══════════════════════════════════════════════════════════════',
+      '_buildProfileCard: '
+      'signedIn=$isSignedIn, '
+      'online=$isOnline, '
+      'loading=${profileAsync.isLoading}, '
+      'profile=${profileAsync.value?.displayName ?? "NULL"}, '
+      'uid=${firebaseUser?.uid ?? "NULL"}',
     );
 
     // Compute a fallback display name from Firebase user info when the
@@ -1740,20 +1724,11 @@ class _ProfilePreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    AppLogging.auth('');
     AppLogging.auth(
-      '╔══════════════════════════════════════════════════════════════',
-    );
-    AppLogging.auth('║ _ProfilePreviewCard.build()');
-    AppLogging.auth('║ Profile received:');
-    AppLogging.auth('║    - profile is null: ${profile == null}');
-    AppLogging.auth('║    - displayName: ${profile?.displayName ?? "NULL"}');
-    AppLogging.auth('║    - callsign: ${profile?.callsign ?? "NULL"}');
-    AppLogging.auth('║    - id: ${profile?.id ?? "NULL"}');
-    AppLogging.auth('║    - isSynced: ${profile?.isSynced ?? "NULL"}');
-    AppLogging.auth('║    - isSignedIn: $isSignedIn');
-    AppLogging.auth(
-      '╚══════════════════════════════════════════════════════════════',
+      '_ProfilePreviewCard: '
+      'name=${profile?.displayName ?? "NULL"}, '
+      'signedIn=$isSignedIn, '
+      'synced=${profile?.isSynced ?? "NULL"}',
     );
 
     final accentColor = context.accentColor;

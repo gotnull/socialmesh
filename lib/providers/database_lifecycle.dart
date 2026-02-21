@@ -20,13 +20,13 @@ import '../providers/telemetry_providers.dart';
 /// Each close is wrapped in its own try/catch so a failure on one database
 /// does not prevent the others from being closed.
 Future<void> closeAllDatabases(WidgetRef ref) async {
-  AppLogging.privacy('closeAllDatabases: closing all open SQLite connections');
+  AppLogging.auth('closeAllDatabases: closing all open SQLite connections');
 
   // messages.db
   try {
     final messageDb = await ref.read(messageStorageProvider.future);
     await messageDb.close();
-    AppLogging.privacy('closeAllDatabases: messages.db closed');
+    AppLogging.auth('closeAllDatabases: messages.db closed');
   } catch (e) {
     AppLogging.debug('closeAllDatabases: messages.db close error: $e');
   }
@@ -35,7 +35,7 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
   try {
     final signalService = ref.read(signalServiceProvider);
     await signalService.close();
-    AppLogging.privacy('closeAllDatabases: signals.db closed');
+    AppLogging.auth('closeAllDatabases: signals.db closed');
   } catch (e) {
     AppLogging.debug('closeAllDatabases: signals.db close error: $e');
   }
@@ -44,7 +44,7 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
   try {
     final telemetryDb = await ref.read(telemetryStorageProvider.future);
     await telemetryDb.close();
-    AppLogging.privacy('closeAllDatabases: telemetry.db closed');
+    AppLogging.auth('closeAllDatabases: telemetry.db closed');
   } catch (e) {
     AppLogging.debug('closeAllDatabases: telemetry.db close error: $e');
   }
@@ -53,7 +53,7 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
   try {
     final routeStorage = await ref.read(routeStorageProvider.future);
     await routeStorage.close();
-    AppLogging.privacy('closeAllDatabases: routes.db closed');
+    AppLogging.auth('closeAllDatabases: routes.db closed');
   } catch (e) {
     AppLogging.debug('closeAllDatabases: routes.db close error: $e');
   }
@@ -62,7 +62,7 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
   try {
     final nodeDexDb = ref.read(nodeDexDatabaseProvider);
     await nodeDexDb.close();
-    AppLogging.privacy('closeAllDatabases: nodedex.db closed');
+    AppLogging.auth('closeAllDatabases: nodedex.db closed');
   } catch (e) {
     AppLogging.debug('closeAllDatabases: nodedex.db close error: $e');
   }
@@ -71,7 +71,7 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
   try {
     final tracerouteRepo = await ref.read(tracerouteRepositoryProvider.future);
     await tracerouteRepo.close();
-    AppLogging.privacy('closeAllDatabases: traceroute_history.db closed');
+    AppLogging.auth('closeAllDatabases: traceroute_history.db closed');
   } catch (e) {
     AppLogging.debug(
       'closeAllDatabases: traceroute_history.db close error: $e',
@@ -82,7 +82,7 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
   try {
     final automationDb = ref.read(automationDatabaseProvider);
     await automationDb.close();
-    AppLogging.privacy('closeAllDatabases: automations.db closed');
+    AppLogging.auth('closeAllDatabases: automations.db closed');
   } catch (e) {
     AppLogging.debug('closeAllDatabases: automations.db close error: $e');
   }
@@ -91,7 +91,7 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
   try {
     final widgetDb = ref.read(widgetDatabaseProvider);
     await widgetDb.close();
-    AppLogging.privacy('closeAllDatabases: widgets.db closed');
+    AppLogging.auth('closeAllDatabases: widgets.db closed');
   } catch (e) {
     AppLogging.debug('closeAllDatabases: widgets.db close error: $e');
   }
@@ -100,7 +100,7 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
   try {
     final takDb = ref.read(takDatabaseProvider);
     await takDb.close();
-    AppLogging.privacy('closeAllDatabases: tak_events.db closed');
+    AppLogging.auth('closeAllDatabases: tak_events.db closed');
   } catch (e) {
     AppLogging.debug('closeAllDatabases: tak_events.db close error: $e');
   }
@@ -109,10 +109,10 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
   try {
     final dedupeStore = ref.read(meshPacketDedupeStoreProvider);
     await dedupeStore.dispose();
-    AppLogging.privacy('closeAllDatabases: mesh_seen_packets.db closed');
+    AppLogging.auth('closeAllDatabases: mesh_seen_packets.db closed');
   } catch (e) {
     AppLogging.debug('closeAllDatabases: mesh_seen_packets.db close error: $e');
   }
 
-  AppLogging.privacy('closeAllDatabases: all database connections closed');
+  AppLogging.auth('closeAllDatabases: all database connections closed');
 }

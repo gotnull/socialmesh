@@ -78,13 +78,13 @@ final effectiveLegalVersionsProvider = FutureProvider<EffectiveLegalVersions>((
         await prefs.setString(_cachedPrivacyKey, remotePrivacy);
       }
 
-      AppLogging.privacy(
+      AppLogging.auth(
         'remote legal versions fetched: '
         'terms=$remoteTerms, privacy=$remotePrivacy',
       );
     }
   } catch (e) {
-    AppLogging.privacy('remote legal versions fetch failed: $e');
+    AppLogging.auth('remote legal versions fetch failed: $e');
   }
 
   // --- Phase 2: Fall back to cache -------------------------------------------
@@ -98,7 +98,7 @@ final effectiveLegalVersionsProvider = FutureProvider<EffectiveLegalVersions>((
     remotePrivacy,
   );
 
-  AppLogging.privacy(
+  AppLogging.auth(
     'effective legal versions: '
     'terms=$effectiveTerms, privacy=$effectivePrivacy',
   );

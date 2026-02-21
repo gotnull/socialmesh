@@ -1050,31 +1050,44 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
 
     try {
       final authService = ref.read(authServiceProvider);
+      // Capture notifiers BEFORE the async gap — the widget's ref may become
+      // invalid if the widget is disposed while awaiting.
+      final deviceNotifier = ref.read(deviceConnectionProvider.notifier);
+      final appInitNotifier = ref.read(appInitProvider.notifier);
+
       await authService.deleteAccount(
         closeLocalDatabases: () => closeAllDatabases(ref),
       );
-      if (!context.mounted) return;
 
-      // Dismiss progress dialog.
-      Navigator.pop(context);
+      // ── Account is irrevocably deleted. Everything below is cleanup. ──
 
-      // Disconnect BLE and invalidate the saved pairing. The wiped databases
-      // leave the BLE bond stale — the user must forget the device in
-      // Bluetooth settings before reconnecting.
+      if (context.mounted) {
+        Navigator.pop(context); // dismiss progress dialog
+      }
+
+      // BLE cleanup is best-effort — the databases were already wiped by
+      // deleteAccount(), so provider-level DB operations inside
+      // handlePairingInvalidation may fail on missing files.
       AppLogging.auth(
         'deleteAccount - Disconnecting BLE and invalidating pairing',
       );
-      await ref
-          .read(deviceConnectionProvider.notifier)
-          .handlePairingInvalidation(PairingInvalidationReason.accountDeleted);
+      try {
+        await deviceNotifier.handlePairingInvalidation(
+          PairingInvalidationReason.accountDeleted,
+        );
+      } catch (e) {
+        AppLogging.auth('deleteAccount - BLE cleanup error (non-fatal): $e');
+      }
 
       // Navigate to ScannerScreen (which shows the "forget device" hint
-      // because isTerminalInvalidated is now true).
-      ref.read(appInitProvider.notifier).setNeedsScanner();
-      final nav = navigatorKey.currentState;
-      if (nav != null) {
-        nav.pushNamedAndRemoveUntil('/app', (route) => false);
-      }
+      // because isTerminalInvalidated is now true). Uses the pre-captured
+      // notifier and global navigatorKey so this works even if the widget
+      // was disposed during the async cleanup above.
+      appInitNotifier.setNeedsScanner();
+      navigatorKey.currentState?.pushNamedAndRemoveUntil(
+        '/app',
+        (route) => false,
+      );
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
         Navigator.pop(context); // dismiss progress dialog
