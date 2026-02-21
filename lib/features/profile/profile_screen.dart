@@ -29,6 +29,7 @@ import '../../core/logging.dart';
 import '../../core/navigation.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/connectivity_providers.dart';
+import '../../providers/connection_providers.dart';
 import '../../providers/database_lifecycle.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/status_banner.dart';
@@ -985,6 +986,14 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     if (confirmed == true && context.mounted) {
       final authService = ref.read(authServiceProvider);
       await authService.signOut();
+
+      // Pop back from the profile screen — the signed-out user should not
+      // remain on a screen that renders a stale Guest profile with avatar
+      // and "Edit Profile". The drawer's Account screen is the correct
+      // entry point for unauthenticated users.
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -1052,8 +1061,27 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       // Capture notifiers and services BEFORE the async gap — the widget's
       // ref may become invalid if the widget is disposed while awaiting.
       final appInitNotifier = ref.read(appInitProvider.notifier);
-      final transport = ref.read(transportProvider);
+      final deviceConnection = ref.read(deviceConnectionProvider.notifier);
 
+      // ── Step 0: Disconnect BLE FIRST ──
+      // This MUST happen before closing/deleting databases. While BLE is
+      // connected, the device continuously streams telemetry, positions,
+      // node updates, etc. If we close and delete database files while
+      // data is still flowing, the in-flight writes hit stale/deleted
+      // file handles → "disk I/O error" (error 6922) storm.
+      //
+      // DeviceConnectionNotifier.disconnect() sets _userDisconnected=true
+      // BEFORE the transport disconnect fires, so the state listener sees
+      // "user-initiated" and suppresses auto-reconnect. It also clears
+      // connectedDeviceProvider and autoReconnectState for us.
+      AppLogging.auth('deleteAccount - Disconnecting BLE before database wipe');
+      try {
+        await deviceConnection.disconnect();
+      } catch (e) {
+        AppLogging.auth('deleteAccount - BLE disconnect error (non-fatal): $e');
+      }
+
+      // ── Step 1: Delete account (CF + local wipe + auth) ──
       await authService.deleteAccount(
         closeLocalDatabases: () => closeAllDatabases(ref),
       );
@@ -1063,28 +1091,6 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       if (context.mounted) {
         Navigator.pop(context); // dismiss progress dialog
       }
-
-      // Simple BLE disconnect — fire and forget.
-      // Do NOT use handlePairingInvalidation here. It triggers a complex
-      // state machine (clearDeviceDataBeforeConnect, pairedDeviceInvalidated
-      // state transition, auto-reconnect state changes) that races with the
-      // user's post-delete navigation. The databases and SharedPreferences
-      // are already wiped by deleteAccount(), so the full invalidation
-      // flow is unnecessary and actively harmful: it can disconnect a
-      // device the user has already re-paired on the Scanner screen.
-      AppLogging.auth('deleteAccount - Disconnecting BLE transport');
-      try {
-        await transport.disconnect();
-      } catch (e) {
-        AppLogging.auth('deleteAccount - BLE disconnect error (non-fatal): $e');
-      }
-
-      // Reset in-memory device state so the auto-reconnect manager
-      // doesn't try to reconnect to the now-deleted user's device.
-      ref.read(connectedDeviceProvider.notifier).setState(null);
-      ref
-          .read(autoReconnectStateProvider.notifier)
-          .setState(AutoReconnectState.idle);
 
       // Navigate to _AppRouter which renders based on appInitProvider.
       final navState = navigatorKey.currentState;
