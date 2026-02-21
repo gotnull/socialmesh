@@ -1086,6 +1086,15 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
         closeLocalDatabases: () => closeAllDatabases(ref),
       );
 
+      // ── Step 2: Invalidate database providers AFTER files are deleted ──
+      // This must happen after deleteAccount (which closes handles, deletes
+      // files). Invalidation triggers dependent providers to rebuild, which
+      // re-opens database files via openDatabase(). If we invalidated
+      // BEFORE deletion (as closeAllDatabases used to do), the rebuilt
+      // providers would re-open the same files → then deletion unlinks them
+      // → "vnode unlinked while in use" + "disk I/O error" storm.
+      invalidateAllDatabaseProviders(ref);
+
       // ── Account is irrevocably deleted. Everything below is cleanup. ──
 
       if (context.mounted) {

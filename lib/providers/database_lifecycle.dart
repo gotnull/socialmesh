@@ -116,10 +116,22 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
 
   AppLogging.auth('closeAllDatabases: all database connections closed');
 
-  // ── Invalidate every database provider so Riverpod creates fresh ──
-  // ── instances on next access. Without this, the providers still ──
-  // ── cache the old (closed) instances and any subsequent read()   ──
-  // ── returns a dead handle that throws "not initialized".         ──
+  // NOTE: Provider invalidation is deliberately NOT done here.
+  // Invalidating triggers dependent providers (e.g. TelemetryLoggerNotifier)
+  // to rebuild immediately — which re-opens the same database files that
+  // LocalDataWipeService is about to delete. That causes "vnode unlinked
+  // while in use" integrity errors and a "disk I/O error" (6922) storm.
+  //
+  // Call invalidateAllDatabaseProviders() AFTER files are deleted.
+}
+
+/// Invalidate every database provider so Riverpod creates fresh instances
+/// on next access.
+///
+/// Call this AFTER database files have been deleted from disk. Calling it
+/// before deletion triggers dependent provider rebuilds that re-open the
+/// same files — which then get unlinked while in use.
+void invalidateAllDatabaseProviders(WidgetRef ref) {
   ref.invalidate(messageStorageProvider);
   ref.invalidate(signalServiceProvider);
   ref.invalidate(telemetryStorageProvider);
@@ -130,5 +142,7 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
   ref.invalidate(widgetDatabaseProvider);
   ref.invalidate(takDatabaseProvider);
   ref.invalidate(meshPacketDedupeStoreProvider);
-  AppLogging.auth('closeAllDatabases: all database providers invalidated');
+  AppLogging.auth(
+    'invalidateAllDatabaseProviders: all database providers invalidated',
+  );
 }
