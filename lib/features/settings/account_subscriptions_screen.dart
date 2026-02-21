@@ -508,6 +508,13 @@ class _AccountSubscriptionsScreenState
           subtitleColor = Colors.orange;
           borderColor = AccentColors.green.withValues(alpha: 0.3);
           badgeText = 'ACTIVE';
+        } else if (hasAccess && !isSignedIn) {
+          // Subscription is active (billing) but user signed out — sync
+          // cannot function without a Firebase user.
+          subtitle = 'Sign in to sync';
+          subtitleColor = Colors.orange;
+          borderColor = AccentColors.green.withValues(alpha: 0.3);
+          badgeText = 'ACTIVE';
         } else if (hasAccess) {
           subtitle = 'Monthly subscription';
           subtitleColor = context.textSecondary;
@@ -519,7 +526,7 @@ class _AccountSubscriptionsScreenState
           borderColor = AppTheme.errorRed.withValues(alpha: 0.3);
           badgeText = 'EXPIRED';
         } else if (!isSignedIn) {
-          // Not signed in - show sign in prompt
+          // Not signed in and no subscription
           subtitle = 'Sign in above to enable';
           subtitleColor = context.textTertiary;
           borderColor = context.border;
