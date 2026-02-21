@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Deny all cloud backup and device transfer to prevent extraction
+    of SQLite databases, SharedPreferences, and SecureStorage data
+    via adb backup or device-to-device transfer.
+
+    See: https://developer.android.com/guide/topics/data/autobackup
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" path="." />
+    </device-transfer>
+</data-extraction-rules>

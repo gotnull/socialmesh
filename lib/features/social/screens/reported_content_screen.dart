@@ -2,12 +2,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/logging.dart';
+import '../../../core/safety/error_handler.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
@@ -1240,14 +1240,10 @@ class _ReportsList extends ConsumerWidget {
         '[BanUser] Firebase Function response: ${response.data}',
       );
 
-      // Log success to analytics
+      // Log success to analytics (no raw UIDs)
       await FirebaseAnalytics.instance.logEvent(
         name: 'ban_user_success',
-        parameters: {
-          'user_id': authorId,
-          'reason': reason,
-          'report_id': report['id'] ?? 'unknown',
-        },
+        parameters: {'reason': reason, 'report_id': report['id'] ?? 'unknown'},
       );
 
       // Delete the content
@@ -1264,28 +1260,20 @@ class _ReportsList extends ConsumerWidget {
         '[BanUser] FirebaseFunctionsException: code=${e.code}, message=${e.message}, details=${e.details}',
       );
 
-      // Record to Crashlytics for debugging
-      await FirebaseCrashlytics.instance.recordError(
+      // Record via centralized error handler (sanitizes PII)
+      AppErrorHandler.reportError(
         e,
         stackTrace,
-        reason: 'banUser Firebase Function failed',
-        information: [
-          'code: ${e.code}',
-          'message: ${e.message}',
-          'details: ${e.details}',
-          'userId: $authorId',
-          'reportId: ${report['id']}',
-        ],
+        context: 'banUser Firebase Function failed',
       );
 
-      // Log to Firebase Analytics for monitoring
+      // Log to Firebase Analytics for monitoring (no raw UIDs)
       await FirebaseAnalytics.instance.logEvent(
         name: 'ban_user_error',
         parameters: {
           'error_type': 'firebase_functions_exception',
           'error_code': e.code,
           'error_message': e.message ?? 'unknown',
-          'user_id': authorId,
           'report_id': report['id'] ?? 'unknown',
         },
       );
@@ -1301,15 +1289,14 @@ class _ReportsList extends ConsumerWidget {
       AppLogging.social('[BanUser] Unexpected error: $e');
       AppLogging.social('[BanUser] Stack trace: $stackTrace');
 
-      // Record to Crashlytics for debugging
-      await FirebaseCrashlytics.instance.recordError(
+      // Record via centralized error handler (sanitizes PII)
+      AppErrorHandler.reportError(
         e,
         stackTrace,
-        reason: 'banUser unexpected error',
-        information: ['userId: $authorId', 'reportId: ${report['id']}'],
+        context: 'banUser unexpected error',
       );
 
-      // Log to Firebase Analytics for monitoring
+      // Log to Firebase Analytics for monitoring (no raw UIDs)
       await FirebaseAnalytics.instance.logEvent(
         name: 'ban_user_error',
         parameters: {
@@ -1318,7 +1305,6 @@ class _ReportsList extends ConsumerWidget {
             0,
             (e.toString().length > 100) ? 100 : e.toString().length,
           ),
-          'user_id': authorId,
           'report_id': report['id'] ?? 'unknown',
         },
       );

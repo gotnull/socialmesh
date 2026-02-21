@@ -240,6 +240,19 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
   }
 
   Future<void> _exportDebug() async {
+    // Disclosure gate: inform user what the export contains
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: 'Debug Export',
+      message:
+          'This export includes device info, connection state, node list, '
+          'route metadata, and recent app logs.\n\n'
+          'Message text is redacted and GPS coordinates are coarsened. '
+          'Review the file before sharing with anyone.',
+      confirmLabel: 'Export',
+    );
+    if (confirmed != true || !mounted) return;
+
     final box = context.findRenderObject() as RenderBox?;
     final sharePositionOrigin = box != null
         ? box.localToGlobal(Offset.zero) & box.size

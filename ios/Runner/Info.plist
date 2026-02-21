@@ -131,12 +131,6 @@
 		<string>Socialmesh uses the camera for QR code scanning and AR Node Radar visualization</string>
 		<key>NSLocalNetworkUsageDescription</key>
 		<string>Socialmesh uses local networking to connect to WiFi-based Meshtastic nodes</string>
-		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-		<string>Socialmesh uses your location to display on the mesh map, filter nodes by distance,
-			and share GPS coordinates. Route Recording uses location in the background.</string>
-		<key>NSLocationAlwaysUsageDescription</key>
-		<string>Socialmesh uses your location to display on the mesh map and share GPS coordinates
-			with your Meshtastic device</string>
 		<key>NSLocationUsageDescription</key>
 		<string>Socialmesh uses your location to display on the mesh map and share GPS coordinates
 			with mesh nodes</string>

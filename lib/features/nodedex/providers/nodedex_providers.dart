@@ -66,6 +66,8 @@ final nodeDexStoreProvider = FutureProvider<NodeDexSqliteStore>((ref) async {
   final db = ref.watch(nodeDexDatabaseProvider);
   final store = NodeDexSqliteStore(db);
   await store.init();
+  // Auto-prune excess entries (>10,000) on startup
+  await store.pruneExcessEntries();
 
   ref.onDispose(() {
     store.flush();

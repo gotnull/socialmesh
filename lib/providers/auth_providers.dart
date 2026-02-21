@@ -3,14 +3,19 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../core/logging.dart';
 import '../main.dart' show firebaseReady;
+import '../services/local_data_wipe_service.dart';
 import '../services/notifications/push_notification_service.dart';
 
 /// Exception thrown when account linking is required
@@ -753,40 +758,115 @@ class AuthService {
     }
   }
 
-  /// Delete the current user's account (with automatic re-authentication)
-  Future<void> deleteAccount() async {
+  /// Delete the current user's account with full cascade.
+  ///
+  /// 1. Calls `deleteUserData` Cloud Function to purge all server-side data
+  ///    (Firestore, Storage, RevenueCat).
+  /// 2. Wipes all local SQLite databases.
+  /// 3. Clears SharedPreferences and FlutterSecureStorage.
+  /// 4. Calls RevenueCat logOut().
+  /// 5. Removes FCM token.
+  /// 6. Deletes Firebase Auth user (with re-auth if needed).
+  ///
+  /// Sprint 006 W2.2 — closes R-03 (account deletion cascade).
+  Future<void> deleteAccount({
+    Future<void> Function()? closeLocalDatabases,
+  }) async {
     final user = _auth.currentUser;
     _logUserInfo('deleteAccount - START', user);
-    if (user != null) {
-      try {
-        AppLogging.auth('deleteAccount - Attempting direct deletion...');
+    if (user == null) {
+      AppLogging.auth('deleteAccount - ❌ No current user to delete');
+      return;
+    }
+
+    // Step 1: Server-side cascade via Cloud Function.
+    // If this fails, we abort — do NOT delete Auth user with orphaned data.
+    AppLogging.auth('deleteAccount - Calling deleteUserData CF...');
+    try {
+      final callable = FirebaseFunctions.instance.httpsCallable(
+        'deleteUserData',
+        options: HttpsCallableOptions(timeout: const Duration(minutes: 5)),
+      );
+      final result = await callable.call<dynamic>({});
+      final data = result.data as Map<String, dynamic>?;
+      AppLogging.auth(
+        'deleteAccount - CF complete: docs=${data?['docsDeleted']}, '
+        'storage=${data?['storageDeletedCount']}, '
+        'rc=${data?['revenueCatDeleted']}, '
+        'errors=${(data?['errors'] as List?)?.length ?? 0}',
+      );
+    } on FirebaseFunctionsException catch (e) {
+      AppLogging.auth(
+        'deleteAccount - ❌ CF failed: code=${e.code}, message=${e.message}',
+      );
+      rethrow;
+    }
+
+    // Step 2: Wipe local SQLite databases.
+    // Close all open database handles first to avoid SQLite "vnode unlinked
+    // while in use" integrity errors when deleting backing files.
+    AppLogging.auth('deleteAccount - Wiping local databases...');
+    final filesDeleted = await LocalDataWipeService.wipeAll(
+      closeAllDatabases: closeLocalDatabases,
+    );
+    AppLogging.auth('deleteAccount - Local wipe: $filesDeleted files deleted');
+
+    // Step 3: Clear SharedPreferences.
+    AppLogging.auth('deleteAccount - Clearing SharedPreferences...');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+    } catch (e) {
+      AppLogging.auth('deleteAccount - SharedPreferences clear error: $e');
+    }
+
+    // Step 4: Clear FlutterSecureStorage.
+    AppLogging.auth('deleteAccount - Clearing SecureStorage...');
+    try {
+      const storage = FlutterSecureStorage(
+        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      );
+      await storage.deleteAll();
+    } catch (e) {
+      AppLogging.auth('deleteAccount - SecureStorage clear error: $e');
+    }
+
+    // Step 5: RevenueCat logOut (best-effort).
+    AppLogging.auth('deleteAccount - RevenueCat logOut...');
+    try {
+      await Purchases.logOut();
+    } catch (e) {
+      AppLogging.auth('deleteAccount - RevenueCat logOut error: $e');
+    }
+
+    // Step 6: Remove FCM token (best-effort).
+    AppLogging.auth('deleteAccount - Removing FCM token...');
+    try {
+      await PushNotificationService().onUserSignOut();
+    } catch (e) {
+      AppLogging.auth('deleteAccount - FCM cleanup error: $e');
+    }
+
+    // Step 7: Delete Firebase Auth user.
+    AppLogging.auth('deleteAccount - Deleting Firebase Auth user...');
+    try {
+      await user.delete();
+      AppLogging.auth('deleteAccount - ✅ SUCCESS (direct deletion)');
+    } on FirebaseAuthException catch (e) {
+      AppLogging.auth('deleteAccount - AUTH ERROR: code=${e.code}');
+      if (e.code == 'requires-recent-login') {
+        AppLogging.auth(
+          'deleteAccount - Requires recent login, re-authenticating...',
+        );
+        await reauthenticate();
+        AppLogging.auth(
+          'deleteAccount - Re-authenticated, attempting deletion again...',
+        );
         await user.delete();
-        AppLogging.auth('deleteAccount - ✅ SUCCESS (direct deletion)');
-      } on FirebaseAuthException catch (e) {
-        AppLogging.auth('deleteAccount - AUTH ERROR: code=${e.code}');
-        if (e.code == 'requires-recent-login') {
-          AppLogging.auth(
-            'deleteAccount - Requires recent login, re-authenticating...',
-          );
-          // Re-authenticate and try again
-          await reauthenticate();
-          AppLogging.auth(
-            'deleteAccount - Re-authenticated, attempting deletion again...',
-          );
-          await user.delete();
-          AppLogging.auth(
-            'deleteAccount - ✅ SUCCESS (after re-authentication)',
-          );
-        } else {
-          AppLogging.auth('deleteAccount - ❌ AUTH ERROR: code=${e.code}');
-          rethrow;
-        }
-      } catch (e) {
-        AppLogging.auth('deleteAccount - ❌ ERROR: $e');
+        AppLogging.auth('deleteAccount - ✅ SUCCESS (after re-authentication)');
+      } else {
         rethrow;
       }
-    } else {
-      AppLogging.auth('deleteAccount - ❌ No current user to delete');
     }
   }
 

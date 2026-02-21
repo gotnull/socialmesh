@@ -12,6 +12,7 @@ import '../../core/widgets/legal_document_sheet.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/terms_acceptance_provider.dart';
 import '../../services/haptic_service.dart';
+import '../../services/privacy_consent_service.dart';
 
 /// Full-screen terms and privacy acceptance gate.
 ///
@@ -63,6 +64,13 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
     final appInit = ref.read(appInitProvider.notifier);
 
     await notifier.accept();
+
+    if (!mounted) return;
+
+    // Enable analytics and Crashlytics now that the user has consented.
+    // Persists consent to SharedPreferences so cold launches re-apply it.
+    final consent = await ref.read(privacyConsentServiceProvider.future);
+    await consent.grantConsentOnAcceptance();
 
     if (!mounted) return;
 

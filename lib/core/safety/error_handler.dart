@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui' as ui;
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
@@ -174,6 +176,14 @@ class AppErrorHandler {
         msg.contains('overflow');
   }
 
+  /// Public API to report a non-fatal error to Crashlytics with context.
+  ///
+  /// Sanitizes PII and adds breadcrumb context before recording. Use this
+  /// instead of calling `FirebaseCrashlytics.instance.recordError()` directly.
+  static void reportError(Object error, StackTrace? stack, {String? context}) {
+    _reportToCrashlytics(error, stack, reason: context);
+  }
+
   /// Report error to Crashlytics with context.
   static void _reportToCrashlytics(
     Object error,
@@ -273,10 +283,12 @@ class AppErrorHandler {
   static void setUserContext({String? userId, String? email, String? name}) {
     try {
       if (userId != null) {
-        // Only use a hash of the user ID, not the actual ID
-        FirebaseCrashlytics.instance.setUserIdentifier(
-          userId.hashCode.toRadixString(16),
-        );
+        // SHA-256 hash truncated to 16 hex chars — non-reversible, sufficient entropy.
+        final hash = sha256
+            .convert(utf8.encode(userId))
+            .toString()
+            .substring(0, 16);
+        FirebaseCrashlytics.instance.setUserIdentifier(hash);
       }
       // Don't set email or name to avoid PII in crash reports
     } catch (_) {

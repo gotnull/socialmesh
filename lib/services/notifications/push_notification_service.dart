@@ -9,6 +9,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart'
     hide Message;
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging.dart';
 
@@ -63,6 +64,10 @@ class PushNotificationService {
   bool _initialized = false;
   StreamSubscription<RemoteMessage>? _foregroundSubscription;
   StreamSubscription<RemoteMessage>? _openedAppSubscription;
+
+  /// SharedPreferences key for persisting the last-saved FCM token so we can
+  /// delete the stale Firestore entry when the platform rotates it.
+  static const _kPreviousFcmToken = 'previous_fcm_token';
 
   /// Notification channel for Android
   static const AndroidNotificationChannel _socialChannel =
@@ -191,16 +196,48 @@ class PushNotificationService {
         },
       }, SetOptions(merge: true));
 
+      // Persist token locally so _onTokenRefresh can delete it later
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_kPreviousFcmToken, token);
+
       AppLogging.notifications('🔔 FCM token saved for user ${user.uid}');
     } catch (e) {
       AppLogging.notifications('🔔 Error saving FCM token: $e');
     }
   }
 
-  /// Handle FCM token refresh
-  void _onTokenRefresh(String token) {
+  /// Handle FCM token refresh — delete stale token before writing the new one.
+  Future<void> _onTokenRefresh(String newToken) async {
     AppLogging.notifications('🔔 FCM token refreshed');
-    _saveFcmToken();
+
+    final user = _auth.currentUser;
+    if (user == null) {
+      AppLogging.notifications(
+        '🔔 _onTokenRefresh - No user signed in, skipping',
+      );
+      return;
+    }
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final previousToken = prefs.getString(_kPreviousFcmToken);
+
+      // If the token actually changed, remove the stale entry from Firestore
+      if (previousToken != null && previousToken != newToken) {
+        AppLogging.notifications(
+          '🔔 Deleting stale FCM token for user ${user.uid}',
+        );
+        await _firestore.collection('users').doc(user.uid).update({
+          'fcmTokens.$previousToken': FieldValue.delete(),
+        });
+      }
+    } catch (e) {
+      // Best-effort — don't block the new token write
+      AppLogging.notifications('🔔 Error removing stale FCM token: $e');
+    }
+
+    // Write the new token (also persists it to SharedPreferences)
+    await _saveFcmToken();
   }
 
   /// Handle foreground messages - show local notification
@@ -208,7 +245,21 @@ class PushNotificationService {
     AppLogging.notifications(
       '🔔 Foreground message: ${message.notification?.title}',
     );
-    AppLogging.notifications('🔔 Foreground message data: ${message.data}');
+
+    // Redact PII before logging — text and sender names replaced with [redacted]
+    final redactedData = Map<String, dynamic>.from(message.data);
+    for (final key in const [
+      'text',
+      'senderLongName',
+      'senderShortName',
+      'body',
+      'message',
+    ]) {
+      if (redactedData.containsKey(key)) {
+        redactedData[key] = '[redacted]';
+      }
+    }
+    AppLogging.notifications('🔔 Foreground message data: $redactedData');
 
     // Emit content refresh event for screens currently visible
     _emitContentRefreshEvent(message);
@@ -507,6 +558,10 @@ class PushNotificationService {
       await _firestore.collection('users').doc(user.uid).update({
         'fcmTokens.$token': FieldValue.delete(),
       });
+
+      // Clear persisted token so it is not orphaned on next sign-in
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_kPreviousFcmToken);
 
       AppLogging.notifications('🔔 onUserSignOut - ✅ FCM token removed');
     } catch (e) {

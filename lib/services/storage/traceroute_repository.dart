@@ -495,4 +495,9 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       );
     }
   }
+
+  /// Close the underlying database connection.
+  Future<void> close() async {
+    await _database.close();
+  }
 }

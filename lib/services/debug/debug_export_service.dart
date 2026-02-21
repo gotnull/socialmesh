@@ -256,8 +256,12 @@ class DebugExportService {
       'role': node.role,
       'presenceConfidence': presence.name,
       'hasPosition': node.hasPosition,
-      'latitude': node.latitude,
-      'longitude': node.longitude,
+      'latitude': node.latitude != null
+          ? double.parse(node.latitude!.toStringAsFixed(2))
+          : null,
+      'longitude': node.longitude != null
+          ? double.parse(node.longitude!.toStringAsFixed(2))
+          : null,
       'altitude': node.altitude,
       'satsInView': node.satsInView,
       'gpsAccuracy': node.gpsAccuracy,
@@ -290,9 +294,7 @@ class DebugExportService {
       'to': msg.to,
       'toHex': '0x${msg.to.toRadixString(16).toUpperCase()}',
       'channel': msg.channel,
-      'text': msg.text.length > 100
-          ? '${msg.text.substring(0, 100)}...'
-          : msg.text,
+      'text': '[redacted]',
       'timestamp': msg.timestamp.toIso8601String(),
       'status': msg.status.name,
       'sent': msg.sent,

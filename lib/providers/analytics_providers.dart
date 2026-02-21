@@ -41,16 +41,10 @@ class AnalyticsEvents {
   }
 
   // Connection events
-  static Future<void> deviceConnected({
-    required String connectionType,
-    String? deviceName,
-  }) async {
+  static Future<void> deviceConnected({required String connectionType}) async {
     await _analytics?.logEvent(
       name: 'device_connected',
-      parameters: {
-        'connection_type': connectionType,
-        if (deviceName != null) 'device_name': deviceName,
-      },
+      parameters: {'connection_type': connectionType},
     );
   }
 

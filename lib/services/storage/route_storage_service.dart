@@ -116,6 +116,23 @@ class RouteStorageService {
     await _db!.delete(_activeRouteKey);
   }
 
+  /// Auto-prune routes older than 365 days. Call on app launch.
+  static const _retentionDays = 365;
+
+  Future<int> pruneExpiredRoutes() async {
+    if (_db == null) await init();
+
+    final cutoff = DateTime.now()
+        .subtract(const Duration(days: _retentionDays))
+        .millisecondsSinceEpoch;
+
+    return _db!.delete(
+      _routesTable,
+      where: 'created_at < ?',
+      whereArgs: [cutoff],
+    );
+  }
+
   /// Get the currently active route being recorded
   Future<Route?> getActiveRoute() async {
     if (_db == null) await init();
@@ -143,6 +160,12 @@ class RouteStorageService {
         'route_data': jsonEncode(route.toJson()),
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
+  }
+
+  /// Close the database connection.
+  Future<void> close() async {
+    await _db?.close();
+    _db = null;
   }
 
   /// Add a location point to the active route

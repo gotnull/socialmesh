@@ -13,8 +13,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:socialmesh/services/transport/background_ble_service.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 import 'package:socialmesh/features/scanner/widgets/connecting_animation.dart';
 import 'firebase_options.dart';
@@ -22,7 +24,7 @@ import 'core/theme.dart';
 import 'core/widgets/glass_scaffold.dart';
 import 'core/widgets/loading_indicator.dart';
 import 'core/transport.dart';
-import 'services/transport/background_ble_service.dart';
+
 import 'services/transport/background_message_processor.dart';
 import 'core/accessibility_theme_adapter.dart';
 import 'core/logging.dart';
@@ -60,6 +62,7 @@ import 'services/app_intents/app_intents_service.dart';
 import 'services/deep_link_manager.dart';
 import 'utils/snackbar.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
+import 'services/privacy_consent_service.dart';
 import 'services/notifications/notification_service.dart';
 import 'services/notifications/push_notification_service.dart';
 import 'services/content_moderation/profanity_checker.dart';
@@ -142,6 +145,17 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     AppLogging.debug('🔥 Firebase core initialized');
+
+    // Gate telemetry — disabled by default until consent is verified in
+    // _initializeFirebaseServices(). This ensures zero collection between
+    // Firebase.initializeApp() and the consent check.
+    try {
+      await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
+      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
+    } catch (_) {
+      // Best-effort — if this fails, _initializeFirebaseServices will retry.
+    }
+
     firebaseReadyCompleter.complete(true);
   } catch (e) {
     AppLogging.debug('Firebase unavailable: $e - app running in offline mode');
@@ -266,10 +280,15 @@ Future<void> _initializeFirebaseServices() async {
     await prefs.setBool(_kFirestoreInitOk, true);
   } catch (_) {}
 
+  // Apply persisted privacy consent state.
+  // On first launch (no consent), both remain disabled (set to false above).
+  // After terms acceptance, consent is persisted and re-applies here.
   try {
-    await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
+    prefs ??= await SharedPreferences.getInstance();
+    final consentService = PrivacyConsentService(prefs);
+    await consentService.applyPersistedConsent();
   } catch (e) {
-    AppLogging.debug('Firebase Analytics init failed: $e');
+    AppLogging.debug('Privacy consent apply failed: $e');
   }
 
   try {

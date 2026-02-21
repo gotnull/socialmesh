@@ -197,6 +197,44 @@ class NodeDexSqliteStore {
     }
   }
 
+  /// Auto-prune to keep at most [maxEntries] rows, deleting oldest by
+  /// updated_at_ms. Call on app launch to bound storage growth.
+  static const int maxEntries = 10000;
+
+  Future<int> pruneExcessEntries() async {
+    try {
+      final count = await entryCount;
+      if (count <= maxEntries) return 0;
+
+      final excess = count - maxEntries;
+      // Delete the oldest non-deleted entries beyond the cap
+      final deleted = await _db.rawDelete(
+        '''
+        DELETE FROM ${NodeDexTables.entries}
+        WHERE ${NodeDexTables.colNodeNum} IN (
+          SELECT ${NodeDexTables.colNodeNum}
+          FROM ${NodeDexTables.entries}
+          WHERE ${NodeDexTables.colDeleted} = 0
+          ORDER BY ${NodeDexTables.colUpdatedAtMs} ASC
+          LIMIT ?
+        )
+      ''',
+        [excess],
+      );
+
+      if (deleted > 0) {
+        _cache = null; // Invalidate cache after pruning
+        AppLogging.storage(
+          'NodeDexSqliteStore: Pruned $deleted entries (cap=$maxEntries)',
+        );
+      }
+      return deleted;
+    } catch (e) {
+      AppLogging.storage('NodeDexSqliteStore: Prune error: $e');
+      return 0;
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Social tag and user note
   // ---------------------------------------------------------------------------

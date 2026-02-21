@@ -23,6 +23,9 @@ class UserPresenceService {
       await _firestore.collection('presence').doc(_userId).set({
         'isOnline': true,
         'lastSeen': FieldValue.serverTimestamp(),
+        'expiresAt': Timestamp.fromDate(
+          DateTime.now().add(const Duration(days: 30)),
+        ),
       }, SetOptions(merge: true));
       AppLogging.auth('🟢 setOnline: Success for $_userId');
     } catch (e) {
@@ -39,6 +42,9 @@ class UserPresenceService {
       await _firestore.collection('presence').doc(_userId).set({
         'isOnline': false,
         'lastSeen': FieldValue.serverTimestamp(),
+        'expiresAt': Timestamp.fromDate(
+          DateTime.now().add(const Duration(days: 30)),
+        ),
       }, SetOptions(merge: true));
       AppLogging.auth('🔴 setOffline: Success for $_userId');
     } catch (e) {

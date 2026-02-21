@@ -53,6 +53,7 @@ import 'subscription_screen.dart';
 import 'ifttt_config_screen.dart';
 import 'theme_settings_screen.dart';
 import 'appearance_accessibility_screen.dart';
+import 'privacy_settings_screen.dart';
 import '../automations/automations_screen.dart';
 import '../automations/automation_providers.dart';
 import 'canned_responses_screen.dart';
@@ -1818,8 +1819,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ),
 
-                          // _PrivacySettingTile(),
-                          // _FollowRequestsTile(),
+                          _SettingsTile(
+                            icon: Icons.shield_outlined,
+                            title: 'Privacy',
+                            subtitle:
+                                'Analytics, crash reporting, and data controls',
+                            trailing: Icon(
+                              Icons.chevron_right,
+                              color: context.textTertiary,
+                            ),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const PrivacySettingsScreen(),
+                              ),
+                            ),
+                          ),
+
+                          // _FollowRequestsTile()
 
                           // Social Notifications Section (only for signed-in users)
                           // const _SocialNotificationsSection(),

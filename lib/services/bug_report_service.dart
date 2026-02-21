@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -285,9 +287,9 @@ class BugReportService with WidgetsBindingObserver {
       'platformVersion': Platform.operatingSystemVersion,
       'deviceModel': deviceModel,
       'osVersion': osVersion,
-      'uid': user?.uid,
-      'email': user?.email,
-      'displayName': user?.displayName,
+      'uid': _hashUid(user?.uid),
+      'email': _maskEmail(user?.email),
+      'displayName': _maskDisplayName(user?.displayName),
       'isAnonymous': user?.isAnonymous,
       'createdAt': user?.metadata.creationTime?.toIso8601String(),
       'lastSignIn': user?.metadata.lastSignInTime?.toIso8601String(),
@@ -365,5 +367,32 @@ class BugReportService with WidgetsBindingObserver {
     }
 
     return context;
+  }
+
+  // ---------------------------------------------------------------------------
+  // PII masking helpers
+  // ---------------------------------------------------------------------------
+
+  /// Hash UID to SHA-256 truncated to 16 hex chars for correlation without
+  /// exposing the raw Firebase UID.
+  static String? _hashUid(String? uid) {
+    if (uid == null) return null;
+    final bytes = utf8.encode(uid);
+    final digest = sha256.convert(bytes);
+    return digest.toString().substring(0, 16);
+  }
+
+  /// Mask email: "alice@example.com" -> "a***@example.com"
+  static String? _maskEmail(String? email) {
+    if (email == null) return null;
+    final parts = email.split('@');
+    if (parts.length != 2 || parts[0].isEmpty) return '***@***';
+    return '${parts[0][0]}***@${parts[1]}';
+  }
+
+  /// Mask display name: keep first character only.
+  static String? _maskDisplayName(String? name) {
+    if (name == null || name.isEmpty) return null;
+    return '${name[0]}***';
   }
 }

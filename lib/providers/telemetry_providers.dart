@@ -35,6 +35,8 @@ final telemetryStorageProvider = FutureProvider<TelemetryDatabase>((ref) async {
 final routeStorageProvider = FutureProvider<RouteStorageService>((ref) async {
   final service = RouteStorageService();
   await service.init();
+  // Auto-prune routes older than 365 days on startup
+  await service.pruneExpiredRoutes();
   return service;
 });
 

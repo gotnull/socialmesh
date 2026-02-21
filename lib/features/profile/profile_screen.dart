@@ -27,6 +27,7 @@ import '../../services/content_moderation/profanity_checker.dart';
 import '../../services/profile/profile_cloud_sync_service.dart';
 import '../../core/logging.dart';
 import '../../providers/connectivity_providers.dart';
+import '../../providers/database_lifecycle.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../utils/validation.dart';
@@ -1018,17 +1019,53 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       ),
     );
 
-    if (confirmed == true && context.mounted) {
-      try {
-        final authService = ref.read(authServiceProvider);
-        await authService.deleteAccount();
-        if (context.mounted) {
-          showInfoSnackBar(context, 'Account deleted');
-        }
-      } on FirebaseAuthException catch (e) {
-        if (context.mounted) {
-          showErrorSnackBar(context, 'Error: ${e.message}');
-        }
+    if (confirmed != true || !context.mounted) return;
+
+    // Show a non-dismissable loading indicator while deletion runs.
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          backgroundColor: context.card,
+          content: Row(
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Text(
+                  'Deleting account...',
+                  style: TextStyle(color: context.textPrimary),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.deleteAccount(
+        closeLocalDatabases: () => closeAllDatabases(ref),
+      );
+      if (context.mounted) {
+        Navigator.pop(context); // dismiss progress dialog
+        showInfoSnackBar(context, 'Account deleted');
+      }
+    } on FirebaseAuthException catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // dismiss progress dialog
+        showErrorSnackBar(context, 'Error: ${e.message}');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // dismiss progress dialog
+        showErrorSnackBar(
+          context,
+          'Deletion failed. Please try again or contact support.',
+        );
       }
     }
   }

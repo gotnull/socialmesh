@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/logging.dart';
@@ -1019,7 +1018,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // If inline, don't navigate - let connection state trigger rebuild
     } catch (e, stack) {
       AppLogging.connection('📡 SCANNER: MeshCore connection error: $e');
-      FirebaseCrashlytics.instance.recordError(e, stack);
+      AppErrorHandler.reportError(e, stack, context: 'MeshCore connection');
 
       if (!mounted) return;
 
@@ -1316,9 +1315,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           errorStr.contains('device is disconnected') ||
           errorStr.contains('discovery failed');
       if (!isExpectedError) {
-        try {
-          await FirebaseCrashlytics.instance.recordError(e, stack);
-        } catch (_) {}
+        AppErrorHandler.reportError(e, stack, context: 'BLE connection');
       }
 
       // Force cleanup on error to ensure clean state for retry

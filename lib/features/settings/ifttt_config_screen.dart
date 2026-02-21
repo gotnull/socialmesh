@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -98,6 +100,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
     }
   }
 
+  static const _iftttDisclosureKey = 'ifttt_disclosure_accepted';
+
   Future<void> _saveConfig() async {
     // Capture provider refs before awaits
     final hasPremium = ref.read(
@@ -112,6 +116,28 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
         feature: PremiumFeature.iftttIntegration,
       );
       return;
+    }
+
+    // Show one-time disclosure before first IFTTT activation
+    if (_enabled) {
+      final prefs = await SharedPreferences.getInstance();
+      final accepted = prefs.getBool(_iftttDisclosureKey) ?? false;
+      if (!accepted) {
+        if (!mounted) return;
+        final confirmed = await AppBottomSheet.showConfirm(
+          context: context,
+          title: 'IFTTT Data Sharing',
+          message:
+              'When IFTTT Webhooks are enabled, mesh event data (messages, '
+              'node status, positions, battery levels) will be sent to '
+              'IFTTT servers via your personal webhook key.\n\n'
+              'IFTTT is a third-party service with its own privacy policy. '
+              'Only the event types you select will be transmitted.',
+          confirmLabel: 'I Understand',
+        );
+        if (confirmed != true || !mounted) return;
+        await prefs.setBool(_iftttDisclosureKey, true);
+      }
     }
 
     // Require valid webhook key when IFTTT is enabled

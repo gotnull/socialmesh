@@ -68,6 +68,9 @@ class ShareLinkService {
       // Metadata
       'createdBy': currentUser.uid,
       'createdAt': FieldValue.serverTimestamp(),
+      'expiresAt': Timestamp.fromDate(
+        DateTime.now().add(const Duration(days: 90)),
+      ),
     });
 
     final shareUrl = AppUrls.shareNodeUrl(docRef.id);
@@ -101,6 +104,9 @@ class ShareLinkService {
       'description': description ?? 'A mesh node on Socialmesh',
       'createdBy': currentUser.uid,
       'createdAt': FieldValue.serverTimestamp(),
+      'expiresAt': Timestamp.fromDate(
+        DateTime.now().add(const Duration(days: 90)),
+      ),
     });
 
     final shareUrl = AppUrls.shareNodeUrl(docRef.id);
