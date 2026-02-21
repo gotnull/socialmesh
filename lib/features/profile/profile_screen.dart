@@ -26,7 +26,10 @@ import '../../providers/subscription_providers.dart';
 import '../../services/content_moderation/profanity_checker.dart';
 import '../../services/profile/profile_cloud_sync_service.dart';
 import '../../core/logging.dart';
+import '../../core/navigation.dart';
+import '../../providers/app_providers.dart';
 import '../../providers/connectivity_providers.dart';
+import '../../providers/connection_providers.dart';
 import '../../providers/database_lifecycle.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/status_banner.dart';
@@ -1050,9 +1053,27 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       await authService.deleteAccount(
         closeLocalDatabases: () => closeAllDatabases(ref),
       );
-      if (context.mounted) {
-        Navigator.pop(context); // dismiss progress dialog
-        showInfoSnackBar(context, 'Account deleted');
+      if (!context.mounted) return;
+
+      // Dismiss progress dialog.
+      Navigator.pop(context);
+
+      // Disconnect BLE and invalidate the saved pairing. The wiped databases
+      // leave the BLE bond stale — the user must forget the device in
+      // Bluetooth settings before reconnecting.
+      AppLogging.auth(
+        'deleteAccount - Disconnecting BLE and invalidating pairing',
+      );
+      await ref
+          .read(deviceConnectionProvider.notifier)
+          .handlePairingInvalidation(PairingInvalidationReason.accountDeleted);
+
+      // Navigate to ScannerScreen (which shows the "forget device" hint
+      // because isTerminalInvalidated is now true).
+      ref.read(appInitProvider.notifier).setNeedsScanner();
+      final nav = navigatorKey.currentState;
+      if (nav != null) {
+        nav.pushNamedAndRemoveUntil('/app', (route) => false);
       }
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {

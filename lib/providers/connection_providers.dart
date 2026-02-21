@@ -66,7 +66,11 @@ enum PairingInvalidationReason {
   peerReset('peer_removed_pairing'),
 
   /// Device could not be found after repeated scans.
-  missingDevice('device_not_found');
+  missingDevice('device_not_found'),
+
+  /// Local databases wiped during account deletion. The BLE bond is stale
+  /// and the user must forget the device in Bluetooth settings.
+  accountDeleted('account_deleted');
 
   final String logValue;
   const PairingInvalidationReason(this.logValue);

@@ -7,6 +7,7 @@ import '../core/legal/legal_constants.dart';
 import '../core/legal/terms_acceptance_state.dart';
 import '../core/logging.dart';
 import 'app_providers.dart';
+import 'remote_legal_versions_provider.dart';
 
 /// Riverpod [AsyncNotifier] that manages terms and privacy acceptance state.
 ///
@@ -79,21 +80,31 @@ class TermsAcceptanceNotifier extends AsyncNotifier<TermsAcceptanceState> {
 
   /// Record the user's acceptance and persist it to local storage.
   ///
+  /// Stores the **effective** versions (max of hardcoded and Firestore
+  /// remote) so that server-side version bumps are correctly recorded.
+  /// If the remote versions provider hasn't resolved yet, falls back to
+  /// the hardcoded [LegalConstants] values.
+  ///
   /// Updates [state] synchronously after persisting so that any UI watching
   /// this provider will immediately reflect the accepted state.
   Future<void> accept({String? buildNumber}) async {
+    // Resolve effective versions (remote > hardcoded).
+    final effective = ref.read(effectiveLegalVersionsProvider).asData?.value;
+    final termsV = effective?.termsVersion ?? LegalConstants.termsVersion;
+    final privacyV = effective?.privacyVersion ?? LegalConstants.privacyVersion;
+
     AppLogging.app(
       'TermsAcceptance: User accepted - '
-      'termsVersion=${LegalConstants.termsVersion}, '
-      'privacyVersion=${LegalConstants.privacyVersion}',
+      'termsVersion=$termsV, '
+      'privacyVersion=$privacyV',
     );
 
     final settings = await ref.read(settingsServiceProvider.future);
     final platform = Platform.isIOS ? 'ios' : 'android';
 
     await settings.setTermsAccepted(
-      termsVersion: LegalConstants.termsVersion,
-      privacyVersion: LegalConstants.privacyVersion,
+      termsVersion: termsV,
+      privacyVersion: privacyV,
       platform: platform,
       buildNumber: buildNumber,
     );
@@ -102,8 +113,8 @@ class TermsAcceptanceNotifier extends AsyncNotifier<TermsAcceptanceState> {
 
     state = AsyncData(
       TermsAcceptanceState(
-        acceptedTermsVersion: LegalConstants.termsVersion,
-        acceptedPrivacyVersion: LegalConstants.privacyVersion,
+        acceptedTermsVersion: termsV,
+        acceptedPrivacyVersion: privacyV,
         acceptedAt: now,
         acceptedBuild: buildNumber,
         acceptedPlatform: platform,

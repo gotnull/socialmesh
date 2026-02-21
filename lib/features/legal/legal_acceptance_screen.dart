@@ -10,6 +10,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/remote_legal_versions_provider.dart';
 import '../../providers/terms_acceptance_provider.dart';
 import '../../services/haptic_service.dart';
 import '../../services/privacy_consent_service.dart';
@@ -216,6 +217,10 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
   }
 
   Widget _buildDocumentLinks(BuildContext context, ThemeData theme) {
+    final effective = ref.watch(effectiveLegalVersionsProvider).asData?.value;
+    final termsV = effective?.termsVersion ?? LegalConstants.termsVersion;
+    final privacyV = effective?.privacyVersion ?? LegalConstants.privacyVersion;
+
     return Column(
       children: [
         // Terms of Service link
@@ -225,7 +230,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
           child: _DocumentLinkTile(
             icon: Icons.description_outlined,
             title: 'Terms of Service',
-            subtitle: 'Effective ${_formatDate(LegalConstants.termsVersion)}',
+            subtitle: 'Effective ${_formatDate(termsV)}',
             onTap: _openTerms,
           ),
         ),
@@ -238,7 +243,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
           child: _DocumentLinkTile(
             icon: Icons.privacy_tip_outlined,
             title: 'Privacy Policy',
-            subtitle: 'Effective ${_formatDate(LegalConstants.privacyVersion)}',
+            subtitle: 'Effective ${_formatDate(privacyV)}',
             onTap: _openPrivacy,
           ),
         ),

@@ -81,6 +81,7 @@ import 'features/navigation/main_shell.dart';
 import 'features/navigation/app_root_shell.dart';
 import 'features/legal/legal_acceptance_screen.dart';
 import 'core/legal/legal_constants.dart';
+import 'providers/remote_legal_versions_provider.dart';
 import 'core/widgets/legal_document_sheet.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/onboarding/screens/mesh_brain_emotion_test_screen.dart';
@@ -2596,14 +2597,25 @@ class _AppRouterState extends ConsumerState<_AppRouter> {
         // completes first (which uses pushReplacement and setInitialized),
         // then terms are shown here at the router level where navigation
         // is clean.
+        //
+        // Effective versions are resolved from Firestore (server-side
+        // legal_versions document) with a hardcoded floor. This lets us
+        // trigger re-acceptance by updating Firestore — no app update
+        // needed.
+        final effectiveAsync = ref.watch(effectiveLegalVersionsProvider);
         final settingsAsync = ref.watch(settingsServiceProvider);
         final needsTerms =
             settingsAsync.whenOrNull(
               data: (settings) {
                 final acceptedTerms = settings.acceptedTermsVersion;
                 final acceptedPrivacy = settings.acceptedPrivacyVersion;
-                return acceptedTerms != LegalConstants.termsVersion ||
-                    acceptedPrivacy != LegalConstants.privacyVersion;
+                final effective = effectiveAsync.asData?.value;
+                final reqTerms =
+                    effective?.termsVersion ?? LegalConstants.termsVersion;
+                final reqPrivacy =
+                    effective?.privacyVersion ?? LegalConstants.privacyVersion;
+                return acceptedTerms != reqTerms ||
+                    acceptedPrivacy != reqPrivacy;
               },
             ) ??
             false;
