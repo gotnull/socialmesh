@@ -29,7 +29,6 @@ import '../../core/logging.dart';
 import '../../core/navigation.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/connectivity_providers.dart';
-import '../../providers/connection_providers.dart';
 import '../../providers/database_lifecycle.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/status_banner.dart';
@@ -1050,10 +1049,10 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
 
     try {
       final authService = ref.read(authServiceProvider);
-      // Capture notifiers BEFORE the async gap — the widget's ref may become
-      // invalid if the widget is disposed while awaiting.
-      final deviceNotifier = ref.read(deviceConnectionProvider.notifier);
+      // Capture notifiers and services BEFORE the async gap — the widget's
+      // ref may become invalid if the widget is disposed while awaiting.
       final appInitNotifier = ref.read(appInitProvider.notifier);
+      final transport = ref.read(transportProvider);
 
       await authService.deleteAccount(
         closeLocalDatabases: () => closeAllDatabases(ref),
@@ -1065,29 +1064,50 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
         Navigator.pop(context); // dismiss progress dialog
       }
 
-      // BLE cleanup is best-effort — the databases were already wiped by
-      // deleteAccount(), so provider-level DB operations inside
-      // handlePairingInvalidation may fail on missing files.
-      AppLogging.auth(
-        'deleteAccount - Disconnecting BLE and invalidating pairing',
-      );
+      // Simple BLE disconnect — fire and forget.
+      // Do NOT use handlePairingInvalidation here. It triggers a complex
+      // state machine (clearDeviceDataBeforeConnect, pairedDeviceInvalidated
+      // state transition, auto-reconnect state changes) that races with the
+      // user's post-delete navigation. The databases and SharedPreferences
+      // are already wiped by deleteAccount(), so the full invalidation
+      // flow is unnecessary and actively harmful: it can disconnect a
+      // device the user has already re-paired on the Scanner screen.
+      AppLogging.auth('deleteAccount - Disconnecting BLE transport');
       try {
-        await deviceNotifier.handlePairingInvalidation(
-          PairingInvalidationReason.accountDeleted,
-        );
+        await transport.disconnect();
       } catch (e) {
-        AppLogging.auth('deleteAccount - BLE cleanup error (non-fatal): $e');
+        AppLogging.auth('deleteAccount - BLE disconnect error (non-fatal): $e');
       }
 
-      // Navigate to ScannerScreen (which shows the "forget device" hint
-      // because isTerminalInvalidated is now true). Uses the pre-captured
-      // notifier and global navigatorKey so this works even if the widget
-      // was disposed during the async cleanup above.
-      appInitNotifier.setNeedsScanner();
-      navigatorKey.currentState?.pushNamedAndRemoveUntil(
-        '/app',
-        (route) => false,
+      // Reset in-memory device state so the auto-reconnect manager
+      // doesn't try to reconnect to the now-deleted user's device.
+      ref.read(connectedDeviceProvider.notifier).setState(null);
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+
+      // Navigate to _AppRouter which renders based on appInitProvider.
+      final navState = navigatorKey.currentState;
+      AppLogging.auth(
+        'deleteAccount - navigatorKey.currentState: '
+        '${navState != null ? "EXISTS" : "NULL"}',
       );
+
+      if (navState != null) {
+        navState.pushNamedAndRemoveUntil('/app', (route) => false);
+        AppLogging.auth('deleteAccount - pushNamedAndRemoveUntil dispatched');
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final fallback = navigatorKey.currentState;
+          fallback?.pushNamedAndRemoveUntil('/app', (route) => false);
+        });
+      }
+
+      // Re-run initialization from scratch. SharedPreferences was cleared,
+      // so initialize() will detect !onboardingComplete and route through
+      // the full fresh-install flow: onboarding → terms → scanner → main.
+      AppLogging.auth('deleteAccount - Re-initializing app state');
+      appInitNotifier.initialize();
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
         Navigator.pop(context); // dismiss progress dialog

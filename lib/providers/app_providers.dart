@@ -1229,17 +1229,36 @@ Future<void> clearDeviceDataBeforeConnect(WidgetRef ref) async {
   // Without this, every reconnect re-discovers the same nodes and inflates the count.
   ref.read(newNodesCountProvider.notifier).reset();
 
+  // Clear persistent storage — each wrapped in try/catch because the
+  // databases may be in an inconsistent state after account deletion
+  // (files deleted, WAL/SHM journals stale). A failure here must never
+  // prevent the user from reconnecting to a device.
+
   // Clear persistent node storage (nodes come fresh from device)
-  final nodeStorage = await ref.read(nodeStorageProvider.future);
-  await nodeStorage.clearNodes();
+  try {
+    final nodeStorage = await ref.read(nodeStorageProvider.future);
+    await nodeStorage.clearNodes();
+  } catch (e) {
+    AppLogging.app('⚠️ clearDeviceData: nodeStorage.clearNodes failed: $e');
+  }
 
   // Clear telemetry data (device metrics, environment metrics, positions, etc.)
-  final telemetryStorage = await ref.read(telemetryStorageProvider.future);
-  await telemetryStorage.clearAllData();
+  try {
+    final telemetryStorage = await ref.read(telemetryStorageProvider.future);
+    await telemetryStorage.clearAllData();
+  } catch (e) {
+    AppLogging.app('⚠️ clearDeviceData: telemetry.clearAllData failed: $e');
+  }
 
   // Clear routes
-  final routeStorage = await ref.read(routeStorageProvider.future);
-  await routeStorage.clearAllRoutes();
+  try {
+    final routeStorage = await ref.read(routeStorageProvider.future);
+    await routeStorage.clearAllRoutes();
+  } catch (e) {
+    AppLogging.app(
+      '⚠️ clearDeviceData: routeStorage.clearAllRoutes failed: $e',
+    );
+  }
 
   AppLogging.app('✅ Device data cleared - ready for fresh data from device');
 }
@@ -1267,17 +1286,36 @@ Future<void> clearDeviceDataBeforeConnectRef(Ref ref) async {
   // Reset new-nodes badge counter so it doesn't accumulate across reconnections.
   ref.read(newNodesCountProvider.notifier).reset();
 
+  // Clear persistent storage — each wrapped in try/catch because the
+  // databases may be in an inconsistent state after account deletion
+  // (files deleted, WAL/SHM journals stale). A failure here must never
+  // prevent the user from reconnecting to a device.
+
   // Clear persistent node storage (nodes come fresh from device)
-  final nodeStorage = await ref.read(nodeStorageProvider.future);
-  await nodeStorage.clearNodes();
+  try {
+    final nodeStorage = await ref.read(nodeStorageProvider.future);
+    await nodeStorage.clearNodes();
+  } catch (e) {
+    AppLogging.app('⚠️ clearDeviceData: nodeStorage.clearNodes failed: $e');
+  }
 
   // Clear telemetry data (device metrics, environment metrics, positions, etc.)
-  final telemetryStorage = await ref.read(telemetryStorageProvider.future);
-  await telemetryStorage.clearAllData();
+  try {
+    final telemetryStorage = await ref.read(telemetryStorageProvider.future);
+    await telemetryStorage.clearAllData();
+  } catch (e) {
+    AppLogging.app('⚠️ clearDeviceData: telemetry.clearAllData failed: $e');
+  }
 
   // Clear routes
-  final routeStorage = await ref.read(routeStorageProvider.future);
-  await routeStorage.clearAllRoutes();
+  try {
+    final routeStorage = await ref.read(routeStorageProvider.future);
+    await routeStorage.clearAllRoutes();
+  } catch (e) {
+    AppLogging.app(
+      '⚠️ clearDeviceData: routeStorage.clearAllRoutes failed: $e',
+    );
+  }
 
   AppLogging.app('✅ Device data cleared - ready for fresh data from device');
 }

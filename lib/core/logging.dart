@@ -56,7 +56,6 @@ class AppLogging {
   static bool? _mfaLoggingEnabled;
   static bool? _aetherLoggingEnabled;
   static bool? _takLoggingEnabled;
-  static bool? _privacyLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -254,12 +253,6 @@ class AppLogging {
     return _takLoggingEnabled!;
   }
 
-  static bool get privacyLoggingEnabled {
-    _privacyLoggingEnabled ??=
-        _safeGetEnv('PRIVACY_LOGGING_ENABLED')?.toLowerCase() != 'false';
-    return _privacyLoggingEnabled!;
-  }
-
   /// Cloud Sync logging — always enabled by default for debugging sync issues.
   /// Disable with SYNC_LOGGING_ENABLED=false if needed.
   static bool get syncLoggingEnabled {
@@ -438,10 +431,6 @@ class AppLogging {
     if (takLoggingEnabled) debugPrint('TAK: $message');
   }
 
-  static void privacy(String message) {
-    if (privacyLoggingEnabled) debugPrint('Privacy: $message');
-  }
-
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -475,7 +464,6 @@ class AppLogging {
     _mfaLoggingEnabled = null;
     _aetherLoggingEnabled = null;
     _takLoggingEnabled = null;
-    _privacyLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

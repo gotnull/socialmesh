@@ -115,4 +115,20 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
   }
 
   AppLogging.auth('closeAllDatabases: all database connections closed');
+
+  // ── Invalidate every database provider so Riverpod creates fresh ──
+  // ── instances on next access. Without this, the providers still ──
+  // ── cache the old (closed) instances and any subsequent read()   ──
+  // ── returns a dead handle that throws "not initialized".         ──
+  ref.invalidate(messageStorageProvider);
+  ref.invalidate(signalServiceProvider);
+  ref.invalidate(telemetryStorageProvider);
+  ref.invalidate(routeStorageProvider);
+  ref.invalidate(nodeDexDatabaseProvider);
+  ref.invalidate(tracerouteRepositoryProvider);
+  ref.invalidate(automationDatabaseProvider);
+  ref.invalidate(widgetDatabaseProvider);
+  ref.invalidate(takDatabaseProvider);
+  ref.invalidate(meshPacketDedupeStoreProvider);
+  AppLogging.auth('closeAllDatabases: all database providers invalidated');
 }

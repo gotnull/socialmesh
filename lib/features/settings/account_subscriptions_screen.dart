@@ -124,16 +124,6 @@ class _AccountSubscriptionsScreenState
   ) {
     final isSignedIn = ref.watch(isSignedInProvider);
     final firebaseUser = ref.watch(currentUserProvider);
-    final isOnline = ref.watch(isOnlineProvider);
-
-    AppLogging.auth(
-      '_buildProfileCard: '
-      'signedIn=$isSignedIn, '
-      'online=$isOnline, '
-      'loading=${profileAsync.isLoading}, '
-      'profile=${profileAsync.value?.displayName ?? "NULL"}, '
-      'uid=${firebaseUser?.uid ?? "NULL"}',
-    );
 
     // Compute a fallback display name from Firebase user info when the
     // local profile still says "Guest" but the user IS signed in.
@@ -149,21 +139,12 @@ class _AccountSubscriptionsScreenState
           firebaseUser.displayName ??
           firebaseUser.email?.split('@').first ??
           'Guest';
-      AppLogging.auth(
-        '║ Profile displayName is "$name" but user is signed in — '
-        'using Firebase fallback: "$fallback"',
-      );
       return profile.copyWith(displayName: fallback);
     }
 
     return profileAsync.when(
       data: (profile) {
         final effectiveProfile = applyFallbackName(profile);
-        AppLogging.auth(
-          '║ profileAsync.when -> data: '
-          'raw="${profile?.displayName ?? "NULL"}", '
-          'effective="${effectiveProfile?.displayName ?? "NULL"}"',
-        );
         return _ProfilePreviewCard(
           profile: effectiveProfile,
           isSignedIn: isSignedIn,
@@ -176,11 +157,9 @@ class _AccountSubscriptionsScreenState
         );
       },
       loading: () {
-        AppLogging.auth('║ profileAsync.when -> loading');
         return const _LoadingCard();
       },
       error: (e, _) {
-        AppLogging.auth('║ profileAsync.when -> error: $e');
         // Still apply fallback name from Firebase user on error
         final fallbackProfile = applyFallbackName(
           UserProfile.fromFirebaseUser(
@@ -210,14 +189,7 @@ class _AccountSubscriptionsScreenState
 
   Widget _buildSignedInAccountCard(User user) {
     final syncStatus = ref.watch(syncStatusProvider);
-    final isOnline = ref.watch(isOnlineProvider);
     final isAnonymous = user.isAnonymous;
-
-    AppLogging.auth(
-      '[AccountScreen] _buildSignedInAccountCard — '
-      'syncStatus: $syncStatus, isOnline: $isOnline, '
-      'isAnonymous: $isAnonymous, uid: ${user.uid}',
-    );
 
     return Container(
       decoration: BoxDecoration(
@@ -1724,13 +1696,6 @@ class _ProfilePreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    AppLogging.auth(
-      '_ProfilePreviewCard: '
-      'name=${profile?.displayName ?? "NULL"}, '
-      'signedIn=$isSignedIn, '
-      'synced=${profile?.isSynced ?? "NULL"}',
-    );
-
     final accentColor = context.accentColor;
     final displayName = isSignedIn
         ? (profile?.displayName ?? 'Guest')
@@ -2089,8 +2054,6 @@ class _SyncStatusBadge extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isOnline = ref.watch(isOnlineProvider);
-
-    AppLogging.auth('[SyncStatusBadge] status: $status, isOnline: $isOnline');
 
     // When idle and online, don't show a badge — nothing interesting to report
     if (status == SyncStatus.idle && isOnline) {
