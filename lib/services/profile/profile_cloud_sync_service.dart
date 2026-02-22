@@ -609,9 +609,11 @@ class ProfileCloudSyncService {
         final cloudUrl = await uploadAvatar(uid, localFile);
 
         // Update profile with cloud URL
-        await _localService.saveProfile(
-          profile.copyWith(avatarUrl: cloudUrl, isSynced: true),
-        );
+        final updated = profile.copyWith(avatarUrl: cloudUrl, isSynced: true);
+        await _localService.saveProfile(updated);
+
+        // Push the cloud URL to Firestore so other clients can see it
+        await _syncPublicProfile(uid, updated);
       }
     }
   }
@@ -716,14 +718,25 @@ class ProfileCloudSyncService {
         final cloudUrl = await uploadBanner(uid, localFile);
 
         // Update profile with cloud URL
-        await _localService.saveProfile(
-          profile.copyWith(bannerUrl: cloudUrl, isSynced: true),
-        );
+        final updated = profile.copyWith(bannerUrl: cloudUrl, isSynced: true);
+        await _localService.saveProfile(updated);
+
+        // Push the cloud URL to Firestore so other clients can see it
+        await _syncPublicProfile(uid, updated);
       }
     }
   }
 
   // --- Helper Methods ---
+
+  /// Returns the URL unchanged if it starts with http(s), otherwise null.
+  /// Used by merge logic to preserve cloud URLs that exist locally but
+  /// are missing from the Firestore document.
+  static String? _preserveHttpUrl(String? url) {
+    if (url == null) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return null;
+  }
 
   /// Returns the URL only if it is an HTTP(S) URL, otherwise null.
   /// Prevents local file paths (e.g. /var/mobile/...) from being written
@@ -873,6 +886,26 @@ class ProfileCloudSyncService {
     AppLogging.auth(
       'ProfileSync: Cloud accentColorIndex: ${cloud.accentColorIndex}',
     );
+
+    // Preserve avatar/banner cloud URLs that were uploaded to Storage but
+    // never written to Firestore (the original sync sanitized local paths
+    // to null). If local has a valid HTTPS URL and cloud has null, keep it.
+    final mergedAvatarUrl =
+        cloud.avatarUrl ?? _preserveHttpUrl(local.avatarUrl);
+    final mergedBannerUrl =
+        cloud.bannerUrl ?? _preserveHttpUrl(local.bannerUrl);
+    if (mergedAvatarUrl != cloud.avatarUrl ||
+        mergedBannerUrl != cloud.bannerUrl) {
+      AppLogging.auth(
+        'ProfileSync: Preserving local media URLs — '
+        'avatar: ${mergedAvatarUrl != cloud.avatarUrl}, '
+        'banner: ${mergedBannerUrl != cloud.bannerUrl}',
+      );
+      return cloud.copyWith(
+        avatarUrl: mergedAvatarUrl,
+        bannerUrl: mergedBannerUrl,
+      );
+    }
     return cloud;
   }
 

@@ -501,6 +501,9 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
             await profileService.saveProfile(cloudUpdated);
             state = AsyncValue.data(cloudUpdated);
             AppLogging.auth('UserProfile: Avatar uploaded to cloud: $cloudUrl');
+
+            // Push cloud URL to Firestore profiles collection
+            await cloudSync.syncToCloud(user.uid);
           } catch (e) {
             // Check if content violation
             if (e.toString().contains('Content policy violation')) {
@@ -594,6 +597,9 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
             await profileService.saveProfile(cloudUpdated);
             state = AsyncValue.data(cloudUpdated);
             AppLogging.auth('UserProfile: Banner uploaded to cloud: $cloudUrl');
+
+            // Push cloud URL to Firestore profiles collection
+            await cloudSync.syncToCloud(user.uid);
           } catch (e) {
             // Check if content violation
             if (e.toString().contains('Content policy violation')) {
