@@ -916,21 +916,35 @@ class _IcosahedronPainter extends CustomPainter {
           }
           // Smooth 0→1 ramp from threshold to 1.0
           final gateT = (gateRaw - gateThreshold) / (1.0 - gateThreshold);
+          // Ease-in the gate so faces don't pop — cubic ramp
+          final gateTEased = gateT * gateT * (3.0 - 2.0 * gateT);
 
-          // Breath cycle target: ~5 s → 2π / (5 × 60) ≈ 0.021 rad/tick.
-          final timeVal = sciFiGlitchSeed * 0.021;
-          final breath = math.sin(facePhase + timeVal); // -1..1
+          // === CINEMATIC MULTI-LAYER ENVELOPE ===
+          // Three independent oscillators combine to produce an irregular,
+          // living rhythm — no two activation windows ever feel the same.
 
-          // Mechanical sub-beat: ~2.5 s cycle
-          final mechRaw = math.sin(facePhase * 0.73 + timeVal * 2.1);
-          final mech = math.pow(mechRaw.abs(), 0.45).toDouble() * mechRaw.sign;
+          // Layer 1 — PRIMARY: ~5s cycle, compressed so it "snaps" through
+          // zero and spends more time near the extremes (pod-bay-door feel).
+          final t1 = sciFiGlitchSeed * 0.021;
+          final s1raw = math.sin(facePhase + t1);
+          // pow(|x|, 0.42) * sign(x) — flattens mid-range, sharpens crossings
+          final primary = math.pow(s1raw.abs(), 0.42).toDouble() * s1raw.sign;
 
-          // Blend: 70% smooth breath + 30% mechanical crunch, gated
-          final envelope = (breath * 0.70 + mech * 0.30) * sciFiGlitch * gateT;
+          // Layer 2 — INHARMONIC DRIFT: golden-ratio frequency offset (~2s)
+          // Never locks to L1 so the pattern never exactly repeats.
+          final t2 = sciFiGlitchSeed * 0.052; // ~2s cycle
+          final drift = 0.28 * math.sin(facePhase * 1.6180 + t2);
+
+          // Layer 3 — HIGH-FREQ SHIMMER: very fast (~0.25s), tiny amplitude.
+          // Gives a "vibrating actuator" micro-texture when extended.
+          final t3 = sciFiGlitchSeed * 0.41; // ~0.25s cycle
+          final shimmer = 0.06 * math.sin(facePhase + t3);
+
+          // Combine, clamp to -1..1, gate and scale
+          final rawEnv = (primary + drift + shimmer).clamp(-1.0, 1.0);
+          final envelope = rawEnv * sciFiGlitch * gateTEased;
 
           // --- 3D displacement along face normal ---
-          // 0.22 units ≈ 22% of sphere radius → visibly separates the fill
-          // from the wireframe cage as the panel pushes/pulls.
           const pulseAmp = 0.22;
           final disp = faceNormal * (envelope * pulseAmp);
 
@@ -956,18 +970,25 @@ class _IcosahedronPainter extends CustomPainter {
             fp2.dy + disp2.dy - base2.dy,
           );
 
-          // --- shading: cold steel base, bleeds toward ice-blue at peak ---
-          // Positive envelope = face pushing toward viewer = brighter/cooler.
-          // normalised: 0 = fully receding, 1 = fully extended toward viewer.
-          final normalised = (envelope / sciFiGlitch + 1.0) / 2.0; // 0..1
+          // === SHADING ===
+          // normalised: 0 = fully receding, 1 = fully extended.
+          final normalised = (envelope / sciFiGlitch + 1.0) / 2.0;
 
-          const peakColor = Color(0xFF88DDFF); // cold steely blue
-          drawColor = Color.lerp(color, peakColor, normalised * 0.70)!;
+          // Two-stage colour ramp: base → cold blue → near-white flash.
+          // The white peak sells the "energy burst" at full extension.
+          const midColor = Color(0xFF4ABAFF); // cold plasma blue
+          const peakColor = Color(0xFFDDF4FF); // white-hot plasma flash
+          drawColor = normalised < 0.6
+              ? Color.lerp(color, midColor, normalised / 0.6 * 0.85)!
+              : Color.lerp(midColor, peakColor, (normalised - 0.6) / 0.4)!;
 
-          // Opacity is INDEPENDENT of faceOpacity (which is near 0.15 and
-          // would make faces invisible). We drive it directly from the pulse:
-          // 0.30 at full recession, 0.80 at full extension.
-          drawOpacity = depthFactor * (0.30 + normalised * 0.50);
+          // Opacity flares bright at full extension (0.30 → 0.90),
+          // with an extra kick right at the gate entry (gateT ramp).
+          final extensionBoost = math.pow(normalised, 1.5).toDouble();
+          drawOpacity =
+              depthFactor *
+              (0.28 + extensionBoost * 0.62) *
+              (0.6 + gateTEased * 0.4);
         }
 
         final faceAlpha = (drawOpacity.clamp(0.0, 1.0) * 255).round().clamp(
