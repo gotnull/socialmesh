@@ -892,7 +892,8 @@ class _IcosahedronPainter extends CustomPainter {
           final slowTime = sciFiGlitchSeed * 0.0042;
           final gateRaw =
               (math.sin(facePhase * 1.31 + slowTime) + 1.0) / 2.0; // 0..1
-          const gateThreshold = 0.82; // open for top 18% of cycle
+          const gateThreshold =
+              0.93; // open for top 7% → ~1.75 s per activation
           if (gateRaw < gateThreshold) {
             // Face is idle — draw at baseline opacity, no displacement
             final baseAlpha = (faceOpacity * depthFactor * 255).round().clamp(
