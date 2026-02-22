@@ -141,6 +141,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Fragment shaders
+  shaders:
+    - assets/shaders/card_dissolve.frag
+
   # Assets
   assets:
     - .env

@@ -1137,70 +1137,97 @@ class _NodeCard extends StatelessWidget {
       tiltDegrees: 4.0,
       child: Opacity(
         opacity: cardOpacity,
-        child: ShaderMask(
-          blendMode: BlendMode.dstIn,
-          shaderCallback: (bounds) => const RadialGradient(
-            center: Alignment.bottomRight,
-            radius: 1.8,
-            colors: [Colors.transparent, Colors.white],
-            stops: [0.0, 1.0],
-          ).createShader(bounds),
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            decoration: !isMyNode && !node.isFavorite
-                ? BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border(
-                      top: BorderSide(color: context.border, width: 1),
-                      left: BorderSide(color: context.border, width: 1),
-                    ),
-                  )
-                : null,
-            child: isMyNode
-                ? GradientBorderContainer(
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    accentOpacity: 1.0,
-                    defaultBorderColor: Colors.transparent,
-                    backgroundColor: context.accentColor.withValues(
-                      alpha: 0.08,
-                    ),
-                    enableDepthBlend: true,
-                    depthBlendOpacity: 0.5,
-                    padding: const EdgeInsets.all(16),
-                    child: _buildCardContent(
-                      context,
-                      signalBars,
-                      statusColor,
-                      statusText,
-                    ),
-                  )
-                : node.isFavorite
-                ? GradientBorderContainer(
-                    borderRadius: 12,
-                    borderWidth: 2,
-                    accentOpacity: 1.0,
-                    accentColor: AccentColors.yellow,
-                    defaultBorderColor: Colors.transparent,
-                    backgroundColor: context.card,
-                    padding: const EdgeInsets.all(16),
-                    child: _buildCardContent(
-                      context,
-                      signalBars,
-                      statusColor,
-                      statusText,
-                    ),
-                  )
-                : Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: _buildCardContent(
-                      context,
-                      signalBars,
-                      statusColor,
-                      statusText,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              children: [
+                // Layer 1: Background fill only
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isMyNode ? null : context.card,
+                      gradient: isMyNode
+                          ? LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                context.accentColor.withValues(alpha: 0.12),
+                                context.accentColor.withValues(alpha: 0.03),
+                              ],
+                            )
+                          : null,
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
+                ),
+                // Layer 2: Border only (under the overlay)
+                if (isMyNode)
+                  Positioned.fill(
+                    child: GradientBorderContainer(
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      accentOpacity: 1.0,
+                      defaultBorderColor: Colors.transparent,
+                      backgroundColor: Colors.transparent,
+                      child: const SizedBox.expand(),
+                    ),
+                  )
+                else if (node.isFavorite)
+                  Positioned.fill(
+                    child: GradientBorderContainer(
+                      borderRadius: 12,
+                      borderWidth: 2,
+                      accentOpacity: 1.0,
+                      accentColor: AccentColors.yellow,
+                      defaultBorderColor: Colors.transparent,
+                      backgroundColor: Colors.transparent,
+                      child: const SizedBox.expand(),
+                    ),
+                  )
+                else
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border(
+                          top: BorderSide(color: context.border, width: 1),
+                          left: BorderSide(color: context.border, width: 1),
+                        ),
+                      ),
+                    ),
+                  ),
+                // Layer 3: Bottom-right corner blend into background
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          center: Alignment.bottomRight,
+                          radius: 2.4,
+                          colors: [
+                            context.background,
+                            context.background.withValues(alpha: 0),
+                          ],
+                          stops: const [0.0, 0.6],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Layer 4: Content — fully opaque on top
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: _buildCardContent(
+                    context,
+                    signalBars,
+                    statusColor,
+                    statusText,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
