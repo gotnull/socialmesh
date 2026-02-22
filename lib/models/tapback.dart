@@ -7,7 +7,7 @@ enum TapbackType {
   dislike('👎'),
   heart('❤️'),
   laugh('😂'),
-  exclamation('‼️'),
+  exclamation('❗'),
   question('❓'),
   poop('💩'),
   wave('👋');
@@ -15,11 +15,18 @@ enum TapbackType {
   const TapbackType(this.emoji);
   final String emoji;
 
+  /// Aliases for emojis that may arrive from other platforms (e.g. iOS sends
+  /// ‼️ U+203C for exclamation, which doesn't render as color emoji on Android).
+  static const _aliases = <String, TapbackType>{
+    '‼️': TapbackType.exclamation, // iOS sends U+203C+FE0F
+    '‼': TapbackType.exclamation, // U+203C without variation selector
+  };
+
   static TapbackType? fromEmoji(String emoji) {
     for (final type in TapbackType.values) {
       if (type.emoji == emoji) return type;
     }
-    return null;
+    return _aliases[emoji];
   }
 }
 
@@ -124,7 +131,7 @@ class DefaultTapbacks {
     TapbackConfig(
       id: 'default_exclamation',
       type: TapbackType.exclamation,
-      emoji: '‼️',
+      emoji: '❗',
       label: 'Exclamation',
       sortOrder: 5,
     ),

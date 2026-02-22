@@ -32,7 +32,7 @@ void main() {
     });
 
     test('exclamation has correct emoji', () {
-      expect(TapbackType.exclamation.emoji, '‼️');
+      expect(TapbackType.exclamation.emoji, '❗');
     });
 
     test('question has correct emoji', () {
@@ -52,10 +52,15 @@ void main() {
       expect(TapbackType.fromEmoji('👎'), TapbackType.dislike);
       expect(TapbackType.fromEmoji('❤️'), TapbackType.heart);
       expect(TapbackType.fromEmoji('😂'), TapbackType.laugh);
-      expect(TapbackType.fromEmoji('‼️'), TapbackType.exclamation);
+      expect(TapbackType.fromEmoji('❗'), TapbackType.exclamation);
       expect(TapbackType.fromEmoji('❓'), TapbackType.question);
       expect(TapbackType.fromEmoji('💩'), TapbackType.poop);
       expect(TapbackType.fromEmoji('👋'), TapbackType.wave);
+    });
+
+    test('fromEmoji recognizes iOS alias ‼️ as exclamation', () {
+      expect(TapbackType.fromEmoji('‼️'), TapbackType.exclamation);
+      expect(TapbackType.fromEmoji('‼'), TapbackType.exclamation);
     });
 
     test('fromEmoji returns null for unknown emoji', () {
