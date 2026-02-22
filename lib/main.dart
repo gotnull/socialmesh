@@ -1169,10 +1169,17 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         case 'announcement':
           // Navigate using the deep link if provided
           if (nav.deepLink != null && nav.deepLink!.isNotEmpty) {
-            AppLogging.notifications(
-              '🔔 Announcement deep link: ${nav.deepLink}',
-            );
-            navigator.pushNamed(nav.deepLink!);
+            final link = nav.deepLink!;
+            AppLogging.notifications('🔔 Announcement deep link: $link');
+            // Only navigate if the deep link starts with '/' (internal route).
+            // External URLs or malformed values must not hit pushNamed.
+            if (link.startsWith('/')) {
+              navigator.pushNamed(link);
+            } else {
+              AppLogging.notifications(
+                '🔔 Ignoring non-route deep link: $link',
+              );
+            }
           }
           break;
 
@@ -1698,6 +1705,12 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
             }
           }
           return null;
+        },
+        onUnknownRoute: (settings) {
+          AppLogging.notifications(
+            '🔔 Unknown route: ${settings.name} — falling back to home',
+          );
+          return MaterialPageRoute(builder: (_) => const _AppRouter());
         },
       ),
     );
