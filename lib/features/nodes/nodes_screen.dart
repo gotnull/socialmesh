@@ -1203,14 +1203,13 @@ class _NodeCard extends StatelessWidget {
                   child: IgnorePointer(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        gradient: RadialGradient(
-                          center: Alignment.bottomRight,
-                          radius: 2.4,
+                        gradient: LinearGradient(
+                          begin: const Alignment(-0.2, -0.2),
+                          end: Alignment.bottomRight,
                           colors: [
-                            context.background,
                             context.background.withValues(alpha: 0),
+                            context.background.withValues(alpha: 0.85),
                           ],
-                          stops: const [0.0, 0.6],
                         ),
                       ),
                     ),

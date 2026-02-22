@@ -19,7 +19,6 @@ import firebase_core
 import firebase_crashlytics
 import firebase_messaging
 import firebase_storage
-import flutter_angle
 import flutter_app_group_directory
 import flutter_blue_plus_darwin
 import flutter_inappwebview_macos
@@ -54,7 +53,6 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   FLTFirebaseCrashlyticsPlugin.register(with: registry.registrar(forPlugin: "FLTFirebaseCrashlyticsPlugin"))
   FLTFirebaseMessagingPlugin.register(with: registry.registrar(forPlugin: "FLTFirebaseMessagingPlugin"))
   FLTFirebaseStoragePlugin.register(with: registry.registrar(forPlugin: "FLTFirebaseStoragePlugin"))
-  FlutterAnglePlugin.register(with: registry.registrar(forPlugin: "FlutterAnglePlugin"))
   FlutterAppGroupDirectoryPlugin.register(with: registry.registrar(forPlugin: "FlutterAppGroupDirectoryPlugin"))
   FlutterBluePlusPlugin.register(with: registry.registrar(forPlugin: "FlutterBluePlusPlugin"))
   InAppWebViewFlutterPlugin.register(with: registry.registrar(forPlugin: "InAppWebViewFlutterPlugin"))
