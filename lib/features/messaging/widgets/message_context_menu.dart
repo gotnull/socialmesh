@@ -40,6 +40,18 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
     with LifecycleSafeMixin {
   bool _detailsExpanded = false;
 
+  /// Quick-reaction emojis shown inline (matches Meshtastic iOS defaults).
+  static const _quickReactions = [
+    '👋',
+    '❤️',
+    '👍',
+    '👎',
+    '🤣',
+    '‼️',
+    '❓',
+    '💩',
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -162,46 +174,25 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
   }
 
   Widget _buildTapbackSection() {
-    final settingsAsync = ref.watch(settingsServiceProvider);
-
-    return settingsAsync.when(
-      data: (settings) {
-        final tapbacks = settings.enabledTapbacks;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: tapbacks
-                .map((config) => _buildTapbackButton(config))
-                .toList(),
-          ),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (e, s) => const SizedBox.shrink(),
-    );
-  }
-
-  Widget _buildTapbackButton(TapbackConfig config) {
-    return GestureDetector(
-      onTap: () => _sendTapback(config.type, config.emoji),
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: context.border.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Center(
-          child: Text(config.emoji, style: const TextStyle(fontSize: 22)),
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          for (final emoji in _quickReactions)
+            _QuickReactionButton(
+              emoji: emoji,
+              onTap: () => _sendTapback(emoji),
+            ),
+          _MoreEmojiButton(onEmojiSelected: _sendTapback),
+        ],
       ),
     );
   }
 
-  Future<void> _sendTapback(TapbackType type, String emoji) async {
+  Future<void> _sendTapback(String emoji) async {
     AppLogging.messages(
-      '🏷️ _sendTapback START: type=${type.name}, emoji=$emoji, '
+      '🏷️ _sendTapback START: emoji=$emoji, '
       'messageId=${widget.message.id}, packetId=${widget.message.packetId}',
     );
 
@@ -226,7 +217,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
     final tapback = MessageTapback(
       messageId: widget.message.id,
       fromNodeNum: myNodeNum,
-      type: type,
+      emoji: emoji,
     );
 
     // Save locally
@@ -238,8 +229,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
     // Invalidate tapbacks so UI updates for own tapback
     ref.invalidate(messageTapbacksProvider(widget.message.id));
 
-    // Send tapback message over the mesh
-    // Use the configured emoji (which may differ from TapbackType default)
+    // Send tapback emoji over the mesh
     try {
       final toNode = widget.isFromMe ? widget.message.to : widget.message.from;
       // Broadcast messages (0xFFFFFFFF) never receive ACKs, so wantAck must
@@ -415,4 +405,473 @@ Future<void> showMessageContextMenu(
       ),
     ),
   );
+}
+
+/// Tappable emoji circle for the quick-reaction row.
+class _QuickReactionButton extends StatelessWidget {
+  final String emoji;
+  final VoidCallback onTap;
+
+  const _QuickReactionButton({required this.emoji, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 36,
+        height: 36,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: context.border.withValues(alpha: 0.15),
+          shape: BoxShape.circle,
+        ),
+        child: Text(emoji, style: const TextStyle(fontSize: 20)),
+      ),
+    );
+  }
+}
+
+/// "+" button that opens a full emoji picker sheet.
+class _MoreEmojiButton extends StatelessWidget {
+  final ValueChanged<String> onEmojiSelected;
+
+  const _MoreEmojiButton({required this.onEmojiSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showEmojiPicker(context),
+      child: Container(
+        width: 36,
+        height: 36,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: context.border.withValues(alpha: 0.15),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(Icons.add, size: 20, color: context.textTertiary),
+      ),
+    );
+  }
+
+  void _showEmojiPicker(BuildContext outerContext) {
+    showModalBottomSheet<String>(
+      context: outerContext,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetCtx) => DraggableScrollableSheet(
+        initialChildSize: 0.45,
+        minChildSize: 0.3,
+        maxChildSize: 0.7,
+        builder: (_, controller) => _EmojiPickerSheet(
+          scrollController: controller,
+          onEmojiSelected: (emoji) {
+            Navigator.pop(sheetCtx, emoji);
+          },
+        ),
+      ),
+    ).then((emoji) {
+      if (emoji != null) onEmojiSelected(emoji);
+    });
+  }
+}
+
+/// Full categorized emoji grid shown in a bottom sheet.
+class _EmojiPickerSheet extends StatelessWidget {
+  final ScrollController scrollController;
+  final ValueChanged<String> onEmojiSelected;
+
+  const _EmojiPickerSheet({
+    required this.scrollController,
+    required this.onEmojiSelected,
+  });
+
+  static const _categories = <(String, List<String>)>[
+    (
+      'Smileys',
+      [
+        '😀',
+        '😃',
+        '😄',
+        '😁',
+        '😆',
+        '😅',
+        '🤣',
+        '😂',
+        '🙂',
+        '🙃',
+        '😉',
+        '😊',
+        '😇',
+        '🥰',
+        '😍',
+        '🤩',
+        '😘',
+        '😗',
+        '😚',
+        '😙',
+        '🥲',
+        '😋',
+        '😛',
+        '😜',
+        '🤪',
+        '😝',
+        '🤑',
+        '🤗',
+        '🤭',
+        '🤫',
+        '🤔',
+        '🫡',
+        '🤐',
+        '🤨',
+        '😐',
+        '😑',
+        '😶',
+        '🫥',
+        '😏',
+        '😒',
+        '🙄',
+        '😬',
+        '🤥',
+        '😌',
+        '😔',
+        '😪',
+        '🤤',
+        '😴',
+        '😷',
+        '🤒',
+        '🤕',
+        '🤢',
+        '🤮',
+        '🥴',
+        '😵',
+        '🤯',
+        '🥳',
+        '🥸',
+        '😎',
+        '🤓',
+        '🧐',
+        '😕',
+        '🫤',
+        '😟',
+        '🙁',
+        '😮',
+        '😯',
+        '😲',
+        '😳',
+        '🥺',
+        '🥹',
+        '😦',
+        '😧',
+        '😨',
+        '😰',
+        '😥',
+        '😢',
+        '😭',
+        '😱',
+        '😖',
+        '😣',
+        '😞',
+        '😓',
+        '😩',
+        '😫',
+        '🥱',
+        '😤',
+        '😡',
+        '😠',
+        '🤬',
+      ],
+    ),
+    (
+      'Gestures',
+      [
+        '👋',
+        '🤚',
+        '🖐️',
+        '✋',
+        '🖖',
+        '🫱',
+        '🫲',
+        '🫳',
+        '🫴',
+        '👌',
+        '🤌',
+        '🤏',
+        '✌️',
+        '🤞',
+        '🫰',
+        '🤟',
+        '🤘',
+        '🤙',
+        '👈',
+        '👉',
+        '👆',
+        '🖕',
+        '👇',
+        '☝️',
+        '🫵',
+        '👍',
+        '👎',
+        '✊',
+        '👊',
+        '🤛',
+        '🤜',
+        '👏',
+        '🙌',
+        '🫶',
+        '👐',
+        '🤲',
+        '🤝',
+        '🙏',
+        '💪',
+        '🦾',
+      ],
+    ),
+    (
+      'Hearts',
+      [
+        '❤️',
+        '🧡',
+        '💛',
+        '💚',
+        '💙',
+        '💜',
+        '🖤',
+        '🤍',
+        '🤎',
+        '💔',
+        '❤️‍🔥',
+        '❤️‍🩹',
+        '❣️',
+        '💕',
+        '💞',
+        '💓',
+        '💗',
+        '💖',
+        '💘',
+        '💝',
+      ],
+    ),
+    (
+      'Symbols',
+      [
+        '‼️',
+        '❓',
+        '❗',
+        '❕',
+        '❔',
+        '⭐',
+        '🌟',
+        '💫',
+        '✨',
+        '🔥',
+        '💯',
+        '💢',
+        '💥',
+        '💤',
+        '💨',
+        '🕳️',
+        '💣',
+        '💬',
+        '🗯️',
+        '💭',
+        '🎵',
+        '🎶',
+        '✅',
+        '❌',
+        '⛔',
+        '🚫',
+        '💀',
+        '☠️',
+        '🏴‍☠️',
+        '👻',
+      ],
+    ),
+    (
+      'Animals',
+      [
+        '🐶',
+        '🐱',
+        '🐭',
+        '🐹',
+        '🐰',
+        '🦊',
+        '🐻',
+        '🐼',
+        '🐨',
+        '🐯',
+        '🦁',
+        '🐮',
+        '🐷',
+        '🐸',
+        '🐵',
+        '🙈',
+        '🙉',
+        '🙊',
+        '🐔',
+        '🦄',
+        '🐝',
+        '🐛',
+        '🦋',
+        '🐌',
+        '🐞',
+        '🐙',
+        '🦑',
+        '🦀',
+        '🐡',
+        '🐠',
+      ],
+    ),
+    (
+      'Food',
+      [
+        '🍎',
+        '🍐',
+        '🍊',
+        '🍋',
+        '🍌',
+        '🍉',
+        '🍇',
+        '🍓',
+        '🫐',
+        '🍈',
+        '🍒',
+        '🍑',
+        '🥭',
+        '🍍',
+        '🥥',
+        '🥝',
+        '🍅',
+        '🥑',
+        '🌶️',
+        '🌽',
+        '🍔',
+        '🍟',
+        '🍕',
+        '🌭',
+        '🥪',
+        '🌮',
+        '🌯',
+        '🥗',
+        '🍿',
+        '🧁',
+        '🍩',
+        '🍪',
+        '🎂',
+        '🍰',
+        '🍫',
+        '🍬',
+        '🍭',
+        '☕',
+        '🍺',
+        '🍷',
+      ],
+    ),
+    (
+      'Objects',
+      [
+        '⚡',
+        '🔋',
+        '💡',
+        '🔦',
+        '🕯️',
+        '🧯',
+        '🛢️',
+        '💰',
+        '💎',
+        '🔧',
+        '🔨',
+        '⚙️',
+        '🧲',
+        '🔫',
+        '💊',
+        '🩹',
+        '🧬',
+        '🔬',
+        '🔭',
+        '📡',
+        '🛰️',
+        '🚀',
+        '🛸',
+        '🏠',
+        '⛺',
+        '🏔️',
+        '🌋',
+        '🗺️',
+        '🧭',
+        '🎯',
+      ],
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Column(
+        children: [
+          // Drag handle
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 4),
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: context.border.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          // Grid
+          Expanded(
+            child: ListView.builder(
+              controller: scrollController,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: _categories.length,
+              itemBuilder: (ctx, index) {
+                final (title, emojis) = _categories[index];
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(4, 12, 0, 6),
+                      child: Text(
+                        title,
+                        style: ctx.bodySmallStyle?.copyWith(
+                          color: ctx.textTertiary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Wrap(
+                      children: [
+                        for (final emoji in emojis)
+                          GestureDetector(
+                            onTap: () => onEmojiSelected(emoji),
+                            child: SizedBox(
+                              width: 42,
+                              height: 42,
+                              child: Center(
+                                child: Text(
+                                  emoji,
+                                  style: const TextStyle(fontSize: 24),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

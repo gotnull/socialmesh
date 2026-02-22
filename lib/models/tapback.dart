@@ -7,7 +7,7 @@ enum TapbackType {
   dislike('👎'),
   heart('❤️'),
   laugh('😂'),
-  exclamation('❗'),
+  exclamation('‼️'),
   question('❓'),
   poop('💩'),
   wave('👋');
@@ -15,11 +15,10 @@ enum TapbackType {
   const TapbackType(this.emoji);
   final String emoji;
 
-  /// Aliases for emojis that may arrive from other platforms (e.g. iOS sends
-  /// ‼️ U+203C for exclamation, which doesn't render as color emoji on Android).
+  /// Aliases for alternate emoji representations from other platforms.
   static const _aliases = <String, TapbackType>{
-    '‼️': TapbackType.exclamation, // iOS sends U+203C+FE0F
     '‼': TapbackType.exclamation, // U+203C without variation selector
+    '❗': TapbackType.exclamation, // U+2757 heavy exclamation mark
   };
 
   static TapbackType? fromEmoji(String emoji) {
@@ -131,7 +130,7 @@ class DefaultTapbacks {
     TapbackConfig(
       id: 'default_exclamation',
       type: TapbackType.exclamation,
-      emoji: '❗',
+      emoji: '‼️',
       label: 'Exclamation',
       sortOrder: 5,
     ),
@@ -152,32 +151,35 @@ class DefaultTapbacks {
   ];
 }
 
-/// Tapback reaction to a message
+/// Tapback reaction to a message.
+/// Stores the raw emoji string — no enum mapping needed for display.
 class MessageTapback {
   final String id;
   final String messageId;
   final int fromNodeNum;
-  final TapbackType type;
+  final String emoji;
   final DateTime timestamp;
 
   MessageTapback({
     String? id,
     required this.messageId,
     required this.fromNodeNum,
-    required this.type,
+    required this.emoji,
     DateTime? timestamp,
   }) : id = id ?? const Uuid().v4(),
        timestamp = timestamp ?? DateTime.now();
 
   factory MessageTapback.fromJson(Map<String, dynamic> json) {
+    // Backwards compatibility: migrate old 'type' field to raw emoji
+    final emoji =
+        json['emoji'] as String? ??
+        _typeNameToEmoji(json['type'] as String?) ??
+        '👍';
     return MessageTapback(
       id: json['id'] as String?,
       messageId: json['messageId'] as String,
       fromNodeNum: json['fromNodeNum'] as int,
-      type: TapbackType.values.firstWhere(
-        (t) => t.name == json['type'],
-        orElse: () => TapbackType.like,
-      ),
+      emoji: emoji,
       timestamp: json['timestamp'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int)
           : null,
@@ -188,9 +190,18 @@ class MessageTapback {
     'id': id,
     'messageId': messageId,
     'fromNodeNum': fromNodeNum,
-    'type': type.name,
+    'emoji': emoji,
     'timestamp': timestamp.millisecondsSinceEpoch,
   };
+
+  /// Migrate legacy TapbackType name to emoji string.
+  static String? _typeNameToEmoji(String? typeName) {
+    if (typeName == null) return null;
+    for (final t in TapbackType.values) {
+      if (t.name == typeName) return t.emoji;
+    }
+    return null;
+  }
 }
 
 /// Message thread for reply support

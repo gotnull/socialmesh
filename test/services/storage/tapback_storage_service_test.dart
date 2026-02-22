@@ -23,7 +23,7 @@ void main() {
       final tapback = MessageTapback(
         messageId: 'message1',
         fromNodeNum: 12345,
-        type: TapbackType.like,
+        emoji: '👍',
       );
 
       await service.addTapback(tapback);
@@ -32,20 +32,20 @@ void main() {
       expect(tapbacks.length, 1);
       expect(tapbacks.first.messageId, 'message1');
       expect(tapbacks.first.fromNodeNum, 12345);
-      expect(tapbacks.first.type, TapbackType.like);
+      expect(tapbacks.first.emoji, '👍');
     });
 
     test('addTapback accumulates multiple tapbacks from same user', () async {
       final tapback1 = MessageTapback(
         messageId: 'message1',
         fromNodeNum: 12345,
-        type: TapbackType.like,
+        emoji: '👍',
       );
 
       final tapback2 = MessageTapback(
         messageId: 'message1',
         fromNodeNum: 12345,
-        type: TapbackType.heart,
+        emoji: '❤️',
       );
 
       await service.addTapback(tapback1);
@@ -54,21 +54,21 @@ void main() {
       final tapbacks = await service.getTapbacksForMessage('message1');
 
       expect(tapbacks.length, 2);
-      expect(tapbacks[0].type, TapbackType.like);
-      expect(tapbacks[1].type, TapbackType.heart);
+      expect(tapbacks[0].emoji, '👍');
+      expect(tapbacks[1].emoji, '❤️');
     });
 
     test('addTapback allows different users to tapback same message', () async {
       final tapback1 = MessageTapback(
         messageId: 'message1',
         fromNodeNum: 12345,
-        type: TapbackType.like,
+        emoji: '👍',
       );
 
       final tapback2 = MessageTapback(
         messageId: 'message1',
         fromNodeNum: 67890,
-        type: TapbackType.heart,
+        emoji: '❤️',
       );
 
       await service.addTapback(tapback1);
@@ -82,7 +82,7 @@ void main() {
       final tapback = MessageTapback(
         messageId: 'message1',
         fromNodeNum: 12345,
-        type: TapbackType.like,
+        emoji: '👍',
       );
 
       await service.addTapback(tapback);
@@ -96,13 +96,13 @@ void main() {
       final tapback1 = MessageTapback(
         messageId: 'message1',
         fromNodeNum: 12345,
-        type: TapbackType.like,
+        emoji: '👍',
       );
 
       final tapback2 = MessageTapback(
         messageId: 'message1',
         fromNodeNum: 67890,
-        type: TapbackType.heart,
+        emoji: '❤️',
       );
 
       await service.addTapback(tapback1);
@@ -114,84 +114,46 @@ void main() {
       expect(tapbacks.first.fromNodeNum, 67890);
     });
 
-    test('getGroupedTapbacks groups by type', () async {
+    test('addTapback stores any emoji string', () async {
       await service.addTapback(
-        MessageTapback(
-          messageId: 'message1',
-          fromNodeNum: 111,
-          type: TapbackType.like,
-        ),
+        MessageTapback(messageId: 'message1', fromNodeNum: 111, emoji: '🦄'),
       );
       await service.addTapback(
-        MessageTapback(
-          messageId: 'message1',
-          fromNodeNum: 222,
-          type: TapbackType.like,
-        ),
-      );
-      await service.addTapback(
-        MessageTapback(
-          messageId: 'message1',
-          fromNodeNum: 333,
-          type: TapbackType.heart,
-        ),
+        MessageTapback(messageId: 'message1', fromNodeNum: 222, emoji: '‼️'),
       );
 
-      final grouped = await service.getGroupedTapbacks('message1');
-
-      expect(grouped[TapbackType.like], containsAll([111, 222]));
-      expect(grouped[TapbackType.heart], [333]);
-      expect(grouped[TapbackType.laugh], isNull);
-    });
-
-    test('getGroupedTapbacks returns empty map for no tapbacks', () async {
-      final grouped = await service.getGroupedTapbacks('nonexistent');
-      expect(grouped, isEmpty);
+      final tapbacks = await service.getTapbacksForMessage('message1');
+      expect(tapbacks.length, 2);
+      expect(tapbacks[0].emoji, '🦄');
+      expect(tapbacks[1].emoji, '‼️');
     });
 
     test('cleanupOldTapbacks removes tapbacks older than 30 days', () async {
-      // Note: This test is limited because we can't easily mock timestamps
-      // in the current implementation. It primarily verifies the method
-      // doesn't throw.
       await service.addTapback(
-        MessageTapback(
-          messageId: 'message1',
-          fromNodeNum: 12345,
-          type: TapbackType.like,
-        ),
+        MessageTapback(messageId: 'message1', fromNodeNum: 12345, emoji: '👍'),
       );
 
-      // Should not throw
       await service.cleanupOldTapbacks();
 
-      // Recent tapback should still exist
       final tapbacks = await service.getTapbacksForMessage('message1');
       expect(tapbacks.length, 1);
     });
 
     test('tapbacks are isolated by message', () async {
       await service.addTapback(
-        MessageTapback(
-          messageId: 'message1',
-          fromNodeNum: 12345,
-          type: TapbackType.like,
-        ),
+        MessageTapback(messageId: 'message1', fromNodeNum: 12345, emoji: '👍'),
       );
       await service.addTapback(
-        MessageTapback(
-          messageId: 'message2',
-          fromNodeNum: 12345,
-          type: TapbackType.heart,
-        ),
+        MessageTapback(messageId: 'message2', fromNodeNum: 12345, emoji: '❤️'),
       );
 
       final tapbacks1 = await service.getTapbacksForMessage('message1');
       final tapbacks2 = await service.getTapbacksForMessage('message2');
 
       expect(tapbacks1.length, 1);
-      expect(tapbacks1.first.type, TapbackType.like);
+      expect(tapbacks1.first.emoji, '👍');
       expect(tapbacks2.length, 1);
-      expect(tapbacks2.first.type, TapbackType.heart);
+      expect(tapbacks2.first.emoji, '❤️');
     });
   });
 }

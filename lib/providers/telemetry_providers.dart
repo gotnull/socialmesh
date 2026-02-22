@@ -446,16 +446,6 @@ final messageTapbacksProvider =
       return storage.getTapbacksForMessage(messageId);
     });
 
-/// Grouped tapbacks by type for a message (for display)
-final groupedTapbacksProvider =
-    FutureProvider.family<Map<TapbackType, List<int>>, String>((
-      ref,
-      messageId,
-    ) async {
-      final storage = await ref.watch(tapbackStorageProvider.future);
-      return storage.getGroupedTapbacks(messageId);
-    });
-
 /// Tapback actions notifier
 class TapbackActionsNotifier extends Notifier<void> {
   @override
@@ -478,7 +468,7 @@ class TapbackActionsNotifier extends Notifier<void> {
     final tapback = MessageTapback(
       messageId: messageId,
       fromNodeNum: fromNodeNum,
-      type: type,
+      emoji: type.emoji,
     );
     await _storage!.addTapback(tapback);
 

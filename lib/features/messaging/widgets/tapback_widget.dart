@@ -69,7 +69,7 @@ class _IndividualTapback extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(tapback.type.emoji, style: const TextStyle(fontSize: 20)),
+        Text(tapback.emoji, style: const TextStyle(fontSize: 20)),
         const SizedBox(height: 2),
         Text(
           shortName,

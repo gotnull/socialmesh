@@ -3053,25 +3053,17 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// message by packet ID (replyId). The [MessageTapback] record is stored
   /// via [TapbackStorageService] so that [TapbackDisplay] can render it.
   void _storeIncomingTapback(Message message) {
+    final emoji = message.text.trim();
     AppLogging.messages(
-      '🏷️ _storeIncomingTapback: text="${message.text}", '
+      '🏷️ _storeIncomingTapback: emoji="$emoji", '
       'from=${message.from}, replyId=${message.replyId}, '
       'isEmoji=${message.isEmoji}',
     );
 
-    final type = TapbackType.fromEmoji(message.text.trim());
-    if (type == null) {
-      AppLogging.messages(
-        '🏷️ _storeIncomingTapback ABORT: emoji "${message.text}" not a '
-        'recognized TapbackType. Known types: '
-        '${TapbackType.values.map((t) => '"${t.emoji}"').join(", ")}',
-      );
+    if (emoji.isEmpty) {
+      AppLogging.messages('🏷️ _storeIncomingTapback ABORT: empty emoji text');
       return;
     }
-
-    AppLogging.messages(
-      '🏷️ _storeIncomingTapback: matched TapbackType.${type.name}',
-    );
 
     // Find the original message by packetId matching the replyId
     final allPacketIds = state
@@ -3104,7 +3096,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     final tapback = MessageTapback(
       messageId: originalMessage.id,
       fromNodeNum: message.from,
-      type: type,
+      emoji: emoji,
     );
 
     // Store asynchronously — fire and forget
@@ -3115,7 +3107,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     if (storage != null) {
       storage.addTapback(tapback).then((_) {
         AppLogging.messages(
-          '🏷️ _storeIncomingTapback SUCCESS: stored ${type.emoji} from '
+          '🏷️ _storeIncomingTapback SUCCESS: stored $emoji from '
           '${message.from} on message ${originalMessage.id}',
         );
         // Invalidate the tapbacks provider so widgets rebuild

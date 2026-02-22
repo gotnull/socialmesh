@@ -33,18 +33,6 @@ class TapbackStorageService {
     await _saveTapbacks(tapbacks);
   }
 
-  /// Get grouped tapbacks by type for a message
-  Future<Map<TapbackType, List<int>>> getGroupedTapbacks(
-    String messageId,
-  ) async {
-    final tapbacks = await getTapbacksForMessage(messageId);
-    final grouped = <TapbackType, List<int>>{};
-    for (final tapback in tapbacks) {
-      grouped.putIfAbsent(tapback.type, () => []).add(tapback.fromNodeNum);
-    }
-    return grouped;
-  }
-
   Future<List<MessageTapback>> _getAllTapbacks() async {
     final jsonList = _prefs.getStringList(_tapbacksKey) ?? [];
     return jsonList

@@ -32,7 +32,7 @@ void main() {
     });
 
     test('exclamation has correct emoji', () {
-      expect(TapbackType.exclamation.emoji, '❗');
+      expect(TapbackType.exclamation.emoji, '‼️');
     });
 
     test('question has correct emoji', () {
@@ -52,15 +52,15 @@ void main() {
       expect(TapbackType.fromEmoji('👎'), TapbackType.dislike);
       expect(TapbackType.fromEmoji('❤️'), TapbackType.heart);
       expect(TapbackType.fromEmoji('😂'), TapbackType.laugh);
-      expect(TapbackType.fromEmoji('❗'), TapbackType.exclamation);
+      expect(TapbackType.fromEmoji('‼️'), TapbackType.exclamation);
       expect(TapbackType.fromEmoji('❓'), TapbackType.question);
       expect(TapbackType.fromEmoji('💩'), TapbackType.poop);
       expect(TapbackType.fromEmoji('👋'), TapbackType.wave);
     });
 
-    test('fromEmoji recognizes iOS alias ‼️ as exclamation', () {
-      expect(TapbackType.fromEmoji('‼️'), TapbackType.exclamation);
+    test('fromEmoji recognizes aliases as exclamation', () {
       expect(TapbackType.fromEmoji('‼'), TapbackType.exclamation);
+      expect(TapbackType.fromEmoji('❗'), TapbackType.exclamation);
     });
 
     test('fromEmoji returns null for unknown emoji', () {
@@ -75,13 +75,13 @@ void main() {
       final tapback = MessageTapback(
         messageId: 'msg-123',
         fromNodeNum: 456,
-        type: TapbackType.like,
+        emoji: '👍',
       );
 
       expect(tapback.id, isNotEmpty);
       expect(tapback.messageId, 'msg-123');
       expect(tapback.fromNodeNum, 456);
-      expect(tapback.type, TapbackType.like);
+      expect(tapback.emoji, '👍');
       expect(tapback.timestamp, isNotNull);
     });
 
@@ -91,14 +91,14 @@ void main() {
         id: 'tapback-id',
         messageId: 'msg-456',
         fromNodeNum: 789,
-        type: TapbackType.heart,
+        emoji: '❤️',
         timestamp: timestamp,
       );
 
       expect(tapback.id, 'tapback-id');
       expect(tapback.messageId, 'msg-456');
       expect(tapback.fromNodeNum, 789);
-      expect(tapback.type, TapbackType.heart);
+      expect(tapback.emoji, '❤️');
       expect(tapback.timestamp, timestamp);
     });
 
@@ -107,7 +107,7 @@ void main() {
         id: 'json-tapback',
         messageId: 'msg-123',
         fromNodeNum: 456,
-        type: TapbackType.laugh,
+        emoji: '😂',
       );
 
       final json = tapback.toJson();
@@ -115,16 +115,16 @@ void main() {
       expect(json['id'], 'json-tapback');
       expect(json['messageId'], 'msg-123');
       expect(json['fromNodeNum'], 456);
-      expect(json['type'], 'laugh');
+      expect(json['emoji'], '😂');
       expect(json['timestamp'], isA<int>());
     });
 
-    test('deserializes from JSON', () {
+    test('deserializes from JSON with emoji field', () {
       final json = {
         'id': 'from-json',
         'messageId': 'msg-789',
         'fromNodeNum': 321,
-        'type': 'heart',
+        'emoji': '❤️',
         'timestamp': DateTime(2024, 1, 1).millisecondsSinceEpoch,
       };
 
@@ -133,10 +133,23 @@ void main() {
       expect(tapback.id, 'from-json');
       expect(tapback.messageId, 'msg-789');
       expect(tapback.fromNodeNum, 321);
-      expect(tapback.type, TapbackType.heart);
+      expect(tapback.emoji, '❤️');
     });
 
-    test('deserializes with default type for unknown', () {
+    test('deserializes legacy type field to emoji', () {
+      final json = {
+        'id': 'legacy',
+        'messageId': 'msg-123',
+        'fromNodeNum': 456,
+        'type': 'heart',
+      };
+
+      final tapback = MessageTapback.fromJson(json);
+
+      expect(tapback.emoji, '❤️');
+    });
+
+    test('deserializes unknown legacy type to default emoji', () {
       final json = {
         'id': 'unknown-type',
         'messageId': 'msg-123',
@@ -146,7 +159,7 @@ void main() {
 
       final tapback = MessageTapback.fromJson(json);
 
-      expect(tapback.type, TapbackType.like); // defaults to like
+      expect(tapback.emoji, '👍'); // defaults to thumbs up
     });
 
     test('roundtrip JSON serialization', () {
@@ -154,7 +167,7 @@ void main() {
         id: 'roundtrip',
         messageId: 'msg-roundtrip',
         fromNodeNum: 999,
-        type: TapbackType.wave,
+        emoji: '👋',
       );
 
       final json = original.toJson();
@@ -163,7 +176,20 @@ void main() {
       expect(restored.id, original.id);
       expect(restored.messageId, original.messageId);
       expect(restored.fromNodeNum, original.fromNodeNum);
-      expect(restored.type, original.type);
+      expect(restored.emoji, original.emoji);
+    });
+
+    test('stores any arbitrary emoji string', () {
+      final tapback = MessageTapback(
+        messageId: 'msg-any',
+        fromNodeNum: 100,
+        emoji: '🦄',
+      );
+
+      final json = tapback.toJson();
+      final restored = MessageTapback.fromJson(json);
+
+      expect(restored.emoji, '🦄');
     });
   });
 
