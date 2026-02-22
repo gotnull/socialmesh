@@ -279,7 +279,11 @@ class PushNotificationService {
 
     // Try to get image URL from data payload
     final imageUrl = message.data['imageUrl'] as String?;
-    AppLogging.notifications('🔔 Foreground message imageUrl: $imageUrl');
+    final notificationType = message.data['type'] as String?;
+    final isAnnouncement = notificationType == 'announcement';
+    AppLogging.notifications(
+      '🔔 Foreground message imageUrl: $imageUrl, type: $notificationType',
+    );
 
     // Download image for attachment if available
     String? imagePath;
@@ -288,16 +292,24 @@ class PushNotificationService {
       AppLogging.notifications('🔔 Downloaded image to: $imagePath');
     }
 
-    // Build notification details with image if available
+    // Select the appropriate channel — announcements get their own channel
+    // so users can independently control notification preferences.
+    final channel = isAnnouncement ? _announcementsChannel : _socialChannel;
+
+    // Build Android notification details.
+    // Broadcast announcements use the branded icon as largeIcon only (the
+    // small coloured square beside the text). BigPictureStyle is skipped
+    // because the 512x512 icon should not be expanded full-width.
+    // Social notifications keep BigPictureStyle for photos/avatars.
     final androidDetails = AndroidNotificationDetails(
-      _socialChannel.id,
-      _socialChannel.name,
-      channelDescription: _socialChannel.description,
+      channel.id,
+      channel.name,
+      channelDescription: channel.description,
       icon: '@mipmap/ic_launcher',
       importance: Importance.high,
       priority: Priority.high,
       largeIcon: imagePath != null ? FilePathAndroidBitmap(imagePath) : null,
-      styleInformation: imagePath != null
+      styleInformation: imagePath != null && !isAnnouncement
           ? BigPictureStyleInformation(
               FilePathAndroidBitmap(imagePath),
               hideExpandedLargeIcon: false,
@@ -334,7 +346,9 @@ class PushNotificationService {
     );
   }
 
-  /// Download an image from URL and save to temp directory
+  /// Download an image from URL and save to temp directory.
+  /// The file extension is derived from the Content-Type header or the URL
+  /// path so that iOS DarwinNotificationAttachment infers the correct type.
   Future<String?> _downloadImage(String imageUrl) async {
     try {
       final response = await http
@@ -342,8 +356,9 @@ class PushNotificationService {
           .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final tempDir = await getTemporaryDirectory();
+        final ext = _imageExtension(response.headers['content-type'], imageUrl);
         final fileName =
-            'notification_${DateTime.now().millisecondsSinceEpoch}.jpg';
+            'notification_${DateTime.now().millisecondsSinceEpoch}$ext';
         final file = File('${tempDir.path}/$fileName');
         await file.writeAsBytes(response.bodyBytes);
         return file.path;
@@ -352,6 +367,28 @@ class PushNotificationService {
       AppLogging.notifications('🔔 Error downloading notification image: $e');
     }
     return null;
+  }
+
+  /// Return a file extension (with leading dot) from Content-Type or URL path.
+  static String _imageExtension(String? contentType, String url) {
+    if (contentType != null) {
+      final mime = contentType.split(';').first.trim().toLowerCase();
+      switch (mime) {
+        case 'image/png':
+          return '.png';
+        case 'image/gif':
+          return '.gif';
+        case 'image/webp':
+          return '.webp';
+        case 'image/jpeg':
+          return '.jpg';
+      }
+    }
+    final path = Uri.tryParse(url)?.path ?? '';
+    if (path.endsWith('.png')) return '.png';
+    if (path.endsWith('.gif')) return '.gif';
+    if (path.endsWith('.webp')) return '.webp';
+    return '.jpg';
   }
 
   /// Emit content refresh events based on notification type

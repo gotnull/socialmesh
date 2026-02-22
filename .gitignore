@@ -67,6 +67,7 @@ firebase-service-account.json
 /scripts/build-sprints-data.sh
 /scripts/verify_hosting_headers.sh
 /scripts/tak/
+/scripts/notification-icons/
 
 # IntelliJ related
 *.iml
