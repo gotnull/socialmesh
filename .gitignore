@@ -18,6 +18,7 @@ meshtastic-ios/
 .firebase
 android/.kotlin/sessions/
 .github/copilot-instructions.md
+/assets/screenshots/
 
 # Backend services (proprietary, not part of public repo)
 /backend/
