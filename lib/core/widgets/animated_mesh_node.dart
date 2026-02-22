@@ -885,18 +885,48 @@ class _IcosahedronPainter extends CustomPainter {
           const goldenAngle = 2.399963; // ≈ 2π / φ²
           final facePhase = faceIdx * goldenAngle;
 
-          // Slow breath — ~4-second cycle at 60 fps seed ticks
-          final timeVal = sciFiGlitchSeed * 0.028;
+          // GATE — limits active faces to ~3-4 out of 20 at any moment.
+          // _glitchSeed increments at ~60 Hz (addListener fires every frame).
+          // Gate cycle target: ~25 s → 2π / (25 × 60) ≈ 0.0042 rad/tick.
+          // 18% duty → each face active ~4.5 s every 25 s.
+          final slowTime = sciFiGlitchSeed * 0.0042;
+          final gateRaw =
+              (math.sin(facePhase * 1.31 + slowTime) + 1.0) / 2.0; // 0..1
+          const gateThreshold = 0.82; // open for top 18% of cycle
+          if (gateRaw < gateThreshold) {
+            // Face is idle — draw at baseline opacity, no displacement
+            final baseAlpha = (faceOpacity * depthFactor * 255).round().clamp(
+              0,
+              255,
+            );
+            if (baseAlpha > 0) {
+              final basePath = Path()
+                ..moveTo(fp0.dx, fp0.dy)
+                ..lineTo(fp1.dx, fp1.dy)
+                ..lineTo(fp2.dx, fp2.dy)
+                ..close();
+              canvas.drawPath(
+                basePath,
+                Paint()
+                  ..color = color.withAlpha(baseAlpha)
+                  ..style = PaintingStyle.fill,
+              );
+            }
+            continue;
+          }
+          // Smooth 0→1 ramp from threshold to 1.0
+          final gateT = (gateRaw - gateThreshold) / (1.0 - gateThreshold);
+
+          // Breath cycle target: ~5 s → 2π / (5 × 60) ≈ 0.021 rad/tick.
+          final timeVal = sciFiGlitchSeed * 0.021;
           final breath = math.sin(facePhase + timeVal); // -1..1
 
-          // Mechanical sub-beat: sharper, higher frequency accent
+          // Mechanical sub-beat: ~2.5 s cycle
           final mechRaw = math.sin(facePhase * 0.73 + timeVal * 2.1);
-          final mech =
-              math.pow(mechRaw.abs(), 0.45).toDouble() *
-              mechRaw.sign; // retains sign
+          final mech = math.pow(mechRaw.abs(), 0.45).toDouble() * mechRaw.sign;
 
-          // Blend: 70% smooth breath + 30% mechanical crunch
-          final envelope = (breath * 0.70 + mech * 0.30) * sciFiGlitch;
+          // Blend: 70% smooth breath + 30% mechanical crunch, gated
+          final envelope = (breath * 0.70 + mech * 0.30) * sciFiGlitch * gateT;
 
           // --- 3D displacement along face normal ---
           // 0.22 units ≈ 22% of sphere radius → visibly separates the fill
