@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/navigation.dart';
@@ -173,7 +174,6 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
         'Bug report submitted${id != '' ? ' (ID: $id)' : ''}.',
       );
     } catch (e) {
-      if (!mounted) return;
       String msg;
       if (e is FirebaseFunctionsException) {
         msg = e.message ?? e.toString();
@@ -182,6 +182,11 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
       } else {
         msg = '$e';
       }
+      AppLogging.bugReport('Submission failed: $msg');
+
+      if (!mounted) return;
+      // Dismiss the sheet so the user isn't stuck behind a dead modal
+      navigatorKey.currentState?.pop();
       showGlobalErrorSnackBar('Failed to send bug report: $msg');
     } finally {
       if (mounted) setState(() => _isSending = false);

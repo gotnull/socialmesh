@@ -1856,6 +1856,8 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
   bool _isLoading = false;
   bool _isUploadingAvatar = false;
   bool _isUploadingBanner = false;
+  bool _isRemovingAvatar = false;
+  bool _isRemovingBanner = false;
   bool _hasChanges = false;
 
   @override
@@ -1988,7 +1990,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
     // Capture notifier before async operation
     final notifier = ref.read(userProfileProvider.notifier);
 
-    safeSetState(() => _isUploadingAvatar = true);
+    safeSetState(() => _isRemovingAvatar = true);
     try {
       await notifier.deleteAvatar();
       if (mounted) {
@@ -2002,7 +2004,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
         backgroundColor: Colors.red,
       );
     } finally {
-      safeSetState(() => _isUploadingAvatar = false);
+      safeSetState(() => _isRemovingAvatar = false);
     }
   }
 
@@ -2072,7 +2074,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
     // Capture notifier before async operation
     final notifier = ref.read(userProfileProvider.notifier);
 
-    safeSetState(() => _isUploadingBanner = true);
+    safeSetState(() => _isRemovingBanner = true);
     try {
       await notifier.deleteBanner();
       if (mounted) {
@@ -2086,7 +2088,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
         backgroundColor: Colors.red,
       );
     } finally {
-      safeSetState(() => _isUploadingBanner = false);
+      safeSetState(() => _isRemovingBanner = false);
     }
   }
 
@@ -2707,50 +2709,46 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
                               padding: const EdgeInsets.only(top: 12),
                               child: Row(
                                 children: [
-                                  if (profile?.avatarUrl != null)
+                                  if (profile?.avatarUrl != null &&
+                                      !_isRemovingAvatar)
                                     TextButton(
-                                      onPressed: _isUploadingAvatar
+                                      onPressed:
+                                          _isUploadingAvatar ||
+                                              _isRemovingAvatar
                                           ? null
                                           : _removeAvatar,
-                                      child: _isUploadingAvatar
-                                          ? SizedBox(
-                                              width: 16,
-                                              height: 16,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: AppTheme.errorRed,
-                                              ),
-                                            )
-                                          : const Text(
-                                              'Remove Avatar',
-                                              style: TextStyle(
-                                                color: AppTheme.errorRed,
-                                                fontSize: 13,
-                                              ),
-                                            ),
+                                      child: Text(
+                                        'Remove Avatar',
+                                        style: TextStyle(
+                                          color: _isUploadingAvatar
+                                              ? AppTheme.errorRed.withValues(
+                                                  alpha: 0.4,
+                                                )
+                                              : AppTheme.errorRed,
+                                          fontSize: 13,
+                                        ),
+                                      ),
                                     ),
                                   const Spacer(),
-                                  if (profile?.bannerUrl != null)
+                                  if (profile?.bannerUrl != null &&
+                                      !_isRemovingBanner)
                                     TextButton(
-                                      onPressed: _isUploadingBanner
+                                      onPressed:
+                                          _isUploadingBanner ||
+                                              _isRemovingBanner
                                           ? null
                                           : _removeBanner,
-                                      child: _isUploadingBanner
-                                          ? SizedBox(
-                                              width: 16,
-                                              height: 16,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: AppTheme.errorRed,
-                                              ),
-                                            )
-                                          : const Text(
-                                              'Remove Banner',
-                                              style: TextStyle(
-                                                color: AppTheme.errorRed,
-                                                fontSize: 13,
-                                              ),
-                                            ),
+                                      child: Text(
+                                        'Remove Banner',
+                                        style: TextStyle(
+                                          color: _isUploadingBanner
+                                              ? AppTheme.errorRed.withValues(
+                                                  alpha: 0.4,
+                                                )
+                                              : AppTheme.errorRed,
+                                          fontSize: 13,
+                                        ),
+                                      ),
                                     ),
                                 ],
                               ),

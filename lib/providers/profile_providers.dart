@@ -493,8 +493,10 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
           try {
             final cloudUrl = await cloudSync.uploadAvatar(user.uid, imageFile);
 
-            // Update profile with cloud URL
-            final cloudUpdated = localUpdated.copyWith(
+            // Re-read current state after async upload to avoid overwriting
+            // concurrent changes (e.g. banner saved while avatar was uploading)
+            final current = state.value ?? localUpdated;
+            final cloudUpdated = current.copyWith(
               avatarUrl: cloudUrl,
               isSynced: true,
             );
@@ -508,8 +510,9 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
             // Check if content violation
             if (e.toString().contains('Content policy violation')) {
               // Delete local avatar since it violates policy
+              final current = state.value ?? localUpdated;
               await profileService.saveProfile(
-                localUpdated.copyWith(avatarUrl: null),
+                current.copyWith(avatarUrl: null),
               );
               state = AsyncValue.error(
                 'Avatar violates content policy',
@@ -589,8 +592,10 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
           try {
             final cloudUrl = await cloudSync.uploadBanner(user.uid, imageFile);
 
-            // Update profile with cloud URL
-            final cloudUpdated = localUpdated.copyWith(
+            // Re-read current state after async upload to avoid overwriting
+            // concurrent changes (e.g. avatar saved while banner was uploading)
+            final current = state.value ?? localUpdated;
+            final cloudUpdated = current.copyWith(
               bannerUrl: cloudUrl,
               isSynced: true,
             );
@@ -604,8 +609,9 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
             // Check if content violation
             if (e.toString().contains('Content policy violation')) {
               // Delete local banner since it violates policy
+              final current = state.value ?? localUpdated;
               await profileService.saveProfile(
-                localUpdated.copyWith(bannerUrl: null),
+                current.copyWith(bannerUrl: null),
               );
               state = AsyncValue.error(
                 'Banner violates content policy',
