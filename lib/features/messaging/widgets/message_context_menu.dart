@@ -235,8 +235,8 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
       '🏷️ _sendTapback: local tapback stored for message ${widget.message.id}',
     );
 
-    // Invalidate grouped tapbacks so UI updates for own tapback
-    ref.invalidate(groupedTapbacksProvider(widget.message.id));
+    // Invalidate tapbacks so UI updates for own tapback
+    ref.invalidate(messageTapbacksProvider(widget.message.id));
 
     // Send tapback message over the mesh
     // Use the configured emoji (which may differ from TapbackType default)

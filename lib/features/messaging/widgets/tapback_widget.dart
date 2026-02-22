@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../models/tapback.dart';
+import '../../../providers/app_providers.dart';
 import '../../../providers/telemetry_providers.dart';
 
-/// Widget for displaying tapback reactions on a message
+/// Widget for displaying tapback reactions on a message.
+/// Shows individual tapbacks with emoji + sender shortName (matches iOS).
 class TapbackDisplay extends ConsumerWidget {
   final String messageId;
 
@@ -13,55 +15,70 @@ class TapbackDisplay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final groupedTapbacks = ref.watch(groupedTapbacksProvider(messageId));
+    final tapbacksAsync = ref.watch(messageTapbacksProvider(messageId));
+    final nodes = ref.watch(nodesProvider);
 
-    return groupedTapbacks.when(
-      data: (grouped) {
-        if (grouped.isEmpty) return const SizedBox.shrink();
+    return tapbacksAsync.when(
+      data: (tapbacks) {
+        if (tapbacks.isEmpty) return const SizedBox.shrink();
 
-        return Wrap(
-          spacing: 4,
-          runSpacing: 4,
-          children: grouped.entries.map((entry) {
-            return _TapbackBadge(type: entry.key, count: entry.value.length);
-          }).toList(),
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+            color: Colors.white.withValues(alpha: 0.05),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (int i = 0; i < tapbacks.length; i++) ...[
+                if (i > 0) const SizedBox(width: 10),
+                _IndividualTapback(
+                  tapback: tapbacks[i],
+                  shortName: _resolveShortName(tapbacks[i].fromNodeNum, nodes),
+                ),
+              ],
+            ],
+          ),
         );
       },
       loading: () => const SizedBox.shrink(),
       error: (e, st) => const SizedBox.shrink(),
     );
   }
+
+  String _resolveShortName(int nodeNum, Map<int, dynamic> nodes) {
+    final node = nodes[nodeNum];
+    if (node != null) {
+      final shortName = node.shortName as String?;
+      if (shortName != null && shortName.isNotEmpty) return shortName;
+    }
+    return '?';
+  }
 }
 
-class _TapbackBadge extends StatelessWidget {
-  final TapbackType type;
-  final int count;
+class _IndividualTapback extends StatelessWidget {
+  final MessageTapback tapback;
+  final String shortName;
 
-  const _TapbackBadge({required this.type, required this.count});
+  const _IndividualTapback({required this.tapback, required this.shortName});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(type.emoji, style: context.bodySmallStyle),
-          if (count > 1) ...[
-            const SizedBox(width: 2),
-            Text(
-              '$count',
-              style: context.captionStyle?.copyWith(
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
-            ),
-          ],
-        ],
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(tapback.type.emoji, style: const TextStyle(fontSize: 20)),
+        const SizedBox(height: 2),
+        Text(
+          shortName,
+          style: context.captionStyle?.copyWith(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 10,
+          ),
+        ),
+      ],
     );
   }
 }

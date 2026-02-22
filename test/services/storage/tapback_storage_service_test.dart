@@ -35,7 +35,7 @@ void main() {
       expect(tapbacks.first.type, TapbackType.like);
     });
 
-    test('addTapback replaces existing tapback from same user', () async {
+    test('addTapback accumulates multiple tapbacks from same user', () async {
       final tapback1 = MessageTapback(
         messageId: 'message1',
         fromNodeNum: 12345,
@@ -53,8 +53,9 @@ void main() {
 
       final tapbacks = await service.getTapbacksForMessage('message1');
 
-      expect(tapbacks.length, 1);
-      expect(tapbacks.first.type, TapbackType.heart);
+      expect(tapbacks.length, 2);
+      expect(tapbacks[0].type, TapbackType.like);
+      expect(tapbacks[1].type, TapbackType.heart);
     });
 
     test('addTapback allows different users to tapback same message', () async {

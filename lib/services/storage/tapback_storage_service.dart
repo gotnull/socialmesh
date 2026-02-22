@@ -17,15 +17,9 @@ class TapbackStorageService {
     return allTapbacks.where((t) => t.messageId == messageId).toList();
   }
 
-  /// Add a tapback to a message
+  /// Add a tapback to a message (accumulates — same user can react multiple times)
   Future<void> addTapback(MessageTapback tapback) async {
     final tapbacks = await _getAllTapbacks();
-    // Remove existing tapback from same user on same message
-    tapbacks.removeWhere(
-      (t) =>
-          t.messageId == tapback.messageId &&
-          t.fromNodeNum == tapback.fromNodeNum,
-    );
     tapbacks.add(tapback);
     await _saveTapbacks(tapbacks);
   }

@@ -3118,10 +3118,10 @@ class MessagesNotifier extends Notifier<List<Message>> {
           '🏷️ _storeIncomingTapback SUCCESS: stored ${type.emoji} from '
           '${message.from} on message ${originalMessage.id}',
         );
-        // Invalidate the grouped tapbacks provider so widgets rebuild
-        ref.invalidate(groupedTapbacksProvider(originalMessage.id));
+        // Invalidate the tapbacks provider so widgets rebuild
+        ref.invalidate(messageTapbacksProvider(originalMessage.id));
         AppLogging.messages(
-          '🏷️ _storeIncomingTapback: invalidated groupedTapbacksProvider '
+          '🏷️ _storeIncomingTapback: invalidated messageTapbacksProvider '
           'for ${originalMessage.id}',
         );
       });
