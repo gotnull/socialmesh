@@ -280,9 +280,11 @@ class ConfiguredSplashMeshNode extends ConsumerStatefulWidget {
 
 class _ConfiguredSplashMeshNodeState
     extends ConsumerState<ConfiguredSplashMeshNode>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
+  late AnimationController _glitchController;
+  int _glitchSeed = 0;
   bool _hasAnimated = false;
 
   @override
@@ -298,11 +300,24 @@ class _ConfiguredSplashMeshNodeState
       parent: _controller,
       curve: Curves.elasticOut,
     );
+
+    // Fast tick to drive sci-fi glitch randomness for AccelerometerMeshNode
+    _glitchController =
+        AnimationController(
+          duration: const Duration(milliseconds: 100),
+          vsync: this,
+        )..addListener(() {
+          setState(() {
+            _glitchSeed++;
+          });
+        });
+    _glitchController.repeat();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _glitchController.dispose();
     super.dispose();
   }
 
@@ -387,6 +402,8 @@ class _ConfiguredSplashMeshNodeState
             stretchIntensity: config.stretchIntensity,
             showFaces: true,
             faceOpacity: 0.15,
+            sciFiGlitch: 0.7,
+            sciFiGlitchSeed: _glitchSeed,
           );
 
     return SizedBox(
@@ -847,6 +864,7 @@ class ScreenLoadingIndicator extends ConsumerWidget {
               showExpression: true,
               showFaces: true,
               faceOpacity: 0.15,
+              sciFiGlitch: true,
             ),
             if (message != null) ...[
               const SizedBox(height: 16),

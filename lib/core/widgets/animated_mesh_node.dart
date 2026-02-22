@@ -163,6 +163,13 @@ class AnimatedMeshNode extends StatefulWidget {
   /// Overall "breathing" phase for organic feel (0-1)
   final double breathePhase;
 
+  // === SCI-FI HOLOGRAPHIC GLITCH ===
+  /// Intensity of Blade Runner-style holographic face glitch (0 = off, 1 = full)
+  final double sciFiGlitch;
+
+  /// Fast-changing seed that drives per-frame glitch randomness
+  final int sciFiGlitchSeed;
+
   const AnimatedMeshNode({
     super.key,
     this.size = 48,
@@ -196,6 +203,8 @@ class AnimatedMeshNode extends StatefulWidget {
     this.tiltAngle = 0.0,
     this.edgeThicknessMult = 1.0,
     this.breathePhase = 0.0,
+    this.sciFiGlitch = 0.0,
+    this.sciFiGlitchSeed = 0,
   });
 
   /// Creates a mesh node with a preset size
@@ -450,6 +459,8 @@ class _AnimatedMeshNodeState extends State<AnimatedMeshNode>
         tiltAngle: widget.tiltAngle,
         edgeThicknessMult: widget.edgeThicknessMult,
         breathePhase: widget.breathePhase,
+        sciFiGlitch: widget.sciFiGlitch,
+        sciFiGlitchSeed: widget.sciFiGlitchSeed,
       ),
     );
 
@@ -604,6 +615,13 @@ class _IcosahedronPainter extends CustomPainter {
   /// Breathing phase for organic alive feel
   final double breathePhase;
 
+  // === SCI-FI HOLOGRAPHIC GLITCH ===
+  /// Intensity of Blade Runner-style holographic face glitch (0 = off, 1 = full)
+  final double sciFiGlitch;
+
+  /// Fast-changing seed that drives per-frame glitch randomness
+  final int sciFiGlitchSeed;
+
   _IcosahedronPainter({
     required this.gradientColors,
     required this.glowIntensity,
@@ -631,6 +649,8 @@ class _IcosahedronPainter extends CustomPainter {
     this.tiltAngle = 0.0,
     this.edgeThicknessMult = 1.0,
     this.breathePhase = 0.0,
+    this.sciFiGlitch = 0.0,
+    this.sciFiGlitchSeed = 0,
   });
 
   // Golden ratio for icosahedron
@@ -816,7 +836,8 @@ class _IcosahedronPainter extends CustomPainter {
       facesWithDepth.sort((a, b) => a.value.compareTo(b.value));
 
       for (final entry in facesWithDepth) {
-        final face = _faces[entry.key];
+        final faceIdx = entry.key;
+        final face = _faces[faceIdx];
         final fp0 = deformedPoints[face[0]];
         final fp1 = deformedPoints[face[1]];
         final fp2 = deformedPoints[face[2]];
@@ -828,20 +849,113 @@ class _IcosahedronPainter extends CustomPainter {
         final t = centroidX / size.width;
         final color = _getGradientColor(t);
 
-        final facePath = Path()
-          ..moveTo(fp0.dx, fp0.dy)
-          ..lineTo(fp1.dx, fp1.dy)
-          ..lineTo(fp2.dx, fp2.dy)
-          ..close();
+        // === FACE-NORMAL DISPLACEMENT — mechanical / biological pulse ===
+        //
+        // Why this approach:
+        //   Each face is displaced along its own 3D face normal, computed
+        //   from the already-rotated transformed points. We re-project the
+        //   displaced 3D positions and take the pixel delta so attention
+        //   offsets and touch-deformation survive untouched.
+        //
+        // Params (tune here):
+        //   _pulseAmp  — max outward displacement in normalised sphere units
+        //   _pulseFreq — rad per seed-tick (100 ms each)
+        //   _mechMix   — blend of slow breath vs. sharp mechanical sub-beat
+        //
+        // Golden-angle phase spread guarantees no two faces peak together.
+        Color drawColor = color;
+        double drawOpacity = faceOpacity * depthFactor;
+        var dfp0 = fp0, dfp1 = fp1, dfp2 = fp2;
 
-        final faceAlpha = (faceOpacity * depthFactor * 255).round().clamp(
+        if (sciFiGlitch > 0) {
+          // --- 3D face normal from cross product of transformed edges ---
+          final tp0 = transformedPoints[face[0]];
+          final tp1 = transformedPoints[face[1]];
+          final tp2 = transformedPoints[face[2]];
+          // e1 = tp1 - tp0,  e2 = tp2 - tp0
+          final e1 = _Point3D(tp1.x - tp0.x, tp1.y - tp0.y, tp1.z - tp0.z);
+          final e2 = _Point3D(tp2.x - tp0.x, tp2.y - tp0.y, tp2.z - tp0.z);
+          final faceNormal = _Point3D(
+            e1.y * e2.z - e1.z * e2.y,
+            e1.z * e2.x - e1.x * e2.z,
+            e1.x * e2.y - e1.y * e2.x,
+          ).normalized();
+
+          // --- per-face deterministic phase via golden angle ---
+          const goldenAngle = 2.399963; // ≈ 2π / φ²
+          final facePhase = faceIdx * goldenAngle;
+
+          // Slow breath — ~4-second cycle at 60 fps seed ticks
+          final timeVal = sciFiGlitchSeed * 0.028;
+          final breath = math.sin(facePhase + timeVal); // -1..1
+
+          // Mechanical sub-beat: sharper, higher frequency accent
+          final mechRaw = math.sin(facePhase * 0.73 + timeVal * 2.1);
+          final mech =
+              math.pow(mechRaw.abs(), 0.45).toDouble() *
+              mechRaw.sign; // retains sign
+
+          // Blend: 70% smooth breath + 30% mechanical crunch
+          final envelope = (breath * 0.70 + mech * 0.30) * sciFiGlitch;
+
+          // --- 3D displacement along face normal ---
+          // 0.22 units ≈ 22% of sphere radius → visibly separates the fill
+          // from the wireframe cage as the panel pushes/pulls.
+          const pulseAmp = 0.22;
+          final disp = faceNormal * (envelope * pulseAmp);
+
+          // --- delta projection: displaced 2D minus baseline 2D ---
+          // Adding this delta to existing fp0/fp1/fp2 preserves all prior
+          // transforms (attention offset, touch deformation).
+          final base0 = tp0.project(size.width, perspective);
+          final base1 = tp1.project(size.width, perspective);
+          final base2 = tp2.project(size.width, perspective);
+          final disp0 = (tp0 + disp).project(size.width, perspective);
+          final disp1 = (tp1 + disp).project(size.width, perspective);
+          final disp2 = (tp2 + disp).project(size.width, perspective);
+          dfp0 = Offset(
+            fp0.dx + disp0.dx - base0.dx,
+            fp0.dy + disp0.dy - base0.dy,
+          );
+          dfp1 = Offset(
+            fp1.dx + disp1.dx - base1.dx,
+            fp1.dy + disp1.dy - base1.dy,
+          );
+          dfp2 = Offset(
+            fp2.dx + disp2.dx - base2.dx,
+            fp2.dy + disp2.dy - base2.dy,
+          );
+
+          // --- shading: cold steel base, bleeds toward ice-blue at peak ---
+          // Positive envelope = face pushing toward viewer = brighter/cooler.
+          // normalised: 0 = fully receding, 1 = fully extended toward viewer.
+          final normalised = (envelope / sciFiGlitch + 1.0) / 2.0; // 0..1
+
+          const peakColor = Color(0xFF88DDFF); // cold steely blue
+          drawColor = Color.lerp(color, peakColor, normalised * 0.70)!;
+
+          // Opacity is INDEPENDENT of faceOpacity (which is near 0.15 and
+          // would make faces invisible). We drive it directly from the pulse:
+          // 0.30 at full recession, 0.80 at full extension.
+          drawOpacity = depthFactor * (0.30 + normalised * 0.50);
+        }
+
+        final faceAlpha = (drawOpacity.clamp(0.0, 1.0) * 255).round().clamp(
           0,
           255,
         );
+        if (faceAlpha <= 0) continue;
 
-        if (glowIntensity > 0) {
+        // Hard-edged polygonal fill — no blur, no bloom
+        final facePath = Path()
+          ..moveTo(dfp0.dx, dfp0.dy)
+          ..lineTo(dfp1.dx, dfp1.dy)
+          ..lineTo(dfp2.dx, dfp2.dy)
+          ..close();
+
+        if (sciFiGlitch <= 0 && glowIntensity > 0) {
           final faceGlowPaint = Paint()
-            ..color = color.withAlpha(
+            ..color = drawColor.withAlpha(
               (faceAlpha * 0.3 * glowIntensity).round().clamp(0, 255),
             )
             ..style = PaintingStyle.fill
@@ -850,7 +964,7 @@ class _IcosahedronPainter extends CustomPainter {
         }
 
         final facePaint = Paint()
-          ..color = color.withAlpha(faceAlpha)
+          ..color = drawColor.withAlpha(faceAlpha)
           ..style = PaintingStyle.fill;
         canvas.drawPath(facePath, facePaint);
       }
@@ -1234,7 +1348,9 @@ class _IcosahedronPainter extends CustomPainter {
         oldDelegate.attentionOffset != attentionOffset ||
         oldDelegate.tiltAngle != tiltAngle ||
         oldDelegate.edgeThicknessMult != edgeThicknessMult ||
-        oldDelegate.breathePhase != breathePhase;
+        oldDelegate.breathePhase != breathePhase ||
+        oldDelegate.sciFiGlitch != sciFiGlitch ||
+        oldDelegate.sciFiGlitchSeed != sciFiGlitchSeed;
   }
 }
 
@@ -1311,6 +1427,12 @@ class AccelerometerMeshNode extends StatefulWidget {
   /// Opacity of triangular faces (0.0 - 1.0)
   final double faceOpacity;
 
+  /// Sci-fi holographic glitch intensity (0 = off, 1 = full)
+  final double sciFiGlitch;
+
+  /// Fast-changing seed for driving glitch randomness
+  final int sciFiGlitchSeed;
+
   const AccelerometerMeshNode({
     super.key,
     this.size = 600,
@@ -1331,6 +1453,8 @@ class AccelerometerMeshNode extends StatefulWidget {
     this.stretchIntensity = 0.3,
     this.showFaces = false,
     this.faceOpacity = 0.0,
+    this.sciFiGlitch = 0.0,
+    this.sciFiGlitchSeed = 0,
   });
 
   @override
@@ -1704,6 +1828,8 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
         stretchIntensity: widget.stretchIntensity,
         showFaces: widget.showFaces,
         faceOpacity: widget.faceOpacity,
+        sciFiGlitch: widget.sciFiGlitch,
+        sciFiGlitchSeed: widget.sciFiGlitchSeed,
       ),
     );
   }

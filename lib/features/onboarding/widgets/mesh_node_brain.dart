@@ -500,6 +500,9 @@ class MeshNodeBrain extends StatefulWidget {
   /// Opacity of the filled triangular faces (0.0 = invisible, 1.0 = fully opaque)
   final double faceOpacity;
 
+  /// Enable Blade Runner-style holographic face glitch effect (sci-fi mode)
+  final bool sciFiGlitch;
+
   const MeshNodeBrain({
     super.key,
     this.size = 180,
@@ -514,6 +517,7 @@ class MeshNodeBrain extends StatefulWidget {
     this.showExpression = true,
     this.showFaces = false,
     this.faceOpacity = 0.0,
+    this.sciFiGlitch = false,
   });
 
   @override
@@ -531,6 +535,10 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
   late AnimationController _expressionController;
   late AnimationController _specialController;
   late AnimationController _spinController;
+
+  // Sci-fi glitch controller: ticks fast to drive per-frame randomness
+  AnimationController? _glitchController;
+  int _glitchSeed = 0;
 
   // Animations
   late Animation<double> _wobbleX;
@@ -613,6 +621,18 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     _spin = Tween<double>(begin: 0, end: 2 * math.pi).animate(
       CurvedAnimation(parent: _spinController, curve: Curves.elasticOut),
     );
+
+    // Sci-fi glitch: fast tick (~60fps) to advance the seed each frame
+    if (widget.sciFiGlitch) {
+      _glitchController =
+          AnimationController(
+            duration: const Duration(milliseconds: 100),
+            vsync: this,
+          )..addListener(() {
+            _glitchSeed++;
+          });
+      _glitchController!.repeat();
+    }
   }
 
   void _initializeParticles() {
@@ -635,6 +655,21 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     if (oldWidget.mood != widget.mood) {
       _updateAnimationsForMood(widget.mood);
       _triggerMoodHaptics(widget.mood);
+    }
+    // Start or stop glitch controller when sciFiGlitch flag changes
+    if (widget.sciFiGlitch && _glitchController == null) {
+      _glitchController =
+          AnimationController(
+            duration: const Duration(milliseconds: 100),
+            vsync: this,
+          )..addListener(() {
+            _glitchSeed++;
+          });
+      _glitchController!.repeat();
+    } else if (!widget.sciFiGlitch && _glitchController != null) {
+      _glitchController!.dispose();
+      _glitchController = null;
+      _glitchSeed = 0;
     }
   }
 
@@ -1182,6 +1217,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     _expressionController.dispose();
     _specialController.dispose();
     _spinController.dispose();
+    _glitchController?.dispose();
     super.dispose();
   }
 
@@ -1586,6 +1622,8 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           breathePhase: _pulse.value,
           showFaces: widget.showFaces,
           faceOpacity: widget.faceOpacity,
+          sciFiGlitch: widget.sciFiGlitch ? 0.7 : 0.0,
+          sciFiGlitchSeed: _glitchSeed,
         ),
       ),
     );
