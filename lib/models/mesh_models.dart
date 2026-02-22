@@ -115,6 +115,13 @@ class Message {
   final int? packetId; // Meshtastic packet ID for tracking delivery
   final MessageSource source; // Where the message originated from
 
+  /// Meshtastic replyId — the packet ID of the message this is replying to.
+  /// Used for tapback reactions and threaded replies.
+  final int? replyId;
+
+  /// Whether this message is an emoji tapback (data.emoji != 0 in protobuf).
+  final bool isEmoji;
+
   /// Whether the user has read this message (opened the conversation).
   /// Only meaningful for incoming messages (received == true).
   final bool read;
@@ -140,6 +147,8 @@ class Message {
     this.routingError,
     this.packetId,
     this.source = MessageSource.unknown,
+    this.replyId,
+    this.isEmoji = false,
     this.read = false,
     this.senderLongName,
     this.senderShortName,
@@ -162,6 +171,8 @@ class Message {
     RoutingError? routingError,
     int? packetId,
     MessageSource? source,
+    int? replyId,
+    bool? isEmoji,
     bool? read,
     String? senderLongName,
     String? senderShortName,
@@ -182,6 +193,8 @@ class Message {
       routingError: routingError ?? this.routingError,
       packetId: packetId ?? this.packetId,
       source: source ?? this.source,
+      replyId: replyId ?? this.replyId,
+      isEmoji: isEmoji ?? this.isEmoji,
       read: read ?? this.read,
       senderLongName: senderLongName ?? this.senderLongName,
       senderShortName: senderShortName ?? this.senderShortName,

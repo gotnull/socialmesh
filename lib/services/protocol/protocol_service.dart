@@ -2081,7 +2081,19 @@ class ProtocolService {
         senderLongName: senderLongName,
         senderShortName: senderShortName,
         senderAvatarColor: senderAvatarColor,
+        replyId: data.replyId != 0 ? data.replyId : null,
+        isEmoji: data.emoji != 0,
+        source: data.emoji != 0 ? MessageSource.tapback : MessageSource.unknown,
       );
+
+      if (message.isEmoji) {
+        AppLogging.protocol(
+          '🏷️ Incoming tapback: emoji="${message.text}", '
+          'replyId=${message.replyId}, from=${message.from}, '
+          'packetId=${message.packetId}, '
+          'data.emoji=${data.emoji}, data.replyId=${data.replyId}',
+        );
+      }
 
       _messageController.add(message);
     } catch (e) {
@@ -3187,6 +3199,11 @@ class ProtocolService {
 
     try {
       AppLogging.protocol('Sending message to $to: $text');
+      if (isEmoji) {
+        AppLogging.protocol(
+          '🏷️ Tapback send: emoji=$text, replyId=$replyId, to=$to, channel=$channel',
+        );
+      }
 
       final packetId = _generatePacketId();
 
@@ -3199,6 +3216,12 @@ class ProtocolService {
       if (replyId != null) {
         data.replyId = replyId;
       }
+
+      AppLogging.protocol(
+        '🏷️ Data fields: portnum=${data.portnum}, emoji=${data.emoji}, '
+        'replyId=${data.hasReplyId() ? data.replyId : "unset"}, '
+        'payloadLen=${data.payload.length}',
+      );
 
       final packet = MeshPacketBuilder.userPayload(
         myNodeNum: _myNodeNum!,
@@ -3232,10 +3255,19 @@ class ProtocolService {
         packetId: packetId,
         status: wantAck ? MessageStatus.pending : MessageStatus.sent,
         source: source,
+        replyId: replyId,
+        isEmoji: isEmoji,
         senderLongName: myNode?.longName,
         senderShortName: myNode?.shortName,
         senderAvatarColor: myNode?.avatarColor,
       );
+
+      if (isEmoji) {
+        AppLogging.protocol(
+          '🏷️ Tapback message object: id=${message.id}, packetId=$packetId, '
+          'replyId=${message.replyId}, isEmoji=${message.isEmoji}',
+        );
+      }
 
       _messageController.add(message);
 
@@ -3733,6 +3765,8 @@ class ProtocolService {
         packetId: packetId,
         status: wantAck ? MessageStatus.pending : MessageStatus.sent,
         source: source,
+        replyId: replyId,
+        isEmoji: isEmoji,
         senderLongName: myNode?.longName,
         senderShortName: myNode?.shortName,
         senderAvatarColor: myNode?.avatarColor,

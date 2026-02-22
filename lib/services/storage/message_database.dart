@@ -23,7 +23,7 @@ import '../../utils/text_sanitizer.dart';
 class MessageDatabase {
   static const _dbName = 'messages.db';
   static const _tableName = 'messages';
-  static const _dbVersion = 1;
+  static const _dbVersion = 2;
 
   /// Maximum messages retained per conversation (DM or channel).
   static const int maxMessagesPerConversation = 500;
@@ -61,7 +61,15 @@ class MessageDatabase {
         AppLogging.storage(
           'Upgrading messages database v$oldVersion -> v$newVersion',
         );
-        // Future migrations go here
+        if (oldVersion < 2) {
+          await db.execute(
+            'ALTER TABLE $_tableName ADD COLUMN reply_id INTEGER',
+          );
+          await db.execute(
+            'ALTER TABLE $_tableName ADD COLUMN is_emoji INTEGER NOT NULL DEFAULT 0',
+          );
+          AppLogging.storage('Added reply_id and is_emoji columns (v2)');
+        }
       },
     );
 
@@ -100,7 +108,9 @@ class MessageDatabase {
         sender_long_name TEXT,
         sender_short_name TEXT,
         sender_avatar_color INTEGER,
-        conversation_key TEXT NOT NULL
+        conversation_key TEXT NOT NULL,
+        reply_id INTEGER,
+        is_emoji INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -343,6 +353,8 @@ class MessageDatabase {
       'sender_short_name': message.senderShortName,
       'sender_avatar_color': message.senderAvatarColor,
       'conversation_key': convKey,
+      'reply_id': message.replyId,
+      'is_emoji': message.isEmoji ? 1 : 0,
     };
   }
 
@@ -370,6 +382,8 @@ class MessageDatabase {
           ? sanitizeUtf16(row['sender_short_name'] as String)
           : null,
       senderAvatarColor: row['sender_avatar_color'] as int?,
+      replyId: row['reply_id'] as int?,
+      isEmoji: (row['is_emoji'] as int?) == 1,
     );
   }
 

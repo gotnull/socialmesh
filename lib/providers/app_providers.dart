@@ -37,6 +37,7 @@ import '../features/widget_builder/storage/widget_storage_service.dart';
 import '../features/widget_builder/widget_sync_providers.dart';
 import 'cloud_sync_entitlement_providers.dart';
 import '../models/mesh_models.dart';
+import '../models/tapback.dart';
 import '../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../generated/meshtastic/mesh.pb.dart' as mesh_pb;
 import 'meshcore_providers.dart';
@@ -2692,6 +2693,18 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
       _addMessageToState(message);
       _notifyNewMessage(message);
+
+      // Auto-store incoming tapback reactions linked to the original message
+      AppLogging.messages(
+        '🏷️ Tapback check: isEmoji=${message.isEmoji}, '
+        'replyId=${message.replyId}, text="${message.text}"',
+      );
+      if (message.isEmoji && message.replyId != null) {
+        AppLogging.messages(
+          '🏷️ Incoming tapback detected — routing to _storeIncomingTapback',
+        );
+        _storeIncomingTapback(message);
+      }
     });
 
     // Listen for message push events from PushNotificationService and persist them
@@ -2730,6 +2743,12 @@ class MessagesNotifier extends Notifier<List<Message>> {
   void _notifyNewMessage(Message message) {
     AppLogging.app('_notifyNewMessage called for message from ${message.from}');
 
+    // Skip notifications for sent messages (including own tapbacks)
+    if (message.sent) {
+      AppLogging.app('Skipping notification for sent message');
+      return;
+    }
+
     // Check master notification toggle
     final settingsAsync = ref.read(settingsServiceProvider);
     final settings = settingsAsync.value;
@@ -2748,6 +2767,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
     final senderName = senderNode?.displayName ?? message.senderDisplayName;
     final senderShortName = senderNode?.shortName ?? message.senderShortName;
     AppLogging.app('Sender: $senderName');
+
+    // For tapback reactions, show a friendlier notification body
+    final notificationBody = message.isEmoji
+        ? '$senderName reacted ${message.text}'
+        : message.text;
 
     // Check if it's a channel message or direct message
     final isChannelMessage = message.channel != null && message.channel! > 0;
@@ -2790,12 +2814,15 @@ class MessagesNotifier extends Notifier<List<Message>> {
           PendingMessageNotification(
             senderName: senderName,
             senderShortName: senderShortName,
-            message: message.text,
+            message: notificationBody,
             fromNodeNum: message.from,
             channelIndex: isChannelMessage ? message.channel : null,
             channelName: channelName,
           ),
         );
+
+    // Tapback reactions should not trigger automations or IFTTT webhooks
+    if (message.isEmoji) return;
 
     // Trigger IFTTT webhook for message received
     _triggerIftttForMessage(message, senderName, isChannelMessage);
@@ -3018,6 +3045,91 @@ class MessagesNotifier extends Notifier<List<Message>> {
     state = [...state, message];
     _storage?.saveMessage(message);
     _recordMessageSignature(message);
+  }
+
+  /// Store an incoming tapback reaction linked to the original message.
+  ///
+  /// Maps the incoming emoji text to a [TapbackType] and finds the original
+  /// message by packet ID (replyId). The [MessageTapback] record is stored
+  /// via [TapbackStorageService] so that [TapbackDisplay] can render it.
+  void _storeIncomingTapback(Message message) {
+    AppLogging.messages(
+      '🏷️ _storeIncomingTapback: text="${message.text}", '
+      'from=${message.from}, replyId=${message.replyId}, '
+      'isEmoji=${message.isEmoji}',
+    );
+
+    final type = TapbackType.fromEmoji(message.text.trim());
+    if (type == null) {
+      AppLogging.messages(
+        '🏷️ _storeIncomingTapback ABORT: emoji "${message.text}" not a '
+        'recognized TapbackType. Known types: '
+        '${TapbackType.values.map((t) => '"${t.emoji}"').join(", ")}',
+      );
+      return;
+    }
+
+    AppLogging.messages(
+      '🏷️ _storeIncomingTapback: matched TapbackType.${type.name}',
+    );
+
+    // Find the original message by packetId matching the replyId
+    final allPacketIds = state
+        .where((m) => m.packetId != null)
+        .map((m) => m.packetId)
+        .toList();
+    AppLogging.messages(
+      '🏷️ _storeIncomingTapback: looking for packetId=${message.replyId} '
+      'in ${allPacketIds.length} messages with packetIds',
+    );
+
+    final originalMessage = state.firstWhereOrNull(
+      (m) => m.packetId == message.replyId,
+    );
+
+    if (originalMessage == null) {
+      AppLogging.messages(
+        '🏷️ _storeIncomingTapback ABORT: no message found with '
+        'packetId=${message.replyId}. '
+        'Available packetIds: ${allPacketIds.take(20).toList()}',
+      );
+      return;
+    }
+
+    AppLogging.messages(
+      '🏷️ _storeIncomingTapback: found original message '
+      'id=${originalMessage.id}, text="${originalMessage.text.length > 30 ? originalMessage.text.substring(0, 30) : originalMessage.text}"',
+    );
+
+    final tapback = MessageTapback(
+      messageId: originalMessage.id,
+      fromNodeNum: message.from,
+      type: type,
+    );
+
+    // Store asynchronously — fire and forget
+    final storage = ref.read(tapbackStorageProvider).value;
+    AppLogging.messages(
+      '🏷️ _storeIncomingTapback: storage=${storage != null ? "available" : "NULL"}',
+    );
+    if (storage != null) {
+      storage.addTapback(tapback).then((_) {
+        AppLogging.messages(
+          '🏷️ _storeIncomingTapback SUCCESS: stored ${type.emoji} from '
+          '${message.from} on message ${originalMessage.id}',
+        );
+        // Invalidate the grouped tapbacks provider so widgets rebuild
+        ref.invalidate(groupedTapbacksProvider(originalMessage.id));
+        AppLogging.messages(
+          '🏷️ _storeIncomingTapback: invalidated groupedTapbacksProvider '
+          'for ${originalMessage.id}',
+        );
+      });
+    } else {
+      AppLogging.messages(
+        '🏷️ _storeIncomingTapback ABORT: TapbackStorageService not available',
+      );
+    }
   }
 
   String _messageSignature(Message message) {

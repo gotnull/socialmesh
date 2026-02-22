@@ -10,6 +10,7 @@ import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/telemetry_providers.dart';
 import '../../../services/haptic_service.dart';
+import '../../../core/logging.dart';
 import '../../../utils/snackbar.dart';
 
 /// Shows a context menu for a message with tapback, reply, copy, details, and delete options
@@ -37,7 +38,6 @@ class MessageContextMenu extends ConsumerStatefulWidget {
 
 class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
     with LifecycleSafeMixin {
-  bool _tapbackExpanded = false;
   bool _detailsExpanded = false;
 
   @override
@@ -167,48 +167,14 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
     return settingsAsync.when(
       data: (settings) {
         final tapbacks = settings.enabledTapbacks;
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            InkWell(
-              onTap: () => setState(() => _tapbackExpanded = !_tapbackExpanded),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      'Tapback',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: context.textPrimary,
-                      ),
-                    ),
-                    const Spacer(),
-                    Icon(
-                      _tapbackExpanded
-                          ? Icons.keyboard_arrow_down
-                          : Icons.keyboard_arrow_right,
-                      size: 20,
-                      color: context.textTertiary,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (_tapbackExpanded) ...[
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: context.border.withValues(alpha: 0.2),
-                indent: 16,
-                endIndent: 16,
-              ),
-              ...tapbacks.map((config) => _buildTapbackItem(config)),
-            ],
-          ],
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: tapbacks
+                .map((config) => _buildTapbackButton(config))
+                .toList(),
+          ),
         );
       },
       loading: () => const SizedBox.shrink(),
@@ -216,31 +182,29 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
     );
   }
 
-  Widget _buildTapbackItem(TapbackConfig config) {
-    return InkWell(
+  Widget _buildTapbackButton(TapbackConfig config) {
+    return GestureDetector(
       onTap: () => _sendTapback(config.type, config.emoji),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Text(
-              config.emoji,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              config.label,
-              style: context.titleSmallStyle?.copyWith(
-                color: context.textPrimary,
-              ),
-            ),
-          ],
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: context.border.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Text(config.emoji, style: const TextStyle(fontSize: 22)),
         ),
       ),
     );
   }
 
   Future<void> _sendTapback(TapbackType type, String emoji) async {
+    AppLogging.messages(
+      '🏷️ _sendTapback START: type=${type.name}, emoji=$emoji, '
+      'messageId=${widget.message.id}, packetId=${widget.message.packetId}',
+    );
+
     // Capture all provider references BEFORE any async operations
     final protocol = ref.read(protocolServiceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
@@ -248,7 +212,15 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
     final haptics = ref.read(hapticServiceProvider);
     final navigator = Navigator.of(context);
 
-    if (myNodeNum == null) return;
+    if (myNodeNum == null) {
+      AppLogging.messages('🏷️ _sendTapback ABORT: myNodeNum is null');
+      return;
+    }
+
+    AppLogging.messages(
+      '🏷️ _sendTapback: myNodeNum=$myNodeNum, '
+      'storage=${storage != null ? "available" : "NULL"}',
+    );
 
     // Create local tapback record
     final tapback = MessageTapback(
@@ -259,6 +231,12 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
 
     // Save locally
     await storage?.addTapback(tapback);
+    AppLogging.messages(
+      '🏷️ _sendTapback: local tapback stored for message ${widget.message.id}',
+    );
+
+    // Invalidate grouped tapbacks so UI updates for own tapback
+    ref.invalidate(groupedTapbacksProvider(widget.message.id));
 
     // Send tapback message over the mesh
     // Use the configured emoji (which may differ from TapbackType default)
@@ -267,6 +245,11 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
       // Broadcast messages (0xFFFFFFFF) never receive ACKs, so wantAck must
       // be false to avoid the message being stuck in pending status forever.
       final isBroadcast = toNode == 0xFFFFFFFF;
+      AppLogging.messages(
+        '🏷️ _sendTapback: sending over mesh — to=$toNode, '
+        'channel=${widget.channelIndex ?? 0}, isBroadcast=$isBroadcast, '
+        'replyId=${widget.message.packetId}',
+      );
       await protocol.sendMessage(
         text: emoji,
         to: toNode,
@@ -277,6 +260,8 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
         source: MessageSource.tapback,
       );
 
+      AppLogging.messages('🏷️ _sendTapback: mesh send SUCCESS');
+
       // Check mounted after await before any UI operations
       if (!mounted) return;
 
@@ -284,6 +269,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
       navigator.pop();
       showSuccessSnackBar(context, 'Tapback sent');
     } catch (e) {
+      AppLogging.messages('🏷️ _sendTapback: mesh send FAILED: $e');
       if (!mounted) return;
 
       navigator.pop();

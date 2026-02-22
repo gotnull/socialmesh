@@ -38,6 +38,7 @@ import '../settings/device_management_screen.dart';
 import '../nodes/nodes_screen.dart';
 import '../navigation/main_shell.dart';
 import 'widgets/message_context_menu.dart';
+import 'widgets/tapback_widget.dart';
 import '../../core/widgets/loading_indicator.dart';
 
 /// Conversation type enum
@@ -1590,6 +1591,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
                         return _MessageBubble(
                           message: message,
+                          allMessages: filteredMessages,
                           isFromMe: isFromMe,
                           senderName: senderName,
                           senderShortName: senderShortName,
@@ -1710,6 +1712,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
 class _MessageBubble extends StatelessWidget {
   final Message message;
+  final List<Message> allMessages;
   final bool isFromMe;
   final String senderName;
   final String senderShortName;
@@ -1725,6 +1728,7 @@ class _MessageBubble extends StatelessWidget {
 
   const _MessageBubble({
     required this.message,
+    required this.allMessages,
     required this.isFromMe,
     required this.senderName,
     required this.senderShortName,
@@ -1851,6 +1855,74 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
+  /// Find the original message referenced by replyId
+  Message? _findReplyMessage() {
+    if (message.replyId == null) return null;
+    for (final m in allMessages) {
+      if (m.packetId == message.replyId) return m;
+    }
+    return null;
+  }
+
+  /// Build a reply quote block showing the original message
+  Widget _buildReplyQuote(BuildContext context, {bool sentByMe = false}) {
+    final replyMessage = _findReplyMessage();
+    if (replyMessage == null && message.replyId == null) {
+      return const SizedBox.shrink();
+    }
+
+    final replyText = replyMessage?.text ?? 'Original message';
+    final truncated = replyText.length > 60
+        ? '${replyText.substring(0, 60)}...'
+        : replyText;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: sentByMe
+            ? Colors.white.withValues(alpha: 0.15)
+            : context.textTertiary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border(
+          left: BorderSide(
+            color: sentByMe
+                ? Colors.white.withValues(alpha: 0.5)
+                : context.accentColor.withValues(alpha: 0.5),
+            width: 3,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.reply,
+            size: 14,
+            color: sentByMe
+                ? Colors.white.withValues(alpha: 0.7)
+                : context.textTertiary,
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              truncated,
+              style: TextStyle(
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+                color: sentByMe
+                    ? Colors.white.withValues(alpha: 0.7)
+                    : context.textTertiary,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final timeFormat = DateFormat('h:mm a');
@@ -1900,6 +1972,10 @@ class _MessageBubble extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
+                          if (message.replyId != null) ...[
+                            _buildReplyQuote(context, sentByMe: true),
+                            const SizedBox(height: 6),
+                          ],
                           Text(
                             message.text,
                             style: Theme.of(context).textTheme.bodyMedium
@@ -1953,6 +2029,10 @@ class _MessageBubble extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 2, right: 8),
+              child: TapbackDisplay(messageId: message.id),
             ),
             if (isFailed) ...[
               const SizedBox(height: 4),
@@ -2045,66 +2125,79 @@ class _MessageBubble extends StatelessWidget {
               ),
             ),
           Flexible(
-            child: GestureDetector(
-              onLongPress: () => _showContextMenu(context),
-              child: Container(
-                margin: const EdgeInsets.only(right: 64),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (showSender) ...[
-                      GestureDetector(
-                        onTap: onSenderTap,
-                        child: Text(
-                          senderName,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: _getAvatarColor(),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                    ],
-                    Text(
-                      message.text,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: context.textPrimary,
-                      ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onLongPress: () => _showContextMenu(context),
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 64),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
                     ),
-                    const SizedBox(height: 2),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (isEncrypted) ...[
-                          Icon(
-                            Icons.lock,
-                            size: 10,
-                            color: context.textTertiary,
+                        if (showSender) ...[
+                          GestureDetector(
+                            onTap: onSenderTap,
+                            child: Text(
+                              senderName,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: _getAvatarColor(),
+                              ),
+                            ),
                           ),
-                          SizedBox(width: 3),
+                          SizedBox(height: 2),
+                        ],
+                        if (message.replyId != null) ...[
+                          _buildReplyQuote(context),
+                          const SizedBox(height: 6),
                         ],
                         Text(
-                          timeFormat.format(message.timestamp),
+                          message.text,
                           style: TextStyle(
-                            fontSize: 11,
-                            color: context.textTertiary,
+                            fontSize: 15,
+                            color: context.textPrimary,
                           ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isEncrypted) ...[
+                              Icon(
+                                Icons.lock,
+                                size: 10,
+                                color: context.textTertiary,
+                              ),
+                              SizedBox(width: 3),
+                            ],
+                            Text(
+                              timeFormat.format(message.timestamp),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: context.textTertiary,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2, left: 4),
+                  child: TapbackDisplay(messageId: message.id),
+                ),
+              ],
             ),
           ),
         ],
