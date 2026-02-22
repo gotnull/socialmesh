@@ -13,7 +13,7 @@ import '../../../core/widgets/status_banner.dart';
 import '../../../utils/snackbar.dart';
 
 /// Filter modes for the user list.
-enum _UserFilter { all, paying, free, excluded, anonymous }
+enum _UserFilter { all, paying, free, excluded, anonymous, deleted }
 
 /// Product prices in AUD for revenue calculation
 /// These should match RevenueCat product prices
@@ -336,6 +336,7 @@ class _UserPurchasesAdminScreenState
               purchases: purchases,
               createdAt: (entData['created_at'] as Timestamp?)?.toDate(),
               isAnonymous: entUserId.startsWith(r'$RCAnonymousID'),
+              isDeleted: !entUserId.startsWith(r'$RCAnonymousID'),
             ),
           );
         }
@@ -374,6 +375,8 @@ class _UserPurchasesAdminScreenState
           if (!_excludedUserIds.contains(user.userId)) return false;
         case _UserFilter.anonymous:
           if (!user.isAnonymous) return false;
+        case _UserFilter.deleted:
+          if (!user.isDeleted) return false;
       }
 
       // Then apply text search
@@ -399,6 +402,8 @@ class _UserPurchasesAdminScreenState
         return _excludedCount;
       case _UserFilter.anonymous:
         return _users.where((u) => u.isAnonymous).length;
+      case _UserFilter.deleted:
+        return _users.where((u) => u.isDeleted).length;
     }
   }
 
@@ -614,6 +619,10 @@ class _UserPurchasesAdminScreenState
                   ],
                   const SizedBox(width: 8),
                   _buildFilterChip(context, _UserFilter.anonymous, 'Anonymous'),
+                  if (_users.any((u) => u.isDeleted)) ...[
+                    const SizedBox(width: 8),
+                    _buildFilterChip(context, _UserFilter.deleted, 'Deleted'),
+                  ],
                 ],
               ),
             ),
@@ -689,6 +698,7 @@ class _UserPurchasesAdminScreenState
                 user: user,
                 onTap: () => _showUserDetail(user),
                 isExcluded: isExcluded,
+                isDeleted: user.isDeleted,
                 onToggleExclude: user.purchases.isNotEmpty
                     ? () {
                         HapticFeedback.selectionClick();
@@ -862,12 +872,14 @@ class _UserTile extends StatelessWidget {
   final _UserWithPurchases user;
   final VoidCallback onTap;
   final bool isExcluded;
+  final bool isDeleted;
   final VoidCallback? onToggleExclude;
 
   const _UserTile({
     required this.user,
     required this.onTap,
     this.isExcluded = false,
+    this.isDeleted = false,
     this.onToggleExclude,
   });
 
@@ -876,7 +888,7 @@ class _UserTile extends StatelessWidget {
     final hasPurchases = user.purchases.isNotEmpty;
 
     return Opacity(
-      opacity: isExcluded ? 0.45 : 1.0,
+      opacity: isExcluded || isDeleted ? 0.35 : 1.0,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Material(
@@ -936,6 +948,27 @@ class _UserTile extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: Colors.orange.shade700,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                            if (isDeleted) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  'Deleted',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.red.shade700,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -1151,6 +1184,31 @@ class _UserDetailSheet extends StatelessWidget {
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.orange.shade700,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                    if (user.isDeleted) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'Deleted',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.red.shade700,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -1527,6 +1585,7 @@ class _UserWithPurchases {
   final List<_Purchase> purchases;
   final DateTime? createdAt;
   final bool isAnonymous;
+  final bool isDeleted;
 
   _UserWithPurchases({
     required this.userId,
@@ -1537,6 +1596,7 @@ class _UserWithPurchases {
     required this.purchases,
     this.createdAt,
     this.isAnonymous = false,
+    this.isDeleted = false,
   });
 }
 
