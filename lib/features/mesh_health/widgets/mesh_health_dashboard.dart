@@ -5,13 +5,20 @@
 // and detected issues. Uses Riverpod for state management.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../services/mesh_health/mesh_health_models.dart';
 import '../../../services/mesh_health/mesh_health_providers.dart';
+import 'mesh_health_battery_reminder.dart';
+
+/// SharedPreferences key — when true the back-button reminder is suppressed.
+const _backReminderDismissedKey = 'mesh_health_back_reminder_dismissed';
 
 /// Main mesh health dashboard widget
 class MeshHealthDashboard extends ConsumerWidget {
@@ -21,53 +28,168 @@ class MeshHealthDashboard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final healthState = ref.watch(meshHealthProvider);
 
-    return HelpTourController(
-      topicId: 'mesh_health_overview',
-      stepKeys: const {},
-      child: GlassScaffold(
-        title: 'Mesh Health',
-        actions: [
-          IconButton(
-            icon: Icon(
-              healthState.isMonitoring ? Icons.pause : Icons.play_arrow,
-              color: healthState.isMonitoring
-                  ? const Color(0xFF00E5FF)
-                  : context.textSecondary,
+    return PopScope(
+      canPop: !healthState.isMonitoring,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final navigator = Navigator.of(context);
+        final prefs = await SharedPreferences.getInstance();
+        final dismissed = prefs.getBool(_backReminderDismissedKey) ?? false;
+        if (dismissed) {
+          navigator.pop();
+          return;
+        }
+        if (!context.mounted) return;
+        await _showBatteryReminder(context, ref, navigator, prefs);
+      },
+      child: HelpTourController(
+        topicId: 'mesh_health_overview',
+        stepKeys: const {},
+        child: GlassScaffold(
+          title: 'Mesh Health',
+          actions: [
+            IconButton(
+              icon: Icon(
+                healthState.isMonitoring ? Icons.pause : Icons.play_arrow,
+                color: healthState.isMonitoring
+                    ? const Color(0xFF00E5FF)
+                    : context.textSecondary,
+              ),
+              tooltip: healthState.isMonitoring ? 'Pause' : 'Resume',
+              onPressed: () {
+                ref.read(meshHealthProvider.notifier).toggleMonitoring();
+              },
             ),
-            tooltip: healthState.isMonitoring ? 'Pause' : 'Resume',
-            onPressed: () {
-              ref.read(meshHealthProvider.notifier).toggleMonitoring();
-            },
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Reset Data',
+              onPressed: () {
+                ref.read(meshHealthProvider.notifier).reset();
+              },
+            ),
+            IcoHelpAppBarButton(topicId: 'mesh_health_overview'),
+          ],
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  const MeshHealthBatteryReminder(),
+                  _buildStatusHeader(healthState),
+                  const SizedBox(height: 16),
+                  _buildMetricsRow(healthState),
+                  const SizedBox(height: 16),
+                  _buildUtilizationChart(healthState),
+                  const SizedBox(height: 16),
+                  _buildIssuesSection(healthState),
+                  const SizedBox(height: 16),
+                  _buildTopContributors(healthState),
+                ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showBatteryReminder(
+    BuildContext context,
+    WidgetRef ref,
+    NavigatorState navigator,
+    SharedPreferences prefs,
+  ) async {
+    HapticFeedback.lightImpact();
+    final result = await AppBottomSheet.show<String>(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 8),
+          Icon(
+            Icons.battery_alert_rounded,
+            size: 40,
+            color: AppTheme.warningYellow,
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Reset Data',
-            onPressed: () {
-              ref.read(meshHealthProvider.notifier).reset();
-            },
+          const SizedBox(height: 12),
+          Text(
+            'Monitoring is still active',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: context.textPrimary,
+            ),
           ),
-          IcoHelpAppBarButton(topicId: 'mesh_health_overview'),
-        ],
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _buildStatusHeader(healthState),
-                const SizedBox(height: 16),
-                _buildMetricsRow(healthState),
-                const SizedBox(height: 16),
-                _buildUtilizationChart(healthState),
-                const SizedBox(height: 16),
-                _buildIssuesSection(healthState),
-                const SizedBox(height: 16),
-                _buildTopContributors(healthState),
-              ]),
+          const SizedBox(height: 6),
+          Text(
+            'Mesh Health monitoring uses extra battery while '
+            'running in the background.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: context.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => Navigator.pop(context, 'pause'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.warningYellow,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Pause & Leave',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => Navigator.pop(context, 'keep'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: context.textSecondary,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                side: BorderSide(color: context.border.withValues(alpha: 0.3)),
+              ),
+              child: const Text(
+                'Keep Running',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'dismiss'),
+            child: Text(
+              "Don't remind me again",
+              style: TextStyle(fontSize: 12, color: context.textTertiary),
             ),
           ),
         ],
       ),
     );
+
+    if (result == 'pause') {
+      ref.read(meshHealthProvider.notifier).stopMonitoring();
+      navigator.pop();
+    } else if (result == 'keep') {
+      navigator.pop();
+    } else if (result == 'dismiss') {
+      await prefs.setBool(_backReminderDismissedKey, true);
+      navigator.pop();
+    }
   }
 
   Widget _buildStatusHeader(MeshHealthState state) {

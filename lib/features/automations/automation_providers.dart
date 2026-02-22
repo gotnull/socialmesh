@@ -130,10 +130,13 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
     onSendToChannel: (channelIndex, message) async {
       try {
         // Channel 0 is broadcast, send to all nodes
+        // Broadcast messages never receive ACKs, so wantAck must be false
+        // to avoid the message being stuck in pending status forever.
         await protocol.sendMessage(
           text: message,
           to: 0xFFFFFFFF, // Broadcast address
           channel: channelIndex,
+          wantAck: false,
           source: MessageSource.automation,
         );
         return true;

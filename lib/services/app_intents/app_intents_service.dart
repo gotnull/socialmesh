@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../features/automations/automation_providers.dart';
 import '../../features/automations/models/automation.dart';
@@ -139,11 +140,14 @@ class AppIntentsService {
       throw Exception('Not connected to a node');
     }
 
+    final messageId = const Uuid().v4();
     final protocol = _ref.read(protocolServiceProvider);
     await protocol.sendMessage(
       text: message,
       to: nodeNum,
       channel: 0,
+      wantAck: true,
+      messageId: messageId,
       source: MessageSource.siri,
     );
 
@@ -175,13 +179,18 @@ class AppIntentsService {
       throw Exception('Not connected to a node');
     }
 
+    final messageId = const Uuid().v4();
     final protocol = _ref.read(protocolServiceProvider);
 
-    // Send to broadcast address (0xFFFFFFFF) on the specified channel
+    // Send to broadcast address (0xFFFFFFFF) on the specified channel.
+    // Broadcast messages never receive ACKs, so wantAck must be false
+    // to avoid the message being stuck in pending status forever.
     await protocol.sendMessage(
       text: message,
       to: 0xFFFFFFFF,
       channel: channelIndex,
+      wantAck: false,
+      messageId: messageId,
       source: MessageSource.siri,
     );
 

@@ -264,11 +264,14 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
     // Use the configured emoji (which may differ from TapbackType default)
     try {
       final toNode = widget.isFromMe ? widget.message.to : widget.message.from;
+      // Broadcast messages (0xFFFFFFFF) never receive ACKs, so wantAck must
+      // be false to avoid the message being stuck in pending status forever.
+      final isBroadcast = toNode == 0xFFFFFFFF;
       await protocol.sendMessage(
         text: emoji,
         to: toNode,
         channel: widget.channelIndex ?? 0,
-        wantAck: true,
+        wantAck: !isBroadcast,
         isEmoji: true,
         replyId: widget.message.packetId,
         source: MessageSource.tapback,

@@ -96,13 +96,30 @@ class Mesh3DStatsCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: context.card.withValues(alpha: 0.85),
+              gradient: LinearGradient(
+                colors: [
+                  context.card.withValues(alpha: 0.85),
+                  context.accentColor.withValues(alpha: 0.06),
+                ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: context.border.withValues(alpha: 0.25)),
+              border: Border.all(
+                color: context.border.withValues(alpha: 0.2),
+                width: 0.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [

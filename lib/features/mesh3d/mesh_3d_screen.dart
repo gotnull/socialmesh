@@ -22,7 +22,7 @@
 
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
+import 'dart:ui';
 
 import 'package:ditredi/ditredi.dart';
 import 'package:flutter/material.dart';
@@ -70,7 +70,6 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
 
   Mesh3DViewMode _currentMode = Mesh3DViewMode.topology;
   Mesh3DNodeFilter _nodeFilter = Mesh3DNodeFilter.all;
-  bool _showLabels = true;
   bool _autoRotate = false;
   bool _showConnections = true;
   final double _connectionQualityThreshold = 0.0;
@@ -368,8 +367,6 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
               switch (value) {
                 case 'connections':
                   safeSetState(() => _showConnections = !_showConnections);
-                case 'labels':
-                  safeSetState(() => _showLabels = !_showLabels);
                 case 'rotate':
                   _toggleAutoRotate();
                 case 'help':
@@ -393,15 +390,6 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
-              PopupMenuItem(
-                value: 'labels',
-                child: ListTile(
-                  leading: Icon(_showLabels ? Icons.label : Icons.label_off),
-                  title: Text(_showLabels ? 'Hide Labels' : 'Show Labels'),
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
               PopupMenuItem(
                 value: 'rotate',
                 child: ListTile(
@@ -441,15 +429,6 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    // Pre-compute positions + projections for labels.
-                    final nodePositions =
-                        Mesh3DFigureBuilder.calculatePositions(
-                          mode: _currentMode,
-                          nodes: nodes,
-                          myNodeNum: myNodeNum,
-                          presenceMap: _presenceMap,
-                        );
-
                     return Stack(
                       children: [
                         // 3D viewport with tap detection.
@@ -481,31 +460,6 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
                             ),
                           ),
                         ),
-
-                        // 2D node label overlay — projects 3D positions
-                        // to screen coordinates and renders name labels.
-                        if (_showLabels && nodes.isNotEmpty)
-                          Positioned.fill(
-                            child: IgnorePointer(
-                              child: CustomPaint(
-                                // Use the DiTreDi controller as the repaint
-                                // listenable so the label overlay repaints
-                                // on drag/zoom without a full widget rebuild.
-                                painter: _NodeLabelPainter(
-                                  repaintListenable: _controller,
-                                  nodes: nodes,
-                                  positions: nodePositions,
-                                  myNodeNum: myNodeNum,
-                                  selectedNodeNum: _selectedNodeNum,
-                                  presenceMap: _presenceMap,
-                                  diController: _controller,
-                                  textPrimary: context.textPrimary,
-                                  accentColor: context.accentColor,
-                                  cardColor: context.card,
-                                ),
-                              ),
-                            ),
-                          ),
 
                         // Node count badge (top-left, map-screen style).
                         if (!_showNodeList)
@@ -542,12 +496,22 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
                             left: 16,
                             right: 16,
                             bottom: 16 + bottomPadding,
-                            child: NodeInfoCard(
-                              node: allNodes[_selectedNodeNum]!,
-                              isMyNode: _selectedNodeNum == myNodeNum,
-                              compact: true,
-                              onClose: () =>
-                                  safeSetState(() => _selectedNodeNum = null),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(
+                                  sigmaX: 16,
+                                  sigmaY: 16,
+                                ),
+                                child: NodeInfoCard(
+                                  node: allNodes[_selectedNodeNum]!,
+                                  isMyNode: _selectedNodeNum == myNodeNum,
+                                  compact: true,
+                                  onClose: () => safeSetState(
+                                    () => _selectedNodeNum = null,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
 
@@ -673,212 +637,6 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
 }
 
 // =============================================================================
-// _NodeLabelPainter — projects 3D node positions to 2D and draws name labels
-// =============================================================================
-
-class _NodeLabelPainter extends CustomPainter {
-  final Map<int, MeshNode> nodes;
-  final Map<int, vector.Vector3> positions;
-  final int? myNodeNum;
-  final int? selectedNodeNum;
-  final Map<int, NodePresence> presenceMap;
-  final DiTreDiController diController;
-  final Color textPrimary;
-  final Color accentColor;
-  final Color cardColor;
-
-  _NodeLabelPainter({
-    required Listenable repaintListenable,
-    required this.nodes,
-    required this.positions,
-    required this.myNodeNum,
-    required this.selectedNodeNum,
-    required this.presenceMap,
-    required this.diController,
-    required this.textPrimary,
-    required this.accentColor,
-    required this.cardColor,
-  }) : super(repaint: repaintListenable);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (positions.isEmpty) return;
-
-    final rotX = diController.rotationX * math.pi / 180;
-    final rotY = diController.rotationY * math.pi / 180;
-    final scale = diController.scale;
-    final cosX = math.cos(rotX);
-    final sinX = math.sin(rotX);
-    final cosY = math.cos(rotY);
-    final sinY = math.sin(rotY);
-
-    // Collect projected labels with their z-depth for back-to-front ordering.
-    final labels = <_ProjectedLabel>[];
-
-    for (final entry in positions.entries) {
-      final node = nodes[entry.key];
-      if (node == null) continue;
-
-      final pos3D = entry.value;
-
-      // Apply camera rotation (same math as tap detection).
-      var x = pos3D.x * cosY - pos3D.z * sinY;
-      final z = pos3D.x * sinY + pos3D.z * cosY;
-      var y = pos3D.y;
-      final newY = y * cosX - z * sinX;
-      final newZ = y * sinX + z * cosX;
-      y = newY;
-
-      // Orthographic projection: normalised coords (-1..1) -> pixel coords.
-      final screenX = (x * scale * 0.1 + 1) / 2 * size.width;
-      final screenY = (-y * scale * 0.1 + 1) / 2 * size.height;
-
-      // Skip labels that project off-screen.
-      if (screenX < -40 ||
-          screenX > size.width + 40 ||
-          screenY < -20 ||
-          screenY > size.height + 20) {
-        continue;
-      }
-
-      final isMyNode = entry.key == myNodeNum;
-      final isSelected = entry.key == selectedNodeNum;
-
-      // Build a short display string.
-      String label;
-      if (isMyNode) {
-        label = 'Me';
-      } else if (node.shortName != null && node.shortName!.isNotEmpty) {
-        label = node.shortName!;
-      } else {
-        label =
-            '!${node.nodeNum.toRadixString(16).padLeft(4, '0').toUpperCase()}';
-      }
-
-      labels.add(
-        _ProjectedLabel(
-          screenX: screenX,
-          screenY: screenY,
-          depth: newZ,
-          label: label,
-          isMyNode: isMyNode,
-          isSelected: isSelected,
-        ),
-      );
-    }
-
-    // Sort front-to-back so nearer labels paint on top.
-    labels.sort((a, b) => a.depth.compareTo(b.depth));
-
-    // Limit visible labels to avoid clutter — show the nearest N.
-    final maxLabels = labels.length <= 24 ? labels.length : 24;
-    final visibleLabels = labels.take(maxLabels).toList();
-
-    // Paint each label as a compact pill with text.
-    final bgPaint = Paint();
-    final borderPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.5;
-
-    for (final lbl in visibleLabels) {
-      // Fade labels that are further away.
-      final depthRange = labels.last.depth - labels.first.depth;
-      final depthNorm = depthRange > 0
-          ? ((lbl.depth - labels.first.depth) / depthRange).clamp(0.0, 1.0)
-          : 0.0;
-      final opacity = lbl.isSelected ? 1.0 : (1.0 - depthNorm * 0.5);
-
-      final textColor = lbl.isMyNode
-          ? accentColor
-          : textPrimary.withValues(alpha: opacity * 0.95);
-
-      // Build text.
-      final textSpan = ui.TextStyle(
-        color: textColor,
-        fontSize: lbl.isSelected ? 11.0 : 10.0,
-        fontWeight: lbl.isMyNode || lbl.isSelected
-            ? FontWeight.w700
-            : FontWeight.w500,
-      );
-
-      final paragraphBuilder =
-          ui.ParagraphBuilder(
-              ui.ParagraphStyle(
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                ellipsis: '..',
-              ),
-            )
-            ..pushStyle(textSpan)
-            ..addText(lbl.label);
-
-      final paragraph = paragraphBuilder.build()
-        ..layout(const ui.ParagraphConstraints(width: 80));
-
-      final textWidth = paragraph.longestLine;
-      final textHeight = paragraph.height;
-
-      // Pill background.
-      const hPad = 5.0;
-      const vPad = 2.0;
-      const nodeOffsetY = 16.0; // Shift label below the node centre.
-
-      final pillRect = RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(lbl.screenX, lbl.screenY + nodeOffsetY),
-          width: textWidth + hPad * 2,
-          height: textHeight + vPad * 2,
-        ),
-        const Radius.circular(6),
-      );
-
-      bgPaint.color = cardColor.withValues(alpha: opacity * 0.75);
-      borderPaint.color = (lbl.isSelected ? accentColor : textPrimary)
-          .withValues(alpha: opacity * 0.2);
-
-      canvas.drawRRect(pillRect, bgPaint);
-      canvas.drawRRect(pillRect, borderPaint);
-
-      // Draw text centred in pill.
-      canvas.drawParagraph(
-        paragraph,
-        Offset(
-          lbl.screenX - textWidth / 2,
-          lbl.screenY + nodeOffsetY - textHeight / 2,
-        ),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _NodeLabelPainter oldDelegate) {
-    // Rotation/scale changes are handled by the repaint listenable.
-    // shouldRepaint covers data changes (node selection, node count).
-    return selectedNodeNum != oldDelegate.selectedNodeNum ||
-        nodes.length != oldDelegate.nodes.length ||
-        positions.length != oldDelegate.positions.length;
-  }
-}
-
-class _ProjectedLabel {
-  final double screenX;
-  final double screenY;
-  final double depth;
-  final String label;
-  final bool isMyNode;
-  final bool isSelected;
-
-  const _ProjectedLabel({
-    required this.screenX,
-    required this.screenY,
-    required this.depth,
-    required this.label,
-    required this.isMyNode,
-    required this.isSelected,
-  });
-}
-
-// =============================================================================
 // _NodeCountBadge — glass-styled node count pill
 // =============================================================================
 
@@ -899,52 +657,65 @@ class _NodeCountBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: context.card.withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: context.border.withValues(alpha: 0.3)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: context.card.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: context.border.withValues(alpha: 0.2),
+                width: 0.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: AppTheme.successGreen,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.successGreen.withValues(alpha: 0.4),
-                    blurRadius: 4,
-                    spreadRadius: 1,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: AppTheme.successGreen,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.successGreen.withValues(alpha: 0.4),
+                        blurRadius: 4,
+                        spreadRadius: 1,
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isFiltered
+                      ? '$filteredCount/$totalCount nodes'
+                      : '$filteredCount nodes',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.chevron_right,
+                  size: 16,
+                  color: context.textTertiary,
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Text(
-              isFiltered
-                  ? '$filteredCount/$totalCount nodes'
-                  : '$filteredCount nodes',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Icon(Icons.chevron_right, size: 16, color: context.textTertiary),
-          ],
+          ),
         ),
       ),
     );

@@ -118,18 +118,40 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
       messagesNotifier.addMessage(pendingMessage);
 
       // Send via protocol
-      await protocol.sendMessageWithPreTracking(
-        text: messageText,
-        to: targetAddress,
-        channel: 0,
-        wantAck: true,
-        messageId: messageId,
-        onPacketIdGenerated: (id) {
-          messagesNotifier.trackPacket(id, messageId);
-        },
-      );
+      final isBroadcast = targetAddress == broadcastAddress;
+      int packetId;
+      if (isBroadcast) {
+        // Broadcast messages never receive ACKs, so wantAck must be false
+        // to avoid the message being stuck in pending status forever.
+        packetId = await protocol.sendMessage(
+          text: messageText,
+          to: targetAddress,
+          channel: 0,
+          wantAck: false,
+          messageId: messageId,
+        );
+      } else {
+        packetId = await protocol.sendMessageWithPreTracking(
+          text: messageText,
+          to: targetAddress,
+          channel: 0,
+          wantAck: true,
+          messageId: messageId,
+          onPacketIdGenerated: (id) {
+            messagesNotifier.trackPacket(id, messageId);
+          },
+        );
+      }
 
       if (!mounted) return;
+
+      // Update optimistic pending message to sent with packet ID.
+      // Broadcast: final status (no ACK expected).
+      // DM: delivery updates arrive later via ACK tracking.
+      messagesNotifier.updateMessage(
+        messageId,
+        pendingMessage.copyWith(status: MessageStatus.sent, packetId: packetId),
+      );
       Navigator.pop(context);
       // Use captured nodes and presenceMap for target name lookup
       final availableNodes = nodes.values
@@ -583,19 +605,23 @@ class _SosSheetContentState extends State<SosSheetContent>
       );
       messagesNotifier.addMessage(pendingMessage);
 
-      // Pre-track before sending to avoid race condition
-      await protocol.sendMessageWithPreTracking(
+      // Broadcast SOS to all nodes. Broadcast messages never receive ACKs,
+      // so wantAck must be false to avoid stuck pending status.
+      final packetId = await protocol.sendMessage(
         text: messageText,
         to: broadcastAddress,
         channel: 0,
-        wantAck: true,
+        wantAck: false,
         messageId: messageId,
-        onPacketIdGenerated: (id) {
-          messagesNotifier.trackPacket(id, messageId);
-        },
       );
 
       if (!mounted) return;
+
+      // Update optimistic pending message to sent (no ACK expected for broadcast)
+      messagesNotifier.updateMessage(
+        messageId,
+        pendingMessage.copyWith(status: MessageStatus.sent, packetId: packetId),
+      );
       Navigator.pop(context);
       showErrorSnackBar(context, 'Emergency SOS sent to all nodes');
     } catch (e) {
