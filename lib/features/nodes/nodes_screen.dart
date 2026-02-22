@@ -1137,60 +1137,71 @@ class _NodeCard extends StatelessWidget {
       tiltDegrees: 4.0,
       child: Opacity(
         opacity: cardOpacity,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: !isMyNode && !node.isFavorite
-              ? BoxDecoration(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border(
-                    top: BorderSide(color: context.border, width: 1),
-                    left: BorderSide(color: context.border, width: 1),
+        child: ShaderMask(
+          blendMode: BlendMode.dstIn,
+          shaderCallback: (bounds) => const RadialGradient(
+            center: Alignment.bottomRight,
+            radius: 0.55,
+            colors: [Colors.transparent, Colors.white],
+            stops: [0.0, 1.0],
+          ).createShader(bounds),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: !isMyNode && !node.isFavorite
+                ? BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border(
+                      top: BorderSide(color: context.border, width: 1),
+                      left: BorderSide(color: context.border, width: 1),
+                    ),
+                  )
+                : null,
+            child: isMyNode
+                ? GradientBorderContainer(
+                    borderRadius: 12,
+                    borderWidth: 2,
+                    accentOpacity: 1.0,
+                    defaultBorderColor: Colors.transparent,
+                    backgroundColor: context.accentColor.withValues(
+                      alpha: 0.08,
+                    ),
+                    enableDepthBlend: true,
+                    depthBlendOpacity: 0.5,
+                    padding: const EdgeInsets.all(16),
+                    child: _buildCardContent(
+                      context,
+                      signalBars,
+                      statusColor,
+                      statusText,
+                    ),
+                  )
+                : node.isFavorite
+                ? GradientBorderContainer(
+                    borderRadius: 12,
+                    borderWidth: 2,
+                    accentOpacity: 1.0,
+                    accentColor: AccentColors.yellow,
+                    defaultBorderColor: Colors.transparent,
+                    backgroundColor: context.card,
+                    padding: const EdgeInsets.all(16),
+                    child: _buildCardContent(
+                      context,
+                      signalBars,
+                      statusColor,
+                      statusText,
+                    ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _buildCardContent(
+                      context,
+                      signalBars,
+                      statusColor,
+                      statusText,
+                    ),
                   ),
-                )
-              : null,
-          child: isMyNode
-              ? GradientBorderContainer(
-                  borderRadius: 12,
-                  borderWidth: 2,
-                  accentOpacity: 1.0,
-                  defaultBorderColor: Colors.transparent,
-                  backgroundColor: context.accentColor.withValues(alpha: 0.08),
-                  enableDepthBlend: true,
-                  depthBlendOpacity: 0.5,
-                  padding: const EdgeInsets.all(16),
-                  child: _buildCardContent(
-                    context,
-                    signalBars,
-                    statusColor,
-                    statusText,
-                  ),
-                )
-              : node.isFavorite
-              ? GradientBorderContainer(
-                  borderRadius: 12,
-                  borderWidth: 2,
-                  accentOpacity: 1.0,
-                  accentColor: AccentColors.yellow,
-                  defaultBorderColor: Colors.transparent,
-                  backgroundColor: context.card,
-                  padding: const EdgeInsets.all(16),
-                  child: _buildCardContent(
-                    context,
-                    signalBars,
-                    statusColor,
-                    statusText,
-                  ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: _buildCardContent(
-                    context,
-                    signalBars,
-                    statusColor,
-                    statusText,
-                  ),
-                ),
+          ),
         ),
       ),
     );
@@ -1205,7 +1216,6 @@ class _NodeCard extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Avatar
         NodeAvatar(
           text: node.avatarName,
           color: isMyNode ? context.accentColor : _getAvatarColor(),
