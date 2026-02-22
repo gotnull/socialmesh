@@ -103,7 +103,7 @@ class _BlurredSectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 40,
-      color: context.background.withValues(alpha: 0.8),
+      color: context.background,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
