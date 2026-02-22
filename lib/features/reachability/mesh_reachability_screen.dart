@@ -498,7 +498,8 @@ class _ReachabilityNodeCard extends StatelessWidget {
                 child: Center(
                   child: Text(
                     nodeData.node.shortName?.isNotEmpty == true
-                        ? nodeData.node.shortName!.substring(0, 1).toUpperCase()
+                        ? nodeData.node.shortName!.characters.first
+                              .toUpperCase()
                         : '?',
                     style: TextStyle(
                       fontSize: 18,

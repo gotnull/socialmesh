@@ -483,7 +483,14 @@ class MeshHealthAnalyzer {
 
     final knownCount = nodeStats.where((n) => n.isKnownNode).length;
     final unknownCount = nodeStats.where((n) => !n.isKnownNode).length;
-    final totalAirtime = packets.fold<int>(0, (sum, p) => sum + p.airtimeMs);
+    // Derive totalAirtime from per-node accumulators (same source as
+    // nodeStats) so the denominator always >= any single node's value.
+    // Using the packet buffer directly can diverge due to independent
+    // pruning, producing >100% per-node contribution percentages.
+    final totalAirtime = nodeStats.fold<int>(
+      0,
+      (sum, n) => sum + n.totalAirtimeMs,
+    );
 
     return MeshHealthSnapshot(
       timestamp: timestamp,

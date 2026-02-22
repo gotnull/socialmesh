@@ -32,6 +32,7 @@ import 'socialmesh/sm_packet_router.dart';
 import 'socialmesh/sm_presence.dart';
 import 'socialmesh/sm_signal.dart';
 import '../mesh_packet_dedupe_store.dart';
+import '../mesh_health/mesh_health_models.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../models/presence_confidence.dart';
 import '../../features/nodes/node_display_name_resolver.dart';
@@ -324,6 +325,7 @@ class ProtocolService {
   final StreamController<pb.User> _userConfigController;
   final StreamController<DetectionSensorEvent> _detectionSensorEventController;
   final StreamController<TraceRouteLog> _traceRouteLogController;
+  final StreamController<MeshTelemetry> _meshTelemetryController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
@@ -474,6 +476,7 @@ class ProtocolService {
        _detectionSensorEventController =
            StreamController<DetectionSensorEvent>.broadcast(),
        _traceRouteLogController = StreamController<TraceRouteLog>.broadcast(),
+       _meshTelemetryController = StreamController<MeshTelemetry>.broadcast(),
        _dedupeStore = dedupeStore ?? MeshPacketDedupeStore(),
        _smCapabilityStore = smCapabilityStore ?? SmCapabilityStore(),
        _smFeatureFlag = smFeatureFlag ?? SmFeatureFlag(),
@@ -509,6 +512,14 @@ class ProtocolService {
   /// Stream of parsed traceroute responses
   Stream<TraceRouteLog> get traceRouteLogStream =>
       _traceRouteLogController.stream;
+
+  /// Stream of per-packet telemetry for mesh health analysis.
+  ///
+  /// Emits a [MeshTelemetry] for every incoming decoded mesh packet,
+  /// capturing packet-level metadata (RSSI, SNR, hop count, payload
+  /// size, etc.) needed by [MeshHealthAnalyzer].
+  Stream<MeshTelemetry> get meshTelemetryStream =>
+      _meshTelemetryController.stream;
 
   /// Stream of received messages
   Stream<Message> get messageStream => _messageController.stream;
@@ -1046,11 +1057,77 @@ class ProtocolService {
     });
   }
 
+  /// Emit a [MeshTelemetry] event for mesh health analysis.
+  ///
+  /// Called for every incoming decoded packet so [MeshHealthAnalyzer] can
+  /// compute per-node statistics, channel utilization, and issue detection.
+  /// Skips own-node packets — they arrive via BLE (no RF metrics) and would
+  /// create false spam/signal-degradation detections.
+  void _emitPacketTelemetry(pb.MeshPacket packet) {
+    if (!_meshTelemetryController.hasListener) return;
+
+    // Skip packets from our own device — they are BLE-delivered local data,
+    // not mesh RF traffic. They lack RSSI/SNR and arrive in rapid bursts
+    // (device metrics, local stats, position, nodeinfo) which the analyzer
+    // would misclassify as interval spam.
+    if (_myNodeNum != null && packet.from == _myNodeNum) return;
+
+    final nodeId = packet.from.toRadixString(16).padLeft(8, '0');
+    final isKnown = _nodes.containsKey(packet.from);
+    final payloadBytes = packet.hasDecoded()
+        ? packet.decoded.payload.length
+        : 0;
+    final rssi = packet.hasRxRssi() ? packet.rxRssi : -120;
+    final snr = packet.hasRxSnr() ? packet.rxSnr.toDouble() : 0.0;
+
+    // Compute hop count from hopStart - hopLimit (both available in proto)
+    int hopCount = 0;
+    int maxHopCount = 3;
+    if (packet.hasHopStart() && packet.hopStart > 0) {
+      maxHopCount = packet.hopStart;
+      hopCount = packet.hopStart - packet.hopLimit;
+      if (hopCount < 0) hopCount = 0;
+    } else if (packet.hasHopLimit()) {
+      maxHopCount = packet.hopLimit;
+    }
+
+    // Reliability from node's cumulative packet stats (if available)
+    double reliability = 1.0;
+    final node = _nodes[packet.from];
+    if (node != null && node.numPacketsRx != null && node.numPacketsRx! > 0) {
+      final bad = node.numPacketsRxBad ?? 0;
+      reliability = 1.0 - (bad / node.numPacketsRx!);
+    }
+
+    // Estimate airtime from payload size (LoRa SF11/125kHz approximation)
+    // ~2ms per byte + ~50ms preamble/header overhead
+    final airtimeMs = (payloadBytes * 2) + 50;
+
+    _meshTelemetryController.add(
+      MeshTelemetry(
+        timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        nodeId: nodeId,
+        isKnownNode: isKnown,
+        hopCount: hopCount,
+        maxHopCount: maxHopCount,
+        payloadBytes: payloadBytes,
+        rssi: rssi,
+        snr: snr,
+        txIntervalSec: 900,
+        reliability: reliability,
+        airtimeMs: airtimeMs,
+      ),
+    );
+  }
+
   /// Handle incoming mesh packet
   Future<void> _handleMeshPacket(pb.MeshPacket packet) async {
     AppLogging.protocol(
       'Handling mesh packet from ${packet.from} to ${packet.to}',
     );
+
+    // Emit per-packet telemetry for mesh health analysis
+    _emitPacketTelemetry(packet);
 
     // Update lastHeard for the sender node (keeps node online status accurate)
     // This ensures any packet from a node updates its online status
@@ -6502,5 +6579,6 @@ class ProtocolService {
     await _clientNotificationController.close();
     await _userConfigController.close();
     await _traceRouteLogController.close();
+    await _meshTelemetryController.close();
   }
 }

@@ -1048,13 +1048,13 @@ class HelpContent {
       HelpStep(
         id: 'profile_customize',
         bubbleText:
-            "Your profile is **optional and private by default**. Only people you share your QR code with can see your details.",
+            "Your profile is **optional and private by default**. Customize it to stand out on the mesh!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'profile_share',
         bubbleText:
-            "Share your **profile QR code** to connect with friends. They can save your details to their contacts!",
+            "Add a **callsign**, **avatar**, and **links** to make your profile yours.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(

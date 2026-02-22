@@ -414,7 +414,7 @@ class MeshNodeMarker extends StatelessWidget {
             ? const Icon(Icons.person, color: SemanticColors.onMarker, size: 20)
             : Text(
                 (node.shortName?.isNotEmpty ?? false)
-                    ? node.shortName![0].toUpperCase()
+                    ? node.shortName!.characters.first.toUpperCase()
                     : '?',
                 style: const TextStyle(
                   color: SemanticColors.onMarker,

@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -262,8 +261,9 @@ class NodeInfoCard extends ConsumerWidget {
                 child: Center(
                   child: Text(
                     (node.shortName != null && node.shortName!.isNotEmpty)
-                        ? node.shortName!
-                              .substring(0, math.min(2, node.shortName!.length))
+                        ? node.shortName!.characters
+                              .take(2)
+                              .toString()
                               .toUpperCase()
                         : '??',
                     style: const TextStyle(

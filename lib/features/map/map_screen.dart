@@ -1094,13 +1094,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         userAgentPackageName: MapConfig.userAgentPackageName,
                         retinaMode: _mapStyle != MapTileStyle.satellite,
                         evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
-                        tileBuilder: (context, tileWidget, tile) {
-                          return AnimatedOpacity(
-                            opacity: 1.0,
-                            duration: const Duration(milliseconds: 300),
-                            child: tileWidget,
-                          );
-                        },
+                        // No tileBuilder — AnimatedOpacity at constant 1.0
+                        // created unnecessary animation controllers per tile,
+                        // causing visible lag on initial map load.
                       ),
                       // Range circles (theoretical coverage) - hide in location only mode
                       if (_showRangeCircles && !widget.locationOnlyMode)
@@ -2297,7 +2293,7 @@ class _NodeMarker extends StatelessWidget {
         children: [
           Text(
             (node.shortName?.isNotEmpty == true
-                ? node.shortName!.substring(0, 1).toUpperCase()
+                ? node.shortName!.characters.first.toUpperCase()
                 : node.nodeNum
                       .toRadixString(16)
                       .characters
@@ -2745,7 +2741,7 @@ class _NodeListItem extends StatelessWidget {
                   children: [
                     Text(
                       (node.shortName?.isNotEmpty == true
-                          ? node.shortName!.substring(0, 1).toUpperCase()
+                          ? node.shortName!.characters.first.toUpperCase()
                           : node.nodeNum
                                 .toRadixString(16)
                                 .characters

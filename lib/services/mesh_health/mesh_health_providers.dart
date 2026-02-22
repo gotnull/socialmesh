@@ -2,11 +2,17 @@
 // Mesh Health Riverpod Providers
 //
 // Follows app's Riverpod 3.x patterns with Notifier classes.
+// Auto-starts monitoring when a BLE device connects, subscribes to the
+// protocol service's per-packet telemetry stream, and feeds data into
+// the MeshHealthAnalyzer for windowed analysis.
 
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/logging.dart';
+import '../../core/transport.dart';
+import '../../providers/app_providers.dart';
 import 'mesh_health_models.dart';
 import 'mesh_health_analyzer.dart';
 
@@ -60,44 +66,91 @@ class MeshHealthState {
 }
 
 /// Notifier for mesh health state
+///
+/// Auto-starts monitoring when the device connects and subscribes to
+/// [ProtocolService.meshTelemetryStream] to feed per-packet data into
+/// the [MeshHealthAnalyzer]. Stops automatically on disconnect.
 class MeshHealthNotifier extends Notifier<MeshHealthState> {
-  StreamSubscription<MeshHealthSnapshot>? _subscription;
+  StreamSubscription<MeshHealthSnapshot>? _snapshotSubscription;
+  StreamSubscription<MeshTelemetry>? _telemetrySubscription;
 
   @override
   MeshHealthState build() {
     ref.onDispose(() {
-      _subscription?.cancel();
+      _snapshotSubscription?.cancel();
+      _telemetrySubscription?.cancel();
     });
+
+    // React to connection state changes: auto-start on connect, stop on
+    // disconnect. ref.listen only fires on changes, not the initial value.
+    ref.listen<DeviceConnectionState>(unifiedConnectionStateProvider, (
+      prev,
+      next,
+    ) {
+      if (next == DeviceConnectionState.connected && !state.isMonitoring) {
+        AppLogging.protocol('MeshHealth: auto-starting on connect');
+        startMonitoring();
+      } else if (next == DeviceConnectionState.disconnected &&
+          state.isMonitoring) {
+        AppLogging.protocol('MeshHealth: stopping on disconnect');
+        stopMonitoring();
+      }
+    });
+
+    // If the device is already connected when this notifier is first built,
+    // schedule auto-start after build completes (cannot mutate state inside
+    // build synchronously).
+    Future.microtask(() {
+      final conn = ref.read(unifiedConnectionStateProvider);
+      if (conn == DeviceConnectionState.connected && !state.isMonitoring) {
+        AppLogging.protocol('MeshHealth: auto-starting (already connected)');
+        startMonitoring();
+      }
+    });
+
     return const MeshHealthState();
   }
 
-  /// Start monitoring mesh health
+  /// Start monitoring mesh health and subscribe to protocol telemetry.
   void startMonitoring() {
     if (state.isMonitoring) return;
 
     final analyzer = ref.read(meshHealthAnalyzerProvider);
     analyzer.start();
 
-    _subscription?.cancel();
-    _subscription = analyzer.snapshots.listen(_onSnapshot);
+    _snapshotSubscription?.cancel();
+    _snapshotSubscription = analyzer.snapshots.listen(_onSnapshot);
+
+    // Subscribe to the protocol service's per-packet telemetry stream
+    _telemetrySubscription?.cancel();
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      _telemetrySubscription = protocol.meshTelemetryStream.listen(
+        analyzer.ingestTelemetry,
+      );
+    } catch (e) {
+      AppLogging.protocol('MeshHealth: failed to subscribe to telemetry: $e');
+    }
 
     state = state.copyWith(isMonitoring: true);
   }
 
-  /// Stop monitoring
+  /// Stop monitoring and cancel all subscriptions.
   void stopMonitoring() {
     if (!state.isMonitoring) return;
 
     final analyzer = ref.read(meshHealthAnalyzerProvider);
     analyzer.stop();
 
-    _subscription?.cancel();
-    _subscription = null;
+    _snapshotSubscription?.cancel();
+    _snapshotSubscription = null;
+    _telemetrySubscription?.cancel();
+    _telemetrySubscription = null;
 
     state = state.copyWith(isMonitoring: false);
   }
 
-  /// Toggle monitoring
+  /// Toggle monitoring on/off (used by dashboard play/pause button).
   void toggleMonitoring() {
     if (state.isMonitoring) {
       stopMonitoring();
@@ -106,20 +159,23 @@ class MeshHealthNotifier extends Notifier<MeshHealthState> {
     }
   }
 
-  /// Ingest telemetry packet
+  /// Manually ingest a telemetry packet (for testing or external data).
   void ingestTelemetry(MeshTelemetry telemetry) {
     ref.read(meshHealthAnalyzerProvider).ingestTelemetry(telemetry);
   }
 
-  /// Ingest telemetry from JSON
+  /// Ingest telemetry from JSON (for testing or external data).
   void ingestJson(Map<String, dynamic> json) {
     ref.read(meshHealthAnalyzerProvider).ingestJson(json);
   }
 
-  /// Reset all data
+  /// Reset all data and restart if currently monitoring.
   void reset() {
+    final wasMonitoring = state.isMonitoring;
+    if (wasMonitoring) stopMonitoring();
     ref.read(meshHealthAnalyzerProvider).reset();
     state = const MeshHealthState();
+    if (wasMonitoring) startMonitoring();
   }
 
   void _onSnapshot(MeshHealthSnapshot snapshot) {

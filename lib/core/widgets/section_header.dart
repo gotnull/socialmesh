@@ -181,7 +181,7 @@ class SectionHeadersToggle extends StatelessWidget {
 /// Filter chip widget for list filtering
 class SectionFilterChip extends StatelessWidget {
   final String label;
-  final int count;
+  final int? count;
   final bool isSelected;
   final Color? color;
   final IconData? icon;
@@ -190,7 +190,7 @@ class SectionFilterChip extends StatelessWidget {
   const SectionFilterChip({
     super.key,
     required this.label,
-    required this.count,
+    this.count,
     required this.isSelected,
     required this.onTap,
     this.color,
@@ -264,24 +264,26 @@ class SectionFilterChip extends StatelessWidget {
                 color: isSelected ? chipColor : context.textSecondary,
               ),
             ),
-            SizedBox(width: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? chipColor.withValues(alpha: 0.3)
-                    : context.border.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                count.toString(),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? chipColor : context.textTertiary,
+            if (count != null) ...[
+              SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? chipColor.withValues(alpha: 0.3)
+                      : context.border.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  count.toString(),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? chipColor : context.textTertiary,
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),
