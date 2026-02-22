@@ -1141,7 +1141,7 @@ class _NodeCard extends StatelessWidget {
           blendMode: BlendMode.dstIn,
           shaderCallback: (bounds) => const RadialGradient(
             center: Alignment.bottomRight,
-            radius: 0.95,
+            radius: 1.8,
             colors: [Colors.transparent, Colors.white],
             stops: [0.0, 1.0],
           ).createShader(bounds),
