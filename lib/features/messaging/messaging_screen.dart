@@ -86,6 +86,8 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
     // Build map of DM info per node (for showing last message, unread count)
     final dmInfoByNode = <int, _DmInfo>{};
     for (final message in messages) {
+      // Skip tapback emoji reactions — they are metadata, not messages
+      if (message.isEmoji) continue;
       if (message.isDirect) {
         final otherNode = message.from == myNodeNum ? message.to : message.from;
         final existing = dmInfoByNode[otherNode];
@@ -1350,6 +1352,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           )
           .toList();
     }
+
+    // Exclude tapback emoji reactions from the visible message list.
+    // They are displayed as badges on the original message via TapbackDisplay.
+    filteredMessages = filteredMessages.where((m) => !m.isEmoji).toList();
 
     // Mark any new unread messages as read while this chat is open.
     // _markAsRead() is only called once in initState, so messages arriving

@@ -16,8 +16,13 @@ class RecentMessagesContent extends ConsumerWidget {
     final messages = ref.watch(messagesProvider);
     final nodes = ref.watch(nodesProvider);
 
-    // Get last 5 messages, sorted by time
-    final recentMessages = messages.toList().reversed.take(5).toList();
+    // Get last 5 messages, sorted by time (excluding tapback reactions)
+    final recentMessages = messages
+        .where((m) => !m.isEmoji)
+        .toList()
+        .reversed
+        .take(5)
+        .toList();
 
     if (recentMessages.isEmpty) {
       return const WidgetEmptyState(

@@ -3846,7 +3846,7 @@ final unreadMessagesCountProvider = Provider<int>((ref) {
   if (myNodeNum == null) return 0;
 
   return messages
-      .where((m) => m.received && m.from != myNodeNum && !m.read)
+      .where((m) => !m.isEmoji && m.received && m.from != myNodeNum && !m.read)
       .length;
 });
 
@@ -3864,7 +3864,14 @@ final unreadDmCountProvider = Provider<int>((ref) {
   if (myNodeNum == null) return 0;
 
   return messages
-      .where((m) => m.received && m.from != myNodeNum && !m.read && m.isDirect)
+      .where(
+        (m) =>
+            !m.isEmoji &&
+            m.received &&
+            m.from != myNodeNum &&
+            !m.read &&
+            m.isDirect,
+      )
       .length;
 });
 
@@ -3903,6 +3910,8 @@ final channelUnreadCountsProvider = Provider<Map<int, int>>((ref) {
 
   final counts = <int, int>{};
   for (final m in messages) {
+    // Skip tapback emoji reactions — they are metadata, not messages
+    if (m.isEmoji) continue;
     if (m.received && m.from != myNodeNum && !m.read && m.isBroadcast) {
       final ch = m.channel ?? 0;
       counts[ch] = (counts[ch] ?? 0) + 1;

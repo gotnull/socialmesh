@@ -1200,6 +1200,8 @@ Future<List<NodeActivityEvent>> _buildTimeline(Ref ref, int nodeNum) async {
 
   // 3. Messages to/from this node.
   for (final msg in messages) {
+    // Skip tapback emoji reactions — they are metadata, not messages
+    if (msg.isEmoji) continue;
     if (msg.from == nodeNum || msg.to == nodeNum) {
       events.add(
         MessageActivityEvent(

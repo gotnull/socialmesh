@@ -27,6 +27,8 @@ class ChannelActivityContent extends ConsumerWidget {
 
     final channelActivity = <int, int>{};
     for (final msg in messages) {
+      // Skip tapback emoji reactions — they are metadata, not messages
+      if (msg.isEmoji) continue;
       if (msg.timestamp.isAfter(oneHourAgo) && msg.channel != null) {
         channelActivity[msg.channel!] =
             (channelActivity[msg.channel!] ?? 0) + 1;
