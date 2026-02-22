@@ -1410,10 +1410,6 @@ PODS:
     - GoogleUtilities/Environment (~> 8.1)
     - GTMSessionFetcher/Core (< 6.0, >= 3.4)
   - Flutter (1.0.0)
-  - flutter_angle (0.3.9):
-    - Flutter
-    - FlutterAngle (~> 0.0.8)
-    - FlutterMacOS
   - flutter_app_group_directory (0.0.1):
     - Flutter
   - flutter_blue_plus_darwin (0.0.2):
@@ -1433,7 +1429,6 @@ PODS:
   - flutter_secure_storage_darwin (10.0.0):
     - Flutter
     - FlutterMacOS
-  - FlutterAngle (0.0.8)
   - geocoding_ios (1.0.5):
     - Flutter
   - geolocator_apple (1.2.0):
@@ -1660,8 +1655,6 @@ PODS:
   - sticker_view (0.0.1):
     - Flutter
   - SwiftyGif (5.4.5)
-  - three_js_sensors (0.1.2):
-    - Flutter
   - TSBackgroundFetch (4.0.6)
   - url_launcher_ios (0.0.1):
     - Flutter
@@ -1685,7 +1678,6 @@ DEPENDENCIES:
   - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
   - firebase_storage (from `.symlinks/plugins/firebase_storage/ios`)
   - Flutter (from `Flutter`)
-  - flutter_angle (from `.symlinks/plugins/flutter_angle/darwin`)
   - flutter_app_group_directory (from `.symlinks/plugins/flutter_app_group_directory/ios`)
   - flutter_blue_plus_darwin (from `.symlinks/plugins/flutter_blue_plus_darwin/darwin`)
   - flutter_foreground_task (from `.symlinks/plugins/flutter_foreground_task/ios`)
@@ -1710,7 +1702,6 @@ DEPENDENCIES:
   - sign_in_with_apple (from `.symlinks/plugins/sign_in_with_apple/ios`)
   - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
   - sticker_view (from `.symlinks/plugins/sticker_view/ios`)
-  - three_js_sensors (from `.symlinks/plugins/three_js_sensors/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
   - workmanager_apple (from `.symlinks/plugins/workmanager_apple/ios`)
 
@@ -1741,7 +1732,6 @@ SPEC REPOS:
     - FirebaseSessions
     - FirebaseSharedSwift
     - FirebaseStorage
-    - FlutterAngle
     - GoogleAdsOnDeviceConversion
     - GoogleAppMeasurement
     - GoogleDataTransport
@@ -1796,8 +1786,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_storage/ios"
   Flutter:
     :path: Flutter
-  flutter_angle:
-    :path: ".symlinks/plugins/flutter_angle/darwin"
   flutter_app_group_directory:
     :path: ".symlinks/plugins/flutter_app_group_directory/ios"
   flutter_blue_plus_darwin:
@@ -1846,8 +1834,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/sqflite_darwin/darwin"
   sticker_view:
     :path: ".symlinks/plugins/sticker_view/ios"
-  three_js_sensors:
-    :path: ".symlinks/plugins/three_js_sensors/ios"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
   workmanager_apple:
@@ -1895,14 +1881,12 @@ SPEC CHECKSUMS:
   FirebaseSharedSwift: f57ed48f4542b2d7eb4738f4f23ba443f78b3780
   FirebaseStorage: 7c37558dc72731aa5f0a1a2401d8c6de10a513f5
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  flutter_angle: 290cf0e9610f10ee5e5a77e0a1e43885aa02ae3b
   flutter_app_group_directory: 55b5362007d1c0cb45dc1dd1e94f67d615f45a6b
   flutter_blue_plus_darwin: 20a08bfeaa0f7804d524858d3d8744bcc1b6dbc3
   flutter_foreground_task: a159d2c2173b33699ddb3e6c2a067045d7cebb89
   flutter_inappwebview_ios: b89ba3482b96fb25e00c967aae065701b66e9b99
   flutter_local_notifications: a5a732f069baa862e728d839dd2ebb904737effb
   flutter_secure_storage_darwin: acdb3f316ed05a3e68f856e0353b133eec373a23
-  FlutterAngle: c810891af800750361b1d0e7cc944f2338d5ae18
   geocoding_ios: 33776c9ebb98d037b5e025bb0e7537f6dd19646e
   geolocator_apple: ab36aa0e8b7d7a2d7639b3b4e48308394e8cef5e
   google_sign_in_ios: 000870aa06da9b28d1d0bf7ef70ff0213059dd28
@@ -1940,7 +1924,6 @@ SPEC CHECKSUMS:
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
   sticker_view: 70c8064192685c6f50213e1e9dc3d93728e91def
   SwiftyGif: 706c60cf65fa2bc5ee0313beece843c8eb8194d4
-  three_js_sensors: f516b092803411e05b1e3dc7625efa36acd8f455
   TSBackgroundFetch: 0afbeaae4e1132866e1d4b6e55265af26b5958ae
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   workmanager_apple: 904529ae31e97fc5be632cf628507652294a0778
