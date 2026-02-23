@@ -55,7 +55,7 @@ Only Riverpod 3.x APIs are used. StateNotifier, StateNotifierProvider, StateProv
 Each feature in `lib/features/` is self-contained:
 
 | Module            | Purpose                                                        |
-| ----------------- | -------------------------------------------------------------- | --- | ------------ | ---------------------------------------- | --- | ----------- | -------------------------------- |
+| ----------------- | -------------------------------------------------------------- |
 | `automations/`    | Rule-based event automation engine                             |
 | `channels/`       | Channel management                                             |
 | `dashboard/`      | Custom widget dashboard                                        |
@@ -72,7 +72,9 @@ Each feature in `lib/features/` is self-contained:
 | `reachability/`   | Node reachability analysis                                     |
 | `routes/`         | Packet route analysis                                          |
 | `signals/`        | Structured operational persistence                             |
-| `social/`         | Activity timeline and team profiles                            |     | `telemetry/` | Traceroute history and route diagnostics |     | `settings/` | App, account, and theme settings |
+| `social/`         | Activity timeline and team profiles                            |
+| `telemetry/`      | Traceroute history and route diagnostics                       |
+| `settings/`       | App, account, and theme settings                               |
 | `widget_builder/` | Custom dashboard widget editor and marketplace                 |
 | `world_mesh/`     | Global MQTT node map                                           |
 
@@ -150,7 +152,8 @@ UI (ref.watch)
 
 SQLite databases handle offline persistence:
 
-- **Messages** -- Chat messages (channel and DM) with per-conversation 500-message retention, indexed by conversation key and packet ID- **NodeDex** — Discovered nodes, encounter history, social tags
+- **Messages** — Chat messages (channel and DM) with per-conversation 500-message retention, indexed by conversation key and packet ID
+- **NodeDex** — Discovered nodes, encounter history, social tags
 - **Signals** — Ephemeral mesh content with TTL
 - **Routes** — Discovered packet routes
 - **Traceroute** — Route discovery history with per-hop SNR (500 global / 100 per-node retention)
