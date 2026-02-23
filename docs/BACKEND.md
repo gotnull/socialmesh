@@ -24,7 +24,7 @@ These features are fully functional with only a Meshtastic radio:
 - Emergency SOS broadcast
 - RTTTL ringtone preview and device upload
 - NodeDex — procedural sigils, trait inference, patina scoring, co-seen tracking
-- Signals — ephemeral mesh-first content with configurable TTL
+- Signals — structured operational reports with configurable TTL
 - Presence — node online/offline tracking and activity patterns
 - Mesh Health — network health metrics and utilization graphs
 - Reachability — probabilistic node reachability assessment

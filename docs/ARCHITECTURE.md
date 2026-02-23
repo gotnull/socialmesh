@@ -44,7 +44,7 @@ Riverpod 3.x providers in `lib/providers/` expose reactive state to the UI:
 - `app_providers.dart` — Core mesh state (nodes, messages, channels)
 - `connection_providers.dart` — Device connection state
 - `subscription_providers.dart` — Premium feature entitlements
-- `signal_providers.dart` — Signals (ephemeral mesh content)
+- `signal_providers.dart` — Signals (structured operational persistence)
 - `activity_providers.dart` — Activity timeline state
 - `presence_providers.dart` — Node presence tracking
 
@@ -54,31 +54,31 @@ Only Riverpod 3.x APIs are used. StateNotifier, StateNotifierProvider, StateProv
 
 Each feature in `lib/features/` is self-contained:
 
-| Module            | Purpose                                              |
-| ----------------- | ---------------------------------------------------- | --- | ------------ | ---------------------------------------- | --- | ----------- | -------------------------------- |
-| `automations/`    | Rule-based event automation engine                   |
-| `channels/`       | Channel management                                   |
-| `dashboard/`      | Custom widget dashboard                              |
-| `device/`         | Device configuration screens                         |
-| `globe/`          | 3D globe visualization                               |
-| `map/`            | Interactive node map with waypoints                  |
-| `mesh3d/`         | 3D mesh network topology view                        |
-| `mesh_health/`    | Network health analytics dashboard                   |
-| `messaging/`      | Channel and direct messages                          |
-| `nodedex/`        | Mesh field journal (sigils, traits, patina, co-seen) |
-| `nodes/`          | Node discovery and details                           |
-| `presence/`       | Node presence tracking                               |
-| `profile/`        | User profile management                              |
-| `reachability/`   | Node reachability analysis                           |
-| `routes/`         | Packet route analysis                                |
-| `signals/`        | Ephemeral mesh-first content                         |
-| `social/`         | Activity timeline and social profiles                |     | `telemetry/` | Traceroute history and route diagnostics |     | `settings/` | App, account, and theme settings |
-| `widget_builder/` | Custom dashboard widget editor and marketplace       |
-| `world_mesh/`     | Global MQTT node map                                 |
+| Module            | Purpose                                                        |
+| ----------------- | -------------------------------------------------------------- | --- | ------------ | ---------------------------------------- | --- | ----------- | -------------------------------- |
+| `automations/`    | Rule-based event automation engine                             |
+| `channels/`       | Channel management                                             |
+| `dashboard/`      | Custom widget dashboard                                        |
+| `device/`         | Device configuration screens                                   |
+| `globe/`          | 3D globe visualization                                         |
+| `map/`            | Interactive node map with waypoints                            |
+| `mesh3d/`         | 3D mesh network topology view                                  |
+| `mesh_health/`    | Network health analytics dashboard                             |
+| `messaging/`      | Channel and direct messages                                    |
+| `nodedex/`        | Mesh asset registry (sigils, classifications, patina, co-seen) |
+| `nodes/`          | Node discovery and details                                     |
+| `presence/`       | Node presence tracking                                         |
+| `profile/`        | User profile management                                        |
+| `reachability/`   | Node reachability analysis                                     |
+| `routes/`         | Packet route analysis                                          |
+| `signals/`        | Structured operational persistence                             |
+| `social/`         | Activity timeline and team profiles                            |     | `telemetry/` | Traceroute history and route diagnostics |     | `settings/` | App, account, and theme settings |
+| `widget_builder/` | Custom dashboard widget editor and marketplace                 |
+| `world_mesh/`     | Global MQTT node map                                           |
 
 ## NodeDex Architecture
 
-The NodeDex (`lib/features/nodedex/`) is the mesh field journal system. It is independent of the Nodes screen — it reads from node data but persists its own enrichment layer in SQLite.
+The NodeDex (`lib/features/nodedex/`) is the mesh asset registry and node intelligence system. It is independent of the Nodes screen — it reads from node data but persists its own enrichment layer in SQLite.
 
 ### Data Model
 

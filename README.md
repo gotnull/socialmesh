@@ -5,8 +5,8 @@
 <h1 align="center">Socialmesh</h1>
 
 <p align="center">
-  <strong>The mesh network in your pocket.</strong><br>
-  A powerful Meshtastic companion app for iOS and Android.
+  <strong>Resilient Field Operations Platform</strong><br>
+  Structured workflows, team coordination, and situational awareness over mesh radio networks — fully offline.
 </p>
 
 <p align="center">
@@ -34,17 +34,17 @@
 
 ---
 
-Connect to your mesh radio, exchange messages, track nearby nodes, and configure your device — **all without internet**.
+Connect to your mesh radio, coordinate field teams, track assets, manage incidents, and maintain situational awareness — **all without internet**.
 
-Socialmesh works fully offline over BLE and USB. Firebase is optional for cloud sync, widget marketplace, and profile sharing.
+Socialmesh works fully offline over BLE and USB. Firebase is optional for cloud sync, fleet telemetry, and team coordination.
 
 ---
 
 ## NodeDex
 
-> _Your personal mesh field journal._
+> _Your mesh asset registry and node intelligence system._
 
-Every node you discover on the mesh is automatically catalogued in the **NodeDex** — a living record of your mesh encounters. Each node receives a unique **procedural Sigil** (a geometric glyph derived deterministically from its identity) and a **personality Trait** inferred from real behavioral data. Accessible from the drawer menu.
+Every node discovered on the mesh is automatically catalogued in the **NodeDex** — a persistent registry of all mesh assets. Each node receives a unique **procedural Sigil** (a geometric glyph derived deterministically from its identity) and a **behavioral classification** inferred from real operational data. Accessible from the drawer menu.
 
 ### Procedural Sigils
 
@@ -107,11 +107,9 @@ Records which nodes have been observed together on the mesh, building a social g
 
 ## Signals
 
-> _Leave short, ephemeral traces for people nearby._
+> _Structured operational reports with location and time context._
 
-Signals is a mesh-first way to communicate. Drop a message, and it appears to everyone in range. Signals expire automatically with configurable TTL and never leave the mesh. Sorted by proximity and expiry. No followers. No likes. No algorithms. **Just presence.**
-
-Think of it as digital graffiti that fades with time.
+Signals is the mesh-native operational persistence system. Publish situation reports, status updates, and hazard markers that are received by all team members in range. Signals carry configurable TTL, GPS location stamps, and image attachments. Sorted by proximity and expiry. Designed for field teams that need structured, time-bounded operational awareness without internet.
 
 ---
 
@@ -133,7 +131,7 @@ Think of it as digital graffiti that fades with time.
 | Feature              | Description                                                               |
 | -------------------- | ------------------------------------------------------------------------- |
 | **Node Discovery**   | See all nodes with signal strength, battery, and location                 |
-| **NodeDex**          | Personal mesh field journal with procedural sigils and trait inference    |
+| **NodeDex**          | Mesh asset registry with procedural sigils and behavioral classification  |
 | **Network Topology** | Visual graph showing mesh interconnections                                |
 | **Traceroute**       | Trace the exact path packets take through the mesh                        |
 | **Signal History**   | SNR and RSSI charts over time                                             |
@@ -151,13 +149,13 @@ Think of it as digital graffiti that fades with time.
 | **Map Styles**       | Street, satellite, and terrain views        |
 | **Route Recording**  | Record and save your routes with GPS tracks |
 
-### Social
+### Team Coordination
 
 | Feature               | Description                                                             |
 | --------------------- | ----------------------------------------------------------------------- |
 | **Activity Timeline** | Chronological feed of mesh activity and events with identity resolution |
-| **Social Profiles**   | View user profiles with posts, followers, and social links              |
-| **Signals Feed**      | Ephemeral mesh-first content sorted by proximity and expiry             |
+| **Team Profiles**     | View team member profiles with role, assignment, and contact details    |
+| **Signals Feed**      | Structured operational reports sorted by proximity and expiry           |
 
 ### Device Configuration
 
@@ -303,11 +301,11 @@ lib/
 │   ├── mesh3d/     # 3D mesh topology view
 │   ├── mesh_health/# Network health analytics
 │   ├── messaging/  # Direct and channel messaging
-│   ├── nodedex/    # Mesh field journal (sigils, traits, patina)
+│   ├── nodedex/    # Mesh asset registry (sigils, classifications, patina)
 │   ├── presence/   # Node presence tracking
 │   ├── reachability/# Node reachability analysis
-│   ├── signals/    # Ephemeral mesh-first content
-│   ├── social/     # Activity timeline, profiles
+│   ├── signals/    # Structured operational persistence
+│   ├── social/     # Activity timeline, team profiles
 │   ├── widget_builder/ # Custom dashboard widget editor
 │   ├── world_mesh/ # Global MQTT node map
 │   └── ...         # Additional feature modules
@@ -385,7 +383,7 @@ socialmesh://node/<base64>      # Import node information
 
 ## Project Status
 
-Socialmesh is a fully functional Meshtastic companion app available on iOS and Android. The codebase is stable and actively maintained.
+Socialmesh is a fully functional Meshtastic field operations platform available on iOS and Android. The codebase is stable and actively maintained.
 
 ### Contributions Welcome
 
@@ -454,5 +452,5 @@ For repository maintainers:
 ---
 
 <p align="center">
-  <strong>Built for the mesh. Built for you.</strong>
+  <strong>Built for the mesh. Built for field operations.</strong>
 </p>
