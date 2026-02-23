@@ -1436,10 +1436,8 @@ class _ProductCardState extends ConsumerState<ProductCard>
     await _heartController.forward();
     await _heartController.reverse();
 
-    // Toggle favorite
-    ref
-        .read(deviceShopServiceProvider)
-        .toggleFavorite(oderId, widget.product.id);
+    // Toggle favorite via queue to prevent double-taps
+    toggleFavoriteQueued(ref, userId: oderId, productId: widget.product.id);
   }
 }
 

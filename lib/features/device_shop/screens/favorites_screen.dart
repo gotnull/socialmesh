@@ -399,8 +399,6 @@ class _FavoriteProductCard extends ConsumerWidget {
   }
 
   void _removeFavorite(WidgetRef ref) {
-    ref
-        .read(deviceShopServiceProvider)
-        .toggleFavorite(userId, favorite.productId);
+    toggleFavoriteQueued(ref, userId: userId, productId: favorite.productId);
   }
 }

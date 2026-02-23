@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/logging.dart';
 import 'auth_providers.dart';
+import 'social_providers.dart';
 
 /// Enum for signal view modes
 enum SignalViewMode { list, grid, gallery, map }
@@ -105,6 +106,7 @@ class SignalBookmarksNotifier extends AsyncNotifier<Set<String>> {
 
     final current = state.value ?? {};
     final isBookmarked = current.contains(signalId);
+    final queue = ref.read(mutationQueueProvider);
 
     final docRef = FirebaseFirestore.instance
         .collection('users')
@@ -113,16 +115,35 @@ class SignalBookmarksNotifier extends AsyncNotifier<Set<String>> {
         .doc(signalId);
 
     try {
-      if (isBookmarked) {
-        await docRef.delete();
-        state = AsyncData({...current}..remove(signalId));
-      } else {
-        await docRef.set({
-          'savedAt': FieldValue.serverTimestamp(),
-          'signalId': signalId,
-        });
-        state = AsyncData({...current, signalId});
-      }
+      await queue.enqueue<void>(
+        key: 'bookmark:$signalId',
+        optimisticApply: () {
+          if (isBookmarked) {
+            state = AsyncData({...current}..remove(signalId));
+          } else {
+            state = AsyncData({...current, signalId});
+          }
+        },
+        execute: () async {
+          if (isBookmarked) {
+            await docRef.delete();
+          } else {
+            await docRef.set({
+              'savedAt': FieldValue.serverTimestamp(),
+              'signalId': signalId,
+            });
+          }
+        },
+        commitApply: (_) {},
+        rollbackApply: () {
+          // Revert to the pre-tap state.
+          if (isBookmarked) {
+            state = AsyncData({...state.value ?? {}, signalId});
+          } else {
+            state = AsyncData({...state.value ?? {}}..remove(signalId));
+          }
+        },
+      );
     } catch (e) {
       AppLogging.social('Failed to toggle bookmark: $e');
     }

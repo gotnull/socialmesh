@@ -255,9 +255,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
           iconColor: isFavorite ? Colors.red : null,
           onPressed: () {
             if (userId != null) {
-              ref
-                  .read(deviceShopServiceProvider)
-                  .toggleFavorite(userId, product.id);
+              toggleFavoriteQueued(ref, userId: userId, productId: product.id);
             } else {
               showSignInRequiredSnackBar(context, 'Sign in to save favorites');
             }

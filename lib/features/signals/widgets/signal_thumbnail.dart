@@ -55,22 +55,50 @@ class SignalThumbnail extends StatelessWidget {
     final effectiveBackgroundColor =
         backgroundColor ?? context.accentColor.withValues(alpha: 0.2);
 
-    return Container(
+    // Use a Stack so the image fills the entire area edge-to-edge,
+    // with the border painted as an overlay on top. This avoids the
+    // implicit padding that Container+BoxDecoration+Border adds.
+    final effectiveBorderRadius = isCircular
+        ? BorderRadius.circular(size / 2)
+        : BorderRadius.circular(borderRadius);
+
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: effectiveBackgroundColor,
-        borderRadius: isCircular ? null : BorderRadius.circular(borderRadius),
-        shape: isCircular ? BoxShape.circle : BoxShape.rectangle,
-        border: Border.all(color: effectiveBorderColor, width: borderWidth),
-      ),
-      child: ClipRRect(
-        borderRadius: isCircular
-            ? BorderRadius.circular(size / 2)
-            : BorderRadius.circular(borderRadius - borderWidth),
-        child: hasImage
-            ? _buildImage(context, effectiveIconColor)
-            : _buildFallback(effectiveIconColor),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Background color (visible when no image or during loading)
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: effectiveBackgroundColor,
+              borderRadius: isCircular ? null : effectiveBorderRadius,
+              shape: isCircular ? BoxShape.circle : BoxShape.rectangle,
+            ),
+            child: const SizedBox.expand(),
+          ),
+          // Image fills the ENTIRE area, clipped to shape
+          ClipRRect(
+            borderRadius: effectiveBorderRadius,
+            child: hasImage
+                ? _buildImage(context, effectiveIconColor)
+                : _buildFallback(effectiveIconColor),
+          ),
+          // Border painted on top as overlay (no implicit padding)
+          IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: isCircular ? null : effectiveBorderRadius,
+                shape: isCircular ? BoxShape.circle : BoxShape.rectangle,
+                border: Border.all(
+                  color: effectiveBorderColor,
+                  width: borderWidth,
+                ),
+              ),
+              child: const SizedBox.expand(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -86,14 +114,11 @@ class SignalThumbnail extends StatelessWidget {
         placeholder: showLoadingIndicator
             ? Container(
                 color: Colors.grey.shade800,
-                child: Center(
+                child: const Center(
                   child: SizedBox(
-                    width: size * 0.4,
-                    height: size * 0.4,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: iconColor,
-                    ),
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 ),
               )
@@ -141,46 +166,93 @@ class SignalMapMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final markerColor = getSignalAgeColor(signal.createdAt);
+    final borderWidth = isSelected ? 3.0 : 2.0;
+    final borderColor = isSelected
+        ? Colors.white
+        : _hasImage
+        ? markerColor
+        : Colors.white54;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+    // Stack-based layout: image fills edge-to-edge, border overlays on top.
+    // This avoids AnimatedContainer + BoxDecoration.border implicit padding
+    // that was shrinking the image.
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: _hasImage ? null : markerColor,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isSelected
-              ? Colors.white
-              : _hasImage
-              ? markerColor
-              : Colors.white54,
-          width: isSelected ? 3 : 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: markerColor.withValues(alpha: 0.5),
-            blurRadius: isSelected ? 12 : 6,
-            spreadRadius: isSelected ? 3 : 1,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Shadow layer
+          DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: markerColor.withValues(alpha: 0.5),
+                  blurRadius: isSelected ? 12 : 6,
+                  spreadRadius: isSelected ? 3 : 1,
+                ),
+              ],
+            ),
+            child: const SizedBox.expand(),
+          ),
+          // Image or fallback, clipped to circle
+          ClipOval(
+            child: _hasImage
+                ? SafeImage.network(
+                    signal.mediaUrls.isNotEmpty ? signal.mediaUrls.first : '',
+                    width: size,
+                    height: size,
+                    fit: BoxFit.cover,
+                    placeholder: Container(color: Colors.grey.shade800),
+                    errorWidget: Container(
+                      color: markerColor,
+                      child: Icon(
+                        Icons.sensors,
+                        color: Colors.white,
+                        size: size * 0.5,
+                      ),
+                    ),
+                  )
+                : _hasLocalImage
+                ? SafeImage.file(
+                    File(signal.imageLocalPath!),
+                    width: size,
+                    height: size,
+                    fit: BoxFit.cover,
+                    errorWidget: Container(
+                      color: markerColor,
+                      child: Icon(
+                        Icons.sensors,
+                        color: Colors.white,
+                        size: size * 0.5,
+                      ),
+                    ),
+                  )
+                : Container(
+                    color: markerColor,
+                    child: Icon(
+                      Icons.sensors,
+                      color: Colors.white,
+                      size: size * 0.5,
+                    ),
+                  ),
+          ),
+          // Border overlay (no implicit padding)
+          IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: borderColor, width: borderWidth),
+              ),
+              child: const SizedBox.expand(),
+            ),
           ),
         ],
       ),
-      child: _hasImage
-          ? ClipOval(
-              child: SignalThumbnail(
-                signal: signal,
-                size: size,
-                isCircular: true,
-                borderWidth: 0,
-                backgroundColor: Colors.grey.shade800,
-                fallbackIconColor: Colors.white,
-              ),
-            )
-          : Icon(
-              Icons.sensors,
-              color: Colors.white,
-              size: isSelected ? size * 0.5 : size * 0.5,
-            ),
     );
   }
+
+  bool get _hasLocalImage =>
+      signal.imageLocalPath != null && signal.imageLocalPath!.isNotEmpty;
 }

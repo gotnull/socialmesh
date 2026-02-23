@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
 import '../models/social_activity.dart';
 import '../providers/auth_providers.dart';
+import '../providers/social_providers.dart';
 import '../services/social_activity_service.dart';
 
 // ===========================================================================
@@ -187,7 +188,7 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
     }
   }
 
-  /// Mark all activities as read.
+  /// Mark all activities as read. Serialized via MutationQueue.
   Future<void> markAllAsRead() async {
     final firebaseAsync = ref.read(firebaseReadyProvider);
     final isFirebaseReady = firebaseAsync.whenOrNull(data: (v) => v) ?? false;
@@ -204,21 +205,39 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
       '${state.activities.length} activities as read',
     );
 
-    try {
-      final service = ref.read(socialActivityServiceProvider);
-      await service.markAllAsRead();
+    final queue = ref.read(mutationQueueProvider);
+    final previousActivities = state.activities;
+    final previousUnread = state.unreadCount;
 
-      final updatedActivities = state.activities
-          .map((a) => a.copyWith(isRead: true))
-          .toList();
-      state = state.copyWith(activities: updatedActivities, unreadCount: 0);
-      AppLogging.social('📬 [ActivityFeed] markAllAsRead() — success');
+    try {
+      await queue.enqueue<void>(
+        key: 'activity-read-all:batch',
+        optimisticApply: () {
+          final updatedActivities = state.activities
+              .map((a) => a.copyWith(isRead: true))
+              .toList();
+          state = state.copyWith(activities: updatedActivities, unreadCount: 0);
+        },
+        execute: () async {
+          final service = ref.read(socialActivityServiceProvider);
+          await service.markAllAsRead();
+        },
+        commitApply: (_) {
+          AppLogging.social('📬 [ActivityFeed] markAllAsRead() — success');
+        },
+        rollbackApply: () {
+          state = state.copyWith(
+            activities: previousActivities,
+            unreadCount: previousUnread,
+          );
+        },
+      );
     } catch (e) {
       AppLogging.social('📬 [ActivityFeed] markAllAsRead() — ERROR: $e');
     }
   }
 
-  /// Mark a single activity as read.
+  /// Mark a single activity as read. Serialized via MutationQueue.
   Future<void> markAsRead(String activityId) async {
     final firebaseAsync = ref.read(firebaseReadyProvider);
     final isFirebaseReady = firebaseAsync.whenOrNull(data: (v) => v) ?? false;
@@ -235,24 +254,43 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
       '📬 [ActivityFeed] markAsRead($activityId) — marking as read',
     );
 
-    try {
-      final service = ref.read(socialActivityServiceProvider);
-      await service.markAsRead(activityId);
+    final queue = ref.read(mutationQueueProvider);
+    final previousActivities = state.activities;
+    final previousUnread = state.unreadCount;
 
-      final updatedActivities = state.activities.map((a) {
-        if (a.id == activityId) {
-          return a.copyWith(isRead: true);
-        }
-        return a;
-      }).toList();
-      final unreadCount = updatedActivities.where((a) => !a.isRead).length;
-      state = state.copyWith(
-        activities: updatedActivities,
-        unreadCount: unreadCount,
-      );
-      AppLogging.social(
-        '📬 [ActivityFeed] markAsRead($activityId) — success, '
-        '$unreadCount unread remaining',
+    try {
+      await queue.enqueue<void>(
+        key: 'activity-read:$activityId',
+        optimisticApply: () {
+          final updatedActivities = state.activities.map((a) {
+            if (a.id == activityId) {
+              return a.copyWith(isRead: true);
+            }
+            return a;
+          }).toList();
+          final unreadCount = updatedActivities.where((a) => !a.isRead).length;
+          state = state.copyWith(
+            activities: updatedActivities,
+            unreadCount: unreadCount,
+          );
+        },
+        execute: () async {
+          final service = ref.read(socialActivityServiceProvider);
+          await service.markAsRead(activityId);
+        },
+        commitApply: (_) {
+          final unreadCount = state.activities.where((a) => !a.isRead).length;
+          AppLogging.social(
+            '📬 [ActivityFeed] markAsRead($activityId) — success, '
+            '$unreadCount unread remaining',
+          );
+        },
+        rollbackApply: () {
+          state = state.copyWith(
+            activities: previousActivities,
+            unreadCount: previousUnread,
+          );
+        },
       );
     } catch (e) {
       AppLogging.social(
@@ -261,27 +299,45 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
     }
   }
 
-  /// Delete an activity.
+  /// Delete an activity. Serialized via MutationQueue.
   Future<void> deleteActivity(String activityId) async {
     AppLogging.social(
       '📬 [ActivityFeed] deleteActivity($activityId) — deleting',
     );
 
-    try {
-      final service = ref.read(socialActivityServiceProvider);
-      await service.deleteActivity(activityId);
+    final queue = ref.read(mutationQueueProvider);
+    final previousActivities = state.activities;
+    final previousUnread = state.unreadCount;
 
-      final updatedActivities = state.activities
-          .where((a) => a.id != activityId)
-          .toList();
-      final unreadCount = updatedActivities.where((a) => !a.isRead).length;
-      state = state.copyWith(
-        activities: updatedActivities,
-        unreadCount: unreadCount,
-      );
-      AppLogging.social(
-        '📬 [ActivityFeed] deleteActivity($activityId) — success, '
-        '${updatedActivities.length} activities remaining',
+    try {
+      await queue.enqueue<void>(
+        key: 'activity-delete:$activityId',
+        optimisticApply: () {
+          final updatedActivities = state.activities
+              .where((a) => a.id != activityId)
+              .toList();
+          final unreadCount = updatedActivities.where((a) => !a.isRead).length;
+          state = state.copyWith(
+            activities: updatedActivities,
+            unreadCount: unreadCount,
+          );
+        },
+        execute: () async {
+          final service = ref.read(socialActivityServiceProvider);
+          await service.deleteActivity(activityId);
+        },
+        commitApply: (_) {
+          AppLogging.social(
+            '📬 [ActivityFeed] deleteActivity($activityId) — success, '
+            '${state.activities.length} activities remaining',
+          );
+        },
+        rollbackApply: () {
+          state = state.copyWith(
+            activities: previousActivities,
+            unreadCount: previousUnread,
+          );
+        },
       );
     } catch (e) {
       AppLogging.social(

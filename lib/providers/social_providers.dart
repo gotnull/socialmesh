@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
+import '../core/mutation_queue.dart';
 import '../models/mesh_models.dart';
 import '../models/social.dart';
 import '../services/social_service.dart';
@@ -16,12 +17,15 @@ import 'auth_providers.dart';
 import 'profile_providers.dart';
 
 // ===========================================================================
-// FOLLOW OPERATION LOCKS
+// MUTATION QUEUE
 // ===========================================================================
 
-/// Set of user IDs currently being processed by toggleFollow to prevent
-/// concurrent operations that could cause race conditions.
-final _followOperationsInProgress = <String>{};
+/// Global per-key serialized mutation queue for toggle actions.
+/// Guarantees that rapid taps produce deterministic final state by
+/// executing mutations sequentially per entity key.
+final mutationQueueProvider = Provider<MutationQueue>((ref) {
+  return MutationQueue();
+});
 
 // ===========================================================================
 // SERVICE PROVIDERS
@@ -284,61 +288,109 @@ final cachedFollowStateProvider = Provider.autoDispose
 /// Helper to toggle follow status.
 /// For private accounts, sends a follow request instead of instant follow.
 /// For accounts with pending requests, cancels the request.
+///
+/// Serialized per target user via MutationQueue to prevent concurrent
+/// operations that could cause race conditions on rapid taps.
 Future<void> toggleFollow(WidgetRef ref, String targetUserId) async {
-  // Prevent concurrent operations on the same user
-  if (_followOperationsInProgress.contains(targetUserId)) {
-    return;
-  }
-  _followOperationsInProgress.add(targetUserId);
+  final queue = ref.read(mutationQueueProvider);
+  final service = ref.read(socialServiceProvider);
+  final currentUser = ref.read(currentUserProvider);
+  final myNodeNum = ref.read(myNodeNumProvider);
+  final currentState = await ref.read(followStateProvider(targetUserId).future);
 
-  try {
-    final service = ref.read(socialServiceProvider);
-    final currentUser = ref.read(currentUserProvider);
-    final myNodeNum = ref.read(myNodeNumProvider);
-    final currentState = await ref.read(
-      followStateProvider(targetUserId).future,
-    );
+  // Get target profile for optimistic updates (needed to know current counts)
+  final targetProfile = ref
+      .read(publicProfileStreamProvider(targetUserId))
+      .value;
+  final myProfile = currentUser != null
+      ? ref.read(publicProfileStreamProvider(currentUser.uid)).value
+      : null;
 
-    // Get target profile for optimistic updates (needed to know current counts)
-    final targetProfile = ref
-        .read(publicProfileStreamProvider(targetUserId))
-        .value;
-    final myProfile = currentUser != null
-        ? ref.read(publicProfileStreamProvider(currentUser.uid)).value
-        : null;
+  // Compute optimistic follow state before enqueuing
+  final optimisticState = FollowState(
+    isFollowing: !currentState.isFollowing && !currentState.hasPendingRequest,
+    hasPendingRequest: false,
+  );
 
-    if (currentState.isFollowing) {
-      // Unfollow - apply optimistic decrements
-      if (targetProfile != null) {
-        ref
-            .read(profileCountAdjustmentsProvider.notifier)
-            .decrement(
-              targetUserId,
-              ProfileCountType.followers,
-              targetProfile.followerCount,
-            );
+  return queue.enqueue<void>(
+    key: 'follow:$targetUserId',
+    optimisticApply: () {
+      // Apply optimistic count changes
+      if (currentState.isFollowing) {
+        // Unfollow - optimistic decrements
+        if (targetProfile != null) {
+          ref
+              .read(profileCountAdjustmentsProvider.notifier)
+              .decrement(
+                targetUserId,
+                ProfileCountType.followers,
+                targetProfile.followerCount,
+              );
+        }
+        if (myProfile != null && currentUser != null) {
+          ref
+              .read(profileCountAdjustmentsProvider.notifier)
+              .decrement(
+                currentUser.uid,
+                ProfileCountType.following,
+                myProfile.followingCount,
+              );
+        }
       }
-      if (myProfile != null && currentUser != null) {
-        ref
-            .read(profileCountAdjustmentsProvider.notifier)
-            .decrement(
-              currentUser.uid,
-              ProfileCountType.following,
-              myProfile.followingCount,
-            );
+      // Update batch cache immediately for responsive UI
+      ref
+          .read(batchFollowStatesProvider.notifier)
+          .updateFollowState(targetUserId, optimisticState);
+    },
+    execute: () async {
+      if (currentState.isFollowing) {
+        await service.unfollowUser(targetUserId);
+      } else if (currentState.hasPendingRequest) {
+        await service.cancelFollowRequest(targetUserId);
+      } else {
+        final result = await service.followUser(
+          targetUserId,
+          actorNodeNum: myNodeNum,
+        );
+        // Only apply optimistic counts if it's an instant follow
+        if (result == 'followed') {
+          if (targetProfile != null) {
+            ref
+                .read(profileCountAdjustmentsProvider.notifier)
+                .increment(
+                  targetUserId,
+                  ProfileCountType.followers,
+                  targetProfile.followerCount,
+                );
+          }
+          if (myProfile != null && currentUser != null) {
+            ref
+                .read(profileCountAdjustmentsProvider.notifier)
+                .increment(
+                  currentUser.uid,
+                  ProfileCountType.following,
+                  myProfile.followingCount,
+                );
+          }
+        }
       }
-      await service.unfollowUser(targetUserId);
-    } else if (currentState.hasPendingRequest) {
-      // Cancel pending request - no count changes
-      await service.cancelFollowRequest(targetUserId);
-    } else {
-      // Follow or send request
-      final result = await service.followUser(
-        targetUserId,
-        actorNodeNum: myNodeNum,
-      );
-      // Only apply optimistic counts if it's an instant follow (not a request)
-      if (result == 'followed') {
+    },
+    commitApply: (_) {
+      // Invalidate to refresh both users' states from server
+      ref.invalidate(followStateProvider(targetUserId));
+      ref.invalidate(publicProfileStreamProvider(targetUserId));
+      if (currentUser != null) {
+        ref.invalidate(publicProfileStreamProvider(currentUser.uid));
+      }
+    },
+    rollbackApply: () {
+      // Revert batch cache to previous state
+      ref
+          .read(batchFollowStatesProvider.notifier)
+          .updateFollowState(targetUserId, currentState);
+      // Revert count adjustments
+      if (currentState.isFollowing) {
+        // We decremented on optimistic — re-increment
         if (targetProfile != null) {
           ref
               .read(profileCountAdjustmentsProvider.notifier)
@@ -358,27 +410,14 @@ Future<void> toggleFollow(WidgetRef ref, String targetUserId) async {
               );
         }
       }
-    }
-
-    // Update batch cache immediately for responsive UI
-    final newState = FollowState(
-      isFollowing: !currentState.isFollowing && !currentState.hasPendingRequest,
-      hasPendingRequest: false,
-    );
-    ref
-        .read(batchFollowStatesProvider.notifier)
-        .updateFollowState(targetUserId, newState);
-
-    // Invalidate to refresh both users' states
-    ref.invalidate(followStateProvider(targetUserId));
-    // Invalidate profile streams so follower/following counts update immediately
-    ref.invalidate(publicProfileStreamProvider(targetUserId));
-    if (currentUser != null) {
-      ref.invalidate(publicProfileStreamProvider(currentUser.uid));
-    }
-  } finally {
-    _followOperationsInProgress.remove(targetUserId);
-  }
+      // Invalidate to get fresh server state
+      ref.invalidate(followStateProvider(targetUserId));
+      ref.invalidate(publicProfileStreamProvider(targetUserId));
+      if (currentUser != null) {
+        ref.invalidate(publicProfileStreamProvider(currentUser.uid));
+      }
+    },
+  );
 }
 
 // ===========================================================================
@@ -400,11 +439,12 @@ final pendingFollowRequestsProvider =
       return service.watchPendingFollowRequests();
     });
 
-/// Accept a follow request
+/// Accept a follow request. Serialized via MutationQueue.
 Future<void> acceptFollowRequest(WidgetRef ref, String requesterId) async {
   final service = ref.read(socialServiceProvider);
   final currentUser = ref.read(currentUserProvider);
   final myNodeNum = ref.read(myNodeNumProvider);
+  final queue = ref.read(mutationQueueProvider);
 
   // Get profiles for optimistic updates
   final requesterProfile = ref
@@ -414,85 +454,95 @@ Future<void> acceptFollowRequest(WidgetRef ref, String requesterId) async {
       ? ref.read(publicProfileStreamProvider(currentUser.uid)).value
       : null;
 
-  // Apply optimistic count updates:
-  // - requester's following count goes up
-  // - my follower count goes up
-  if (requesterProfile != null) {
-    ref
-        .read(profileCountAdjustmentsProvider.notifier)
-        .increment(
-          requesterId,
-          ProfileCountType.following,
-          requesterProfile.followingCount,
-        );
-  }
-  if (myProfile != null && currentUser != null) {
-    ref
-        .read(profileCountAdjustmentsProvider.notifier)
-        .increment(
-          currentUser.uid,
-          ProfileCountType.followers,
-          myProfile.followerCount,
-        );
-  }
-
-  try {
-    await service.acceptFollowRequest(requesterId, actorNodeNum: myNodeNum);
-  } catch (e) {
-    // Rollback optimistic updates on failure
-    if (requesterProfile != null) {
-      ref
-          .read(profileCountAdjustmentsProvider.notifier)
-          .decrement(
-            requesterId,
-            ProfileCountType.following,
-            requesterProfile.followingCount,
-          );
-    }
-    if (myProfile != null && currentUser != null) {
-      ref
-          .read(profileCountAdjustmentsProvider.notifier)
-          .decrement(
-            currentUser.uid,
-            ProfileCountType.followers,
-            myProfile.followerCount,
-          );
-    }
-    rethrow;
-  }
-
-  // Invalidate related providers
-  ref.invalidate(pendingFollowRequestsProvider);
-  ref.invalidate(pendingFollowRequestsCountProvider);
-  ref.invalidate(followStateProvider(requesterId));
-  // Invalidate profile streams so follower counts update immediately
-  ref.invalidate(publicProfileStreamProvider(requesterId));
-  ref.invalidate(optimisticProfileProvider(requesterId));
-  if (currentUser != null) {
-    ref.invalidate(publicProfileStreamProvider(currentUser.uid));
-    ref.invalidate(optimisticProfileProvider(currentUser.uid));
-  }
+  return queue.enqueue<void>(
+    key: 'follow-request:$requesterId',
+    optimisticApply: () {
+      // Optimistic count updates:
+      // - requester's following count goes up
+      // - my follower count goes up
+      if (requesterProfile != null) {
+        ref
+            .read(profileCountAdjustmentsProvider.notifier)
+            .increment(
+              requesterId,
+              ProfileCountType.following,
+              requesterProfile.followingCount,
+            );
+      }
+      if (myProfile != null && currentUser != null) {
+        ref
+            .read(profileCountAdjustmentsProvider.notifier)
+            .increment(
+              currentUser.uid,
+              ProfileCountType.followers,
+              myProfile.followerCount,
+            );
+      }
+    },
+    execute: () =>
+        service.acceptFollowRequest(requesterId, actorNodeNum: myNodeNum),
+    commitApply: (_) {
+      ref.invalidate(pendingFollowRequestsProvider);
+      ref.invalidate(pendingFollowRequestsCountProvider);
+      ref.invalidate(followStateProvider(requesterId));
+      ref.invalidate(publicProfileStreamProvider(requesterId));
+      ref.invalidate(optimisticProfileProvider(requesterId));
+      if (currentUser != null) {
+        ref.invalidate(publicProfileStreamProvider(currentUser.uid));
+        ref.invalidate(optimisticProfileProvider(currentUser.uid));
+      }
+    },
+    rollbackApply: () {
+      // Revert optimistic count increments
+      if (requesterProfile != null) {
+        ref
+            .read(profileCountAdjustmentsProvider.notifier)
+            .decrement(
+              requesterId,
+              ProfileCountType.following,
+              requesterProfile.followingCount,
+            );
+      }
+      if (myProfile != null && currentUser != null) {
+        ref
+            .read(profileCountAdjustmentsProvider.notifier)
+            .decrement(
+              currentUser.uid,
+              ProfileCountType.followers,
+              myProfile.followerCount,
+            );
+      }
+    },
+  );
 }
 
-/// Decline a follow request
+/// Decline a follow request. Serialized via MutationQueue.
 Future<void> declineFollowRequest(WidgetRef ref, String requesterId) async {
   final service = ref.read(socialServiceProvider);
-  try {
-    await service.declineFollowRequest(requesterId);
-  } catch (e) {
-    // Re-throw to allow caller to handle the error
-    rethrow;
-  }
+  final queue = ref.read(mutationQueueProvider);
 
-  // Invalidate related providers
-  ref.invalidate(pendingFollowRequestsProvider);
-  ref.invalidate(pendingFollowRequestsCountProvider);
+  return queue.enqueue<void>(
+    key: 'follow-request:$requesterId',
+    optimisticApply: () {
+      // No optimistic state change — request just disappears
+    },
+    execute: () => service.declineFollowRequest(requesterId),
+    commitApply: (_) {
+      ref.invalidate(pendingFollowRequestsProvider);
+      ref.invalidate(pendingFollowRequestsCountProvider);
+    },
+    rollbackApply: () {
+      ref.invalidate(pendingFollowRequestsProvider);
+      ref.invalidate(pendingFollowRequestsCountProvider);
+    },
+  );
 }
 
-/// Remove a follower (for private accounts)
+/// Remove a follower (for private accounts). Serialized via MutationQueue.
 Future<void> removeFollower(WidgetRef ref, String followerId) async {
   final service = ref.read(socialServiceProvider);
   final currentUser = ref.read(currentUserProvider);
+  final queue = ref.read(mutationQueueProvider);
 
   // Get profiles for optimistic updates
   final followerProfile = ref
@@ -502,49 +552,90 @@ Future<void> removeFollower(WidgetRef ref, String followerId) async {
       ? ref.read(publicProfileStreamProvider(currentUser.uid)).value
       : null;
 
-  // Apply optimistic count updates:
-  // - follower's following count goes down
-  // - my follower count goes down
-  if (followerProfile != null) {
-    ref
-        .read(profileCountAdjustmentsProvider.notifier)
-        .decrement(
-          followerId,
-          ProfileCountType.following,
-          followerProfile.followingCount,
-        );
-  }
-  if (myProfile != null && currentUser != null) {
-    ref
-        .read(profileCountAdjustmentsProvider.notifier)
-        .decrement(
-          currentUser.uid,
-          ProfileCountType.followers,
-          myProfile.followerCount,
-        );
-  }
-
-  await service.removeFollower(followerId);
-
-  // Invalidate related providers
-  ref.invalidate(followStateProvider(followerId));
-  // Invalidate profile streams so follower counts update immediately
-  ref.invalidate(publicProfileStreamProvider(followerId));
-  if (currentUser != null) {
-    ref.invalidate(publicProfileStreamProvider(currentUser.uid));
-  }
+  return queue.enqueue<void>(
+    key: 'follow:$followerId',
+    optimisticApply: () {
+      // Apply optimistic count updates:
+      // - follower's following count goes down
+      // - my follower count goes down
+      if (followerProfile != null) {
+        ref
+            .read(profileCountAdjustmentsProvider.notifier)
+            .decrement(
+              followerId,
+              ProfileCountType.following,
+              followerProfile.followingCount,
+            );
+      }
+      if (myProfile != null && currentUser != null) {
+        ref
+            .read(profileCountAdjustmentsProvider.notifier)
+            .decrement(
+              currentUser.uid,
+              ProfileCountType.followers,
+              myProfile.followerCount,
+            );
+      }
+    },
+    execute: () => service.removeFollower(followerId),
+    commitApply: (_) {
+      // Invalidate related providers
+      ref.invalidate(followStateProvider(followerId));
+      ref.invalidate(publicProfileStreamProvider(followerId));
+      if (currentUser != null) {
+        ref.invalidate(publicProfileStreamProvider(currentUser.uid));
+      }
+    },
+    rollbackApply: () {
+      // Revert optimistic count decrements
+      if (followerProfile != null) {
+        ref
+            .read(profileCountAdjustmentsProvider.notifier)
+            .increment(
+              followerId,
+              ProfileCountType.following,
+              followerProfile.followingCount,
+            );
+      }
+      if (myProfile != null && currentUser != null) {
+        ref
+            .read(profileCountAdjustmentsProvider.notifier)
+            .increment(
+              currentUser.uid,
+              ProfileCountType.followers,
+              myProfile.followerCount,
+            );
+      }
+    },
+  );
 }
 
-/// Set account privacy setting
+/// Set account privacy setting. Serialized via MutationQueue.
 Future<void> setAccountPrivacy(WidgetRef ref, bool isPrivate) async {
   final service = ref.read(socialServiceProvider);
-  await service.setAccountPrivacy(isPrivate);
-
-  // Invalidate current user's profile
+  final queue = ref.read(mutationQueueProvider);
   final currentUser = ref.read(currentUserProvider);
-  if (currentUser != null) {
-    ref.invalidate(publicProfileProvider(currentUser.uid));
-  }
+
+  return queue.enqueue<void>(
+    key: 'profile-privacy:${currentUser?.uid ?? 'unknown'}',
+    optimisticApply: () {
+      // Invalidate profile to show new privacy state immediately
+      if (currentUser != null) {
+        ref.invalidate(publicProfileProvider(currentUser.uid));
+      }
+    },
+    execute: () => service.setAccountPrivacy(isPrivate),
+    commitApply: (_) {
+      if (currentUser != null) {
+        ref.invalidate(publicProfileProvider(currentUser.uid));
+      }
+    },
+    rollbackApply: () {
+      if (currentUser != null) {
+        ref.invalidate(publicProfileProvider(currentUser.uid));
+      }
+    },
+  );
 }
 
 // ===========================================================================
@@ -1586,17 +1677,49 @@ final likeStatusProvider = FutureProvider.autoDispose.family<bool, String>((
   return service.hasLikedPost(postId);
 });
 
-/// Helper to toggle like status
-Future<void> toggleLike(WidgetRef ref, String postId) async {
+/// Helper to toggle like status using the per-key MutationQueue.
+///
+/// Applies optimistic state immediately via [optimisticIsLiked] and
+/// [optimisticLikeCount] callbacks, then serializes the Firestore write
+/// so rapid taps never produce out-of-order responses.
+///
+/// [currentlyLiked] – the like state at the moment the user tapped.
+/// [currentLikeCount] – the like count shown when the user tapped.
+/// [onOptimistic] – called synchronously with (isLiked, likeCount).
+/// [onCommit] – called when the server write succeeds.
+/// [onRollback] – called with (isLiked, likeCount) to revert.
+Future<void> toggleLikeQueued(
+  WidgetRef ref, {
+  required String postId,
+  required bool currentlyLiked,
+  required int currentLikeCount,
+  required void Function(bool isLiked, int likeCount) onOptimistic,
+  void Function()? onCommit,
+  void Function(bool isLiked, int likeCount)? onRollback,
+}) {
   final service = ref.read(socialServiceProvider);
   final myNodeNum = ref.read(myNodeNumProvider);
-  final isLiked = await service.hasLikedPost(postId);
+  final queue = ref.read(mutationQueueProvider);
 
-  if (isLiked) {
-    await service.unlikePost(postId);
-  } else {
-    await service.likePost(postId, actorNodeNum: myNodeNum);
-  }
+  final newIsLiked = !currentlyLiked;
+  final newLikeCount = (currentLikeCount + (newIsLiked ? 1 : -1)).clamp(
+    0,
+    999999,
+  );
+
+  return queue.enqueue<void>(
+    key: 'like:$postId',
+    optimisticApply: () => onOptimistic(newIsLiked, newLikeCount),
+    execute: () async {
+      if (newIsLiked) {
+        await service.likePost(postId, actorNodeNum: myNodeNum);
+      } else {
+        await service.unlikePost(postId);
+      }
+    },
+    commitApply: (_) => onCommit?.call(),
+    rollbackApply: () => onRollback?.call(currentlyLiked, currentLikeCount),
+  );
 }
 
 // ===========================================================================
@@ -1894,20 +2017,48 @@ final blockedUsersProvider = FutureProvider.autoDispose<List<String>>((
   return service.getBlockedUserIds();
 });
 
-/// Helper to block a user
+/// Helper to block a user. Serialized via MutationQueue per user.
 Future<void> blockUser(WidgetRef ref, String userId) async {
   final service = ref.read(socialServiceProvider);
-  await service.blockUser(userId);
-  ref.invalidate(isBlockedProvider(userId));
-  ref.invalidate(blockedUsersProvider);
+  final queue = ref.read(mutationQueueProvider);
+
+  return queue.enqueue<void>(
+    key: 'block:$userId',
+    optimisticApply: () {
+      // No optimistic state — blocking UI is confirmation-gated
+    },
+    execute: () => service.blockUser(userId),
+    commitApply: (_) {
+      ref.invalidate(isBlockedProvider(userId));
+      ref.invalidate(blockedUsersProvider);
+    },
+    rollbackApply: () {
+      ref.invalidate(isBlockedProvider(userId));
+      ref.invalidate(blockedUsersProvider);
+    },
+  );
 }
 
-/// Helper to unblock a user
+/// Helper to unblock a user. Serialized via MutationQueue per user.
 Future<void> unblockUser(WidgetRef ref, String userId) async {
   final service = ref.read(socialServiceProvider);
-  await service.unblockUser(userId);
-  ref.invalidate(isBlockedProvider(userId));
-  ref.invalidate(blockedUsersProvider);
+  final queue = ref.read(mutationQueueProvider);
+
+  return queue.enqueue<void>(
+    key: 'block:$userId',
+    optimisticApply: () {
+      // No optimistic state — unblocking UI is confirmation-gated
+    },
+    execute: () => service.unblockUser(userId),
+    commitApply: (_) {
+      ref.invalidate(isBlockedProvider(userId));
+      ref.invalidate(blockedUsersProvider);
+    },
+    rollbackApply: () {
+      ref.invalidate(isBlockedProvider(userId));
+      ref.invalidate(blockedUsersProvider);
+    },
+  );
 }
 
 // ===========================================================================

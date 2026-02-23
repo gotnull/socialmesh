@@ -24,7 +24,8 @@ class SubscribeButton extends ConsumerStatefulWidget {
 
 class _SubscribeButtonState extends ConsumerState<SubscribeButton>
     with LifecycleSafeMixin {
-  bool _isLoading = false;
+  /// Tracks whether an optimistic toggle is pending (for visual feedback).
+  bool _isToggling = false;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +76,7 @@ class _SubscribeButtonState extends ConsumerState<SubscribeButton>
   }
 
   Widget _buildButton(bool isSubscribed) {
-    if (_isLoading) {
+    if (_isToggling) {
       return widget.compact
           ? const SizedBox(
               width: 18,
@@ -123,30 +124,50 @@ class _SubscribeButtonState extends ConsumerState<SubscribeButton>
   }
 
   Future<void> _handleToggle() async {
-    safeSetState(() => _isLoading = true);
     final service = ref.read(socialServiceProvider);
+    final queue = ref.read(mutationQueueProvider);
+
+    // Determine current subscription state
+    final isSubscribed = await service.isSubscribedToAuthorSignals(
+      widget.authorId,
+    );
+
+    safeSetState(() => _isToggling = true);
+
     try {
-      final isSubscribed = await service.isSubscribedToAuthorSignals(
-        widget.authorId,
+      await queue.enqueue<void>(
+        key: 'subscribe:${widget.authorId}',
+        optimisticApply: () {
+          // Optimistic feedback handled by _isToggling spinner
+        },
+        execute: () async {
+          if (isSubscribed) {
+            await service.unsubscribeFromAuthorSignals(widget.authorId);
+          } else {
+            await service.subscribeToAuthorSignals(widget.authorId);
+          }
+        },
+        commitApply: (_) {
+          if (!mounted) return;
+          showInfoSnackBar(
+            context,
+            isSubscribed ? 'Unsubscribed' : 'Subscribed',
+          );
+          ref.invalidate(signalSubscriptionProvider(widget.authorId));
+        },
+        rollbackApply: () {
+          // Provider state unchanged — just invalidate to refresh
+          if (mounted) {
+            ref.invalidate(signalSubscriptionProvider(widget.authorId));
+          }
+        },
       );
-      if (isSubscribed) {
-        await service.unsubscribeFromAuthorSignals(widget.authorId);
-        if (!mounted) return;
-        showInfoSnackBar(context, 'Unsubscribed');
-      } else {
-        await service.subscribeToAuthorSignals(widget.authorId);
-        if (!mounted) return;
-        showInfoSnackBar(context, 'Subscribed');
-      }
-      // invalidate provider to refresh state
-      if (!mounted) return;
-      ref.invalidate(signalSubscriptionProvider(widget.authorId));
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to update subscription: $e');
       }
     } finally {
-      safeSetState(() => _isLoading = false);
+      safeSetState(() => _isToggling = false);
     }
   }
 }

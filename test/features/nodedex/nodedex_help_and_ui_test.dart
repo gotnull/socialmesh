@@ -50,14 +50,17 @@ void main() {
       expect(stepIds, contains('nodedex_social_tag'));
       expect(stepIds, contains('nodedex_note'));
       expect(stepIds, contains('nodedex_regions'));
+      expect(stepIds, contains('nodedex_auto_summary'));
+      expect(stepIds, contains('nodedex_observation_timeline'));
       expect(stepIds, contains('nodedex_encounters'));
+      expect(stepIds, contains('nodedex_activity_timeline'));
       expect(stepIds, contains('nodedex_coseen'));
       expect(stepIds, contains('nodedex_device'));
     });
 
-    test('topic has exactly 10 steps', () {
+    test('topic has exactly 13 steps', () {
       final topic = HelpContent.getTopic('nodedex_detail')!;
-      expect(topic.steps.length, equals(10));
+      expect(topic.steps.length, equals(13));
     });
 
     test('first step cannot go back', () {
@@ -144,8 +147,8 @@ void main() {
       }
     });
 
-    test('has exactly 16 entries (10 node-detail + 6 album)', () {
-      expect(HelpContent.nodeDexSectionHelp.length, equals(16));
+    test('has exactly 19 entries (13 node-detail + 6 album)', () {
+      expect(HelpContent.nodeDexSectionHelp.length, equals(19));
     });
 
     test('all values are non-empty strings', () {

@@ -1,18 +1,54 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:math' as math;
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/datetime_picker_sheet.dart';
+import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/search_filter_header.dart';
+import '../../core/widgets/section_header.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
 
-/// Device metrics history screen with filtering and graph views
+// =============================================================================
+// Filter enum
+// =============================================================================
+
+enum _MetricFilter {
+  all('All', null),
+  battery('Battery', Icons.battery_full),
+  voltage('Voltage', Icons.bolt),
+  channel('Channel', Icons.signal_cellular_alt),
+  airUtil('Air Util', Icons.wifi),
+  uptime('Uptime', Icons.timer);
+
+  final String label;
+  final IconData? icon;
+
+  const _MetricFilter(this.label, this.icon);
+}
+
+// =============================================================================
+// Screen
+// =============================================================================
+
+/// Device metrics history screen — battery, voltage, utilization logs.
+///
+/// Follows the standard screen architecture:
+/// GlassScaffold → pinned SearchFilterHeaderDelegate → chart → SliverList.
+/// Always-visible multi-metric overlay chart (matching Android/iOS reference
+/// apps) sits between the filter header and the card list. All metrics are
+/// overlaid on a single chart: battery / channel util / air util share the
+/// left 0–100 % axis; voltage uses the right axis.
+/// Date-range filtering via app bar actions.
 class DeviceMetricsLogScreen extends ConsumerStatefulWidget {
   const DeviceMetricsLogScreen({super.key});
 
@@ -23,12 +59,36 @@ class DeviceMetricsLogScreen extends ConsumerStatefulWidget {
 
 class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
     with LifecycleSafeMixin<DeviceMetricsLogScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  _MetricFilter _activeFilter = _MetricFilter.all;
   DateTime? _startDate;
   DateTime? _endDate;
-  bool _showGraph = false;
-  _GraphMetric _selectedMetric = _GraphMetric.battery;
 
-  List<DeviceMetricsLog> _filterLogs(List<DeviceMetricsLog> logs) {
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Filtering helpers
+  // ---------------------------------------------------------------------------
+
+  bool get _hasDateFilter => _startDate != null || _endDate != null;
+
+  void _clearDateFilter() {
+    safeSetState(() {
+      _startDate = null;
+      _endDate = null;
+    });
+  }
+
+  List<DeviceMetricsLog> _applyDateFilter(List<DeviceMetricsLog> logs) {
     return logs.where((log) {
       if (_startDate != null && log.timestamp.isBefore(_startDate!)) {
         return false;
@@ -41,340 +101,482 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
     }).toList();
   }
 
-  bool get _hasActiveFilters => _startDate != null || _endDate != null;
+  List<DeviceMetricsLog> _applyMetricFilter(List<DeviceMetricsLog> logs) {
+    return switch (_activeFilter) {
+      _MetricFilter.all => logs,
+      _MetricFilter.battery =>
+        logs.where((l) => l.batteryLevel != null).toList(),
+      _MetricFilter.voltage => logs.where((l) => l.voltage != null).toList(),
+      _MetricFilter.channel =>
+        logs.where((l) => l.channelUtilization != null).toList(),
+      _MetricFilter.airUtil => logs.where((l) => l.airUtilTx != null).toList(),
+      _MetricFilter.uptime =>
+        logs.where((l) => l.uptimeSeconds != null).toList(),
+    };
+  }
 
-  void _clearFilters() {
+  List<DeviceMetricsLog> _applySearch(
+    List<DeviceMetricsLog> logs,
+    Map<int, dynamic> nodes,
+  ) {
+    if (_searchQuery.isEmpty) return logs;
+    final query = _searchQuery.toLowerCase();
+    return logs.where((log) {
+      final node = nodes[log.nodeNum];
+      final name =
+          (node?.displayName as String?) ??
+          '!${log.nodeNum.toRadixString(16).toUpperCase()}';
+      return name.toLowerCase().contains(query) ||
+          log.nodeNum.toString().contains(query);
+    }).toList();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Filter chip counts
+  // ---------------------------------------------------------------------------
+
+  int _countForFilter(List<DeviceMetricsLog> logs, _MetricFilter filter) {
+    return switch (filter) {
+      _MetricFilter.all => logs.length,
+      _MetricFilter.battery => logs.where((l) => l.batteryLevel != null).length,
+      _MetricFilter.voltage => logs.where((l) => l.voltage != null).length,
+      _MetricFilter.channel =>
+        logs.where((l) => l.channelUtilization != null).length,
+      _MetricFilter.airUtil => logs.where((l) => l.airUtilTx != null).length,
+      _MetricFilter.uptime => logs.where((l) => l.uptimeSeconds != null).length,
+    };
+  }
+
+  Color? _colorForFilter(_MetricFilter filter) {
+    return switch (filter) {
+      _MetricFilter.all => null,
+      _MetricFilter.battery => AccentColors.green,
+      _MetricFilter.voltage => AppTheme.warningYellow,
+      _MetricFilter.channel => AppTheme.primaryBlue,
+      _MetricFilter.airUtil => AppTheme.primaryMagenta,
+      _MetricFilter.uptime => AccentColors.cyan,
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Date range picker
+  // ---------------------------------------------------------------------------
+
+  // Uses DatePickerSheet, not banned Material dialogs.
+  Future<void> _selectDateRange() async {
+    final start = await DatePickerSheet.show(
+      context,
+      initialDate: _startDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      title: 'Start Date',
+    );
+    if (!mounted || start == null) return;
+
+    final end = await DatePickerSheet.show(
+      context,
+      initialDate: _endDate ?? start,
+      firstDate: start,
+      lastDate: DateTime.now(),
+      title: 'End Date',
+    );
+    if (!mounted || end == null) return;
+
     safeSetState(() {
-      _startDate = null;
-      _endDate = null;
+      _startDate = start;
+      _endDate = end;
     });
   }
 
-  Future<void> _selectDateRange() async {
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      initialDateRange: _startDate != null && _endDate != null
-          ? DateTimeRange(start: _startDate!, end: _endDate!)
-          : null,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null && mounted) {
-      safeSetState(() {
-        _startDate = picked.start;
-        _endDate = picked.end;
-      });
-    }
-  }
+  // ---------------------------------------------------------------------------
+  // Build
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
     final logsAsync = ref.watch(deviceMetricsLogsProvider);
     final nodes = ref.watch(nodesProvider);
 
-    return GlassScaffold(
-      title: 'Device',
-      actions: [
-        if (_hasActiveFilters)
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: GlassScaffold(
+        resizeToAvoidBottomInset: false,
+        title: 'Device Metrics',
+        actions: [
+          if (_hasDateFilter)
+            IconButton(
+              icon: const Icon(Icons.filter_alt_off),
+              tooltip: 'Clear date filter',
+              onPressed: _clearDateFilter,
+            ),
           IconButton(
-            icon: const Icon(Icons.filter_alt_off),
-            tooltip: 'Clear filters',
-            onPressed: _clearFilters,
+            icon: Badge(
+              isLabelVisible: _hasDateFilter,
+              child: const Icon(Icons.date_range),
+            ),
+            tooltip: 'Date range',
+            onPressed: _selectDateRange,
           ),
-        IconButton(
-          icon: Badge(
-            isLabelVisible: _hasActiveFilters,
-            child: const Icon(Icons.date_range),
-          ),
-          tooltip: 'Date range',
-          onPressed: _selectDateRange,
-        ),
-        IconButton(
-          icon: Icon(_showGraph ? Icons.list : Icons.show_chart),
-          tooltip: _showGraph ? 'List view' : 'Graph view',
-          onPressed: () => setState(() => _showGraph = !_showGraph),
-        ),
-      ],
-      slivers: [
-        logsAsync.when(
-          loading: () =>
-              const SliverFillRemaining(child: ScreenLoadingIndicator()),
-          error: (e, s) =>
-              SliverFillRemaining(child: Center(child: Text('Error: $e'))),
+        ],
+        slivers: logsAsync.when(
+          loading: () => [
+            const SliverFillRemaining(child: ScreenLoadingIndicator()),
+          ],
+          error: (e, s) => [
+            SliverFillRemaining(
+              child: Center(
+                child: Text(
+                  'Error: $e',
+                  style: TextStyle(color: context.textSecondary),
+                ),
+              ),
+            ),
+          ],
           data: (logs) {
-            final filtered = _filterLogs(logs)
+            // Apply date filter first (before counting chips).
+            final dateLogs = _applyDateFilter(logs);
+
+            // Compute per-filter counts on date-filtered set.
+            final counts = {
+              for (final f in _MetricFilter.values)
+                f: _countForFilter(dateLogs, f),
+            };
+
+            // Apply metric filter + search.
+            final filtered = _applySearch(_applyMetricFilter(dateLogs), nodes)
               ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
-            if (filtered.isEmpty) {
-              return SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.battery_unknown,
-                        size: 64,
-                        color: context.textTertiary,
+            return [
+              // Top padding below the glass app bar
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+              // Pinned search + filter chips
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: SearchFilterHeaderDelegate(
+                  searchController: _searchController,
+                  searchQuery: _searchQuery,
+                  onSearchChanged: (value) =>
+                      safeSetState(() => _searchQuery = value),
+                  hintText: 'Search by node',
+                  textScaler: MediaQuery.textScalerOf(context),
+                  rebuildKey: Object.hashAll([_activeFilter, ...counts.values]),
+                  filterChips: [
+                    for (final filter in _MetricFilter.values)
+                      SectionFilterChip(
+                        label: filter.label,
+                        count: counts[filter],
+                        isSelected: _activeFilter == filter,
+                        icon: filter.icon,
+                        color: _colorForFilter(filter),
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          safeSetState(() => _activeFilter = filter);
+                        },
                       ),
-                      SizedBox(height: 16),
-                      Text(
-                        _hasActiveFilters
-                            ? 'No metrics match filters'
-                            : 'No device history',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: context.textSecondary,
-                        ),
+                  ],
+                ),
+              ),
+
+              // Pinned chart legend — stays visible like a section header
+              // while the chart + list scroll beneath it.
+              if (filtered.length >= 2)
+                () {
+                  final legendItems = <Widget>[
+                    if (filtered.any((l) => l.batteryLevel != null))
+                      _LegendItem(color: AccentColors.green, label: 'Battery'),
+                    if (filtered.any((l) => l.voltage != null))
+                      _LegendItem(
+                        color: AppTheme.warningYellow,
+                        label: 'Voltage',
                       ),
-                      if (_hasActiveFilters) ...[
-                        const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: _clearFilters,
-                          child: const Text('Clear filters'),
-                        ),
-                      ],
-                    ],
+                    if (filtered.any((l) => l.channelUtilization != null))
+                      _LegendItem(
+                        color: AppTheme.primaryBlue,
+                        label: 'Ch Util',
+                      ),
+                    if (filtered.any((l) => l.airUtilTx != null))
+                      _LegendItem(
+                        color: AppTheme.primaryMagenta,
+                        label: 'Air Util',
+                      ),
+                  ];
+                  if (legendItems.isEmpty) {
+                    return const SliverToBoxAdapter(child: SizedBox.shrink());
+                  }
+                  return SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _ChartLegendHeaderDelegate(
+                      legendItems: legendItems,
+                      readingsCount: filtered.length,
+                    ),
+                  );
+                }(),
+
+              // Chart — always visible when there is data (matches
+              // Android BaseMetricScreen / iOS DeviceMetricsLog).
+              if (filtered.length >= 2)
+                SliverToBoxAdapter(child: _DeviceMetricsChart(logs: filtered)),
+
+              // Content — empty state or list
+              if (filtered.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: context.card,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Icon(
+                              Icons.battery_unknown,
+                              size: 40,
+                              color: context.textTertiary,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            _hasDateFilter ||
+                                    _activeFilter != _MetricFilter.all ||
+                                    _searchQuery.isNotEmpty
+                                ? 'No metrics match filters'
+                                : 'No device metrics yet',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: context.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _hasDateFilter ||
+                                    _activeFilter != _MetricFilter.all ||
+                                    _searchQuery.isNotEmpty
+                                ? 'Try adjusting your search or filters'
+                                : 'Metrics will appear when your device reports telemetry',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: context.textTertiary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          if (_activeFilter != _MetricFilter.all ||
+                              _searchQuery.isNotEmpty ||
+                              _hasDateFilter) ...[
+                            const SizedBox(height: 16),
+                            FilledButton.icon(
+                              onPressed: () {
+                                _searchController.clear();
+                                safeSetState(() {
+                                  _searchQuery = '';
+                                  _activeFilter = _MetricFilter.all;
+                                  _startDate = null;
+                                  _endDate = null;
+                                });
+                              },
+                              icon: const Icon(Icons.filter_alt_off, size: 18),
+                              label: const Text('Clear all filters'),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  sliver: SliverList.separated(
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final log = filtered[index];
+                      final nodeName =
+                          nodes[log.nodeNum]?.displayName ??
+                          '!${log.nodeNum.toRadixString(16).toUpperCase()}';
+                      return _DeviceMetricsCard(log: log, nodeName: nodeName);
+                    },
                   ),
                 ),
-              );
-            }
 
-            if (_showGraph) {
-              return SliverFillRemaining(
-                child: _DeviceGraphView(
-                  logs: filtered,
-                  selectedMetric: _selectedMetric,
-                  onMetricChanged: (m) => setState(() => _selectedMetric = m),
+              // Bottom safe-area padding
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: MediaQuery.of(context).padding.bottom + 16,
                 ),
-              );
-            }
-
-            return SliverPadding(
-              padding: const EdgeInsets.all(16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final log = filtered[index];
-                  final nodeName =
-                      nodes[log.nodeNum]?.displayName ??
-                      '!${log.nodeNum.toRadixString(16).toUpperCase()}';
-
-                  return _DeviceMetricsCard(log: log, nodeName: nodeName);
-                }, childCount: filtered.length),
               ),
-            );
+            ];
           },
         ),
-      ],
+      ),
     );
   }
 }
 
-enum _GraphMetric {
-  battery('Battery', '%', Icons.battery_full),
-  voltage('Voltage', 'V', Icons.bolt),
-  channelUtil('Channel', '%', Icons.signal_cellular_alt),
-  airUtil('Air Util', '%', Icons.wifi);
+// =============================================================================
+// Chart — all metrics overlaid, matching Android/iOS reference apps
+// =============================================================================
 
-  final String label;
-  final String unit;
-  final IconData icon;
-
-  const _GraphMetric(this.label, this.unit, this.icon);
-}
-
-class _DeviceGraphView extends StatelessWidget {
+class _DeviceMetricsChart extends StatelessWidget {
   final List<DeviceMetricsLog> logs;
-  final _GraphMetric selectedMetric;
-  final ValueChanged<_GraphMetric> onMetricChanged;
 
-  const _DeviceGraphView({
-    required this.logs,
-    required this.selectedMetric,
-    required this.onMetricChanged,
-  });
+  const _DeviceMetricsChart({required this.logs});
 
   @override
   Widget build(BuildContext context) {
-    // Prepare data points sorted by time
-    final sortedLogs = List<DeviceMetricsLog>.from(logs)
+    // Sort oldest → newest for left-to-right rendering.
+    final sorted = List<DeviceMetricsLog>.from(logs)
       ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
-    final spots = <FlSpot>[];
-    double? minY;
-    double? maxY;
+    // Build per-metric spot lists. Left axis: 0-100 %. Right axis: voltage.
+    final batterySpots = <FlSpot>[];
+    final chUtilSpots = <FlSpot>[];
+    final airUtilSpots = <FlSpot>[];
+    final voltageSpots = <FlSpot>[];
+    double vMin = double.infinity;
+    double vMax = double.negativeInfinity;
 
-    for (int i = 0; i < sortedLogs.length; i++) {
-      final log = sortedLogs[i];
-      double? value;
-
-      switch (selectedMetric) {
-        case _GraphMetric.battery:
-          value = log.batteryLevel?.toDouble();
-        case _GraphMetric.voltage:
-          value = log.voltage;
-        case _GraphMetric.channelUtil:
-          value = log.channelUtilization;
-        case _GraphMetric.airUtil:
-          value = log.airUtilTx;
+    for (int i = 0; i < sorted.length; i++) {
+      final log = sorted[i];
+      final x = i.toDouble();
+      if (log.batteryLevel != null) {
+        batterySpots.add(FlSpot(x, log.batteryLevel!.toDouble().clamp(0, 100)));
       }
-
-      if (value != null) {
-        spots.add(FlSpot(i.toDouble(), value));
-        minY = minY == null ? value : math.min(minY, value);
-        maxY = maxY == null ? value : math.max(maxY, value);
+      if (log.channelUtilization != null) {
+        chUtilSpots.add(FlSpot(x, log.channelUtilization!.clamp(0, 100)));
+      }
+      if (log.airUtilTx != null) {
+        airUtilSpots.add(FlSpot(x, log.airUtilTx!.clamp(0, 100)));
+      }
+      if (log.voltage != null) {
+        voltageSpots.add(FlSpot(x, log.voltage!));
+        vMin = math.min(vMin, log.voltage!);
+        vMax = math.max(vMax, log.voltage!);
       }
     }
 
-    if (spots.isEmpty) {
-      return Column(
+    final hasLeftAxis =
+        batterySpots.isNotEmpty ||
+        chUtilSpots.isNotEmpty ||
+        airUtilSpots.isNotEmpty;
+    final hasRightAxis = voltageSpots.isNotEmpty;
+
+    if (!hasLeftAxis && !hasRightAxis) return const SizedBox.shrink();
+
+    // Voltage axis padding
+    final vPad = hasRightAxis ? ((vMax - vMin) * 0.15).clamp(0.1, 1.0) : 0.0;
+    final vAxisMin = hasRightAxis ? vMin - vPad : 0.0;
+    final vAxisMax = hasRightAxis ? vMax + vPad : 5.0;
+
+    // Normalise voltage spots into 0–100 range to share the same Y space.
+    final vRange = vAxisMax - vAxisMin;
+    final normVoltageSpots = voltageSpots
+        .map((s) => FlSpot(s.x, ((s.y - vAxisMin) / vRange) * 100))
+        .toList();
+
+    // Collect line bar data.
+    final lineBars = <LineChartBarData>[
+      if (batterySpots.length >= 2)
+        _line(batterySpots, AccentColors.green, true),
+      if (chUtilSpots.length >= 2)
+        _line(chUtilSpots, AppTheme.primaryBlue, false),
+      if (airUtilSpots.length >= 2)
+        _line(airUtilSpots, AppTheme.primaryMagenta, false),
+      if (normVoltageSpots.length >= 2)
+        _line(normVoltageSpots, AppTheme.warningYellow, true),
+    ];
+
+    if (lineBars.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Metric selector - always visible
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SegmentedButton<_GraphMetric>(
-                segments: _GraphMetric.values
-                    .map(
-                      (m) => ButtonSegment(
-                        value: m,
-                        label: Text(m.label),
-                        icon: Icon(m.icon),
-                      ),
-                    )
-                    .toList(),
-                selected: {selectedMetric},
-                onSelectionChanged: (s) => onMetricChanged(s.first),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    selectedMetric.icon,
-                    size: 48,
-                    color: context.textTertiary,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'No ${selectedMetric.label.toLowerCase()} data',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: context.textSecondary,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Try selecting a different metric',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    // Set appropriate Y range based on metric type
-    double finalMinY, finalMaxY;
-    switch (selectedMetric) {
-      case _GraphMetric.battery:
-      case _GraphMetric.channelUtil:
-      case _GraphMetric.airUtil:
-        finalMinY = 0;
-        finalMaxY = 100;
-      case _GraphMetric.voltage:
-        final yPadding = ((maxY ?? 0) - (minY ?? 0)) * 0.1;
-        finalMinY = (minY ?? 0) - yPadding;
-        finalMaxY = (maxY ?? 0) + yPadding;
-    }
-
-    return Column(
-      children: [
-        // Metric selector
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SegmentedButton<_GraphMetric>(
-              segments: _GraphMetric.values
-                  .map(
-                    (m) => ButtonSegment(
-                      value: m,
-                      label: Text(m.label),
-                      icon: Icon(m.icon),
-                    ),
-                  )
-                  .toList(),
-              selected: {selectedMetric},
-              onSelectionChanged: (s) => onMetricChanged(s.first),
-            ),
-          ),
-        ),
-
-        // Stats summary
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _StatsRow(logs: sortedLogs, metric: selectedMetric),
-        ),
-
-        SizedBox(height: 16),
-
-        // Graph
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 8, 24, 16),
+          // Chart
+          SizedBox(
+            height: 200,
             child: LineChart(
               LineChartData(
+                minY: 0,
+                maxY: 100,
+                lineBarsData: lineBars,
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: ((finalMaxY - finalMinY) / 4).clamp(
-                    1,
-                    100,
-                  ),
+                  horizontalInterval: 25,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: context.border.withValues(alpha: 0.5),
+                    color: context.border.withValues(alpha: 0.3),
                     strokeWidth: 1,
                   ),
                 ),
+                borderData: FlBorderData(show: false),
                 titlesData: FlTitlesData(
                   topTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
                   ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                  rightTitles: AxisTitles(
+                    sideTitles: hasRightAxis
+                        ? SideTitles(
+                            showTitles: true,
+                            reservedSize: 44,
+                            interval: 25,
+                            getTitlesWidget: (value, _) {
+                              final actual = (value / 100) * vRange + vAxisMin;
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 4),
+                                child: Text(
+                                  '${actual.toStringAsFixed(1)}V',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: AppTheme.warningYellow.withValues(
+                                      alpha: 0.7,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : const SideTitles(showTitles: false),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 36,
+                      interval: 25,
+                      getTitlesWidget: (value, _) => Text(
+                        '${value.toInt()}%',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                    ),
                   ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 32,
-                      interval: math.max(1, spots.length / 6),
-                      getTitlesWidget: (value, meta) {
-                        final index = value.toInt();
-                        if (index < 0 || index >= sortedLogs.length) {
+                      reservedSize: 28,
+                      interval: math.max(1, sorted.length / 5),
+                      getTitlesWidget: (value, _) {
+                        final idx = value.toInt();
+                        if (idx < 0 || idx >= sorted.length) {
                           return const SizedBox.shrink();
                         }
-                        final log = sortedLogs[index];
                         return Padding(
-                          padding: const EdgeInsets.only(top: 8),
+                          padding: const EdgeInsets.only(top: 6),
                           child: Text(
-                            DateFormat('HH:mm').format(log.timestamp),
+                            DateFormat('HH:mm').format(sorted[idx].timestamp),
                             style: TextStyle(
                               fontSize: 10,
                               color: context.textTertiary,
@@ -384,201 +586,179 @@ class _DeviceGraphView extends StatelessWidget {
                       },
                     ),
                   ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 48,
-                      interval: ((finalMaxY - finalMinY) / 4).clamp(1, 100),
-                      getTitlesWidget: (value, meta) {
-                        return Text(
-                          '${value.toStringAsFixed(selectedMetric == _GraphMetric.voltage ? 2 : 0)}${selectedMetric.unit}',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: context.textTertiary,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
                 ),
-                borderData: FlBorderData(show: false),
-                minX: 0,
-                maxX: (spots.length - 1).toDouble(),
-                minY: finalMinY,
-                maxY: finalMaxY,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: spots,
-                    isCurved: true,
-                    curveSmoothness: 0.3,
-                    color: _getMetricColor(selectedMetric),
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: spots.length < 30,
-                      getDotPainter: (spot, percent, bar, index) =>
-                          FlDotCirclePainter(
-                            radius: 3,
-                            color: Colors.white,
-                            strokeWidth: 2,
-                            strokeColor: _getMetricColor(selectedMetric),
-                          ),
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          _getMetricColor(
-                            selectedMetric,
-                          ).withValues(alpha: 0.3),
-                          _getMetricColor(
-                            selectedMetric,
-                          ).withValues(alpha: 0.0),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
                 lineTouchData: LineTouchData(
                   touchTooltipData: LineTouchTooltipData(
+                    maxContentWidth: 180,
                     getTooltipColor: (_) => context.card,
-                    getTooltipItems: (spots) {
-                      return spots.map((spot) {
-                        final index = spot.x.toInt();
-                        final log = sortedLogs[index];
-                        return LineTooltipItem(
-                          '${spot.y.toStringAsFixed(selectedMetric == _GraphMetric.voltage ? 2 : 0)}${selectedMetric.unit}\n${DateFormat('MMM d HH:mm').format(log.timestamp)}',
-                          TextStyle(
-                            color: context.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        );
-                      }).toList();
-                    },
+                    getTooltipItems: (spots) => spots.map((spot) {
+                      final idx = spot.x.toInt().clamp(0, sorted.length - 1);
+                      final log = sorted[idx];
+                      final color = spot.bar.color ?? context.textPrimary;
+                      // Reverse-map voltage from normalised value.
+                      final isVoltage = color == AppTheme.warningYellow;
+                      final display = isVoltage
+                          ? '${((spot.y / 100) * vRange + vAxisMin).toStringAsFixed(2)}V'
+                          : '${spot.y.toStringAsFixed(1)}%';
+                      return LineTooltipItem(
+                        '$display\n${DateFormat('MMM d HH:mm').format(log.timestamp)}',
+                        TextStyle(
+                          color: color,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
-    );
-  }
 
-  Color _getMetricColor(_GraphMetric metric) {
-    switch (metric) {
-      case _GraphMetric.battery:
-        return AccentColors.green;
-      case _GraphMetric.voltage:
-        return AppTheme.warningYellow;
-      case _GraphMetric.channelUtil:
-        return AppTheme.primaryBlue;
-      case _GraphMetric.airUtil:
-        return AppTheme.primaryMagenta;
-    }
-  }
-}
-
-class _StatsRow extends StatelessWidget {
-  final List<DeviceMetricsLog> logs;
-  final _GraphMetric metric;
-
-  const _StatsRow({required this.logs, required this.metric});
-
-  @override
-  Widget build(BuildContext context) {
-    final values = <double>[];
-    for (final log in logs) {
-      double? value;
-      switch (metric) {
-        case _GraphMetric.battery:
-          value = log.batteryLevel?.toDouble();
-        case _GraphMetric.voltage:
-          value = log.voltage;
-        case _GraphMetric.channelUtil:
-          value = log.channelUtilization;
-        case _GraphMetric.airUtil:
-          value = log.airUtilTx;
-      }
-      if (value != null) values.add(value);
-    }
-
-    if (values.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final min = values.reduce(math.min);
-    final max = values.reduce(math.max);
-    final avg = values.reduce((a, b) => a + b) / values.length;
-    final current = values.last;
-
-    final decimals = metric == _GraphMetric.voltage ? 2 : 0;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: context.surface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _StatItem(
-            label: 'Current',
-            value: '${current.toStringAsFixed(decimals)}${metric.unit}',
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          _StatItem(
-            label: 'Avg',
-            value: '${avg.toStringAsFixed(decimals)}${metric.unit}',
-            color: context.textSecondary,
-          ),
-          _StatItem(
-            label: 'Min',
-            value: '${min.toStringAsFixed(decimals)}${metric.unit}',
-            color: AccentColors.cyan,
-          ),
-          _StatItem(
-            label: 'Max',
-            value: '${max.toStringAsFixed(decimals)}${metric.unit}',
-            color: AppTheme.errorRed,
-          ),
+          // Bottom spacing
+          const SizedBox(height: 8),
         ],
       ),
     );
   }
+
+  /// Builds a [LineChartBarData] for a metric series.
+  static LineChartBarData _line(
+    List<FlSpot> spots,
+    Color color,
+    bool showArea,
+  ) {
+    return LineChartBarData(
+      spots: spots,
+      isCurved: true,
+      curveSmoothness: 0.25,
+      color: color,
+      barWidth: 2.5,
+      isStrokeCapRound: true,
+      dotData: FlDotData(
+        show: spots.length < 30,
+        getDotPainter: (_, _, _, _) => FlDotCirclePainter(
+          radius: 2,
+          color: Colors.white,
+          strokeWidth: 1.5,
+          strokeColor: color,
+        ),
+      ),
+      belowBarData: showArea
+          ? BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  color.withValues(alpha: 0.2),
+                  color.withValues(alpha: 0.0),
+                ],
+              ),
+            )
+          : BarAreaData(show: false),
+    );
+  }
 }
 
-class _StatItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
+// =============================================================================
+// Pinned chart legend — frosted glass header matching SectionHeaderDelegate
+// =============================================================================
 
-  const _StatItem({
-    required this.label,
-    required this.value,
-    required this.color,
+/// Renders the chart legend (coloured dots + labels + readings count) as a
+/// pinned sliver header with backdrop blur, matching [SectionHeaderDelegate].
+class _ChartLegendHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final List<Widget> legendItems;
+  final int readingsCount;
+
+  _ChartLegendHeaderDelegate({
+    required this.legendItems,
+    required this.readingsCount,
   });
+
+  static const double _height = 40.0;
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final showShadow = shrinkOffset > 0 || overlapsContent;
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: StickyHeaderShadow(
+          blurRadius: showShadow ? 8 : 0,
+          offsetY: showShadow ? 2 : 0,
+          child: Container(
+            height: _height,
+            color: context.background.withValues(alpha: 0.8),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Wrap(
+                    spacing: 16,
+                    runSpacing: 4,
+                    children: legendItems,
+                  ),
+                ),
+                Text(
+                  '$readingsCount readings',
+                  style: TextStyle(fontSize: 11, color: context.textTertiary),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _ChartLegendHeaderDelegate oldDelegate) {
+    return readingsCount != oldDelegate.readingsCount ||
+        legendItems.length != oldDelegate.legendItems.length;
+  }
+}
+
+/// Colour dot + label used in the chart legend row.
+class _LegendItem extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _LegendItem({required this.color, required this.label});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: context.textSecondary),
+        ),
       ],
     );
   }
 }
+
+// =============================================================================
+// Card
+// =============================================================================
 
 class _DeviceMetricsCard extends StatelessWidget {
   final DeviceMetricsLog log;
@@ -592,21 +772,17 @@ class _DeviceMetricsCard extends StatelessWidget {
     final timeFormat = DateFormat('HH:mm:ss');
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
+            // Header — node name + timestamp
             Row(
               children: [
-                Icon(
-                  Icons.memory,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                SizedBox(width: 8),
+                Icon(Icons.memory, size: 16, color: context.accentColor),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     nodeName,
@@ -616,7 +792,9 @@ class _DeviceMetricsCard extends StatelessWidget {
                 ),
                 Text(
                   '${dateFormat.format(log.timestamp)} ${timeFormat.format(log.timestamp)}',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),
@@ -663,7 +841,7 @@ class _DeviceMetricsCard extends StatelessWidget {
               const SizedBox(height: 12),
             ],
 
-            // Metrics
+            // Metric chips — single-line pill layout matching SectionFilterChip
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -671,30 +849,26 @@ class _DeviceMetricsCard extends StatelessWidget {
                 if (log.voltage != null)
                   _MetricChip(
                     icon: Icons.bolt,
-                    label: 'Voltage',
-                    value: '${log.voltage!.toStringAsFixed(2)}V',
+                    label: '${log.voltage!.toStringAsFixed(2)}V',
                     color: AppTheme.warningYellow,
                   ),
                 if (log.channelUtilization != null)
                   _MetricChip(
                     icon: Icons.signal_cellular_alt,
-                    label: 'Channel',
-                    value: '${log.channelUtilization!.toStringAsFixed(1)}%',
+                    label: 'Ch ${log.channelUtilization!.toStringAsFixed(1)}%',
                     color: AppTheme.primaryBlue,
                   ),
                 if (log.airUtilTx != null)
                   _MetricChip(
                     icon: Icons.wifi,
-                    label: 'Air Util',
-                    value: '${log.airUtilTx!.toStringAsFixed(1)}%',
+                    label: 'Air ${log.airUtilTx!.toStringAsFixed(1)}%',
                     color: AppTheme.primaryMagenta,
                   ),
                 if (log.uptimeSeconds != null)
                   _MetricChip(
                     icon: Icons.timer,
-                    label: 'Uptime',
-                    value: _formatUptime(log.uptimeSeconds!),
-                    color: AccentColors.green,
+                    label: _formatUptime(log.uptimeSeconds!),
+                    color: AccentColors.cyan,
                   ),
               ],
             ),
@@ -734,50 +908,47 @@ class _DeviceMetricsCard extends StatelessWidget {
   }
 }
 
+// =============================================================================
+// Single-line metric chip — matches SectionFilterChip visual language
+// =============================================================================
+
+/// Read-only data chip styled to match [SectionFilterChip].
+///
+/// Single-line horizontal layout: icon + label text.
+/// Pill shape, tinted background, subtle border — identical to the
+/// design system chips used across Nodes, NodeDex, Channels, etc.
 class _MetricChip extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String value;
   final Color color;
 
   const _MetricChip({
     required this.icon,
     required this.label,
-    required this.value,
     required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
+        color: color.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color),
-          SizedBox(width: 6),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                value,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                label,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
-              ),
-            ],
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
           ),
         ],
       ),

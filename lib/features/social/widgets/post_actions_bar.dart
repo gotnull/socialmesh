@@ -99,9 +99,8 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
     with SingleTickerProviderStateMixin, LifecycleSafeMixin<_LikeButton> {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  bool _isLiking = false;
 
-  // Optimistic state
+  // Optimistic state managed by MutationQueue callbacks.
   bool? _optimisticIsLiked;
   int? _optimisticLikeCount;
 
@@ -130,54 +129,49 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
       return;
     }
 
-    if (_isLiking) return;
+    // Play animation (fire-and-forget, does not block mutation).
+    _controller.forward().then((_) => _controller.reverse());
 
-    // Capture provider before any await
-    final service = ref.read(socialServiceProvider);
-
-    safeSetState(() {
-      _isLiking = true;
-      // Optimistic update
-      _optimisticIsLiked = !currentlyLiked;
-      _optimisticLikeCount =
-          (widget.post.likeCount + (_optimisticIsLiked! ? 1 : -1)).clamp(
-            0,
-            999999,
-          );
-    });
-
-    // Play animation
-    await _controller.forward();
-    _controller.reverse();
+    final likeCount = _optimisticLikeCount ?? widget.post.likeCount;
+    final isLiked = _optimisticIsLiked ?? currentlyLiked;
 
     try {
-      if (_optimisticIsLiked!) {
-        await service.likePost(widget.post.id);
-      } else {
-        await service.unlikePost(widget.post.id);
-      }
-    } catch (e) {
-      // Revert optimistic update on error
-      if (mounted) {
-        safeSetState(() {
-          _optimisticIsLiked = currentlyLiked;
-          _optimisticLikeCount = widget.post.likeCount;
-        });
-        showErrorSnackBar(context, 'Failed to like: $e');
-      }
-    } finally {
-      if (mounted) {
-        // Clear optimistic state after a delay to let Firestore update
-        Future.delayed(const Duration(milliseconds: 500), () {
+      await toggleLikeQueued(
+        ref,
+        postId: widget.post.id,
+        currentlyLiked: isLiked,
+        currentLikeCount: likeCount,
+        onOptimistic: (newIsLiked, newLikeCount) {
+          safeSetState(() {
+            _optimisticIsLiked = newIsLiked;
+            _optimisticLikeCount = newLikeCount;
+          });
+        },
+        onCommit: () {
           if (mounted) {
-            setState(() {
-              _isLiking = false;
-              _optimisticIsLiked = null;
-              _optimisticLikeCount = null;
+            // Clear optimistic state after a delay to let Firestore update
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted) {
+                setState(() {
+                  _optimisticIsLiked = null;
+                  _optimisticLikeCount = null;
+                });
+              }
             });
           }
-        });
-      }
+        },
+        onRollback: (revertIsLiked, revertLikeCount) {
+          if (mounted) {
+            safeSetState(() {
+              _optimisticIsLiked = revertIsLiked;
+              _optimisticLikeCount = revertLikeCount;
+            });
+            showErrorSnackBar(context, 'Failed to update like');
+          }
+        },
+      );
+    } catch (_) {
+      // Error already handled by onRollback callback.
     }
   }
 
@@ -208,7 +202,7 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
           child: _ActionButton(
             icon: isLiked ? Icons.favorite : Icons.favorite_border,
             count: widget.showCount ? likeCount : null,
-            onTap: _isLiking ? null : () => _handleLike(isLiked),
+            onTap: () => _handleLike(isLiked),
             iconSize: widget.iconSize,
             color: isLiked
                 ? Colors.red

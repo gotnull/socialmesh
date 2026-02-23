@@ -1586,6 +1586,18 @@ class HelpContent {
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
+        id: 'nodedex_auto_summary',
+        bubbleText:
+            "**Auto-Summary** computes insights from encounter history — time-of-day distribution, observation streaks, and busiest-day patterns. Everything updates automatically as new encounters arrive.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'nodedex_observation_timeline',
+        bubbleText:
+            "The **Observation Timeline** visualizes this node's encounter density over time, with relative labels showing how recently each observation was recorded.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
         id: 'nodedex_discovery',
         bubbleText:
             "**Discovery Stats** show when you first and last saw this node, how many encounters you've had, and the closest range recorded. These update automatically.",
@@ -1620,6 +1632,12 @@ class HelpContent {
         bubbleText:
             "**Recent Encounters** is a timeline of when this node appeared on your mesh. Each entry shows the timestamp, signal quality, and range if GPS was available.",
         icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'nodedex_activity_timeline',
+        bubbleText:
+            "The **Activity Timeline** is a unified chronological feed of everything observed about this node — encounters, messages, presence changes, signals, and milestones.",
+        icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'nodedex_coseen',

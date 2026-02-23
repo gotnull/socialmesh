@@ -310,65 +310,83 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   }
 
   Future<void> _setVote(SignalResponse response, int value) async {
-    // Optimistic update
     final previousVote = _myVotes[response.id];
     // Capture providers before any await
     final service = ref.read(signalServiceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
-    safeSetState(() {
-      _myVotes[response.id] = value;
-    });
+    final queue = ref.read(mutationQueueProvider);
 
     try {
-      await service.setVote(
-        signalId: widget.signal.id,
-        commentId: response.id,
-        actorNodeNum: myNodeNum,
-        value: value,
+      await queue.enqueue<void>(
+        key: 'vote:${widget.signal.id}:${response.id}',
+        optimisticApply: () {
+          safeSetState(() {
+            _myVotes[response.id] = value;
+          });
+        },
+        execute: () => service.setVote(
+          signalId: widget.signal.id,
+          commentId: response.id,
+          actorNodeNum: myNodeNum,
+          value: value,
+        ),
+        commitApply: (_) {
+          // Vote counts update via Firestore listener and _loadComments
+        },
+        rollbackApply: () {
+          if (mounted) {
+            safeSetState(() {
+              if (previousVote != null) {
+                _myVotes[response.id] = previousVote;
+              } else {
+                _myVotes.remove(response.id);
+              }
+            });
+          }
+        },
       );
-      // Vote counts will be updated via Firestore listener and _loadComments
     } catch (e) {
-      // Revert on error
       AppLogging.social('Vote error: $e');
       if (mounted) {
-        safeSetState(() {
-          if (previousVote != null) {
-            _myVotes[response.id] = previousVote;
-          } else {
-            _myVotes.remove(response.id);
-          }
-        });
         showErrorSnackBar(context, 'Failed to submit vote');
       }
     }
   }
 
   Future<void> _removeVote(SignalResponse response) async {
-    // Optimistic update
     final previousVote = _myVotes[response.id];
     // Capture providers before any await
     final service = ref.read(signalServiceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
-    safeSetState(() {
-      _myVotes.remove(response.id);
-    });
+    final queue = ref.read(mutationQueueProvider);
 
     try {
-      await service.clearVote(
-        signalId: widget.signal.id,
-        commentId: response.id,
-        actorNodeNum: myNodeNum,
+      await queue.enqueue<void>(
+        key: 'vote:${widget.signal.id}:${response.id}',
+        optimisticApply: () {
+          safeSetState(() {
+            _myVotes.remove(response.id);
+          });
+        },
+        execute: () => service.clearVote(
+          signalId: widget.signal.id,
+          commentId: response.id,
+          actorNodeNum: myNodeNum,
+        ),
+        commitApply: (_) {
+          // Vote counts update via Firestore listener and _loadComments
+        },
+        rollbackApply: () {
+          if (mounted && previousVote != null) {
+            safeSetState(() {
+              _myVotes[response.id] = previousVote;
+            });
+          }
+        },
       );
-      // Vote counts will be updated via Firestore listener and _loadComments
     } catch (e) {
-      // Revert on error
       AppLogging.social('Clear vote error: $e');
       if (mounted) {
-        if (previousVote != null) {
-          safeSetState(() {
-            _myVotes[response.id] = previousVote;
-          });
-        }
         showErrorSnackBar(context, 'Failed to remove vote');
       }
     }

@@ -343,11 +343,24 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
 
     safeSetState(() => _isSubmitting = true);
 
+    final replyingTo = _replyingToId;
+    final queue = ref.read(mutationQueueProvider);
+
     try {
-      await addComment(ref, postId, content, parentId: _replyingToId);
-      _commentController.clear();
-      _cancelReply();
-      // Stream will automatically update - no need to invalidate
+      await queue.enqueue<void>(
+        key: 'comment-submit:$postId',
+        optimisticApply: () {
+          // No optimistic state — Firestore stream delivers the comment
+        },
+        execute: () => addComment(ref, postId, content, parentId: replyingTo),
+        commitApply: (_) {
+          _commentController.clear();
+          _cancelReply();
+        },
+        rollbackApply: () {
+          // Nothing to roll back — no optimistic state applied
+        },
+      );
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to post comment: $e');
@@ -498,6 +511,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
     // Capture providers before any await
     final socialService = ref.read(socialServiceProvider);
     final navigator = Navigator.of(context);
+    final queue = ref.read(mutationQueueProvider);
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -523,20 +537,36 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
     if (!mounted) return;
     if (confirmed == true) {
       try {
-        await socialService.deletePost(post.id);
-
-        if (!mounted) return;
-        // Apply optimistic post count decrement for instant UI feedback
-        final currentProfile = ref
-            .read(publicProfileStreamProvider(post.authorId))
-            .value;
-        final currentCount = currentProfile?.postCount ?? 0;
-        ref
-            .read(profileCountAdjustmentsProvider.notifier)
-            .decrement(post.authorId, ProfileCountType.posts, currentCount);
-
-        navigator.pop();
-        showSuccessSnackBar(context, 'Post deleted');
+        await queue.enqueue<void>(
+          key: 'post-delete:${post.id}',
+          optimisticApply: () {
+            // Apply optimistic post count decrement for instant UI feedback
+            final currentProfile = ref
+                .read(publicProfileStreamProvider(post.authorId))
+                .value;
+            final currentCount = currentProfile?.postCount ?? 0;
+            ref
+                .read(profileCountAdjustmentsProvider.notifier)
+                .decrement(post.authorId, ProfileCountType.posts, currentCount);
+          },
+          execute: () => socialService.deletePost(post.id),
+          commitApply: (_) {
+            if (mounted) {
+              navigator.pop();
+              showSuccessSnackBar(context, 'Post deleted');
+            }
+          },
+          rollbackApply: () {
+            // Revert the optimistic count decrement
+            final currentProfile = ref
+                .read(publicProfileStreamProvider(post.authorId))
+                .value;
+            final currentCount = currentProfile?.postCount ?? 0;
+            ref
+                .read(profileCountAdjustmentsProvider.notifier)
+                .increment(post.authorId, ProfileCountType.posts, currentCount);
+          },
+        );
       } catch (e) {
         if (mounted) {
           showErrorSnackBar(context, 'Failed to delete: $e');
@@ -692,7 +722,6 @@ class _CommentTileState extends ConsumerState<_CommentTile>
     with LifecycleSafeMixin<_CommentTile> {
   bool _isLiked = false;
   int _likeCount = 0;
-  bool _isLiking = false;
 
   @override
   void initState() {
@@ -712,48 +741,50 @@ class _CommentTileState extends ConsumerState<_CommentTile>
   }
 
   Future<void> _toggleLike() async {
-    if (_isLiking) return;
-
     final currentUser = ref.read(currentUserProvider);
     if (currentUser == null) return;
 
-    // Capture providers before any await
+    // Capture state at tap time for the queued mutation closure.
+    final wasLiked = _isLiked;
+    final prevCount = _likeCount;
+    final newIsLiked = !wasLiked;
+    final newCount = (prevCount + (newIsLiked ? 1 : -1)).clamp(0, 999999);
+
+    // Capture providers before any await.
     final socialService = ref.read(socialServiceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
+    final queue = ref.read(mutationQueueProvider);
 
-    safeSetState(() {
-      _isLiking = true;
-      // Optimistic update
-      if (_isLiked) {
-        _isLiked = false;
-        _likeCount = (_likeCount - 1).clamp(0, 999999);
-      } else {
-        _isLiked = true;
-        _likeCount += 1;
-      }
-    });
+    final commentId = widget.comment.comment.id;
 
     try {
-      if (_isLiked) {
-        await socialService.likeComment(
-          widget.comment.comment.id,
-          actorNodeNum: myNodeNum,
-        );
-      } else {
-        await socialService.unlikeComment(widget.comment.comment.id);
-      }
-    } catch (e) {
-      // Revert on error
-      if (mounted) {
-        safeSetState(() {
-          _isLiked = !_isLiked;
-          _likeCount = _isLiked
-              ? _likeCount + 1
-              : (_likeCount - 1).clamp(0, 999999);
-        });
-      }
-    } finally {
-      safeSetState(() => _isLiking = false);
+      await queue.enqueue<void>(
+        key: 'comment-like:$commentId',
+        optimisticApply: () {
+          safeSetState(() {
+            _isLiked = newIsLiked;
+            _likeCount = newCount;
+          });
+        },
+        execute: () async {
+          if (newIsLiked) {
+            await socialService.likeComment(commentId, actorNodeNum: myNodeNum);
+          } else {
+            await socialService.unlikeComment(commentId);
+          }
+        },
+        commitApply: (_) {},
+        rollbackApply: () {
+          if (mounted) {
+            safeSetState(() {
+              _isLiked = wasLiked;
+              _likeCount = prevCount;
+            });
+          }
+        },
+      );
+    } catch (_) {
+      // Error already handled by rollbackApply.
     }
   }
 

@@ -264,8 +264,8 @@ void main() {
         if (file.path.contains('/test/')) continue;
 
         final content = readFile(file);
-        // Match print( but not debugPrint( or _logger
-        final printMatches = RegExp(r'(?<!debug)print\(')
+        // Match print( but not debugPrint(, _logger, or compound words like Fingerprint(
+        final printMatches = RegExp(r'(?<![a-zA-Z_])print\(')
             .allMatches(content)
             .where((m) {
               // Check it's not in a comment

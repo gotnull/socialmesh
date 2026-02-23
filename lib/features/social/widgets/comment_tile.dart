@@ -218,34 +218,62 @@ class _CommentLikeButton extends ConsumerStatefulWidget {
 
 class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton>
     with LifecycleSafeMixin {
-  bool _isLiking = false;
+  bool _optimisticLiked = false;
+  int _optimisticLikeCount = 0;
+  bool _hasOptimisticState = false;
+
+  int get _displayLikeCount =>
+      _hasOptimisticState ? _optimisticLikeCount : widget.likeCount;
 
   Future<void> _handleLike() async {
-    if (widget.currentUserId == null || _isLiking) return;
+    if (widget.currentUserId == null) return;
 
-    safeSetState(() => _isLiking = true);
+    // Capture providers before any await
+    final socialService = ref.read(socialServiceProvider);
+    final myNodeNum = ref.read(myNodeNumProvider);
+    final queue = ref.read(mutationQueueProvider);
+
+    // Determine current state (use optimistic if pending, else fetch)
+    final currentlyLiked = _hasOptimisticState
+        ? _optimisticLiked
+        : await socialService.isCommentLiked(widget.commentId);
+    final currentCount = _displayLikeCount;
+
+    final newLiked = !currentlyLiked;
+    final newCount = (currentCount + (newLiked ? 1 : -1)).clamp(0, 999999);
+
     try {
-      // Capture providers before any await
-      final socialService = ref.read(socialServiceProvider);
-      final myNodeNum = ref.read(myNodeNumProvider);
-      // Check current like status and toggle
-      final currentlyLiked = await socialService.isCommentLiked(
-        widget.commentId,
+      await queue.enqueue<void>(
+        key: 'comment-like:${widget.commentId}',
+        optimisticApply: () {
+          safeSetState(() {
+            _optimisticLiked = newLiked;
+            _optimisticLikeCount = newCount;
+            _hasOptimisticState = true;
+          });
+        },
+        execute: () async {
+          if (newLiked) {
+            await socialService.likeComment(
+              widget.commentId,
+              actorNodeNum: myNodeNum,
+            );
+          } else {
+            await socialService.unlikeComment(widget.commentId);
+          }
+        },
+        commitApply: (_) {},
+        rollbackApply: () {
+          safeSetState(() {
+            _optimisticLiked = currentlyLiked;
+            _optimisticLikeCount = currentCount;
+          });
+        },
       );
-      if (currentlyLiked) {
-        await socialService.unlikeComment(widget.commentId);
-      } else {
-        await socialService.likeComment(
-          widget.commentId,
-          actorNodeNum: myNodeNum,
-        );
-      }
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed: $e');
       }
-    } finally {
-      safeSetState(() => _isLiking = false);
     }
   }
 
@@ -261,25 +289,19 @@ class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (_isLiking)
-              SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: theme.colorScheme.primary,
-                ),
-              )
-            else
-              Icon(
-                Icons.favorite_border,
-                size: 14,
-                color: theme.colorScheme.onSurface.withAlpha(150),
-              ),
-            if (widget.likeCount > 0) ...[
+            Icon(
+              _hasOptimisticState && _optimisticLiked
+                  ? Icons.favorite
+                  : Icons.favorite_border,
+              size: 14,
+              color: _hasOptimisticState && _optimisticLiked
+                  ? theme.colorScheme.error
+                  : theme.colorScheme.onSurface.withAlpha(150),
+            ),
+            if (_displayLikeCount > 0) ...[
               const SizedBox(width: 4),
               Text(
-                widget.likeCount.toString(),
+                _displayLikeCount.toString(),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withAlpha(150),
                 ),

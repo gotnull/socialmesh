@@ -13,6 +13,7 @@ import '../services/story_service.dart';
 import 'app_providers.dart';
 import 'auth_providers.dart';
 import 'connectivity_providers.dart';
+import 'social_providers.dart';
 
 // ===========================================================================
 // SERVICE PROVIDER
@@ -342,19 +343,37 @@ final storyLikesProvider = FutureProvider.autoDispose
       return service.getStoryLikes(storyId);
     });
 
-/// Like or unlike a story.
+/// Like or unlike a story. Serialized via MutationQueue per story.
+///
+/// Returns the new like state (true = liked).
 Future<bool> toggleStoryLike(WidgetRef ref, String storyId) async {
   final service = ref.read(storyServiceProvider);
   final myNodeNum = ref.read(myNodeNumProvider);
+  final queue = ref.read(mutationQueueProvider);
   final isLiked = await service.hasLikedStory(storyId);
 
-  if (isLiked) {
-    await service.unlikeStory(storyId);
-    return false;
-  } else {
-    await service.likeStory(storyId, actorNodeNum: myNodeNum);
-    return true;
-  }
+  return queue.enqueue<bool>(
+    key: 'story-like:$storyId',
+    optimisticApply: () {
+      // Invalidate like status provider so UI reflects optimistic state
+      ref.invalidate(storyLikeStatusProvider(storyId));
+    },
+    execute: () async {
+      if (isLiked) {
+        await service.unlikeStory(storyId);
+        return false;
+      } else {
+        await service.likeStory(storyId, actorNodeNum: myNodeNum);
+        return true;
+      }
+    },
+    commitApply: (_) {
+      ref.invalidate(storyLikeStatusProvider(storyId));
+    },
+    rollbackApply: () {
+      ref.invalidate(storyLikeStatusProvider(storyId));
+    },
+  );
 }
 
 // ===========================================================================
@@ -395,38 +414,45 @@ Future<void> markStoryViewed(WidgetRef ref, String storyId) async {
   await service.markStoryViewed(storyId);
 }
 
-/// Delete a story.
+/// Delete a story. Serialized via MutationQueue.
 Future<void> deleteStory(WidgetRef ref, String storyId) async {
   AppLogging.social(
     '🗑️ [deleteStory provider] Starting delete for storyId=$storyId',
   );
+  final service = ref.read(storyServiceProvider);
+  final queue = ref.read(mutationQueueProvider);
+  final currentUser = ref.read(currentUserProvider);
+
   try {
-    final service = ref.read(storyServiceProvider);
-    AppLogging.social(
-      '🗑️ [deleteStory provider] Got story service, calling deleteStory...',
+    await queue.enqueue<void>(
+      key: 'story-delete:$storyId',
+      optimisticApply: () {
+        // No optimistic state — story list refreshes from server
+      },
+      execute: () async {
+        AppLogging.social('🗑️ [deleteStory provider] Calling deleteStory...');
+        await service.deleteStory(storyId);
+        AppLogging.social(
+          '🗑️ [deleteStory provider] Service deleteStory completed',
+        );
+      },
+      commitApply: (_) {
+        AppLogging.social(
+          '🗑️ [deleteStory provider] Refreshing story groups...',
+        );
+        ref.read(storyGroupsProvider.notifier).refresh();
+        if (currentUser != null) {
+          ref.invalidate(userStoriesProvider(currentUser.uid));
+        }
+        ref.invalidate(myStoriesProvider);
+        AppLogging.social(
+          '🗑️ [deleteStory provider] All providers invalidated',
+        );
+      },
+      rollbackApply: () {
+        // Nothing to roll back — no optimistic state applied
+      },
     );
-    await service.deleteStory(storyId);
-    AppLogging.social(
-      '🗑️ [deleteStory provider] Service deleteStory completed',
-    );
-
-    // Refresh story groups
-    AppLogging.social('🗑️ [deleteStory provider] Refreshing story groups...');
-    ref.read(storyGroupsProvider.notifier).refresh();
-    AppLogging.social('🗑️ [deleteStory provider] Story groups refreshed');
-
-    // Also invalidate user stories provider for the current user
-    final currentUser = ref.read(currentUserProvider);
-    if (currentUser != null) {
-      AppLogging.social(
-        '🗑️ [deleteStory provider] Invalidating userStoriesProvider for ${currentUser.uid}',
-      );
-      ref.invalidate(userStoriesProvider(currentUser.uid));
-    }
-
-    // Invalidate myStoriesProvider as well
-    ref.invalidate(myStoriesProvider);
-    AppLogging.social('🗑️ [deleteStory provider] All providers invalidated');
   } catch (e, stack) {
     AppLogging.social('🗑️ [deleteStory provider] ERROR: $e');
     AppLogging.social('🗑️ [deleteStory provider] Stack: $stack');

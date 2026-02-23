@@ -112,6 +112,7 @@ dependencies:
   # In-app review
   in_app_review: ^2.0.10
   pretty_qr_code: ^3.6.0
+  emoji_picker_flutter: ^4.4.0
 
 dev_dependencies:
   flutter_test:

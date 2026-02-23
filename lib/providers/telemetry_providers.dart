@@ -506,10 +506,199 @@ final tapbackActionsProvider = NotifierProvider<TapbackActionsNotifier, void>(
 
 // ============ Telemetry Auto-Logging ============
 
-/// Telemetry logger that automatically saves telemetry to storage when received
+/// Fingerprint of the last logged device metrics for a given node.
+/// Used to suppress duplicate writes when the node stream re-emits
+/// unchanged values (e.g. position updates, lastHeard bumps).
+class _DeviceMetricsFingerprint {
+  final int? batteryLevel;
+  final double? voltage;
+  final double? channelUtilization;
+  final double? airUtilTx;
+  final int? uptimeSeconds;
+
+  const _DeviceMetricsFingerprint({
+    this.batteryLevel,
+    this.voltage,
+    this.channelUtilization,
+    this.airUtilTx,
+    this.uptimeSeconds,
+  });
+
+  bool matches(MeshNode node) =>
+      batteryLevel == node.batteryLevel &&
+      voltage == node.voltage &&
+      channelUtilization == node.channelUtilization &&
+      airUtilTx == node.airUtilTx &&
+      uptimeSeconds == node.uptimeSeconds;
+}
+
+/// Fingerprint of the last logged environment metrics for a given node.
+class _EnvMetricsFingerprint {
+  final double? temperature;
+  final double? humidity;
+  final double? barometricPressure;
+  final double? gasResistance;
+  final int? iaq;
+  final double? lux;
+  final double? whiteLux;
+  final double? uvLux;
+  final int? windDirection;
+  final double? windSpeed;
+  final double? windGust;
+  final double? rainfall1h;
+  final double? rainfall24h;
+  final int? soilMoisture;
+  final double? soilTemperature;
+
+  const _EnvMetricsFingerprint({
+    this.temperature,
+    this.humidity,
+    this.barometricPressure,
+    this.gasResistance,
+    this.iaq,
+    this.lux,
+    this.whiteLux,
+    this.uvLux,
+    this.windDirection,
+    this.windSpeed,
+    this.windGust,
+    this.rainfall1h,
+    this.rainfall24h,
+    this.soilMoisture,
+    this.soilTemperature,
+  });
+
+  bool matches(MeshNode node) =>
+      temperature == node.temperature &&
+      humidity == node.humidity &&
+      barometricPressure == node.barometricPressure &&
+      gasResistance == node.gasResistance &&
+      iaq == node.iaq &&
+      lux == node.lux &&
+      whiteLux == node.whiteLux &&
+      uvLux == node.uvLux &&
+      windDirection == node.windDirection &&
+      windSpeed == node.windSpeed &&
+      windGust == node.windGust &&
+      rainfall1h == node.rainfall1h &&
+      rainfall24h == node.rainfall24h &&
+      soilMoisture == node.soilMoisture &&
+      soilTemperature == node.soilTemperature;
+}
+
+/// Fingerprint of the last logged power metrics for a given node.
+class _PowerMetricsFingerprint {
+  final double? ch1Voltage;
+  final double? ch1Current;
+  final double? ch2Voltage;
+  final double? ch2Current;
+  final double? ch3Voltage;
+  final double? ch3Current;
+
+  const _PowerMetricsFingerprint({
+    this.ch1Voltage,
+    this.ch1Current,
+    this.ch2Voltage,
+    this.ch2Current,
+    this.ch3Voltage,
+    this.ch3Current,
+  });
+
+  bool matches(MeshNode node) =>
+      ch1Voltage == node.ch1Voltage &&
+      ch1Current == node.ch1Current &&
+      ch2Voltage == node.ch2Voltage &&
+      ch2Current == node.ch2Current &&
+      ch3Voltage == node.ch3Voltage &&
+      ch3Current == node.ch3Current;
+}
+
+/// Fingerprint of the last logged air quality metrics for a given node.
+class _AirQualityFingerprint {
+  final int? pm10Standard;
+  final int? pm25Standard;
+  final int? pm100Standard;
+  final int? pm10Environmental;
+  final int? pm25Environmental;
+  final int? pm100Environmental;
+  final int? particles03um;
+  final int? particles05um;
+  final int? particles10um;
+  final int? particles25um;
+  final int? particles50um;
+  final int? particles100um;
+  final int? co2;
+
+  const _AirQualityFingerprint({
+    this.pm10Standard,
+    this.pm25Standard,
+    this.pm100Standard,
+    this.pm10Environmental,
+    this.pm25Environmental,
+    this.pm100Environmental,
+    this.particles03um,
+    this.particles05um,
+    this.particles10um,
+    this.particles25um,
+    this.particles50um,
+    this.particles100um,
+    this.co2,
+  });
+
+  bool matches(MeshNode node) =>
+      pm10Standard == node.pm10Standard &&
+      pm25Standard == node.pm25Standard &&
+      pm100Standard == node.pm100Standard &&
+      pm10Environmental == node.pm10Environmental &&
+      pm25Environmental == node.pm25Environmental &&
+      pm100Environmental == node.pm100Environmental &&
+      particles03um == node.particles03um &&
+      particles05um == node.particles05um &&
+      particles10um == node.particles10um &&
+      particles25um == node.particles25um &&
+      particles50um == node.particles50um &&
+      particles100um == node.particles100um &&
+      co2 == node.co2;
+}
+
+/// Fingerprint of the last logged position for a given node.
+class _PositionFingerprint {
+  final double latitude;
+  final double longitude;
+  final int? altitude;
+  final int? satsInView;
+
+  const _PositionFingerprint({
+    required this.latitude,
+    required this.longitude,
+    this.altitude,
+    this.satsInView,
+  });
+
+  bool matches(MeshNode node) =>
+      latitude == node.latitude &&
+      longitude == node.longitude &&
+      altitude == node.altitude &&
+      satsInView == node.satsInView;
+}
+
+/// Telemetry logger that automatically saves telemetry to storage when received.
+///
+/// The protocol service emits node updates on every change (position,
+/// lastHeard, name, telemetry, etc.). Without deduplication each emission
+/// would create a new database row even when the metric values are
+/// identical. The per-node fingerprint caches below suppress duplicate
+/// writes by comparing incoming values against the last logged values.
 class TelemetryLoggerNotifier extends Notifier<bool> {
   StreamSubscription? _nodeSubscription;
   StreamSubscription? _traceRouteSubscription;
+
+  /// Per-node caches of the last logged metric values. Keyed by nodeNum.
+  final _lastDevice = <int, _DeviceMetricsFingerprint>{};
+  final _lastEnv = <int, _EnvMetricsFingerprint>{};
+  final _lastPower = <int, _PowerMetricsFingerprint>{};
+  final _lastAirQuality = <int, _AirQualityFingerprint>{};
+  final _lastPosition = <int, _PositionFingerprint>{};
 
   @override
   bool build() {
@@ -551,27 +740,43 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
       ref.invalidate(nodeTraceRouteLogsProvider(log.nodeNum));
     });
 
-    // Listen to node updates and log telemetry
+    // Listen to node updates and log telemetry.
+    // The node stream fires for ANY node mutation (position, name,
+    // lastHeard, telemetry, etc.). To avoid writing duplicate rows when
+    // the actual metric values have not changed, each metric type keeps
+    // a per-node fingerprint of the last logged values.
     _nodeSubscription = _protocol.nodeStream.listen((node) async {
-      // Log device metrics if present
+      final id = node.nodeNum;
+
+      // Log device metrics only when values actually change
       if (node.batteryLevel != null || node.voltage != null) {
-        await storage.addDeviceMetrics(
-          DeviceMetricsLog(
-            nodeNum: node.nodeNum,
+        final cached = _lastDevice[id];
+        if (cached == null || !cached.matches(node)) {
+          _lastDevice[id] = _DeviceMetricsFingerprint(
             batteryLevel: node.batteryLevel,
             voltage: node.voltage,
             channelUtilization: node.channelUtilization,
             airUtilTx: node.airUtilTx,
             uptimeSeconds: node.uptimeSeconds,
-          ),
-        );
+          );
+          await storage.addDeviceMetrics(
+            DeviceMetricsLog(
+              nodeNum: id,
+              batteryLevel: node.batteryLevel,
+              voltage: node.voltage,
+              channelUtilization: node.channelUtilization,
+              airUtilTx: node.airUtilTx,
+              uptimeSeconds: node.uptimeSeconds,
+            ),
+          );
+        }
       }
 
-      // Log environment metrics if present
+      // Log environment metrics only when values actually change
       if (node.temperature != null || node.humidity != null) {
-        await storage.addEnvironmentMetrics(
-          EnvironmentMetricsLog(
-            nodeNum: node.nodeNum,
+        final cached = _lastEnv[id];
+        if (cached == null || !cached.matches(node)) {
+          _lastEnv[id] = _EnvMetricsFingerprint(
             temperature: node.temperature,
             humidity: node.humidity,
             barometricPressure: node.barometricPressure,
@@ -587,34 +792,65 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
             rainfall24h: node.rainfall24h,
             soilMoisture: node.soilMoisture,
             soilTemperature: node.soilTemperature,
-          ),
-        );
+          );
+          await storage.addEnvironmentMetrics(
+            EnvironmentMetricsLog(
+              nodeNum: id,
+              temperature: node.temperature,
+              humidity: node.humidity,
+              barometricPressure: node.barometricPressure,
+              gasResistance: node.gasResistance,
+              iaq: node.iaq,
+              lux: node.lux,
+              whiteLux: node.whiteLux,
+              uvLux: node.uvLux,
+              windDirection: node.windDirection,
+              windSpeed: node.windSpeed,
+              windGust: node.windGust,
+              rainfall1h: node.rainfall1h,
+              rainfall24h: node.rainfall24h,
+              soilMoisture: node.soilMoisture,
+              soilTemperature: node.soilTemperature,
+            ),
+          );
+        }
       }
 
-      // Log power metrics if present
+      // Log power metrics only when values actually change
       if (node.ch1Voltage != null ||
           node.ch2Voltage != null ||
           node.ch3Voltage != null) {
-        await storage.addPowerMetrics(
-          PowerMetricsLog(
-            nodeNum: node.nodeNum,
+        final cached = _lastPower[id];
+        if (cached == null || !cached.matches(node)) {
+          _lastPower[id] = _PowerMetricsFingerprint(
             ch1Voltage: node.ch1Voltage,
             ch1Current: node.ch1Current,
             ch2Voltage: node.ch2Voltage,
             ch2Current: node.ch2Current,
             ch3Voltage: node.ch3Voltage,
             ch3Current: node.ch3Current,
-          ),
-        );
+          );
+          await storage.addPowerMetrics(
+            PowerMetricsLog(
+              nodeNum: id,
+              ch1Voltage: node.ch1Voltage,
+              ch1Current: node.ch1Current,
+              ch2Voltage: node.ch2Voltage,
+              ch2Current: node.ch2Current,
+              ch3Voltage: node.ch3Voltage,
+              ch3Current: node.ch3Current,
+            ),
+          );
+        }
       }
 
-      // Log air quality if present
+      // Log air quality only when values actually change
       if (node.pm10Standard != null ||
           node.pm25Standard != null ||
           node.co2 != null) {
-        await storage.addAirQualityMetrics(
-          AirQualityMetricsLog(
-            nodeNum: node.nodeNum,
+        final cached = _lastAirQuality[id];
+        if (cached == null || !cached.matches(node)) {
+          _lastAirQuality[id] = _AirQualityFingerprint(
             pm10Standard: node.pm10Standard,
             pm25Standard: node.pm25Standard,
             pm100Standard: node.pm100Standard,
@@ -628,21 +864,48 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
             particles50um: node.particles50um,
             particles100um: node.particles100um,
             co2: node.co2,
-          ),
-        );
+          );
+          await storage.addAirQualityMetrics(
+            AirQualityMetricsLog(
+              nodeNum: id,
+              pm10Standard: node.pm10Standard,
+              pm25Standard: node.pm25Standard,
+              pm100Standard: node.pm100Standard,
+              pm10Environmental: node.pm10Environmental,
+              pm25Environmental: node.pm25Environmental,
+              pm100Environmental: node.pm100Environmental,
+              particles03um: node.particles03um,
+              particles05um: node.particles05um,
+              particles10um: node.particles10um,
+              particles25um: node.particles25um,
+              particles50um: node.particles50um,
+              particles100um: node.particles100um,
+              co2: node.co2,
+            ),
+          );
+        }
       }
 
-      // Log position if present
+      // Log position only when values actually change
       if (node.hasPosition) {
-        await storage.addPositionLog(
-          PositionLog(
-            nodeNum: node.nodeNum,
+        final cached = _lastPosition[id];
+        if (cached == null || !cached.matches(node)) {
+          _lastPosition[id] = _PositionFingerprint(
             latitude: node.latitude!,
             longitude: node.longitude!,
             altitude: node.altitude,
             satsInView: node.satsInView,
-          ),
-        );
+          );
+          await storage.addPositionLog(
+            PositionLog(
+              nodeNum: id,
+              latitude: node.latitude!,
+              longitude: node.longitude!,
+              altitude: node.altitude,
+              satsInView: node.satsInView,
+            ),
+          );
+        }
       }
     });
   }

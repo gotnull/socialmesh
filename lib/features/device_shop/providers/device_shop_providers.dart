@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logging.dart';
+import '../../../providers/social_providers.dart';
 import '../models/shop_models.dart';
 import '../services/device_shop_service.dart';
 import '../services/device_shop_event_logger.dart';
@@ -248,6 +249,33 @@ final lilygoTrendingProductsProvider = Provider<AsyncValue<List<ShopProduct>>>((
 final deviceShopServiceProvider = Provider<DeviceShopService>((ref) {
   return DeviceShopService();
 });
+
+/// Toggle product favorite via MutationQueue to prevent double-taps.
+///
+/// Returns the new favorite state (true = favorited).
+Future<bool> toggleFavoriteQueued(
+  WidgetRef ref, {
+  required String userId,
+  required String productId,
+}) {
+  final service = ref.read(deviceShopServiceProvider);
+  final queue = ref.read(mutationQueueProvider);
+
+  return queue.enqueue<bool>(
+    key: 'product-fav:$productId',
+    optimisticApply: () {
+      // No client-side state to update optimistically — product stream
+      // updates from Firestore
+    },
+    execute: () => service.toggleFavorite(userId, productId),
+    commitApply: (_) {
+      // Product list stream will reflect the change
+    },
+    rollbackApply: () {
+      // Nothing to roll back — no optimistic state applied
+    },
+  );
+}
 
 /// Provider for all active products
 final shopProductsProvider = StreamProvider<List<ShopProduct>>((ref) {
