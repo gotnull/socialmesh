@@ -93,8 +93,8 @@ class SafeImage extends StatelessWidget {
       placeholder: placeholder,
       errorWidget: errorWidget,
       fadeInDuration: fadeInDuration,
-      cacheWidth: cacheWidth ?? _calculateCacheSize(width),
-      cacheHeight: cacheHeight ?? _calculateCacheSize(height),
+      cacheWidth: cacheWidth ?? _calculateOptimalCacheWidth(width, height),
+      cacheHeight: cacheHeight,
       color: color,
       colorBlendMode: colorBlendMode,
       alignment: alignment,
@@ -134,8 +134,8 @@ class SafeImage extends StatelessWidget {
       placeholder: placeholder,
       errorWidget: errorWidget,
       fadeInDuration: fadeInDuration,
-      cacheWidth: cacheWidth ?? _calculateCacheSize(width),
-      cacheHeight: cacheHeight ?? _calculateCacheSize(height),
+      cacheWidth: cacheWidth ?? _calculateOptimalCacheWidth(width, height),
+      cacheHeight: cacheHeight,
       color: color,
       colorBlendMode: colorBlendMode,
       alignment: alignment,
@@ -175,8 +175,8 @@ class SafeImage extends StatelessWidget {
       placeholder: placeholder,
       errorWidget: errorWidget,
       fadeInDuration: fadeInDuration,
-      cacheWidth: cacheWidth ?? _calculateCacheSize(width),
-      cacheHeight: cacheHeight ?? _calculateCacheSize(height),
+      cacheWidth: cacheWidth ?? _calculateOptimalCacheWidth(width, height),
+      cacheHeight: cacheHeight,
       color: color,
       colorBlendMode: colorBlendMode,
       alignment: alignment,
@@ -218,8 +218,8 @@ class SafeImage extends StatelessWidget {
       placeholder: placeholder,
       errorWidget: errorWidget,
       fadeInDuration: fadeInDuration,
-      cacheWidth: cacheWidth ?? _calculateCacheSize(width),
-      cacheHeight: cacheHeight ?? _calculateCacheSize(height),
+      cacheWidth: cacheWidth ?? _calculateOptimalCacheWidth(width, height),
+      cacheHeight: cacheHeight,
       color: color,
       colorBlendMode: colorBlendMode,
       alignment: alignment,
@@ -294,6 +294,21 @@ class SafeImage extends StatelessWidget {
     }
     // 2x for retina, capped at reasonable max
     return (displaySize * 2).toInt().clamp(1, 2048);
+  }
+
+  /// Computes an optimal cache width from display dimensions.
+  ///
+  /// Only cacheWidth is auto-computed — never cacheHeight — because setting
+  /// both forces Flutter to decode non-square source images into that exact
+  /// pixel buffer, squishing them. With only cacheWidth set, Flutter computes
+  /// height proportionally (preserving aspect ratio).
+  static int? _calculateOptimalCacheWidth(double? width, double? height) {
+    double? best;
+    if (width != null && width.isFinite && !width.isNaN) best = width;
+    if (height != null && height.isFinite && !height.isNaN) {
+      if (best == null || height > best) best = height;
+    }
+    return _calculateCacheSize(best);
   }
 
   @override
@@ -534,6 +549,20 @@ class _SafeImageLoaderState extends State<_SafeImageLoader> {
         duration: wasSynchronouslyLoaded
             ? Duration.zero
             : widget.fadeInDuration,
+        // Override the default layoutBuilder which uses StackFit.loose.
+        // Loose constraints cause Image (with null width/height) to size
+        // to its intrinsic aspect ratio instead of filling the parent,
+        // resulting in letterboxing. StackFit.expand preserves the tight
+        // constraints from the parent so BoxFit.cover works correctly.
+        layoutBuilder: (currentChild, previousChildren) {
+          return Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              ...previousChildren,
+              if (currentChild != null) currentChild,
+            ],
+          );
+        },
         child: child,
       );
     }

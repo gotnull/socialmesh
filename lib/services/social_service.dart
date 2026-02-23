@@ -1579,6 +1579,17 @@ class SocialService {
       await _firestore.collection('posts').doc(targetId).delete();
     } else if (type == 'story') {
       await _firestore.collection('stories').doc(targetId).delete();
+    } else if (type == 'signal_comment') {
+      final reportContext = data['context'] as Map<String, dynamic>?;
+      final signalId = reportContext?['signalId'] as String?;
+      if (signalId != null) {
+        await _firestore
+            .collection('posts')
+            .doc(signalId)
+            .collection('comments')
+            .doc(targetId)
+            .delete();
+      }
     }
 
     // Mark report as resolved
@@ -2305,6 +2316,39 @@ class SocialService {
         if (authorId != null) 'authorId': authorId,
         if (content != null) 'content': content,
         if (imageUrl != null) 'imageUrl': imageUrl,
+      },
+    });
+  }
+
+  /// Report a signal comment/response for moderation.
+  ///
+  /// Writes to the `reports` collection with `type: 'signal_comment'`.
+  /// The comment lives at `posts/{signalId}/comments/{commentId}` in Firestore.
+  Future<void> reportSignalComment({
+    required String commentId,
+    required String signalId,
+    required String reason,
+    String? authorId,
+    String? authorName,
+    String? content,
+  }) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to report signal comments');
+    }
+
+    await _firestore.collection('reports').add({
+      'type': 'signal_comment',
+      'targetId': commentId,
+      'reporterId': currentUserId,
+      'reason': reason,
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+      'context': {
+        'signalId': signalId,
+        if (authorId != null) 'authorId': authorId,
+        if (authorName != null) 'authorName': authorName,
+        if (content != null) 'content': content,
       },
     });
   }

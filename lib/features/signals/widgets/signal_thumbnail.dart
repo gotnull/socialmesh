@@ -104,34 +104,40 @@ class SignalThumbnail extends StatelessWidget {
   }
 
   Widget _buildImage(BuildContext context, Color iconColor) {
-    // Prioritize cloud image (same as _SignalImage in signal_card.dart)
+    // Pass width/height for memory-efficient cache sizing.
+    // SafeImage only auto-computes cacheWidth (never cacheHeight),
+    // so non-square images are decoded with correct aspect ratio.
     if (_hasCloudImage) {
-      return SafeImage.network(
-        signal.mediaUrls.first,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        placeholder: showLoadingIndicator
-            ? Container(
-                color: Colors.grey.shade800,
-                child: const Center(
-                  child: SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+      return SizedBox.expand(
+        child: SafeImage.network(
+          signal.mediaUrls.first,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          placeholder: showLoadingIndicator
+              ? Container(
+                  color: Colors.grey.shade800,
+                  child: const Center(
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
-                ),
-              )
-            : null,
-        errorWidget: _buildFallback(iconColor),
+                )
+              : null,
+          errorWidget: _buildFallback(iconColor),
+        ),
       );
     } else if (_hasLocalImage) {
-      return SafeImage.file(
-        File(signal.imageLocalPath!),
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        errorWidget: _buildFallback(iconColor),
+      return SizedBox.expand(
+        child: SafeImage.file(
+          File(signal.imageLocalPath!),
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorWidget: _buildFallback(iconColor),
+        ),
       );
     }
     return _buildFallback(iconColor);
@@ -196,36 +202,40 @@ class SignalMapMarker extends StatelessWidget {
             ),
             child: const SizedBox.expand(),
           ),
-          // Image or fallback, clipped to circle
+          // Image or fallback, clipped to circle.
           ClipOval(
-            child: _hasImage
-                ? SafeImage.network(
-                    signal.mediaUrls.isNotEmpty ? signal.mediaUrls.first : '',
-                    width: size,
-                    height: size,
-                    fit: BoxFit.cover,
-                    placeholder: Container(color: Colors.grey.shade800),
-                    errorWidget: Container(
-                      color: markerColor,
-                      child: Icon(
-                        Icons.sensors,
-                        color: Colors.white,
-                        size: size * 0.5,
+            child: _hasImage && signal.mediaUrls.isNotEmpty
+                ? SizedBox.expand(
+                    child: SafeImage.network(
+                      signal.mediaUrls.first,
+                      width: size,
+                      height: size,
+                      fit: BoxFit.cover,
+                      placeholder: Container(color: Colors.grey.shade800),
+                      errorWidget: Container(
+                        color: markerColor,
+                        child: Icon(
+                          Icons.sensors,
+                          color: Colors.white,
+                          size: size * 0.5,
+                        ),
                       ),
                     ),
                   )
-                : _hasLocalImage
-                ? SafeImage.file(
-                    File(signal.imageLocalPath!),
-                    width: size,
-                    height: size,
-                    fit: BoxFit.cover,
-                    errorWidget: Container(
-                      color: markerColor,
-                      child: Icon(
-                        Icons.sensors,
-                        color: Colors.white,
-                        size: size * 0.5,
+                : _hasImage && _hasLocalImage
+                ? SizedBox.expand(
+                    child: SafeImage.file(
+                      File(signal.imageLocalPath!),
+                      width: size,
+                      height: size,
+                      fit: BoxFit.cover,
+                      errorWidget: Container(
+                        color: markerColor,
+                        child: Icon(
+                          Icons.sensors,
+                          color: Colors.white,
+                          size: size * 0.5,
+                        ),
                       ),
                     ),
                   )
