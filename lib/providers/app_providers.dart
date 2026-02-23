@@ -44,6 +44,7 @@ import 'meshcore_providers.dart';
 import 'social_providers.dart';
 import 'telemetry_providers.dart';
 import 'connection_providers.dart';
+import 'age_eligibility_provider.dart';
 
 // App initialization state - purely about app lifecycle, NOT device connection
 // Device connection is handled separately by DeviceConnectionNotifier in connection_providers.dart
@@ -51,6 +52,7 @@ enum AppInitState {
   uninitialized,
   initializing,
   ready, // App services loaded, UI can be shown (renamed from initialized)
+  needsAgeEligibility, // User has not confirmed 16+ or policy version bumped
   needsOnboarding,
   needsTermsAcceptance, // Terms version changed or never accepted
   needsScanner, // First launch after onboarding, need to pair a device
@@ -116,6 +118,16 @@ class AppInitNotifier extends Notifier<AppInitState> {
 
       // Initialize storage services
       final settings = await ref.read(settingsServiceProvider.future);
+
+      // Check age eligibility FIRST — must confirm 16+ before anything else
+      final ageState = await ref.read(ageEligibilityProvider.future);
+      if (ageState.needsConfirmation) {
+        _transition(
+          AppInitState.needsAgeEligibility,
+          'initialize:needsAgeEligibility',
+        );
+        return;
+      }
 
       // Check for onboarding completion FIRST
       if (!settings.onboardingComplete) {

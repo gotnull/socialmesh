@@ -80,6 +80,7 @@ import 'features/settings/device_management_screen.dart';
 import 'features/navigation/main_shell.dart';
 import 'features/navigation/app_root_shell.dart';
 import 'features/legal/legal_acceptance_screen.dart';
+import 'features/legal/eligibility_gate_screen.dart';
 import 'core/legal/legal_constants.dart';
 import 'providers/remote_legal_versions_provider.dart';
 import 'core/widgets/legal_document_sheet.dart';
@@ -2597,6 +2598,8 @@ class _AppRouterState extends ConsumerState<_AppRouter> {
         return const _SplashScreen();
       case AppInitState.error:
         return const _ErrorScreen();
+      case AppInitState.needsAgeEligibility:
+        return const EligibilityGateScreen();
       case AppInitState.needsOnboarding:
         return const OnboardingScreen();
       case AppInitState.needsTermsAcceptance:

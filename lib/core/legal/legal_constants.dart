@@ -11,11 +11,15 @@ class LegalConstants {
 
   /// Current Terms of Service version (matches "Last Updated" on website).
   /// Bump this value when Terms content changes materially.
-  static const String termsVersion = '2026-02-23';
+  static const String termsVersion = '2026-02-25';
 
   /// Current Privacy Policy version (matches "Last Updated" on website).
   /// Bump this value when Privacy Policy content changes materially.
-  static const String privacyVersion = '2026-02-23';
+  static const String privacyVersion = '2026-02-25';
+
+  /// Age eligibility policy version. Increment to force re-confirmation
+  /// from all users (e.g. when the minimum age or legal posture changes).
+  static const int ageEligibilityPolicyVersion = 2;
 
   // ---------------------------------------------------------------------------
   // SharedPreferences keys
@@ -35,6 +39,17 @@ class LegalConstants {
 
   /// Platform identifier at the time of acceptance (ios / android).
   static const String acceptedPlatformKey = 'terms_accepted_platform';
+
+  /// Whether the user has confirmed age eligibility (16+).
+  static const String ageEligibilityConfirmedKey = 'age_eligibility_confirmed';
+
+  /// ISO-8601 timestamp of the age eligibility confirmation.
+  static const String ageEligibilityConfirmedAtKey =
+      'age_eligibility_confirmed_at';
+
+  /// Policy version at the time of age eligibility confirmation.
+  static const String ageEligibilityPolicyVersionKey =
+      'age_eligibility_policy_version';
 
   // ---------------------------------------------------------------------------
   // HTML section anchors (must match id= attributes in terms-of-service.html)

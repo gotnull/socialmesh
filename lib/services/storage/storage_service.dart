@@ -412,6 +412,25 @@ class SettingsService {
   String? get termsAcceptedBuild =>
       _preferences.getString('terms_accepted_build');
 
+  // Age eligibility confirmation (16+)
+  Future<void> setAgeEligibilityConfirmed({required int policyVersion}) async {
+    await _preferences.setBool('age_eligibility_confirmed', true);
+    await _preferences.setString(
+      'age_eligibility_confirmed_at',
+      DateTime.now().toUtc().toIso8601String(),
+    );
+    await _preferences.setInt('age_eligibility_policy_version', policyVersion);
+  }
+
+  bool get ageEligibilityConfirmed =>
+      _preferences.getBool('age_eligibility_confirmed') ?? false;
+
+  String? get ageEligibilityConfirmedAt =>
+      _preferences.getString('age_eligibility_confirmed_at');
+
+  int get ageEligibilityPolicyVersion =>
+      _preferences.getInt('age_eligibility_policy_version') ?? 0;
+
   // Canned responses
   Future<void> setCannedResponses(List<CannedResponse> responses) async {
     final jsonList = responses.map((r) => r.toJson()).toList();
