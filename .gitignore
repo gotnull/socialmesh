@@ -12,6 +12,7 @@
 .swiftpm/
 migrate_working_dir/
 meshtastic-ios/
+meshtastic-android/
 /MeshCore-Firmware/
 /meshcore-open/
 .venv/

@@ -23,7 +23,7 @@ import '../../utils/text_sanitizer.dart';
 class MessageDatabase {
   static const _dbName = 'messages.db';
   static const _tableName = 'messages';
-  static const _dbVersion = 2;
+  static const _dbVersion = 3;
 
   /// Maximum messages retained per conversation (DM or channel).
   static const int maxMessagesPerConversation = 500;
@@ -69,6 +69,21 @@ class MessageDatabase {
             'ALTER TABLE $_tableName ADD COLUMN is_emoji INTEGER NOT NULL DEFAULT 0',
           );
           AppLogging.storage('Added reply_id and is_emoji columns (v2)');
+        }
+        if (oldVersion < 3) {
+          // Retroactively fix tapback messages that were stored as regular
+          // messages before the is_emoji flag was properly set.  Any message
+          // whose text is at most 8 UTF-16 code units (a single emoji
+          // grapheme cluster) AND has a reply_id is almost certainly a
+          // tapback reaction, not a real text message.
+          final fixed = await db.rawUpdate(
+            'UPDATE $_tableName SET is_emoji = 1 '
+            'WHERE reply_id IS NOT NULL AND LENGTH(text) <= 8 '
+            'AND is_emoji = 0',
+          );
+          AppLogging.storage(
+            'v3 migration: retroactively flagged $fixed legacy tapback messages',
+          );
         }
       },
     );

@@ -2615,9 +2615,25 @@ class MessagesNotifier extends Notifier<List<Message>> {
     _storageLoaded = true;
 
     if (savedMessages.isNotEmpty) {
-      state = savedMessages;
+      // Exclude tapback emoji reactions from the message state.
+      // They are tracked separately via TapbackStorageService and would
+      // otherwise pollute the message list even though the UI filters
+      // them.  This matches the Meshtastic Android architecture where
+      // reactions live in a separate `reactions` table.
+      final regularMessages = savedMessages.where((m) {
+        // Filter messages with the is_emoji flag set in the database.
+        if (m.isEmoji) return false;
+        // Content-based fallback: a single-emoji text with a replyId is
+        // almost certainly a tapback that wasn't flagged (e.g. stored
+        // before the v3 migration ran).  This matches the Meshtastic
+        // Android approach of never putting reactions in the message list.
+        if (m.replyId != null && _looksLikeEmoji(m.text)) return false;
+        return true;
+      }).toList();
+      state = regularMessages;
       AppLogging.messages(
-        'Loaded ${savedMessages.length} messages from storage',
+        'Loaded ${regularMessages.length} messages from storage '
+        '(${savedMessages.length - regularMessages.length} tapbacks excluded)',
       );
       for (final msg in savedMessages) {
         _recordMessageSignature(msg);
@@ -2647,14 +2663,37 @@ class MessagesNotifier extends Notifier<List<Message>> {
     _pushSubscription?.cancel();
 
     // Listen for new messages
-    _messageSubscription = protocol.messageStream.listen((message) {
+    _messageSubscription = protocol.messageStream.listen((message) async {
       if (!ref.mounted) return;
+
+      // Wait for persisted messages to load before processing incoming
+      // messages. Without this, early BLE packets could arrive while
+      // state is still empty, bypassing dedup, and then duplicated once
+      // storage loads and sets state = savedMessages.
+      await _storageLoadCompleter.future;
+      if (!ref.mounted) return;
+
       AppLogging.messages(
         '📨 New message: from=${message.from}, to=${message.to.toRadixString(16)}, '
         'channel=${message.channel}, isBroadcast=${message.isBroadcast}, sent=${message.sent}, id=${message.id}',
       );
 
       if (message.sent) {
+        // Sent tapback reactions: route to tapback storage only, never
+        // add them to the main message list (matches Meshtastic Android
+        // which stores reactions in a separate table).
+        // Sent tapback reactions: route to tapback storage only.
+        final sentIsTapback =
+            (message.isEmoji && message.replyId != null) ||
+            (message.replyId != null && _looksLikeEmoji(message.text));
+        if (sentIsTapback) {
+          AppLogging.messages(
+            '🏷️ Sent tapback — skipping message state, storing as reaction only',
+          );
+          _recordMessageSignature(message);
+          return;
+        }
+
         final existingMessage = state.firstWhereOrNull((m) {
           if (m.id == message.id) return true;
           if (m.packetId != null &&
@@ -2691,20 +2730,29 @@ class MessagesNotifier extends Notifier<List<Message>> {
         return;
       }
 
+      // Incoming tapback reactions: route to tapback storage only, never
+      // add them to the main message list. This matches the official
+      // Meshtastic Android app which stores reactions in a separate
+      // `reactions` table and never inserts them into the `packet` table.
+      // Also catch messages where the protobuf emoji flag was not set
+      // but the content is clearly a single emoji with a replyId.
+      final isTapback =
+          (message.isEmoji && message.replyId != null) ||
+          (message.replyId != null && _looksLikeEmoji(message.text));
+      if (isTapback) {
+        AppLogging.messages(
+          '🏷️ Incoming tapback detected — routing to _storeIncomingTapback '
+          '(not adding to message state, isEmoji=${message.isEmoji}, '
+          'contentMatch=${_looksLikeEmoji(message.text)})',
+        );
+        _recordMessageSignature(message);
+        _notifyNewMessage(message);
+        _storeIncomingTapback(message);
+        return;
+      }
+
       _addMessageToState(message);
       _notifyNewMessage(message);
-
-      // Auto-store incoming tapback reactions linked to the original message
-      AppLogging.messages(
-        '🏷️ Tapback check: isEmoji=${message.isEmoji}, '
-        'replyId=${message.replyId}, text="${message.text}"',
-      );
-      if (message.isEmoji && message.replyId != null) {
-        AppLogging.messages(
-          '🏷️ Incoming tapback detected — routing to _storeIncomingTapback',
-        );
-        _storeIncomingTapback(message);
-      }
     });
 
     // Listen for message push events from PushNotificationService and persist them
@@ -3122,6 +3170,18 @@ class MessagesNotifier extends Notifier<List<Message>> {
         '🏷️ _storeIncomingTapback ABORT: TapbackStorageService not available',
       );
     }
+  }
+
+  /// Returns true if [text] looks like a single emoji (no ASCII letters
+  /// or digits, at most a few code points).  Used as a content-based
+  /// fallback to identify tapback messages that lack the is_emoji flag.
+  static bool _looksLikeEmoji(String text) {
+    if (text.isEmpty) return false;
+    // Tapback emojis are short: a single emoji grapheme is at most ~8
+    // UTF-16 code units (flag sequences, family ZWJ, etc.).
+    if (text.length > 8) return false;
+    // Every rune must be non-ASCII (emoji characters are > 127).
+    return text.runes.every((r) => r > 127);
   }
 
   String _messageSignature(Message message) {

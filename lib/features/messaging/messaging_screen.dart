@@ -88,6 +88,9 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
     for (final message in messages) {
       // Skip tapback emoji reactions — they are metadata, not messages
       if (message.isEmoji) continue;
+      if (message.replyId != null && _looksLikeEmojiContent(message.text)) {
+        continue;
+      }
       if (message.isDirect) {
         final otherNode = message.from == myNodeNum ? message.to : message.from;
         final existing = dmInfoByNode[otherNode];
@@ -554,6 +557,15 @@ class _ContactSection {
   final List<_Contact> contacts;
 
   _ContactSection(this.title, this.contacts);
+}
+
+/// Returns true if [text] looks like a single emoji (no ASCII, short string).
+/// Used as a content-based fallback to identify tapback messages that lack
+/// the is_emoji database flag.
+bool _looksLikeEmojiContent(String text) {
+  if (text.isEmpty) return false;
+  if (text.length > 8) return false;
+  return text.runes.every((r) => r > 127);
 }
 
 /// Helper class to track DM info for a node
@@ -1355,7 +1367,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
     // Exclude tapback emoji reactions from the visible message list.
     // They are displayed as badges on the original message via TapbackDisplay.
-    filteredMessages = filteredMessages.where((m) => !m.isEmoji).toList();
+    // Check both the is_emoji flag AND content-based heuristic for legacy
+    // messages that were stored before the flag was properly set.
+    filteredMessages = filteredMessages.where((m) {
+      if (m.isEmoji) return false;
+      if (m.replyId != null && _looksLikeEmojiContent(m.text)) return false;
+      return true;
+    }).toList();
 
     // Mark any new unread messages as read while this chat is open.
     // _markAsRead() is only called once in initState, so messages arriving
