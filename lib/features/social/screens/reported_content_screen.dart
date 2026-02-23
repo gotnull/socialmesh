@@ -31,7 +31,7 @@ class _ReportedContentScreenState extends ConsumerState<ReportedContentScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -95,6 +95,18 @@ class _ReportedContentScreenState extends ConsumerState<ReportedContentScreen>
               return _TabWithBadge(label: 'Signals', count: count);
             },
           ),
+          // Signal comments tab
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: socialService.watchPendingReports(),
+            builder: (context, snapshot) {
+              final count =
+                  snapshot.data
+                      ?.where((r) => r['type'] == 'signal_comment')
+                      .length ??
+                  0;
+              return _TabWithBadge(label: 'Sig. Comments', count: count);
+            },
+          ),
         ],
       ),
       slivers: [
@@ -107,6 +119,7 @@ class _ReportedContentScreenState extends ConsumerState<ReportedContentScreen>
               _ReportsList(filter: 'post'),
               _ReportsList(filter: 'comment'),
               _ReportsList(filter: 'signal'),
+              _ReportsList(filter: 'signal_comment'),
             ],
           ),
         ),
@@ -1113,6 +1126,8 @@ class _ReportsList extends ConsumerWidget {
       }
     } else if (type == 'signal') {
       _showSignalPreviewSheet(context, report);
+    } else if (type == 'signal_comment') {
+      _showSignalCommentPreviewSheet(context, report);
     } else if (type == 'story') {
       _showStoryPreviewSheet(context, report);
     }
@@ -1134,6 +1149,29 @@ class _ReportsList extends ConsumerWidget {
         content: content,
         imageUrl: imageUrl,
         authorId: authorId,
+        reason: reason,
+      ),
+    );
+  }
+
+  void _showSignalCommentPreviewSheet(
+    BuildContext context,
+    Map<String, dynamic> report,
+  ) {
+    final reportContext = report['context'] as Map<String, dynamic>?;
+    final content = reportContext?['content'] as String?;
+    final authorId = reportContext?['authorId'] as String?;
+    final authorName = reportContext?['authorName'] as String?;
+    final signalId = reportContext?['signalId'] as String?;
+    final reason = report['reason'] as String? ?? 'No reason provided';
+
+    AppBottomSheet.show(
+      context: context,
+      child: _SignalCommentPreviewContent(
+        content: content,
+        authorId: authorId,
+        authorName: authorName,
+        signalId: signalId,
         reason: reason,
       ),
     );
@@ -1357,6 +1395,11 @@ class _ReportCard extends StatelessWidget {
         theme.colorScheme.secondary.withAlpha(30),
         theme.colorScheme.secondary,
         Icons.comment_outlined,
+      ),
+      'signal_comment' => (
+        Colors.teal.withAlpha(30),
+        Colors.teal,
+        Icons.chat_outlined,
       ),
       'user' => (
         Colors.purple.withAlpha(30),
@@ -2212,6 +2255,147 @@ class _StoryPreviewContent extends StatelessWidget {
         ],
 
         const SizedBox(height: 24),
+      ],
+    );
+  }
+}
+
+/// Preview content for a reported signal comment, shown in admin bottom sheet.
+class _SignalCommentPreviewContent extends StatelessWidget {
+  const _SignalCommentPreviewContent({
+    this.content,
+    this.authorId,
+    this.authorName,
+    this.signalId,
+    required this.reason,
+  });
+
+  final String? content;
+  final String? authorId;
+  final String? authorName;
+  final String? signalId;
+  final String reason;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.teal.withAlpha(30),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.chat_outlined, size: 14, color: Colors.teal),
+                  const SizedBox(width: 6),
+                  Text(
+                    'SIGNAL COMMENT',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 16),
+
+        // Report reason
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.errorContainer.withAlpha(50),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: theme.colorScheme.error.withAlpha(50)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.flag, size: 16, color: theme.colorScheme.error),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  reason,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Author info
+        if (authorName != null || authorId != null) ...[
+          Row(
+            children: [
+              Icon(Icons.person_outlined, size: 16, color: theme.hintColor),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  authorName ?? authorId ?? 'Unknown',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+
+        // Signal ID reference
+        if (signalId != null) ...[
+          Row(
+            children: [
+              Icon(Icons.cell_tower, size: 16, color: theme.hintColor),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Signal: $signalId',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+
+        // Comment content
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            content ?? 'Content unavailable',
+            style: theme.textTheme.bodyMedium,
+          ),
+        ),
+
+        const SizedBox(height: 16),
       ],
     );
   }

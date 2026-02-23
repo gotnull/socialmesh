@@ -678,6 +678,11 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
             index < displayList.length - 1 &&
             displayList[index + 1].response.parentId == item.response.id;
 
+        final currentUser = ref.watch(currentUserProvider);
+        final isOwnComment =
+            currentUser != null && item.response.authorId == currentUser.uid;
+        final canReport = currentUser != null && !isOwnComment;
+
         return _AnimatedCommentItem(
           key: ValueKey('animated_${item.response.id}'),
           index: index,
@@ -694,6 +699,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
             onUpvote: () => _handleVote(item.response, 1),
             onDownvote: () => _handleVote(item.response, -1),
             myVote: _myVotes[item.response.id],
+            onReport: canReport ? () => _reportComment(item.response) : null,
           ),
         );
       }).toList(),
@@ -773,6 +779,71 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       await feedNotifier.deleteSignal(signal.id);
       if (mounted) {
         navigator.pop();
+      }
+    }
+  }
+
+  Future<void> _reportComment(SignalResponse response) async {
+    // Capture provider before any await
+    final socialService = ref.read(socialServiceProvider);
+
+    final reason = await AppBottomSheet.showActions<String>(
+      context: context,
+      header: Text(
+        'Why are you reporting this comment?',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: context.textPrimary,
+        ),
+      ),
+      actions: [
+        BottomSheetAction(
+          icon: Icons.warning_outlined,
+          label: 'Spam or misleading',
+          value: 'spam',
+        ),
+        BottomSheetAction(
+          icon: Icons.person_off_outlined,
+          label: 'Harassment or bullying',
+          value: 'harassment',
+        ),
+        BottomSheetAction(
+          icon: Icons.dangerous_outlined,
+          label: 'Violence or dangerous content',
+          value: 'violence',
+        ),
+        BottomSheetAction(
+          icon: Icons.no_adult_content,
+          label: 'Nudity or sexual content',
+          value: 'nudity',
+        ),
+        BottomSheetAction(
+          icon: Icons.more_horiz,
+          label: 'Other',
+          value: 'other',
+        ),
+      ],
+    );
+
+    if (!mounted) return;
+    if (reason != null) {
+      try {
+        await socialService.reportSignalComment(
+          commentId: response.id,
+          signalId: response.signalId,
+          reason: reason,
+          authorId: response.authorId,
+          authorName: response.authorName,
+          content: response.content,
+        );
+        if (mounted) {
+          showSuccessSnackBar(context, 'Comment reported. Thank you.');
+        }
+      } catch (e) {
+        if (mounted) {
+          showErrorSnackBar(context, 'Failed to report: $e');
+        }
       }
     }
   }
@@ -1130,6 +1201,7 @@ class _ResponseTile extends StatelessWidget {
     this.onReplyTap,
     this.onUpvote,
     this.onDownvote,
+    this.onReport,
     this.myVote,
   });
 
@@ -1143,6 +1215,7 @@ class _ResponseTile extends StatelessWidget {
   final VoidCallback? onReplyTap;
   final VoidCallback? onUpvote;
   final VoidCallback? onDownvote;
+  final VoidCallback? onReport;
   final int? myVote; // 1=upvoted, -1=downvoted, null=no vote
 
   static const double _avatarSize = 24.0;
@@ -1350,6 +1423,17 @@ class _ResponseTile extends StatelessWidget {
                           ],
                         ),
                       ),
+                      if (onReport != null) ...[
+                        const SizedBox(width: 12),
+                        GestureDetector(
+                          onTap: onReport,
+                          child: Icon(
+                            Icons.flag_outlined,
+                            size: 14,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
 
