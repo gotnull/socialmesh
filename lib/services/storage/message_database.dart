@@ -23,7 +23,7 @@ import '../../utils/text_sanitizer.dart';
 class MessageDatabase {
   static const _dbName = 'messages.db';
   static const _tableName = 'messages';
-  static const _dbVersion = 3;
+  static const _dbVersion = 4;
 
   /// Maximum messages retained per conversation (DM or channel).
   static const int maxMessagesPerConversation = 500;
@@ -85,6 +85,16 @@ class MessageDatabase {
             'v3 migration: retroactively flagged $fixed legacy tapback messages',
           );
         }
+        if (oldVersion < 4) {
+          await db.execute(
+            'ALTER TABLE $_tableName ADD COLUMN hop_count INTEGER',
+          );
+          await db.execute('ALTER TABLE $_tableName ADD COLUMN rx_snr REAL');
+          await db.execute(
+            'ALTER TABLE $_tableName ADD COLUMN rx_rssi INTEGER',
+          );
+          AppLogging.storage('Added hop_count, rx_snr, rx_rssi columns (v4)');
+        }
       },
     );
 
@@ -125,7 +135,10 @@ class MessageDatabase {
         sender_avatar_color INTEGER,
         conversation_key TEXT NOT NULL,
         reply_id INTEGER,
-        is_emoji INTEGER NOT NULL DEFAULT 0
+        is_emoji INTEGER NOT NULL DEFAULT 0,
+        hop_count INTEGER,
+        rx_snr REAL,
+        rx_rssi INTEGER
       )
     ''');
 
@@ -370,6 +383,9 @@ class MessageDatabase {
       'conversation_key': convKey,
       'reply_id': message.replyId,
       'is_emoji': message.isEmoji ? 1 : 0,
+      'hop_count': message.hopCount,
+      'rx_snr': message.rxSnr,
+      'rx_rssi': message.rxRssi,
     };
   }
 
@@ -399,6 +415,9 @@ class MessageDatabase {
       senderAvatarColor: row['sender_avatar_color'] as int?,
       replyId: row['reply_id'] as int?,
       isEmoji: (row['is_emoji'] as int?) == 1,
+      hopCount: row['hop_count'] as int?,
+      rxSnr: (row['rx_snr'] as num?)?.toDouble(),
+      rxRssi: row['rx_rssi'] as int?,
     );
   }
 

@@ -325,11 +325,10 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
               ],
             ),
           ),
-          // Hops away for received messages (not available in current message model)
-          // This would show hop count if available from the protocol layer
-          if (!widget.isFromMe)
+          // Hops, SNR, RSSI for received messages
+          if (!widget.isFromMe) ...[
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
               child: Row(
                 children: [
                   Text(
@@ -342,6 +341,34 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: Wrap(
+                spacing: 16,
+                runSpacing: 6,
+                children: [
+                  if (widget.message.hopCount != null)
+                    _DetailChip(
+                      icon: Icons.route,
+                      label:
+                          '${widget.message.hopCount} '
+                          '${widget.message.hopCount == 1 ? 'hop' : 'hops'}',
+                    ),
+                  if (widget.message.rxSnr != null)
+                    _DetailChip(
+                      icon: Icons.signal_cellular_alt,
+                      label:
+                          'SNR ${widget.message.rxSnr!.toStringAsFixed(1)} dB',
+                    ),
+                  if (widget.message.rxRssi != null)
+                    _DetailChip(
+                      icon: Icons.cell_tower,
+                      label: 'RSSI ${widget.message.rxRssi} dBm',
+                    ),
+                ],
+              ),
+            ),
+          ],
           // Delivery status for sent messages
           if (widget.isFromMe) ...[
             Padding(
@@ -525,6 +552,11 @@ class _EmojiPickerSheet extends StatelessWidget {
                   gridPadding: EdgeInsets.zero,
                   backgroundColor: Colors.transparent,
                   columns: 8,
+                  noRecents: Text(
+                    'No Recents',
+                    style: TextStyle(fontSize: 16, color: context.textTertiary),
+                    textAlign: TextAlign.center,
+                  ),
                   loadingIndicator: const Center(
                     child: CircularProgressIndicator.adaptive(),
                   ),
@@ -563,6 +595,29 @@ class _EmojiPickerSheet extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Small icon + label chip used in the message details section.
+class _DetailChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _DetailChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: context.textTertiary),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(fontSize: 13, color: context.textSecondary),
+        ),
+      ],
     );
   }
 }

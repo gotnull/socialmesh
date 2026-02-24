@@ -126,6 +126,18 @@ class Message {
   /// Only meaningful for incoming messages (received == true).
   final bool read;
 
+  /// Hop count at reception: hopStart - hopLimit.
+  /// 0 = direct (no relay), null = unknown (sent messages or legacy data).
+  final int? hopCount;
+
+  /// Received SNR (Signal-to-Noise Ratio) in dB at the gateway node.
+  /// Higher is better. Typical range: -20 to +15. null if unavailable.
+  final double? rxSnr;
+
+  /// Received RSSI (Received Signal Strength Indicator) in dBm.
+  /// Typical range: -120 (weak) to -40 (strong). null if unavailable.
+  final int? rxRssi;
+
   // Cached sender info - populated when message is received/created
   // This ensures sender info is always available even if node hasn't loaded yet
   final String? senderLongName;
@@ -150,6 +162,9 @@ class Message {
     this.replyId,
     this.isEmoji = false,
     this.read = false,
+    this.hopCount,
+    this.rxSnr,
+    this.rxRssi,
     this.senderLongName,
     this.senderShortName,
     this.senderAvatarColor,
@@ -174,6 +189,9 @@ class Message {
     int? replyId,
     bool? isEmoji,
     bool? read,
+    int? hopCount,
+    double? rxSnr,
+    int? rxRssi,
     String? senderLongName,
     String? senderShortName,
     int? senderAvatarColor,
@@ -196,6 +214,9 @@ class Message {
       replyId: replyId ?? this.replyId,
       isEmoji: isEmoji ?? this.isEmoji,
       read: read ?? this.read,
+      hopCount: hopCount ?? this.hopCount,
+      rxSnr: rxSnr ?? this.rxSnr,
+      rxRssi: rxRssi ?? this.rxRssi,
       senderLongName: senderLongName ?? this.senderLongName,
       senderShortName: senderShortName ?? this.senderShortName,
       senderAvatarColor: senderAvatarColor ?? this.senderAvatarColor,

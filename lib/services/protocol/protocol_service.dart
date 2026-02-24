@@ -2037,6 +2037,16 @@ class ProtocolService {
   /// Cached metadata received before myNodeNum was set
   pb.DeviceMetadata? _pendingMetadata;
 
+  /// Compute hop count from hopStart and hopLimit fields in a MeshPacket.
+  /// Returns null if hop info is unavailable.
+  int? _computeHopCount(pb.MeshPacket packet) {
+    if (packet.hasHopStart() && packet.hopStart > 0) {
+      final hops = packet.hopStart - packet.hopLimit;
+      return hops < 0 ? 0 : hops;
+    }
+    return null;
+  }
+
   /// Handle text message
   void _handleTextMessage(pb.MeshPacket packet, pb.Data data) {
     try {
@@ -2078,6 +2088,9 @@ class ProtocolService {
         channel: packet.channel,
         received: true,
         packetId: packet.id,
+        hopCount: _computeHopCount(packet),
+        rxSnr: packet.hasRxSnr() ? packet.rxSnr.toDouble() : null,
+        rxRssi: packet.hasRxRssi() ? packet.rxRssi : null,
         senderLongName: senderLongName,
         senderShortName: senderShortName,
         senderAvatarColor: senderAvatarColor,
