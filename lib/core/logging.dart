@@ -58,6 +58,7 @@ class AppLogging {
   static bool? _takLoggingEnabled;
   static bool? _claimsLoggingEnabled;
   static bool? _uiGatesLoggingEnabled;
+  static bool? _incidentsLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -457,6 +458,18 @@ class AppLogging {
     if (uiGatesLoggingEnabled) debugPrint('Gate: $message');
   }
 
+  /// Incident lifecycle logging.
+  /// Enable with INCIDENTS_LOGGING_ENABLED=true in .env file.
+  static bool get incidentsLoggingEnabled {
+    _incidentsLoggingEnabled ??=
+        _safeGetEnv('INCIDENTS_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _incidentsLoggingEnabled!;
+  }
+
+  static void incidents(String message) {
+    if (incidentsLoggingEnabled) debugPrint('Incidents: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -492,6 +505,7 @@ class AppLogging {
     _takLoggingEnabled = null;
     _claimsLoggingEnabled = null;
     _uiGatesLoggingEnabled = null;
+    _incidentsLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }
