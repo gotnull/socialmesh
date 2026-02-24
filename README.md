@@ -10,6 +10,8 @@
 </p>
 
 <p align="center">
+  <a href="#status">Status</a> •
+  <a href="#operational-coordination-enterprise-focus">Enterprise</a> •
   <a href="#features">Features</a> •
   <a href="#nodedex">NodeDex</a> •
   <a href="#signals">Signals</a> •
@@ -34,17 +36,43 @@
 
 ---
 
-Connect to your mesh radio, coordinate field teams, track assets, manage incidents, and maintain situational awareness — **all without internet**.
+Connect to your mesh radio, coordinate field teams, track assets, and maintain situational awareness — **all without internet**.
 
 Socialmesh works fully offline over BLE and USB. Firebase is optional for cloud sync, fleet telemetry, and team coordination.
 
 ---
 
+## Status
+
+- The **iOS and Android releases** on the App Store and Play Store are the current stable builds. All features listed in the [Features](#features) section below are available in these releases.
+- **Enterprise operational workflows** — including incident lifecycle management, RBAC, append-only audit trails, task systems, and structured reporting — are under active development on the `main` branch and are not yet present in the store releases.
+- The offline-first architecture, mesh communication, NodeDex, Signals, TAK integration, and all companion-app capabilities are **shipped and stable**.
+- See [Architecture Overview](docs/ARCHITECTURE.md) for the current system design and [Releasing](docs/RELEASING.md) for the release process.
+
+---
+
+## Operational Coordination (Enterprise Focus)
+
+Socialmesh is evolving from a mesh companion app into a resilient field operations platform for remote industrial and infrastructure teams. The following describes both shipped capabilities and the enterprise direction:
+
+- **Offline-first coordination** — All mesh communication, node tracking, and situational awareness works without internet. Six local SQLite databases with conflict resolution and sync outbox. *(Shipped)*
+- **Structured operational persistence** — Signals provides time-bounded, location-stamped situation reports, status updates, and hazard markers across the mesh. *(Shipped)*
+- **Mesh asset registry** — NodeDex catalogues every discovered node with deterministic identity, behavioral classification, and progressive disclosure. *(Shipped)*
+- **TAK interoperability** — Bidirectional CoT exchange with ATAK/WinTAK via the TAK Gateway, including entity tracking and video streaming. *(Shipped)*
+- **Cloud optionality** — Firebase enables cloud sync, fleet telemetry, and team coordination when available. The app is fully functional without it.
+- **Incident lifecycle workflows** — Append-only state machine for operational incidents with deterministic conflict resolution. *In development (main branch)*
+- **Role-based access control** — Org-scoped permission enforcement with offline claims caching. *In development (main branch)*
+- **Append-only audit trails and structured reporting** — Field report templates (SPOTREP, SITREP) with PDF export and SHA-256 integrity hashing. *In development (main branch)*
+
+> Socialmesh supports **mesh companion mode** today — full Meshtastic compatibility for individual and team use. Enterprise operational workflows are being built on top of this foundation. Cloud features remain optional.
+
+---
+
 ## NodeDex
 
-> _Your mesh asset registry and node intelligence system._
+> _Mesh asset registry and node intelligence system._
 
-Every node discovered on the mesh is automatically catalogued in the **NodeDex** — a persistent registry of all mesh assets. Each node receives a unique **procedural Sigil** (a geometric glyph derived deterministically from its identity) and a **behavioral classification** inferred from real operational data. Accessible from the drawer menu.
+Every node discovered on the mesh is automatically catalogued in the **NodeDex** — a persistent, queryable registry of all mesh assets and their operational history. In field operations, NodeDex serves as the authoritative record of what devices are deployed, how they behave, and where they have been observed. Each node receives a unique **procedural Sigil** (a geometric glyph derived deterministically from its identity) and a **behavioral classification** inferred from real operational data. Accessible from the drawer menu.
 
 ### Procedural Sigils
 
@@ -107,15 +135,17 @@ Records which nodes have been observed together on the mesh, building a social g
 
 ## Signals
 
-> _Structured operational reports with location and time context._
+> _Structured operational persistence with location and time context._
 
-Signals is the mesh-native operational persistence system. Publish situation reports, status updates, and hazard markers that are received by all team members in range. Signals carry configurable TTL, GPS location stamps, and image attachments. Sorted by proximity and expiry. Designed for field teams that need structured, time-bounded operational awareness without internet.
+Signals is the mesh-native operational persistence layer. Publish situation reports, status updates, and hazard markers that are received by all team members in range. Signals carry configurable TTL, GPS location stamps, and image attachments. Sorted by proximity and expiry. Designed for field teams that need structured, time-bounded operational awareness without internet.
 
 ---
 
 ## Features
 
-### Messaging
+### Operational & Coordination
+
+#### Messaging
 
 | Feature               | Description                                                        |
 | --------------------- | ------------------------------------------------------------------ |
@@ -126,7 +156,7 @@ Signals is the mesh-native operational persistence system. Publish situation rep
 | **Offline Queue**     | Messages queued when disconnected, sent automatically on reconnect |
 | **Reactions**         | React to messages with emoji responses                             |
 
-### Network and Nodes
+#### Network and Nodes
 
 | Feature              | Description                                                               |
 | -------------------- | ------------------------------------------------------------------------- |
@@ -139,7 +169,7 @@ Signals is the mesh-native operational persistence system. Publish situation rep
 | **Node Profiles**    | Rich profiles with user info, social links, and custom avatars            |
 | **Presence**         | Track when nodes are online, their activity patterns, and last seen times |
 
-### Maps and Location
+#### Maps and Location
 
 | Feature              | Description                                 |
 | -------------------- | ------------------------------------------- |
@@ -149,7 +179,7 @@ Signals is the mesh-native operational persistence system. Publish situation rep
 | **Map Styles**       | Street, satellite, and terrain views        |
 | **Route Recording**  | Record and save your routes with GPS tracks |
 
-### Team Coordination
+#### Team Coordination
 
 | Feature               | Description                                                             |
 | --------------------- | ----------------------------------------------------------------------- |
@@ -157,7 +187,23 @@ Signals is the mesh-native operational persistence system. Publish situation rep
 | **Team Profiles**     | View team member profiles with role, assignment, and contact details    |
 | **Signals Feed**      | Structured operational reports sorted by proximity and expiry           |
 
-### Device Configuration
+#### Safety
+
+- **Emergency SOS** — One-tap broadcast with optional GPS coordinates
+- **Geofence Alerts** — Notifications when nodes leave defined areas
+- **Battery Alerts** — Low battery warnings for tracked nodes
+
+#### Analytics and Monitoring
+
+| Feature            | Description                                                               |
+| ------------------ | ------------------------------------------------------------------------- |
+| **Mesh Health**    | Real-time network health metrics, utilization graphs, and issue detection |
+| **Reachability**   | Probabilistic assessment of node reachability based on observed data      |
+| **Presence**       | Track when nodes are online, their activity patterns, and last seen times |
+| **Route Analysis** | View discovered routes and packet paths through the mesh                  |
+| **Telemetry Logs** | Device metrics, environment sensors, air quality, position history        |
+
+#### Device Configuration
 
 Full control over your Meshtastic device:
 
@@ -170,25 +216,20 @@ Full control over your Meshtastic device:
 - **Detection Sensor** — Motion and door sensor triggers
 - **Canned Messages** — On-device quick responses
 
-### Audio
-
-- **7,000+ RTTTL Ringtones** — Organized by category, preview before sending
-- **Custom Compositions** — Create and save your own ringtones
-
-### Integrations
+#### Integrations
 
 - **IFTTT Webhooks** — Trigger automations on node events and geofence alerts
 - **MQTT Bridge** — Internet uplink configuration
 - **QR Codes** — Import/export channels and share node info instantly
-- **Nothing Phone Glyph** — LED pattern notifications for mesh events (Nothing Phone only)
 
-### Safety
+### Community, Visualization & Extras
 
-- **Emergency SOS** — One-tap broadcast with optional GPS coordinates
-- **Geofence Alerts** — Notifications when nodes leave defined areas
-- **Battery Alerts** — Low battery warnings for tracked nodes
+#### Audio
 
-### Visualization
+- **7,000+ RTTTL Ringtones** — Organized by category, preview before sending
+- **Custom Compositions** — Create and save your own ringtones
+
+#### Visualization
 
 | Feature          | Description                                                  |
 | ---------------- | ------------------------------------------------------------ |
@@ -197,17 +238,12 @@ Full control over your Meshtastic device:
 | **Globe View**   | 3D rotating globe with node positions plotted worldwide      |
 | **Timeline**     | Chronological feed of all mesh activity and events           |
 
-### Analytics and Monitoring
+#### Extras
 
-| Feature            | Description                                                               |
-| ------------------ | ------------------------------------------------------------------------- |
-| **Mesh Health**    | Real-time network health metrics, utilization graphs, and issue detection |
-| **Reachability**   | Probabilistic assessment of node reachability based on observed data      |
-| **Presence**       | Track when nodes are online, their activity patterns, and last seen times |
-| **Route Analysis** | View discovered routes and packet paths through the mesh                  |
-| **Telemetry Logs** | Device metrics, environment sensors, air quality, position history        |
+- **Nothing Phone Glyph** — LED pattern notifications for mesh events (Nothing Phone only)
+- **Sigil Cards** — Collectible trading-card-style renders of node identities with shareable PNG export
 
-### Premium Features
+#### Premium Features
 
 These features are available via one-time in-app purchases:
 
