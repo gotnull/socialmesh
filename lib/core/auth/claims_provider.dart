@@ -61,7 +61,9 @@ class ClaimsState {
 /// Consumer users (no custom claims) are handled gracefully: the provider
 /// returns [ClaimsState] with null orgId and null role.
 class ClaimsNotifier extends Notifier<ClaimsState> {
-  late final ClaimsCache _cache;
+  // Not `late final` — build() is re-invoked on dependency changes and
+  // `late final` fields cannot be reassigned.
+  late ClaimsCache _cache;
   bool _wasOffline = false;
   bool _initialized = false;
 
