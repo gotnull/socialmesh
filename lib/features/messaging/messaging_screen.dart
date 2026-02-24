@@ -791,6 +791,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   bool _isSearching = false;
   String _searchQuery = '';
 
+  /// The message being replied to, or null if not replying.
+  Message? _replyingTo;
+
   @override
   void initState() {
     super.initState();
@@ -859,6 +862,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     super.dispose();
   }
 
+  void _setReplyTo(Message message) {
+    setState(() => _replyingTo = message);
+    _messageFocusNode.requestFocus();
+  }
+
+  void _clearReply() {
+    setState(() => _replyingTo = null);
+  }
+
   void _showQuickResponses() async {
     ref.haptics.buttonTap();
     final settingsService = await ref.read(settingsServiceProvider.future);
@@ -908,6 +920,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         : 0;
     final wantAck = widget.type != ConversationType.channel;
 
+    // Capture and clear reply state before async operations
+    final replyPacketId = _replyingTo?.packetId;
+
     // Create pending message with sender info cached
     final pendingMessage = Message(
       id: messageId,
@@ -918,6 +933,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       sent: true,
       status: MessageStatus.pending,
       source: MessageSource.manual,
+      replyId: replyPacketId,
       senderLongName: myNode?.longName,
       senderShortName: myNode?.shortName,
       senderAvatarColor: myNode?.avatarColor,
@@ -926,6 +942,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     // Add to messages immediately for optimistic UI
     messagesNotifier.addMessage(pendingMessage);
     _messageController.clear();
+    _clearReply();
 
     // Haptic feedback for message send
     haptics.trigger(HapticType.light);
@@ -964,6 +981,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           wantAck: false,
           messageId: messageId,
           source: MessageSource.manual,
+          replyId: replyPacketId,
         );
         // Channel messages don't get ACKs, so no tracking needed
       } else {
@@ -980,6 +998,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             messagesNotifier.trackPacket(id, messageId);
           },
           source: MessageSource.manual,
+          replyId: replyPacketId,
         );
       }
 
@@ -1628,6 +1647,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                           channelIndex: widget.type == ConversationType.channel
                               ? widget.channelIndex
                               : null,
+                          onReply: () => _setReplyTo(message),
                           onRetry: message.isFailed
                               ? () => _retryMessage(message)
                               : null,
@@ -1647,13 +1667,82 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                     ),
             ),
 
+            // Reply banner
+            if (_replyingTo != null)
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+                decoration: BoxDecoration(
+                  color: context.card,
+                  border: Border(
+                    top: BorderSide(
+                      color: context.border.withValues(alpha: 0.3),
+                    ),
+                    bottom: BorderSide(
+                      color: context.border.withValues(alpha: 0.15),
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.reply, size: 18, color: context.accentColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Replying to ${_replyingTo!.senderDisplayName}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: context.accentColor,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _replyingTo!.text.length > 80
+                                ? '${_replyingTo!.text.substring(0, 80)}...'
+                                : _replyingTo!.text,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: context.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.close,
+                        size: 18,
+                        color: context.textTertiary,
+                      ),
+                      onPressed: _clearReply,
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             // Input
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: context.card,
                 border: Border(
-                  top: BorderSide(color: context.border.withValues(alpha: 0.3)),
+                  top: _replyingTo != null
+                      ? BorderSide.none
+                      : BorderSide(
+                          color: context.border.withValues(alpha: 0.3),
+                        ),
                 ),
               ),
               child: SafeArea(
@@ -1745,6 +1834,7 @@ class _MessageBubble extends StatelessWidget {
   final bool isEncrypted;
   final bool isQueued;
   final int? channelIndex;
+  final VoidCallback? onReply;
   final VoidCallback? onRetry;
   final VoidCallback? onPkiFix;
   final VoidCallback? onDelete;
@@ -1761,6 +1851,7 @@ class _MessageBubble extends StatelessWidget {
     this.isEncrypted = true,
     this.isQueued = false,
     this.channelIndex,
+    this.onReply,
     this.onRetry,
     this.onPkiFix,
     this.onDelete,
@@ -2236,6 +2327,7 @@ class _MessageBubble extends StatelessWidget {
       isFromMe: isFromMe,
       senderName: senderName,
       channelIndex: channelIndex,
+      onReply: onReply,
       onDelete: onDelete,
     );
   }
