@@ -58,6 +58,7 @@ import '../profile/profile_screen.dart';
 import '../debug/device_logs_screen.dart';
 import '../nodedex/screens/nodedex_screen.dart';
 import '../social/screens/activity_timeline_screen.dart';
+import '../social/screens/social_hub_screen.dart';
 import '../aether/screens/aether_screen.dart';
 import '../aether/providers/aether_flight_matcher_provider.dart';
 import '../aether/providers/aether_flight_lifecycle_provider.dart';
@@ -420,6 +421,14 @@ class _MainShellState extends ConsumerState<MainShell> {
       sectionHeader: 'SOCIAL',
       iconColor: Colors.purple.shade300,
     ),
+    if (AppFeatureFlags.isSocialEnabled)
+      _DrawerMenuItem(
+        icon: Icons.forum_outlined,
+        label: 'Social',
+        screen: const SocialHubScreen(),
+        iconColor: Colors.pink.shade300,
+        requiresConnection: false,
+      ),
     _DrawerMenuItem(
       icon: Icons.auto_stories_outlined,
       label: 'NodeDex',

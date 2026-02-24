@@ -412,6 +412,18 @@ class AutomationSqliteStore {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  /// Delete a sync state key entirely.
+  ///
+  /// Used to reset the pull watermark when a blob import is detected,
+  /// forcing a full re-pull on the next sync cycle.
+  Future<void> deleteSyncState(String key) async {
+    await _db.delete(
+      AutomationTables.syncState,
+      where: '${AutomationTables.colSyncKey} = ?',
+      whereArgs: [key],
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Export / Import (JSON)
   // ---------------------------------------------------------------------------

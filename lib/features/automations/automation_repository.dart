@@ -8,6 +8,12 @@ import 'models/automation.dart';
 import 'models/schedule_spec.dart';
 import 'services/automation_sqlite_store.dart';
 
+/// Sync state key used to mark that automations were imported from the
+/// stale profile blob (`automationsJson`). The sync service checks this
+/// flag to reset the pull watermark and prevent resurrecting deleted
+/// automations.
+const String blobImportedSyncKey = 'automations_blob_imported';
+
 /// Repository for storing and retrieving automations.
 ///
 /// Uses [AutomationSqliteStore] as the backing store for automations
@@ -133,7 +139,11 @@ class AutomationRepository extends ChangeNotifier {
           'automations from cloud profile preferences (one-time)',
         );
         await _store!.bulkImport(automations);
-        await _store!.enqueueAllForSync();
+        // Mark that data was imported from the stale profile blob.
+        // The sync service will reset the pull watermark and do a
+        // full re-pull before pushing, so Firestore deletion markers
+        // are applied first and deleted automations are not resurrected.
+        await _store!.setSyncState(blobImportedSyncKey, 'true');
         notifyListeners();
       }
     } catch (e) {

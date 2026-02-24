@@ -21,6 +21,7 @@ import '../../../core/logging.dart';
 import '../../../services/sync/sync_contract.dart';
 import '../../../services/sync/sync_diagnostics.dart';
 import '../../../services/sync/sync_probe_result.dart';
+import '../automation_repository.dart' show blobImportedSyncKey;
 import '../models/automation.dart';
 import 'automation_sqlite_store.dart';
 
@@ -209,14 +210,34 @@ class AutomationSyncService {
         'enabled=$_enabled store.syncEnabled=${_store.syncEnabled}',
       );
 
+      // If the stale profile blob was imported into SQLite, reset the
+      // pull watermark so the upcoming pull does a full re-fetch.
+      // This ensures Firestore deletion markers are applied before any
+      // blob-imported data is pushed, preventing ghost resurrection.
+      final blobFlag = await _store.getSyncState(blobImportedSyncKey);
+      if (blobFlag == 'true') {
+        final wmKey = _watermarkKey(user.uid);
+        final existingWm = await _store.getSyncState(wmKey);
+        if (existingWm != null) {
+          await _store.deleteSyncState(wmKey);
+          _syncLog('Blob import detected — watermark cleared for full re-pull');
+        }
+      }
+
       // Initial push: if this is the first sync for this user (no watermark),
       // enqueue any local automations that exist in SQLite but were never
       // outboxed. This handles the case where automations were saved before
       // Cloud Sync was activated (syncEnabled was false at save time).
+      // Skips if data was blob-imported (pull must reconcile first).
       await _ensureInitialPushIfNeeded(user.uid);
 
       await _drainOutbox(user.uid);
       await _pullUpdates(user.uid);
+
+      // After pull, reconcile blob import: enqueue surviving
+      // (non-deleted) automations and drain them immediately.
+      await _reconcileBlobImportAfterPull(user.uid);
+
       _diagnostics.recordSyncCycleComplete();
 
       final elapsed = DateTime.now().difference(cycleStart).inMilliseconds;
@@ -235,6 +256,9 @@ class AutomationSyncService {
   /// user), any automations already in SQLite were saved before sync was active.
   /// Those saves had [syncEnabled] = false, so no outbox entries were created.
   /// This method detects that situation and enqueues everything once.
+  ///
+  /// Skips when a blob import was detected — in that case, the pull must
+  /// reconcile deletion markers first (see [_reconcileBlobImportAfterPull]).
   Future<void> _ensureInitialPushIfNeeded(String userId) async {
     final wmKey = _watermarkKey(userId);
     final existingWatermark = await _store.getSyncState(wmKey);
@@ -246,6 +270,18 @@ class AutomationSyncService {
     final outboxCount = await _store.outboxCount;
     if (outboxCount > 0) return; // outbox already has entries (e.g. migration)
 
+    // If data was imported from the stale profile blob, do NOT push it.
+    // The blob may contain deleted automations that would overwrite
+    // Firestore deletion markers. Let the pull reconcile first.
+    final blobFlag = await _store.getSyncState(blobImportedSyncKey);
+    if (blobFlag == 'true') {
+      _syncLog(
+        'Initial push: skipped — data was blob-imported, '
+        'waiting for pull to reconcile',
+      );
+      return;
+    }
+
     _syncLog(
       'Initial push: first sync for uid=${userId.substring(0, 8)}... '
       '— enqueuing $localCount local automations to outbox',
@@ -253,6 +289,39 @@ class AutomationSyncService {
 
     final enqueued = await _store.enqueueAllForSync();
     _syncLog('Initial push: enqueued $enqueued automations');
+  }
+
+  /// Reconcile a blob import after the pull has applied remote deletions.
+  ///
+  /// When automations are imported from the stale `automationsJson` profile
+  /// blob, the data may include automations that were previously deleted via
+  /// per-document sync. The blob is never updated after deletions, so it
+  /// acts as a snapshot that can resurrect dead automations.
+  ///
+  /// This method runs after the pull phase has applied Firestore deletion
+  /// markers. It clears the blob-import flag, then enqueues only the
+  /// surviving (non-deleted) automations for sync and drains them
+  /// immediately so they reach Firestore without overwriting deletions.
+  Future<void> _reconcileBlobImportAfterPull(String userId) async {
+    final blobFlag = await _store.getSyncState(blobImportedSyncKey);
+    if (blobFlag != 'true') return;
+
+    // Clear the flag so subsequent cycles skip this code path.
+    await _store.deleteSyncState(blobImportedSyncKey);
+
+    final survivorCount = _store.count;
+    if (survivorCount > 0) {
+      final enqueued = await _store.enqueueAllForSync();
+      _syncLog(
+        'Blob reconciliation: pull applied, '
+        'enqueued $enqueued surviving automations for sync',
+      );
+
+      // Drain immediately so surviving items reach Firestore promptly.
+      await _drainOutbox(userId);
+    } else {
+      _syncLog('Blob reconciliation: no surviving automations after pull');
+    }
   }
 
   // ---------------------------------------------------------------------------

@@ -7,17 +7,22 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import 'package:social_media_buttons/social_media_icons.dart';
 import '../../../services/share_link_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/animated_empty_state.dart';
+import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/default_banner.dart';
 import '../../../core/widgets/edge_fade.dart';
+import '../../../core/widgets/glass_app_bar.dart';
 import '../../../core/widgets/shimmer_image.dart';
+import '../../../core/widgets/skeleton_config.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
 import '../../../providers/activity_providers.dart';
@@ -220,25 +225,44 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                 // Posts section - only visible if allowed
                 if (canViewContent) ...[
                   // Posts filter tabs
+                  // Posts filter tabs with glass-quality styling
                   SliverToBoxAdapter(
-                    child: TabBar(
-                      controller: _tabController,
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      indicatorColor: context.accentColor,
-                      labelColor: context.accentColor,
-                      unselectedLabelColor: context.textSecondary,
-                      labelStyle: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: context.border.withValues(alpha: 0.5),
+                            width: 0.5,
+                          ),
+                        ),
                       ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontWeight: FontWeight.normal,
-                        fontSize: 14,
+                      child: TabBar(
+                        controller: _tabController,
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        indicatorWeight: 2,
+                        indicatorColor: context.accentColor,
+                        labelColor: context.accentColor,
+                        unselectedLabelColor: context.textTertiary,
+                        labelStyle: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          letterSpacing: 0.3,
+                        ),
+                        unselectedLabelStyle: const TextStyle(
+                          fontWeight: FontWeight.normal,
+                          fontSize: 13,
+                        ),
+                        dividerColor: Colors.transparent,
+                        tabs: PostFilter.values.map((filter) {
+                          final icon = switch (filter) {
+                            PostFilter.all => Icons.grid_on_rounded,
+                            PostFilter.photos => Icons.image_outlined,
+                            PostFilter.location => Icons.location_on_outlined,
+                            PostFilter.nodes => Icons.router_outlined,
+                          };
+                          return Tab(icon: Icon(icon, size: 20));
+                        }).toList(),
                       ),
-                      dividerColor: context.border,
-                      tabs: PostFilter.values
-                          .map((filter) => Tab(text: filter.label))
-                          .toList(),
                     ),
                   ),
                   _buildPostsGrid(context, postsState, isOwnProfile),
@@ -254,7 +278,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => _buildSkeletonProfile(context),
         error: (error, _) => _buildErrorState(context, error),
       ),
     );
@@ -262,20 +286,55 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
 
   Widget _buildProfileNotFound(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.person_off_outlined,
-            size: 64,
-            color: context.textTertiary,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Profile not found',
-            style: TextStyle(color: context.textSecondary, fontSize: 16),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 48),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    context.accentColor.withValues(alpha: 0.08),
+                    context.accentColor.withValues(alpha: 0.03),
+                  ],
+                ),
+                border: Border.all(
+                  color: context.accentColor.withValues(alpha: 0.15),
+                  width: 0.5,
+                ),
+              ),
+              child: Icon(
+                Icons.person_off_outlined,
+                size: 48,
+                color: context.textTertiary.withValues(alpha: 0.6),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Profile not found',
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'This profile may have been removed or is no longer available.',
+              style: TextStyle(
+                color: context.textTertiary,
+                fontSize: 13,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -283,35 +342,196 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
   Widget _buildErrorState(BuildContext context, Object error) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 48),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: context.textTertiary),
-            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppTheme.errorRed.withValues(alpha: 0.08),
+                    AppTheme.errorRed.withValues(alpha: 0.03),
+                  ],
+                ),
+                border: Border.all(
+                  color: AppTheme.errorRed.withValues(alpha: 0.15),
+                  width: 0.5,
+                ),
+              ),
+              child: Icon(
+                Icons.error_outline,
+                size: 48,
+                color: context.textTertiary.withValues(alpha: 0.6),
+              ),
+            ),
+            const SizedBox(height: 20),
             Text(
               'Failed to load profile',
               style: TextStyle(
                 color: context.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               error.toString(),
-              style: TextStyle(color: context.textTertiary, fontSize: 13),
+              style: TextStyle(
+                color: context.textTertiary,
+                fontSize: 13,
+                height: 1.4,
+              ),
               textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 16),
-            OutlinedButton(
-              onPressed: () =>
+            const SizedBox(height: 20),
+            BouncyTap(
+              onTap: () =>
                   ref.invalidate(publicProfileStreamProvider(widget.userId)),
-              child: const Text('Retry'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      context.accentColor.withValues(alpha: 0.15),
+                      context.accentColor.withValues(alpha: 0.08),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: context.accentColor.withValues(alpha: 0.25),
+                    width: 0.5,
+                  ),
+                ),
+                child: Text(
+                  'Retry',
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  /// Skeleton loading placeholder shown while profile data loads.
+  Widget _buildSkeletonProfile(BuildContext context) {
+    return Skeletonizer(
+      enabled: true,
+      effect: AppSkeletonConfig.effect(context),
+      child: CustomScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        slivers: [
+          // Skeleton banner area
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                SizedBox(height: MediaQuery.of(context).padding.top),
+                // Banner placeholder
+                Container(height: 180, color: context.surface),
+                // Avatar + header skeleton
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Bone.circle(size: 80),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Bone.text(words: 2, fontSize: 18),
+                                const SizedBox(height: 6),
+                                Bone.text(words: 1, fontSize: 13),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Stats card skeleton
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.surface,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildSkeletonStat(),
+                            _buildSkeletonStat(),
+                            _buildSkeletonStat(),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Bio skeleton
+                      Bone.text(words: 8, fontSize: 14),
+                      const SizedBox(height: 8),
+                      Bone.text(words: 5, fontSize: 14),
+                      const SizedBox(height: 16),
+                      // Action button skeleton
+                      Container(
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: context.surface,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Grid skeleton
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 2,
+                crossAxisSpacing: 2,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => Container(color: context.surface),
+                childCount: 9,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkeletonStat() {
+    return Column(
+      children: [
+        Bone.text(words: 1, fontSize: 18),
+        const SizedBox(height: 4),
+        Bone.text(words: 1, fontSize: 13),
+      ],
     );
   }
 
@@ -324,8 +544,17 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
     const avatarSize = 80.0;
     const avatarOverlap = 40.0;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sigma = GlassConstants.blurSigma;
+    final fillColor = isDark
+        ? Colors.black.withValues(alpha: GlassConstants.fillOpacity)
+        : Colors.white.withValues(alpha: GlassConstants.fillOpacity);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: GlassConstants.borderOpacity)
+        : Colors.black.withValues(alpha: GlassConstants.borderOpacity * 0.5);
+
     return SliverAppBar(
-      backgroundColor: context.background.withValues(alpha: 0.8),
+      backgroundColor: Colors.transparent,
       foregroundColor: context.textPrimary,
       pinned: true,
       expandedHeight: bannerHeight + avatarOverlap,
@@ -335,321 +564,334 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
       leading: widget.showHamburgerMenu ? const HamburgerMenuButton() : null,
       flexibleSpace: ClipRect(
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: FlexibleSpaceBar(
-            background: Stack(
-              clipBehavior: Clip.none,
-              fit: StackFit.expand,
-              children: [
-                // Banner image with shimmer loading
-                Positioned.fill(
-                  bottom: avatarOverlap,
-                  child: ClipRect(
-                    child: BouncyTap(
-                      onTap: isOwnProfile
-                          ? () => _showBannerOptions(profile)
-                          : null,
-                      scaleFactor: 0.98,
-                      enabled: isOwnProfile,
-                      child: profile.bannerUrl != null
-                          ? Image.network(
-                              profile.bannerUrl!,
-                              width: double.infinity,
-                              height: double.infinity,
-                              fit: BoxFit.cover,
-                              alignment: Alignment.center,
-                              frameBuilder:
-                                  (
-                                    context,
-                                    child,
-                                    frame,
-                                    wasSynchronouslyLoaded,
-                                  ) {
-                                    if (wasSynchronouslyLoaded) return child;
-                                    return AnimatedSwitcher(
-                                      duration: const Duration(
-                                        milliseconds: 300,
-                                      ),
-                                      child: frame != null
-                                          ? child
-                                          : const DefaultBanner(),
-                                    );
-                                  },
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const DefaultBanner(),
-                            )
-                          : const DefaultBanner(),
-                    ),
-                  ),
+          filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+          child: Container(
+            decoration: BoxDecoration(
+              color: fillColor,
+              border: Border(
+                bottom: BorderSide(
+                  color: borderColor,
+                  width: GlassConstants.borderWidth,
                 ),
-                // Gradient overlay for readability - fades into background at bottom
-                Positioned.fill(
-                  bottom: avatarOverlap,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.5),
-                          Colors.black.withValues(alpha: 0.2),
-                          Colors.transparent,
-                          context.background.withValues(alpha: 0.7),
-                          context.background,
-                        ],
-                        stops: const [0.0, 0.15, 0.4, 0.85, 1.0],
+              ),
+            ),
+            child: FlexibleSpaceBar(
+              background: Stack(
+                clipBehavior: Clip.none,
+                fit: StackFit.expand,
+                children: [
+                  // Banner image with shimmer loading
+                  Positioned.fill(
+                    bottom: avatarOverlap,
+                    child: ClipRect(
+                      child: BouncyTap(
+                        onTap: isOwnProfile
+                            ? () => _showBannerOptions(profile)
+                            : null,
+                        scaleFactor: 0.98,
+                        enabled: isOwnProfile,
+                        child: profile.bannerUrl != null
+                            ? Image.network(
+                                profile.bannerUrl!,
+                                width: double.infinity,
+                                height: double.infinity,
+                                fit: BoxFit.cover,
+                                alignment: Alignment.center,
+                                frameBuilder:
+                                    (
+                                      context,
+                                      child,
+                                      frame,
+                                      wasSynchronouslyLoaded,
+                                    ) {
+                                      if (wasSynchronouslyLoaded) return child;
+                                      return AnimatedSwitcher(
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
+                                        child: frame != null
+                                            ? child
+                                            : const DefaultBanner(),
+                                      );
+                                    },
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const DefaultBanner(),
+                              )
+                            : const DefaultBanner(),
                       ),
                     ),
                   ),
-                ),
-                // Avatar overlapping the banner
-                Positioned(
-                  left: 16,
-                  bottom: 0,
-                  child: Consumer(
-                    builder: (context, ref, _) {
-                      // Check if user has stories
-                      final userStoriesAsync = ref.watch(
-                        userStoriesProvider(widget.userId),
-                      );
-                      final hasStories =
-                          userStoriesAsync.whenOrNull(
-                            data: (stories) => stories.isNotEmpty,
-                          ) ??
-                          false;
+                  // Gradient overlay for readability - fades into background at bottom
+                  Positioned.fill(
+                    bottom: avatarOverlap,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.5),
+                            Colors.black.withValues(alpha: 0.2),
+                            Colors.transparent,
+                            context.background.withValues(alpha: 0.7),
+                            context.background,
+                          ],
+                          stops: const [0.0, 0.15, 0.4, 0.85, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Avatar overlapping the banner
+                  Positioned(
+                    left: 16,
+                    bottom: 0,
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        // Check if user has stories
+                        final userStoriesAsync = ref.watch(
+                          userStoriesProvider(widget.userId),
+                        );
+                        final hasStories =
+                            userStoriesAsync.whenOrNull(
+                              data: (stories) => stories.isNotEmpty,
+                            ) ??
+                            false;
 
-                      // Check if current user has viewed all stories
-                      final viewedStoriesState = ref.watch(
-                        viewedStoriesProvider,
-                      );
-                      final allViewed =
-                          userStoriesAsync.whenOrNull(
-                            data: (stories) => stories.every(
-                              (s) => viewedStoriesState.hasViewed(s.id),
-                            ),
-                          ) ??
-                          true;
-
-                      final hasUnviewed = hasStories && !allViewed;
-                      final accentColor = context.accentColor;
-                      final gradientColors = AccentColors.gradientFor(
-                        accentColor,
-                      );
-
-                      // Use same proportions as StoryAvatar for consistency
-                      final ringWidth = avatarSize * 0.05;
-                      final ringPadding = avatarSize * 0.04;
-                      final totalRingSize =
-                          avatarSize + (ringWidth + ringPadding) * 2;
-
-                      // Trigger shatter animation on first visit with stories
-                      if (hasStories &&
-                          !isOwnProfile &&
-                          _lastProfileIdWithStories != widget.userId) {
-                        _lastProfileIdWithStories = widget.userId;
-                        _hasPlayedShatterAnimation = false;
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) {
-                            _initShatterAnimation();
-                            setState(() => _hasPlayedShatterAnimation = true);
-                          }
-                        });
-                      }
-
-                      // Determine if we should show the shatter animation
-                      final showShatterAnimation =
-                          hasStories &&
-                          !isOwnProfile &&
-                          _hasPlayedShatterAnimation &&
-                          _shatterController != null;
-
-                      return BouncyTap(
-                        onTap: () {
-                          if (hasStories) {
-                            // Open story viewer
-                            final stories = userStoriesAsync.value ?? [];
-                            if (stories.isNotEmpty) {
-                              final group = StoryGroup(
-                                userId: widget.userId,
-                                stories: stories,
-                                lastStoryAt: stories.first.createdAt,
-                              );
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => StoryViewerScreen(
-                                    storyGroups: [group],
-                                    initialGroupIndex: 0,
-                                  ),
-                                ),
-                              );
-                            }
-                          } else if (isOwnProfile) {
-                            // No stories - add new story
-                            _navigateToCreateStory();
-                          }
-                        },
-                        scaleFactor: 0.95,
-                        // Always use totalRingSize for consistent layout (no shifting)
-                        child: SizedBox(
-                          width: totalRingSize + 8,
-                          height: totalRingSize + 8,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: context.background,
-                                width: 4,
+                        // Check if current user has viewed all stories
+                        final viewedStoriesState = ref.watch(
+                          viewedStoriesProvider,
+                        );
+                        final allViewed =
+                            userStoriesAsync.whenOrNull(
+                              data: (stories) => stories.every(
+                                (s) => viewedStoriesState.hasViewed(s.id),
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
+                            ) ??
+                            true;
+
+                        final hasUnviewed = hasStories && !allViewed;
+                        final accentColor = context.accentColor;
+                        final gradientColors = AccentColors.gradientFor(
+                          accentColor,
+                        );
+
+                        // Use same proportions as StoryAvatar for consistency
+                        final ringWidth = avatarSize * 0.05;
+                        final ringPadding = avatarSize * 0.04;
+                        final totalRingSize =
+                            avatarSize + (ringWidth + ringPadding) * 2;
+
+                        // Trigger shatter animation on first visit with stories
+                        if (hasStories &&
+                            !isOwnProfile &&
+                            _lastProfileIdWithStories != widget.userId) {
+                          _lastProfileIdWithStories = widget.userId;
+                          _hasPlayedShatterAnimation = false;
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) {
+                              _initShatterAnimation();
+                              setState(() => _hasPlayedShatterAnimation = true);
+                            }
+                          });
+                        }
+
+                        // Determine if we should show the shatter animation
+                        final showShatterAnimation =
+                            hasStories &&
+                            !isOwnProfile &&
+                            _hasPlayedShatterAnimation &&
+                            _shatterController != null;
+
+                        return BouncyTap(
+                          onTap: () {
+                            if (hasStories) {
+                              // Open story viewer
+                              final stories = userStoriesAsync.value ?? [];
+                              if (stories.isNotEmpty) {
+                                final group = StoryGroup(
+                                  userId: widget.userId,
+                                  stories: stories,
+                                  lastStoryAt: stories.first.createdAt,
+                                );
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => StoryViewerScreen(
+                                      storyGroups: [group],
+                                      initialGroupIndex: 0,
+                                    ),
+                                  ),
+                                );
+                              }
+                            } else if (isOwnProfile) {
+                              // No stories - add new story
+                              _navigateToCreateStory();
+                            }
+                          },
+                          scaleFactor: 0.95,
+                          // Always use totalRingSize for consistent layout (no shifting)
+                          child: SizedBox(
+                            width: totalRingSize + 8,
+                            height: totalRingSize + 8,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: context.background,
+                                  width: 4,
                                 ),
-                              ],
-                            ),
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                // Gradient ring for stories (animated shatter effect or static)
-                                // Always render the ring container for consistent sizing
-                                if (hasStories)
-                                  showShatterAnimation
-                                      ? AnimatedBuilder(
-                                          animation: _shatterController!,
-                                          builder: (context, _) {
-                                            return CustomPaint(
-                                              size: Size(
-                                                totalRingSize,
-                                                totalRingSize,
-                                              ),
-                                              painter: _ShatteredRingPainter(
-                                                progress:
-                                                    _shatterController!.value,
-                                                gradientColors: hasUnviewed
-                                                    ? gradientColors
-                                                    : [
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  // Gradient ring for stories (animated shatter effect or static)
+                                  // Always render the ring container for consistent sizing
+                                  if (hasStories)
+                                    showShatterAnimation
+                                        ? AnimatedBuilder(
+                                            animation: _shatterController!,
+                                            builder: (context, _) {
+                                              return CustomPaint(
+                                                size: Size(
+                                                  totalRingSize,
+                                                  totalRingSize,
+                                                ),
+                                                painter: _ShatteredRingPainter(
+                                                  progress:
+                                                      _shatterController!.value,
+                                                  gradientColors: hasUnviewed
+                                                      ? gradientColors
+                                                      : [
+                                                          Colors.grey.shade500,
+                                                          Colors.grey.shade400,
+                                                          Colors.grey.shade500,
+                                                        ],
+                                                  ringWidth: ringWidth,
+                                                  backgroundColor:
+                                                      context.background,
+                                                ),
+                                              );
+                                            },
+                                          )
+                                        : Container(
+                                            width: totalRingSize,
+                                            height: totalRingSize,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              gradient: hasUnviewed
+                                                  ? SweepGradient(
+                                                      colors: [
+                                                        gradientColors[0],
+                                                        gradientColors[1],
+                                                        gradientColors[2],
+                                                        gradientColors[1],
+                                                        gradientColors[0],
+                                                      ],
+                                                      stops: const [
+                                                        0.0,
+                                                        0.25,
+                                                        0.5,
+                                                        0.75,
+                                                        1.0,
+                                                      ],
+                                                      // Offset seam to bottom where it's less visible
+                                                      startAngle: math.pi / 2,
+                                                    )
+                                                  : SweepGradient(
+                                                      colors: [
+                                                        Colors.grey.shade500,
+                                                        Colors.grey.shade400,
                                                         Colors.grey.shade500,
                                                         Colors.grey.shade400,
                                                         Colors.grey.shade500,
                                                       ],
-                                                ringWidth: ringWidth,
-                                                backgroundColor:
-                                                    context.background,
-                                              ),
-                                            );
-                                          },
-                                        )
-                                      : Container(
-                                          width: totalRingSize,
-                                          height: totalRingSize,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            gradient: hasUnviewed
-                                                ? SweepGradient(
-                                                    colors: [
-                                                      gradientColors[0],
-                                                      gradientColors[1],
-                                                      gradientColors[2],
-                                                      gradientColors[1],
-                                                      gradientColors[0],
-                                                    ],
-                                                    stops: const [
-                                                      0.0,
-                                                      0.25,
-                                                      0.5,
-                                                      0.75,
-                                                      1.0,
-                                                    ],
-                                                    // Offset seam to bottom where it's less visible
-                                                    startAngle: math.pi / 2,
-                                                  )
-                                                : SweepGradient(
-                                                    colors: [
-                                                      Colors.grey.shade500,
-                                                      Colors.grey.shade400,
-                                                      Colors.grey.shade500,
-                                                      Colors.grey.shade400,
-                                                      Colors.grey.shade500,
-                                                    ],
-                                                    stops: const [
-                                                      0.0,
-                                                      0.25,
-                                                      0.5,
-                                                      0.75,
-                                                      1.0,
-                                                    ],
-                                                    // Offset seam to bottom where it's less visible
-                                                    startAngle: math.pi / 2,
-                                                  ),
-                                          ),
-                                          child: Center(
-                                            child: Container(
-                                              width:
-                                                  totalRingSize - ringWidth * 2,
-                                              height:
-                                                  totalRingSize - ringWidth * 2,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: context.background,
+                                                      stops: const [
+                                                        0.0,
+                                                        0.25,
+                                                        0.5,
+                                                        0.75,
+                                                        1.0,
+                                                      ],
+                                                      // Offset seam to bottom where it's less visible
+                                                      startAngle: math.pi / 2,
+                                                    ),
+                                            ),
+                                            child: Center(
+                                              child: Container(
+                                                width:
+                                                    totalRingSize -
+                                                    ringWidth * 2,
+                                                height:
+                                                    totalRingSize -
+                                                    ringWidth * 2,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: context.background,
+                                                ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                // Avatar with shimmer loading and scale-in animation
-                                // Always positioned with ring offset for consistent placement
-                                Positioned(
-                                  left: ringWidth + ringPadding,
-                                  top: ringWidth + ringPadding,
-                                  child: ShimmerAvatar(
-                                    imageUrl: profile.avatarUrl,
-                                    radius: avatarSize / 2,
-                                    fallbackText: profile.displayName[0]
-                                        .toUpperCase(),
-                                    backgroundColor: context.accentColor
-                                        .withValues(alpha: 0.2),
-                                    animateIn: true,
-                                    animationDelay: const Duration(
-                                      milliseconds: 100,
-                                    ),
-                                  ),
-                                ),
-                                // Add story button for own profile (always visible)
-                                if (isOwnProfile)
+                                  // Avatar with shimmer loading and scale-in animation
+                                  // Always positioned with ring offset for consistent placement
                                   Positioned(
-                                    right: 0,
-                                    bottom: 0,
-                                    child: BouncyTap(
-                                      onTap: _navigateToCreateStory,
-                                      scaleFactor: 0.85,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          color: context.accentColor,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: context.background,
-                                            width: 2,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.add,
-                                          color: Colors.white,
-                                          size: 12,
-                                        ),
+                                    left: ringWidth + ringPadding,
+                                    top: ringWidth + ringPadding,
+                                    child: ShimmerAvatar(
+                                      imageUrl: profile.avatarUrl,
+                                      radius: avatarSize / 2,
+                                      fallbackText: profile.displayName[0]
+                                          .toUpperCase(),
+                                      backgroundColor: context.accentColor
+                                          .withValues(alpha: 0.2),
+                                      animateIn: true,
+                                      animationDelay: const Duration(
+                                        milliseconds: 100,
                                       ),
                                     ),
                                   ),
-                              ],
+                                  // Add story button for own profile (always visible)
+                                  if (isOwnProfile)
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: BouncyTap(
+                                        onTap: _navigateToCreateStory,
+                                        scaleFactor: 0.85,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: context.accentColor,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: context.background,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: const Icon(
+                                            Icons.add,
+                                            color: Colors.white,
+                                            size: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -714,52 +956,61 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Stats row - full width, centered
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              SlideInAnimation(
-                delay: const Duration(milliseconds: 0),
-                duration: const Duration(milliseconds: 300),
-                beginOffset: const Offset(0, 0.3),
-                child: Consumer(
-                  builder: (context, ref, _) {
-                    final postsState = ref.watch(
-                      userPostsStateProvider(widget.userId),
-                    );
-                    return _StatColumn(
-                      count: postsState.posts.length,
-                      label: 'Posts',
-                      singularLabel: 'Post',
-                      onTap: null,
-                    );
-                  },
+          // Glass stats card
+          SlideInAnimation(
+            duration: const Duration(milliseconds: 400),
+            beginOffset: const Offset(0, 0.2),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    context.accentColor.withValues(alpha: 0.08),
+                    context.accentColor.withValues(alpha: 0.03),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: context.accentColor.withValues(alpha: 0.15),
+                  width: 0.5,
                 ),
               ),
-              SlideInAnimation(
-                delay: const Duration(milliseconds: 50),
-                duration: const Duration(milliseconds: 300),
-                beginOffset: const Offset(0, 0.3),
-                child: _StatColumn(
-                  count: profile.followerCount,
-                  label: 'Followers',
-                  singularLabel: 'Follower',
-                  onTap: () =>
-                      _navigateToFollowers(FollowersScreenMode.followers),
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final postsState = ref.watch(
+                        userPostsStateProvider(widget.userId),
+                      );
+                      return _StatColumn(
+                        count: postsState.posts.length,
+                        label: 'Posts',
+                        singularLabel: 'Post',
+                        onTap: null,
+                      );
+                    },
+                  ),
+                  _GlassStatDivider(),
+                  _StatColumn(
+                    count: profile.followerCount,
+                    label: 'Followers',
+                    singularLabel: 'Follower',
+                    onTap: () =>
+                        _navigateToFollowers(FollowersScreenMode.followers),
+                  ),
+                  _GlassStatDivider(),
+                  _StatColumn(
+                    count: profile.followingCount,
+                    label: 'Following',
+                    onTap: () =>
+                        _navigateToFollowers(FollowersScreenMode.following),
+                  ),
+                ],
               ),
-              SlideInAnimation(
-                delay: const Duration(milliseconds: 100),
-                duration: const Duration(milliseconds: 300),
-                beginOffset: const Offset(0, 0.3),
-                child: _StatColumn(
-                  count: profile.followingCount,
-                  label: 'Following',
-                  onTap: () =>
-                      _navigateToFollowers(FollowersScreenMode.following),
-                ),
-              ),
-            ],
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -875,80 +1126,105 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
 
           // Action buttons
           if (isOwnProfile) ...[
-            // Main action row with Edit profile and action icons
-            Row(
-              children: [
-                Expanded(
-                  child: SlideInAnimation(
-                    delay: const Duration(milliseconds: 150),
+            // Main action row with Edit profile and glass action icons
+            SlideInAnimation(
+              delay: const Duration(milliseconds: 150),
+              duration: const Duration(milliseconds: 400),
+              beginOffset: const Offset(0, 0.2),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: BouncyTap(
+                      onTap: _navigateToEditProfile,
+                      child: AnimatedGradientBackground(
+                        gradient: LinearGradient(
+                          colors: [
+                            context.accentColor.withValues(alpha: 0.15),
+                            context.accentColor.withValues(alpha: 0.08),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: context.accentColor.withValues(
+                                alpha: 0.25,
+                              ),
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Edit profile',
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ScaleInAnimation(
+                    delay: const Duration(milliseconds: 200),
                     duration: const Duration(milliseconds: 300),
-                    beginOffset: const Offset(0, 0.3),
-                    child: OutlinedButton(
-                      onPressed: _navigateToEditProfile,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: context.textPrimary,
-                        side: BorderSide(color: context.border),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                    curve: Curves.easeOutBack,
+                    child: _GlassActionIcon(
+                      icon: Icons.share,
+                      onTap: () => ref
+                          .read(shareLinkServiceProvider)
+                          .shareProfile(
+                            userId: widget.userId,
+                            displayName: profile.displayName,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ScaleInAnimation(
+                    delay: const Duration(milliseconds: 250),
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutBack,
+                    child: _FollowRequestsBadge(
+                      child: _GlassActionIcon(
+                        icon: Icons.person_add_outlined,
+                        onTap: _navigateToFollowRequests,
                       ),
-                      child: const Text('Edit profile'),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                ScaleInAnimation(
-                  delay: const Duration(milliseconds: 200),
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutBack,
-                  child: _ActionIconButton(
-                    icon: Icons.share,
-                    onTap: () => ref
-                        .read(shareLinkServiceProvider)
-                        .shareProfile(
-                          userId: widget.userId,
-                          displayName: profile.displayName,
-                        ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ScaleInAnimation(
-                  delay: const Duration(milliseconds: 250),
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutBack,
-                  child: _FollowRequestsBadge(
-                    child: _ActionIconButton(
-                      icon: Icons.person_add_outlined,
-                      onTap: _navigateToFollowRequests,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ScaleInAnimation(
-                  delay: const Duration(milliseconds: 300),
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutBack,
-                  child: _ActivityBadge(
-                    child: _ActionIconButton(
-                      icon: Icons.favorite_border,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ActivityTimelineScreen(),
+                  const SizedBox(width: 8),
+                  ScaleInAnimation(
+                    delay: const Duration(milliseconds: 300),
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutBack,
+                    child: _ActivityBadge(
+                      child: _GlassActionIcon(
+                        icon: Icons.favorite_border,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ActivityTimelineScreen(),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                ScaleInAnimation(
-                  delay: const Duration(milliseconds: 350),
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutBack,
-                  child: _ActionIconButton(
-                    icon: Icons.add_box_outlined,
-                    onTap: _navigateToCreatePost,
+                  const SizedBox(width: 8),
+                  ScaleInAnimation(
+                    delay: const Duration(milliseconds: 350),
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutBack,
+                    child: _GlassActionIcon(
+                      icon: Icons.add_box_outlined,
+                      onTap: _navigateToCreatePost,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ] else
             SlideInAnimation(
@@ -983,14 +1259,12 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
             crossAxisSpacing: 2,
           ),
           delegate: SliverChildBuilderDelegate(
-            (context, index) => Container(
-              color: context.surface,
-              child: const Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
+            (context, index) => Skeletonizer(
+              enabled: true,
+              effect: AppSkeletonConfig.effect(context),
+              child: Container(
+                color: context.surface,
+                child: const Bone.square(size: double.infinity),
               ),
             ),
             childCount: 9,
@@ -1062,10 +1336,26 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
 
   Widget _buildEmptyFilteredPosts(BuildContext context) {
     final filterInfo = switch (_selectedFilter) {
-      PostFilter.photos => (Icons.image_outlined, 'No photo posts'),
-      PostFilter.location => (Icons.location_on_outlined, 'No location posts'),
-      PostFilter.nodes => (Icons.router_outlined, 'No node posts'),
-      PostFilter.all => (Icons.grid_on_outlined, 'No posts'),
+      PostFilter.photos => (
+        Icons.image_outlined,
+        'No photo posts',
+        'Share a photo post to see it here',
+      ),
+      PostFilter.location => (
+        Icons.location_on_outlined,
+        'No location posts',
+        'Tag a location in your next post',
+      ),
+      PostFilter.nodes => (
+        Icons.router_outlined,
+        'No node posts',
+        'Link a mesh node to your next post',
+      ),
+      PostFilter.all => (
+        Icons.grid_on_outlined,
+        'No posts',
+        'Try selecting a different filter',
+      ),
     };
 
     return Center(
@@ -1074,20 +1364,46 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(filterInfo.$1, size: 48, color: context.textTertiary),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    context.accentColor.withValues(alpha: 0.08),
+                    context.accentColor.withValues(alpha: 0.03),
+                  ],
+                ),
+                border: Border.all(
+                  color: context.accentColor.withValues(alpha: 0.15),
+                  width: 0.5,
+                ),
+              ),
+              child: Icon(
+                filterInfo.$1,
+                size: 40,
+                color: context.textTertiary.withValues(alpha: 0.6),
+              ),
+            ),
             const SizedBox(height: 16),
             Text(
               filterInfo.$2,
               style: TextStyle(
                 color: context.textPrimary,
-                fontSize: 16,
+                fontSize: 17,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Try selecting a different filter',
-              style: TextStyle(color: context.textSecondary, fontSize: 14),
+              filterInfo.$3,
+              style: TextStyle(
+                color: context.textTertiary,
+                fontSize: 13,
+                height: 1.4,
+              ),
             ),
           ],
         ),
@@ -1111,7 +1427,18 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: context.textTertiary, width: 2),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      context.accentColor.withValues(alpha: 0.08),
+                      context.accentColor.withValues(alpha: 0.03),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: context.accentColor.withValues(alpha: 0.15),
+                    width: 0.5,
+                  ),
                 ),
                 child: Icon(
                   Icons.lock_outline,
@@ -1131,7 +1458,11 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
               const SizedBox(height: 8),
               Text(
                 'Follow ${profile.displayName} to see their posts and linked devices.',
-                style: TextStyle(color: context.textSecondary, fontSize: 14),
+                style: TextStyle(
+                  color: context.textTertiary,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -1142,6 +1473,33 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
   }
 
   Widget _buildEmptyPosts(BuildContext context, bool isOwnProfile) {
+    if (isOwnProfile) {
+      return AnimatedEmptyState(
+        config: AnimatedEmptyStateConfig(
+          icons: const [
+            Icons.camera_alt_outlined,
+            Icons.photo_library_outlined,
+            Icons.grid_on_outlined,
+            Icons.explore_outlined,
+            Icons.public_outlined,
+            Icons.auto_awesome,
+          ],
+          taglines: const [
+            'Share photos and stories about your mesh adventures.',
+            'Post about your node setups, range tests, and discoveries.',
+            'Your mesh community is waiting to see what you build.',
+            'Document your adventures and share them with the mesh.',
+          ],
+          titlePrefix: 'Share your first ',
+          titleKeyword: 'post',
+          titleSuffix: '',
+          actionLabel: 'Create Post',
+          actionIcon: Icons.add_box_outlined,
+          onAction: _navigateToCreatePost,
+        ),
+      );
+    }
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -1152,7 +1510,18 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: context.textTertiary, width: 2),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    context.accentColor.withValues(alpha: 0.08),
+                    context.accentColor.withValues(alpha: 0.03),
+                  ],
+                ),
+                border: Border.all(
+                  color: context.accentColor.withValues(alpha: 0.15),
+                  width: 0.5,
+                ),
               ),
               child: Icon(
                 Icons.camera_alt_outlined,
@@ -1162,30 +1531,13 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
             ),
             const SizedBox(height: 24),
             Text(
-              isOwnProfile ? 'Share your first post' : 'No posts yet',
+              'No posts yet',
               style: TextStyle(
                 color: context.textPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            if (isOwnProfile) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Share photos and stories about your mesh adventures',
-                style: TextStyle(color: context.textSecondary, fontSize: 14),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _navigateToCreatePost,
-                style: FilledButton.styleFrom(
-                  backgroundColor: context.accentColor,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Create Post'),
-              ),
-            ],
           ],
         ),
       ),
@@ -1457,8 +1809,9 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
 // ===========================================================================
 
 /// Compact action icon button for profile actions
-class _ActionIconButton extends StatelessWidget {
-  const _ActionIconButton({required this.icon, required this.onTap});
+/// Glass-effect action icon button with accent gradient background.
+class _GlassActionIcon extends StatelessWidget {
+  const _GlassActionIcon({required this.icon, required this.onTap});
 
   final IconData icon;
   final VoidCallback onTap;
@@ -1471,11 +1824,34 @@ class _ActionIconButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          border: Border.all(color: context.border),
-          borderRadius: BorderRadius.circular(8),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              context.accentColor.withValues(alpha: 0.1),
+              context.accentColor.withValues(alpha: 0.04),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: context.accentColor.withValues(alpha: 0.2),
+            width: 0.5,
+          ),
         ),
         child: Icon(icon, color: context.textPrimary, size: 20),
       ),
+    );
+  }
+}
+
+/// Subtle vertical divider for the glass stats card.
+class _GlassStatDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 0.5,
+      height: 32,
+      color: context.border.withValues(alpha: 0.5),
     );
   }
 }
@@ -1901,15 +2277,22 @@ class _PostGridTile extends StatelessWidget {
 
   Widget _buildTextPreview(BuildContext context) {
     return Container(
-      color: context.surface,
-      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [context.surface, context.card],
+        ),
+      ),
+      padding: const EdgeInsets.all(10),
       child: Center(
         child: Text(
           post.content.isNotEmpty ? post.content : 'No content',
           style: TextStyle(
-            color: context.textPrimary,
+            color: context.textSecondary,
             fontSize: 11,
-            height: 1.3,
+            height: 1.4,
+            letterSpacing: 0.1,
           ),
           maxLines: 5,
           overflow: TextOverflow.ellipsis,

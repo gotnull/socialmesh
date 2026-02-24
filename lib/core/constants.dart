@@ -294,6 +294,18 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the Social feature (stories, posts, profile social) is enabled.
+  /// Set `SOCIAL_ENABLED=true` in `.env` to enable.
+  /// Default: false — Social Hub is hidden unless explicitly enabled.
+  static bool get isSocialEnabled {
+    try {
+      final raw = dotenv.env['SOCIAL_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the Apple Wallet sigil card feature is enabled.
   /// Set `APPLE_WALLET_ENABLED=true` in `.env` to enable.
   /// Default: false — wallet button is hidden until the Sigil API
