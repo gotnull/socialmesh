@@ -57,6 +57,7 @@ class AppLogging {
   static bool? _aetherLoggingEnabled;
   static bool? _takLoggingEnabled;
   static bool? _claimsLoggingEnabled;
+  static bool? _uiGatesLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -255,11 +256,19 @@ class AppLogging {
   }
 
   /// Org claims caching and refresh logging.
-  /// Enable with LOG_CLAIMS=true in .env file.
+  /// Enable with CLAIMS_LOGGING_ENABLED=true in .env file.
   static bool get claimsLoggingEnabled {
     _claimsLoggingEnabled ??=
         _safeGetEnv('CLAIMS_LOGGING_ENABLED')?.toLowerCase() == 'true';
     return _claimsLoggingEnabled!;
+  }
+
+  /// RBAC UI gate visibility logging.
+  /// Enable with UI_GATES_LOGGING_ENABLED=true in .env file.
+  static bool get uiGatesLoggingEnabled {
+    _uiGatesLoggingEnabled ??=
+        _safeGetEnv('UI_GATES_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _uiGatesLoggingEnabled!;
   }
 
   /// Cloud Sync logging — always enabled by default for debugging sync issues.
@@ -444,6 +453,10 @@ class AppLogging {
     if (claimsLoggingEnabled) debugPrint(message);
   }
 
+  static void uiGates(String message) {
+    if (uiGatesLoggingEnabled) debugPrint('Gate: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -478,6 +491,7 @@ class AppLogging {
     _aetherLoggingEnabled = null;
     _takLoggingEnabled = null;
     _claimsLoggingEnabled = null;
+    _uiGatesLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }
