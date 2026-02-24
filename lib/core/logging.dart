@@ -60,6 +60,7 @@ class AppLogging {
   static bool? _uiGatesLoggingEnabled;
   static bool? _incidentsLoggingEnabled;
   static bool? _incidentSyncLoggingEnabled;
+  static bool? _incidentUILoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -483,6 +484,18 @@ class AppLogging {
     if (incidentSyncLoggingEnabled) debugPrint('IncidentSync: $message');
   }
 
+  /// Incident UI screen logging.
+  /// Enable with INCIDENT_UI_LOGGING_ENABLED=true in .env file.
+  static bool get incidentUILoggingEnabled {
+    _incidentUILoggingEnabled ??=
+        _safeGetEnv('INCIDENT_UI_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _incidentUILoggingEnabled!;
+  }
+
+  static void incidentUI(String message) {
+    if (incidentUILoggingEnabled) debugPrint('IncidentUI: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -520,6 +533,7 @@ class AppLogging {
     _uiGatesLoggingEnabled = null;
     _incidentsLoggingEnabled = null;
     _incidentSyncLoggingEnabled = null;
+    _incidentUILoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

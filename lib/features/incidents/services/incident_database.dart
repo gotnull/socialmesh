@@ -411,4 +411,84 @@ class IncidentDatabase {
     _initCompleter = null;
     _initFailed = false;
   }
+
+  // -------------------------------------------------------------------------
+  // Query helpers
+  // -------------------------------------------------------------------------
+
+  /// Returns all incidents for [orgId], ordered by [createdAt] descending
+  /// then [id] for stable ordering.
+  ///
+  /// Optionally filters by [states], [priorities], and [assigneeId].
+  Future<List<Incident>> getIncidentsByOrgId(
+    String orgId, {
+    Set<IncidentState>? states,
+    Set<IncidentPriority>? priorities,
+    String? assigneeId,
+  }) async {
+    final db = database;
+
+    final where = StringBuffer('orgId = ?');
+    final whereArgs = <Object>[orgId];
+
+    if (states != null && states.isNotEmpty) {
+      final placeholders = List.filled(states.length, '?').join(', ');
+      where.write(' AND state IN ($placeholders)');
+      whereArgs.addAll(states.map((s) => s.name));
+    }
+
+    if (priorities != null && priorities.isNotEmpty) {
+      final placeholders = List.filled(priorities.length, '?').join(', ');
+      where.write(' AND priority IN ($placeholders)');
+      whereArgs.addAll(priorities.map((p) => p.name));
+    }
+
+    if (assigneeId != null) {
+      where.write(' AND assigneeId = ?');
+      whereArgs.add(assigneeId);
+    }
+
+    final rows = await db.query(
+      'incidents',
+      where: where.toString(),
+      whereArgs: whereArgs,
+      orderBy: 'createdAt DESC, id ASC',
+    );
+
+    return rows.map(Incident.fromMap).toList();
+  }
+
+  /// Returns a single incident by [id], or null if not found.
+  Future<Incident?> getIncidentById(String id) async {
+    final db = database;
+    final rows = await db.query(
+      'incidents',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return Incident.fromMap(rows.first);
+  }
+
+  /// Returns all transitions for [incidentId], ordered by timestamp
+  /// ascending then id for stable ordering.
+  Future<List<IncidentTransition>> getTransitionsByIncidentId(
+    String incidentId,
+  ) async {
+    final db = database;
+    final rows = await db.query(
+      'incident_transitions',
+      where: 'incidentId = ?',
+      whereArgs: [incidentId],
+      orderBy: 'timestamp ASC, id ASC',
+    );
+    return rows.map(IncidentTransition.fromMap).toList();
+  }
+
+  /// Inserts a new incident row.
+  Future<void> insertIncident(Incident incident) async {
+    final db = database;
+    await db.insert('incidents', incident.toMap());
+  }
 }

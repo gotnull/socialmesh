@@ -73,6 +73,7 @@ import '../../providers/activity_providers.dart';
 import '../../providers/whats_new_providers.dart';
 import '../../core/whats_new/whats_new_sheet.dart';
 import '../admin/screens/admin_screen.dart';
+import '../incidents/screens/incident_list_screen.dart';
 
 /// Combined admin notification count provider
 /// Uses FutureProvider to properly handle the async stream states
@@ -2212,7 +2213,7 @@ class _DrawerEnterpriseSection extends ConsumerWidget {
                   iconColor: Colors.red.shade400,
                   onTap: () {
                     ref.haptics.tabChange();
-                    // Placeholder: enterprise screens not yet built (W3.3)
+                    onNavigate(const IncidentListScreen());
                   },
                 ),
               ),

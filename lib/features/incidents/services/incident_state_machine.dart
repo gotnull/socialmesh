@@ -90,6 +90,80 @@ class IncidentStateMachine {
        _permissions = permissions;
 
   // -----------------------------------------------------------------------
+  // Incident creation
+  // -----------------------------------------------------------------------
+
+  /// Creates a new incident in draft state.
+  ///
+  /// Inserts the incident row and an initial draft transition record.
+  /// Requires [Permission.createIncident].
+  ///
+  /// Returns the created [Incident].
+  Future<Incident> createIncident({
+    required String orgId,
+    required String title,
+    String? description,
+    required IncidentPriority priority,
+    required IncidentClassification classification,
+    required String actorId,
+    double? locationLat,
+    double? locationLon,
+  }) async {
+    // --- RBAC check ---
+    if (!_permissions.can(Permission.createIncident)) {
+      final roleName = _permissions.currentRole?.name ?? 'none';
+      AppLogging.incidents(
+        'create incident rejected (permission denied, role=$roleName)',
+      );
+      throw InsufficientPermissionException(
+        'createIncident denied for role $roleName',
+      );
+    }
+
+    final incidentId = _uuid.v4();
+    final transitionId = _uuid.v4();
+    final now = DateTime.now();
+
+    final incident = Incident(
+      id: incidentId,
+      orgId: orgId,
+      title: title,
+      description: description,
+      state: IncidentState.draft,
+      priority: priority,
+      classification: classification,
+      ownerId: actorId,
+      locationLat: locationLat,
+      locationLon: locationLon,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    final record = IncidentTransition(
+      id: transitionId,
+      incidentId: incidentId,
+      fromState: IncidentState.draft,
+      toState: IncidentState.draft,
+      actorId: actorId,
+      actorRole: _permissions.currentRole?.name,
+      note: 'Incident created',
+      timestamp: now,
+    );
+
+    await _db.insertIncident(incident);
+
+    final db = _db.database;
+    await db.insert('incident_transitions', record.toMap());
+
+    AppLogging.incidents(
+      'created incident $incidentId '
+      '(title="$title", priority=${priority.name}, actor=$actorId)',
+    );
+
+    return incident;
+  }
+
+  // -----------------------------------------------------------------------
   // Query helpers
   // -----------------------------------------------------------------------
 
