@@ -67,6 +67,10 @@ class ClaimsNotifier extends Notifier<ClaimsState> {
   bool _wasOffline = false;
   bool _initialized = false;
 
+  /// Last known state, tracked as an instance field so that `build()` never
+  /// reads `state` (which is uninitialized during build in Riverpod 3.x).
+  ClaimsState _previousState = const ClaimsState();
+
   @override
   ClaimsState build() {
     _cache = ref.read(claimsCacheProvider);
@@ -98,15 +102,17 @@ class ClaimsNotifier extends Notifier<ClaimsState> {
     // On first build with a user, load from cache then refresh.
     // Return a default ClaimsState immediately — the async load will
     // call `state = ...` once cached/remote claims are available.
-    // Reading `state` here would throw because the notifier has not
-    // yet returned its first value (Riverpod 3.x invariant).
     if (!_initialized) {
       _initialized = true;
       _loadCachedAndRefresh(user);
+      _previousState = const ClaimsState();
       return const ClaimsState();
     }
 
-    return state;
+    // On rebuild (dependency changed), return the last known state.
+    // Reading `state` here would throw because Riverpod 3.x clears provider
+    // state before re-invoking build(). We track _previousState ourselves.
+    return _previousState;
   }
 
   /// Load cached claims from secure storage, then refresh from JWT.
@@ -173,7 +179,10 @@ class ClaimsNotifier extends Notifier<ClaimsState> {
     // Only notify listeners if the meaningful claims data changed.
     // We compare orgId/role (the identity data) rather than timestamps
     // to avoid spurious rebuilds on token refreshes that don't change role.
-    final oldClaims = state.claims;
+    // Read from _previousState instead of `state` to avoid accessing
+    // uninitialized provider state if build() is still in progress.
+    final oldClaims = _previousState.claims;
+    _previousState = newState;
     if (oldClaims?.orgId != newClaims.orgId ||
         oldClaims?.role != newClaims.role) {
       state = newState;
@@ -192,6 +201,7 @@ class ClaimsNotifier extends Notifier<ClaimsState> {
     } catch (_) {
       // Best-effort clear on sign-out
     }
+    _previousState = const ClaimsState();
     state = const ClaimsState();
   }
 
