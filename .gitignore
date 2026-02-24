@@ -57,6 +57,9 @@ storage.rules
 .firebaserc
 docker-compose.yml
 
+# Firestore security rule tests (enterprise, private repo only)
+/test/firestore_rules/
+
 # Firebase/GCP service account keys (NEVER commit these!)
 *-firebase-adminsdk-*.json
 firebase-service-account.json
