@@ -93,10 +93,15 @@ class ClaimsNotifier extends Notifier<ClaimsState> {
     }
     _wasOffline = !isOnline;
 
-    // On first build with a user, load from cache then refresh
+    // On first build with a user, load from cache then refresh.
+    // Return a default ClaimsState immediately — the async load will
+    // call `state = ...` once cached/remote claims are available.
+    // Reading `state` here would throw because the notifier has not
+    // yet returned its first value (Riverpod 3.x invariant).
     if (!_initialized) {
       _initialized = true;
       _loadCachedAndRefresh(user);
+      return const ClaimsState();
     }
 
     return state;
