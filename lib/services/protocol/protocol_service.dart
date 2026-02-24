@@ -4091,7 +4091,10 @@ class ProtocolService {
     );
   }
 
-  /// Set channel configuration
+  /// Local-only: channel slots are stored on the directly-connected device.
+  ///
+  /// Remote channel changes require a separate admin session with the target
+  /// node. This method intentionally uses [MeshPacketBuilder.localAdmin].
   Future<void> setChannel(ChannelConfig config) async {
     // Validate we're ready to send
     if (_myNodeNum == null) {
@@ -4172,7 +4175,9 @@ class ProtocolService {
     }
   }
 
-  /// Get channel
+  /// Local-only: reads channel config from the directly-connected device.
+  ///
+  /// This method intentionally uses [MeshPacketBuilder.localAdmin].
   Future<void> getChannel(int index) async {
     try {
       AppLogging.protocol('Getting channel $index');
@@ -4325,85 +4330,12 @@ class ProtocolService {
     }
   }
 
-  /// Set the user name (long name and short name)
-  /// Long name is up to 36 bytes, short name is up to 4 characters
-  Future<void> setUserName({
-    required String longName,
-    required String shortName,
-  }) async {
-    // Validate we're ready to send
-    if (_myNodeNum == null) {
-      throw StateError(
-        'Cannot set user name: device not ready (no node number)',
-      );
-    }
-    if (!_transport.isConnected) {
-      throw StateError('Cannot set user name: not connected to device');
-    }
-
-    try {
-      // Validate lengths
-      final trimmedLong = longName.length > 36
-          ? longName.substring(0, 36)
-          : longName;
-      final trimmedShort = shortName.length > 4
-          ? shortName.substring(0, 4)
-          : shortName;
-
-      AppLogging.protocol(
-        'Setting user name: long="$trimmedLong", short="$trimmedShort"',
-      );
-
-      final user = pb.User()
-        ..longName = trimmedLong
-        ..shortName = trimmedShort;
-
-      final adminMsg = admin.AdminMessage()..setOwner = user;
-
-      final data = pb.Data()
-        ..portnum = pn.PortNum.ADMIN_APP
-        ..payload = adminMsg.writeToBuffer()
-        ..wantResponse = true;
-
-      final packet = MeshPacketBuilder.admin(
-        myNodeNum: _myNodeNum!,
-        targetNodeNum: _myNodeNum!,
-        data: data,
-        packetId: _generatePacketId(),
-      );
-
-      final toRadio = pb.ToRadio()..packet = packet;
-      final bytes = toRadio.writeToBuffer();
-
-      await _transport.send(_prepareForSend(bytes));
-
-      // Immediately update local node cache so UI reflects the change
-      final existingNode = _nodes[_myNodeNum!];
-      if (existingNode != null) {
-        final updatedNode = existingNode.copyWith(
-          longName: trimmedLong,
-          shortName: trimmedShort,
-        );
-        _nodes[_myNodeNum!] = updatedNode;
-        _nodeController.add(updatedNode);
-        AppLogging.protocol('Updated local node cache with new name');
-
-        // Also update identity store so name persists across reconnects
-        onIdentityUpdate?.call(
-          nodeNum: _myNodeNum!,
-          longName: trimmedLong,
-          shortName: trimmedShort,
-          lastSeenAtMs: DateTime.now().millisecondsSinceEpoch,
-        );
-      }
-    } catch (e) {
-      AppLogging.protocol('Error setting user name: $e');
-      rethrow;
-    }
-  }
-
-  /// Set the region/frequency for the device
-  /// Also sets usePreset=true and hopLimit=3 to match Meshtastic defaults
+  /// Local-only: region/frequency is a radio hardware setting on the
+  /// directly-connected device.
+  ///
+  /// Also sets usePreset=true and hopLimit=3 to match Meshtastic defaults.
+  /// Called during onboarding only. This method intentionally uses
+  /// [MeshPacketBuilder.localAdmin].
   Future<void> setRegion(
     config_pbenum.Config_LoRaConfig_RegionCode region,
   ) async {
@@ -4849,7 +4781,10 @@ class ProtocolService {
   // NODE MANAGEMENT METHODS
   // ============================================================================
 
-  /// Remove a node from the device's node database
+  /// Local-only: removes a node from the directly-connected device's
+  /// node database.
+  ///
+  /// This method intentionally uses [MeshPacketBuilder.localAdmin].
   Future<void> removeNode(int nodeNum) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot remove node: device not ready');
@@ -4878,7 +4813,10 @@ class ProtocolService {
     AppLogging.protocol('Node $nodeNum removal command sent to device');
   }
 
-  /// Set a node as favorite
+  /// Local-only: favorites are stored in the directly-connected device's
+  /// node database.
+  ///
+  /// This method intentionally uses [MeshPacketBuilder.localAdmin].
   Future<void> setFavoriteNode(int nodeNum) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot set favorite: device not ready');
@@ -4905,7 +4843,10 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Remove a node from favorites
+  /// Local-only: favorites are stored in the directly-connected device's
+  /// node database.
+  ///
+  /// This method intentionally uses [MeshPacketBuilder.localAdmin].
   Future<void> removeFavoriteNode(int nodeNum) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot remove favorite: device not ready');
@@ -4932,7 +4873,9 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Set a fixed position for the device
+  /// Local-only: sets a fixed GPS position on the directly-connected device.
+  ///
+  /// This method intentionally uses [MeshPacketBuilder.localAdmin].
   Future<void> setFixedPosition({
     required double latitude,
     required double longitude,
@@ -4970,7 +4913,10 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Remove fixed position (use GPS)
+  /// Local-only: removes the fixed GPS override on the directly-connected
+  /// device, reverting to live GPS.
+  ///
+  /// This method intentionally uses [MeshPacketBuilder.localAdmin].
   Future<void> removeFixedPosition() async {
     if (_myNodeNum == null) {
       throw StateError('Cannot remove fixed position: device not ready');
@@ -4997,7 +4943,9 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Set a node as ignored (mute messages from this node)
+  /// Local-only: the ignore list is stored on the directly-connected device.
+  ///
+  /// This method intentionally uses [MeshPacketBuilder.localAdmin].
   Future<void> setIgnoredNode(int nodeNum) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot set ignored: device not ready');
@@ -5024,7 +4972,9 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Remove a node from ignored list (un-mute)
+  /// Local-only: the ignore list is stored on the directly-connected device.
+  ///
+  /// This method intentionally uses [MeshPacketBuilder.localAdmin].
   Future<void> removeIgnoredNode(int nodeNum) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot remove ignored: device not ready');
@@ -5051,38 +5001,10 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Toggle muted status for a node on the device (v2.7.18)
+  /// Local-only: set the device time to a specific Unix timestamp.
   ///
-  /// This is different from setIgnoredNode - toggleMutedNode sets the
-  /// device-side mute flag (isMuted in NodeInfo), while setIgnoredNode
-  /// sets the local app ignore flag.
-  Future<void> toggleMutedNode(int nodeNum) async {
-    if (_myNodeNum == null) {
-      throw StateError('Cannot toggle muted: device not ready');
-    }
-    if (!_transport.isConnected) {
-      throw StateError('Cannot toggle muted: not connected');
-    }
-
-    AppLogging.protocol('Toggling muted status for node $nodeNum');
-
-    final adminMsg = admin.AdminMessage()..toggleMutedNode = nodeNum;
-
-    final data = pb.Data()
-      ..portnum = pn.PortNum.ADMIN_APP
-      ..payload = adminMsg.writeToBuffer();
-
-    final packet = MeshPacketBuilder.localAdmin(
-      myNodeNum: _myNodeNum!,
-      data: data,
-      packetId: _generatePacketId(),
-    );
-
-    final toRadio = pb.ToRadio()..packet = packet;
-    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
-  }
-
-  /// Set the device time to a specific Unix timestamp
+  /// Time sync operates on the directly-connected device only. Remote nodes
+  /// sync time via the mesh protocol's existing time propagation mechanism.
   Future<void> setTimeOnly(int unixTimestamp) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot set time: device not ready');
@@ -5109,7 +5031,9 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Set device time to current time
+  /// Local-only: delegates to [setTimeOnly] with the phone's current time.
+  ///
+  /// See [setTimeOnly] for rationale on why time sync is local-only.
   Future<void> syncTime() async {
     final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     await setTimeOnly(timestamp);
@@ -6503,33 +6427,6 @@ class ProtocolService {
     final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
       targetNodeNum: dest,
-      data: data,
-      packetId: _generatePacketId(),
-    );
-
-    final toRadio = pb.ToRadio()..packet = packet;
-    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
-  }
-
-  /// Delete a file from the device
-  Future<void> deleteFile(String filename) async {
-    if (_myNodeNum == null) {
-      throw StateError('Cannot delete file: device not ready');
-    }
-    if (!_transport.isConnected) {
-      throw StateError('Cannot delete file: not connected');
-    }
-
-    AppLogging.protocol('Deleting file: $filename');
-
-    final adminMsg = admin.AdminMessage()..deleteFileRequest = filename;
-
-    final data = pb.Data()
-      ..portnum = pn.PortNum.ADMIN_APP
-      ..payload = adminMsg.writeToBuffer();
-
-    final packet = MeshPacketBuilder.localAdmin(
-      myNodeNum: _myNodeNum!,
       data: data,
       packetId: _generatePacketId(),
     );

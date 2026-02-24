@@ -22,6 +22,7 @@ import 'package:socialmesh/generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import 'package:socialmesh/generated/meshtastic/module_config.pb.dart'
     as module_pb;
 import 'package:socialmesh/generated/meshtastic/portnums.pbenum.dart' as pn;
+import 'package:socialmesh/models/mesh_models.dart';
 import 'package:socialmesh/services/protocol/admin_target.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 
@@ -573,6 +574,148 @@ void main() {
 
       final adminMsg = transport.lastAdminMessage;
       expect(adminMsg.enterDfuModeRequest, isTrue);
+    });
+  });
+
+  // ==========================================================================
+  // Local-only method guards
+  //
+  // These methods intentionally use MeshPacketBuilder.localAdmin() and have
+  // no AdminTarget parameter. Every packet MUST be self-addressed
+  // (from == to == myNodeNum) and MUST NOT set wantAck (local ops).
+  // ==========================================================================
+
+  group('Local-only guard: setChannel', () {
+    test('always sends to local device', () async {
+      await protocol.setChannel(
+        ChannelConfig(index: 0, name: 'Test', psk: [1]),
+      );
+
+      final packet = transport.lastPacket;
+      expect(packet.from, _myNodeNum);
+      expect(packet.to, _myNodeNum);
+      expect(packet.wantAck, isFalse);
+    });
+  });
+
+  group('Local-only guard: getChannel', () {
+    test('always sends to local device', () async {
+      await protocol.getChannel(0);
+
+      final packet = transport.lastPacket;
+      expect(packet.from, _myNodeNum);
+      expect(packet.to, _myNodeNum);
+      expect(packet.wantAck, isFalse);
+    });
+  });
+
+  group('Local-only guard: setRegion', () {
+    test('always sends to local device', () async {
+      await protocol.setRegion(config_pbenum.Config_LoRaConfig_RegionCode.US);
+
+      final packet = transport.lastPacket;
+      expect(packet.from, _myNodeNum);
+      expect(packet.to, _myNodeNum);
+      expect(packet.wantAck, isFalse);
+    });
+  });
+
+  group('Local-only guard: removeNode', () {
+    test('always sends to local device', () async {
+      await protocol.removeNode(0x11111111);
+
+      final packet = transport.lastPacket;
+      expect(packet.from, _myNodeNum);
+      expect(packet.to, _myNodeNum);
+      expect(packet.wantAck, isFalse);
+    });
+  });
+
+  group('Local-only guard: setFavoriteNode', () {
+    test('always sends to local device', () async {
+      await protocol.setFavoriteNode(0x11111111);
+
+      final packet = transport.lastPacket;
+      expect(packet.from, _myNodeNum);
+      expect(packet.to, _myNodeNum);
+      expect(packet.wantAck, isFalse);
+    });
+  });
+
+  group('Local-only guard: removeFavoriteNode', () {
+    test('always sends to local device', () async {
+      await protocol.removeFavoriteNode(0x11111111);
+
+      final packet = transport.lastPacket;
+      expect(packet.from, _myNodeNum);
+      expect(packet.to, _myNodeNum);
+      expect(packet.wantAck, isFalse);
+    });
+  });
+
+  group('Local-only guard: setFixedPosition', () {
+    test('always sends to local device', () async {
+      await protocol.setFixedPosition(latitude: 37.7749, longitude: -122.4194);
+
+      final packet = transport.lastPacket;
+      expect(packet.from, _myNodeNum);
+      expect(packet.to, _myNodeNum);
+      expect(packet.wantAck, isFalse);
+    });
+  });
+
+  group('Local-only guard: removeFixedPosition', () {
+    test('always sends to local device', () async {
+      await protocol.removeFixedPosition();
+
+      final packet = transport.lastPacket;
+      expect(packet.from, _myNodeNum);
+      expect(packet.to, _myNodeNum);
+      expect(packet.wantAck, isFalse);
+    });
+  });
+
+  group('Local-only guard: setIgnoredNode', () {
+    test('always sends to local device', () async {
+      await protocol.setIgnoredNode(0x11111111);
+
+      final packet = transport.lastPacket;
+      expect(packet.from, _myNodeNum);
+      expect(packet.to, _myNodeNum);
+      expect(packet.wantAck, isFalse);
+    });
+  });
+
+  group('Local-only guard: removeIgnoredNode', () {
+    test('always sends to local device', () async {
+      await protocol.removeIgnoredNode(0x11111111);
+
+      final packet = transport.lastPacket;
+      expect(packet.from, _myNodeNum);
+      expect(packet.to, _myNodeNum);
+      expect(packet.wantAck, isFalse);
+    });
+  });
+
+  group('Local-only guard: setTimeOnly', () {
+    test('always sends to local device', () async {
+      await protocol.setTimeOnly(1700000000);
+
+      final packet = transport.lastPacket;
+      expect(packet.from, _myNodeNum);
+      expect(packet.to, _myNodeNum);
+      expect(packet.wantAck, isFalse);
+    });
+  });
+
+  group('Local-only guard: syncTime', () {
+    test('always sends to local device', () async {
+      await protocol.syncTime();
+
+      final packet = transport.lastPacket;
+      expect(packet.from, _myNodeNum);
+      expect(packet.to, _myNodeNum);
+      expect(packet.wantAck, isFalse);
     });
   });
 }
