@@ -36,6 +36,7 @@ import '../features/automations/automation_engine.dart';
 import '../features/widget_builder/storage/widget_storage_service.dart';
 import '../features/widget_builder/widget_sync_providers.dart';
 import 'cloud_sync_entitlement_providers.dart';
+import '../core/auth/claims_provider.dart';
 import '../models/mesh_models.dart';
 import '../models/tapback.dart';
 import '../generated/meshtastic/config.pbenum.dart' as config_pbenum;
@@ -191,6 +192,11 @@ class AppInitNotifier extends Notifier<AppInitState> {
       await ref.read(nodeStorageProvider.future);
       await ref.read(iftttServiceProvider).init();
       await ref.read(automationEngineInitProvider.future);
+
+      // Eagerly activate the org claims provider so cached claims are
+      // available immediately for enterprise query layers.
+      // ignore: unused_local_variable
+      final claims = ref.read(claimsProvider);
 
       // Eagerly activate Cloud Sync services so they start on login,
       // not only when the user navigates to specific screens.

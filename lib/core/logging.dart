@@ -56,6 +56,7 @@ class AppLogging {
   static bool? _mfaLoggingEnabled;
   static bool? _aetherLoggingEnabled;
   static bool? _takLoggingEnabled;
+  static bool? _claimsLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -253,6 +254,14 @@ class AppLogging {
     return _takLoggingEnabled!;
   }
 
+  /// Org claims caching and refresh logging.
+  /// Enable with LOG_CLAIMS=true in .env file.
+  static bool get claimsLoggingEnabled {
+    _claimsLoggingEnabled ??=
+        _safeGetEnv('CLAIMS_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _claimsLoggingEnabled!;
+  }
+
   /// Cloud Sync logging — always enabled by default for debugging sync issues.
   /// Disable with SYNC_LOGGING_ENABLED=false if needed.
   static bool get syncLoggingEnabled {
@@ -431,6 +440,10 @@ class AppLogging {
     if (takLoggingEnabled) debugPrint('TAK: $message');
   }
 
+  static void claims(String message) {
+    if (claimsLoggingEnabled) debugPrint(message);
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -464,6 +477,7 @@ class AppLogging {
     _mfaLoggingEnabled = null;
     _aetherLoggingEnabled = null;
     _takLoggingEnabled = null;
+    _claimsLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

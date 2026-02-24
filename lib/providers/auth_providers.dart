@@ -141,6 +141,31 @@ class AuthService {
     }
   }
 
+  /// Get the current user's ID token result for claims extraction.
+  ///
+  /// Returns the full [IdTokenResult] including custom claims (orgId, role)
+  /// and expiration time. Used by [ClaimsNotifier] to extract and cache
+  /// enterprise org claims from the JWT.
+  Future<IdTokenResult?> getIdTokenResult({bool forceRefresh = false}) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      AppLogging.auth('getIdTokenResult - No user signed in');
+      return null;
+    }
+    try {
+      final result = await user.getIdTokenResult(forceRefresh);
+      AppLogging.auth(
+        'getIdTokenResult - ✅ Token result fetched '
+        '(claims keys=${result.claims?.keys.toList()}, '
+        'expiry=${result.expirationTime})',
+      );
+      return result;
+    } catch (e) {
+      AppLogging.auth('getIdTokenResult - ❌ Error: $e');
+      rethrow;
+    }
+  }
+
   /// Sign in anonymously (for basic functionality)
   Future<UserCredential> signInAnonymously() async {
     AppLogging.auth('signInAnonymously - START');
