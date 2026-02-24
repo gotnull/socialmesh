@@ -6,7 +6,7 @@
 // Tables: incidents, incident_transitions, incident_field_reports.
 //
 // Database: incidents.db
-// Schema version: 1
+// Schema version: 2
 //
 // Spec: INCIDENT_LIFECYCLE.md (Sprint 007).
 
@@ -18,12 +18,15 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../core/logging.dart';
+import '../models/incident.dart';
+import '../models/incident_transition.dart';
+import 'incident_conflict_resolver.dart';
 
 /// Schema version for the incidents SQLite database.
 ///
-/// Bump this when adding tables, columns, or indices.
-/// Migration logic runs in [_onUpgrade].
-const int incidentSchemaVersion = 1;
+/// v1: Initial schema (incidents, incident_transitions, incident_field_reports).
+/// v2: Added actorRole and supersededBy columns to incident_transitions.
+const int incidentSchemaVersion = 2;
 
 /// Manages the incidents SQLite database lifecycle.
 ///
@@ -99,6 +102,7 @@ class IncidentDatabase {
     return openDatabase(
       path,
       version: incidentSchemaVersion,
+      singleInstance: path != inMemoryDatabasePath,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onDowngrade: _onDowngrade,
@@ -148,8 +152,10 @@ class IncidentDatabase {
         fromState       TEXT NOT NULL,
         toState         TEXT NOT NULL,
         actorId         TEXT NOT NULL,
+        actorRole       TEXT,
         note            TEXT,
         timestamp       INTEGER NOT NULL,
+        supersededBy    TEXT,
         FOREIGN KEY (incidentId) REFERENCES incidents(id)
       )
     ''');
@@ -188,13 +194,23 @@ class IncidentDatabase {
     AppLogging.incidents('IncidentDatabase: created v$version');
   }
 
-  /// Migrations scaffold — currently only version 1.
+  /// Migrations.
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     AppLogging.incidents(
       'IncidentDatabase: upgrade v$oldVersion -> v$newVersion',
     );
-    // Future migrations:
-    // if (oldVersion < 2) { ... }
+
+    if (oldVersion < 2) {
+      await db.execute(
+        'ALTER TABLE incident_transitions ADD COLUMN actorRole TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE incident_transitions ADD COLUMN supersededBy TEXT',
+      );
+      AppLogging.incidents(
+        'IncidentDatabase: v2 migration — added actorRole, supersededBy',
+      );
+    }
   }
 
   /// Downgrade: drop and recreate.
@@ -232,6 +248,160 @@ class IncidentDatabase {
   Future<String> _defaultPath() async {
     final dir = await getApplicationDocumentsDirectory();
     return p.join(dir.path, _dbFileName);
+  }
+
+  // -------------------------------------------------------------------------
+  // Projection rebuild
+  // -------------------------------------------------------------------------
+
+  /// Replays all non-superseded transitions for [incidentId] by walking the
+  /// from→to chain starting from `draft`. This is deterministic regardless of
+  /// timestamp ordering.
+  ///
+  /// Returns the final [IncidentState] after replay.
+  Future<IncidentState> rebuildProjection(String incidentId) async {
+    final db = database;
+
+    final rows = await db.query(
+      'incident_transitions',
+      where: 'incidentId = ? AND supersededBy IS NULL',
+      whereArgs: [incidentId],
+    );
+
+    IncidentState current = IncidentState.draft;
+    if (rows.isEmpty) {
+      AppLogging.incidents(
+        'projection rebuild $incidentId: no transitions found',
+      );
+    } else {
+      // Index transitions by fromState for O(n) chain walk.
+      final byFromState = <String, Map<String, Object?>>{};
+      for (final row in rows) {
+        byFromState[row['fromState'] as String] = row;
+      }
+
+      var steps = 0;
+      while (byFromState.containsKey(current.name)) {
+        final row = byFromState[current.name]!;
+        current = IncidentState.values.byName(row['toState'] as String);
+        steps++;
+        // Safety: prevent infinite loops.
+        if (steps > rows.length) break;
+      }
+
+      AppLogging.incidents(
+        'projection rebuild $incidentId: '
+        'replayed $steps transitions, final state=${current.name}',
+      );
+    }
+
+    final now = DateTime.now();
+    await db.update(
+      'incidents',
+      {'state': current.name, 'updatedAt': now.millisecondsSinceEpoch},
+      where: 'id = ?',
+      whereArgs: [incidentId],
+    );
+
+    return current;
+  }
+
+  // -------------------------------------------------------------------------
+  // Remote transition reconciliation
+  // -------------------------------------------------------------------------
+
+  /// Applies a batch of remote transitions received during the drain cycle.
+  ///
+  /// 1. Inserts remote transitions (skips duplicates via transitionId
+  ///    uniqueness constraint).
+  /// 2. For each affected incident, queries all non-superseded transitions.
+  /// 3. Runs [IncidentConflictResolver.resolveConflicts] to detect conflicts.
+  /// 4. Marks losing transitions as superseded (sets `supersededBy` to the
+  ///    winning transition's ID). Rows are never deleted.
+  /// 5. Rebuilds the `incidents.state` projection from the winning sequence.
+  ///
+  /// This method is idempotent — calling it again with the same transitions
+  /// produces the same result.
+  Future<void> applyRemoteTransitions({
+    required List<IncidentTransition> remoteTransitions,
+    IncidentConflictResolver resolver = const IncidentConflictResolver(),
+  }) async {
+    final db = database;
+
+    // 1. Insert remote transitions (ignore duplicates).
+    for (final t in remoteTransitions) {
+      await db.insert(
+        'incident_transitions',
+        t.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+
+    // 2. Resolve conflicts per affected incident.
+    final affectedIncidents = remoteTransitions
+        .map((t) => t.incidentId)
+        .toSet();
+    final remoteIds = remoteTransitions.map((t) => t.id).toSet();
+
+    for (final incidentId in affectedIncidents) {
+      // Query all non-superseded transitions.
+      final rows = await db.query(
+        'incident_transitions',
+        where: 'incidentId = ? AND supersededBy IS NULL',
+        whereArgs: [incidentId],
+      );
+      final allTransitions = rows.map(IncidentTransition.fromMap).toList();
+
+      // 3. Resolve.
+      final resolution = resolver.resolveConflicts(
+        incidentId: incidentId,
+        transitions: allTransitions,
+      );
+
+      // 4. Log and mark superseded transitions.
+      if (resolution.supersededIds.isNotEmpty) {
+        for (final sid in resolution.supersededIds) {
+          final superseded = allTransitions.firstWhere((t) => t.id == sid);
+          final isRemote = remoteIds.contains(sid);
+
+          // Find the winner from the same fromState group.
+          final winner = resolution.winningTransitions
+              .where((w) => w.fromState == superseded.fromState)
+              .firstOrNull;
+          final winnerId =
+              winner?.id ?? resolution.winningTransitions.lastOrNull?.id;
+          final winIsRemote = winnerId != null && remoteIds.contains(winnerId);
+
+          AppLogging.incidentSync(
+            'conflict detected on $incidentId: '
+            '${isRemote ? "remote" : "local"}='
+            '${superseded.toState.name}'
+            '@${superseded.timestamp.millisecondsSinceEpoch}, '
+            '${winIsRemote ? "remote" : "local"}='
+            '${winner?.toState.name ?? "?"}'
+            '@${winner?.timestamp.millisecondsSinceEpoch ?? "?"}',
+          );
+
+          await db.update(
+            'incident_transitions',
+            {'supersededBy': winnerId ?? 'orphan'},
+            where: 'id = ?',
+            whereArgs: [sid],
+          );
+        }
+
+        AppLogging.incidentSync(
+          'resolution chain: ${resolution.debugResolutionPath}',
+        );
+      }
+
+      // 5. Rebuild projection.
+      final finalState = await rebuildProjection(incidentId);
+
+      AppLogging.incidentSync(
+        'projection rebuilt $incidentId: final state=${finalState.name}',
+      );
+    }
   }
 
   /// Close the database.

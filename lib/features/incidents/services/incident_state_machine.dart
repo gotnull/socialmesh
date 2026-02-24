@@ -188,6 +188,7 @@ class IncidentStateMachine {
       fromState: current,
       toState: target,
       actorId: actorId,
+      actorRole: _permissions.currentRole?.name,
       note: note,
       timestamp: now,
     );
@@ -228,48 +229,15 @@ class IncidentStateMachine {
   // Projection rebuild (corruption recovery)
   // -----------------------------------------------------------------------
 
-  /// Replays all transitions for [incidentId] ordered by timestamp then
-  /// transitionId (lexicographic tie-break per spec) and overwrites the
-  /// `incidents.state` projection with the derived value.
+  /// Replays all non-superseded transitions for [incidentId] ordered by
+  /// timestamp then transitionId (lexicographic tie-break per spec) and
+  /// overwrites the `incidents.state` projection with the derived value.
+  ///
+  /// Delegates to [IncidentDatabase.rebuildProjection] which filters out
+  /// superseded transitions.
   ///
   /// Returns the final [IncidentState] after replay.
   Future<IncidentState> rebuildProjection(String incidentId) async {
-    final db = _db.database;
-
-    final rows = await db.query(
-      'incident_transitions',
-      where: 'incidentId = ?',
-      whereArgs: [incidentId],
-      orderBy: 'timestamp ASC, id ASC',
-    );
-
-    if (rows.isEmpty) {
-      AppLogging.incidents(
-        'projection rebuild $incidentId: no transitions found',
-      );
-      return IncidentState.draft;
-    }
-
-    // Replay: the last toState is the current state.
-    IncidentState current = IncidentState.draft;
-    for (final row in rows) {
-      current = IncidentState.values.byName(row['toState'] as String);
-    }
-
-    // Overwrite projection.
-    final now = DateTime.now();
-    await db.update(
-      'incidents',
-      {'state': current.name, 'updatedAt': now.millisecondsSinceEpoch},
-      where: 'id = ?',
-      whereArgs: [incidentId],
-    );
-
-    AppLogging.incidents(
-      'projection rebuild $incidentId: '
-      'replayed ${rows.length} transitions, final state=${current.name}',
-    );
-
-    return current;
+    return _db.rebuildProjection(incidentId);
   }
 }

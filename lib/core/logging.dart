@@ -59,6 +59,7 @@ class AppLogging {
   static bool? _claimsLoggingEnabled;
   static bool? _uiGatesLoggingEnabled;
   static bool? _incidentsLoggingEnabled;
+  static bool? _incidentSyncLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -470,6 +471,18 @@ class AppLogging {
     if (incidentsLoggingEnabled) debugPrint('Incidents: $message');
   }
 
+  /// Incident sync conflict resolution logging.
+  /// Enable with INCIDENT_SYNC_LOGGING_ENABLED=true in .env file.
+  static bool get incidentSyncLoggingEnabled {
+    _incidentSyncLoggingEnabled ??=
+        _safeGetEnv('INCIDENT_SYNC_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _incidentSyncLoggingEnabled!;
+  }
+
+  static void incidentSync(String message) {
+    if (incidentSyncLoggingEnabled) debugPrint('IncidentSync: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -506,6 +519,7 @@ class AppLogging {
     _claimsLoggingEnabled = null;
     _uiGatesLoggingEnabled = null;
     _incidentsLoggingEnabled = null;
+    _incidentSyncLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

@@ -46,6 +46,13 @@ enum SyncType {
   /// Each user-created widget is its own Firestore document in
   /// `users/{uid}/widgets_sync/{docId}`.
   widgetSchemas,
+
+  /// Incident transition records — per-document sync via outbox pattern.
+  ///
+  /// Each transition is synced individually. Conflict resolution uses a
+  /// deterministic 5-field chain: priorityRank > timestamp >
+  /// actorRoleRank > actorId > transitionId.
+  incidentTransition,
 }
 
 /// Configuration for a single syncable entity type.
@@ -187,6 +194,17 @@ const Map<SyncType, SyncTypeConfig> syncTypeConfigs = {
     conflictPolicy:
         'Per-document last-write-wins. Each custom widget is an independent '
         'Firestore document with its own updated_at_ms timestamp.',
+  ),
+  SyncType.incidentTransition: SyncTypeConfig(
+    displayName: 'Incident Transitions',
+    entityTypeKey: 'incidentTransition',
+    cloudCollectionPath: 'incidents_sync',
+    usesOutbox: true,
+    supportsTombstone: false,
+    conflictPolicy:
+        'Deterministic 5-field chain: priorityRank > timestamp > '
+        'actorRoleRank > actorId > transitionId. '
+        'Losing transitions marked superseded, never deleted.',
   ),
 };
 

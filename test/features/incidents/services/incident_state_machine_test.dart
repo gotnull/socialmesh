@@ -632,7 +632,7 @@ void main() {
         'incident_transitions',
         where: 'incidentId = ?',
         whereArgs: ['append-1'],
-        orderBy: 'timestamp ASC, id ASC',
+        orderBy: 'rowid ASC',
       );
 
       expect(rows.length, 2);
