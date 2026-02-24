@@ -351,6 +351,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
     }
 
     return GlassScaffold.body(
+      resizeToAvoidBottomInset: false,
       title: 'Set Geofence',
       physics: const NeverScrollableScrollPhysics(),
       actions: [

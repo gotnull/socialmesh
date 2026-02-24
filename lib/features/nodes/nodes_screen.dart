@@ -295,7 +295,8 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
             // Node list content
             if (nodesList.isEmpty &&
                 isConnected &&
-                _activeFilter == NodeFilter.all)
+                _activeFilter == NodeFilter.all &&
+                _searchQuery.isEmpty)
               // Loading shimmer as SliverList (not SliverFillRemaining to avoid intrinsic dimension issues)
               SliverList(
                 delegate: SliverChildBuilderDelegate(

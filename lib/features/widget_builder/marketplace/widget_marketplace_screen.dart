@@ -90,6 +90,7 @@ class _WidgetMarketplaceScreenState
         topicId: 'marketplace_overview',
         stepKeys: const {},
         child: GlassScaffold(
+          resizeToAvoidBottomInset: false,
           title: 'Widget Marketplace',
           actions: [
             IconButton(

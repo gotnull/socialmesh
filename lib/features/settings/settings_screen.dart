@@ -1639,6 +1639,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         topicId: 'settings_overview',
         stepKeys: const {},
         child: GlassScaffold(
+          resizeToAvoidBottomInset: false,
           title: 'Settings',
           actions: [
             IconButton(

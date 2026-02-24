@@ -60,6 +60,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     }
 
     return GlassScaffold.body(
+      resizeToAvoidBottomInset: false,
       leading: const MeshCoreHamburgerMenuButton(),
       title: 'Contacts${contacts.isEmpty ? '' : ' (${contacts.length})'}',
       actions: [

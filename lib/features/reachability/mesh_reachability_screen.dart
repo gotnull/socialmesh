@@ -60,6 +60,7 @@ class _MeshReachabilityScreenState
       child: GestureDetector(
         onTap: _dismissKeyboard,
         child: GlassScaffold(
+          resizeToAvoidBottomInset: false,
           titleWidget: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

@@ -159,6 +159,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         topicId: 'world_mesh_overview',
         stepKeys: const {},
         child: Scaffold(
+          resizeToAvoidBottomInset: false,
           appBar: AppBar(
             backgroundColor: context.background,
             title: Text(

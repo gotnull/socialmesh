@@ -201,6 +201,7 @@ class _ConstellationScreenState extends ConsumerState<ConstellationScreen>
         : constellation.weightAtPercentile(_edgeDensity.percentile);
 
     return GlassScaffold.body(
+      resizeToAvoidBottomInset: false,
       physics: const NeverScrollableScrollPhysics(),
       title: 'Constellation',
       actions: [

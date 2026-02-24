@@ -95,6 +95,7 @@ class _MessagesContainerScreenState
       topicId: 'message_routing',
       stepKeys: const {},
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: context.background,
         appBar: AppBar(
           backgroundColor: context.background,

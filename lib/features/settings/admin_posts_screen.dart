@@ -37,6 +37,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
         .snapshots();
 
     return GlassScaffold(
+      resizeToAvoidBottomInset: false,
       title: 'Signals',
       actions: [
         IconButton(

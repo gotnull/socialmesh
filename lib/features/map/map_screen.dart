@@ -626,6 +626,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       topicId: 'map_overview',
       stepKeys: const {},
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: context.background,
         appBar: AppBar(
           backgroundColor: context.background,

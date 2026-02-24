@@ -1136,6 +1136,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
       onTap: () => FocusScope.of(context).unfocus(),
       behavior: HitTestBehavior.opaque,
       child: GlassScaffold(
+        resizeToAvoidBottomInset: false,
         title: 'Ringtone',
         actions: [
           IconButton(

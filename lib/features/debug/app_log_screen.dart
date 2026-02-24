@@ -320,6 +320,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
     final filters = ref.watch(filteredLogsProvider);
 
     return GlassScaffold(
+      resizeToAvoidBottomInset: false,
       title: 'App Log',
       actions: [
         IconButton(

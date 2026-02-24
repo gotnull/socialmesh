@@ -586,6 +586,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       topicId: 'region_selection',
       stepKeys: const {},
       child: GlassScaffold(
+        resizeToAvoidBottomInset: false,
         title: widget.isInitialSetup ? 'Select Your Region' : 'Change Region',
         leading: widget.isInitialSetup ? const SizedBox.shrink() : null,
         automaticallyImplyLeading: !widget.isInitialSetup,

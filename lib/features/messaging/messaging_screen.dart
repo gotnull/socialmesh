@@ -23,8 +23,8 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/auto_scroll_text.dart';
-import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/gradient_border_container.dart';
+import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/ico_help_system.dart';
 
 import '../../core/widgets/section_header.dart';
@@ -228,178 +228,139 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
       }).toList();
     }
 
-    // Build the body content
-    final bodyContent = Column(
-      children: [
-        // Search bar
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) => setState(() => _searchQuery = value),
-              style: TextStyle(color: context.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Search contacts',
-                hintStyle: TextStyle(color: context.textTertiary),
-                prefixIcon: Icon(Icons.search, color: context.textTertiary),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(Icons.clear, color: context.textTertiary),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                    : null,
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-              ),
-            ),
-          ),
-        ),
-        // Filter chips
-        SizedBox(
-          height: 44,
-          child: Row(
-            children: [
-              Expanded(
-                child: EdgeFade.end(
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.only(left: 16),
-                    children: [
-                      SectionFilterChip(
-                        label: 'All',
-                        count: contacts.length,
-                        isSelected: _currentFilter == ContactFilter.all,
-                        onTap: () =>
-                            setState(() => _currentFilter = ContactFilter.all),
-                      ),
-                      SizedBox(width: 8),
-                      SectionFilterChip(
-                        label: 'Active',
-                        count: activeCount,
-                        isSelected: _currentFilter == ContactFilter.active,
-                        color: AccentColors.green,
-                        onTap: () => setState(
-                          () => _currentFilter = ContactFilter.active,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      SectionFilterChip(
-                        label: 'Unread',
-                        count: unreadCount,
-                        isSelected: _currentFilter == ContactFilter.unread,
-                        icon: Icons.mark_email_unread_outlined,
-                        color: AccentColors.red,
-                        onTap: () => setState(
-                          () => _currentFilter = ContactFilter.unread,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      SectionFilterChip(
-                        label: 'Messaged',
-                        count: messagedCount,
-                        isSelected: _currentFilter == ContactFilter.messaged,
-                        icon: Icons.chat_bubble_outline,
-                        color: AppTheme.primaryBlue,
-                        onTap: () => setState(
-                          () => _currentFilter = ContactFilter.messaged,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      SectionFilterChip(
-                        label: 'Favorites',
-                        count: favoritesCount,
-                        isSelected: _currentFilter == ContactFilter.favorites,
-                        icon: Icons.star,
-                        color: AppTheme.warningYellow,
-                        onTap: () => setState(
-                          () => _currentFilter = ContactFilter.favorites,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                  ),
-                ),
-              ),
-              // Static toggle at end
-              const SizedBox(width: 8),
+    // Build the body content — use CustomScrollView with a pinned sliver
+    // header so the search bar + filter chips never overflow on compact
+    // screens.
+    final textScaler = MediaQuery.textScalerOf(context);
+
+    final bodyContent = CustomScrollView(
+      slivers: [
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SearchFilterHeaderDelegate(
+            searchController: _searchController,
+            searchQuery: _searchQuery,
+            onSearchChanged: (value) => setState(() => _searchQuery = value),
+            hintText: 'Search contacts',
+            textScaler: textScaler,
+            rebuildKey: Object.hashAll([
+              _currentFilter,
+              contacts.length,
+              activeCount,
+              unreadCount,
+              messagedCount,
+              favoritesCount,
+              _showSectionHeaders,
+            ]),
+            trailingControls: [
               SectionHeadersToggle(
                 enabled: _showSectionHeaders,
                 onToggle: () =>
                     setState(() => _showSectionHeaders = !_showSectionHeaders),
               ),
-              const SizedBox(width: 12),
+            ],
+            filterChips: [
+              SectionFilterChip(
+                label: 'All',
+                count: contacts.length,
+                isSelected: _currentFilter == ContactFilter.all,
+                onTap: () => setState(() => _currentFilter = ContactFilter.all),
+              ),
+              SectionFilterChip(
+                label: 'Active',
+                count: activeCount,
+                isSelected: _currentFilter == ContactFilter.active,
+                color: AccentColors.green,
+                onTap: () =>
+                    setState(() => _currentFilter = ContactFilter.active),
+              ),
+              SectionFilterChip(
+                label: 'Unread',
+                count: unreadCount,
+                isSelected: _currentFilter == ContactFilter.unread,
+                icon: Icons.mark_email_unread_outlined,
+                color: AccentColors.red,
+                onTap: () =>
+                    setState(() => _currentFilter = ContactFilter.unread),
+              ),
+              SectionFilterChip(
+                label: 'Messaged',
+                count: messagedCount,
+                isSelected: _currentFilter == ContactFilter.messaged,
+                icon: Icons.chat_bubble_outline,
+                color: AppTheme.primaryBlue,
+                onTap: () =>
+                    setState(() => _currentFilter = ContactFilter.messaged),
+              ),
+              SectionFilterChip(
+                label: 'Favorites',
+                count: favoritesCount,
+                isSelected: _currentFilter == ContactFilter.favorites,
+                icon: Icons.star,
+                color: AppTheme.warningYellow,
+                onTap: () =>
+                    setState(() => _currentFilter = ContactFilter.favorites),
+              ),
             ],
           ),
         ),
-        SizedBox(height: 8),
-        // Divider
-        Container(height: 1, color: context.border.withValues(alpha: 0.3)),
-        // Contacts list
-        Expanded(
-          child: filteredContacts.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          color: context.card,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          Icons.people_outline,
-                          size: 40,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                      SizedBox(height: 24),
-                      Text(
-                        _searchQuery.isNotEmpty
-                            ? 'No contacts match "$_searchQuery"'
-                            : _currentFilter != ContactFilter.all
-                            ? 'No ${_currentFilter.name} contacts'
-                            : 'No contacts yet',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: context.textSecondary,
-                        ),
-                      ),
-                      if (_searchQuery.isEmpty) ...[
-                        SizedBox(height: 8),
-                        Text(
-                          'Discovered nodes will appear here',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: context.textTertiary,
-                          ),
-                        ),
-                      ],
-                      if (_searchQuery.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        TextButton(
-                          onPressed: () => setState(() => _searchQuery = ''),
-                          child: const Text('Clear search'),
-                        ),
-                      ],
-                    ],
+        // Contacts list (or empty state)
+        if (filteredContacts.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      Icons.people_outline,
+                      size: 40,
+                      color: context.textTertiary,
+                    ),
                   ),
-                )
-              : _buildContactsList(filteredContacts),
-        ),
+                  SizedBox(height: 24),
+                  Text(
+                    _searchQuery.isNotEmpty
+                        ? 'No contacts match "$_searchQuery"'
+                        : _currentFilter != ContactFilter.all
+                        ? 'No ${_currentFilter.name} contacts'
+                        : 'No contacts yet',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: context.textSecondary,
+                    ),
+                  ),
+                  if (_searchQuery.isEmpty) ...[
+                    SizedBox(height: 8),
+                    Text(
+                      'Discovered nodes will appear here',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                  if (_searchQuery.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () => setState(() => _searchQuery = ''),
+                      child: const Text('Clear search'),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          )
+        else
+          ..._buildContactSlivers(filteredContacts),
       ],
     );
 
@@ -418,6 +379,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
         topicId: 'message_routing',
         stepKeys: const {},
         child: Scaffold(
+          resizeToAvoidBottomInset: false,
           backgroundColor: context.background,
           appBar: AppBar(
             backgroundColor: context.background,
@@ -439,65 +401,19 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
     );
   }
 
-  Widget _buildContactsList(List<_Contact> contacts) {
+  /// Returns slivers for the contacts list, suitable for embedding in the
+  /// top-level [CustomScrollView].
+  List<Widget> _buildContactSlivers(List<_Contact> contacts) {
     final animationsEnabled = ref.watch(animationsEnabledProvider);
 
     if (!_showSectionHeaders) {
-      // Simple list without headers
-      return ListView.builder(
-        itemCount: contacts.length,
-        itemBuilder: (context, index) {
-          final contact = contacts[index];
-          return Perspective3DSlide(
-            index: index,
-            direction: SlideDirection.left,
-            enabled: animationsEnabled,
-            child: _ContactTile(
-              contact: contact,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChatScreen(
-                      type: ConversationType.directMessage,
-                      nodeNum: contact.nodeNum,
-                      title: contact.displayName,
-                      avatarColor: contact.avatarColor,
-                    ),
-                  ),
-                );
-              },
-            ),
-          );
-        },
-      );
-    }
-
-    // Build grouped list with section headers
-    final sections = _groupContactsIntoSections(contacts);
-    final nonEmptySections = sections
-        .where((s) => s.contacts.isNotEmpty)
-        .toList();
-
-    return CustomScrollView(
-      slivers: [
-        for (
-          var sectionIndex = 0;
-          sectionIndex < nonEmptySections.length;
-          sectionIndex++
-        ) ...[
-          // Sticky header
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: SectionHeaderDelegate(
-              title: nonEmptySections[sectionIndex].title,
-              count: nonEmptySections[sectionIndex].contacts.length,
-            ),
-          ),
-          // Section contacts
-          SliverList(
+      // Simple flat list
+      return [
+        SliverPadding(
+          padding: const EdgeInsets.only(top: 8),
+          sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
-              final contact = nonEmptySections[sectionIndex].contacts[index];
+              final contact = contacts[index];
               return Perspective3DSlide(
                 index: index,
                 direction: SlideDirection.left,
@@ -519,11 +435,61 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                   },
                 ),
               );
-            }, childCount: nonEmptySections[sectionIndex].contacts.length),
+            }, childCount: contacts.length),
           ),
-        ],
+        ),
+      ];
+    }
+
+    // Grouped list with section headers
+    final sections = _groupContactsIntoSections(contacts);
+    final nonEmptySections = sections
+        .where((s) => s.contacts.isNotEmpty)
+        .toList();
+
+    return [
+      for (
+        var sectionIndex = 0;
+        sectionIndex < nonEmptySections.length;
+        sectionIndex++
+      ) ...[
+        // Sticky header
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SectionHeaderDelegate(
+            title: nonEmptySections[sectionIndex].title,
+            count: nonEmptySections[sectionIndex].contacts.length,
+          ),
+        ),
+        // Section contacts
+        SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final contact = nonEmptySections[sectionIndex].contacts[index];
+            return Perspective3DSlide(
+              index: index,
+              direction: SlideDirection.left,
+              enabled: animationsEnabled,
+              child: _ContactTile(
+                contact: contact,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatScreen(
+                        type: ConversationType.directMessage,
+                        nodeNum: contact.nodeNum,
+                        title: contact.displayName,
+                        avatarColor: contact.avatarColor,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
+          }, childCount: nonEmptySections[sectionIndex].contacts.length),
+        ),
       ],
-    );
+    ];
   }
 
   List<_ContactSection> _groupContactsIntoSections(List<_Contact> contacts) {

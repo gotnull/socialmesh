@@ -410,6 +410,7 @@ class _UserPurchasesAdminScreenState
   @override
   Widget build(BuildContext context) {
     return GlassScaffold(
+      resizeToAvoidBottomInset: false,
       titleWidget: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

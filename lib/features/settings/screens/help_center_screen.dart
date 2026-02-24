@@ -53,6 +53,7 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
     final theme = Theme.of(context);
 
     return GlassScaffold(
+      resizeToAvoidBottomInset: false,
       title: 'Help Center',
       slivers: [
         // Ico mascot header

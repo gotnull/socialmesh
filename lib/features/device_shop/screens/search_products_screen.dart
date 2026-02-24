@@ -64,6 +64,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: context.background,
         appBar: AppBar(
           backgroundColor: context.card,

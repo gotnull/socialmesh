@@ -34,6 +34,7 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen>
     final productsAsync = ref.watch(adminAllProductsProvider);
 
     return GlassScaffold(
+      resizeToAvoidBottomInset: false,
       title: 'Manage Products',
       actions: [
         IconButton(

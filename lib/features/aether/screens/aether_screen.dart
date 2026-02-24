@@ -366,6 +366,7 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
       child: GestureDetector(
         onTap: _dismissKeyboard,
         child: Scaffold(
+          resizeToAvoidBottomInset: false,
           backgroundColor: context.background,
           appBar: AppBar(
             backgroundColor: context.background,

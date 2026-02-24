@@ -246,6 +246,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
         topicId: 'channels_overview',
         stepKeys: const {},
         child: Scaffold(
+          resizeToAvoidBottomInset: false,
           backgroundColor: context.background,
           appBar: AppBar(
             backgroundColor: context.background,

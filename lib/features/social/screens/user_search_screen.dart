@@ -58,6 +58,7 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold(
+        resizeToAvoidBottomInset: false,
         title: 'Search',
         slivers: [
           // Search bar in body like Direct Messages

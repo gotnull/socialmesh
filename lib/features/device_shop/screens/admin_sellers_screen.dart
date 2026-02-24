@@ -32,6 +32,7 @@ class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen>
     final sellersAsync = ref.watch(adminAllSellersProvider);
 
     return GlassScaffold(
+      resizeToAvoidBottomInset: false,
       title: 'Manage Sellers',
       actions: [
         IconButton(
