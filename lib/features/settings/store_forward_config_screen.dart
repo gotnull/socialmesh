@@ -9,6 +9,7 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
+import '../../services/protocol/admin_target.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -69,12 +70,17 @@ class _StoreForwardConfigScreenState
     AppLogging.settings('[StoreForward] Loading config...');
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentStoreForwardConfig;
-      if (cached != null) {
-        AppLogging.settings('[StoreForward] Applying cached config');
-        _applyConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentStoreForwardConfig;
+        if (cached != null) {
+          AppLogging.settings('[StoreForward] Applying cached config');
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -93,6 +99,7 @@ class _StoreForwardConfigScreenState
         AppLogging.settings('[StoreForward] Requesting config from device');
         await protocol.getModuleConfig(
           admin_pbenum.AdminMessage_ModuleConfigType.STOREFORWARD_CONFIG,
+          target: target,
         );
       } else {
         AppLogging.settings('[StoreForward] Not connected, skipping load');
@@ -110,6 +117,9 @@ class _StoreForwardConfigScreenState
 
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
       await protocol.setStoreForwardConfig(
         enabled: _enabled,
         isServer: _isServer,
@@ -117,6 +127,7 @@ class _StoreForwardConfigScreenState
         records: _records,
         historyReturnMax: _historyReturnMax,
         historyReturnWindow: _historyReturnWindow,
+        target: target,
       );
 
       if (mounted) {

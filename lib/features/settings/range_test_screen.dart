@@ -14,6 +14,7 @@ import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
+import '../../services/protocol/admin_target.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../utils/presence_utils.dart';
@@ -73,11 +74,16 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
   Future<void> _loadCurrentConfig() async {
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentRangeTestConfig;
-      if (cached != null) {
-        _applyConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentRangeTestConfig;
+        if (cached != null) {
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -90,6 +96,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
         // Request fresh config from device
         await protocol.getModuleConfig(
           admin_pbenum.AdminMessage_ModuleConfigType.RANGETEST_CONFIG,
+          target: target,
         );
       }
     } finally {
@@ -102,10 +109,14 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
 
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
       await protocol.setRangeTestConfig(
         enabled: _enabled,
         sender: _senderInterval,
         save: _saveResults,
+        target: target,
       );
 
       if (mounted) {

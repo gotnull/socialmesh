@@ -8,6 +8,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
+import '../../services/protocol/admin_target.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -89,12 +90,17 @@ class _ExternalNotificationConfigScreenState
     AppLogging.settings('[ExternalNotification] Loading config...');
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentExternalNotificationConfig;
-      if (cached != null) {
-        AppLogging.settings('[ExternalNotification] Applying cached config');
-        _applyConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentExternalNotificationConfig;
+        if (cached != null) {
+          AppLogging.settings('[ExternalNotification] Applying cached config');
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -117,6 +123,7 @@ class _ExternalNotificationConfigScreenState
         );
         await protocol.getModuleConfig(
           admin_pbenum.AdminMessage_ModuleConfigType.EXTNOTIF_CONFIG,
+          target: target,
         );
       } else {
         AppLogging.settings(
@@ -136,6 +143,9 @@ class _ExternalNotificationConfigScreenState
 
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
       // Create the external notification config
       final extNotifConfig = module_pb.ModuleConfig_ExternalNotificationConfig()
@@ -158,7 +168,7 @@ class _ExternalNotificationConfigScreenState
       final moduleConfig = module_pb.ModuleConfig()
         ..externalNotification = extNotifConfig;
 
-      await protocol.setModuleConfig(moduleConfig);
+      await protocol.setModuleConfig(moduleConfig, target: target);
 
       if (mounted) {
         showSuccessSnackBar(context, 'External notification settings saved');

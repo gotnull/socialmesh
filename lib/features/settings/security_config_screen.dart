@@ -16,6 +16,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../services/protocol/admin_target.dart';
 import 'package:cryptography/cryptography.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/status_banner.dart';
@@ -92,11 +93,16 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
     safeSetState(() => _loading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentSecurityConfig;
-      if (cached != null) {
-        _applyConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentSecurityConfig;
+        if (cached != null) {
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -109,6 +115,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
         // Request fresh config from device
         await protocol.getConfig(
           admin_pbenum.AdminMessage_ConfigType.SECURITY_CONFIG,
+          target: target,
         );
       }
     } catch (e) {
@@ -193,6 +200,9 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
 
     // Capture provider ref before awaits
     final protocol = ref.read(protocolServiceProvider);
+    final target = AdminTarget.fromNullable(
+      ref.read(remoteAdminTargetProvider),
+    );
 
     safeSetState(() => _saving = true);
 
@@ -213,6 +223,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
         adminChannelEnabled: _adminChannelEnabled,
         privateKey: privateKeyBytes,
         adminKeys: adminKeys,
+        target: target,
       );
 
       if (!mounted) return;

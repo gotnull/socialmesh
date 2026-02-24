@@ -13,6 +13,7 @@ import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../services/protocol/admin_target.dart';
 
 /// PAX Counter module configuration screen
 class PaxCounterConfigScreen extends ConsumerStatefulWidget {
@@ -60,11 +61,16 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
   Future<void> _loadCurrentConfig() async {
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentPaxCounterConfig;
-      if (cached != null) {
-        _applyConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentPaxCounterConfig;
+        if (cached != null) {
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -77,6 +83,7 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
         // Request fresh config from device
         await protocol.getModuleConfig(
           admin_pbenum.AdminMessage_ModuleConfigType.PAXCOUNTER_CONFIG,
+          target: target,
         );
       } else {
         safeSetState(() => _isLoading = false);
@@ -91,11 +98,15 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
 
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
       await protocol.setPaxCounterConfig(
         enabled: _paxCounterEnabled,
         updateInterval: _paxCounterEnabled ? _paxCounterUpdateInterval : 0,
         wifiEnabled: _wifiEnabled,
         bleEnabled: _bleEnabled,
+        target: target,
       );
 
       safeSetState(() => _hasChanges = false);

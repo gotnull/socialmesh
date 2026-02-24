@@ -9,6 +9,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../services/protocol/admin_target.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -83,11 +84,16 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
     safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentLoraConfig;
-      if (cached != null) {
-        _applyConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentLoraConfig;
+        if (cached != null) {
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -97,9 +103,10 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
           if (mounted) _applyConfig(config);
         });
 
-        // Request fresh config from device
+        // Request fresh config from device (or remote node)
         await protocol.getConfig(
           admin_pbenum.AdminMessage_ConfigType.LORA_CONFIG,
+          target: target,
         );
       }
     } catch (e) {
@@ -115,6 +122,9 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
   Future<void> _saveConfig() async {
     // Capture providers and UI dependencies before any await
     final protocol = ref.read(protocolServiceProvider);
+    final target = AdminTarget.fromNullable(
+      ref.read(remoteAdminTargetProvider),
+    );
     final settingsFuture = ref.read(settingsServiceProvider.future);
     final navigator = Navigator.of(context);
 
@@ -138,6 +148,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
         overrideFrequency: _overrideFrequency,
         ignoreMqtt: _ignoreMqtt,
         configOkToMqtt: _okToMqtt,
+        target: target,
       );
 
       // Mark region as configured if a valid region was set

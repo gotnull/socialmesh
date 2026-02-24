@@ -10,6 +10,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../services/protocol/admin_target.dart';
 
 class SerialConfigScreen extends ConsumerStatefulWidget {
   const SerialConfigScreen({super.key});
@@ -91,11 +92,16 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
 
   Future<void> _loadCurrentConfig() async {
     final protocol = ref.read(protocolServiceProvider);
+    final target = AdminTarget.fromNullable(
+      ref.read(remoteAdminTargetProvider),
+    );
 
-    // Apply cached config immediately if available
-    final cached = protocol.currentSerialConfig;
-    if (cached != null) {
-      _applyConfig(cached);
+    // Apply cached config immediately if available (local only)
+    if (target.isLocal) {
+      final cached = protocol.currentSerialConfig;
+      if (cached != null) {
+        _applyConfig(cached);
+      }
     }
 
     // Only request from device if connected
@@ -108,6 +114,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
       // Request fresh config from device
       await protocol.getModuleConfig(
         admin_pbenum.AdminMessage_ModuleConfigType.SERIAL_CONFIG,
+        target: target,
       );
     } else {
       safeSetState(() => _isLoading = false);
@@ -142,6 +149,9 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
 
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
       await protocol.setSerialConfig(
         enabled: _serialEnabled,
         echo: false,
@@ -151,6 +161,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
         timeout: _timeout,
         mode: _modeValues[_mode] ?? 0,
         overrideConsoleSerialPort: _overrideConsoleSerialPort,
+        target: target,
       );
 
       safeSetState(() => _hasChanges = false);

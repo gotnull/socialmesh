@@ -13,6 +13,7 @@ import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
+import '../../services/protocol/admin_target.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/status_banner.dart';
@@ -90,11 +91,16 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
     safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentMqttConfig;
-      if (cached != null) {
-        _applyConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentMqttConfig;
+        if (cached != null) {
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -107,6 +113,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         // Request fresh config from device
         await protocol.getModuleConfig(
           admin_pbenum.AdminMessage_ModuleConfigType.MQTT_CONFIG,
+          target: target,
         );
       }
     } catch (e) {
@@ -122,6 +129,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
     safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
       final root = _rootController.text.trim();
       await protocol.setMQTTConfig(
         enabled: _enabled,
@@ -136,6 +146,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         mapReportingEnabled: _mapReportingEnabled,
         mapPublishIntervalSecs: _mapPublishIntervalSecs,
         mapPositionPrecision: _mapPositionPrecision.round(),
+        target: target,
       );
 
       if (mounted) {

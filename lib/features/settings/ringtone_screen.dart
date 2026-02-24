@@ -11,6 +11,7 @@ import '../../core/widgets/premium_gating.dart';
 import '../../models/subscription_models.dart';
 import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
+import '../../services/protocol/admin_target.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/audio/rtttl_library_service.dart';
@@ -903,10 +904,13 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
     }
 
     final protocol = ref.read(protocolServiceProvider);
+    final target = AdminTarget.fromNullable(
+      ref.read(remoteAdminTargetProvider),
+    );
     setState(() => _saving = true);
 
     try {
-      await protocol.setRingtone(_rtttlController.text.trim());
+      await protocol.setRingtone(_rtttlController.text.trim(), target: target);
       if (!mounted) return;
 
       showSuccessSnackBar(context, 'Ringtone saved to device');

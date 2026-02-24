@@ -12,6 +12,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../services/protocol/admin_target.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
 
@@ -77,11 +78,16 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
     safeSetState(() => _loading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentNetworkConfig;
-      if (cached != null) {
-        _applyConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentNetworkConfig;
+        if (cached != null) {
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -94,6 +100,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
         // Request fresh config from device
         await protocol.getConfig(
           admin_pbenum.AdminMessage_ConfigType.NETWORK_CONFIG,
+          target: target,
         );
       }
     } catch (e) {
@@ -108,6 +115,9 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
 
   Future<void> _saveConfig() async {
     final protocol = ref.read(protocolServiceProvider);
+    final target = AdminTarget.fromNullable(
+      ref.read(remoteAdminTargetProvider),
+    );
 
     safeSetState(() => _saving = true);
 
@@ -123,6 +133,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
         addressMode: _addressMode,
         rsyslogServer: rsyslog,
         enabledProtocols: _udpEnabled ? 1 : 0,
+        target: target,
       );
 
       if (mounted) {

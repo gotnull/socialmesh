@@ -14,6 +14,7 @@ import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../generated/meshtastic/module_config.pbenum.dart' as module_pbenum;
+import '../../services/protocol/admin_target.dart';
 import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for configuring Detection Sensor module
@@ -84,6 +85,9 @@ class _DetectionSensorConfigScreenState
   Future<void> _loadCurrentConfig() async {
     AppLogging.settings('[DetectionSensor] Loading config...');
     final protocol = ref.read(protocolServiceProvider);
+    final target = AdminTarget.fromNullable(
+      ref.read(remoteAdminTargetProvider),
+    );
 
     // Load app-side notification preference
     final prefs = await SharedPreferences.getInstance();
@@ -91,11 +95,13 @@ class _DetectionSensorConfigScreenState
     final notifEnabled = prefs.getBool('enableDetectionNotifications') ?? false;
     safeSetState(() => _notificationsEnabled = notifEnabled);
 
-    // Apply cached config immediately if available
-    final cached = protocol.currentDetectionSensorConfig;
-    if (cached != null) {
-      AppLogging.settings('[DetectionSensor] Applying cached config');
-      _applyConfig(cached);
+    // Apply cached config immediately if available (local only)
+    if (target.isLocal) {
+      final cached = protocol.currentDetectionSensorConfig;
+      if (cached != null) {
+        AppLogging.settings('[DetectionSensor] Applying cached config');
+        _applyConfig(cached);
+      }
     }
 
     // Only request from device if connected
@@ -115,6 +121,7 @@ class _DetectionSensorConfigScreenState
       try {
         await protocol.getModuleConfig(
           admin_pbenum.AdminMessage_ModuleConfigType.DETECTIONSENSOR_CONFIG,
+          target: target,
         );
       } catch (e) {
         AppLogging.settings('[DetectionSensor] Error requesting config: $e');
@@ -131,6 +138,9 @@ class _DetectionSensorConfigScreenState
 
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
       // Create the detection sensor config
       final dsConfig = module_pb.ModuleConfig_DetectionSensorConfig()
@@ -144,7 +154,7 @@ class _DetectionSensorConfigScreenState
         ..detectionTriggerType = _triggerType;
 
       final moduleConfig = module_pb.ModuleConfig()..detectionSensor = dsConfig;
-      await protocol.setModuleConfig(moduleConfig);
+      await protocol.setModuleConfig(moduleConfig, target: target);
 
       if (mounted) {
         showSuccessSnackBar(context, 'Detection Sensor configuration saved');

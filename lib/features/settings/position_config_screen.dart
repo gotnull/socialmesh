@@ -14,6 +14,7 @@ import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../services/protocol/admin_target.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
 
@@ -141,11 +142,16 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
     safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Check if we already have cached config
-      final cachedConfig = protocol.currentPositionConfig;
-      if (cachedConfig != null) {
-        _applyConfig(cachedConfig);
+      // Check if we already have cached config (local only)
+      if (target.isLocal) {
+        final cachedConfig = protocol.currentPositionConfig;
+        if (cachedConfig != null) {
+          _applyConfig(cachedConfig);
+        }
       }
 
       // Only request from device if connected
@@ -161,6 +167,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
         // Request fresh config from device
         await protocol.getConfig(
           admin_pbenum.AdminMessage_ConfigType.POSITION_CONFIG,
+          target: target,
         );
 
         // Wait a bit for response
@@ -234,6 +241,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
     safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
       // If fixed position is enabled, set the fixed position first
       if (_fixedPosition) {
@@ -266,6 +276,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
         rxGpio: _rxGpio,
         txGpio: _txGpio,
         gpsEnGpio: _gpsEnGpio,
+        target: target,
       );
 
       if (mounted) {

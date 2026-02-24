@@ -14,6 +14,7 @@ import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../services/protocol/admin_target.dart';
 
 /// Screen for configuring display settings
 class DisplayConfigScreen extends ConsumerStatefulWidget {
@@ -78,11 +79,16 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
     safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentDisplayConfig;
-      if (cached != null) {
-        _applyConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentDisplayConfig;
+        if (cached != null) {
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -95,6 +101,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
         // Request fresh config from device
         await protocol.getConfig(
           admin_pbenum.AdminMessage_ConfigType.DISPLAY_CONFIG,
+          target: target,
         );
       }
     } catch (e) {
@@ -111,6 +118,9 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
     safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
       await protocol.setDisplayConfig(
         screenOnSecs: _screenOnSecs,
         autoScreenCarouselSecs: _autoCarouselSecs,
@@ -130,6 +140,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
         compassNorthTop: _compassNorthTop,
         useLongNodeName: _useLongNodeName,
         enableMessageBubbles: _enableMessageBubbles,
+        target: target,
       );
 
       if (mounted) {

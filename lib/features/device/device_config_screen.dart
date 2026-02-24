@@ -617,6 +617,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
           shortName: nameChanged ? _shortNameController.text : null,
           isUnmessagable: _isUnmessagable,
           isLicensed: _isLicensed,
+          target: AdminTarget.fromNullable(targetNodeNum),
         );
       }
 
@@ -628,6 +629,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
           callSign: _longNameController.text,
           txPower: _txPower,
           frequency: frequency,
+          target: AdminTarget.fromNullable(targetNodeNum),
         );
       }
 
@@ -2162,8 +2164,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
   }
 
   Future<void> _showNodeDbResetConfirm() async {
-    // Capture provider before any await
+    // Capture providers before any await
     final protocol = ref.read(protocolServiceProvider);
+    final target = AdminTarget.fromNullable(
+      ref.read(remoteAdminTargetProvider),
+    );
 
     final confirmed = await AppBottomSheet.showConfirm(
       context: context,
@@ -2178,7 +2183,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     if (!mounted) return;
     if (confirmed == true) {
       try {
-        await protocol.nodeDbReset();
+        await protocol.nodeDbReset(target: target);
         if (mounted) {
           showSuccessSnackBar(context, 'Node database reset initiated');
         }
@@ -2191,8 +2196,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
   }
 
   Future<void> _showFactoryResetConfirm() async {
-    // Capture provider before any await
+    // Capture providers before any await
     final protocol = ref.read(protocolServiceProvider);
+    final target = AdminTarget.fromNullable(
+      ref.read(remoteAdminTargetProvider),
+    );
 
     final confirmed = await AppBottomSheet.showConfirm(
       context: context,
@@ -2208,7 +2216,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     if (confirmed == true) {
       AppLogging.protocol('DeviceConfig: Factory reset confirmed');
       try {
-        await protocol.factoryResetDevice();
+        await protocol.factoryResetDevice(target: target);
         AppLogging.protocol('DeviceConfig: factoryResetDevice command sent');
         if (mounted) {
           showSuccessSnackBar(

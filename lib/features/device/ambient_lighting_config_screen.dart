@@ -8,6 +8,7 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
+import '../../services/protocol/admin_target.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -75,11 +76,16 @@ class _AmbientLightingConfigScreenState
   Future<void> _loadCurrentConfig() async {
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentAmbientLightingConfig;
-      if (cached != null) {
-        _applyConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentAmbientLightingConfig;
+        if (cached != null) {
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -94,6 +100,7 @@ class _AmbientLightingConfigScreenState
         // Request fresh config from device
         await protocol.getModuleConfig(
           admin_pbenum.AdminMessage_ModuleConfigType.AMBIENTLIGHTING_CONFIG,
+          target: target,
         );
       }
     } finally {
@@ -113,12 +120,16 @@ class _AmbientLightingConfigScreenState
 
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
       await protocol.setAmbientLightingConfig(
         ledState: _ledState,
         red: _red,
         green: _green,
         blue: _blue,
         current: _current,
+        target: target,
       );
 
       safeSetState(() => _hasChanges = false);

@@ -4149,8 +4149,9 @@ class ProtocolService {
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
-      final packet = MeshPacketBuilder.localAdmin(
+      final packet = MeshPacketBuilder.admin(
         myNodeNum: _myNodeNum!,
+        targetNodeNum: _myNodeNum!,
         data: data,
         packetId: _generatePacketId(),
       );
@@ -4183,8 +4184,9 @@ class ProtocolService {
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
-      final packet = MeshPacketBuilder.localAdmin(
+      final packet = MeshPacketBuilder.admin(
         myNodeNum: _myNodeNum ?? 0,
+        targetNodeNum: _myNodeNum ?? 0,
         data: data,
         packetId: _generatePacketId(),
       );
@@ -4200,8 +4202,10 @@ class ProtocolService {
 
   /// Set owner config (name and/or user flags) in a single admin message.
   ///
-  /// After calling this, the device will save the config and reboot.
-  /// The caller should expect a disconnection.
+  /// After calling this, the local device will save the config and reboot.
+  /// The caller should expect a disconnection (for local target only).
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
   ///
   /// Note: Device role is NOT sent here — it belongs in Config.DeviceConfig
   /// (via [setDeviceConfig]), which is the only place the firmware reads it.
@@ -4211,6 +4215,7 @@ class ProtocolService {
     String? shortName,
     bool? isUnmessagable,
     bool? isLicensed,
+    AdminTarget? target,
   }) async {
     // Validate we're ready to send
     if (_myNodeNum == null) {
@@ -4259,13 +4264,23 @@ class ProtocolService {
 
       final adminMsg = admin.AdminMessage()..setOwner = user;
 
+      final dest = _resolveTarget(target);
+      final isRemote = dest != _myNodeNum;
+
+      if (isRemote) {
+        AppLogging.protocol(
+          'RemoteAdmin: sending setOwner to target=${dest.toRadixString(16)} (mode=remote)',
+        );
+      }
+
       final data = pb.Data()
         ..portnum = pn.PortNum.ADMIN_APP
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
-      final packet = MeshPacketBuilder.localAdmin(
+      final packet = MeshPacketBuilder.admin(
         myNodeNum: _myNodeNum!,
+        targetNodeNum: dest,
         data: data,
         packetId: _generatePacketId(),
       );
@@ -4274,29 +4289,34 @@ class ProtocolService {
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
-      AppLogging.protocol('Owner config sent successfully, device will reboot');
+      AppLogging.protocol(
+        'Owner config sent successfully${isRemote ? " to remote node" : ", device will reboot"}',
+      );
 
-      // Immediately update local node cache so UI reflects the change
-      final existingNode = _nodes[_myNodeNum!];
-      if (existingNode != null) {
-        final updatedNode = existingNode.copyWith(
-          longName: trimmedLong ?? existingNode.longName,
-          shortName: trimmedShort ?? existingNode.shortName,
-        );
-        _nodes[_myNodeNum!] = updatedNode;
-        _nodeController.add(updatedNode);
-        AppLogging.protocol('Updated local node cache with new owner config');
-
-        // Also update identity store so name persists across reconnects
-        // This is critical - without this, _mergeIdentity will restore old name
-        if (trimmedLong != null || trimmedShort != null) {
-          onIdentityUpdate?.call(
-            nodeNum: _myNodeNum!,
-            longName: trimmedLong,
-            shortName: trimmedShort,
-            lastSeenAtMs: DateTime.now().millisecondsSinceEpoch,
+      // Only update local node cache and identity store for local target.
+      // Remote admin targets should not pollute the local cache.
+      if (!isRemote) {
+        final existingNode = _nodes[_myNodeNum!];
+        if (existingNode != null) {
+          final updatedNode = existingNode.copyWith(
+            longName: trimmedLong ?? existingNode.longName,
+            shortName: trimmedShort ?? existingNode.shortName,
           );
-          AppLogging.protocol('Updated identity store with new name');
+          _nodes[_myNodeNum!] = updatedNode;
+          _nodeController.add(updatedNode);
+          AppLogging.protocol('Updated local node cache with new owner config');
+
+          // Also update identity store so name persists across reconnects
+          // This is critical - without this, _mergeIdentity will restore old name
+          if (trimmedLong != null || trimmedShort != null) {
+            onIdentityUpdate?.call(
+              nodeNum: _myNodeNum!,
+              longName: trimmedLong,
+              shortName: trimmedShort,
+              lastSeenAtMs: DateTime.now().millisecondsSinceEpoch,
+            );
+            AppLogging.protocol('Updated identity store with new name');
+          }
         }
       }
     } catch (e) {
@@ -4345,8 +4365,9 @@ class ProtocolService {
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
-      final packet = MeshPacketBuilder.localAdmin(
+      final packet = MeshPacketBuilder.admin(
         myNodeNum: _myNodeNum!,
+        targetNodeNum: _myNodeNum!,
         data: data,
         packetId: _generatePacketId(),
       );
@@ -4413,8 +4434,9 @@ class ProtocolService {
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
-      final packet = MeshPacketBuilder.localAdmin(
+      final packet = MeshPacketBuilder.admin(
         myNodeNum: _myNodeNum!,
+        targetNodeNum: _myNodeNum!,
         data: data,
         packetId: _generatePacketId(),
       );
@@ -4555,8 +4577,10 @@ class ProtocolService {
   // DEVICE MANAGEMENT METHODS
   // ============================================================================
 
-  /// Reboot the device after specified seconds (0 = immediate)
-  Future<void> reboot({int delaySeconds = 2}) async {
+  /// Reboot the device after specified seconds (0 = immediate).
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
+  Future<void> reboot({int delaySeconds = 2, AdminTarget? target}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot reboot: device not ready');
     }
@@ -4564,7 +4588,12 @@ class ProtocolService {
       throw StateError('Cannot reboot: not connected');
     }
 
-    AppLogging.protocol('Rebooting device in $delaySeconds seconds');
+    final dest = _resolveTarget(target);
+    final isRemote = dest != _myNodeNum;
+
+    AppLogging.protocol(
+      'Rebooting device in $delaySeconds seconds${isRemote ? ' (remote node $dest)' : ''}',
+    );
 
     final adminMsg = admin.AdminMessage()..rebootSeconds = delaySeconds;
 
@@ -4572,8 +4601,9 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = MeshPacketBuilder.localAdmin(
+    final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
       data: data,
       packetId: _generatePacketId(),
     );
@@ -4582,8 +4612,10 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Shutdown the device after specified seconds (0 = immediate)
-  Future<void> shutdown({int delaySeconds = 2}) async {
+  /// Shutdown the device after specified seconds (0 = immediate).
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
+  Future<void> shutdown({int delaySeconds = 2, AdminTarget? target}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot shutdown: device not ready');
     }
@@ -4591,7 +4623,12 @@ class ProtocolService {
       throw StateError('Cannot shutdown: not connected');
     }
 
-    AppLogging.protocol('Shutting down device in $delaySeconds seconds');
+    final dest = _resolveTarget(target);
+    final isRemote = dest != _myNodeNum;
+
+    AppLogging.protocol(
+      'Shutting down device in $delaySeconds seconds${isRemote ? ' (remote node $dest)' : ''}',
+    );
 
     final adminMsg = admin.AdminMessage()..shutdownSeconds = delaySeconds;
 
@@ -4599,8 +4636,9 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = MeshPacketBuilder.localAdmin(
+    final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
       data: data,
       packetId: _generatePacketId(),
     );
@@ -4609,9 +4647,14 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Factory reset the device configuration (keeps node DB)
-  /// The delay parameter specifies seconds to wait before reset (default 5, like official app)
-  Future<void> factoryResetConfig({int delaySeconds = 5}) async {
+  /// Factory reset the device configuration (keeps node DB).
+  /// The delay parameter specifies seconds to wait before reset (default 5, like official app).
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
+  Future<void> factoryResetConfig({
+    int delaySeconds = 5,
+    AdminTarget? target,
+  }) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot factory reset config: device not ready');
     }
@@ -4619,8 +4662,11 @@ class ProtocolService {
       throw StateError('Cannot factory reset config: not connected');
     }
 
+    final dest = _resolveTarget(target);
+    final isRemote = dest != _myNodeNum;
+
     AppLogging.protocol(
-      'Factory resetting configuration (delay: ${delaySeconds}s)',
+      'Factory resetting configuration (delay: ${delaySeconds}s)${isRemote ? ' on remote node $dest' : ''}',
     );
 
     final adminMsg = admin.AdminMessage()..factoryResetConfig = delaySeconds;
@@ -4629,8 +4675,9 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = MeshPacketBuilder.localAdmin(
+    final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
       data: data,
       packetId: _generatePacketId(),
     );
@@ -4639,9 +4686,14 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Factory reset the entire device (config + node DB)
-  /// The delay parameter specifies seconds to wait before reset (default 5, like official app)
-  Future<void> factoryResetDevice({int delaySeconds = 5}) async {
+  /// Factory reset the entire device (config + node DB).
+  /// The delay parameter specifies seconds to wait before reset (default 5, like official app).
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
+  Future<void> factoryResetDevice({
+    int delaySeconds = 5,
+    AdminTarget? target,
+  }) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot factory reset device: device not ready');
     }
@@ -4649,8 +4701,11 @@ class ProtocolService {
       throw StateError('Cannot factory reset device: not connected');
     }
 
+    final dest = _resolveTarget(target);
+    final isRemote = dest != _myNodeNum;
+
     AppLogging.protocol(
-      'Factory resetting entire device (delay: ${delaySeconds}s)',
+      'Factory resetting entire device (delay: ${delaySeconds}s)${isRemote ? ' on remote node $dest' : ''}',
     );
 
     final adminMsg = admin.AdminMessage()..factoryResetDevice = delaySeconds;
@@ -4659,8 +4714,9 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = MeshPacketBuilder.localAdmin(
+    final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
       data: data,
       packetId: _generatePacketId(),
     );
@@ -4669,9 +4725,11 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Reset the node database (removes all learned nodes)
+  /// Reset the node database (removes all learned nodes).
   /// This sends the reset command to the device and clears the local node cache.
-  Future<void> nodeDbReset() async {
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
+  Future<void> nodeDbReset({AdminTarget? target}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot reset node DB: device not ready');
     }
@@ -4679,7 +4737,12 @@ class ProtocolService {
       throw StateError('Cannot reset node DB: not connected');
     }
 
-    AppLogging.protocol('Resetting node database');
+    final dest = _resolveTarget(target);
+    final isRemote = dest != _myNodeNum;
+
+    AppLogging.protocol(
+      'Resetting node database${isRemote ? ' on remote node $dest' : ''}',
+    );
 
     final adminMsg = admin.AdminMessage()..nodedbReset = true;
 
@@ -4687,8 +4750,9 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = MeshPacketBuilder.localAdmin(
+    final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
       data: data,
       packetId: _generatePacketId(),
     );
@@ -4696,11 +4760,11 @@ class ProtocolService {
     final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
 
-    // Wait for device to process the reset command
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // Clear local nodes cache (keep only our own node)
-    clearNodes();
+    // Only clear local cache when targeting the local device.
+    if (!isRemote) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      clearNodes();
+    }
   }
 
   /// Clear all nodes from the local cache (keeps only own node if known)
@@ -4715,14 +4779,18 @@ class ProtocolService {
     AppLogging.protocol('Cleared local nodes cache');
   }
 
-  /// Enter DFU (Device Firmware Update) mode
-  Future<void> enterDfuMode() async {
+  /// Enter DFU (Device Firmware Update) mode.
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
+  Future<void> enterDfuMode({AdminTarget? target}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot enter DFU mode: device not ready');
     }
     if (!_transport.isConnected) {
       throw StateError('Cannot enter DFU mode: not connected');
     }
+
+    final dest = _resolveTarget(target);
 
     AppLogging.protocol('Entering DFU mode');
 
@@ -4732,8 +4800,9 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = MeshPacketBuilder.localAdmin(
+    final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
       data: data,
       packetId: _generatePacketId(),
     );
@@ -4742,14 +4811,18 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Request device metadata
-  Future<void> getDeviceMetadata() async {
+  /// Request device metadata.
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
+  Future<void> getDeviceMetadata({AdminTarget? target}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot get metadata: device not ready');
     }
     if (!_transport.isConnected) {
       throw StateError('Cannot get metadata: not connected');
     }
+
+    final dest = _resolveTarget(target);
 
     AppLogging.protocol('Requesting device metadata...');
     AppLogging.protocol('Requesting device metadata');
@@ -4761,8 +4834,9 @@ class ProtocolService {
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
-    final packet = MeshPacketBuilder.localAdmin(
+    final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
       data: data,
       packetId: _generatePacketId(),
     );
@@ -5045,11 +5119,14 @@ class ProtocolService {
   // HAM RADIO MODE
   // ============================================================================
 
-  /// Set HAM radio mode with call sign
+  /// Set HAM radio mode with call sign.
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
   Future<void> setHamMode({
     required String callSign,
     int txPower = 0,
     double frequency = 0.0,
+    AdminTarget? target,
   }) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot set HAM mode: device not ready');
@@ -5058,7 +5135,17 @@ class ProtocolService {
       throw StateError('Cannot set HAM mode: not connected');
     }
 
-    AppLogging.protocol('Setting HAM mode: callSign=$callSign');
+    final dest = _resolveTarget(target);
+    final isRemote = dest != _myNodeNum;
+
+    AppLogging.protocol(
+      'Setting HAM mode: callSign=$callSign${isRemote ? ' on remote node $dest' : ''}',
+    );
+    if (isRemote) {
+      AppLogging.protocol(
+        'RemoteAdmin: sending setHamMode to target=${dest.toRadixString(16)} (mode=remote)',
+      );
+    }
 
     final hamParams = admin.HamParameters()
       ..callSign = callSign
@@ -5071,8 +5158,9 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = MeshPacketBuilder.localAdmin(
+    final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
       data: data,
       packetId: _generatePacketId(),
     );
@@ -6291,14 +6379,18 @@ class ProtocolService {
   // CANNED MESSAGES & RINGTONE
   // ============================================================================
 
-  /// Get canned messages
-  Future<void> getCannedMessages() async {
+  /// Get canned messages.
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
+  Future<void> getCannedMessages({AdminTarget? target}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot get canned messages: device not ready');
     }
     if (!_transport.isConnected) {
       throw StateError('Cannot get canned messages: not connected');
     }
+
+    final dest = _resolveTarget(target);
 
     AppLogging.protocol('Requesting canned messages');
 
@@ -6310,8 +6402,9 @@ class ProtocolService {
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
-    final packet = MeshPacketBuilder.localAdmin(
+    final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
       data: data,
       packetId: _generatePacketId(),
     );
@@ -6320,14 +6413,18 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Set canned messages (pipe-separated list)
-  Future<void> setCannedMessages(String messages) async {
+  /// Set canned messages (pipe-separated list).
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
+  Future<void> setCannedMessages(String messages, {AdminTarget? target}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot set canned messages: device not ready');
     }
     if (!_transport.isConnected) {
       throw StateError('Cannot set canned messages: not connected');
     }
+
+    final dest = _resolveTarget(target);
 
     AppLogging.protocol('Setting canned messages');
 
@@ -6338,8 +6435,9 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = MeshPacketBuilder.localAdmin(
+    final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
       data: data,
       packetId: _generatePacketId(),
     );
@@ -6348,14 +6446,18 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Get device ringtone
-  Future<void> getRingtone() async {
+  /// Get device ringtone.
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
+  Future<void> getRingtone({AdminTarget? target}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot get ringtone: device not ready');
     }
     if (!_transport.isConnected) {
       throw StateError('Cannot get ringtone: not connected');
     }
+
+    final dest = _resolveTarget(target);
 
     AppLogging.protocol('Requesting ringtone');
 
@@ -6366,8 +6468,9 @@ class ProtocolService {
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
-    final packet = MeshPacketBuilder.localAdmin(
+    final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
       data: data,
       packetId: _generatePacketId(),
     );
@@ -6376,14 +6479,18 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Set device ringtone (RTTTL format)
-  Future<void> setRingtone(String rtttl) async {
+  /// Set device ringtone (RTTTL format).
+  ///
+  /// Pass [target] to specify local or remote device. Defaults to local.
+  Future<void> setRingtone(String rtttl, {AdminTarget? target}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot set ringtone: device not ready');
     }
     if (!_transport.isConnected) {
       throw StateError('Cannot set ringtone: not connected');
     }
+
+    final dest = _resolveTarget(target);
 
     AppLogging.protocol('Setting ringtone');
 
@@ -6393,8 +6500,9 @@ class ProtocolService {
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = MeshPacketBuilder.localAdmin(
+    final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
       data: data,
       packetId: _generatePacketId(),
     );

@@ -13,6 +13,7 @@ import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../services/protocol/admin_target.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
 
@@ -62,11 +63,16 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
     safeSetState(() => _loading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentBluetoothConfig;
-      if (cached != null) {
-        _applyConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentBluetoothConfig;
+        if (cached != null) {
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -79,6 +85,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
         // Request fresh config from device
         await protocol.getConfig(
           admin_pbenum.AdminMessage_ConfigType.BLUETOOTH_CONFIG,
+          target: target,
         );
       }
     } catch (e) {
@@ -102,6 +109,9 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
     }
 
     final protocol = ref.read(protocolServiceProvider);
+    final target = AdminTarget.fromNullable(
+      ref.read(remoteAdminTargetProvider),
+    );
 
     safeSetState(() => _saving = true);
 
@@ -110,6 +120,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
         enabled: _enabled,
         mode: _mode,
         fixedPin: _fixedPin,
+        target: target,
       );
 
       if (mounted) {

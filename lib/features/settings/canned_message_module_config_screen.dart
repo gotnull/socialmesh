@@ -13,6 +13,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/admin.pb.dart' as admin;
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
+import '../../services/protocol/admin_target.dart';
 
 /// Screen for configuring device-side canned message module settings
 /// This is different from CannedResponsesScreen which manages local quick responses
@@ -82,11 +83,16 @@ class _CannedMessageModuleConfigScreenState
     safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentCannedMessageConfig;
-      if (cached != null) {
-        _applyConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentCannedMessageConfig;
+        if (cached != null) {
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -101,6 +107,7 @@ class _CannedMessageModuleConfigScreenState
         // Request fresh config from device
         await protocol.getModuleConfig(
           admin.AdminMessage_ModuleConfigType.CANNEDMSG_CONFIG,
+          target: target,
         );
       }
     } catch (e) {
@@ -116,6 +123,9 @@ class _CannedMessageModuleConfigScreenState
     safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
       // Determine allowInputSource based on enabled controls
       String allowInputSource = '_any';
@@ -143,11 +153,15 @@ class _CannedMessageModuleConfigScreenState
         inputbrokerEventPress:
             _inputbrokerEventPress ??
             module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
+        target: target,
       );
 
       // Save messages separately if changed
       if (_messagesChanged && _messagesController.text.isNotEmpty) {
-        await protocol.setCannedMessages(_messagesController.text.trim());
+        await protocol.setCannedMessages(
+          _messagesController.text.trim(),
+          target: target,
+        );
       }
 
       if (mounted) {

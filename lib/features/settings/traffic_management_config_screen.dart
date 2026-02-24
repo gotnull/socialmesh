@@ -13,6 +13,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../services/protocol/admin_target.dart';
 
 /// Screen for configuring traffic management module settings (v2.7.19)
 class TrafficManagementConfigScreen extends ConsumerStatefulWidget {
@@ -104,11 +105,16 @@ class _TrafficManagementConfigScreenState
     safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentTrafficManagementConfig;
-      if (cached != null) {
-        _applyConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentTrafficManagementConfig;
+        if (cached != null) {
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -121,6 +127,7 @@ class _TrafficManagementConfigScreenState
 
         await protocol.getModuleConfig(
           admin_pbenum.AdminMessage_ModuleConfigType.TRAFFICMANAGEMENT_CONFIG,
+          target: target,
         );
       }
     } catch (e) {
@@ -134,6 +141,9 @@ class _TrafficManagementConfigScreenState
     safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
       await protocol.setTrafficManagementConfig(
         enabled: _enabled,
         positionDedupEnabled: _positionDedupEnabled,
@@ -149,6 +159,7 @@ class _TrafficManagementConfigScreenState
         exhaustHopTelemetry: _exhaustHopTelemetry,
         exhaustHopPosition: _exhaustHopPosition,
         routerPreserveHops: _routerPreserveHops,
+        target: target,
       );
 
       if (mounted) {

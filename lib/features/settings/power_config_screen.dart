@@ -13,6 +13,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../services/protocol/admin_target.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/status_banner.dart';
 
@@ -74,11 +75,16 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
     safeSetState(() => _loading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-      // Apply cached config immediately if available
-      final cached = protocol.currentPowerConfig;
-      if (cached != null) {
-        _applyConfig(cached);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentPowerConfig;
+        if (cached != null) {
+          _applyConfig(cached);
+        }
       }
 
       // Only request from device if connected
@@ -91,6 +97,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
         // Request fresh config from device
         await protocol.getConfig(
           admin_pbenum.AdminMessage_ConfigType.POWER_CONFIG,
+          target: target,
         );
       }
     } catch (e) {
@@ -104,6 +111,9 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
 
   Future<void> _saveConfig() async {
     final protocol = ref.read(protocolServiceProvider);
+    final target = AdminTarget.fromNullable(
+      ref.read(remoteAdminTargetProvider),
+    );
 
     safeSetState(() => _saving = true);
 
@@ -118,6 +128,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
             ? _shutdownAfterSecs
             : 0,
         adcMultiplierOverride: _adcOverride ? _adcMultiplier : 0.0,
+        target: target,
       );
 
       if (mounted) {
