@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme.dart';
+import 'app_bottom_sheet.dart';
 
 /// A text overlay that can be dragged, scaled, and rotated with gestures.
 ///
@@ -178,37 +179,17 @@ class TransformableTextState extends State<TransformableText> {
     });
   }
 
-  void _showDeleteConfirmation() {
-    showDialog(
+  Future<void> _showDeleteConfirmation() async {
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.surface,
-        title: Text(
-          'Delete text?',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Text(
-          'This will remove the text overlay.',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              widget.onDelete();
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      title: 'Delete text?',
+      message: 'This will remove the text overlay.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
+    if (confirmed == true) {
+      widget.onDelete();
+    }
   }
 
   @override

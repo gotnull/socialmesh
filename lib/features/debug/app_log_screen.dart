@@ -283,35 +283,18 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
     showSuccessSnackBar(context, 'Log copied to clipboard');
   }
 
-  void _clearLogs() {
-    showDialog(
+  Future<void> _clearLogs() async {
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: Text('Clear Logs', style: TextStyle(color: context.textPrimary)),
-        content: Text(
-          'Are you sure you want to clear all logs?',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              ref.read(appLoggerProvider).clear();
-              setState(() {});
-              Navigator.pop(context);
-            },
-            child: const Text(
-              'Clear',
-              style: TextStyle(color: AppTheme.errorRed),
-            ),
-          ),
-        ],
-      ),
+      title: 'Clear Logs',
+      message: 'Are you sure you want to clear all logs?',
+      confirmLabel: 'Clear',
+      isDestructive: true,
     );
+    if (confirmed == true && mounted) {
+      ref.read(appLoggerProvider).clear();
+      setState(() {});
+    }
   }
 
   @override

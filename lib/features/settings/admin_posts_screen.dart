@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../models/social.dart';
@@ -307,56 +308,95 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
     final totalCount = _lastTotalCount;
     final filteredRefs = List<DocumentReference>.from(_filteredDocRefs);
 
-    final result = await showDialog<_DeleteScope>(
+    String input = '';
+    final result = await AppBottomSheet.show<_DeleteScope>(
       context: context,
-      builder: (context) {
-        String input = '';
-        return StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
-            title: const Text('Delete signals?'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: StatefulBuilder(
+        builder: (ctx, setSheetState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Delete signals?',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              hasFilters
+                  ? 'Delete filtered ($filteredCount) or all ($totalCount) signals.'
+                  : 'Delete all $totalCount signals.',
+              style: TextStyle(color: context.textPrimary),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'This cannot be undone. Type DELETE to confirm.',
+              style: TextStyle(color: context.textSecondary),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              onChanged: (value) => setSheetState(() => input = value.trim()),
+              decoration: const InputDecoration(hintText: 'DELETE'),
+            ),
+            const SizedBox(height: 24),
+            Row(
               children: [
-                Text(
-                  hasFilters
-                      ? 'Delete filtered ($filteredCount) or all ($totalCount) signals.'
-                      : 'Delete all $totalCount signals.',
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(ctx).pop(null),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: Colors.grey.shade700),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  'This cannot be undone. Type DELETE to confirm.',
-                  style: TextStyle(color: context.textSecondary),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  onChanged: (value) => setState(() => input = value.trim()),
-                  decoration: const InputDecoration(hintText: 'DELETE'),
-                ),
+                if (hasFilters) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: input == 'DELETE'
+                          ? () => Navigator.of(ctx).pop(_DeleteScope.filtered)
+                          : null,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: AppTheme.errorRed,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text('Filtered ($filteredCount)'),
+                    ),
+                  ),
+                ],
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(null),
-                child: const Text('Cancel'),
-              ),
-              if (hasFilters)
-                TextButton(
-                  onPressed: input == 'DELETE'
-                      ? () => Navigator.of(context).pop(_DeleteScope.filtered)
-                      : null,
-                  child: Text('Delete filtered ($filteredCount)'),
-                ),
-              TextButton(
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
                 onPressed: input == 'DELETE'
-                    ? () => Navigator.of(context).pop(_DeleteScope.all)
+                    ? () => Navigator.of(ctx).pop(_DeleteScope.all)
                     : null,
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: AppTheme.errorRed,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 child: Text('Delete all ($totalCount)'),
               ),
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
 
     if (result == null || !mounted) return;

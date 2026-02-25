@@ -16,6 +16,7 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/user_avatar.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../models/social.dart';
@@ -131,15 +132,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
     final profile = profileAsync.value;
 
     if (currentUser == null) {
-      return Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          title: Text(
-            'Create Post',
-            style: TextStyle(color: context.textPrimary),
-          ),
-        ),
+      return GlassScaffold.body(
+        title: 'Create Post',
         body: Center(
           child: Text(
             'Sign in to create posts',
@@ -149,65 +143,52 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
       );
     }
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: Icon(
-            Icons.close,
-            color: _isSubmitting ? context.textTertiary : context.textPrimary,
-          ),
-          onPressed: _isSubmitting ? null : _handleClose,
+    return GlassScaffold.body(
+      title: 'Create Post',
+      leading: IconButton(
+        icon: Icon(
+          Icons.close,
+          color: _isSubmitting ? context.textTertiary : context.textPrimary,
         ),
-        title: Text(
-          'Create Post',
-          style: TextStyle(
-            color: context.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: BouncyTap(
-              onTap: _canPost && !_isSubmitting ? _submitPost : null,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  gradient: _canPost && !_isSubmitting
-                      ? AppTheme.brandGradientHorizontal
-                      : null,
-                  color: _canPost && !_isSubmitting
-                      ? null
-                      : context.border.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: _isSubmitting
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(
-                        'Post',
-                        style: TextStyle(
-                          color: _canPost ? Colors.white : context.textTertiary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
+        onPressed: _isSubmitting ? null : _handleClose,
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: BouncyTap(
+            onTap: _canPost && !_isSubmitting ? _submitPost : null,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: _canPost && !_isSubmitting
+                    ? AppTheme.brandGradientHorizontal
+                    : null,
+                color: _canPost && !_isSubmitting
+                    ? null
+                    : context.border.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(20),
               ),
+              child: _isSubmitting
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      'Post',
+                      style: TextStyle(
+                        color: _canPost ? Colors.white : context.textTertiary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: Column(

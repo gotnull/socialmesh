@@ -10,6 +10,7 @@ import 'dart:convert';
 import '../../core/logging.dart';
 import '../../core/constants.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../models/social.dart';
 import '../../utils/snackbar.dart';
@@ -33,26 +34,16 @@ class _AdminFollowRequestsScreenState
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'Social Admin',
-            style: TextStyle(
-              color: context.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          bottom: TabBar(
-            indicatorColor: context.accentColor,
-            labelColor: context.textPrimary,
-            unselectedLabelColor: context.textTertiary,
-            tabs: const [
-              Tab(text: 'Follow Requests'),
-              Tab(text: 'Seed Data'),
-            ],
-          ),
+      child: GlassScaffold.body(
+        title: 'Social Admin',
+        bottom: TabBar(
+          indicatorColor: context.accentColor,
+          labelColor: context.textPrimary,
+          unselectedLabelColor: context.textTertiary,
+          tabs: const [
+            Tab(text: 'Follow Requests'),
+            Tab(text: 'Seed Data'),
+          ],
         ),
         body: TabBarView(
           children: [

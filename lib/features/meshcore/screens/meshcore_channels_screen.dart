@@ -340,118 +340,138 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     final nameController = TextEditingController();
     var isHashtag = true;
 
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: context.card,
-          title: const Text(
-            'Create Channel',
-            style: TextStyle(color: Colors.white),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: nameController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: 'Channel Name',
-                  labelStyle: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
-                  ),
-                  hintText: isHashtag ? 'e.g. general' : 'Channel name',
-                  hintStyle: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.4),
-                  ),
-                  prefixText: isHashtag ? '#' : null,
-                  prefixStyle: TextStyle(color: AccentColors.purple),
-                  filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.05),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                style: const TextStyle(color: Colors.white),
-              ),
-              const SizedBox(height: 16),
-              SwitchListTile(
-                title: const Text(
-                  'Public Hashtag Channel',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
-                ),
-                subtitle: Text(
-                  isHashtag
-                      ? 'PSK derived from name (discoverable)'
-                      : 'Random PSK (private)',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    fontSize: 12,
-                  ),
-                ),
-                value: isHashtag,
-                activeColor: AccentColors.purple,
-                onChanged: (v) => setDialogState(() => isHashtag = v),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: context.textSecondary),
+      child: StatefulBuilder(
+        builder: (ctx, setSheetState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Create Channel',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
               ),
             ),
-            TextButton(
-              onPressed: () async {
-                final name = nameController.text.trim();
-                if (name.isEmpty) {
-                  showErrorSnackBar(ctx, 'Please enter a channel name');
-                  return;
-                }
-
-                Navigator.pop(ctx);
-
-                // Create channel with next available index
-                final channelsState = ref.read(meshCoreChannelsProvider);
-                final existingIndices = channelsState.channels
-                    .map((c) => c.index)
-                    .toSet();
-                var newIndex = 0;
-                for (var i = 0; i < 8; i++) {
-                  if (!existingIndices.contains(i)) {
-                    newIndex = i;
-                    break;
-                  }
-                }
-
-                final channel = isHashtag
-                    ? MeshCoreChannel.publicChannel(newIndex, name)
-                    : MeshCoreChannel(
-                        index: newIndex,
-                        name: name,
-                        psk: Uint8List.fromList(List.generate(16, (i) => i)),
-                      );
-
-                await ref
-                    .read(meshCoreChannelsProvider.notifier)
-                    .setChannel(channel);
-
-                if (mounted) {
-                  showSuccessSnackBar(
-                    context,
-                    'Channel "${channel.name}" created',
-                  );
-                }
-              },
-              child: Text(
-                'Create',
-                style: TextStyle(color: AccentColors.purple),
+            const SizedBox(height: 16),
+            TextField(
+              controller: nameController,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: 'Channel Name',
+                labelStyle: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                ),
+                hintText: isHashtag ? 'e.g. general' : 'Channel name',
+                hintStyle: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.4),
+                ),
+                prefixText: isHashtag ? '#' : null,
+                prefixStyle: TextStyle(color: AccentColors.purple),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.05),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
               ),
+              style: const TextStyle(color: Colors.white),
+            ),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text(
+                'Public Hashtag Channel',
+                style: TextStyle(color: Colors.white, fontSize: 14),
+              ),
+              subtitle: Text(
+                isHashtag
+                    ? 'PSK derived from name (discoverable)'
+                    : 'Random PSK (private)',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 12,
+                ),
+              ),
+              value: isHashtag,
+              activeColor: AccentColors.purple,
+              onChanged: (v) => setSheetState(() => isHashtag = v),
+              contentPadding: EdgeInsets.zero,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: Colors.grey.shade700),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () async {
+                      final name = nameController.text.trim();
+                      if (name.isEmpty) {
+                        showErrorSnackBar(ctx, 'Please enter a channel name');
+                        return;
+                      }
+
+                      Navigator.pop(ctx);
+
+                      // Create channel with next available index
+                      final channelsState = ref.read(meshCoreChannelsProvider);
+                      final existingIndices = channelsState.channels
+                          .map((c) => c.index)
+                          .toSet();
+                      var newIndex = 0;
+                      for (var i = 0; i < 8; i++) {
+                        if (!existingIndices.contains(i)) {
+                          newIndex = i;
+                          break;
+                        }
+                      }
+
+                      final channel = isHashtag
+                          ? MeshCoreChannel.publicChannel(newIndex, name)
+                          : MeshCoreChannel(
+                              index: newIndex,
+                              name: name,
+                              psk: Uint8List.fromList(
+                                List.generate(16, (i) => i),
+                              ),
+                            );
+
+                      await ref
+                          .read(meshCoreChannelsProvider.notifier)
+                          .setChannel(channel);
+
+                      if (mounted) {
+                        showSuccessSnackBar(
+                          context,
+                          'Channel "${channel.name}" created',
+                        );
+                      }
+                    },
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: AccentColors.purple,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Create'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

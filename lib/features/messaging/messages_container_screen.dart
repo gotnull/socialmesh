@@ -8,6 +8,7 @@ import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
 import '../channels/channel_wizard_screen.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../channels/channels_screen.dart';
 import 'messaging_screen.dart';
 
@@ -94,79 +95,68 @@ class _MessagesContainerScreenState
     return HelpTourController(
       topicId: 'message_routing',
       stepKeys: const {},
-      child: Scaffold(
+      child: GlassScaffold.body(
         resizeToAvoidBottomInset: false,
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          leading: const HamburgerMenuButton(),
-          centerTitle: true,
-          title: Text(
-            'Messages',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
+        leading: const HamburgerMenuButton(),
+        centerTitle: true,
+        title: 'Messages',
+        actions: [
+          const DeviceStatusButton(),
+          MessagingPopupMenu(
+            isConnected: isConnected,
+            onAddChannel: () => _showAddChannelScreen(isConnected),
+            onScanChannel: () => _openChannelScanner(isConnected),
           ),
-          actions: [
-            const DeviceStatusButton(),
-            MessagingPopupMenu(
-              isConnected: isConnected,
-              onAddChannel: () => _showAddChannelScreen(isConnected),
-              onScanChannel: () => _openChannelScanner(isConnected),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: context.border.withValues(alpha: 0.3),
+                ),
+              ),
             ),
-          ],
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(48),
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: context.border.withValues(alpha: 0.3),
-                  ),
-                ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: context.accentColor,
+              indicatorWeight: 3,
+              labelColor: context.accentColor,
+              unselectedLabelColor: context.textSecondary,
+              labelStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
-              child: TabBar(
-                controller: _tabController,
-                indicatorColor: context.accentColor,
-                indicatorWeight: 3,
-                labelColor: context.accentColor,
-                unselectedLabelColor: context.textSecondary,
-                labelStyle: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                tabs: [
-                  Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('Contacts'),
-                        const SizedBox(width: 6),
-                        _TabBadge(count: contactsCount, showDot: hasUnreadDm),
-                      ],
-                    ),
-                  ),
-                  Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('Channels'),
-                        const SizedBox(width: 6),
-                        _TabBadge(
-                          count: channels.length,
-                          showDot: hasUnreadChannel,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
+              tabs: [
+                Tab(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Contacts'),
+                      const SizedBox(width: 6),
+                      _TabBadge(count: contactsCount, showDot: hasUnreadDm),
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Channels'),
+                      const SizedBox(width: 6),
+                      _TabBadge(
+                        count: channels.length,
+                        showDot: hasUnreadChannel,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),

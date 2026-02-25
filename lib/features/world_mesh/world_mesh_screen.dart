@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — full-screen map, glass blur would obscure tiles
 import 'dart:async';
 import 'dart:math' as math;
 

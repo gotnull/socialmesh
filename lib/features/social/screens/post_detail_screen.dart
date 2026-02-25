@@ -513,25 +513,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
     final navigator = Navigator.of(context);
     final queue = ref.read(mutationQueueProvider);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Post'),
-        content: const Text('Are you sure you want to delete this post?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Post',
+      message: 'Are you sure you want to delete this post?',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
 
     if (!mounted) return;
@@ -579,27 +566,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
     // Capture navigator before any await
     final navigator = Navigator.of(context);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Block User'),
-        content: const Text(
+      title: 'Block User',
+      message:
           'You will no longer see posts from this user. You can unblock them later in settings.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            child: const Text('Block'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Block',
+      isDestructive: true,
     );
 
     if (!mounted) return;

@@ -625,40 +625,22 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     );
   }
 
-  void _confirmRemoveContact(MeshCoreContact contact) {
-    showDialog(
+  Future<void> _confirmRemoveContact(MeshCoreContact contact) async {
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        title: const Text(
-          'Remove Contact?',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Text(
-          'Are you sure you want to remove ${contact.name}?',
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ref
-                  .read(meshCoreContactsProvider.notifier)
-                  .removeContact(contact.publicKeyHex);
-              showSuccessSnackBar(context, '${contact.name} removed');
-            },
-            child: Text('Remove', style: TextStyle(color: AppTheme.errorRed)),
-          ),
-        ],
-      ),
+      title: 'Remove Contact?',
+      message: 'Are you sure you want to remove ${contact.name}?',
+      confirmLabel: 'Remove',
+      isDestructive: true,
     );
+
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    ref
+        .read(meshCoreContactsProvider.notifier)
+        .removeContact(contact.publicKeyHex);
+    showSuccessSnackBar(context, '${contact.name} removed');
   }
 
   void _disconnect() async {
@@ -678,51 +660,83 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
   void _enterContactCode() {
     final controller = TextEditingController();
 
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        title: const Text(
-          'Enter Contact Code',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: 'Paste contact code here...',
-            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.05),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Enter Contact Code',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
           ),
-          style: const TextStyle(color: Colors.white, fontFamily: 'monospace'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            autofocus: true,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Paste contact code here...',
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.05),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            style: const TextStyle(
+              color: Colors.white,
+              fontFamily: 'monospace',
             ),
           ),
-          TextButton(
-            onPressed: () {
-              final code = controller.text.trim();
-              final contact = parseContactCode(code);
-              if (contact != null) {
-                Navigator.pop(ctx);
-                ref.read(meshCoreContactsProvider.notifier).addContact(contact);
-                showSuccessSnackBar(context, '${contact.name} added');
-              } else {
-                showErrorSnackBar(ctx, 'Invalid contact code');
-              }
-            },
-            child: Text('Add', style: TextStyle(color: AccentColors.cyan)),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    final code = controller.text.trim();
+                    final contact = parseContactCode(code);
+                    if (contact != null) {
+                      Navigator.pop(context);
+                      ref
+                          .read(meshCoreContactsProvider.notifier)
+                          .addContact(contact);
+                      showSuccessSnackBar(context, '${contact.name} added');
+                    } else {
+                      showErrorSnackBar(context, 'Invalid contact code');
+                    }
+                  },
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: context.accentColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Add'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -16,6 +16,7 @@ import '../../providers/app_providers.dart';
 import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/validation.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/loading_indicator.dart';
 
 /// Key size options
@@ -344,42 +345,31 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: _dismissKeyboard,
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          leading: IconButton(
-            icon: Icon(Icons.close, color: context.textPrimary),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Text(
-            isEditing ? 'Edit Channel' : 'New Channel',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-          centerTitle: true,
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: TextButton(
-                onPressed: _isSaving ? null : _saveChannel,
-                child: _isSaving
-                    ? LoadingIndicator(size: 20)
-                    : Text(
-                        'Save',
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
-                      ),
-              ),
-            ),
-          ],
+      child: GlassScaffold.body(
+        leading: IconButton(
+          icon: Icon(Icons.close, color: context.textPrimary),
+          onPressed: () => Navigator.pop(context),
         ),
+        title: isEditing ? 'Edit Channel' : 'New Channel',
+        centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton(
+              onPressed: _isSaving ? null : _saveChannel,
+              child: _isSaving
+                  ? LoadingIndicator(size: 20)
+                  : Text(
+                      'Save',
+                      style: TextStyle(
+                        color: context.accentColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+            ),
+          ),
+        ],
         body: Form(
           key: _formKey,
           child: ListView(

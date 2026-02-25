@@ -111,11 +111,11 @@ void _showEncryptionKey(BuildContext context, ChannelConfig channel) {
 }
 
 /// Confirms and deletes a channel from the device.
-void _deleteChannel(
+Future<void> _deleteChannel(
   BuildContext context,
   ChannelConfig channel,
   WidgetRef ref,
-) {
+) async {
   final connectionState = ref.read(connectionStateProvider);
   final isConnected = connectionState.maybeWhen(
     data: (state) => state == DeviceConnectionState.connected,
@@ -127,48 +127,34 @@ void _deleteChannel(
     return;
   }
 
-  showDialog(
+  final confirmed = await AppBottomSheet.showConfirm(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Delete Channel'),
-      content: Text('Delete channel "${channel.name}"?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () async {
-            Navigator.pop(dialogContext);
-
-            final disabledChannel = ChannelConfig(
-              index: channel.index,
-              name: '',
-              psk: [],
-              uplink: false,
-              downlink: false,
-              role: 'DISABLED',
-            );
-
-            try {
-              final protocol = ref.read(protocolServiceProvider);
-              final channelsNotifier = ref.read(channelsProvider.notifier);
-              await protocol.setChannel(disabledChannel);
-              channelsNotifier.removeChannel(channel.index);
-            } catch (e) {
-              if (context.mounted) {
-                showErrorSnackBar(context, 'Failed to delete channel: $e');
-              }
-            }
-          },
-          style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(dialogContext).colorScheme.error,
-          ),
-          child: const Text('Delete'),
-        ),
-      ],
-    ),
+    title: 'Delete Channel',
+    message: 'Delete channel "${channel.name}"?',
+    confirmLabel: 'Delete',
+    isDestructive: true,
   );
+  if (confirmed != true || !context.mounted) return;
+
+  final disabledChannel = ChannelConfig(
+    index: channel.index,
+    name: '',
+    psk: [],
+    uplink: false,
+    downlink: false,
+    role: 'DISABLED',
+  );
+
+  try {
+    final protocol = ref.read(protocolServiceProvider);
+    final channelsNotifier = ref.read(channelsProvider.notifier);
+    await protocol.setChannel(disabledChannel);
+    channelsNotifier.removeChannel(channel.index);
+  } catch (e) {
+    if (context.mounted) {
+      showErrorSnackBar(context, 'Failed to delete channel: $e');
+    }
+  }
 }
 
 /// Encryption key viewer widget.

@@ -31,6 +31,7 @@ import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../providers/help_providers.dart';
@@ -365,102 +366,89 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
       stepKeys: const {},
       child: GestureDetector(
         onTap: _dismissKeyboard,
-        child: Scaffold(
+        child: GlassScaffold.body(
           resizeToAvoidBottomInset: false,
-          backgroundColor: context.background,
-          appBar: AppBar(
-            backgroundColor: context.background,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            leading: const BackButton(),
-            centerTitle: true,
-            title: Text(
-              'Aether',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
+          leading: const BackButton(),
+          centerTitle: true,
+          title: 'Aether',
+          actions: [
+            _buildScheduleFlightButton(context),
+            const SizedBox(width: 4),
+            _buildLeaderboardButton(context),
+            const SizedBox(width: 4),
+            AppBarOverflowMenu<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'info':
+                    _showInfo();
+                  case 'help':
+                    ref
+                        .read(helpProvider.notifier)
+                        .startTour('aether_overview');
+                  case 'settings':
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const SettingsScreen(),
+                      ),
+                    );
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'info',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: context.textSecondary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'About Aether',
+                        style: TextStyle(color: context.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'help',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.help_outline,
+                        color: context.textSecondary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Help',
+                        style: TextStyle(color: context.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'settings',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.settings_outlined,
+                        color: context.textSecondary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Settings',
+                        style: TextStyle(color: context.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            actions: [
-              _buildScheduleFlightButton(context),
-              const SizedBox(width: 4),
-              _buildLeaderboardButton(context),
-              const SizedBox(width: 4),
-              AppBarOverflowMenu<String>(
-                onSelected: (value) {
-                  switch (value) {
-                    case 'info':
-                      _showInfo();
-                    case 'help':
-                      ref
-                          .read(helpProvider.notifier)
-                          .startTour('aether_overview');
-                    case 'settings':
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const SettingsScreen(),
-                        ),
-                      );
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'info',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: context.textSecondary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'About Aether',
-                          style: TextStyle(color: context.textPrimary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'help',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.help_outline,
-                          color: context.textSecondary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Help',
-                          style: TextStyle(color: context.textPrimary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'settings',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.settings_outlined,
-                          color: context.textSecondary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Settings',
-                          style: TextStyle(color: context.textPrimary),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 8),
-            ],
-          ),
+            const SizedBox(width: 8),
+          ],
           body: _FlightsTabContent(
             flightsAsync: flightsAsync,
             activeFlightsAsync: activeFlightsAsync,

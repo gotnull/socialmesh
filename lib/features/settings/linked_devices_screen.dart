@@ -379,40 +379,13 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
     final currentUser = ref.read(currentUserProvider);
     final container = ProviderScope.containerOf(context);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: dialogContext.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Unlink Device',
-          style: TextStyle(
-            color: dialogContext.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: Text(
+      title: 'Unlink Device',
+      message:
           'Remove this device from your profile? Others will no longer see your profile when viewing this node.',
-          style: TextStyle(color: dialogContext.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: dialogContext.textSecondary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.errorRed,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Unlink'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Unlink',
+      isDestructive: true,
     );
 
     AppLogging.settings(

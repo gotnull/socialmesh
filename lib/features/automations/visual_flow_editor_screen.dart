@@ -20,6 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/visual_flow/compiler/flow_compiler.dart';
 import '../../core/visual_flow/interfaces/event_signal_interface.dart';
 import '../../core/visual_flow/providers/visual_flow_provider.dart';
@@ -422,26 +423,15 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
     final flowState = ref.read(visualFlowProvider);
     if (!flowState.isDirty) return true;
 
-    final shouldDiscard = await showDialog<bool>(
+    final shouldDiscard = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: context.surface,
-        title: const Text('Discard Changes?'),
-        content: const Text(
+      title: 'Discard Changes?',
+      message:
           'You have unsaved changes in the flow editor. '
           'Discard them and go back?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Keep Editing'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text('Discard', style: TextStyle(color: AppTheme.errorRed)),
-          ),
-        ],
-      ),
+      confirmLabel: 'Discard',
+      cancelLabel: 'Keep Editing',
+      isDestructive: true,
     );
 
     return shouldDiscard ?? false;

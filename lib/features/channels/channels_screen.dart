@@ -8,6 +8,7 @@ import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/ico_help_system.dart';
@@ -245,95 +246,84 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
       child: HelpTourController(
         topicId: 'channels_overview',
         stepKeys: const {},
-        child: Scaffold(
+        child: GlassScaffold.body(
           resizeToAvoidBottomInset: false,
-          backgroundColor: context.background,
-          appBar: AppBar(
-            backgroundColor: context.background,
-            leading: const HamburgerMenuButton(),
-            centerTitle: true,
-            title: Text(
-              'Channels (${channels.length})',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
-            ),
-            actions: [
-              const DeviceStatusButton(),
-              AppBarOverflowMenu<String>(
-                onSelected: (value) {
-                  switch (value) {
-                    case 'add':
-                      // Find next available channel index (1-7, 0 is Primary)
-                      final usedIndices = channels.map((c) => c.index).toSet();
-                      int nextIndex = 1;
-                      for (int i = 1; i <= 7; i++) {
-                        if (!usedIndices.contains(i)) {
-                          nextIndex = i;
-                          break;
-                        }
+          leading: const HamburgerMenuButton(),
+          centerTitle: true,
+          title: 'Channels (${channels.length})',
+          actions: [
+            const DeviceStatusButton(),
+            AppBarOverflowMenu<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'add':
+                    // Find next available channel index (1-7, 0 is Primary)
+                    final usedIndices = channels.map((c) => c.index).toSet();
+                    int nextIndex = 1;
+                    for (int i = 1; i <= 7; i++) {
+                      if (!usedIndices.contains(i)) {
+                        nextIndex = i;
+                        break;
                       }
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ChannelWizardScreen(channelIndex: nextIndex),
-                        ),
-                      );
-                    case 'scan':
-                      Navigator.of(context).pushNamed('/qr-scanner');
-                    case 'settings':
-                      Navigator.pushNamed(context, '/settings');
-                    case 'help':
-                      ref
-                          .read(helpProvider.notifier)
-                          .startTour('channels_overview');
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'add',
-                    child: ListTile(
-                      leading: Icon(Icons.add),
-                      title: Text('Add Channel'),
-                      contentPadding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
-                    ),
+                    }
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ChannelWizardScreen(channelIndex: nextIndex),
+                      ),
+                    );
+                  case 'scan':
+                    Navigator.of(context).pushNamed('/qr-scanner');
+                  case 'settings':
+                    Navigator.pushNamed(context, '/settings');
+                  case 'help':
+                    ref
+                        .read(helpProvider.notifier)
+                        .startTour('channels_overview');
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'add',
+                  child: ListTile(
+                    leading: Icon(Icons.add),
+                    title: Text('Add Channel'),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
                   ),
-                  const PopupMenuItem(
-                    value: 'scan',
-                    child: ListTile(
-                      leading: Icon(Icons.qr_code_scanner),
-                      title: Text('Scan QR Code'),
-                      contentPadding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
-                    ),
+                ),
+                const PopupMenuItem(
+                  value: 'scan',
+                  child: ListTile(
+                    leading: Icon(Icons.qr_code_scanner),
+                    title: Text('Scan QR Code'),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
                   ),
-                  const PopupMenuDivider(),
-                  const PopupMenuItem(
-                    value: 'settings',
-                    child: ListTile(
-                      leading: Icon(Icons.settings_outlined),
-                      title: Text('Settings'),
-                      contentPadding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
-                    ),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'settings',
+                  child: ListTile(
+                    leading: Icon(Icons.settings_outlined),
+                    title: Text('Settings'),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
                   ),
-                  const PopupMenuItem(
-                    value: 'help',
-                    child: ListTile(
-                      leading: Icon(Icons.help_outline),
-                      title: Text('Help'),
-                      contentPadding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
-                    ),
+                ),
+                const PopupMenuItem(
+                  value: 'help',
+                  child: ListTile(
+                    leading: Icon(Icons.help_outline),
+                    title: Text('Help'),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
           body: bodyContent,
         ),
       ),

@@ -21,6 +21,7 @@ import 'marketplace/marketplace_providers.dart';
 import 'widget_share_utils.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/widget_preview_card.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
@@ -189,56 +190,45 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     return HelpTourController(
       topicId: 'widget_builder_overview',
       stepKeys: const {},
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'My Widgets',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
+      child: GlassScaffold.body(
+        title: 'My Widgets',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _createNewWidget,
+            tooltip: 'Create Widget',
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: _createNewWidget,
-              tooltip: 'Create Widget',
-            ),
-            AppBarOverflowMenu<String>(
-              onSelected: (value) {
-                switch (value) {
-                  case 'marketplace':
-                    _openMarketplace();
-                  case 'help':
-                    ref
-                        .read(helpProvider.notifier)
-                        .startTour('widget_builder_overview');
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'marketplace',
-                  child: ListTile(
-                    leading: Icon(Icons.store, color: context.accentColor),
-                    title: const Text('Marketplace'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+          AppBarOverflowMenu<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'marketplace':
+                  _openMarketplace();
+                case 'help':
+                  ref
+                      .read(helpProvider.notifier)
+                      .startTour('widget_builder_overview');
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'marketplace',
+                child: ListTile(
+                  leading: Icon(Icons.store, color: context.accentColor),
+                  title: const Text('Marketplace'),
+                  contentPadding: EdgeInsets.zero,
                 ),
-                const PopupMenuItem(
-                  value: 'help',
-                  child: ListTile(
-                    leading: Icon(Icons.help_outline),
-                    title: Text('Help'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+              ),
+              const PopupMenuItem(
+                value: 'help',
+                child: ListTile(
+                  leading: Icon(Icons.help_outline),
+                  title: Text('Help'),
+                  contentPadding: EdgeInsets.zero,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
         body: _isLoading ? const ScreenLoadingIndicator() : _buildWidgetList(),
       ),
     );

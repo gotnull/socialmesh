@@ -8,6 +8,7 @@ import '../renderer/widget_renderer.dart';
 
 import '../widget_sync_providers.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../utils/snackbar.dart';
@@ -2875,34 +2876,61 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
   void _editWidgetName() async {
     final controller = TextEditingController(text: _schema.name);
 
-    final result = await showDialog<String>(
+    final result = await AppBottomSheet.show<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: Text(
-          'Widget Name',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: TextStyle(color: context.textPrimary),
-          decoration: InputDecoration(
-            hintText: 'Enter widget name',
-            hintStyle: TextStyle(color: context.textTertiary),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Widget Name',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: Text('Save', style: TextStyle(color: context.accentColor)),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            autofocus: true,
+            style: TextStyle(color: context.textPrimary),
+            decoration: InputDecoration(
+              hintText: 'Enter widget name',
+              hintStyle: TextStyle(color: context.textTertiary),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(context, controller.text),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: context.accentColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Save'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

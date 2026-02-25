@@ -10,6 +10,7 @@ import '../../models/world_mesh_node.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/node_favorites_provider.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/presence_utils.dart';
 import 'node_analytics_screen.dart';
@@ -73,30 +74,12 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
   }
 
   Future<void> _confirmRemoveFavorite(_FavoriteItem item) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        title: Text(
-          'Remove Favorite?',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Text(
-          'Remove ${item.displayName} from your favorites?',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.errorRed),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
+      title: 'Remove Favorite?',
+      message: 'Remove ${item.displayName} from your favorites?',
+      confirmLabel: 'Remove',
+      isDestructive: true,
     );
 
     if (confirmed == true) {
@@ -183,34 +166,12 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
     final favoritesAsync = ref.watch(nodeFavoritesProvider);
 
     return favoritesAsync.when(
-      loading: () => Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'Favorite Nodes',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-        ),
+      loading: () => GlassScaffold.body(
+        title: 'Favorite Nodes',
         body: const ScreenLoadingIndicator(),
       ),
-      error: (error, stack) => Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'Favorite Nodes',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-        ),
+      error: (error, stack) => GlassScaffold.body(
+        title: 'Favorite Nodes',
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,

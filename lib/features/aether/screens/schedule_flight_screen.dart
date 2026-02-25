@@ -13,7 +13,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../core/widgets/datetime_picker_sheet.dart';
-import '../../../core/widgets/glass_app_bar.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/info_chip.dart';
 import '../../../core/widgets/legal_document_sheet.dart';
 import '../../../core/widgets/status_banner.dart';
@@ -714,33 +714,30 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     final myNode = _getMyNode();
     final gradientColors = AccentColors.gradientFor(context.accentColor);
 
-    return Scaffold(
-      backgroundColor: context.background,
+    return GlassScaffold.body(
       bottomNavigationBar: _buildBottomBar(myNode, gradientColors),
-      appBar: GlassAppBar(
-        title: Text(
-          'Schedule Flight',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
+      titleWidget: Text(
+        'Schedule Flight',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: context.textPrimary,
+        ),
+      ),
+      actions: [
+        IconButton(
+          icon: Icon(
+            Icons.security_rounded,
+            color: context.textSecondary,
+            size: 20,
+          ),
+          tooltip: 'Your Responsibility',
+          onPressed: () => LegalDocumentSheet.showTermsSection(
+            context,
+            LegalConstants.anchorAcceptableUse,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.security_rounded,
-              color: context.textSecondary,
-              size: 20,
-            ),
-            tooltip: 'Your Responsibility',
-            onPressed: () => LegalDocumentSheet.showTermsSection(
-              context,
-              LegalConstants.anchorAcceptableUse,
-            ),
-          ),
-        ],
-      ),
+      ],
       body: GestureDetector(
         onTap: _dismissKeyboard,
         behavior: HitTestBehavior.opaque,

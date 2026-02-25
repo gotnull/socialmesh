@@ -1319,26 +1319,12 @@ class _MeshCoreDeviceSheetContentState
   Future<void> _disconnect(BuildContext context) async {
     final coordinator = ref.read(connectionCoordinatorProvider);
     final nav = Navigator.of(context);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        title: const Text('Disconnect'),
-        content: const Text(
-          'Are you sure you want to disconnect from this MeshCore device?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
-            child: const Text('Disconnect'),
-          ),
-        ],
-      ),
+      title: 'Disconnect',
+      message: 'Are you sure you want to disconnect from this MeshCore device?',
+      confirmLabel: 'Disconnect',
+      isDestructive: true,
     );
 
     if (!mounted) return;

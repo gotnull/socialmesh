@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/connection_providers.dart';
 import '../../utils/snackbar.dart';
+import '../widgets/glass_scaffold.dart';
 import 'route_guard.dart';
 
 /// Navigation observer that enforces route requirements.
@@ -115,8 +116,8 @@ class _BlockedRouteScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Access Restricted')),
+    return GlassScaffold.body(
+      title: 'Access Restricted',
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),

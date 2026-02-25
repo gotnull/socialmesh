@@ -769,37 +769,18 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     showSuccessSnackBar(context, 'Refreshing contacts...');
   }
 
-  void _confirmReboot(BuildContext context) {
-    showDialog(
+  Future<void> _confirmReboot(BuildContext context) async {
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: const Text(
-          'Reboot Device',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          'Are you sure you want to reboot the MeshCore device?',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _rebootDevice();
-            },
-            child: const Text('Reboot', style: TextStyle(color: Colors.orange)),
-          ),
-        ],
-      ),
+      title: 'Reboot Device',
+      message: 'Are you sure you want to reboot the MeshCore device?',
+      confirmLabel: 'Reboot',
     );
+
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    _rebootDevice();
   }
 
   Future<void> _rebootDevice() async {

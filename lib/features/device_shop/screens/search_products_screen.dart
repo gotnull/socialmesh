@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
 import 'product_detail_screen.dart';
@@ -63,25 +64,20 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
+      child: GlassScaffold.body(
         resizeToAvoidBottomInset: false,
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.card,
-          titleSpacing: 0,
-          title: _buildSearchField(),
-          actions: [
-            if (_query.isNotEmpty)
-              IconButton(
-                icon: const Icon(Icons.clear),
-                onPressed: () {
-                  _searchController.clear();
-                  setState(() => _query = '');
-                  _focusNode.requestFocus();
-                },
-              ),
-          ],
-        ),
+        titleWidget: _buildSearchField(),
+        actions: [
+          if (_query.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: () {
+                _searchController.clear();
+                setState(() => _query = '');
+                _focusNode.requestFocus();
+              },
+            ),
+        ],
         body: _query.isEmpty ? _buildSuggestions() : _buildResults(),
       ),
     );

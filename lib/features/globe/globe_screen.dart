@@ -5,6 +5,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/mesh_globe.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/node_info_card.dart';
 import '../../core/widgets/node_selector_sheet.dart';
 import '../../providers/help_providers.dart';
@@ -74,49 +75,44 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen>
     return HelpTourController(
       topicId: 'globe_overview',
       stepKeys: const {},
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.card,
-          title: Text('Mesh Globe'),
-          actions: [
-            // Toggle connections
-            IconButton(
-              icon: Icon(
-                _showConnections ? Icons.link : Icons.link_off,
-                color: _showConnections
-                    ? context.accentColor
-                    : context.textTertiary,
-              ),
-              onPressed: () {
-                setState(() {
-                  _showConnections = !_showConnections;
-                });
-              },
-              tooltip: _showConnections
-                  ? 'Hide connections'
-                  : 'Show connections',
+      child: GlassScaffold.body(
+        title: 'Mesh Globe',
+        physics: const NeverScrollableScrollPhysics(),
+        actions: [
+          // Toggle connections
+          IconButton(
+            icon: Icon(
+              _showConnections ? Icons.link : Icons.link_off,
+              color: _showConnections
+                  ? context.accentColor
+                  : context.textTertiary,
             ),
-            // Reset view
-            IconButton(
-              icon: const Icon(Icons.center_focus_strong),
-              onPressed: () {
-                _globeKey.currentState?.rotateToLocation(0, 0);
-                setState(() {
-                  _selectedNode = null;
-                });
-              },
-              tooltip: 'Reset view',
-            ),
-            // Help button
-            IconButton(
-              icon: const Icon(Icons.help_outline),
-              onPressed: () =>
-                  ref.read(helpProvider.notifier).startTour('globe_overview'),
-              tooltip: 'Help',
-            ),
-          ],
-        ),
+            onPressed: () {
+              setState(() {
+                _showConnections = !_showConnections;
+              });
+            },
+            tooltip: _showConnections ? 'Hide connections' : 'Show connections',
+          ),
+          // Reset view
+          IconButton(
+            icon: const Icon(Icons.center_focus_strong),
+            onPressed: () {
+              _globeKey.currentState?.rotateToLocation(0, 0);
+              setState(() {
+                _selectedNode = null;
+              });
+            },
+            tooltip: 'Reset view',
+          ),
+          // Help button
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: () =>
+                ref.read(helpProvider.notifier).startTour('globe_overview'),
+            tooltip: 'Help',
+          ),
+        ],
         body: Stack(
           children: [
             // Globe - fullscreen

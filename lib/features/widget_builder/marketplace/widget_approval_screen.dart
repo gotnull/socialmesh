@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'widget_marketplace_service.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/splash_mesh_provider.dart';
@@ -97,67 +98,83 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen>
   }
 
   Future<void> _rejectWidget(MarketplaceWidget widget) async {
-    // Show dialog to get rejection reason
-    final reason = await showDialog<String>(
+    // Show bottom sheet to get rejection reason
+    final controller = TextEditingController();
+    final reason = await AppBottomSheet.show<String>(
       context: context,
-      builder: (context) {
-        final controller = TextEditingController();
-        return AlertDialog(
-          backgroundColor: context.card,
-          title: Text(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
             'Reject Widget',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Why is "${widget.name}" being rejected?',
+            style: TextStyle(color: context.textSecondary),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Enter reason...',
+              hintStyle: TextStyle(color: context.textSecondary),
+              filled: true,
+              fillColor: context.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+            ),
             style: TextStyle(color: context.textPrimary),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 24),
+          Row(
             children: [
-              Text(
-                'Why is "${widget.name}" being rejected?',
-                style: TextStyle(color: context.textSecondary),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: controller,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: 'Enter reason...',
-                  hintStyle: TextStyle(color: context.textSecondary),
-                  filled: true,
-                  fillColor: context.background,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
+                  child: const Text('Cancel'),
                 ),
-                style: TextStyle(color: context.textPrimary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    if (controller.text.trim().isEmpty) {
+                      showErrorSnackBar(context, 'Please enter a reason');
+                      return;
+                    }
+                    Navigator.pop(context, controller.text.trim());
+                  },
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: AppTheme.errorRed,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Reject'),
+                ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: context.textSecondary),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                if (controller.text.trim().isEmpty) {
-                  showErrorSnackBar(context, 'Please enter a reason');
-                  return;
-                }
-                Navigator.pop(context, controller.text.trim());
-              },
-              child: const Text(
-                'Reject',
-                style: TextStyle(color: AppTheme.errorRed),
-              ),
-            ),
-          ],
-        );
-      },
+        ],
+      ),
     );
 
     if (reason == null || !mounted) return;

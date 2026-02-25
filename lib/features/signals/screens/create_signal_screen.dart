@@ -19,6 +19,7 @@ import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/local_image_gallery.dart';
 import '../../../core/widgets/status_banner.dart';
@@ -1298,58 +1299,52 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     return HelpTourController(
       topicId: 'signal_creation',
       stepKeys: const {},
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          leading: IconButton(
-            icon: Icon(
-              Icons.close,
-              color: _isSubmitting ? context.textTertiary : context.textPrimary,
-            ),
-            onPressed: _isSubmitting ? null : _handleClose,
+      child: GlassScaffold.body(
+        leading: IconButton(
+          icon: Icon(
+            Icons.close,
+            color: _isSubmitting ? context.textTertiary : context.textPrimary,
           ),
-          centerTitle: true,
-          title: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+          onPressed: _isSubmitting ? null : _handleClose,
+        ),
+        centerTitle: true,
+        titleWidget: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Go Active',
+              style: TextStyle(
+                color: context.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+              ),
+            ),
+            if (myNodeNum != null)
               Text(
-                'Go Active',
+                '!${myNodeNum.toRadixString(16).toUpperCase()}',
                 style: TextStyle(
-                  color: context.textPrimary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
+                  color: context.accentColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              if (myNodeNum != null)
-                Text(
-                  '!${myNodeNum.toRadixString(16).toUpperCase()}',
-                  style: TextStyle(
-                    color: context.accentColor,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(
-                Icons.security_rounded,
-                color: context.textSecondary,
-                size: 20,
-              ),
-              tooltip: 'Your Responsibility',
-              onPressed: () => LegalDocumentSheet.showTermsSection(
-                context,
-                LegalConstants.anchorAcceptableUse,
-              ),
-            ),
-            const IcoHelpAppBarButton(topicId: 'signal_creation'),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.security_rounded,
+              color: context.textSecondary,
+              size: 20,
+            ),
+            tooltip: 'Your Responsibility',
+            onPressed: () => LegalDocumentSheet.showTermsSection(
+              context,
+              LegalConstants.anchorAcceptableUse,
+            ),
+          ),
+          const IcoHelpAppBarButton(topicId: 'signal_creation'),
+        ],
         body: GestureDetector(
           onTap: _dismissKeyboard,
           behavior: HitTestBehavior.opaque,

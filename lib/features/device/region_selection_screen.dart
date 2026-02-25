@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../services/storage/storage_service.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../providers/app_providers.dart';
@@ -231,32 +232,17 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     final settingsRefresh = ref.read(settingsRefreshProvider.notifier);
 
     // Show confirmation dialog explaining the device will reboot
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: const Text('Apply Region'),
-        content: Text(
-          isInitialSetup
-              ? 'Your device will reboot to apply the region settings. '
-                    'This may take up to 30 seconds.\n\n'
-                    'The app will automatically reconnect when ready.'
-              : 'Changing the region will cause your device to reboot. '
-                    'This may take up to 30 seconds.\n\n'
-                    'You will be briefly disconnected while the device restarts.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: context.accentColor),
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
+      title: 'Apply Region',
+      message: isInitialSetup
+          ? 'Your device will reboot to apply the region settings. '
+                'This may take up to 30 seconds.\n\n'
+                'The app will automatically reconnect when ready.'
+          : 'Changing the region will cause your device to reboot. '
+                'This may take up to 30 seconds.\n\n'
+                'You will be briefly disconnected while the device restarts.',
+      confirmLabel: 'Continue',
     );
 
     if (confirmed != true) {

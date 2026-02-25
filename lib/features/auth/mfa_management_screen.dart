@@ -10,6 +10,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/connectivity_providers.dart';
 import '../../services/haptic_service.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../utils/snackbar.dart';
 import 'mfa_enrollment_screen.dart';
 import 'mfa_error_messages.dart';
@@ -139,31 +140,13 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
     }
 
     AppLogging.mfa('_removeFactor — showing confirmation dialog');
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Remove Two-Factor Auth?',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Text(
+      title: 'Remove Two-Factor Auth?',
+      message:
           'Your account will be less secure. You can re-enable it anytime.',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Remove',
+      isDestructive: true,
     );
 
     AppLogging.mfa(

@@ -8,6 +8,7 @@ import '../../../core/auth/permission_provider.dart';
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/permission_gate.dart';
@@ -392,29 +393,63 @@ class _ActionButtons extends ConsumerWidget {
 
   Future<String?> _showAssigneeDialog(BuildContext context) async {
     final controller = TextEditingController();
-    return showDialog<String>(
+    return AppBottomSheet.show<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Assign Incident'),
-        content: TextField(
-          controller: controller,
-          maxLength: 200,
-          decoration: const InputDecoration(
-            labelText: 'Assignee User ID',
-            hintText: 'Enter user ID',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Assign Incident',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            maxLength: 200,
+            decoration: const InputDecoration(
+              labelText: 'Assignee User ID',
+              hintText: 'Enter user ID',
+            ),
           ),
-          FilledButton(
-            onPressed: () {
-              final value = controller.text.trim();
-              if (value.isNotEmpty) Navigator.of(ctx).pop(value);
-            },
-            child: const Text('Assign'),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    final value = controller.text.trim();
+                    if (value.isNotEmpty) Navigator.of(context).pop(value);
+                  },
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: context.accentColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Assign'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -423,30 +458,64 @@ class _ActionButtons extends ConsumerWidget {
 
   Future<String?> _showNoteDialog(BuildContext context, String action) async {
     final controller = TextEditingController();
-    return showDialog<String>(
+    return AppBottomSheet.show<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('$action Note (optional)'),
-        content: TextField(
-          controller: controller,
-          maxLength: 500,
-          maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: 'Note',
-            hintText: 'Optional note for this transition',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$action Note (optional)',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Skip'),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            maxLength: 500,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: 'Note',
+              hintText: 'Optional note for this transition',
+            ),
           ),
-          FilledButton(
-            onPressed: () {
-              final value = controller.text.trim();
-              Navigator.of(ctx).pop(value.isEmpty ? null : value);
-            },
-            child: const Text('Continue'),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Skip'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    final value = controller.text.trim();
+                    Navigator.of(context).pop(value.isEmpty ? null : value);
+                  },
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: context.accentColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Continue'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

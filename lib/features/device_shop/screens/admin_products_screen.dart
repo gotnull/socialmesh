@@ -6,8 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
-import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../models/shop_models.dart';
@@ -198,26 +199,14 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen>
     // Capture providers before async gap
     final service = ref.read(deviceShopServiceProvider);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Product'),
-        content: Text(
+      title: 'Delete Product',
+      message:
           'Are you sure you want to permanently delete "${product.name}"?\n\n'
           'This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
 
     if (confirmed == true && mounted) {

@@ -5,6 +5,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../providers/auth_providers.dart';
@@ -226,25 +227,12 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
     // Capture provider before async gap
     final shopService = ref.read(deviceShopServiceProvider);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Review'),
-        content: const Text(
-          'Are you sure you want to permanently delete this review?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Review',
+      message: 'Are you sure you want to permanently delete this review?',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
 
     if (confirmed != true) return;

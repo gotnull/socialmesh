@@ -360,32 +360,12 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
     );
     final protocol = ref.read(protocolServiceProvider);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: const Text('Disconnect'),
-        content: const Text(
-          'Are you sure you want to disconnect from this device?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              AppLogging.connection('🔌 DISCONNECT: User cancelled dialog');
-              Navigator.pop(context, false);
-            },
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              AppLogging.connection('🔌 DISCONNECT: User confirmed disconnect');
-              Navigator.pop(context, true);
-            },
-            style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
-            child: const Text('Disconnect'),
-          ),
-        ],
-      ),
+      title: 'Disconnect',
+      message: 'Are you sure you want to disconnect from this device?',
+      confirmLabel: 'Disconnect',
+      isDestructive: true,
     );
 
     if (confirmed == true && context.mounted) {

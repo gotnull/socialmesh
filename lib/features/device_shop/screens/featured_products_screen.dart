@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
@@ -221,22 +222,11 @@ class _FeaturedProductsScreenState extends ConsumerState<FeaturedProductsScreen>
     final service = ref.read(deviceShopServiceProvider);
     final user = ref.read(currentUserProvider);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove from Featured'),
-        content: Text('Remove "${product.name}" from featured products?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
+      title: 'Remove from Featured',
+      message: 'Remove "${product.name}" from featured products?',
+      confirmLabel: 'Remove',
     );
 
     if (confirmed == true && mounted) {

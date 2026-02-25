@@ -297,25 +297,11 @@ class _ModerationQueueListState extends ConsumerState<_ModerationQueueList>
       return;
     }
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Unsuspend User'),
-        content: Text(
-          'Are you sure you want to lift the suspension for $displayName?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Unsuspend'),
-          ),
-        ],
-      ),
+      title: 'Unsuspend User',
+      message: 'Are you sure you want to lift the suspension for $displayName?',
+      confirmLabel: 'Unsuspend',
     );
 
     if (confirmed == true && context.mounted) {

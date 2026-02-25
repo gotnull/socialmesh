@@ -24,6 +24,7 @@ import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/gradient_border_container.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/ico_help_system.dart';
 
@@ -378,23 +379,19 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
       child: HelpTourController(
         topicId: 'message_routing',
         stepKeys: const {},
-        child: Scaffold(
+        child: GlassScaffold.body(
           resizeToAvoidBottomInset: false,
-          backgroundColor: context.background,
-          appBar: AppBar(
-            backgroundColor: context.background,
-            leading: const HamburgerMenuButton(),
-            centerTitle: true,
-            title: Text(
-              'Contacts${contacts.isNotEmpty ? ' (${contacts.length})' : ''}',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
+          leading: const HamburgerMenuButton(),
+          centerTitle: true,
+          titleWidget: Text(
+            'Contacts${contacts.isNotEmpty ? ' (${contacts.length})' : ''}',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
-            actions: const [DeviceStatusButton(), MessagingPopupMenu()],
           ),
+          actions: const [DeviceStatusButton(), MessagingPopupMenu()],
           body: bodyContent,
         ),
       ),
@@ -1233,48 +1230,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     );
   }
 
-  void _deleteMessage(Message message) {
-    // Capture notifier and parent context before showing dialog
-    // to avoid ref access in dialog callback after potential dispose
+  Future<void> _deleteMessage(Message message) async {
+    // Capture notifier before async gap
     final messagesNotifier = ref.read(messagesProvider.notifier);
-    final parentContext = context;
 
-    showDialog(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: dialogContext.card,
-        title: Text(
-          'Delete Message',
-          style: TextStyle(color: dialogContext.textPrimary),
-        ),
-        content: Text(
+      title: 'Delete Message',
+      message:
           'Are you sure you want to delete this message? This only removes it locally.',
-          style: TextStyle(color: dialogContext.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: dialogContext.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              messagesNotifier.deleteMessage(message.id);
-              Navigator.pop(dialogContext);
-              if (mounted) {
-                showSuccessSnackBar(parentContext, 'Message deleted');
-              }
-            },
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: AppTheme.errorRed),
-            ),
-          ),
-        ],
-      ),
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
+
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    messagesNotifier.deleteMessage(message.id);
+    showSuccessSnackBar(context, 'Message deleted');
   }
 
   void _showChannelSettings(BuildContext context, WidgetRef ref) {
@@ -1381,99 +1354,90 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
     return GestureDetector(
       onTap: _dismissKeyboard,
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          titleSpacing: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: context.textPrimary),
-            onPressed: () {
-              _dismissKeyboard();
-              if (_isSearching) {
-                _toggleSearch();
-              } else {
-                Navigator.pop(context);
-              }
-            },
-          ),
-          title: GestureDetector(
-            onTap: widget.type == ConversationType.directMessage
-                ? _showNodeDetails
-                : null,
-            behavior: HitTestBehavior.opaque,
-            child: Row(
-              children: [
-                if (widget.type == ConversationType.channel)
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.tag,
-                      color: context.accentColor,
-                      size: 18,
-                    ),
-                  )
-                else
-                  NodeAvatar(
-                    text: widget.title.length >= 2
-                        ? widget.title.substring(0, 2)
-                        : widget.title,
-                    color: widget.avatarColor != null
-                        ? Color(widget.avatarColor!)
-                        : AppTheme.graphPurple,
-                    size: 36,
-                  ),
-                SizedBox(width: 12),
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AutoScrollText(
-                        widget.title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        widget.type == ConversationType.channel
-                            ? 'Channel'
-                            : 'Direct Message',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(
-                _isSearching ? Icons.close : Icons.search,
-                color: _isSearching ? context.accentColor : context.textPrimary,
-              ),
-              tooltip: _isSearching ? 'Close Search' : 'Search Messages',
-              onPressed: _toggleSearch,
-            ),
-            if (widget.type == ConversationType.channel)
-              IconButton(
-                icon: Icon(Icons.settings, color: context.textPrimary),
-                tooltip: 'Channel Settings',
-                onPressed: () => _showChannelSettings(context, ref),
-              ),
-          ],
+      child: GlassScaffold.body(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: context.textPrimary),
+          onPressed: () {
+            _dismissKeyboard();
+            if (_isSearching) {
+              _toggleSearch();
+            } else {
+              Navigator.pop(context);
+            }
+          },
         ),
+        titleWidget: GestureDetector(
+          onTap: widget.type == ConversationType.directMessage
+              ? _showNodeDetails
+              : null,
+          behavior: HitTestBehavior.opaque,
+          child: Row(
+            children: [
+              if (widget.type == ConversationType.channel)
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: context.accentColor.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.tag, color: context.accentColor, size: 18),
+                )
+              else
+                NodeAvatar(
+                  text: widget.title.length >= 2
+                      ? widget.title.substring(0, 2)
+                      : widget.title,
+                  color: widget.avatarColor != null
+                      ? Color(widget.avatarColor!)
+                      : AppTheme.graphPurple,
+                  size: 36,
+                ),
+              SizedBox(width: 12),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AutoScrollText(
+                      widget.title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      widget.type == ConversationType.channel
+                          ? 'Channel'
+                          : 'Direct Message',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isSearching ? Icons.close : Icons.search,
+              color: _isSearching ? context.accentColor : context.textPrimary,
+            ),
+            tooltip: _isSearching ? 'Close Search' : 'Search Messages',
+            onPressed: _toggleSearch,
+          ),
+          if (widget.type == ConversationType.channel)
+            IconButton(
+              icon: Icon(Icons.settings, color: context.textPrimary),
+              tooltip: 'Channel Settings',
+              onPressed: () => _showChannelSettings(context, ref),
+            ),
+        ],
         body: Column(
           children: [
             // Search bar (same design as Nodes screen)

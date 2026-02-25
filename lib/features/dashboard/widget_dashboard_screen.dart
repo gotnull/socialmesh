@@ -7,6 +7,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/gradient_border_container.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../providers/help_providers.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -63,77 +64,66 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
     return HelpTourController(
       topicId: 'dashboard_overview',
       stepKeys: const {},
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          leading: canPop ? const BackButton() : const HamburgerMenuButton(),
-          centerTitle: true,
-          title: Text(
-            _editMode ? 'Edit Dashboard' : 'Dashboard',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
+      child: GlassScaffold.body(
+        leading: canPop ? const BackButton() : const HamburgerMenuButton(),
+        centerTitle: true,
+        title: _editMode ? 'Edit Dashboard' : 'Dashboard',
+        actions: [
+          // Add widget button - always visible
+          IconButton(
+            icon: Icon(Icons.add, color: context.accentColor),
+            onPressed: () => _showAddWidgetSheet(context),
+            tooltip: 'Add Widget',
           ),
-          actions: [
-            // Add widget button - always visible
-            IconButton(
-              icon: Icon(Icons.add, color: context.accentColor),
-              onPressed: () => _showAddWidgetSheet(context),
-              tooltip: 'Add Widget',
-            ),
-            if (!_editMode) ...[
-              // Device button
-              const DeviceStatusButton(),
-              // Settings
-              AppBarOverflowMenu<String>(
-                onSelected: (value) {
-                  switch (value) {
-                    case 'help':
-                      ref
-                          .read(helpProvider.notifier)
-                          .startTour('dashboard_overview');
-                    case 'settings':
-                      Navigator.of(context).pushNamed('/settings');
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'help',
-                    child: ListTile(
-                      leading: Icon(Icons.help_outline),
-                      title: Text('Help'),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'settings',
-                    child: ListTile(
-                      leading: Icon(Icons.settings_outlined),
-                      title: Text('Settings'),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                ],
-              ),
-            ] else ...[
-              // Done button
-              TextButton(
-                onPressed: () => setState(() => _editMode = false),
-                child: Text(
-                  'Done',
-                  style: TextStyle(
-                    color: context.accentColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
+          if (!_editMode) ...[
+            // Device button
+            const DeviceStatusButton(),
+            // Settings
+            AppBarOverflowMenu<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'help':
+                    ref
+                        .read(helpProvider.notifier)
+                        .startTour('dashboard_overview');
+                  case 'settings':
+                    Navigator.of(context).pushNamed('/settings');
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'help',
+                  child: ListTile(
+                    leading: Icon(Icons.help_outline),
+                    title: Text('Help'),
+                    contentPadding: EdgeInsets.zero,
                   ),
                 ),
+                const PopupMenuItem(
+                  value: 'settings',
+                  child: ListTile(
+                    leading: Icon(Icons.settings_outlined),
+                    title: Text('Settings'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            // Done button
+            TextButton(
+              onPressed: () => setState(() => _editMode = false),
+              child: Text(
+                'Done',
+                style: TextStyle(
+                  color: context.accentColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
               ),
-            ],
+            ),
           ],
-        ),
+        ],
         body: _buildDashboard(context, widgetConfigs),
       ),
     );
@@ -641,33 +631,13 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
             ),
             onTap: () async {
               Navigator.pop(context);
-              final shouldRemove = await showDialog<bool>(
+              final shouldRemove = await AppBottomSheet.showConfirm(
                 context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: context.card,
-                  title: Text(
-                    'Remove Widget?',
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                  content: Text(
+                title: 'Remove Widget?',
+                message:
                     'Are you sure you want to remove this widget from your dashboard?',
-                    style: TextStyle(color: context.textSecondary),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.errorRed,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('Remove'),
-                    ),
-                  ],
-                ),
+                confirmLabel: 'Remove',
+                isDestructive: true,
               );
               if (shouldRemove == true) {
                 ref

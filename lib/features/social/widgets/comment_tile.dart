@@ -10,6 +10,7 @@ import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../services/social_service.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../utils/snackbar.dart';
 
 /// A tile displaying a comment with reply capability.
@@ -168,25 +169,12 @@ class CommentTile extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Comment'),
-        content: const Text('Are you sure you want to delete this comment?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Comment',
+      message: 'Are you sure you want to delete this comment?',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
 
     if (confirmed == true && context.mounted) {

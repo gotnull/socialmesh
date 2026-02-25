@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — InAppWebView browser, glass blur would obscure web content
 import '../feedback/bug_report_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -2971,30 +2972,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   ) async {
     // Capture provider ref before await
     final messagesNotifier = ref.read(messagesProvider.notifier);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: Text(
-          'Clear Messages',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Text(
+      title: 'Clear Messages',
+      message:
           'This will delete all stored messages. This action cannot be undone.',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
-            child: const Text('Clear'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Clear',
+      isDestructive: true,
     );
 
     if (confirmed == true && context.mounted) {
@@ -3011,32 +2995,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     final messagesNotifier = ref.read(messagesProvider.notifier);
     final nodesNotifier = ref.read(nodesProvider.notifier);
     final channelsNotifier = ref.read(channelsProvider.notifier);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: Text(
-          'Reset Local Data',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Text(
+      title: 'Reset Local Data',
+      message:
           'This will clear all messages and node data, forcing a fresh sync from your device on next connection.\n\n'
           'Your settings, theme, and preferences will be kept.\n\n'
           'Use this if nodes show incorrect status or messages appear wrong.',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.orange),
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Reset',
+      isDestructive: true,
     );
 
     if (confirmed == true && context.mounted) {

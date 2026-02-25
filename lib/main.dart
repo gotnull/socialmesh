@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — transient loader widgets, visible for milliseconds only
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';

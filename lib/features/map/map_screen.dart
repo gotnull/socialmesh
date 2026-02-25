@@ -19,6 +19,7 @@ import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/node_info_card.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
@@ -625,422 +626,413 @@ class _MapScreenState extends ConsumerState<MapScreen>
     return HelpTourController(
       topicId: 'map_overview',
       stepKeys: const {},
-      child: Scaffold(
+      child: GlassScaffold.body(
         resizeToAvoidBottomInset: false,
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          leading: canPop ? const BackButton() : const HamburgerMenuButton(),
-          centerTitle: true,
-          title: Text(
-            widget.locationOnlyMode
-                ? (widget.initialLocationLabel ?? 'Location')
-                : 'Mesh Map',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
+        physics: const NeverScrollableScrollPhysics(),
+        leading: canPop ? const BackButton() : const HamburgerMenuButton(),
+        centerTitle: true,
+        titleWidget: Text(
+          widget.locationOnlyMode
+              ? (widget.initialLocationLabel ?? 'Location')
+              : 'Mesh Map',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: context.textPrimary,
           ),
-          actions: [
-            // Filter toggle - hide in location only mode
-            if (!widget.locationOnlyMode)
-              IconButton(
-                icon: Icon(
-                  _nodeFilter != NodeFilter.all || _showFilters
-                      ? Icons.filter_alt
-                      : Icons.filter_alt_outlined,
-                  color: _nodeFilter != NodeFilter.all || _showFilters
-                      ? context.accentColor
-                      : context.textSecondary,
-                ),
-                onPressed: () => setState(() => _showFilters = !_showFilters),
-                tooltip: 'Filter nodes',
+        ),
+        actions: [
+          // Filter toggle - hide in location only mode
+          if (!widget.locationOnlyMode)
+            IconButton(
+              icon: Icon(
+                _nodeFilter != NodeFilter.all || _showFilters
+                    ? Icons.filter_alt
+                    : Icons.filter_alt_outlined,
+                color: _nodeFilter != NodeFilter.all || _showFilters
+                    ? context.accentColor
+                    : context.textSecondary,
               ),
-            // Map style
-            PopupMenuButton<MapTileStyle>(
-              icon: Icon(Icons.map, color: context.textSecondary),
-              tooltip: 'Map style',
-              onSelected: (style) {
-                setState(() => _mapStyle = style);
-                unawaited(_saveMapStyle(style));
-              },
-              itemBuilder: (context) => MapTileStyle.values.map((style) {
-                return PopupMenuItem(
-                  value: style,
+              onPressed: () => setState(() => _showFilters = !_showFilters),
+              tooltip: 'Filter nodes',
+            ),
+          // Map style
+          PopupMenuButton<MapTileStyle>(
+            icon: Icon(Icons.map, color: context.textSecondary),
+            tooltip: 'Map style',
+            onSelected: (style) {
+              setState(() => _mapStyle = style);
+              unawaited(_saveMapStyle(style));
+            },
+            itemBuilder: (context) => MapTileStyle.values.map((style) {
+              return PopupMenuItem(
+                value: style,
+                child: Row(
+                  children: [
+                    Icon(
+                      _mapStyle == style ? Icons.check : Icons.map_outlined,
+                      size: 18,
+                      color: _mapStyle == style
+                          ? context.accentColor
+                          : context.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(style.label),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          // Device status - hide in location only mode
+          if (!widget.locationOnlyMode) const DeviceStatusButton(),
+          // More options menu
+          AppBarOverflowMenu<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'refresh':
+                  _refreshPositions();
+                  break;
+                case 'heatmap':
+                  setState(() => _showHeatmap = !_showHeatmap);
+                  break;
+                case 'connections':
+                  setState(() => _showConnectionLines = !_showConnectionLines);
+                  break;
+                case 'distance_1':
+                  setState(() => _connectionMaxDistance = 1.0);
+                  break;
+                case 'distance_5':
+                  setState(() => _connectionMaxDistance = 5.0);
+                  break;
+                case 'distance_10':
+                  setState(() => _connectionMaxDistance = 10.0);
+                  break;
+                case 'distance_25':
+                  setState(() => _connectionMaxDistance = 25.0);
+                  break;
+                case 'distance_all':
+                  setState(() => _connectionMaxDistance = 100.0);
+                  break;
+                case 'range':
+                  setState(() => _showRangeCircles = !_showRangeCircles);
+                  break;
+                case 'measure':
+                  setState(() {
+                    _measureMode = !_measureMode;
+                    _measureStart = null;
+                    _measureEnd = null;
+                  });
+                  break;
+                case 'tak_layer':
+                  setState(() => _showTakLayer = !_showTakLayer);
+                  AppLogging.tak(
+                    'Map TAK layer toggled: visible=$_showTakLayer',
+                  );
+                  break;
+                case 'tak_dashboard':
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const TakDashboardScreen(),
+                    ),
+                  );
+                  break;
+                case 'globe':
+                  Navigator.of(context).pushNamed('/globe');
+                  break;
+                case 'help':
+                  ref.read(helpProvider.notifier).startTour('map_overview');
+                  break;
+                case 'settings':
+                  Navigator.of(context).pushNamed('/settings');
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              // Node-related options - hide in location only mode
+              if (!widget.locationOnlyMode) ...[
+                PopupMenuItem(
+                  value: 'refresh',
                   child: Row(
                     children: [
                       Icon(
-                        _mapStyle == style ? Icons.check : Icons.map_outlined,
+                        Icons.refresh,
                         size: 18,
-                        color: _mapStyle == style
+                        color: _isRefreshing
+                            ? context.textTertiary
+                            : context.textSecondary,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        _isRefreshing ? 'Refreshing...' : 'Refresh positions',
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'heatmap',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _showHeatmap ? Icons.layers : Icons.layers_outlined,
+                        size: 18,
+                        color: _showHeatmap
                             ? context.accentColor
                             : context.textSecondary,
                       ),
-                      const SizedBox(width: 8),
-                      Text(style.label),
+                      SizedBox(width: 8),
+                      Text(_showHeatmap ? 'Hide heatmap' : 'Show heatmap'),
                     ],
                   ),
-                );
-              }).toList(),
-            ),
-            // Device status - hide in location only mode
-            if (!widget.locationOnlyMode) const DeviceStatusButton(),
-            // More options menu
-            AppBarOverflowMenu<String>(
-              onSelected: (value) {
-                switch (value) {
-                  case 'refresh':
-                    _refreshPositions();
-                    break;
-                  case 'heatmap':
-                    setState(() => _showHeatmap = !_showHeatmap);
-                    break;
-                  case 'connections':
-                    setState(
-                      () => _showConnectionLines = !_showConnectionLines,
-                    );
-                    break;
-                  case 'distance_1':
-                    setState(() => _connectionMaxDistance = 1.0);
-                    break;
-                  case 'distance_5':
-                    setState(() => _connectionMaxDistance = 5.0);
-                    break;
-                  case 'distance_10':
-                    setState(() => _connectionMaxDistance = 10.0);
-                    break;
-                  case 'distance_25':
-                    setState(() => _connectionMaxDistance = 25.0);
-                    break;
-                  case 'distance_all':
-                    setState(() => _connectionMaxDistance = 100.0);
-                    break;
-                  case 'range':
-                    setState(() => _showRangeCircles = !_showRangeCircles);
-                    break;
-                  case 'measure':
-                    setState(() {
-                      _measureMode = !_measureMode;
-                      _measureStart = null;
-                      _measureEnd = null;
-                    });
-                    break;
-                  case 'tak_layer':
-                    setState(() => _showTakLayer = !_showTakLayer);
-                    AppLogging.tak(
-                      'Map TAK layer toggled: visible=$_showTakLayer',
-                    );
-                    break;
-                  case 'tak_dashboard':
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const TakDashboardScreen(),
-                      ),
-                    );
-                    break;
-                  case 'globe':
-                    Navigator.of(context).pushNamed('/globe');
-                    break;
-                  case 'help':
-                    ref.read(helpProvider.notifier).startTour('map_overview');
-                    break;
-                  case 'settings':
-                    Navigator.of(context).pushNamed('/settings');
-                    break;
-                }
-              },
-              itemBuilder: (context) => [
-                // Node-related options - hide in location only mode
-                if (!widget.locationOnlyMode) ...[
-                  PopupMenuItem(
-                    value: 'refresh',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.refresh,
-                          size: 18,
-                          color: _isRefreshing
-                              ? context.textTertiary
-                              : context.textSecondary,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          _isRefreshing ? 'Refreshing...' : 'Refresh positions',
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'heatmap',
-                    child: Row(
-                      children: [
-                        Icon(
-                          _showHeatmap ? Icons.layers : Icons.layers_outlined,
-                          size: 18,
-                          color: _showHeatmap
-                              ? context.accentColor
-                              : context.textSecondary,
-                        ),
-                        SizedBox(width: 8),
-                        Text(_showHeatmap ? 'Hide heatmap' : 'Show heatmap'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'connections',
-                    child: Row(
-                      children: [
-                        Icon(
-                          _showConnectionLines
-                              ? Icons.share
-                              : Icons.share_outlined,
-                          size: 18,
-                          color: _showConnectionLines
-                              ? context.accentColor
-                              : context.textSecondary,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          _showConnectionLines
-                              ? 'Hide connection lines'
-                              : 'Show connection lines',
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Distance filter options (only shown when connections are enabled)
-                  if (_showConnectionLines) ...[
-                    PopupMenuItem(
-                      enabled: false,
-                      height: 32,
-                      child: Text(
-                        'Max Distance',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.textTertiary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'distance_1',
-                      child: Row(
-                        children: [
-                          Icon(
-                            _connectionMaxDistance == 1.0
-                                ? Icons.check_circle
-                                : Icons.circle_outlined,
-                            size: 16,
-                            color: _connectionMaxDistance == 1.0
-                                ? context.accentColor
-                                : context.textTertiary,
-                          ),
-                          SizedBox(width: 8),
-                          const Text('1 km'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'distance_5',
-                      child: Row(
-                        children: [
-                          Icon(
-                            _connectionMaxDistance == 5.0
-                                ? Icons.check_circle
-                                : Icons.circle_outlined,
-                            size: 16,
-                            color: _connectionMaxDistance == 5.0
-                                ? context.accentColor
-                                : context.textTertiary,
-                          ),
-                          SizedBox(width: 8),
-                          const Text('5 km'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'distance_10',
-                      child: Row(
-                        children: [
-                          Icon(
-                            _connectionMaxDistance == 10.0
-                                ? Icons.check_circle
-                                : Icons.circle_outlined,
-                            size: 16,
-                            color: _connectionMaxDistance == 10.0
-                                ? context.accentColor
-                                : context.textTertiary,
-                          ),
-                          SizedBox(width: 8),
-                          const Text('10 km'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'distance_25',
-                      child: Row(
-                        children: [
-                          Icon(
-                            _connectionMaxDistance == 25.0
-                                ? Icons.check_circle
-                                : Icons.circle_outlined,
-                            size: 16,
-                            color: _connectionMaxDistance == 25.0
-                                ? context.accentColor
-                                : context.textTertiary,
-                          ),
-                          SizedBox(width: 8),
-                          const Text('25 km'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'distance_all',
-                      child: Row(
-                        children: [
-                          Icon(
-                            _connectionMaxDistance >= 100.0
-                                ? Icons.check_circle
-                                : Icons.circle_outlined,
-                            size: 16,
-                            color: _connectionMaxDistance >= 100.0
-                                ? context.accentColor
-                                : context.textTertiary,
-                          ),
-                          SizedBox(width: 8),
-                          const Text('All'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuDivider(),
-                  ],
-                  PopupMenuItem(
-                    value: 'range',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.radio_button_unchecked,
-                          size: 18,
-                          color: _showRangeCircles
-                              ? context.accentColor
-                              : context.textSecondary,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          _showRangeCircles
-                              ? 'Hide range circles'
-                              : 'Show range circles',
-                        ),
-                      ],
-                    ),
-                  ),
-                ], // End of node-related options
+                ),
                 PopupMenuItem(
-                  value: 'measure',
+                  value: 'connections',
                   child: Row(
                     children: [
                       Icon(
-                        Icons.straighten,
+                        _showConnectionLines
+                            ? Icons.share
+                            : Icons.share_outlined,
                         size: 18,
-                        color: _measureMode
+                        color: _showConnectionLines
                             ? context.accentColor
                             : context.textSecondary,
                       ),
                       SizedBox(width: 8),
                       Text(
-                        _measureMode ? 'Exit measure mode' : 'Measure distance',
+                        _showConnectionLines
+                            ? 'Hide connection lines'
+                            : 'Show connection lines',
                       ),
                     ],
                   ),
                 ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  value: 'globe',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.public,
-                        size: 18,
-                        color: context.textSecondary,
-                      ),
-                      SizedBox(width: 8),
-                      const Text('3D Globe View'),
-                    ],
-                  ),
-                ),
-                if (AppFeatureFlags.isTakGatewayEnabled &&
-                    !widget.locationOnlyMode) ...[
+                // Distance filter options (only shown when connections are enabled)
+                if (_showConnectionLines) ...[
                   PopupMenuItem(
-                    value: 'tak_layer',
+                    enabled: false,
+                    height: 32,
+                    child: Text(
+                      'Max Distance',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'distance_1',
                     child: Row(
                       children: [
                         Icon(
-                          _showTakLayer
-                              ? Icons.military_tech
-                              : Icons.military_tech_outlined,
-                          size: 18,
-                          color: _showTakLayer
+                          _connectionMaxDistance == 1.0
+                              ? Icons.check_circle
+                              : Icons.circle_outlined,
+                          size: 16,
+                          color: _connectionMaxDistance == 1.0
                               ? context.accentColor
-                              : context.textSecondary,
+                              : context.textTertiary,
                         ),
                         SizedBox(width: 8),
-                        Text(
-                          _showTakLayer
-                              ? 'Hide TAK entities'
-                              : 'Show TAK entities',
-                        ),
+                        const Text('1 km'),
                       ],
                     ),
                   ),
                   PopupMenuItem(
-                    value: 'tak_dashboard',
+                    value: 'distance_5',
                     child: Row(
                       children: [
                         Icon(
-                          Icons.dashboard_outlined,
-                          size: 18,
-                          color: context.textSecondary,
+                          _connectionMaxDistance == 5.0
+                              ? Icons.check_circle
+                              : Icons.circle_outlined,
+                          size: 16,
+                          color: _connectionMaxDistance == 5.0
+                              ? context.accentColor
+                              : context.textTertiary,
                         ),
                         SizedBox(width: 8),
-                        const Text('SA Dashboard'),
+                        const Text('5 km'),
                       ],
                     ),
                   ),
+                  PopupMenuItem(
+                    value: 'distance_10',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _connectionMaxDistance == 10.0
+                              ? Icons.check_circle
+                              : Icons.circle_outlined,
+                          size: 16,
+                          color: _connectionMaxDistance == 10.0
+                              ? context.accentColor
+                              : context.textTertiary,
+                        ),
+                        SizedBox(width: 8),
+                        const Text('10 km'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'distance_25',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _connectionMaxDistance == 25.0
+                              ? Icons.check_circle
+                              : Icons.circle_outlined,
+                          size: 16,
+                          color: _connectionMaxDistance == 25.0
+                              ? context.accentColor
+                              : context.textTertiary,
+                        ),
+                        SizedBox(width: 8),
+                        const Text('25 km'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'distance_all',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _connectionMaxDistance >= 100.0
+                              ? Icons.check_circle
+                              : Icons.circle_outlined,
+                          size: 16,
+                          color: _connectionMaxDistance >= 100.0
+                              ? context.accentColor
+                              : context.textTertiary,
+                        ),
+                        SizedBox(width: 8),
+                        const Text('All'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
                 ],
-                const PopupMenuDivider(),
                 PopupMenuItem(
-                  value: 'help',
+                  value: 'range',
                   child: Row(
                     children: [
                       Icon(
-                        Icons.help_outline,
+                        Icons.radio_button_unchecked,
                         size: 18,
-                        color: context.textSecondary,
+                        color: _showRangeCircles
+                            ? context.accentColor
+                            : context.textSecondary,
                       ),
                       SizedBox(width: 8),
-                      const Text('Help'),
+                      Text(
+                        _showRangeCircles
+                            ? 'Hide range circles'
+                            : 'Show range circles',
+                      ),
+                    ],
+                  ),
+                ),
+              ], // End of node-related options
+              PopupMenuItem(
+                value: 'measure',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.straighten,
+                      size: 18,
+                      color: _measureMode
+                          ? context.accentColor
+                          : context.textSecondary,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      _measureMode ? 'Exit measure mode' : 'Measure distance',
+                    ),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'globe',
+                child: Row(
+                  children: [
+                    Icon(Icons.public, size: 18, color: context.textSecondary),
+                    SizedBox(width: 8),
+                    const Text('3D Globe View'),
+                  ],
+                ),
+              ),
+              if (AppFeatureFlags.isTakGatewayEnabled &&
+                  !widget.locationOnlyMode) ...[
+                PopupMenuItem(
+                  value: 'tak_layer',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _showTakLayer
+                            ? Icons.military_tech
+                            : Icons.military_tech_outlined,
+                        size: 18,
+                        color: _showTakLayer
+                            ? context.accentColor
+                            : context.textSecondary,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        _showTakLayer
+                            ? 'Hide TAK entities'
+                            : 'Show TAK entities',
+                      ),
                     ],
                   ),
                 ),
                 PopupMenuItem(
-                  value: 'settings',
+                  value: 'tak_dashboard',
                   child: Row(
                     children: [
                       Icon(
-                        Icons.settings_outlined,
+                        Icons.dashboard_outlined,
                         size: 18,
                         color: context.textSecondary,
                       ),
                       SizedBox(width: 8),
-                      const Text('Settings'),
+                      const Text('SA Dashboard'),
                     ],
                   ),
                 ),
               ],
-            ),
-          ],
-        ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'help',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.help_outline,
+                      size: 18,
+                      color: context.textSecondary,
+                    ),
+                    SizedBox(width: 8),
+                    const Text('Help'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.settings_outlined,
+                      size: 18,
+                      color: context.textSecondary,
+                    ),
+                    SizedBox(width: 8),
+                    const Text('Settings'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
         body: (!widget.locationOnlyMode && allNodesWithPosition.isEmpty)
             ? _buildEmptyState()
             : Stack(

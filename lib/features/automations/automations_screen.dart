@@ -7,6 +7,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/premium_gating.dart';
 import '../../models/subscription_models.dart';
@@ -845,39 +846,27 @@ class AutomationsScreen extends ConsumerWidget {
     showAutomationShareSheet(context, automation, ref: ref);
   }
 
-  void _confirmDelete(
+  Future<void> _confirmDelete(
     BuildContext context,
     WidgetRef ref,
     Automation automation,
-  ) {
-    showDialog(
+  ) async {
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.surface,
-        title: const Text('Delete Automation'),
-        content: Text('Are you sure you want to delete "${automation.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              Navigator.pop(context);
-              showLoadingSnackBar(context, 'Deleting "${automation.name}"...');
-              await ref
-                  .read(automationsProvider.notifier)
-                  .deleteAutomation(automation.id);
-              messenger.hideCurrentSnackBar();
-              showGlobalSuccessSnackBar('Deleted "${automation.name}"');
-            },
-            style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Automation',
+      message: 'Are you sure you want to delete "${automation.name}"?',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
+    if (confirmed == true && context.mounted) {
+      final messenger = ScaffoldMessenger.of(context);
+      showLoadingSnackBar(context, 'Deleting "${automation.name}"...');
+      await ref
+          .read(automationsProvider.notifier)
+          .deleteAutomation(automation.id);
+      messenger.hideCurrentSnackBar();
+      showGlobalSuccessSnackBar('Deleted "${automation.name}"');
+    }
   }
 
   void _showExecutionLog(BuildContext context, WidgetRef ref) {

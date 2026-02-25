@@ -18,6 +18,7 @@ import '../../models/world_mesh_node.dart';
 import '../../models/presence_confidence.dart';
 import '../../services/world_mesh_map_service.dart';
 import '../../utils/share_utils.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/presence_utils.dart';
 import 'services/node_favorites_service.dart';
@@ -149,43 +150,13 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
   }
 
   Future<void> _clearHistory() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(Icons.delete_outline, color: AppTheme.errorRed, size: 24),
-            SizedBox(width: 12),
-            Text(
-              'Clear History',
-              style: TextStyle(
-                color: context.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        content: Text(
+      title: 'Clear History',
+      message:
           'This will delete all historical data for this node. This action cannot be undone.',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed),
-            child: const Text('Clear'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Clear',
+      isDestructive: true,
     );
 
     if (confirmed == true) {

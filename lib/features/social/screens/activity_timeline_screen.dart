@@ -11,6 +11,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/section_header.dart';
 
 import '../../../core/widgets/verified_badge.dart';
@@ -624,44 +625,26 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
     ref.read(activityFeedProvider.notifier).deleteActivity(activity.id);
   }
 
-  void _showClearConfirmation() {
+  Future<void> _showClearConfirmation() async {
     AppLogging.social(
       '📬 [ActivityScreen] _showClearConfirmation() — showing dialog',
     );
-    showDialog(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.surface,
-        title: Text(
-          'Clear all activity?',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Text(
+      title: 'Clear all activity?',
+      message:
           'This will remove all activity from your feed. '
           'This action cannot be undone.',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              AppLogging.social(
-                '📬 [ActivityScreen] clear confirmed — calling clearAll()',
-              );
-              ref.read(activityFeedProvider.notifier).clearAll();
-            },
-            child: const Text('Clear', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      confirmLabel: 'Clear',
+      isDestructive: true,
     );
+
+    if (confirmed == true && mounted) {
+      AppLogging.social(
+        '📬 [ActivityScreen] clear confirmed — calling clearAll()',
+      );
+      ref.read(activityFeedProvider.notifier).clearAll();
+    }
   }
 }
 

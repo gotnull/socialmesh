@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -668,30 +669,13 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
     // Capture provider ref before awaits
     final nodeNum = ref.read(protocolServiceProvider).myNodeNum;
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.surface,
-        title: Text(
-          'Delete Backup?',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Text(
+      title: 'Delete Backup?',
+      message:
           'This will permanently delete the backed up private key from secure storage. This cannot be undone.',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
-            child: Text('Delete'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
 
     if (confirmed != true || !mounted) return;

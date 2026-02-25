@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 
 /// Base wrapper for all dashboard widgets providing consistent styling
 /// and optional edit mode actions (remove, favorite, reorder handle)
@@ -119,33 +120,12 @@ class DashboardWidgetBase extends StatelessWidget {
   }
 
   Future<void> _showRemoveConfirmation(BuildContext context) async {
-    final shouldRemove = await showDialog<bool>(
+    final shouldRemove = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: Text(
-          'Remove Widget?',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Text(
-          'Are you sure you want to remove "$title" from your dashboard?',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.errorRed,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
+      title: 'Remove Widget?',
+      message: 'Are you sure you want to remove "$title" from your dashboard?',
+      confirmLabel: 'Remove',
+      isDestructive: true,
     );
 
     if (shouldRemove == true) {
