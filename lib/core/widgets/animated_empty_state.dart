@@ -149,14 +149,12 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
         accelerometerEventStream(
           samplingPeriod: const Duration(milliseconds: 16),
         ).listen((event) {
-          if (!mounted) return;
           _updateTilt(event.x, event.y);
         });
     _gyroscopeSub =
         gyroscopeEventStream(
           samplingPeriod: const Duration(milliseconds: 16),
         ).listen((event) {
-          if (!mounted) return;
           _updateGyro(event.x, event.y);
         });
 
@@ -257,7 +255,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
 
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -324,7 +322,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
 
                   // Center icon
                   Container(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(AppTheme.spacing24),
                     decoration: BoxDecoration(
                       color: context.card,
                       shape: BoxShape.circle,
@@ -414,7 +412,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // Title with gradient keyword
             Builder(
@@ -457,7 +455,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
               },
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
 
             // Cycling taglines
             SizedBox(
@@ -475,7 +473,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
             ),
 
             if (hasAction) ...[
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
 
               // Action button
               _AnimatedActionButton(
@@ -545,6 +543,7 @@ class _AnimatedIconCycleState extends State<_AnimatedIconCycle>
   }
 
   Future<void> _cycleToNext() async {
+    if (!mounted) return;
     await _controller.reverse();
     if (!mounted) return;
 
@@ -654,7 +653,7 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
               gradient: gradient,
               animate: widget.enabled,
               enabled: widget.enabled,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(AppTheme.radius24),
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -664,7 +663,7 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
                   color: widget.enabled
                       ? null
                       : context.border.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppTheme.radius24),
                   boxShadow: widget.enabled
                       ? [
                           BoxShadow(
@@ -688,7 +687,7 @@ class _AnimatedActionButtonState extends State<_AnimatedActionButton>
                             : context.textTertiary,
                         size: 20,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                     ],
                     Text(
                       widget.label,

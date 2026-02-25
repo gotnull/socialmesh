@@ -180,7 +180,7 @@ class _BatteryGuideContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 8, 24, 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,7 +189,7 @@ class _BatteryGuideContent extends StatelessWidget {
           Row(
             children: [
               Icon(Icons.battery_alert, color: context.accentColor, size: 28),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Text(
                   'Optimize for ${guide.oemName}',
@@ -201,7 +201,7 @@ class _BatteryGuideContent extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Scrollable description + steps
           Flexible(
@@ -218,7 +218,7 @@ class _BatteryGuideContent extends StatelessWidget {
                       color: context.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   // Steps
                   ...guide.steps.asMap().entries.map((entry) {
@@ -248,7 +248,7 @@ class _BatteryGuideContent extends StatelessWidget {
                                   ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppTheme.spacing12),
                           Expanded(
                             child: Text(
                               step,
@@ -265,7 +265,7 @@ class _BatteryGuideContent extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
 
           // Open settings button
           SizedBox(
@@ -279,7 +279,7 @@ class _BatteryGuideContent extends StatelessWidget {
               label: const Text('Open Battery Settings'),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
 
           // Dismiss / don't show again
           Row(
@@ -293,7 +293,7 @@ class _BatteryGuideContent extends StatelessWidget {
                   child: const Text('Dismiss'),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: TextButton(
                   onPressed: () {

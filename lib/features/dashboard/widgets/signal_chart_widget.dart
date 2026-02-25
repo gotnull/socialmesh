@@ -27,12 +27,12 @@ class SignalChartContent extends ConsumerWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       child: Column(
         children: [
           // Signal bars visualization
           _SignalBars(rssi: rssi ?? -100),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           // Metrics row
           Row(
             children: [
@@ -43,7 +43,7 @@ class SignalChartContent extends ConsumerWidget {
                   quality: _getRssiQuality(rssi),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: _MetricCard(
                   label: 'SNR',
@@ -51,7 +51,7 @@ class SignalChartContent extends ConsumerWidget {
                   quality: _getSnrQuality(snr),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: _MetricCard(
                   label: 'Ch. Util',
@@ -122,7 +122,7 @@ class _SignalBars extends StatelessWidget {
                 color: isActive
                     ? _getBarColor(bars)
                     : context.border.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(AppTheme.radius3),
               ),
             ),
           );
@@ -166,7 +166,7 @@ class _MetricCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
@@ -179,7 +179,7 @@ class _MetricCard extends StatelessWidget {
               color: color,
             ),
           ),
-          SizedBox(height: 2),
+          SizedBox(height: AppTheme.spacing2),
           Text(
             label,
             style: Theme.of(

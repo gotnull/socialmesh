@@ -61,13 +61,13 @@ class _ReportBugPromptSheetState extends State<ReportBugPromptSheet> {
     return SafeArea(
       top: true,
       child: Container(
-        margin: const EdgeInsets.all(16),
+        margin: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppTheme.radius24),
         ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 20, 20, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,12 +80,12 @@ class _ReportBugPromptSheetState extends State<ReportBugPromptSheet> {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 "If something isn't working correctly, you can report it to help improve Socialmesh for everyone.",
                 style: TextStyle(color: context.textSecondary, fontSize: 14),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppTheme.spacing20),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -95,7 +95,7 @@ class _ReportBugPromptSheetState extends State<ReportBugPromptSheet> {
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(AppTheme.radius18),
                     ),
                   ),
                   child: const Text(
@@ -104,7 +104,7 @@ class _ReportBugPromptSheetState extends State<ReportBugPromptSheet> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Shake device to report a bug'),
@@ -220,7 +220,12 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                     controller: scrollController,
                     keyboardDismissBehavior:
                         ScrollViewKeyboardDismissBehavior.onDrag,
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppTheme.spacing20,
+                      16,
+                      20,
+                      16,
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -245,7 +250,7 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppTheme.spacing8),
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
@@ -257,7 +262,7 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppTheme.spacing8),
                         TextField(
                           controller: _controller,
                           focusNode: _descriptionFocusNode,
@@ -271,7 +276,9 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                                 ? 'Please describe the issue.'
                                 : null,
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius12,
+                              ),
                               borderSide: BorderSide.none,
                             ),
                           ),
@@ -283,7 +290,7 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                             }
                           },
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppTheme.spacing8),
                         if (widget.initialScreenshot != null) ...[
                           ListTile(
                             dense: true,
@@ -307,13 +314,17 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                               margin: const EdgeInsets.only(top: 8),
                               decoration: BoxDecoration(
                                 color: context.background,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius12,
+                                ),
                                 border: Border.all(
                                   color: context.border.withValues(alpha: 0.3),
                                 ),
                               ),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius12,
+                                ),
                                 child: Image.memory(
                                   widget.initialScreenshot!,
                                   fit: BoxFit.cover,
@@ -362,7 +373,7 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                                 },
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppTheme.spacing12),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -372,7 +383,9 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius14,
+                              ),
                             ),
                           ),
                           child: _isSending

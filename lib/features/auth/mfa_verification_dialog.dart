@@ -89,14 +89,12 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
           await _resolveWithCredential(credential);
         },
         verificationFailed: (e) {
-          if (!mounted) return;
           safeSetState(() {
             _isSendingCode = false;
             _errorMessage = friendlyMFAError(e);
           });
         },
         codeSent: (verificationId, resendToken) {
-          if (!mounted) return;
           safeSetState(() {
             _verificationId = verificationId;
             _isSendingCode = false;
@@ -105,7 +103,6 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
         codeAutoRetrievalTimeout: (_) {},
       );
     } catch (e) {
-      if (!mounted) return;
       safeSetState(() {
         _isSendingCode = false;
         _errorMessage = friendlyMFAError(e);
@@ -146,13 +143,11 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
       if (!mounted) return;
       Navigator.of(context).pop(userCredential);
     } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
       safeSetState(() {
         _isVerifying = false;
         _errorMessage = friendlyMFAError(e);
       });
     } catch (e) {
-      if (!mounted) return;
       safeSetState(() {
         _isVerifying = false;
         _errorMessage = friendlyMFAError(e);
@@ -176,7 +171,7 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
         Row(
           children: [
             Icon(Icons.security, color: context.accentColor),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Text(
               'Verify Identity',
               style: TextStyle(
@@ -187,7 +182,7 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         if (_isSendingCode) ...[
           const Center(
             child: Padding(
@@ -205,7 +200,7 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
             'Enter the code sent to ${_getMaskedPhone()}',
             style: TextStyle(fontSize: 14, color: context.textSecondary),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           TextField(
             controller: _codeController,
             keyboardType: TextInputType.number,
@@ -222,15 +217,15 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
               counterText: '',
               hintText: '000000',
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide(color: context.border),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide(color: context.border),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide(color: context.accentColor, width: 2),
               ),
             ),
@@ -238,14 +233,14 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
           ),
         ],
         if (_errorMessage != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             _errorMessage!,
             style: const TextStyle(color: Colors.red, fontSize: 13),
             textAlign: TextAlign.center,
           ),
         ],
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
         Row(
           children: [
             Expanded(
@@ -255,21 +250,21 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   side: BorderSide(color: Colors.grey.shade700),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                 ),
                 child: const Text('Cancel'),
               ),
             ),
             if (!_isSendingCode) ...[
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: _isVerifying ? null : _verifyCode,
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: _isVerifying

@@ -7,6 +7,7 @@ import '../../../models/social.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Action bar for posts showing like, comment, and share buttons.
 class PostActionsBar extends ConsumerWidget {
@@ -44,7 +45,7 @@ class PostActionsBar extends ConsumerWidget {
           iconSize: iconSize,
           showCount: showCounts,
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: AppTheme.spacing16),
 
         // Comment button
         _ActionButton(
@@ -54,7 +55,7 @@ class PostActionsBar extends ConsumerWidget {
           iconSize: iconSize,
           color: theme.colorScheme.onSurface.withAlpha(180),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: AppTheme.spacing16),
 
         // Share button
         _ActionButton(
@@ -249,15 +250,15 @@ class _ActionButton extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppTheme.radius8),
       child: Padding(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(AppTheme.spacing4),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: iconSize, color: color),
             if (count != null && count! > 0) ...[
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
               Text(
                 _formatCount(count!),
                 style: theme.textTheme.bodySmall?.copyWith(color: color),

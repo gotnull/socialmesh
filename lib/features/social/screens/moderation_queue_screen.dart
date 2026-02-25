@@ -81,12 +81,12 @@ class _QueueList extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.error_outline, size: 48, color: context.textSecondary),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'Error loading queue',
               style: TextStyle(color: context.textSecondary),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             TextButton(
               onPressed: () => ref.invalidate(moderationQueueProvider(status)),
               child: const Text('Retry'),
@@ -107,7 +107,7 @@ class _QueueList extends ConsumerWidget {
                   size: 48,
                   color: context.textSecondary,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 Text(
                   status == 'pending'
                       ? 'No items pending review'
@@ -150,7 +150,7 @@ class _QueueItemCard extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -158,7 +158,7 @@ class _QueueItemCard extends ConsumerWidget {
             Row(
               children: [
                 _ContentTypeChip(contentType: item.contentType),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 _StatusChip(status: item.status),
                 const Spacer(),
                 Text(
@@ -170,12 +170,12 @@ class _QueueItemCard extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Content preview
             if (item.contentUrl != null) ...[
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 child: Image.network(
                   item.contentUrl!,
                   height: 200,
@@ -199,16 +199,16 @@ class _QueueItemCard extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
             ],
 
             if (item.textContent != null) ...[
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 decoration: BoxDecoration(
                   color: context.surfaceVariant.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: Text(
                   item.textContent!,
@@ -219,7 +219,7 @@ class _QueueItemCard extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
             ],
 
             // User ID
@@ -232,7 +232,7 @@ class _QueueItemCard extends ConsumerWidget {
 
             // Actions
             if (showActions) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               Row(
                 children: [
                   Expanded(
@@ -245,7 +245,7 @@ class _QueueItemCard extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: () => _handleReview(context, ref, 'reject'),
@@ -262,7 +262,7 @@ class _QueueItemCard extends ConsumerWidget {
 
             // Review info for non-pending items
             if (!showActions && item.reviewedBy != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               Text(
                 'Reviewed by ${item.reviewedBy} on ${_formatDate(item.reviewedAt!)}',
                 style: TextStyle(
@@ -352,13 +352,13 @@ class _ContentTypeChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             contentType,
             style: TextStyle(
@@ -397,7 +397,7 @@ class _StatusChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
       ),
       child: Text(
         status.toUpperCase(),
@@ -458,7 +458,7 @@ class _RejectNotesSheetState extends State<_RejectNotesSheet> {
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           SizedBox(
             height: 200,
             child: ListView.builder(
@@ -469,7 +469,7 @@ class _RejectNotesSheetState extends State<_RejectNotesSheet> {
 
                 return InkWell(
                   onTap: () => setState(() => _selectedReason = reason),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -486,7 +486,7 @@ class _RejectNotesSheetState extends State<_RejectNotesSheet> {
                               ? Theme.of(context).colorScheme.primary
                               : context.textSecondary,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Text(
                             reason,
@@ -505,8 +505,9 @@ class _RejectNotesSheetState extends State<_RejectNotesSheet> {
               },
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           TextField(
+            maxLength: 500,
             controller: _controller,
             decoration: const InputDecoration(
               labelText: 'Additional notes (optional)',
@@ -514,7 +515,7 @@ class _RejectNotesSheetState extends State<_RejectNotesSheet> {
             ),
             maxLines: 2,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Row(
             children: [
               Expanded(
@@ -523,7 +524,7 @@ class _RejectNotesSheetState extends State<_RejectNotesSheet> {
                   child: const Text('Cancel'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: _selectedReason == null

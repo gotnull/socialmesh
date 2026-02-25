@@ -18,6 +18,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/vs_node_data_provider.dart';
+import 'package:socialmesh/core/theme.dart';
 
 class VSSelectionArea extends StatefulWidget {
   /// Mobile-friendly selection area overlay.
@@ -127,7 +128,7 @@ class _VSSelectionAreaState extends State<VSSelectionArea> {
                   color: accentColor.withValues(alpha: 0.5),
                   width: 1.0,
                 ),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppTheme.radius4),
               ),
             ),
           ),

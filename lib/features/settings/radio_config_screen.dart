@@ -212,10 +212,10 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                 children: [
                   const _SectionHeader(title: 'REGION'),
                   _buildRegionSelector(),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
                   const _SectionHeader(title: 'MODEM PRESET'),
                   _buildModemPresetSelector(),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
                   const _SectionHeader(title: 'TRANSMISSION'),
                   _SettingsTile(
                     icon: Icons.cell_tower,
@@ -235,10 +235,10 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                       horizontal: 16,
                       vertical: 2,
                     ),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,7 +262,9 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                                 color: context.accentColor.withValues(
                                   alpha: 0.15,
                                 ),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius6,
+                                ),
                               ),
                               child: Text(
                                 '$_hopLimit',
@@ -275,7 +277,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                             ),
                           ],
                         ),
-                        SizedBox(height: 4),
+                        SizedBox(height: AppTheme.spacing4),
                         Text(
                           'Number of times messages can be relayed',
                           style: TextStyle(
@@ -283,7 +285,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                             fontSize: 13,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        SizedBox(height: AppTheme.spacing8),
                         SliderTheme(
                           data: SliderThemeData(
                             inactiveTrackColor: context.border,
@@ -323,7 +325,9 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                                 color: context.accentColor.withValues(
                                   alpha: 0.15,
                                 ),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius6,
+                                ),
                               ),
                               child: Text(
                                 _txPower == 0 ? 'Default' : '${_txPower}dBm',
@@ -336,7 +340,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                             ),
                           ],
                         ),
-                        SizedBox(height: 4),
+                        SizedBox(height: AppTheme.spacing4),
                         Text(
                           'Override transmit power (0 = use default)',
                           style: TextStyle(
@@ -344,7 +348,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                             fontSize: 13,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        SizedBox(height: AppTheme.spacing8),
                         SliderTheme(
                           data: SliderThemeData(
                             inactiveTrackColor: context.border,
@@ -367,12 +371,12 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   const _SectionHeader(title: 'ADVANCED'),
                   _buildAdvancedSettings(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   _buildInfoCard(),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppTheme.spacing32),
                 ],
               ),
             ),
@@ -411,10 +415,10 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,7 +438,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    SizedBox(height: AppTheme.spacing2),
                     Text(
                       'Use preset modem settings instead of custom',
                       style: TextStyle(
@@ -472,7 +476,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                 Container(
                   decoration: BoxDecoration(
                     color: context.background,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     border: Border.all(color: context.border),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -491,7 +495,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                 ),
               ],
             ),
-            SizedBox(height: 12),
+            SizedBox(height: AppTheme.spacing12),
             // Spread Factor
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -506,7 +510,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                 Container(
                   decoration: BoxDecoration(
                     color: context.background,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     border: Border.all(color: context.border),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -525,7 +529,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                 ),
               ],
             ),
-            SizedBox(height: 12),
+            SizedBox(height: AppTheme.spacing12),
             // Coding Rate
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -540,7 +544,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                 Container(
                   decoration: BoxDecoration(
                     color: context.background,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     border: Border.all(color: context.border),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -578,7 +582,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    SizedBox(height: AppTheme.spacing2),
                     Text(
                       'Your operating frequency is calculated from '
                       'the region, modem preset, and this value. '
@@ -595,6 +599,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
               SizedBox(
                 width: 80,
                 child: TextFormField(
+                  maxLength: 10,
                   key: ValueKey('channelNum_$_channelNum'),
                   initialValue: '$_channelNum',
                   keyboardType: TextInputType.number,
@@ -609,11 +614,11 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                     fillColor: context.background,
                     filled: true,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.border),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.border),
                     ),
                   ),
@@ -626,7 +631,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
             ],
           ),
           if (_channelNum == 0) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             StatusBanner.warning(
               title:
                   'Changing your primary channel name will change '
@@ -655,7 +660,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    SizedBox(height: AppTheme.spacing2),
                     Text(
                       'Enable boosted gain on SX126x receivers',
                       style: TextStyle(
@@ -693,7 +698,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    SizedBox(height: AppTheme.spacing2),
                     Text(
                       'Override frequency in MHz (0 = disabled)',
                       style: TextStyle(
@@ -707,6 +712,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
               SizedBox(
                 width: 100,
                 child: TextFormField(
+                  maxLength: 10,
                   key: ValueKey(
                     'freq_${_overrideFrequency.toStringAsFixed(3)}',
                   ),
@@ -729,11 +735,11 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                     hintText: '0.0',
                     hintStyle: TextStyle(color: context.textTertiary),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.border),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.border),
                     ),
                   ),
@@ -767,7 +773,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    SizedBox(height: AppTheme.spacing2),
                     Text(
                       'Ignore messages via MQTT from this device',
                       style: TextStyle(
@@ -805,7 +811,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    SizedBox(height: AppTheme.spacing2),
                     Text(
                       'Config is ok to send via MQTT uplink',
                       style: TextStyle(
@@ -883,10 +889,10 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -895,11 +901,11 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
             'Select the region that matches your country\'s regulations',
             style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppTheme.spacing16),
           Container(
             decoration: BoxDecoration(
               color: context.background,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               border: Border.all(color: context.border),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -978,10 +984,10 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -990,7 +996,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
             'All devices in the mesh must use the same preset',
             style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppTheme.spacing16),
           ...presets.map((p) {
             final isSelected = _selectedModemPreset == p.$1;
             return InkWell(
@@ -1007,7 +1013,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                           ? context.accentColor
                           : context.textSecondary,
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1062,7 +1068,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
       child: Text(
         title,
         style: TextStyle(
@@ -1097,14 +1103,14 @@ class _SettingsTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Icon(icon, color: iconColor ?? context.textSecondary),
-            SizedBox(width: 16),
+            SizedBox(width: AppTheme.spacing16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1117,7 +1123,7 @@ class _SettingsTile extends StatelessWidget {
                       color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     subtitle,
                     style: context.bodySmallStyle?.copyWith(

@@ -195,7 +195,7 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppTheme.radius16),
                 boxShadow: [
                   BoxShadow(
                     color: widget.accentColor.withValues(
@@ -211,11 +211,11 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
 
           // Main bubble
           ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radius16),
             child: Container(
               decoration: BoxDecoration(
                 color: context.card.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppTheme.radius16),
                 border: Border.all(
                   color: widget.accentColor.withValues(alpha: _glow.value),
                   width: 1.5,
@@ -260,7 +260,7 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             Text(
                               'Ico',
                               style: TextStyle(
@@ -282,7 +282,9 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
                                   );
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.all(4),
+                                  padding: const EdgeInsets.all(
+                                    AppTheme.spacing4,
+                                  ),
                                   child: Icon(
                                     widget.hapticFeedback
                                         ? Icons.vibration
@@ -297,14 +299,14 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
                                 ),
                               ),
                             if (widget.onHapticToggle != null)
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppTheme.spacing8),
                             // Typing indicator
                             if (_currentCharIndex < widget.text.length &&
                                 widget.typewriterEffect)
                               _buildTypingIndicator(),
                           ],
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: AppTheme.spacing10),
 
                         // Main text with cursor - adaptive height
                         RichText(
@@ -333,7 +335,7 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
 
                         // Subtitle
                         if (widget.subtitle != null) ...[
-                          SizedBox(height: 8),
+                          SizedBox(height: AppTheme.spacing8),
                           Text(
                             widget.subtitle!,
                             style: TextStyle(

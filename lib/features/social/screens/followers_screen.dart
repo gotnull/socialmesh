@@ -9,6 +9,7 @@ import '../../../providers/social_providers.dart';
 import '../../../services/social_service.dart';
 import '../widgets/follow_button.dart';
 import 'profile_social_screen.dart';
+import 'package:socialmesh/core/theme.dart';
 
 enum FollowersScreenMode { followers, following }
 
@@ -215,7 +216,7 @@ class _UserTile extends StatelessWidget {
             ),
           ),
           if (profile?.isVerified == true) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             const SimpleVerifiedBadge(size: 16),
           ],
         ],
@@ -243,7 +244,7 @@ Widget _buildEmptyState(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 64, color: theme.colorScheme.primary.withAlpha(100)),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         Text(
           message,
           style: theme.textTheme.bodyLarge?.copyWith(
@@ -265,9 +266,9 @@ Widget _buildErrorState(
       mainAxisSize: MainAxisSize.min,
       children: [
         const Icon(Icons.error_outline, size: 48),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         Text('Failed to load: $error'),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         FilledButton(onPressed: onRetry, child: const Text('Retry')),
       ],
     ),

@@ -94,6 +94,7 @@ Future<void> shareChannelInviteLink(
       channel: channel,
       ownerUid: user.uid,
     );
+    if (!context.mounted) return;
 
     // Create an invite via Cloud Function
     final inviteService = ref.read(channelInviteServiceProvider);

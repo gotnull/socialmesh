@@ -51,15 +51,15 @@ class _FeaturedProductsScreenState extends ConsumerState<FeaturedProductsScreen>
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Card(
               color: context.accentColor.withValues(alpha: 0.1),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Row(
                   children: [
                     Icon(Icons.info_outline, color: context.accentColor),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Text(
                         'Drag and drop products to reorder. Products at the top will appear first in the featured section.',
@@ -93,9 +93,9 @@ class _FeaturedProductsScreenState extends ConsumerState<FeaturedProductsScreen>
                         size: 64,
                         color: context.textTertiary,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                       Text('No featured products', style: context.titleStyle),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppTheme.spacing8),
                       Text(
                         'Mark products as featured to manage their order here',
                         style: TextStyle(color: context.textSecondary),
@@ -135,15 +135,15 @@ class _FeaturedProductsScreenState extends ConsumerState<FeaturedProductsScreen>
         if (_hasChanges)
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Card(
                 color: Colors.amber.withValues(alpha: 0.1),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
                   child: Row(
                     children: [
                       const Icon(Icons.warning, color: Colors.amber),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       const Expanded(
                         child: Text(
                           'You have unsaved changes',
@@ -271,7 +271,7 @@ class _FeaturedProductItem extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       color: Colors.white.withValues(alpha: 0.05),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTheme.spacing12),
         child: Row(
           children: [
             // Order number
@@ -280,7 +280,7 @@ class _FeaturedProductItem extends StatelessWidget {
               height: 32,
               decoration: BoxDecoration(
                 color: context.accentColor.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Center(
                 child: Text(
@@ -292,11 +292,11 @@ class _FeaturedProductItem extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
 
             // Product image
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               child: product.primaryImage != null
                   ? Image.network(
                       product.primaryImage!,
@@ -308,7 +308,7 @@ class _FeaturedProductItem extends StatelessWidget {
                     )
                   : _placeholderImage(),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
 
             // Product info
             Expanded(
@@ -321,7 +321,7 @@ class _FeaturedProductItem extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Row(
                     children: [
                       Text(
@@ -332,7 +332,7 @@ class _FeaturedProductItem extends StatelessWidget {
                           fontSize: 13,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Text(
                         product.sellerName,
                         style: TextStyle(

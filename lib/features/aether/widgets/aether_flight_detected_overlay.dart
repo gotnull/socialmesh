@@ -80,7 +80,7 @@ class _OverlayCard extends StatelessWidget {
         child: GestureDetector(
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 8, 12),
             decoration: BoxDecoration(
               color: _flightColor.withValues(alpha: 0.12),
               border: Border(
@@ -95,7 +95,7 @@ class _OverlayCard extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: _flightColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: const Icon(
                     Icons.flight,
@@ -103,7 +103,7 @@ class _OverlayCard extends StatelessWidget {
                     size: 22,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 // Flight info
                 Expanded(
                   child: Column(
@@ -123,7 +123,7 @@ class _OverlayCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: AppTheme.spacing6),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,
@@ -131,7 +131,9 @@ class _OverlayCard extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: _flightColor,
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
                             ),
                             child: const Text(
                               'DETECTED',
@@ -145,7 +147,7 @@ class _OverlayCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Row(
                         children: [
                           Flexible(
@@ -172,13 +174,13 @@ class _OverlayCard extends StatelessWidget {
                             ),
                           ),
                           if (node.rssi != null) ...[
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             Icon(
                               Icons.signal_cellular_alt,
                               size: 11,
                               color: context.textTertiary,
                             ),
-                            const SizedBox(width: 2),
+                            const SizedBox(width: AppTheme.spacing2),
                             Text(
                               '${node.rssi} dBm',
                               style: TextStyle(
@@ -200,7 +202,7 @@ class _OverlayCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: _flightColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                   child: const Text(
                     'Report',

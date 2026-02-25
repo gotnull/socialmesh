@@ -111,7 +111,7 @@ List<Widget> buildAlbumSlivers({
       ),
     ),
 
-    const SliverToBoxAdapter(child: SizedBox(height: 8)),
+    const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing8)),
   ];
 
   if (pages.isEmpty) {
@@ -191,7 +191,9 @@ List<Widget> buildAlbumSlivers({
       );
 
       // Subtle spacer between groups
-      slivers.add(const SliverToBoxAdapter(child: SizedBox(height: 4)));
+      slivers.add(
+        const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing4)),
+      );
 
       flatIndexOffset += page.filledCount;
     }
@@ -240,7 +242,7 @@ class _GroupingSelector extends StatelessWidget {
               color: context.textTertiary.withValues(alpha: 0.5),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
 
           // Chips
           Expanded(
@@ -309,7 +311,7 @@ class _GroupingChip extends StatelessWidget {
           color: isSelected
               ? accentColor.withValues(alpha: 0.12)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(
             color: isSelected
                 ? accentColor.withValues(alpha: 0.4)
@@ -327,7 +329,7 @@ class _GroupingChip extends StatelessWidget {
                   ? accentColor
                   : context.textTertiary.withValues(alpha: 0.6),
             ),
-            const SizedBox(width: 5),
+            const SizedBox(width: AppTheme.spacing5),
             Text(
               _label,
               style: TextStyle(
@@ -479,7 +481,7 @@ class _EmptyAlbumState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -488,7 +490,7 @@ class _EmptyAlbumState extends StatelessWidget {
               size: 64,
               color: context.textTertiary.withValues(alpha: 0.3),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'No cards yet',
               style: TextStyle(
@@ -497,7 +499,7 @@ class _EmptyAlbumState extends StatelessWidget {
                 color: context.textSecondary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Connect to a mesh device and discover nodes\nto start building your collection',
               textAlign: TextAlign.center,
@@ -507,7 +509,7 @@ class _EmptyAlbumState extends StatelessWidget {
                 height: 1.5,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -515,7 +517,7 @@ class _EmptyAlbumState extends StatelessWidget {
                   icon: Icons.bluetooth_searching,
                   label: 'Scan for devices',
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _HintChip(icon: Icons.explore_outlined, label: 'Move around'),
               ],
             ),
@@ -538,7 +540,7 @@ class _HintChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: context.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         border: Border.all(
           color: context.border.withValues(alpha: 0.3),
           width: 0.5,
@@ -548,7 +550,7 @@ class _HintChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: context.textTertiary),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Text(
             label,
             style: TextStyle(

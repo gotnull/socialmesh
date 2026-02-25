@@ -180,7 +180,9 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
           title: 'Presence',
           actions: [IcoHelpAppBarButton(topicId: 'presence_overview')],
           slivers: [
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: AppTheme.spacing8),
+            ),
 
             // Pinned search + filter chips (consistent with Nodes, NodeDex,
             // Timeline, Bug Reports)
@@ -330,7 +332,12 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                 // Flat list with simple header
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppTheme.spacing16,
+                      24,
+                      16,
+                      12,
+                    ),
                     child: Text(
                       _filter == PresenceFilter.all && _searchQuery.isEmpty
                           ? 'All Nodes'
@@ -401,7 +408,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
             height: 72,
             decoration: BoxDecoration(
               color: context.card,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.radius16),
             ),
             child: Icon(
               hasActiveSearch ? Icons.search_off : Icons.filter_list_off,
@@ -409,7 +416,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
               color: context.textTertiary,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Text(
             hasActiveSearch
                 ? 'No nodes match your search'
@@ -418,7 +425,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
               color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             hasActiveSearch || hasActiveFilter
                 ? 'Try a different search or filter'
@@ -428,7 +435,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
             ),
           ),
           if (hasActiveFilter && !hasActiveSearch) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             TextButton(
               onPressed: () => setState(() => _filter = PresenceFilter.all),
               child: const Text('Show all nodes'),
@@ -445,7 +452,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
     Map<PresenceConfidence, int> summary,
   ) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Row(
         children: PresenceConfidence.values.asMap().entries.map((entry) {
           final status = entry.value;
@@ -460,7 +467,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
               decoration: BoxDecoration(
                 color: color.withAlpha(26),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 border: Border.all(color: color.withAlpha(77)),
               ),
               child: Column(
@@ -468,7 +475,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(_statusIcon(status), color: color, size: 24),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Text(
                     count.toString(),
                     style: theme.textTheme.headlineMedium?.copyWith(
@@ -476,7 +483,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Text(
                     status.label,
                     style: theme.textTheme.bodySmall?.copyWith(color: color),
@@ -506,10 +513,10 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -517,7 +524,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
             Row(
               children: [
                 Icon(Icons.show_chart, color: context.textSecondary, size: 20),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Recent Activity',
                   style: theme.textTheme.titleSmall?.copyWith(
@@ -527,18 +534,18 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             SizedBox(
               height: 60,
               child: _ActivityTimeline(presences: activePresences),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             // Legend
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _LegendItem(color: AppTheme.successGreen, label: '< 2 min'),
-                const SizedBox(width: 24),
+                const SizedBox(width: AppTheme.spacing24),
                 _LegendItem(color: AppTheme.warningYellow, label: '2-10 min'),
               ],
             ),
@@ -555,7 +562,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: context.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -594,7 +601,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Wrap(
               spacing: 6,
               runSpacing: 4,
@@ -608,7 +615,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                       size: 12,
                       color: _statusColor(presence.confidence),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppTheme.spacing4),
                     Tooltip(
                       message: kPresenceInferenceTooltip,
                       child: Text(
@@ -654,17 +661,17 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
             ),
             // Encounter history
             if (presence.encounter != null) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
               _EncounterRow(encounter: presence.encounter!),
             ],
             // Extended presence: intent and short status
             if (presence.extendedInfo != null &&
                 presence.extendedInfo!.hasData) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: AppTheme.spacing6),
               _ExtendedPresenceRow(info: presence.extendedInfo!),
             ],
             if (presence.signalQuality != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _SignalQualityBar(quality: presence.signalQuality!),
             ],
           ],
@@ -716,10 +723,10 @@ class _LegendItem extends StatelessWidget {
           height: 12,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(3),
+            borderRadius: BorderRadius.circular(AppTheme.radius3),
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppTheme.spacing6),
         Text(
           label,
           style: Theme.of(
@@ -741,10 +748,10 @@ class _SignalQualityBar extends StatelessWidget {
     return Row(
       children: [
         Icon(Icons.signal_cellular_alt, size: 12, color: context.textTertiary),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         Expanded(
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(AppTheme.radius2),
             child: LinearProgressIndicator(
               value: quality,
               minHeight: 4,
@@ -759,7 +766,7 @@ class _SignalQualityBar extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         Text(
           '${(quality * 100).toInt()}%',
           style: Theme.of(
@@ -837,7 +844,7 @@ class _ActivityTimeline extends StatelessWidget {
                         context,
                         index,
                       ).withAlpha(count > 0 ? 200 : 51),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(AppTheme.radius4),
                     ),
                   ),
                 ),
@@ -875,7 +882,7 @@ class _ExtendedPresenceRow extends StatelessWidget {
             size: 12,
             color: context.accentColor,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             info.intent.label,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -887,14 +894,14 @@ class _ExtendedPresenceRow extends StatelessWidget {
         // Short status
         if (info.shortStatus != null && info.shortStatus!.isNotEmpty) ...[
           if (info.intent != PresenceIntent.unknown) ...[
-            const SizedBox(width: 6),
+            const SizedBox(width: AppTheme.spacing6),
             Text(
               '·',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: context.textTertiary,
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppTheme.spacing6),
           ],
           Flexible(
             child: Text(
@@ -925,7 +932,7 @@ class _ConfidenceTierBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: _tierColor(context).withAlpha(26),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
         border: Border.all(color: _tierColor(context).withAlpha(51)),
       ),
       child: Text(
@@ -969,21 +976,21 @@ class _EncounterRow extends StatelessWidget {
           size: 12,
           color: context.textTertiary,
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         Text(
           encounter.encounterSummary,
           style: theme.textTheme.bodySmall?.copyWith(
             color: context.textTertiary,
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppTheme.spacing6),
         Text(
           '·',
           style: theme.textTheme.bodySmall?.copyWith(
             color: context.textTertiary,
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppTheme.spacing6),
         Text(
           encounter.relationshipAgeText(now),
           style: theme.textTheme.bodySmall?.copyWith(
@@ -1002,17 +1009,17 @@ class _QuietMeshHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(color: context.border),
       ),
       child: Row(
         children: [
           Icon(Icons.wifi_tethering, size: 16, color: context.textTertiary),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppTheme.spacing10),
           Expanded(
             child: Text(
               'Mesh is quiet right now — nodes appear as they come online.',
@@ -1037,7 +1044,7 @@ class _FamiliarBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: AppTheme.primaryPurple.withAlpha(26),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
         border: Border.all(color: AppTheme.primaryPurple.withAlpha(51)),
       ),
       child: Text(
@@ -1062,7 +1069,7 @@ class _BackNearbyBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: AppTheme.accentOrange.withAlpha(26),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
         border: Border.all(color: AppTheme.accentOrange.withAlpha(51)),
       ),
       child: Text(
@@ -1097,7 +1104,7 @@ class _RoleBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: AppTheme.primaryPurple.withAlpha(26),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
         border: Border.all(color: AppTheme.primaryPurple.withAlpha(51)),
       ),
       child: Text(

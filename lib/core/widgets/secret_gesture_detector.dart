@@ -501,7 +501,7 @@ class _ProgressIndicator extends StatelessWidget {
         height: 3,
         decoration: BoxDecoration(
           color: SemanticColors.glow(0.2),
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(AppTheme.radius2),
         ),
         child: FractionallySizedBox(
           alignment: Alignment.centerLeft,
@@ -511,7 +511,7 @@ class _ProgressIndicator extends StatelessWidget {
               gradient: const LinearGradient(
                 colors: [Color(0xFFFF6B4A), Color(0xFFE91E8C)],
               ),
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(AppTheme.radius2),
             ),
           ),
         ),

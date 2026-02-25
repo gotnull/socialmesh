@@ -1567,7 +1567,6 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
         accelerometerEventStream(
           samplingPeriod: const Duration(milliseconds: 16),
         ).listen((event) {
-          if (!mounted) return;
           _handleAccelerometer(event.x, event.y);
         });
   }
@@ -1630,8 +1629,6 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
 
   // ============ PHYSICS LOOP - ALWAYS RUNS ============
   void _physicsLoop() {
-    if (!mounted) return;
-
     setState(() {
       // ALWAYS apply velocity to rotation (this makes everything spin)
       _rotationX += _velocityX;

@@ -99,14 +99,14 @@ class TrustIndicator extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
         border: Border.all(color: color.withValues(alpha: 0.25), width: 0.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(level.icon, size: 11, color: color),
-          const SizedBox(width: 3),
+          const SizedBox(width: AppTheme.spacing3),
           Text(
             level.displayLabel,
             style: TextStyle(
@@ -135,14 +135,14 @@ class TrustIndicator extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTheme.radius14),
         border: Border.all(color: color.withValues(alpha: 0.30), width: 0.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(level.icon, size: 14, color: color),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

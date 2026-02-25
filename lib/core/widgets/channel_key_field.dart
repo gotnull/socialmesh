@@ -141,7 +141,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
       child: Container(
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(
             color: _keyValidationError != null
                 ? AppTheme.errorRed.withAlpha(128)
@@ -153,7 +153,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
           children: [
             // Header row with label and actions
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 8, 12),
               child: Row(
                 children: [
                   Container(
@@ -165,7 +165,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                           : _keyValidationError != null
                           ? AppTheme.errorRed.withAlpha(38)
                           : context.background,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                     child: Icon(
                       Icons.key,
@@ -177,7 +177,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: AppTheme.spacing14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +190,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                             color: context.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           _isEditingKey
                               ? 'Enter base64-encoded key'
@@ -218,7 +218,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                       ),
                       decoration: BoxDecoration(
                         color: _accentColor.withAlpha(38),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(AppTheme.radius6),
                       ),
                       child: Text(
                         ChannelKeyUtils.getKeySizeDisplayName(
@@ -237,10 +237,10 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
 
             // Key input/display area
             Container(
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 8),
               decoration: BoxDecoration(
                 color: context.background,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
                 border: Border.all(
                   color: _keyValidationError != null
                       ? AppTheme.errorRed.withAlpha(128)
@@ -249,6 +249,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
               ),
               child: _isEditingKey && widget.editable
                   ? TextField(
+                      maxLength: 64,
                       controller: _keyController,
                       style: TextStyle(
                         fontSize: 14,
@@ -258,7 +259,9 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                       ),
                       decoration: InputDecoration(
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.all(16),
+                        contentPadding: const EdgeInsets.all(
+                          AppTheme.spacing16,
+                        ),
                         hintText: 'e.g., AQ== or AAAAAAAAAAAAAAAAAAAAAA==',
                         hintStyle: TextStyle(
                           color: context.textTertiary.withAlpha(128),
@@ -291,7 +294,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                   : SizedBox(
                       width: double.infinity,
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
                         child: _showKey
                             ? SelectableText(
                                 _keyController.text.isEmpty
@@ -326,7 +329,12 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
             // Validation error message
             if (_keyValidationError != null)
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  0,
+                  16,
+                  8,
+                ),
                 child: Row(
                   children: [
                     const Icon(
@@ -334,7 +342,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                       color: AppTheme.errorRed,
                       size: 14,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     Expanded(
                       child: Text(
                         _keyValidationError!,
@@ -351,7 +359,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
             // Action buttons row
             if (widget.editable)
               Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
+                padding: const EdgeInsets.fromLTRB(AppTheme.spacing8, 8, 8, 12),
                 child: Row(
                   children: [
                     // Show/Hide toggle
@@ -361,7 +369,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                       onPressed: () => setState(() => _showKey = !_showKey),
                       isEnabled: true,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppTheme.spacing4),
                     // Edit manually
                     _buildActionButton(
                       icon: Icons.edit,
@@ -375,7 +383,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                       isEnabled: !_isEditingKey,
                     ),
                     if (widget.showGenerateButton) ...[
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       // Regenerate
                       _buildActionButton(
                         icon: Icons.refresh,
@@ -393,7 +401,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                         isEnabled: !_isEditingKey,
                       ),
                     ],
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppTheme.spacing4),
                     // Copy
                     _buildActionButton(
                       icon: Icons.copy,
@@ -438,7 +446,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
         color: Colors.transparent,
         child: InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Row(
@@ -451,7 +459,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                       ? context.textSecondary
                       : context.textTertiary.withAlpha(102),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppTheme.spacing6),
                 Text(
                   label,
                   style: TextStyle(

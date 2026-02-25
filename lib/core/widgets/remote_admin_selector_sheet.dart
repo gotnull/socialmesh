@@ -112,11 +112,11 @@ class _RemoteAdminSelectorSheetState
         children: [
           // Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 16, 12, 8),
             child: Row(
               children: [
                 Icon(Icons.admin_panel_settings, color: accentColor, size: 24),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Text(
                     'Remote Administration',
@@ -143,6 +143,7 @@ class _RemoteAdminSelectorSheetState
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
+              maxLength: 100,
               controller: _searchController,
               style: TextStyle(color: context.textPrimary, fontSize: 14),
               decoration: InputDecoration(
@@ -169,7 +170,7 @@ class _RemoteAdminSelectorSheetState
                 filled: true,
                 fillColor: context.background,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                   borderSide: BorderSide.none,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
@@ -198,11 +199,11 @@ class _RemoteAdminSelectorSheetState
 
           // Section header
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 8),
             child: Row(
               children: [
                 Icon(Icons.lock, size: 14, color: accentColor),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppTheme.spacing6),
                 Text(
                   'PKI-ENABLED NODES',
                   style: TextStyle(
@@ -260,7 +261,7 @@ class _RemoteAdminSelectorSheetState
 
           // Info banner
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: StatusBanner.custom(
               color: Colors.orange,
               title:
@@ -277,7 +278,7 @@ class _RemoteAdminSelectorSheetState
 
   Widget _buildEmptyState() {
     return Padding(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(AppTheme.spacing32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -286,7 +287,7 @@ class _RemoteAdminSelectorSheetState
             size: 48,
             color: context.textTertiary,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             _searchQuery.isEmpty
                 ? 'No PKI-enabled nodes available'
@@ -346,11 +347,11 @@ class _DeviceTile extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: iconColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Center(child: Icon(icon, color: iconColor, size: 22)),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,7 +457,7 @@ class _NodeAdminTile extends StatelessWidget {
                     left: 0,
                     bottom: 0,
                     child: Container(
-                      padding: const EdgeInsets.all(2),
+                      padding: const EdgeInsets.all(AppTheme.spacing2),
                       decoration: BoxDecoration(
                         color: context.card,
                         shape: BoxShape.circle,
@@ -470,7 +471,7 @@ class _NodeAdminTile extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -483,7 +484,7 @@ class _NodeAdminTile extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Row(
                       children: [
                         Tooltip(
@@ -498,7 +499,7 @@ class _NodeAdminTile extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Text(
                           '• PKI enabled',
                           style: TextStyle(

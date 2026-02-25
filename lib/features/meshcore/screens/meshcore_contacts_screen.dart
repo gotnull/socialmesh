@@ -88,7 +88,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                     color: context.textSecondary,
                     size: 20,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Text(
                     'Add Contact',
                     style: TextStyle(color: context.textPrimary),
@@ -105,7 +105,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                     color: context.textSecondary,
                     size: 20,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Text(
                     'Refresh Contacts',
                     style: TextStyle(color: context.textPrimary),
@@ -122,7 +122,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                     color: context.textSecondary,
                     size: 20,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Text(
                     'My Contact Code',
                     style: TextStyle(color: context.textPrimary),
@@ -140,7 +140,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                     color: context.textSecondary,
                     size: 20,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Text(
                     'Disconnect',
                     style: TextStyle(color: context.textPrimary),
@@ -167,7 +167,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(),
-          SizedBox(height: 16),
+          SizedBox(height: AppTheme.spacing16),
           Text('Loading contacts...', style: TextStyle(color: Colors.white70)),
         ],
       ),
@@ -177,7 +177,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
   Widget _buildDisconnectedState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -186,14 +186,14 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
               size: 64,
               color: Colors.white.withValues(alpha: 0.4),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'MeshCore Disconnected',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: Colors.white.withValues(alpha: 0.8),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Connect to a MeshCore device to view contacts',
               textAlign: TextAlign.center,
@@ -210,7 +210,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
   Widget _buildEmptyState(String deviceName) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -218,14 +218,14 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
               borderRadius: 20,
               borderWidth: 1.5,
               accentColor: AccentColors.cyan,
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppTheme.spacing24),
               child: Icon(
                 Icons.people_outline_rounded,
                 size: 64,
                 color: AccentColors.cyan.withValues(alpha: 0.8),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Text(
               'No Contacts',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -233,7 +233,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               'Contacts will appear here when discovered via advertisements.\n\n'
               'You can also add contacts manually using their contact code.',
@@ -243,7 +243,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                 height: 1.5,
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppTheme.spacing32),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -256,7 +256,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                     foregroundColor: AccentColors.cyan,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 OutlinedButton.icon(
                   onPressed: _refreshContacts,
                   icon: const Icon(Icons.refresh_rounded),
@@ -270,12 +270,12 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: AccentColors.green.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 border: Border.all(
                   color: AccentColors.green.withValues(alpha: 0.3),
                 ),
@@ -288,7 +288,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                     size: 18,
                     color: AccentColors.green,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Text(
                     'Connected to $deviceName',
                     style: TextStyle(
@@ -310,8 +310,9 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
       children: [
         // Search bar
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           child: TextField(
+            maxLength: 100,
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Search contacts...',
@@ -328,7 +329,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
               filled: true,
               fillColor: context.card,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide.none,
               ),
               contentPadding: const EdgeInsets.symmetric(
@@ -359,7 +360,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         ),
         if (isLoading)
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(AppTheme.spacing8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -368,7 +369,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Refreshing...',
                   style: TextStyle(color: context.textTertiary),
@@ -434,10 +435,10 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(AppTheme.spacing10),
         decoration: BoxDecoration(
           color: AccentColors.cyan.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
         ),
         child: Icon(icon, color: AccentColors.cyan),
       ),
@@ -487,7 +488,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildDetailRow('Type', contact.typeLabel),
           _buildDetailRow('Path', contact.pathLabel),
           _buildDetailRow('Public Key', contact.shortPubKeyHex),
@@ -497,7 +498,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
               '${contact.latitude?.toStringAsFixed(4)}, '
                   '${contact.longitude?.toStringAsFixed(4)}',
             ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Row(
             children: [
               Expanded(
@@ -519,7 +520,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               OutlinedButton.icon(
                 onPressed: () {
                   final code = generateContactCode(contact);
@@ -576,7 +577,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.chat_rounded, color: AccentColors.cyan),
@@ -674,8 +675,9 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           TextField(
+            maxLength: 100,
             controller: controller,
             autofocus: true,
             maxLines: 3,
@@ -685,7 +687,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.05),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide.none,
               ),
             ),
@@ -694,7 +696,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
               fontFamily: 'monospace',
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             children: [
               Expanded(
@@ -704,13 +706,13 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide(color: Colors.grey.shade700),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Cancel'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: () {
@@ -730,7 +732,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: context.accentColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Add'),
@@ -796,11 +798,11 @@ class _ContactCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border, width: 1),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           child: Row(
             children: [
               // Avatar
@@ -809,7 +811,7 @@ class _ContactCard extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: avatarColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Center(
                   child: Text(
@@ -824,7 +826,7 @@ class _ContactCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               // Info
               Expanded(
                 child: Column(
@@ -838,7 +840,7 @@ class _ContactCard extends StatelessWidget {
                         fontSize: 15,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Row(
                       children: [
                         Icon(
@@ -846,7 +848,7 @@ class _ContactCard extends StatelessWidget {
                           size: 14,
                           color: context.textTertiary,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Text(
                           contact.typeLabel,
                           style: TextStyle(
@@ -854,13 +856,13 @@ class _ContactCard extends StatelessWidget {
                             fontSize: 12,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Icon(
                           Icons.route_rounded,
                           size: 14,
                           color: context.textTertiary,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Text(
                           contact.pathLabel,
                           style: TextStyle(
@@ -882,7 +884,7 @@ class _ContactCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: AccentColors.cyan,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Text(
                     '${contact.unreadCount}',

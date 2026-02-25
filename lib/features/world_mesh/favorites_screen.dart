@@ -181,12 +181,12 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                 size: 48,
                 color: AppTheme.errorRed,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               Text(
                 'Error loading favorites',
                 style: TextStyle(color: context.textPrimary),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               TextButton(
                 onPressed: () =>
                     ref.read(nodeFavoritesProvider.notifier).refresh(),
@@ -229,7 +229,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                     ),
                     decoration: BoxDecoration(
                       color: context.accentColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Text(
                       '${favorites.length}',
@@ -254,7 +254,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -272,7 +272,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                 color: context.textTertiary,
               ),
             ),
-            SizedBox(height: 24),
+            SizedBox(height: AppTheme.spacing24),
             Text(
               'No Favorites Yet',
               style: TextStyle(
@@ -281,7 +281,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                 color: context.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Tap the star icon on any node to add it to your favorites for quick access.',
               textAlign: TextAlign.center,
@@ -298,7 +298,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
   List<Widget> _buildFavoritesSlivers(List<_FavoriteItem> favorites) {
     return [
       SliverPadding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         sliver: SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
             final item = favorites[index];
@@ -326,7 +326,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.delete, color: Colors.white, size: 24),
-                SizedBox(width: 8),
+                SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Delete',
                   style: TextStyle(
@@ -377,7 +377,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
         borderRadius: borderRadius,
         onTap: () => _handleItemTap(item),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           decoration: BoxDecoration(
             borderRadius: borderRadius,
             border: Border.all(
@@ -412,7 +412,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                       ? Icon(Icons.check, size: 16, color: Colors.white)
                       : null,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
               ],
               // Status indicator
               Container(
@@ -433,7 +433,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: AppTheme.spacing14),
               // Node info
               Expanded(
                 child: Column(
@@ -460,7 +460,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                             color: statusColor,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppTheme.spacing6),
                         Text(
                           statusText,
                           style: context.bodySmallStyle?.copyWith(
@@ -469,7 +469,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Row(
                       children: [
                         Text(
@@ -499,7 +499,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                       ],
                     ),
                     if (item.liveNode?.batteryLevel != null) ...[
-                      SizedBox(height: 6),
+                      SizedBox(height: AppTheme.spacing6),
                       Row(
                         children: [
                           Icon(
@@ -509,7 +509,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                               item.liveNode!.batteryLevel!,
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: AppTheme.spacing4),
                           Text(
                             item.liveNode!.batteryLevel! > 100
                                 ? 'Charging'

@@ -380,7 +380,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
                               size: 64,
                               color: context.textTertiary,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppTheme.spacing16),
                             Text(
                               _hasActiveFilters
                                   ? 'No positions match filters'
@@ -389,7 +389,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
                                   ?.copyWith(color: context.textSecondary),
                             ),
                             if (_hasActiveFilters) ...[
-                              const SizedBox(height: 12),
+                              const SizedBox(height: AppTheme.spacing12),
                               TextButton.icon(
                                 onPressed: _clearFilters,
                                 icon: const Icon(
@@ -415,10 +415,11 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
                   // List view
                   else
                     SliverPadding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
                       sliver: SliverList.separated(
                         itemCount: filtered.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: AppTheme.spacing8),
                         itemBuilder: (context, index) {
                           final log = filtered[index];
                           final prevLog = index < filtered.length - 1
@@ -500,13 +501,13 @@ class _DateRangeBanner extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: context.accentColor.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
             Icon(Icons.date_range, size: 16, color: context.accentColor),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Text(
               label,
               style: TextStyle(
@@ -567,7 +568,10 @@ class _PositionMapViewState extends State<_PositionMapView> {
         LatLng(lats.reduce(math.max), lons.reduce(math.max)),
       );
       _mapController.fitCamera(
-        CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(50)),
+        CameraFit.bounds(
+          bounds: bounds,
+          padding: const EdgeInsets.all(AppTheme.spacing50),
+        ),
       );
     }
   }
@@ -581,7 +585,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.map_outlined, size: 48, color: context.textTertiary),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               'No positions to display',
               style: TextStyle(color: context.textSecondary),
@@ -666,7 +670,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
                 Container(
                   decoration: BoxDecoration(
                     color: context.card,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: DropdownButtonHideUnderline(
@@ -690,13 +694,13 @@ class _PositionMapViewState extends State<_PositionMapView> {
                   ),
                 ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
 
               // Toggle trail
               Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: IconButton(
                   icon: Icon(
@@ -710,7 +714,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
                 ),
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
 
               // Zoom controls
               MapZoomControls(
@@ -738,10 +742,10 @@ class _PositionMapViewState extends State<_PositionMapView> {
           left: 16,
           right: 16,
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: context.card.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -832,7 +836,7 @@ class _StatItem extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 20, color: context.textTertiary),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Text(
           value,
           style: Theme.of(
@@ -868,7 +872,7 @@ class _PositionCard extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTheme.spacing12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -880,7 +884,7 @@ class _PositionCard extends StatelessWidget {
                   size: 16,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   child: Text(
                     nodeName,
@@ -895,7 +899,7 @@ class _PositionCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
 
             // Coordinates
             Row(
@@ -908,7 +912,7 @@ class _PositionCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
 
             // Metrics row
             Wrap(
@@ -962,13 +966,13 @@ class _MetricChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: (color ?? context.textTertiary).withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: color ?? context.textTertiary),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             value,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(

@@ -246,7 +246,7 @@ class TransformableTextState extends State<TransformableText> {
         color: widget.hasBackground
             ? widget.backgroundColor
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: widget.showEditBorder || _isEditing
             ? Border.all(color: Colors.white38, width: 1.5)
             : null,
@@ -389,13 +389,13 @@ class _TextEditorSheetState extends State<_TextEditorSheet> {
                 margin: const EdgeInsets.only(top: 12),
                 decoration: BoxDecoration(
                   color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppTheme.radius2),
                 ),
               ),
 
               // Header
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Row(
                   children: [
                     IconButton(
@@ -422,6 +422,7 @@ class _TextEditorSheetState extends State<_TextEditorSheet> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: TextField(
+                  maxLength: 100,
                   controller: widget.controller,
                   focusNode: _focusNode,
                   textAlign: TextAlign.center,
@@ -444,7 +445,7 @@ class _TextEditorSheetState extends State<_TextEditorSheet> {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Color picker
               SingleChildScrollView(
@@ -500,7 +501,7 @@ class _TextEditorSheetState extends State<_TextEditorSheet> {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
 
               // Size slider
               Padding(
@@ -533,7 +534,7 @@ class _TextEditorSheetState extends State<_TextEditorSheet> {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
             ],
           ),
         ),

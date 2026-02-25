@@ -158,19 +158,19 @@ class _StoreForwardConfigScreenState
           ? [SliverFillRemaining(child: const ScreenLoadingIndicator())]
           : [
               SliverPadding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     // Info card
                     _buildInfoCard(),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // Module settings
                     _buildSectionTitle('Module Settings'),
                     _buildConfigCard(),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // Server settings (only shown if server mode)
                     if (_isServer) ...[
@@ -201,17 +201,17 @@ class _StoreForwardConfigScreenState
 
   Widget _buildInfoCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: AppTheme.primaryBlue.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: AppTheme.primaryBlue.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.storage, color: AppTheme.primaryBlue, size: 24),
-          SizedBox(width: 12),
+          SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,7 +224,7 @@ class _StoreForwardConfigScreenState
                     fontSize: 15,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Text(
                   'Allows nodes to store messages and forward them to devices that were offline. '
                   'A "server" node stores messages, while "client" nodes can request missed messages.',
@@ -246,7 +246,7 @@ class _StoreForwardConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         children: [
@@ -305,7 +305,7 @@ class _StoreForwardConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         children: [

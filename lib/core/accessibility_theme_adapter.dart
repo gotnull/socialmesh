@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../models/accessibility_preferences.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Adapts ThemeData based on accessibility preferences
 ///
@@ -342,7 +343,7 @@ class AccessibilityThemeAdapter {
       dividerTheme: theme.dividerTheme.copyWith(color: highContrastBorder),
       cardTheme: theme.cardTheme.copyWith(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           side: BorderSide(color: highContrastBorder, width: 1),
         ),
       ),

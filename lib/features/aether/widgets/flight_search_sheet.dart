@@ -144,7 +144,6 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
         _fetchRoutes(results.take(10).toList());
       }
     } catch (e) {
-      if (!mounted) return;
       // Also check generation for error state — don't show errors for
       // superseded queries.
       if (generation != _searchGeneration) return;
@@ -189,7 +188,6 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
 
     const batchSize = 3;
     for (var i = 0; i < toFetch.length; i += batchSize) {
-      if (!mounted) return;
       final batch = toFetch.skip(i).take(batchSize);
       await Future.wait(
         batch.map((f) async {
@@ -226,11 +224,11 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
           // Search bar
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
               child: Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: TextField(
                   controller: _controller,
@@ -336,7 +334,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
           hasScrollBody: false,
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(AppTheme.spacing32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -345,7 +343,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
                     size: 48,
                     color: Colors.red.withValues(alpha: 0.7),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     _errorMessage,
                     style: TextStyle(
@@ -355,7 +353,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   TextButton(
                     onPressed: () =>
                         _executeSearch(_controller.text.trim().toUpperCase()),
@@ -413,7 +411,7 @@ class _CenteredMessage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -422,7 +420,7 @@ class _CenteredMessage extends StatelessWidget {
               size: 48,
               color: context.textTertiary.withValues(alpha: 0.5),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               title,
               style: TextStyle(
@@ -431,7 +429,7 @@ class _CenteredMessage extends StatelessWidget {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               subtitle,
               style: TextStyle(color: context.textTertiary, fontSize: 14),
@@ -473,14 +471,14 @@ class _FlightTile extends StatelessWidget {
       color: context.card,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         side: BorderSide(color: context.border),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           child: Row(
             children: [
               // Icon
@@ -489,7 +487,7 @@ class _FlightTile extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: context.accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Icon(
                   flight.onGround ? Icons.flight_land : Icons.flight_takeoff,
@@ -497,7 +495,7 @@ class _FlightTile extends StatelessWidget {
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
 
               // Info — vertical stack, no truncation
               Expanded(
@@ -517,7 +515,7 @@ class _FlightTile extends StatelessWidget {
 
                     // Route — own row (with loading skeleton)
                     if (hasRoute) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.spacing4),
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 250),
                         child: Row(
@@ -530,7 +528,7 @@ class _FlightTile extends StatelessWidget {
                               size: 13,
                               color: context.accentColor.withValues(alpha: 0.7),
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: AppTheme.spacing4),
                             Flexible(
                               child: Text(
                                 _routeString,
@@ -545,12 +543,12 @@ class _FlightTile extends StatelessWidget {
                         ),
                       ),
                     ] else if (routeLoading) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.spacing4),
                       _RouteSkeletonLine(),
                     ],
 
                     // Metadata chips — wrapping, never truncated
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppTheme.spacing6),
                     Wrap(
                       spacing: 6,
                       runSpacing: 4,
@@ -560,7 +558,7 @@ class _FlightTile extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Icon(Icons.chevron_right, color: context.textTertiary),
             ],
           ),
@@ -667,13 +665,13 @@ class _RouteSkeletonLineState extends State<_RouteSkeletonLine>
               size: 13,
               color: context.textTertiary.withValues(alpha: 0.3),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             Container(
               width: 100,
               height: 13,
               decoration: BoxDecoration(
                 color: context.textTertiary.withValues(alpha: shimmerOpacity),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppTheme.radius4),
               ),
             ),
           ],

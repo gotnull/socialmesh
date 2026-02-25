@@ -336,7 +336,7 @@ class MeshGlobeState extends State<MeshGlobe> {
                       valueColor: AlwaysStoppedAnimation(context.accentColor),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     'Loading Globe...',
                     style: TextStyle(

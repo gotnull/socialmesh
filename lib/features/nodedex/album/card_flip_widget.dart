@@ -290,7 +290,7 @@ class _CardBack extends StatelessWidget {
           AlbumConstants.slotBorderRadius - rarity.borderWidth,
         ),
         child: Padding(
-          padding: EdgeInsets.all(12.0 * scale),
+          padding: EdgeInsets.all(AppTheme.spacing12 * scale),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -302,19 +302,19 @@ class _CardBack extends StatelessWidget {
                 traitColor: traitColor,
                 scale: scale,
               ),
-              SizedBox(height: 8.0 * scale),
+              SizedBox(height: AppTheme.spacing8 * scale),
 
               // Divider
               _OrnamentLine(color: rarity.borderColor, scale: scale),
-              SizedBox(height: 8.0 * scale),
+              SizedBox(height: AppTheme.spacing8 * scale),
 
               // Encounter stats
               _StatsSection(entry: entry, scale: scale),
-              SizedBox(height: 6.0 * scale),
+              SizedBox(height: AppTheme.spacing6 * scale),
 
               // Trait classification
               _TraitSection(traitResult: effectiveTrait, scale: scale),
-              SizedBox(height: 6.0 * scale),
+              SizedBox(height: AppTheme.spacing6 * scale),
 
               // Patina breakdown (if available)
               if (patinaResult != null) ...[
@@ -323,7 +323,7 @@ class _CardBack extends StatelessWidget {
                   accentColor: traitColor,
                   scale: scale,
                 ),
-                SizedBox(height: 6.0 * scale),
+                SizedBox(height: AppTheme.spacing6 * scale),
               ],
 
               const Spacer(),
@@ -331,7 +331,7 @@ class _CardBack extends StatelessWidget {
               // Region and co-seen summary
               _BottomSummary(entry: entry, rarity: rarity, scale: scale),
 
-              SizedBox(height: 4.0 * scale),
+              SizedBox(height: AppTheme.spacing4 * scale),
 
               // Footer
               _BackFooter(rarity: rarity, scale: scale),
@@ -379,7 +379,7 @@ class _BackHeader extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
         ),
-        SizedBox(height: 2.0 * scale),
+        SizedBox(height: AppTheme.spacing2 * scale),
         Text(
           hexId,
           style: TextStyle(
@@ -391,7 +391,7 @@ class _BackHeader extends StatelessWidget {
           ),
           textAlign: TextAlign.center,
         ),
-        SizedBox(height: 2.0 * scale),
+        SizedBox(height: AppTheme.spacing2 * scale),
         Container(
           padding: EdgeInsets.symmetric(
             horizontal: 8.0 * scale,
@@ -399,7 +399,7 @@ class _BackHeader extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             color: rarity.borderColor.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(4.0 * scale),
+            borderRadius: BorderRadius.circular(AppTheme.radius4 * scale),
           ),
           child: Text(
             rarity.label,
@@ -489,7 +489,7 @@ class _StatsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionLabel(text: 'ENCOUNTER LOG', scale: scale),
-        SizedBox(height: 4.0 * scale),
+        SizedBox(height: AppTheme.spacing4 * scale),
         _StatRow(
           label: 'Encounters',
           value: '${entry.encounterCount}',
@@ -548,7 +548,7 @@ class _TraitSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionLabel(text: 'CLASSIFICATION', scale: scale),
-        SizedBox(height: 4.0 * scale),
+        SizedBox(height: AppTheme.spacing4 * scale),
         Row(
           children: [
             Container(
@@ -559,7 +559,7 @@ class _TraitSection extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
             ),
-            SizedBox(width: 6.0 * scale),
+            SizedBox(width: AppTheme.spacing6 * scale),
             Expanded(
               child: Text(
                 traitResult.primary.displayLabel,
@@ -582,10 +582,10 @@ class _TraitSection extends StatelessWidget {
           ],
         ),
         if (traitResult.secondary != null) ...[
-          SizedBox(height: 2.0 * scale),
+          SizedBox(height: AppTheme.spacing2 * scale),
           Row(
             children: [
-              SizedBox(width: 12.0 * scale),
+              SizedBox(width: AppTheme.spacing12 * scale),
               Container(
                 width: 4.0 * scale,
                 height: 4.0 * scale,
@@ -594,7 +594,7 @@ class _TraitSection extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
               ),
-              SizedBox(width: 6.0 * scale),
+              SizedBox(width: AppTheme.spacing6 * scale),
               Text(
                 traitResult.secondary!.displayLabel,
                 style: TextStyle(
@@ -646,7 +646,7 @@ class _PatinaSection extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: accentColor.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(3.0 * scale),
+                borderRadius: BorderRadius.circular(AppTheme.radius3 * scale),
               ),
               child: Text(
                 '${result.stampLabel}: ${result.score}',
@@ -660,7 +660,7 @@ class _PatinaSection extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: 4.0 * scale),
+        SizedBox(height: AppTheme.spacing4 * scale),
         _PatinaAxis(
           label: 'Tenure',
           value: result.tenure,
@@ -733,7 +733,7 @@ class _PatinaAxis extends StatelessWidget {
           ),
           Expanded(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(1.0 * scale),
+              borderRadius: BorderRadius.circular(AppTheme.radius1 * scale),
               child: SizedBox(
                 height: 2.5 * scale,
                 child: LayoutBuilder(
@@ -755,7 +755,7 @@ class _PatinaAxis extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: 4.0 * scale),
+          SizedBox(width: AppTheme.spacing4 * scale),
           SizedBox(
             width: 24.0 * scale,
             child: Text(
@@ -837,7 +837,7 @@ class _CompactStat extends StatelessWidget {
     return Column(
       children: [
         Icon(icon, size: 12.0 * scale, color: color.withValues(alpha: 0.5)),
-        SizedBox(height: 2.0 * scale),
+        SizedBox(height: AppTheme.spacing2 * scale),
         Text(
           value,
           style: TextStyle(
@@ -876,7 +876,7 @@ class _BackFooter extends StatelessWidget {
           size: 10.0 * scale,
           color: context.textTertiary.withValues(alpha: 0.4),
         ),
-        SizedBox(width: 4.0 * scale),
+        SizedBox(width: AppTheme.spacing4 * scale),
         Text(
           'TAP TO FLIP',
           style: TextStyle(

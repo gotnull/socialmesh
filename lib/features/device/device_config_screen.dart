@@ -506,6 +506,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     AppLogging.protocol('DeviceConfigScreen: _saveConfig started');
 
     // Capture remote admin target before any async work.
+    if (!mounted) return;
     final targetNodeNum = ref.read(remoteAdminTargetProvider);
     final isRemote = targetNodeNum != null;
 
@@ -714,7 +715,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
       ],
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Remote admin banner
@@ -730,7 +731,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                 hint: 'Enter display name',
               ),
 
-              SizedBox(height: 16),
+              SizedBox(height: AppTheme.spacing16),
 
               // Short Name Field
               _buildNameField(
@@ -748,7 +749,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                 textCapitalization: TextCapitalization.characters,
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
@@ -759,13 +760,13 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // User Flags Section
               _buildSectionHeader('User Flags'),
               _buildUserFlagsSettings(),
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // Device Info Section
               _buildSectionHeader('Device Info'),
@@ -794,19 +795,19 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                 ],
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Device Role Section
               _buildSectionHeader('Device Role'),
               Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
                 child: Material(
                   color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   child: Column(
                     children: deviceRoles.asMap().entries.map((entry) {
                       final index = entry.key;
@@ -861,7 +862,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                                           )
                                         : null,
                                   ),
-                                  const SizedBox(width: 12),
+                                  const SizedBox(width: AppTheme.spacing12),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
@@ -879,7 +880,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                                                 : context.textSecondary,
                                           ),
                                         ),
-                                        SizedBox(height: 2),
+                                        SizedBox(height: AppTheme.spacing2),
                                         Text(
                                           option.description,
                                           style: TextStyle(
@@ -902,61 +903,61 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
 
               // Rebroadcast Mode Section
               _buildSectionHeader('Rebroadcast Mode'),
               _buildRebroadcastModeSelector(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Node Info Broadcast Section
               _buildSectionHeader('Node Info Broadcast'),
               _buildNodeInfoBroadcastSetting(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Button & Input Section
               _buildSectionHeader('Button & Input'),
               _buildButtonInputSettings(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Buzzer Section
               _buildSectionHeader('Buzzer'),
               _buildBuzzerSettings(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // LED & Display Section
               _buildSectionHeader('LED'),
               _buildLedSettings(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Serial Console Section
               _buildSectionHeader('Serial'),
               _buildSerialConsoleSetting(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Timezone Section
               _buildSectionHeader('Timezone'),
               _buildTimezoneSettings(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // GPIO Section (Advanced)
               _buildSectionHeader('GPIO (Advanced)'),
               _buildGpioSettings(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Danger Zone — only for local devices
               if (!isRemote) ...[
                 _buildSectionHeader('Danger Zone'),
                 _buildDangerZone(),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
               ],
 
               // Warning
@@ -967,7 +968,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                   margin: EdgeInsets.zero,
                 ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
             ]),
           ),
         ),
@@ -979,12 +980,12 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Column(
           children: rebroadcastModes.asMap().entries.map((entry) {
             final index = entry.key;
@@ -1033,7 +1034,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                                 )
                               : null,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1050,7 +1051,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                                       : context.textSecondary,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: AppTheme.spacing2),
                               Text(
                                 option.description,
                                 style: TextStyle(
@@ -1099,17 +1100,22 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing16,
+                16,
+                16,
+                12,
+              ),
               child: Row(
                 children: [
                   Icon(
@@ -1117,7 +1123,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                     color: context.accentColor,
                     size: 20,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1130,7 +1136,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                             color: context.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           'How often to broadcast node info to the mesh',
                           style: TextStyle(
@@ -1226,7 +1232,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -1261,12 +1267,12 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Column(
           children: buzzerModes.asMap().entries.map((entry) {
             final index = entry.key;
@@ -1315,7 +1321,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                                 )
                               : null,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1332,7 +1338,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                                       : context.textSecondary,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: AppTheme.spacing2),
                               Text(
                                 option.description,
                                 style: TextStyle(
@@ -1360,7 +1366,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: _buildToggleRow(
@@ -1380,17 +1386,17 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Icon(Icons.schedule, color: context.accentColor, size: 20),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1403,7 +1409,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                         color: context.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       'e.g. EST5EDT,M3.2.0,M11.1.0',
                       style: TextStyle(
@@ -1416,7 +1422,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           TextFormField(
             key: ValueKey('tzdef_${_tzdef.hashCode}'),
             initialValue: _tzdef,
@@ -1434,15 +1440,15 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
               filled: true,
               fillColor: context.background,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.border),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.border),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.accentColor),
               ),
             ),
@@ -1460,10 +1466,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1473,7 +1479,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
               context,
             ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Row(
             children: [
               Expanded(
@@ -1486,7 +1492,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                   },
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppTheme.spacing16),
               Expanded(
                 child: _buildGpioField(
                   label: 'Buzzer GPIO',
@@ -1520,7 +1526,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
             color: context.textSecondary,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppTheme.spacing6),
         TextFormField(
           key: ValueKey('numField_$value'),
           initialValue: value == 0 ? '' : value.toString(),
@@ -1540,15 +1546,15 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
             filled: true,
             fillColor: context.background,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               borderSide: BorderSide(color: context.border),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               borderSide: BorderSide(color: context.border),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               borderSide: BorderSide(color: context.accentColor),
             ),
           ),
@@ -1572,7 +1578,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
       child: Row(
         children: [
           Icon(icon, color: context.accentColor, size: 20),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1585,7 +1591,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                     color: context.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   subtitle,
                   style: Theme.of(
@@ -1640,7 +1646,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -1648,7 +1654,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
         children: [
           // Header row with label
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 12),
             child: Row(
               children: [
                 Container(
@@ -1656,11 +1662,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                   height: 40,
                   decoration: BoxDecoration(
                     color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTheme.radius10),
                   ),
                   child: Icon(icon, color: context.accentColor, size: 20),
                 ),
-                SizedBox(width: 14),
+                SizedBox(width: AppTheme.spacing14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1673,7 +1679,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                           color: context.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         subtitle,
                         style: TextStyle(
@@ -1693,7 +1699,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                     color: controller.text.length >= maxLength
                         ? AppTheme.warningYellow.withValues(alpha: 0.15)
                         : context.background,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                   child: Text(
                     '${controller.text.length}/$maxLength',
@@ -1712,10 +1718,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
 
           // Input field area
           Container(
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 16),
             decoration: BoxDecoration(
               color: context.background,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppTheme.radius10),
               border: Border.all(color: context.border.withValues(alpha: 0.5)),
             ),
             child: TextField(
@@ -1732,7 +1738,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
               decoration: InputDecoration(
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.all(16),
+                contentPadding: const EdgeInsets.all(AppTheme.spacing16),
                 hintText: hint,
                 hintStyle: TextStyle(
                   color: context.textTertiary,
@@ -1755,7 +1761,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -1772,7 +1778,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                       : context.textSecondary,
                   size: 22,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1785,7 +1791,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                           color: context.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         'Mark as infrastructure node that won\'t respond to messages',
                         style: TextStyle(
@@ -1820,7 +1826,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                       : context.textSecondary,
                   size: 22,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1833,7 +1839,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                           color: context.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         'Sets call sign, overrides frequency/power, '
                         'disables encryption',
@@ -1860,7 +1866,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
           if (_isLicensed) ...[
             Divider(height: 1, color: context.border.withValues(alpha: 0.5)),
             Container(
-              margin: const EdgeInsets.all(16),
+              margin: const EdgeInsets.all(AppTheme.spacing16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1872,7 +1878,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                         'encryption.',
                     margin: EdgeInsets.zero,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
                   StatusBanner.warning(
                     title:
                         'HAM nodes cannot relay encrypted traffic. Other '
@@ -1881,7 +1887,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                         'creating a relay gap in the network.',
                     margin: EdgeInsets.zero,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   // Frequency override
                   Text(
                     'Frequency Override (MHz)',
@@ -1891,7 +1897,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                       color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   TextField(
                     controller: _frequencyOverrideController,
                     keyboardType: const TextInputType.numberWithOptions(
@@ -1909,21 +1915,21 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                         vertical: 10,
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                         borderSide: BorderSide(color: context.border),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                         borderSide: BorderSide(color: context.border),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                         borderSide: BorderSide(color: context.accentColor),
                       ),
                     ),
                     onChanged: (_) => _checkForChanges(),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   // TX Power
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1946,7 +1952,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
                       activeTrackColor: context.accentColor,
@@ -1981,7 +1987,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     final accentColor = context.accentColor;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -1991,13 +1997,13 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
             accentColor.withValues(alpha: 0.05),
           ],
         ),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: accentColor.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
           Icon(Icons.admin_panel_settings, color: accentColor, size: 24),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2010,7 +2016,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                     fontSize: 14,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   'Configuring: ${remoteState.targetNodeName ?? '0x${remoteState.targetNodeNum!.toRadixString(16)}'}',
                   style: TextStyle(
@@ -2030,7 +2036,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: _buildToggleRow(
@@ -2050,7 +2056,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -2068,7 +2074,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                     height: 40,
                     decoration: BoxDecoration(
                       color: AppTheme.warningYellow.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                     child: Icon(
                       Icons.refresh,
@@ -2076,7 +2082,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: AppTheme.spacing14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2089,7 +2095,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                             color: context.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           'Clear all stored node information',
                           style: TextStyle(
@@ -2121,7 +2127,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.red.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                     child: Icon(
                       Icons.warning_rounded,
@@ -2129,7 +2135,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: AppTheme.spacing14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2142,7 +2148,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                             color: Colors.red,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           'Reset device to factory defaults',
                           style: TextStyle(

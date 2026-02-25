@@ -54,6 +54,7 @@ class _GlobalLayerDiagnosticsScreenState
     final haptics = ref.read(hapticServiceProvider);
     await haptics.trigger(HapticType.medium);
 
+    if (!mounted) return;
     final configAsync = ref.read(globalLayerConfigProvider);
     final config =
         configAsync.whenOrNull(data: (c) => c) ?? GlobalLayerConfig.initial;
@@ -87,8 +88,6 @@ class _GlobalLayerDiagnosticsScreenState
     final checks = _report!.results.map((r) => r.type).toList();
 
     for (final checkType in checks) {
-      if (!mounted) return;
-
       // Mark as running
       final runningResult = DiagnosticCheckResult(
         type: checkType,
@@ -255,6 +254,7 @@ class _GlobalLayerDiagnosticsScreenState
   Future<void> _copyToClipboard() async {
     if (_report == null) return;
 
+    if (!mounted) return;
     final haptics = ref.read(hapticServiceProvider);
     final messenger = ScaffoldMessenger.of(context);
     await haptics.trigger(HapticType.light);
@@ -295,7 +295,7 @@ class _GlobalLayerDiagnosticsScreenState
         if (_report != null) ...[
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 16, 20, 8),
               child: Text(
                 'Check Results',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -329,12 +329,12 @@ class _GlobalLayerDiagnosticsScreenState
 
   Widget _buildHeader(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Column(
@@ -343,7 +343,7 @@ class _GlobalLayerDiagnosticsScreenState
             Row(
               children: [
                 Icon(Icons.troubleshoot, size: 20, color: context.accentColor),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Connection Diagnostics',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -353,7 +353,7 @@ class _GlobalLayerDiagnosticsScreenState
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Run a series of checks to verify your broker connection. '
               'Each step tests a different layer of the connection stack.',
@@ -375,7 +375,7 @@ class _GlobalLayerDiagnosticsScreenState
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           decoration: BoxDecoration(
             color: context.accentColor.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(
               color: context.accentColor.withValues(alpha: 0.2),
             ),
@@ -391,7 +391,7 @@ class _GlobalLayerDiagnosticsScreenState
                   color: context.accentColor,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Text(
                 'Running checks... '
                 '${_report?.passedCount ?? 0}/${_report?.results.length ?? 0}',
@@ -413,7 +413,7 @@ class _GlobalLayerDiagnosticsScreenState
           children: [
             // Overall result
             _OverallResultBanner(report: _report!),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             // Re-run button
             SizedBox(
               width: double.infinity,
@@ -444,13 +444,13 @@ class _GlobalLayerDiagnosticsScreenState
                   context.accentColor.withValues(alpha: 0.8),
                 ],
               ),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.play_arrow, color: Colors.white, size: 22),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   _hasRun ? 'Run Again' : 'Start Diagnostics',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -472,12 +472,12 @@ class _GlobalLayerDiagnosticsScreenState
     final diagnosis = ConfigDiagnostics.plainEnglishDiagnosis(_report!);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 8),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Column(
@@ -490,7 +490,7 @@ class _GlobalLayerDiagnosticsScreenState
                   size: 18,
                   color: context.textSecondary,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Summary',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -500,7 +500,7 @@ class _GlobalLayerDiagnosticsScreenState
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppTheme.spacing10),
             Text(
               diagnosis,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -511,7 +511,7 @@ class _GlobalLayerDiagnosticsScreenState
 
             // Duration
             if (_report!.totalDuration != null) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: AppTheme.spacing10),
               Text(
                 'Total time: ${_report!.totalDuration!.inMilliseconds}ms',
                 style: Theme.of(
@@ -568,13 +568,13 @@ class _OverallResultBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
           Icon(icon, color: color, size: 24),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -586,7 +586,7 @@ class _OverallResultBanner extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   message,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -616,10 +616,10 @@ class _DiagnosticCheckTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTheme.spacing12),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppTheme.radius10),
           border: Border.all(
             color: _borderColor(result.status),
             width: result.status.isProblem ? 1.2 : 0.8,
@@ -632,7 +632,7 @@ class _DiagnosticCheckTile extends StatelessWidget {
             Row(
               children: [
                 _StatusIndicator(status: result.status),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppTheme.spacing10),
                 Expanded(
                   child: Text(
                     result.type.title,
@@ -654,7 +654,7 @@ class _DiagnosticCheckTile extends StatelessWidget {
 
             // Description (when pending)
             if (result.status == DiagnosticStatus.pending) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
               Padding(
                 padding: const EdgeInsets.only(left: 28),
                 child: Text(
@@ -669,7 +669,7 @@ class _DiagnosticCheckTile extends StatelessWidget {
             // Result message
             if (result.message.isNotEmpty &&
                 result.status != DiagnosticStatus.pending) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: AppTheme.spacing6),
               Padding(
                 padding: const EdgeInsets.only(left: 28),
                 child: Text(
@@ -683,7 +683,7 @@ class _DiagnosticCheckTile extends StatelessWidget {
 
             // Suggestion
             if (result.suggestion != null && result.suggestion!.isNotEmpty) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: AppTheme.spacing6),
               Padding(
                 padding: const EdgeInsets.only(left: 28),
                 child: Container(
@@ -693,7 +693,7 @@ class _DiagnosticCheckTile extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFBBF24).withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(AppTheme.radius6),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -706,7 +706,7 @@ class _DiagnosticCheckTile extends StatelessWidget {
                           color: Color(0xFFFBBF24),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       Expanded(
                         child: Text(
                           result.suggestion!,

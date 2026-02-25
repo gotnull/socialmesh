@@ -85,6 +85,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
 
   Widget _buildSearchField() {
     return TextField(
+      maxLength: 100,
       controller: _searchController,
       focusNode: _focusNode,
       style: TextStyle(color: context.textPrimary),
@@ -105,7 +106,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
 
   Widget _buildSuggestions() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -128,7 +129,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -145,7 +146,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
                   )
                   .toList(),
             ),
-            SizedBox(height: 24),
+            SizedBox(height: AppTheme.spacing24),
           ],
 
           // Trending products
@@ -157,7 +158,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           ref
               .watch(lilygoTrendingProductsProvider)
               .when(
@@ -170,9 +171,13 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
                                 padding: const EdgeInsets.only(bottom: 8),
                                 child: Material(
                                   color: context.card,
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius12,
+                                  ),
                                   child: InkWell(
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radius12,
+                                    ),
                                     onTap: () => Navigator.push(
                                       context,
                                       MaterialPageRoute<void>(
@@ -193,7 +198,9 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
                                             size: 18,
                                             color: context.accentColor,
                                           ),
-                                          const SizedBox(width: 12),
+                                          const SizedBox(
+                                            width: AppTheme.spacing12,
+                                          ),
                                           Expanded(
                                             child: Text(
                                               p.name,
@@ -228,7 +235,9 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
                         height: 48,
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                       ),
                     ),
@@ -236,7 +245,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
                 ),
                 error: (e, _) => const SizedBox.shrink(),
               ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           // Browse by category
           Text(
@@ -247,7 +256,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           ...DeviceCategory.values.map(
             (cat) => ListTile(
               contentPadding: EdgeInsets.zero,
@@ -256,7 +265,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
                 height: 40,
                 decoration: BoxDecoration(
                   color: context.accentColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: Icon(
                   _categoryIcon(cat),
@@ -310,7 +319,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text('Search failed', style: TextStyle(color: context.textPrimary)),
             TextButton(
               onPressed: () => ref.invalidate(lilygoProductsProvider),
@@ -326,12 +335,12 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.search_off, color: context.textTertiary, size: 64),
-                SizedBox(height: 16),
+                SizedBox(height: AppTheme.spacing16),
                 Text(
                   'No results for "$_query"',
                   style: TextStyle(color: context.textPrimary, fontSize: 18),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Text(
                   'Try different keywords or browse categories',
                   style: TextStyle(color: context.textSecondary),
@@ -346,7 +355,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
           children: [
             // Results count
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Text(
                 '${products.length} result${products.length == 1 ? '' : 's'} for "$_query"',
                 style: TextStyle(color: context.textSecondary),
@@ -387,23 +396,23 @@ class _SearchChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: context.card,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppTheme.radius20),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, color: context.textTertiary, size: 16),
-              SizedBox(width: 6),
+              SizedBox(width: AppTheme.spacing6),
               Text(
                 label,
                 style: TextStyle(color: context.textPrimary, fontSize: 13),
               ),
               if (onDelete != null) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 GestureDetector(
                   onTap: onDelete,
                   child: Icon(
@@ -431,7 +440,9 @@ class _SearchResultCard extends StatelessWidget {
     return Card(
       color: context.card,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
       child: InkWell(
         onTap: () => Navigator.push(
           context,
@@ -439,14 +450,14 @@ class _SearchResultCard extends StatelessWidget {
             builder: (_) => ProductDetailScreen(productId: product.id),
           ),
         ),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           child: Row(
             children: [
               // Image
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 child: product.primaryImage != null
                     ? Image.network(
                         product.primaryImage!,
@@ -458,7 +469,7 @@ class _SearchResultCard extends StatelessWidget {
                       )
                     : _imagePlaceholder(context),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppTheme.spacing12),
 
               // Details
               Expanded(
@@ -473,7 +484,7 @@ class _SearchResultCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: context.accentColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(AppTheme.radius4),
                       ),
                       child: Text(
                         product.category.label,
@@ -484,7 +495,7 @@ class _SearchResultCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(height: 6),
+                    SizedBox(height: AppTheme.spacing6),
 
                     // Name
                     Text(
@@ -497,7 +508,7 @@ class _SearchResultCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
 
                     // Seller
                     Text(
@@ -507,7 +518,7 @@ class _SearchResultCard extends StatelessWidget {
                         fontSize: 12,
                       ),
                     ),
-                    SizedBox(height: 6),
+                    SizedBox(height: AppTheme.spacing6),
 
                     // Price & Rating
                     Row(
@@ -521,7 +532,7 @@ class _SearchResultCard extends StatelessWidget {
                           ),
                         ),
                         if (product.isOnSale) ...[
-                          SizedBox(width: 6),
+                          SizedBox(width: AppTheme.spacing6),
                           Text(
                             product.formattedComparePrice!,
                             style: TextStyle(
@@ -534,7 +545,7 @@ class _SearchResultCard extends StatelessWidget {
                         const Spacer(),
                         if (product.reviewCount > 0) ...[
                           Icon(Icons.star, color: Colors.amber, size: 14),
-                          SizedBox(width: 2),
+                          SizedBox(width: AppTheme.spacing2),
                           Text(
                             product.rating.toStringAsFixed(1),
                             style: TextStyle(
@@ -558,7 +569,7 @@ class _SearchResultCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: Colors.red.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppTheme.radius4),
                   ),
                   child: Text(
                     'Out of Stock',

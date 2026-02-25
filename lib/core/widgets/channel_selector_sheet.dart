@@ -65,7 +65,7 @@ class ChannelSelectorSheet extends ConsumerWidget {
         children: [
           // Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 12, 0),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 0, 12, 0),
             child: Row(
               children: [
                 Text(
@@ -136,12 +136,12 @@ class ChannelSelectorSheet extends ConsumerWidget {
 
   Widget _buildEmptyState(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(AppTheme.spacing32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.wifi_tethering_off, size: 48, color: context.textTertiary),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             'No channels configured',
             style: TextStyle(color: context.textSecondary, fontSize: 14),
@@ -186,7 +186,7 @@ class _ChannelTile extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: context.accentColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Center(
                   child: Text(
@@ -199,7 +199,7 @@ class _ChannelTile extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,7 +220,7 @@ class _ChannelTile extends StatelessWidget {
                           ),
                         ),
                         if (isPrimary) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,
@@ -230,7 +230,9 @@ class _ChannelTile extends StatelessWidget {
                               color: context.accentColor.withValues(
                                 alpha: 0.15,
                               ),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
                             ),
                             child: Text(
                               'PRIMARY',

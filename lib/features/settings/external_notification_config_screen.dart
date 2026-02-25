@@ -204,7 +204,7 @@ class _ExternalNotificationConfigScreenState
           const SliverFillRemaining(child: ScreenLoadingIndicator())
         else ...[
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 if (!isConnected)
@@ -278,7 +278,7 @@ class _ExternalNotificationConfigScreenState
                   ),
                 ]),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
 
                 // Primary GPIO Section
                 _buildSectionHeader(context, 'Primary GPIO'),
@@ -324,7 +324,7 @@ class _ExternalNotificationConfigScreenState
                   ),
                 ]),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
 
                 // Optional GPIO Section
                 _buildSectionHeader(context, 'Optional GPIO'),
@@ -392,7 +392,7 @@ class _ExternalNotificationConfigScreenState
                   ),
                 ]),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spacing32),
               ]),
             ),
           ),
@@ -418,7 +418,7 @@ class _ExternalNotificationConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.border),
       ),
       child: Column(children: children),

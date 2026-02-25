@@ -72,10 +72,10 @@ class _TriggerSelectorState extends State<TriggerSelector> {
         BouncyTap(
           onTap: () => _showTriggerTypePicker(context),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: context.card,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(color: context.border),
             ),
             child: Row(
@@ -85,11 +85,11 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                   height: 44,
                   decoration: BoxDecoration(
                     color: Colors.amber.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Icon(widget.trigger.type.icon, color: Colors.amber),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,7 +98,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                         widget.trigger.type.displayName,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         widget.trigger.type.category,
                         style: const TextStyle(
@@ -115,7 +115,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
           ),
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
 
         // Trigger configuration
         _buildTriggerConfig(context),
@@ -146,7 +146,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                 );
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _buildNodeFilterConfig(context),
           ],
         );
@@ -162,7 +162,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
         return Column(
           children: [
             _buildGeofenceConfig(context),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _buildNodeFilterConfig(context),
           ],
         );
@@ -189,7 +189,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                 );
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _buildNodeFilterConfig(context),
           ],
         );
@@ -215,7 +215,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                 );
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _buildNodeFilterConfig(context),
           ],
         );
@@ -231,7 +231,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
         return Column(
           children: [
             _buildDetectionSensorConfig(context),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _buildNodeFilterConfig(context),
           ],
         );
@@ -261,10 +261,10 @@ class _TriggerSelectorState extends State<TriggerSelector> {
     required void Function(double value) onChanged,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -297,18 +297,19 @@ class _TriggerSelectorState extends State<TriggerSelector> {
 
   Widget _buildKeywordConfig(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('Keyword to match', style: TextStyle(color: Colors.grey)),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           TextField(
+            maxLength: 100,
             controller: _keywordController,
             onChanged: (value) {
               widget.onChanged(
@@ -321,11 +322,11 @@ class _TriggerSelectorState extends State<TriggerSelector> {
               hintText: 'e.g., SOS, help, emergency',
               isDense: true,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.border),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.border),
               ),
             ),
@@ -340,10 +341,10 @@ class _TriggerSelectorState extends State<TriggerSelector> {
     final detectedStateFilter = widget.trigger.detectedStateFilter;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -353,13 +354,14 @@ class _TriggerSelectorState extends State<TriggerSelector> {
             'Sensor name filter (optional)',
             style: TextStyle(color: Colors.grey),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             'Leave empty to trigger for any sensor',
             style: TextStyle(color: Colors.grey[600], fontSize: 12),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           TextFormField(
+            maxLength: 100,
             initialValue: sensorNameFilter,
             onChanged: (value) {
               final newConfig = Map<String, dynamic>.from(
@@ -376,21 +378,21 @@ class _TriggerSelectorState extends State<TriggerSelector> {
               hintText: 'e.g., Motion, Door, Window',
               isDense: true,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.border),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.border),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           const Text(
             'Trigger when sensor is',
             style: TextStyle(color: Colors.grey),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           SegmentedButton<bool?>(
             segments: [
               const ButtonSegment(value: null, label: Text('Any')),
@@ -431,10 +433,10 @@ class _TriggerSelectorState extends State<TriggerSelector> {
         : null;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -444,19 +446,19 @@ class _TriggerSelectorState extends State<TriggerSelector> {
             'Filter by node (optional)',
             style: TextStyle(color: Colors.grey),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             'Leave empty to trigger for any node',
             style: TextStyle(color: Colors.grey[600], fontSize: 12),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           BouncyTap(
             onTap: () => _showNodePicker(context),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
                 color: context.background,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 border: Border.all(color: context.border),
               ),
               child: Row(
@@ -468,7 +470,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                       color: selectedNode != null
                           ? Colors.blue.withValues(alpha: 0.2)
                           : Colors.grey.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                     ),
                     child: Icon(
                       selectedNode != null ? Icons.router : Icons.all_inclusive,
@@ -476,7 +478,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                       color: selectedNode != null ? Colors.blue : Colors.grey,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -516,7 +518,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                         );
                       },
                       child: Padding(
-                        padding: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.all(AppTheme.spacing4),
                         child: Icon(
                           Icons.close,
                           size: 18,
@@ -554,10 +556,10 @@ class _TriggerSelectorState extends State<TriggerSelector> {
 
   Widget _buildGeofenceConfig(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -566,15 +568,16 @@ class _TriggerSelectorState extends State<TriggerSelector> {
           Row(
             children: [
               Icon(Icons.location_on, size: 18, color: Colors.grey),
-              SizedBox(width: 8),
+              SizedBox(width: AppTheme.spacing8),
               Text('Geofence Center', style: TextStyle(color: Colors.grey)),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Row(
             children: [
               Expanded(
                 child: TextField(
+                  maxLength: 20,
                   controller: _latController,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -584,7 +587,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                     labelText: 'Latitude',
                     isDense: true,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                     ),
                   ),
                   onChanged: (value) {
@@ -602,9 +605,10 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                   },
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: TextField(
+                  maxLength: 20,
                   controller: _lonController,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -614,7 +618,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                     labelText: 'Longitude',
                     isDense: true,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                     ),
                   ),
                   onChanged: (value) {
@@ -634,7 +638,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -711,17 +715,17 @@ class _TriggerSelectorState extends State<TriggerSelector> {
         widget.trigger.config['intervalMinutes'] as int? ?? 60;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('Schedule Type', style: TextStyle(color: Colors.grey)),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           SegmentedButton<String>(
             segments: [
               const ButtonSegment(value: 'daily', label: Text('Daily')),
@@ -751,18 +755,19 @@ class _TriggerSelectorState extends State<TriggerSelector> {
               widget.onChanged(widget.trigger.copyWith(config: newConfig));
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Time picker for daily/weekly
           if (scheduleType == 'daily' || scheduleType == 'weekly') ...[
             const Text('Time', style: TextStyle(color: Colors.grey)),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             BouncyTap(
               onTap: () async {
                 final time = await showTimePicker(
                   context: context,
                   initialTime: TimeOfDay(hour: hour, minute: minute),
                 );
+                if (!mounted) return;
                 if (time != null) {
                   final newConfig = Map<String, dynamic>.from(
                     widget.trigger.config,
@@ -786,7 +791,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                 ),
                 decoration: BoxDecoration(
                   border: Border.all(color: context.border),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -804,9 +809,9 @@ class _TriggerSelectorState extends State<TriggerSelector> {
 
           // Days of week picker for weekly
           if (scheduleType == 'weekly') ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             const Text('Days', style: TextStyle(color: Colors.grey)),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Wrap(
               spacing: 8,
               children: [
@@ -853,7 +858,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
 
           // Interval picker for interval type
           if (scheduleType == 'interval') ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             _buildSliderConfig(
               context,
               label: 'Repeat every',
@@ -877,7 +882,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                 widget.onChanged(widget.trigger.copyWith(config: newConfig));
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               _formatInterval(intervalMinutes),
               style: TextStyle(color: Colors.grey[600], fontSize: 12),
@@ -922,10 +927,10 @@ class _TriggerSelectorState extends State<TriggerSelector> {
     final channelIndex = widget.trigger.config['channelIndex'] as int?;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -935,19 +940,19 @@ class _TriggerSelectorState extends State<TriggerSelector> {
             'Channel (optional)',
             style: TextStyle(color: Colors.grey),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             'Leave empty to trigger for any channel activity',
             style: TextStyle(color: Colors.grey[600], fontSize: 12),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           DropdownButtonFormField<int?>(
             value: channelIndex,
             decoration: InputDecoration(
               hintText: 'Any channel',
               isDense: true,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.border),
               ),
             ),
@@ -978,10 +983,10 @@ class _TriggerSelectorState extends State<TriggerSelector> {
 
   Widget _buildManualTriggerInfo(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -990,14 +995,14 @@ class _TriggerSelectorState extends State<TriggerSelector> {
           Row(
             children: [
               Icon(Icons.info_outline, color: Colors.blue[400], size: 20),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               const Text(
                 'Manual Trigger',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'This automation can be triggered manually from:\n'
             '• The Automations screen (tap the play button)\n'
@@ -1037,7 +1042,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                 margin: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.grey[600],
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppTheme.radius2),
                 ),
               ),
               Padding(
@@ -1049,7 +1054,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Expanded(
                 child: ListView(
                   controller: scrollController,
@@ -1088,7 +1093,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
 
       widgets.add(
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 8),
           child: Text(
             category,
             style: const TextStyle(
@@ -1112,7 +1117,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                         context,
                       ).colorScheme.primary.withValues(alpha: 0.2)
                     : context.card,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
               ),
               child: Icon(
                 type.icon,

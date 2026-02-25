@@ -258,7 +258,7 @@ class MarqueeAppBarWithAvatar extends StatelessWidget
         child: Row(
           children: [
             avatar,
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Flexible(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -146,7 +146,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                 color: _canPost && !_isSubmitting
                     ? null
                     : context.border.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppTheme.radius20),
               ),
               child: _isSubmitting
                   ? SizedBox(
@@ -175,7 +175,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -188,7 +188,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                           size: 44,
                           foregroundColor: context.accentColor,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,7 +201,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                                   fontSize: 15,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: AppTheme.spacing2),
                               _buildVisibilityChip(),
                             ],
                           ),
@@ -209,7 +209,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                       ],
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // Content input
                     TextField(
@@ -240,13 +240,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
 
                     // Image previews
                     if (_imageUrls.isNotEmpty) ...[
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                       _buildImagePreviews(),
                     ],
 
                     // Tags section
                     if (_location != null || _nodeId != null) ...[
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -287,14 +287,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                             ? 'Add image'
                             : '${_imageUrls.length}/$_maxImages images',
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       _buildToolbarButton(
                         icon: Icons.location_on_outlined,
                         isActive: _location != null,
                         onTap: _isSubmitting ? null : _addLocation,
                         tooltip: 'Add location',
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       _buildToolbarButton(
                         icon: Icons.router_outlined,
                         isActive: _nodeId != null,
@@ -310,7 +310,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                         ),
                         decoration: BoxDecoration(
                           color: context.background,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                         child: Text(
                           '${_contentController.text.length}',
@@ -356,13 +358,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
             color: context.accentColor.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 14, color: context.accentColor),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
               Text(
                 label,
                 style: TextStyle(
@@ -371,7 +373,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(width: 2),
+              const SizedBox(width: AppTheme.spacing2),
               Icon(
                 Icons.keyboard_arrow_down,
                 size: 16,
@@ -401,11 +403,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
               height: 4,
               decoration: BoxDecoration(
                 color: context.border,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppTheme.radius2),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Text(
                 'Who can see this?',
                 style: TextStyle(
@@ -436,7 +438,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
               'Only me',
               'Only you can see this post',
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
           ],
         ),
       ),
@@ -459,12 +461,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: isSelected
               ? context.accentColor.withValues(alpha: 0.1)
               : context.background,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: isSelected
               ? Border.all(color: context.accentColor.withValues(alpha: 0.5))
               : null,
@@ -472,12 +474,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(AppTheme.spacing10),
               decoration: BoxDecoration(
                 color: isSelected
                     ? context.accentColor.withValues(alpha: 0.2)
                     : context.border.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
               ),
               child: Icon(
                 icon,
@@ -485,7 +487,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                 color: isSelected ? context.accentColor : context.textSecondary,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -527,12 +529,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
         child: Opacity(
           opacity: isDisabled ? 0.5 : 1.0,
           child: Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(AppTheme.spacing10),
             decoration: BoxDecoration(
               color: isActive
                   ? context.accentColor.withValues(alpha: 0.15)
                   : context.background,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppTheme.radius10),
             ),
             child: Icon(
               icon,
@@ -563,13 +565,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       border: Border.all(
                         color: context.border.withValues(alpha: 0.3),
                       ),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       child: Image.network(
                         imageUrl,
                         width: 120,
@@ -595,7 +597,6 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                           final shouldHandle = _failedImageUrls.add(imageUrl);
                           if (shouldHandle) {
                             WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (!mounted) return;
                               final removalIndex = _imageUrls.indexOf(imageUrl);
                               if (removalIndex != -1) {
                                 setState(() {
@@ -633,7 +634,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                         });
                       },
                       child: Container(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(AppTheme.spacing6),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.7),
                           shape: BoxShape.circle,
@@ -660,14 +661,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: AppTheme.successGreen.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         border: Border.all(color: AppTheme.successGreen.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.location_on, size: 16, color: AppTheme.successGreen),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Text(
             _location!.name ?? 'Location',
             style: TextStyle(
@@ -676,7 +677,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
               fontSize: 13,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           BouncyTap(
             onTap: () => setState(() => _location = null),
             child: Icon(Icons.close, size: 16, color: AppTheme.successGreen),
@@ -698,7 +699,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.router, size: 16, color: AccentColors.cyan),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Text(
             'Node $_nodeId',
             style: TextStyle(
@@ -707,7 +708,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
               fontSize: 13,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           BouncyTap(
             onTap: () => setState(() => _nodeId = null),
             child: Icon(Icons.close, size: 16, color: AccentColors.cyan),
@@ -834,11 +835,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
               height: 4,
               decoration: BoxDecoration(
                 color: context.border,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppTheme.radius2),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Text(
                 'Add Location',
                 style: TextStyle(
@@ -852,21 +853,22 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
               onTap: () async {
                 Navigator.pop(ctx);
                 await _useCurrentLocation();
+                if (!mounted) return;
               },
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
                   color: context.background,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(AppTheme.spacing10),
                       decoration: BoxDecoration(
                         color: AppTheme.successGreen.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppTheme.radius10),
                       ),
                       child: Icon(
                         Icons.my_location,
@@ -874,7 +876,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                         color: AppTheme.successGreen,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -909,18 +911,18 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
               },
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
                   color: context.background,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(AppTheme.spacing10),
                       decoration: BoxDecoration(
                         color: AccentColors.blue.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppTheme.radius10),
                       ),
                       child: Icon(
                         Icons.edit_location_alt,
@@ -928,7 +930,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                         color: AccentColors.blue,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -956,7 +958,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
           ],
         ),
       ),
@@ -1024,7 +1026,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           TextField(
             controller: controller,
             maxLength: 100,
@@ -1035,21 +1037,21 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
               filled: true,
               fillColor: context.background,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide(color: context.border),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide(color: context.border),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide(color: context.accentColor, width: 2),
               ),
             ),
             autofocus: true,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             children: [
               Expanded(
@@ -1059,7 +1061,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide(color: Colors.grey.shade700),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: Text(
@@ -1068,7 +1070,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: () {
@@ -1088,7 +1090,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: context.accentColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Add'),

@@ -183,32 +183,32 @@ class _DetectionSensorConfigScreenState
           const SliverFillRemaining(child: ScreenLoadingIndicator())
         else
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // Info card
                 _buildInfoCard(),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
 
                 // Basic settings
                 _buildSectionTitle('Basic Settings'),
                 _buildBasicSettingsCard(),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
 
                 // Pin configuration (only shown if enabled)
                 if (_enabled) ...[
                   _buildSectionTitle('Pin Configuration'),
                   _buildPinConfigCard(),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   // Timing settings
                   _buildSectionTitle('Timing'),
                   _buildTimingCard(),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   // Client options (app-side settings)
                   _buildSectionTitle('Client Options'),
@@ -238,17 +238,17 @@ class _DetectionSensorConfigScreenState
 
   Widget _buildInfoCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: AppTheme.accentOrange.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: AppTheme.accentOrange.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.sensors, color: AppTheme.accentOrange, size: 24),
-          SizedBox(width: 12),
+          SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,7 +261,7 @@ class _DetectionSensorConfigScreenState
                     fontSize: 15,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Text(
                   'Monitor a GPIO pin and broadcast state changes to the mesh. '
                   'Use with PIR motion sensors, door/window contacts, or other binary sensors.',
@@ -283,7 +283,7 @@ class _DetectionSensorConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         children: [
@@ -304,8 +304,9 @@ class _DetectionSensorConfigScreenState
           if (_enabled) ...[
             Divider(height: 1, color: context.border),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: TextField(
+                maxLength: 100,
                 controller: _nameController,
                 style: TextStyle(color: context.textPrimary),
                 decoration: InputDecoration(
@@ -318,7 +319,7 @@ class _DetectionSensorConfigScreenState
                   filled: true,
                   fillColor: context.background,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTheme.radius10),
                     borderSide: BorderSide.none,
                   ),
                   contentPadding: const EdgeInsets.symmetric(
@@ -339,12 +340,12 @@ class _DetectionSensorConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Row(
               children: [
                 Expanded(
@@ -355,7 +356,7 @@ class _DetectionSensorConfigScreenState
                         'GPIO Pin',
                         style: TextStyle(color: context.textPrimary),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: AppTheme.spacing4),
                       Text(
                         'The GPIO pin number to monitor',
                         style: TextStyle(
@@ -369,6 +370,7 @@ class _DetectionSensorConfigScreenState
                 SizedBox(
                   width: 80,
                   child: TextField(
+                    maxLength: 100,
                     controller: _pinController,
                     style: TextStyle(color: context.textPrimary),
                     textAlign: TextAlign.center,
@@ -381,7 +383,7 @@ class _DetectionSensorConfigScreenState
                       filled: true,
                       fillColor: context.background,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppTheme.radius10),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
@@ -450,7 +452,7 @@ class _DetectionSensorConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         children: [
@@ -532,7 +534,7 @@ class _DetectionSensorConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         children: [
@@ -614,7 +616,7 @@ class _DetectionSensorConfigScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Row(
                 children: [
                   Text(

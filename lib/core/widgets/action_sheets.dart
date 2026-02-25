@@ -168,7 +168,6 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                 'node';
       showSuccessSnackBar(context, 'Sent to $targetName');
     } catch (e) {
-      if (!mounted) return;
       safeSetState(() => _isSending = false);
       showErrorSnackBar(context, 'Failed to send: $e');
     }
@@ -216,14 +215,14 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
       children: [
         // Header
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 12, 0),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 0, 12, 0),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppTheme.spacing10),
                 decoration: BoxDecoration(
                   color: context.accentColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Icon(
                   Icons.send_rounded,
@@ -231,7 +230,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                   size: 22,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Text(
                   'Quick Message',
@@ -253,7 +252,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
         Divider(height: 1, color: context.border),
 
         Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppTheme.spacing20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -267,7 +266,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                   letterSpacing: 1,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               GestureDetector(
                 onTap: _showNodeSelector,
                 child: Container(
@@ -277,7 +276,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                   ),
                   decoration: BoxDecoration(
                     color: context.background,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     border: Border.all(color: context.border),
                   ),
                   child: Row(
@@ -287,7 +286,9 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                         height: 36,
                         decoration: BoxDecoration(
                           color: context.accentColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius10,
+                          ),
                         ),
                         child: Icon(
                           _selectedNodeNum == null
@@ -297,7 +298,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                           size: 20,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,7 +331,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: AppTheme.spacing20),
 
               // Quick presets
               Text(
@@ -342,7 +343,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                   letterSpacing: 1,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
@@ -370,7 +371,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                         color: isSelected
                             ? context.accentColor.withValues(alpha: 0.15)
                             : context.background,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppTheme.radius20),
                         border: Border.all(
                           color: isSelected
                               ? context.accentColor
@@ -392,7 +393,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                 }),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
 
               // Custom message input
               Text(
@@ -404,7 +405,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                   letterSpacing: 1,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               TextField(
                 controller: _controller,
                 style: TextStyle(color: context.textPrimary, fontSize: 14),
@@ -417,15 +418,15 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                   filled: true,
                   fillColor: context.background,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     borderSide: BorderSide(color: context.border),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     borderSide: BorderSide(color: context.border),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     borderSide: BorderSide(color: context.accentColor),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
@@ -443,7 +444,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                 },
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
 
               // Send button
               SizedBox(
@@ -458,7 +459,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                     disabledBackgroundColor: context.border,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: _isSending
@@ -474,7 +475,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(Icons.send_rounded, size: 18),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             Text(
                               _selectedNodeNum == null ? 'Broadcast' : 'Send',
                               style: const TextStyle(
@@ -524,7 +525,6 @@ class _SosSheetContentState extends State<SosSheetContent>
 
   void _startCountdown() async {
     for (int i = 5; i > 0; i--) {
-      if (!mounted) return;
       safeSetState(() => _countdown = i);
       await Future.delayed(const Duration(seconds: 1));
     }
@@ -625,7 +625,6 @@ class _SosSheetContentState extends State<SosSheetContent>
       Navigator.pop(context);
       showErrorSnackBar(context, 'Emergency SOS sent to all nodes');
     } catch (e) {
-      if (!mounted) return;
       safeSetState(() => _isSending = false);
       showErrorSnackBar(context, 'Failed to send SOS: $e');
     }
@@ -638,14 +637,14 @@ class _SosSheetContentState extends State<SosSheetContent>
       children: [
         // Header
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 12, 0),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 0, 12, 0),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppTheme.spacing10),
                 decoration: BoxDecoration(
                   color: AppTheme.errorRed.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: const Icon(
                   Icons.emergency,
@@ -653,7 +652,7 @@ class _SosSheetContentState extends State<SosSheetContent>
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Text(
                 'Emergency SOS',
                 style: TextStyle(
@@ -675,16 +674,16 @@ class _SosSheetContentState extends State<SosSheetContent>
 
         // Content
         Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppTheme.spacing20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Warning box
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(AppTheme.spacing14),
                 decoration: BoxDecoration(
                   color: AppTheme.errorRed.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(
                     color: AppTheme.errorRed.withValues(alpha: 0.3),
                   ),
@@ -700,7 +699,7 @@ class _SosSheetContentState extends State<SosSheetContent>
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     _buildBulletPoint(
                       'Broadcast an emergency message to ALL nodes',
                     ),
@@ -712,7 +711,7 @@ class _SosSheetContentState extends State<SosSheetContent>
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: AppTheme.spacing20),
 
               // Countdown / Ready state
               Center(
@@ -728,7 +727,7 @@ class _SosSheetContentState extends State<SosSheetContent>
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: AppTheme.spacing20),
 
               // Action buttons
               Row(
@@ -743,7 +742,9 @@ class _SosSheetContentState extends State<SosSheetContent>
                         side: BorderSide(color: context.border),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                       ),
                       child: Text(
@@ -752,7 +753,7 @@ class _SosSheetContentState extends State<SosSheetContent>
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _canSend && !_isSending ? _sendSos : null,
@@ -762,7 +763,9 @@ class _SosSheetContentState extends State<SosSheetContent>
                         disabledBackgroundColor: context.border,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                       ),
                       child: _isSending
@@ -778,7 +781,7 @@ class _SosSheetContentState extends State<SosSheetContent>
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 const Icon(Icons.emergency, size: 18),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: AppTheme.spacing8),
                                 Text(
                                   _canSend ? 'Send SOS' : '$_countdown',
                                   style: const TextStyle(
@@ -911,7 +914,6 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
       }
       navigator.pop(_selectedNodeNum);
     } catch (e) {
-      if (!mounted) return;
       safeSetState(() => _isSending = false);
       showErrorSnackBar(context, 'Failed to send traceroute: $e');
     }
@@ -924,18 +926,18 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
       children: [
         // Header
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 12, 0),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 0, 12, 0),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppTheme.spacing10),
                 decoration: BoxDecoration(
                   color: context.accentColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Icon(Icons.route, color: context.accentColor, size: 22),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Text(
                 'Traceroute',
                 style: TextStyle(
@@ -956,16 +958,16 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
         Divider(height: 1, color: context.border),
 
         Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppTheme.spacing20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Info box
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(AppTheme.spacing14),
                 decoration: BoxDecoration(
                   color: context.accentColor.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Row(
                   children: [
@@ -974,7 +976,7 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
                       color: context.accentColor.withValues(alpha: 0.7),
                       size: 20,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Text(
                         'Traceroute discovers the path packets take to reach a node through the mesh network.',
@@ -989,7 +991,7 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: AppTheme.spacing20),
 
               // Node selector
               Text(
@@ -1001,7 +1003,7 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
                   letterSpacing: 1,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               GestureDetector(
                 onTap: _showNodeSelector,
                 child: Container(
@@ -1011,7 +1013,7 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
                   ),
                   decoration: BoxDecoration(
                     color: context.background,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     border: Border.all(
                       color: _selectedNodeNum != null
                           ? context.accentColor.withValues(alpha: 0.5)
@@ -1027,7 +1029,9 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
                           color: _selectedNodeNum != null
                               ? context.accentColor.withValues(alpha: 0.15)
                               : context.border.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius10,
+                          ),
                         ),
                         child: Icon(
                           _selectedNodeNum != null
@@ -1039,7 +1043,7 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
                           size: 22,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Expanded(
                         child: Text(
                           _selectedNodeNum != null
@@ -1067,7 +1071,7 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Action buttons
               Row(
@@ -1082,7 +1086,9 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
                         side: BorderSide(color: context.border),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                       ),
                       child: Text(
@@ -1091,7 +1097,7 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _selectedNodeNum != null && !_isSending
@@ -1103,7 +1109,9 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
                         disabledBackgroundColor: context.border,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                       ),
                       child: _isSending
@@ -1119,7 +1127,7 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(Icons.route, size: 18),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppTheme.spacing8),
                                 Text(
                                   'Trace',
                                   style: TextStyle(

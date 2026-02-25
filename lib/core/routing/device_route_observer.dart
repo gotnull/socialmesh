@@ -5,6 +5,7 @@ import '../../providers/connection_providers.dart';
 import '../../utils/snackbar.dart';
 import '../widgets/glass_scaffold.dart';
 import 'route_guard.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Navigation observer that enforces route requirements.
 /// Intercepts navigation to device-required routes when disconnected.
@@ -120,7 +121,7 @@ class _BlockedRouteScreen extends StatelessWidget {
       title: 'Access Restricted',
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(AppTheme.spacing32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -137,13 +138,13 @@ class _BlockedRouteScreen extends StatelessWidget {
                   color: Colors.orange,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
               Text(
                 message,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.titleMedium,
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
               if (fallbackRoute != null)
                 FilledButton(
                   onPressed: () {

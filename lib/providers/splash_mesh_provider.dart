@@ -867,7 +867,7 @@ class ScreenLoadingIndicator extends ConsumerWidget {
               sciFiGlitch: true,
             ),
             if (message != null) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               Text(
                 message!,
                 style: TextStyle(

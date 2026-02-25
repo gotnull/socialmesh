@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// A bar displaying social stats (followers, following, posts).
 ///
@@ -34,13 +35,13 @@ class SocialStatsBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _CompactStat(count: postCount, label: 'Posts', onTap: onPostsTap),
-          const SizedBox(width: 24),
+          const SizedBox(width: AppTheme.spacing24),
           _CompactStat(
             count: followerCount,
             label: 'Followers',
             onTap: onFollowersTap,
           ),
-          const SizedBox(width: 24),
+          const SizedBox(width: AppTheme.spacing24),
           _CompactStat(
             count: followingCount,
             label: 'Following',
@@ -91,7 +92,7 @@ class _StatItem extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppTheme.radius8),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Column(
@@ -103,7 +104,7 @@ class _StatItem extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               label,
               style: theme.textTheme.bodySmall?.copyWith(
@@ -139,7 +140,7 @@ class _CompactStat extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             label,
             style: theme.textTheme.bodySmall?.copyWith(

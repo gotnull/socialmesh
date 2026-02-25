@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'app_bottom_sheet.dart';
 import '../../utils/snackbar.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Action taken by user in content moderation dialog
 enum ContentModerationAction { edit, cancel, proceed }
@@ -97,7 +98,7 @@ class _ContentModerationWarningContent extends StatelessWidget {
       children: [
         // Header with warning icon
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 24, 20, 16),
           child: Column(
             children: [
               Container(
@@ -113,7 +114,7 @@ class _ContentModerationWarningContent extends StatelessWidget {
                   color: isBlocked ? Colors.red : Colors.orange,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               Text(
                 isBlocked
                     ? 'Content Not Allowed'
@@ -123,7 +124,7 @@ class _ContentModerationWarningContent extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 isBlocked
                     ? 'Your content violates our Community Guidelines and cannot be posted.'
@@ -141,7 +142,7 @@ class _ContentModerationWarningContent extends StatelessWidget {
         if (result.categories.isNotEmpty) ...[
           const Divider(height: 1),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -152,7 +153,7 @@ class _ContentModerationWarningContent extends StatelessWidget {
                       size: 18,
                       color: theme.colorScheme.error,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Text(
                       'Issues Detected',
                       style: theme.textTheme.titleSmall?.copyWith(
@@ -161,7 +162,7 @@ class _ContentModerationWarningContent extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -173,7 +174,7 @@ class _ContentModerationWarningContent extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.errorContainer.withAlpha(80),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppTheme.radius16),
                         border: Border.all(
                           color: theme.colorScheme.error.withAlpha(50),
                         ),
@@ -196,17 +197,17 @@ class _ContentModerationWarningContent extends StatelessWidget {
 
         // Info box about consequences
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 16),
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Row(
               children: [
                 Icon(Icons.info_outline, size: 20, color: theme.hintColor),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Text(
                     isBlocked
@@ -224,7 +225,7 @@ class _ContentModerationWarningContent extends StatelessWidget {
 
         // Action buttons
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 24),
           child: Column(
             children: [
               // Primary action: Edit content
@@ -245,7 +246,7 @@ class _ContentModerationWarningContent extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               // Secondary actions
               Row(
                 children: [
@@ -271,7 +272,7 @@ class _ContentModerationWarningContent extends StatelessWidget {
                   // When using the static show() method, callbacks are null
                   // so we check !isBlocked to allow proceeding for flagged content
                   if (!isBlocked) ...[
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () {

@@ -35,7 +35,7 @@ class TTLSelector extends StatelessWidget {
               color: isSelected
                   ? context.accentColor.withValues(alpha: 0.15)
                   : context.card,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppTheme.radius20),
               border: Border.all(
                 color: isSelected
                     ? context.accentColor

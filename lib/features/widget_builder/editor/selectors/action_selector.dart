@@ -40,15 +40,16 @@ class _ActionSelectorState extends State<ActionSelector> {
           context: context,
           currentAction: widget.currentAction,
         );
+        if (!mounted) return;
         widget.onSelect(result);
       },
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppTheme.radius8),
       child: GradientBorderContainer(
         borderRadius: 8,
         borderWidth: 2,
         accentOpacity: hasAction ? 0.5 : 0.0,
         backgroundColor: context.background,
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTheme.spacing12),
         child: Row(
           children: [
             Icon(
@@ -56,7 +57,7 @@ class _ActionSelectorState extends State<ActionSelector> {
               size: 20,
               color: hasAction ? context.accentColor : context.textSecondary,
             ),
-            SizedBox(width: 12),
+            SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,7 +195,7 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
         Row(
           children: [
             Icon(Icons.touch_app, size: 20, color: accentColor),
-            SizedBox(width: 8),
+            SizedBox(width: AppTheme.spacing8),
             Text(
               'What should happen when tapped?',
               style: TextStyle(
@@ -205,16 +206,16 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         Text(
           'Choose an action for this element',
           style: TextStyle(color: context.textSecondary, fontSize: 13),
         ),
-        SizedBox(height: 20),
+        SizedBox(height: AppTheme.spacing20),
 
         // Action categories
         _buildSectionLabel('MESSAGING'),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _buildActionTile(
           type: ActionType.sendMessage,
           icon: Icons.send,
@@ -222,7 +223,7 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
           description: 'Open message composer to send a message',
           color: Colors.blue,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _buildActionTile(
           type: ActionType.shareLocation,
           icon: Icons.location_on,
@@ -231,9 +232,9 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
           color: Colors.green,
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         _buildSectionLabel('NETWORK'),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _buildActionTile(
           type: ActionType.traceroute,
           icon: Icons.timeline,
@@ -241,7 +242,7 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
           description: 'Trace the route to a node',
           color: Colors.orange,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _buildActionTile(
           type: ActionType.requestPositions,
           icon: Icons.refresh,
@@ -250,9 +251,9 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
           color: Colors.purple,
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         _buildSectionLabel('EMERGENCY'),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _buildActionTile(
           type: ActionType.sos,
           icon: Icons.warning_amber,
@@ -263,11 +264,11 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
 
         // Configuration options based on selected type
         if (_selectedType != null) ...[
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
           _buildConfigSection(accentColor),
         ],
 
-        const SizedBox(height: 20),
+        const SizedBox(height: AppTheme.spacing20),
 
         // Confirm button
         SizedBox(
@@ -311,14 +312,14 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
 
     return InkWell(
       onTap: () => setState(() => _selectedType = type),
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(AppTheme.radius10),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTheme.spacing12),
         decoration: BoxDecoration(
           color: isSelected
               ? color.withValues(alpha: 0.15)
               : context.background,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppTheme.radius10),
           border: Border.all(
             color: isSelected ? color : context.border,
             width: isSelected ? 2 : 1,
@@ -327,14 +328,14 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppTheme.spacing8),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Icon(icon, color: color, size: 20),
             ),
-            SizedBox(width: 12),
+            SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,14 +372,14 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
       borderWidth: 2,
       accentOpacity: 0.3,
       backgroundColor: accentColor.withValues(alpha: 0.1),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Icon(Icons.settings, size: 16, color: accentColor),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Text(
                 'Options',
                 style: TextStyle(
@@ -389,7 +390,7 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           ..._buildTypeSpecificOptions(),
         ],
       ),
@@ -406,7 +407,7 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
             value: _requiresNodeSelection,
             onChanged: (v) => setState(() => _requiresNodeSelection = v),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _buildCheckbox(
             label: 'Show channel picker',
             subtitle: 'Let user choose which channel',
@@ -441,7 +442,7 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
   }) {
     return InkWell(
       onTap: () => onChanged(!value),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppTheme.radius8),
       child: Row(
         children: [
           Checkbox(

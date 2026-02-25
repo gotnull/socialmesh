@@ -25,6 +25,7 @@ import '../vs_node_view/common.dart';
 import '../vs_node_view/data/vs_interface.dart';
 import '../vs_node_view/data/vs_node_data.dart';
 import '../vs_node_view/data/vs_subgroup.dart';
+import 'package:socialmesh/core/theme.dart';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -291,7 +292,7 @@ Widget _buildSendMessageWidget(_SendMessageConfig config) {
           value: config.targetNodeNum,
           onChanged: (v) => config.targetNodeNum = v,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _TextInputField(
           hint: 'Message text...',
           value: config.messageText,
@@ -316,7 +317,7 @@ Widget _buildPlaySoundWidget(_PlaySoundConfig config) {
           value: config.soundName ?? '',
           onChanged: (v) => config.soundName = v.isEmpty ? null : v,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _TextInputField(
           hint: 'RTTTL string (optional)...',
           value: config.soundRtttl ?? '',
@@ -353,7 +354,7 @@ Widget _buildPushNotificationWidget(_PushNotificationConfig config) {
           value: config.notificationTitle,
           onChanged: (v) => config.notificationTitle = v,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _TextInputField(
           hint: 'Notification body...',
           value: config.notificationBody,
@@ -378,7 +379,7 @@ Widget _buildTriggerWebhookWidget(_WebhookConfig config) {
           value: config.webhookEventName,
           onChanged: (v) => config.webhookEventName = v,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _TextInputField(
           hint: 'Webhook URL...',
           value: config.webhookUrl,
@@ -428,7 +429,7 @@ Widget _buildSendToChannelWidget(_SendToChannelConfig config) {
           value: config.targetChannelIndex,
           onChanged: (v) => config.targetChannelIndex = v,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _TextInputField(
           hint: 'Message text...',
           value: config.messageText,
@@ -764,7 +765,7 @@ class _ActionConfigWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 14, color: kActionSignalColor),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Flexible(
               child: Text(
                 label,
@@ -780,7 +781,7 @@ class _ActionConfigWidget extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppTheme.spacing10),
         child,
       ],
     );
@@ -830,6 +831,7 @@ class _TextInputFieldState extends State<_TextInputField> {
         maxHeight: widget.maxLines > 1 ? 72 : 36,
       ),
       child: TextField(
+        maxLength: 100,
         controller: _controller,
         onChanged: widget.onChanged,
         maxLines: widget.maxLines,
@@ -846,19 +848,19 @@ class _TextInputFieldState extends State<_TextInputField> {
             vertical: 8,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppTheme.radius6),
             borderSide: BorderSide(
               color: colorScheme.onSurface.withValues(alpha: 0.2),
             ),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppTheme.radius6),
             borderSide: BorderSide(
               color: colorScheme.onSurface.withValues(alpha: 0.15),
             ),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppTheme.radius6),
             borderSide: BorderSide(color: kActionSignalColor, width: 1.5),
           ),
         ),
@@ -911,11 +913,12 @@ class _NodeNumFieldState extends State<_NodeNumField> {
             color: colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         Expanded(
           child: SizedBox(
             height: 32,
             child: TextField(
+              maxLength: 10,
               controller: _controller,
               keyboardType: TextInputType.number,
               onChanged: (v) {
@@ -934,19 +937,19 @@ class _NodeNumFieldState extends State<_NodeNumField> {
                   vertical: 6,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                   borderSide: BorderSide(
                     color: colorScheme.onSurface.withValues(alpha: 0.15),
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                   borderSide: BorderSide(
                     color: colorScheme.onSurface.withValues(alpha: 0.1),
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                   borderSide: BorderSide(
                     color: kActionSignalColor.withValues(alpha: 0.6),
                   ),

@@ -41,7 +41,7 @@ class AetherFlightMatchCard extends StatelessWidget {
           backgroundColor: flightColor.withValues(alpha: 0.06),
           enableDepthBlend: true,
           depthBlendOpacity: 0.4,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -51,11 +51,11 @@ class AetherFlightMatchCard extends StatelessWidget {
                 height: 56,
                 decoration: BoxDecoration(
                   color: flightColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTheme.radius16),
                 ),
                 child: const Icon(Icons.flight, color: flightColor, size: 28),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppTheme.spacing16),
               // Flight info
               Expanded(
                 child: Column(
@@ -75,7 +75,7 @@ class AetherFlightMatchCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -83,7 +83,9 @@ class AetherFlightMatchCard extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: flightColor,
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius6,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -93,7 +95,7 @@ class AetherFlightMatchCard extends StatelessWidget {
                                 size: 10,
                                 color: Colors.white,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: AppTheme.spacing4),
                               const Text(
                                 'IN FLIGHT',
                                 style: TextStyle(
@@ -108,7 +110,7 @@ class AetherFlightMatchCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppTheme.spacing6),
                     // Route
                     Builder(
                       builder: (context) {
@@ -172,7 +174,7 @@ class AetherFlightMatchCard extends StatelessWidget {
                         );
                       },
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     // Node name
                     Row(
                       children: [
@@ -181,7 +183,7 @@ class AetherFlightMatchCard extends StatelessWidget {
                           size: 13,
                           color: context.textTertiary,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Flexible(
                           child: Text(
                             node.displayName,
@@ -194,13 +196,13 @@ class AetherFlightMatchCard extends StatelessWidget {
                         ),
                         // Signal metrics if available
                         if (node.rssi != null) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           Icon(
                             Icons.signal_cellular_alt,
                             size: 12,
                             color: context.textTertiary,
                           ),
-                          const SizedBox(width: 2),
+                          const SizedBox(width: AppTheme.spacing2),
                           Text(
                             '${node.rssi} dBm',
                             style: TextStyle(
@@ -210,7 +212,7 @@ class AetherFlightMatchCard extends StatelessWidget {
                           ),
                         ],
                         if (node.snr != null) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: AppTheme.spacing6),
                           Text(
                             'SNR ${node.snr}',
                             style: TextStyle(
@@ -221,7 +223,7 @@ class AetherFlightMatchCard extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     // CTA
                     Row(
                       children: [
@@ -230,7 +232,7 @@ class AetherFlightMatchCard extends StatelessWidget {
                           size: 14,
                           color: flightColor,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Text(
                           'Tap to report your reception',
                           style: TextStyle(

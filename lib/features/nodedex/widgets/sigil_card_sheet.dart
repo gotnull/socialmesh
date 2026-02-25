@@ -75,7 +75,7 @@ void showSigilCardSheet({
 
   AppBottomSheet.show<void>(
     context: context,
-    padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+    padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 24, 16),
     child: _SigilCardSheetContent(
       entry: entry,
       traitResult: traitResult,
@@ -133,13 +133,13 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
 
         // --- Header ---
         Row(
           children: [
             Icon(Icons.auto_awesome, size: 18, color: rarity.borderColor),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Text(
               'Sigil Card',
               style: TextStyle(
@@ -160,7 +160,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
                   ),
                   decoration: BoxDecoration(
                     color: rarity.borderColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     border: Border.all(
                       color: rarity.borderColor.withValues(alpha: 0.3),
                       width: 0.5,
@@ -177,7 +177,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
                     ),
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 GestureDetector(
                   onTap: () => _showRarityInfo(context),
                   child: Icon(
@@ -191,7 +191,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
           ],
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // --- Animated card preview (visible to user) ---
         Center(
@@ -210,7 +210,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // --- Share button ---
         if (_isSharing)
@@ -240,7 +240,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(48),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 textStyle: const TextStyle(
                   fontSize: 15,
@@ -253,7 +253,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
 
         // --- Add to Apple Wallet button (iOS only, feature-flagged) ---
         if (Platform.isIOS && AppFeatureFlags.isAppleWalletEnabled) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: AppTheme.spacing10),
           if (_isAddingToWallet)
             const SizedBox(
               height: 48,
@@ -283,7 +283,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
                   ),
                   minimumSize: const Size.fromHeight(48),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   textStyle: const TextStyle(
                     fontSize: 15,
@@ -357,7 +357,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             'A card\'s rarity reflects how often you\'ve encountered '
             'this node on the mesh. The more you cross paths, the '
@@ -368,17 +368,17 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildRarityRow(CardRarity.common, 'Under 5 encounters'),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _buildRarityRow(CardRarity.uncommon, '5 - 19 encounters'),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _buildRarityRow(CardRarity.rare, '20 - 49 encounters'),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _buildRarityRow(CardRarity.epic, '50 - 99 encounters'),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _buildRarityRow(CardRarity.legendary, '100+ encounters'),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
@@ -414,7 +414,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
                 : null,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppTheme.spacing10),
         Text(
           tier.label,
           style: TextStyle(
@@ -425,7 +425,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
             fontFamily: AppTheme.fontFamily,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         Expanded(
           child: Text(
             description,

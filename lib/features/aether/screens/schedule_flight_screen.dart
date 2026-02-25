@@ -748,7 +748,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -761,27 +761,27 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                       icon: Icons.flight,
                       margin: EdgeInsets.zero,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // Tips — right below the intro card
                     _buildTipsCard(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // Incomplete route data notice (if applicable)
                     if (_showIncompleteDataNotice) ...[
                       _buildIncompleteDataNotice(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                     ],
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
 
                     // Flight Info Section
                     _buildSectionHeader('Flight Information'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppTheme.spacing12),
 
                     // Flight Number with Validation
                     _buildFlightNumberField(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // Airports row with swap button
                     Row(
@@ -831,11 +831,11 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
 
                     // Route info / warnings
                     _buildRouteInfo(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppTheme.spacing24),
 
                     // Departure Time Section
                     _buildSectionHeader('Departure Time'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppTheme.spacing12),
 
                     Row(
                       children: [
@@ -852,7 +852,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                                 : null,
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: AppTheme.spacing16),
                         Expanded(
                           child: _buildDateButton(
                             label: 'Time',
@@ -876,11 +876,11 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppTheme.spacing24),
 
                     // Arrival Time Section (optional)
                     _buildSectionHeader('Arrival Time (Optional)'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppTheme.spacing12),
 
                     Row(
                       children: [
@@ -897,7 +897,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                                 : null,
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: AppTheme.spacing16),
                         Expanded(
                           child: _buildDateButton(
                             label: 'Time',
@@ -921,11 +921,11 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppTheme.spacing24),
 
                     // Notes Section
                     _buildSectionHeader('Additional Notes (Optional)'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppTheme.spacing12),
 
                     _buildTextField(
                       controller: _notesController,
@@ -997,7 +997,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                 color: !_isSaving && myNode != null
                     ? null
                     : context.border.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppTheme.radius16),
                 boxShadow: !_isSaving && myNode != null
                     ? [
                         BoxShadow(
@@ -1029,7 +1029,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                               ? Colors.white
                               : context.textTertiary,
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: AppTheme.spacing10),
                         Text(
                           'Schedule Flight',
                           style: TextStyle(
@@ -1054,7 +1054,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     final isConnected = myNode != null;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 12),
       decoration: BoxDecoration(
         color: context.card,
         border: Border(
@@ -1071,7 +1071,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
               height: 40,
               decoration: BoxDecoration(
                 color: AppTheme.warningYellow.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
               ),
               child: Icon(
                 Icons.bluetooth_disabled,
@@ -1079,7 +1079,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                 size: 20,
               ),
             ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1200,21 +1200,29 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                         fillColor: this.context.card,
                         counterText: '',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide(color: this.context.border),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide(color: this.context.border),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide(
                             color: this.context.accentColor,
                           ),
                         ),
                         errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide(color: AppTheme.errorRed),
                         ),
                       ),
@@ -1237,7 +1245,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                         size: 12,
                         color: context.accentColor,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       Expanded(
                         child: Text(
                           resolvedAirport.city,
@@ -1330,7 +1338,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       child: Row(
         children: [
           Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Expanded(
             child: Text(
               text,
@@ -1394,19 +1402,19 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
         fillColor: context.card,
         counterStyle: TextStyle(color: context.textTertiary),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           borderSide: BorderSide(color: context.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           borderSide: BorderSide(color: context.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           borderSide: BorderSide(color: context.accentColor),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           borderSide: BorderSide(color: AppTheme.errorRed),
         ),
       ),
@@ -1423,16 +1431,16 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Row(
           children: [
             Icon(icon, color: context.textTertiary, size: 20),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1441,7 +1449,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                     label,
                     style: TextStyle(color: context.textTertiary, fontSize: 12),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     value,
                     style: TextStyle(
@@ -1745,32 +1753,32 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                   ),
                 // Search button — gradient pill, always visible
                 _buildSearchPill(),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
               ],
             ),
             filled: true,
             fillColor: context.card,
             counterStyle: TextStyle(color: context.textTertiary),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               borderSide: BorderSide(color: context.border),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               borderSide: BorderSide(color: context.border),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               borderSide: BorderSide(color: context.accentColor),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               borderSide: BorderSide(color: AppTheme.errorRed),
             ),
           ),
         ),
         if (_validationResult != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _buildValidationStatus(),
         ],
       ],
@@ -1787,7 +1795,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     final child = GestureDetector(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(AppTheme.spacing8),
         child: isLoading
             ? SizedBox(
                 width: 20,
@@ -1822,14 +1830,14 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
           gradient: gradient,
           animate: true,
           enabled: true,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.search, size: 16, color: Colors.white),
-                SizedBox(width: 4),
+                SizedBox(width: AppTheme.spacing4),
                 Text(
                   'Search',
                   style: TextStyle(
@@ -1876,13 +1884,13 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Icon(icon, color: color, size: 18),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Expanded(
             child: Text(
               result.message,
@@ -1894,7 +1902,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
             ),
           ),
           if (result.isActive && result.position?.hasPosition == true) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Text(
               '${result.position!.altitudeFeet != null ? NumberFormat('#,##0').format(result.position!.altitudeFeet!.round()) : '--'} ft',
               style: TextStyle(
@@ -1911,10 +1919,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
 
   Widget _buildTipsCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -1927,7 +1935,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                 color: AppTheme.warningYellow,
                 size: 20,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Text(
                 'Tips for best reception',
                 style: TextStyle(
@@ -1937,7 +1945,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildTip('Get a window seat if possible'),
           _buildTip('Keep node near the window during flight'),
           _buildTip('Higher TX power = longer range'),
@@ -1973,10 +1981,10 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
         : '${_missingFields.sublist(0, _missingFields.length - 1).join(', ')}, and ${_missingFields.last}';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: AppTheme.warningYellow.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(
           color: AppTheme.warningYellow.withValues(alpha: 0.3),
         ),
@@ -1985,7 +1993,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.info_outline, color: AppTheme.warningYellow, size: 22),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1998,7 +2006,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                     fontSize: 14,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: AppTheme.spacing6),
                 Text(
                   'Could not auto-fill $missingText from OpenSky Network. Please enter these details manually below.',
                   style: TextStyle(color: context.textSecondary, fontSize: 13),
@@ -2006,7 +2014,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
@@ -2047,17 +2055,17 @@ class _AirportOptionsOverlay extends StatelessWidget {
         padding: const EdgeInsets.only(top: 4),
         child: Material(
           elevation: 8,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           color: context.card,
           child: Container(
             width: fieldWidth,
             constraints: const BoxConstraints(maxHeight: 260),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(color: context.border),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               child: ListView.separated(
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
@@ -2085,7 +2093,9 @@ class _AirportOptionsOverlay extends StatelessWidget {
                               color: context.accentColor.withValues(
                                 alpha: 0.15,
                               ),
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius6,
+                              ),
                             ),
                             child: Text(
                               airport.iata,
@@ -2098,7 +2108,7 @@ class _AirportOptionsOverlay extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           // City + airport name
                           Expanded(
                             child: Column(
@@ -2264,7 +2274,7 @@ class _LiveFlightStickyHeaderState extends State<_LiveFlightStickyHeader>
                           color: accentColor,
                           size: 18,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Expanded(
                           child: Text(
                             'Live Flight Data',
@@ -2283,7 +2293,7 @@ class _LiveFlightStickyHeaderState extends State<_LiveFlightStickyHeader>
                             size: 12,
                             color: accentColor.withValues(alpha: 0.7),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: AppTheme.spacing4),
                           Text(
                             _routeString(),
                             style: TextStyle(
@@ -2292,7 +2302,7 @@ class _LiveFlightStickyHeaderState extends State<_LiveFlightStickyHeader>
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                         ],
                         // Status pill
                         Container(
@@ -2302,7 +2312,9 @@ class _LiveFlightStickyHeaderState extends State<_LiveFlightStickyHeader>
                           ),
                           decoration: BoxDecoration(
                             color: Colors.green.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius6,
+                            ),
                           ),
                           child: Text(
                             pos.onGround ? 'On Ground' : 'In Flight',
@@ -2315,7 +2327,7 @@ class _LiveFlightStickyHeaderState extends State<_LiveFlightStickyHeader>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppTheme.spacing6),
 
                     // Bottom row: data chips
                     Wrap(

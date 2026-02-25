@@ -86,7 +86,7 @@ class SignalGridCard extends ConsumerWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppTheme.radius20),
           border: Border.all(color: context.border.withValues(alpha: 0.5)),
           boxShadow: [
             BoxShadow(
@@ -97,7 +97,7 @@ class SignalGridCard extends ConsumerWidget {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(19),
+          borderRadius: BorderRadius.circular(AppTheme.radius19),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -130,7 +130,7 @@ class SignalGridCard extends ConsumerWidget {
                 left: 0,
                 right: 0,
                 child: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(AppTheme.spacing8),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
@@ -166,7 +166,7 @@ class SignalGridCard extends ConsumerWidget {
                 right: 0,
                 bottom: 0,
                 child: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(AppTheme.spacing8),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
@@ -190,7 +190,7 @@ class SignalGridCard extends ConsumerWidget {
                               icon: Icons.chat_bubble_outline,
                               text: signal.commentCount.toString(),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                           ],
                           // Location indicator
                           if (hasLocation) ...[
@@ -198,7 +198,7 @@ class SignalGridCard extends ConsumerWidget {
                               icon: Icons.location_on,
                               text: null,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                           ],
                           // Image indicator (only show if has image)
                           if (hasImage) ...[
@@ -210,7 +210,7 @@ class SignalGridCard extends ConsumerWidget {
                             const _IconBadge(icon: Icons.router, text: null),
                         ],
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: AppTheme.spacing6),
                       // Author row
                       Row(
                         children: [
@@ -237,7 +237,7 @@ class SignalGridCard extends ConsumerWidget {
                               foregroundColor: avatarColor,
                               fallbackIcon: Icons.person,
                             ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: AppTheme.spacing6),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,7 +264,7 @@ class SignalGridCard extends ConsumerWidget {
                                       ),
                                     ),
                                     if (isOwnMeshSignal) ...[
-                                      const SizedBox(width: 4),
+                                      const SizedBox(width: AppTheme.spacing4),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 4,
@@ -384,7 +384,7 @@ class SignalGridCard extends ConsumerWidget {
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 32, 12, 56),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing12, 32, 12, 56),
           child: Text(
             signal.content,
             style: TextStyle(
@@ -432,7 +432,7 @@ class _IconBadge extends StatelessWidget {
           shadows: const [Shadow(color: Colors.black87, blurRadius: 4)],
         ),
         if (text != null) ...[
-          const SizedBox(width: 2),
+          const SizedBox(width: AppTheme.spacing2),
           Text(
             text!,
             style: TextStyle(
@@ -466,7 +466,7 @@ class _BadgePill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.1),
           width: 0.5,
@@ -476,7 +476,7 @@ class _BadgePill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: iconColor),
-          const SizedBox(width: 2),
+          const SizedBox(width: AppTheme.spacing2),
           Text(
             text,
             style: TextStyle(
@@ -528,7 +528,7 @@ class _TTLBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.1),
           width: 0.5,
@@ -542,7 +542,7 @@ class _TTLBadge extends StatelessWidget {
             size: 10,
             color: Colors.white.withValues(alpha: 0.9),
           ),
-          const SizedBox(width: 2),
+          const SizedBox(width: AppTheme.spacing2),
           Text(
             text,
             style: const TextStyle(

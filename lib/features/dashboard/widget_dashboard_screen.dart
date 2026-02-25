@@ -167,7 +167,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
                   return Material(
                     elevation: elevation,
                     color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTheme.radius16),
                     child: child,
                   );
                 },
@@ -207,7 +207,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
 
   Widget _buildWidgetUpsellCard(int premiumWidgetCount) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
       child: GradientBorderContainer(
         borderRadius: 16,
         borderWidth: 2,
@@ -221,9 +221,9 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
                 MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
               );
             },
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radius16),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Row(
                 children: [
                   Container(
@@ -238,7 +238,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
                           context.accentColor.withValues(alpha: 0.1),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       border: Border.all(
                         color: context.accentColor.withValues(alpha: 0.3),
                       ),
@@ -249,7 +249,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
                       size: 24,
                     ),
                   ),
-                  SizedBox(width: 16),
+                  SizedBox(width: AppTheme.spacing16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,7 +262,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
                             color: context.accentColor,
                           ),
                         ),
-                        SizedBox(height: 4),
+                        SizedBox(height: AppTheme.spacing4),
                         Text(
                           'Battery, messages, map, and more',
                           style: TextStyle(
@@ -278,7 +278,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
                     height: 32,
                     decoration: BoxDecoration(
                       color: context.accentColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                     ),
                     child: Icon(
                       Icons.arrow_forward_ios,
@@ -439,7 +439,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
   Widget _buildEmptyDashboard(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -448,7 +448,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
               size: 64,
               color: context.textTertiary.withValues(alpha: 0.5),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: AppTheme.spacing16),
             Text(
               'No Widgets Added',
               style: TextStyle(
@@ -457,7 +457,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
                 color: context.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Customize your dashboard with widgets that matter to you',
               style: Theme.of(
@@ -465,7 +465,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
               ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 24),
+            SizedBox(height: AppTheme.spacing24),
             ElevatedButton.icon(
               onPressed: () => _showAddWidgetSheet(context),
               icon: Icon(Icons.add, size: 20),
@@ -478,7 +478,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
                   vertical: 14,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
             ),
@@ -542,14 +542,14 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
         children: [
           // Header
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(AppTheme.spacing8),
                   decoration: BoxDecoration(
                     color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                   child: Icon(
                     isCustomWidget ? Icons.widgets : widgetInfo.icon,
@@ -557,7 +557,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
                     size: 20,
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Text(
                     isCustomWidget ? 'Custom Widget' : widgetInfo.name,
@@ -583,6 +583,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
               onTap: () async {
                 Navigator.pop(context);
                 await _editCustomWidget(config.schemaId);
+                if (!mounted) return;
               },
             ),
           // Toggle favorite
@@ -646,7 +647,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
               }
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
         ],
       ),
     );
@@ -748,7 +749,7 @@ class _AddWidgetSheet extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         // Widget list
         Expanded(
           child: ListView.builder(
@@ -831,7 +832,7 @@ class _AddWidgetSheet extends ConsumerWidget {
         borderRadius: 12,
         borderWidth: 2,
         accentOpacity: 0.3,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -842,7 +843,7 @@ class _AddWidgetSheet extends ConsumerWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
           ),
           child: Row(
             children: [
@@ -851,7 +852,7 @@ class _AddWidgetSheet extends ConsumerWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: context.accentColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Icon(
                   Icons.auto_awesome,
@@ -859,7 +860,7 @@ class _AddWidgetSheet extends ConsumerWidget {
                   size: 22,
                 ),
               ),
-              SizedBox(width: 14),
+              SizedBox(width: AppTheme.spacing14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -872,7 +873,7 @@ class _AddWidgetSheet extends ConsumerWidget {
                         color: context.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       'Get $widgetPackName for ${DashboardWidgetType.values.length - _freeWidgetTypes.length} more widgets',
                       style: TextStyle(
@@ -900,7 +901,7 @@ class _AddWidgetSheet extends ConsumerWidget {
                     vertical: 8,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                 ),
                 child: Text(
@@ -937,12 +938,12 @@ class _WidgetOption extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           decoration: BoxDecoration(
             color: context.background,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(
               color: isAdded
                   ? context.accentColor.withValues(alpha: 0.3)
@@ -960,7 +961,7 @@ class _WidgetOption extends StatelessWidget {
                       : isAdded
                       ? context.accentColor.withValues(alpha: 0.15)
                       : context.surface,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Icon(
                   isLocked ? Icons.lock_outline : info.icon,
@@ -972,7 +973,7 @@ class _WidgetOption extends StatelessWidget {
                   size: 22,
                 ),
               ),
-              SizedBox(width: 14),
+              SizedBox(width: AppTheme.spacing14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -994,7 +995,7 @@ class _WidgetOption extends StatelessWidget {
                           ),
                         ),
                         if (isLocked) ...[
-                          SizedBox(width: 6),
+                          SizedBox(width: AppTheme.spacing6),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,
@@ -1004,7 +1005,9 @@ class _WidgetOption extends StatelessWidget {
                               color: context.accentColor.withValues(
                                 alpha: 0.15,
                               ),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
                             ),
                             child: Text(
                               'PRO',
@@ -1019,7 +1022,7 @@ class _WidgetOption extends StatelessWidget {
                         ],
                       ],
                     ),
-                    SizedBox(height: 2),
+                    SizedBox(height: AppTheme.spacing2),
                     Text(
                       info.description,
                       style: TextStyle(

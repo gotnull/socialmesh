@@ -12,6 +12,7 @@ import '../common.dart';
 import '../data/vs_interface.dart';
 import '../data/vs_node_data_provider.dart';
 import '../special_nodes/vs_list_node.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Minimum touch target size for mobile usability (Material Design guideline).
 const double _kMinTouchTarget = 44.0;
@@ -52,7 +53,6 @@ class _VSNodeInputState extends State<VSNodeInput> {
 
   void updateRenderBox() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
       renderBox = findAndUpdateWidgetPosition(
         widgetAnchor: _anchor,
         context: context,
@@ -92,7 +92,7 @@ class _VSNodeInputState extends State<VSNodeInput> {
                       child: Padding(
                         // Extra padding around the icon so the tap area extends
                         // beyond the visual icon bounds.
-                        padding: const EdgeInsets.all(6.0),
+                        padding: const EdgeInsets.all(AppTheme.spacing6),
                         child: wrapWithToolTip(
                           toolTip: widget.data.toolTip,
                           child: widget.data.getInterfaceIcon(

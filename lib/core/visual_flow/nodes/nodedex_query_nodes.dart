@@ -27,6 +27,7 @@ import '../vs_node_view/data/vs_interface.dart';
 import '../vs_node_view/data/vs_node_data.dart';
 import '../vs_node_view/data/vs_subgroup.dart';
 import '../vs_node_view/special_nodes/vs_widget_node.dart';
+import 'package:socialmesh/core/theme.dart';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -802,7 +803,7 @@ class _QueryConfigWidget extends StatelessWidget {
           Row(
             children: [
               Icon(icon, size: 14, color: _kQueryAccent),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Expanded(
                 child: Text(
                   label,
@@ -816,7 +817,10 @@ class _QueryConfigWidget extends StatelessWidget {
               ),
             ],
           ),
-          if (child is! SizedBox) ...[const SizedBox(height: 6), child],
+          if (child is! SizedBox) ...[
+            const SizedBox(height: AppTheme.spacing6),
+            child,
+          ],
         ],
       ),
     );
@@ -856,7 +860,7 @@ class _TraitSelectorState extends State<_TraitSelector> {
               color: isSelected
                   ? _kQueryAccent.withValues(alpha: 0.2)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(AppTheme.radius6),
               border: Border.all(
                 color: isSelected
                     ? _kQueryAccent
@@ -909,7 +913,7 @@ class _DistanceConfigState extends State<_DistanceConfig> {
                 setState(() => widget.config.operator = val);
               },
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Text(
               '${km}km',
               style: const TextStyle(
@@ -920,7 +924,7 @@ class _DistanceConfigState extends State<_DistanceConfig> {
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         SizedBox(
           height: 20,
           child: SliderTheme(
@@ -973,11 +977,12 @@ class _EncounterConfigState extends State<_EncounterConfig> {
             setState(() => widget.config.operator = val);
           },
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         SizedBox(
           width: 40,
           height: 24,
           child: TextField(
+            maxLength: 10,
             controller: TextEditingController(
               text: widget.config.threshold.toString(),
             ),
@@ -994,19 +999,19 @@ class _EncounterConfigState extends State<_EncounterConfig> {
                 vertical: 4,
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppTheme.radius4),
                 borderSide: BorderSide(
                   color: Colors.grey.withValues(alpha: 0.3),
                 ),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppTheme.radius4),
                 borderSide: BorderSide(
                   color: Colors.grey.withValues(alpha: 0.3),
                 ),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppTheme.radius4),
                 borderSide: const BorderSide(color: _kQueryAccent),
               ),
             ),
@@ -1080,7 +1085,7 @@ class _BatteryConfigState extends State<_BatteryConfig> {
                 setState(() => widget.config.operator = val);
               },
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Text(
               '${widget.config.threshold}%',
               style: const TextStyle(
@@ -1091,7 +1096,7 @@ class _BatteryConfigState extends State<_BatteryConfig> {
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         SizedBox(
           height: 20,
           child: SliderTheme(
@@ -1152,6 +1157,7 @@ class _NameConfigState extends State<_NameConfig> {
     return SizedBox(
       height: 28,
       child: TextField(
+        maxLength: 100,
         controller: _controller,
         style: const TextStyle(color: _kQueryAccent, fontSize: 12),
         decoration: InputDecoration(
@@ -1166,15 +1172,15 @@ class _NameConfigState extends State<_NameConfig> {
             vertical: 6,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppTheme.radius6),
             borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppTheme.radius6),
             borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppTheme.radius6),
             borderSide: const BorderSide(color: _kQueryAccent),
           ),
         ),
@@ -1223,7 +1229,7 @@ class _SortConfigWidgetState extends State<_SortConfigWidget> {
                   color: isSelected
                       ? _kQueryAccent.withValues(alpha: 0.2)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(AppTheme.radius6),
                   border: Border.all(
                     color: isSelected
                         ? _kQueryAccent
@@ -1244,7 +1250,7 @@ class _SortConfigWidgetState extends State<_SortConfigWidget> {
             );
           }).toList(),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppTheme.spacing6),
         // Direction toggle.
         _CompactToggle(
           options: const ['Ascending', 'Descending'],
@@ -1287,7 +1293,7 @@ class _LimitConfigWidgetState extends State<_LimitConfigWidget> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         SizedBox(
           height: 20,
           child: SliderTheme(

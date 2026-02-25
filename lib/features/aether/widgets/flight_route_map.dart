@@ -155,7 +155,7 @@ class FlightRouteMap extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: const Color(0xCC1F2633),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 border: Border.all(
                   color: context.border.withValues(alpha: 0.5),
                 ),
@@ -202,7 +202,7 @@ class FlightRouteMap extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
               color: const Color(0xE61F2633),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(AppTheme.radius6),
               border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
             ),
             child: Text(
@@ -216,7 +216,7 @@ class FlightRouteMap extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppTheme.spacing2),
           // Dot
           Container(
             width: 8,

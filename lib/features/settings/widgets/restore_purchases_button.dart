@@ -97,7 +97,7 @@ class _RestorePurchasesButtonState extends ConsumerState<RestorePurchasesButton>
 
     return Column(
       children: [
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         Center(
           child: TextButton.icon(
             onPressed: isLoading ? null : () => _onPressed(context),

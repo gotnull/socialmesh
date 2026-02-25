@@ -72,7 +72,7 @@ class _NodeTile extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               color: signalColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppTheme.radius10),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -89,7 +89,7 @@ class _NodeTile extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(width: 10),
+          SizedBox(width: AppTheme.spacing10),
           // Node info
           Expanded(
             child: Column(
@@ -120,12 +120,12 @@ class _NodeTile extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Row(
                   children: [
                     if (node.role != null) ...[
                       _RoleChip(role: node.role!),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                     ],
                     Text(
                       lastSeen,
@@ -178,7 +178,7 @@ class _RoleChip extends StatelessWidget {
         color: isRouter
             ? context.accentColor.withValues(alpha: 0.15)
             : context.background,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
         border: Border.all(
           color: isRouter
               ? context.accentColor.withValues(alpha: 0.3)

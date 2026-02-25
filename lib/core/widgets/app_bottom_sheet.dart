@@ -45,7 +45,7 @@ class AppBottomSheet extends StatelessWidget {
   const AppBottomSheet({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.fromLTRB(24, 0, 24, 24),
+    this.padding = const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 24, 24),
     this.showDragPill = true,
   });
 
@@ -53,7 +53,12 @@ class AppBottomSheet extends StatelessWidget {
   static Future<T?> show<T>({
     required BuildContext context,
     required Widget child,
-    EdgeInsets padding = const EdgeInsets.fromLTRB(24, 0, 24, 24),
+    EdgeInsets padding = const EdgeInsets.fromLTRB(
+      AppTheme.spacing24,
+      0,
+      24,
+      24,
+    ),
     bool isScrollControlled = true,
     bool showDragPill = true,
     bool useSafeArea = true,
@@ -154,7 +159,7 @@ class AppBottomSheet extends StatelessWidget {
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             message,
             textAlign: TextAlign.center,
@@ -162,7 +167,7 @@ class AppBottomSheet extends StatelessWidget {
               context,
             ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             children: [
               Expanded(
@@ -172,13 +177,13 @@ class AppBottomSheet extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide(color: Colors.grey.shade700),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: Text(cancelLabel),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: () => Navigator.pop(context, true),
@@ -188,7 +193,7 @@ class AppBottomSheet extends StatelessWidget {
                         ? AppTheme.errorRed
                         : context.accentColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: Text(confirmLabel),
@@ -211,13 +216,13 @@ class AppBottomSheet extends StatelessWidget {
   }) {
     return show<T>(
       context: context,
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing0, 0, 0, 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 24, 16),
             child: Text(
               title,
               style: TextStyle(
@@ -247,7 +252,7 @@ class AppBottomSheet extends StatelessWidget {
   }) {
     return show<T>(
       context: context,
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing0, 0, 0, 8),
       // Use Builder to obtain the bottom sheet's own context for
       // Navigator.pop. The caller's context may be stale if the
       // parent widget was disposed while the sheet was showing.
@@ -257,7 +262,12 @@ class AppBottomSheet extends StatelessWidget {
           children: [
             if (header != null) ...[
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  0,
+                  16,
+                  16,
+                ),
                 child: header,
               ),
             ],
@@ -338,7 +348,7 @@ class _DragPill extends StatelessWidget {
       margin: const EdgeInsets.only(top: 12, bottom: 20),
       decoration: BoxDecoration(
         color: context.textTertiary.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(AppTheme.radius2),
       ),
     );
   }
@@ -361,7 +371,7 @@ class DragPill extends StatelessWidget {
       margin: margin,
       decoration: BoxDecoration(
         color: context.textTertiary.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(AppTheme.radius2),
       ),
     );
   }
@@ -411,7 +421,7 @@ class BottomSheetHeader extends StatelessWidget {
               ),
             ),
           if (subtitle != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               subtitle!,
               style: Theme.of(
@@ -431,11 +441,11 @@ class BottomSheetHeader extends StatelessWidget {
           height: 48,
           decoration: BoxDecoration(
             color: (iconColor ?? context.accentColor).withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
           ),
           child: Icon(icon, color: iconColor ?? context.accentColor, size: 24),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: AppTheme.spacing16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -457,7 +467,7 @@ class BottomSheetHeader extends StatelessWidget {
                   ),
                 ),
               if (subtitle != null) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Text(
                   subtitle!,
                   style: Theme.of(
@@ -537,22 +547,22 @@ class BottomSheetTextField extends StatelessWidget {
         filled: true,
         fillColor: context.background,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           borderSide: BorderSide(
             color: hasError ? AppTheme.errorRed : context.accentColor,
             width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           borderSide: const BorderSide(color: AppTheme.errorRed, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           borderSide: const BorderSide(color: AppTheme.errorRed, width: 2),
         ),
         counterStyle: TextStyle(color: context.textSecondary),
@@ -591,13 +601,13 @@ class BottomSheetButtons extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 16),
               side: BorderSide(color: Colors.grey.shade700),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
             ),
             child: Text(cancelLabel),
           ),
         ),
-        SizedBox(width: 12),
+        SizedBox(width: AppTheme.spacing12),
         Expanded(
           child: FilledButton(
             onPressed: isConfirmEnabled ? onConfirm : null,
@@ -607,7 +617,7 @@ class BottomSheetButtons extends StatelessWidget {
                   ? AppTheme.errorRed
                   : context.accentColor,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
             ),
             child: Text(confirmLabel),

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// A wrapper that animates list items with staggered fade and slide animations
 class AnimatedListItem extends StatelessWidget {
@@ -126,7 +127,9 @@ class AnimatedOpenContainer extends StatelessWidget {
       closedElevation: closedElevation,
       closedShape:
           closedShape ??
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+          ),
       openColor: Colors.transparent,
       openElevation: 0,
       closedBuilder: (context, openContainer) {

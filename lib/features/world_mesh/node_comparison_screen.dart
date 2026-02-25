@@ -26,37 +26,37 @@ class NodeComparisonScreen extends StatelessWidget {
     return GlassScaffold.body(
       title: 'Compare Nodes',
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Node headers
             _buildNodeHeaders(context),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // Status comparison
             _buildSectionHeader(context, 'Status'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _buildStatusComparison(context),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // Device info comparison
             _buildSectionHeader(context, 'Device Info'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _buildDeviceComparison(),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // Metrics comparison
             _buildSectionHeader(context, 'Metrics'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _buildMetricsComparison(),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // Network comparison
             _buildSectionHeader(context, 'Network'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _buildNetworkComparison(),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppTheme.spacing32),
           ],
         ),
       ),
@@ -67,7 +67,7 @@ class NodeComparisonScreen extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: _buildNodeCard(context, nodeA, Colors.blue)),
-        SizedBox(width: 12),
+        SizedBox(width: AppTheme.spacing12),
         Container(
           width: 32,
           height: 32,
@@ -87,7 +87,7 @@ class NodeComparisonScreen extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         Expanded(child: _buildNodeCard(context, nodeB, Colors.orange)),
       ],
     );
@@ -99,10 +99,10 @@ class NodeComparisonScreen extends StatelessWidget {
     final statusIcon = _presenceIcon(node.presenceConfidence);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Column(
@@ -117,7 +117,7 @@ class NodeComparisonScreen extends StatelessWidget {
             ),
             child: Icon(statusIcon, color: statusColor, size: 20),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           AutoScrollText(
             node.displayName,
             style: TextStyle(
@@ -126,7 +126,7 @@ class NodeComparisonScreen extends StatelessWidget {
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           GestureDetector(
             onTap: () {
               Clipboard.setData(ClipboardData(text: '!$nodeId'));
@@ -405,11 +405,11 @@ class _ComparisonTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
       child: Container(
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Column(
@@ -437,7 +437,7 @@ class _ComparisonTable extends StatelessWidget {
                 if (row.winner == 1)
                   Container(
                     margin: const EdgeInsets.only(right: 6),
-                    padding: const EdgeInsets.all(2),
+                    padding: const EdgeInsets.all(AppTheme.spacing2),
                     decoration: BoxDecoration(
                       color: AccentColors.green.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
@@ -498,7 +498,7 @@ class _ComparisonTable extends StatelessWidget {
                 if (row.winner == -1)
                   Container(
                     margin: const EdgeInsets.only(left: 6),
-                    padding: const EdgeInsets.all(2),
+                    padding: const EdgeInsets.all(AppTheme.spacing2),
                     decoration: BoxDecoration(
                       color: AccentColors.green.withValues(alpha: 0.2),
                       shape: BoxShape.circle,

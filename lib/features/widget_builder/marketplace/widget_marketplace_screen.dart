@@ -117,7 +117,7 @@ class _WidgetMarketplaceScreenState
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.favorite, size: 16),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppTheme.spacing4),
                     Text(
                       'Favorites${favoritesCount > 0 ? ' ($favoritesCount)' : ''}',
                     ),
@@ -131,8 +131,9 @@ class _WidgetMarketplaceScreenState
             // Search bar
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: TextField(
+                  maxLength: 100,
                   controller: _searchController,
                   onChanged: (value) => _search(value),
                   style: TextStyle(color: context.textPrimary),
@@ -157,7 +158,7 @@ class _WidgetMarketplaceScreenState
                     filled: true,
                     fillColor: context.card,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       borderSide: BorderSide.none,
                     ),
                   ),
@@ -204,7 +205,7 @@ class _WidgetMarketplaceScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.search_off, size: 48, color: context.textTertiary),
-            SizedBox(height: 16),
+            SizedBox(height: AppTheme.spacing16),
             Text(
               'No widgets found',
               style: TextStyle(color: context.textSecondary, fontSize: 16),
@@ -295,7 +296,7 @@ class _WidgetMarketplaceScreenState
     if (favoriteWidgets.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(AppTheme.spacing32),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -304,13 +305,13 @@ class _WidgetMarketplaceScreenState
                 size: 48,
                 color: context.textTertiary,
               ),
-              SizedBox(height: 16),
+              SizedBox(height: AppTheme.spacing16),
               Text(
                 'No favorite widgets yet',
                 style: TextStyle(color: context.textSecondary, fontSize: 16),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 8),
+              SizedBox(height: AppTheme.spacing8),
               Text(
                 'Tap the heart icon on any widget to add it here',
                 style: TextStyle(color: context.textTertiary, fontSize: 14),
@@ -328,19 +329,19 @@ class _WidgetMarketplaceScreenState
   Widget _buildErrorState(String message, {VoidCallback? onRetry}) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.error_outline, size: 48, color: context.textTertiary),
-            SizedBox(height: 16),
+            SizedBox(height: AppTheme.spacing16),
             Text(
               message,
               style: TextStyle(color: context.textSecondary, fontSize: 16),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               TextButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
@@ -356,12 +357,12 @@ class _WidgetMarketplaceScreenState
   Widget _buildEmptyState(String message) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.widgets_outlined, size: 48, color: context.textTertiary),
-            SizedBox(height: 16),
+            SizedBox(height: AppTheme.spacing16),
             Text(
               message,
               style: TextStyle(color: context.textSecondary, fontSize: 16),
@@ -375,7 +376,7 @@ class _WidgetMarketplaceScreenState
 
   Widget _buildCategoriesTab() {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       itemCount: WidgetCategories.all.length,
       itemBuilder: (context, index) {
         final category = WidgetCategories.all[index];
@@ -449,7 +450,7 @@ class _WidgetMarketplaceScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.widgets_outlined, size: 48, color: context.textTertiary),
-            SizedBox(height: 16),
+            SizedBox(height: AppTheme.spacing16),
             Text(
               'No widgets available',
               style: TextStyle(color: context.textSecondary, fontSize: 16),
@@ -461,7 +462,7 @@ class _WidgetMarketplaceScreenState
 
     // Use single column list - matches My Widgets style
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       itemCount: widgets.length,
       itemBuilder: (context, index) {
         return _MarketplaceWidgetCard(
@@ -572,7 +573,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
       ],
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverToBoxAdapter(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -581,7 +582,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
                 Container(
                   decoration: BoxDecoration(
                     color: context.card,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTheme.radius16),
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: FutureBuilder<WidgetSchema>(
@@ -601,7 +602,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
                                     alpha: 0.4,
                                   ),
                                 ),
-                                SizedBox(height: 8),
+                                SizedBox(height: AppTheme.spacing8),
                                 Text(
                                   'Loading preview...',
                                   style: TextStyle(
@@ -617,7 +618,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
 
                       // Render widget at its natural size
                       return Padding(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(AppTheme.spacing12),
                         child: WidgetRenderer(
                           schema: snapshot.data!,
                           node: node,
@@ -631,7 +632,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
                     },
                   ),
                 ),
-                SizedBox(height: 24),
+                SizedBox(height: AppTheme.spacing24),
                 // Title and author
                 Text(
                   mWidget.name,
@@ -641,13 +642,13 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 // Author
                 Text(
                   'by ${mWidget.author}',
                   style: TextStyle(color: context.textSecondary, fontSize: 14),
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppTheme.spacing16),
                 // Stats row
                 Row(
                   children: [
@@ -656,7 +657,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
                       '${mWidget.rating.toStringAsFixed(1)} (${mWidget.ratingCount})',
                       AppTheme.warningYellow,
                     ),
-                    const SizedBox(width: 24),
+                    const SizedBox(width: AppTheme.spacing24),
                     _buildStatItem(
                       Icons.download_done,
                       '${mWidget.installs} installs',
@@ -664,7 +665,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
                     ),
                   ],
                 ),
-                SizedBox(height: 24),
+                SizedBox(height: AppTheme.spacing24),
                 // Description
                 Text(
                   'Description',
@@ -674,7 +675,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Text(
                   mWidget.description,
                   style: TextStyle(
@@ -683,7 +684,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
                     height: 1.5,
                   ),
                 ),
-                SizedBox(height: 24),
+                SizedBox(height: AppTheme.spacing24),
                 // Tags
                 if (mWidget.tags.isNotEmpty) ...[
                   Text(
@@ -694,7 +695,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -706,7 +707,9 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
                         ),
                         decoration: BoxDecoration(
                           color: context.accentColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius16,
+                          ),
                         ),
                         child: Text(
                           tag,
@@ -719,7 +722,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
                     }).toList(),
                   ),
                 ],
-                SizedBox(height: 32),
+                SizedBox(height: AppTheme.spacing32),
                 // Install button
                 Builder(
                   builder: (context) {
@@ -742,7 +745,9 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
                               : context.accentColor,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
                           ),
                         ),
                         child: _isInstalling
@@ -770,7 +775,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
                                       size: 18,
                                     ),
                                   if (isAlreadyInstalled || isLocked)
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: AppTheme.spacing8),
                                   Text(
                                     isAlreadyInstalled
                                         ? 'Already Installed'
@@ -801,7 +806,7 @@ class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen>
     return Row(
       children: [
         Icon(icon, size: 16, color: color),
-        SizedBox(width: 4),
+        SizedBox(width: AppTheme.spacing4),
         Text(
           text,
           style: TextStyle(color: context.textSecondary, fontSize: 13),
@@ -939,7 +944,7 @@ class _CategoryScreenState extends ConsumerState<_CategoryScreen>
                     size: 48,
                     color: context.textTertiary,
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
                   Text(
                     'Failed to load category',
                     style: TextStyle(
@@ -972,7 +977,7 @@ class _CategoryScreenState extends ConsumerState<_CategoryScreen>
                         size: 48,
                         color: context.textTertiary,
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: AppTheme.spacing16),
                       Text(
                         'No widgets in this category',
                         style: TextStyle(
@@ -989,7 +994,7 @@ class _CategoryScreenState extends ConsumerState<_CategoryScreen>
 
           return [
             SliverPadding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   return _MarketplaceWidgetCard(

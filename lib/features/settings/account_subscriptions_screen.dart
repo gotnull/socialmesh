@@ -61,7 +61,7 @@ class _AccountSubscriptionsScreenState
       actions: const [IcoHelpAppBarButton(topicId: 'cloud_sync_overview')],
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // ═══════════════════════════════════════════════════════════════
@@ -69,13 +69,13 @@ class _AccountSubscriptionsScreenState
               // ═══════════════════════════════════════════════════════════════
               _buildProfileCard(profileAsync, accentColor),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // ═══════════════════════════════════════════════════════════════
               // ACCOUNT SECTION - Sign in/out, linked accounts
               // ═══════════════════════════════════════════════════════════════
               _buildSectionHeader('ACCOUNT'),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               authState.when(
                 data: (user) => user != null
                     ? _buildSignedInAccountCard(user)
@@ -84,29 +84,29 @@ class _AccountSubscriptionsScreenState
                 error: (e, _) => _buildSignedOutAccountCard(),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // ═══════════════════════════════════════════════════════════════
               // PREMIUM SECTION - Cloud Sync (subscription) + Feature Packs (one-time)
               // ═══════════════════════════════════════════════════════════════
               _buildSectionHeader('PREMIUM'),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
 
               // Cloud Sync subscription card (monthly/yearly)
               _buildCloudSyncCard(),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
 
               // Feature packs card (one-time purchases)
               _buildFeaturePacksCard(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // ═══════════════════════════════════════════════════════════════
               // MANAGE SECTION - Restore, Terms, Privacy
               // ═══════════════════════════════════════════════════════════════
               _buildSectionHeader('MANAGE'),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _buildManageCard(),
             ]),
           ),
@@ -195,14 +195,14 @@ class _AccountSubscriptionsScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: AccentColors.green.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
           // Status header
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: AccentColors.green.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.vertical(
@@ -212,10 +212,10 @@ class _AccountSubscriptionsScreenState
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(AppTheme.spacing8),
                   decoration: BoxDecoration(
                     color: AccentColors.green.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                   child: Icon(
                     syncStatus == SyncStatus.syncing
@@ -225,7 +225,7 @@ class _AccountSubscriptionsScreenState
                     size: 20,
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,7 +256,7 @@ class _AccountSubscriptionsScreenState
           // Linked providers (if any)
           if (user.providerData.isNotEmpty && !isAnonymous) ...[
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 0),
               child: Row(
                 children: [
                   Text(
@@ -266,7 +266,7 @@ class _AccountSubscriptionsScreenState
                       color: context.textSecondary,
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppTheme.spacing12),
                   ...user.providerData.map(
                     (p) => Padding(
                       padding: const EdgeInsets.only(right: 8),
@@ -280,16 +280,16 @@ class _AccountSubscriptionsScreenState
 
           // Actions
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Column(
               children: [
                 if (isAnonymous) ...[
                   // Upgrade prompt for guest accounts
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
                     decoration: BoxDecoration(
                       color: context.accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       border: Border.all(
                         color: context.accentColor.withValues(alpha: 0.3),
                       ),
@@ -301,7 +301,7 @@ class _AccountSubscriptionsScreenState
                           color: context.accentColor,
                           size: 20,
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Text(
                             'Link an email to keep your data across devices',
@@ -314,7 +314,7 @@ class _AccountSubscriptionsScreenState
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
@@ -325,7 +325,7 @@ class _AccountSubscriptionsScreenState
                   ),
                 ],
                 if (!isAnonymous) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   _MFAStatusButton(
                     onTap: () async {
                       final online = ref.read(isOnlineProvider);
@@ -351,7 +351,7 @@ class _AccountSubscriptionsScreenState
                     },
                   ),
                 ],
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
@@ -370,10 +370,10 @@ class _AccountSubscriptionsScreenState
 
   Widget _buildSignedOutAccountCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -383,7 +383,7 @@ class _AccountSubscriptionsScreenState
             size: 48,
             color: context.textSecondary,
           ),
-          SizedBox(height: 12),
+          SizedBox(height: AppTheme.spacing12),
           Text(
             'Sign in to sync across devices',
             style: TextStyle(
@@ -392,19 +392,19 @@ class _AccountSubscriptionsScreenState
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             'Your local data is always available',
             style: context.bodySmallStyle?.copyWith(
               color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
 
           // Sign in buttons
           if (_isSigningIn)
             Padding(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(AppTheme.spacing16),
               child: CircularProgressIndicator(),
             )
           else ...[
@@ -416,7 +416,7 @@ class _AccountSubscriptionsScreenState
               backgroundColor: Colors.white,
               textColor: Colors.black87,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppTheme.spacing10),
 
             // Apple (iOS/macOS only)
             if (Platform.isIOS || Platform.isMacOS) ...[
@@ -427,7 +427,7 @@ class _AccountSubscriptionsScreenState
                 backgroundColor: Colors.black,
                 textColor: Colors.white,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppTheme.spacing10),
             ],
 
             // GitHub
@@ -438,7 +438,7 @@ class _AccountSubscriptionsScreenState
               backgroundColor: const Color(0xFF24292F),
               textColor: Colors.white,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppTheme.spacing10),
 
             // Twitter/X
             _SocialSignInButton(
@@ -542,7 +542,7 @@ class _AccountSubscriptionsScreenState
         return Container(
           decoration: BoxDecoration(
             color: context.card,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radius16),
             border: Border.all(color: borderColor),
           ),
           child: Column(
@@ -550,12 +550,12 @@ class _AccountSubscriptionsScreenState
               // Header
               ListTile(
                 leading: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(AppTheme.spacing8),
                   decoration: BoxDecoration(
                     color: AccentColors.green.withValues(
                       alpha: hasAccess ? 0.15 : 0.08,
                     ),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                   child: Icon(
                     Icons.cloud_sync,
@@ -590,7 +590,9 @@ class _AccountSubscriptionsScreenState
                                       ? AppTheme.errorRed
                                       : AccentColors.green)
                                   .withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                         child: Text(
                           badgeText,
@@ -629,7 +631,12 @@ class _AccountSubscriptionsScreenState
               if (!hasAccess || isCancelled) ...[
                 if (!isCancelled) const Divider(height: 1),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    12,
+                    16,
+                    4,
+                  ),
                   child: Column(
                     children: [
                       _FeatureRow(
@@ -659,7 +666,7 @@ class _AccountSubscriptionsScreenState
 
               // Subscribe/Manage button
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: SizedBox(
                   width: double.infinity,
                   child: hasAccess
@@ -756,7 +763,7 @@ class _AccountSubscriptionsScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(
           color: allUnlocked
               ? AccentColors.green.withValues(alpha: 0.3)
@@ -768,12 +775,12 @@ class _AccountSubscriptionsScreenState
           // Header
           ListTile(
             leading: Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppTheme.spacing8),
               decoration: BoxDecoration(
                 color: AccentColors.green.withValues(
                   alpha: allUnlocked ? 0.15 : 0.08,
                 ),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Icon(
                 Icons.extension,
@@ -804,7 +811,7 @@ class _AccountSubscriptionsScreenState
                     ),
                     decoration: BoxDecoration(
                       color: AccentColors.green.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Text(
                       'ACTIVE',
@@ -822,7 +829,7 @@ class _AccountSubscriptionsScreenState
           if (!allUnlocked) ...[
             const Divider(height: 1),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 4),
               child: Column(
                 children: OneTimePurchases.allPurchases.map((purchase) {
                   return _FeatureRow(
@@ -841,7 +848,7 @@ class _AccountSubscriptionsScreenState
 
           // View all button
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: SizedBox(
               width: double.infinity,
               child: allUnlocked
@@ -889,7 +896,7 @@ class _AccountSubscriptionsScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.border),
       ),
       clipBehavior: Clip.antiAlias,
@@ -1014,16 +1021,16 @@ class _AccountSubscriptionsScreenState
 
   Widget _buildErrorCard(String message) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: AppTheme.errorRed.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: AppTheme.errorRed.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Icon(Icons.error_outline, color: AppTheme.errorRed),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Text(message, style: TextStyle(color: AppTheme.errorRed)),
           ),
@@ -1408,14 +1415,14 @@ class _AccountSubscriptionsScreenState
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             'An account with ${e.email} already exists using $providerName.\n\n'
             'Sign in with $providerName to link your GitHub account?',
             textAlign: TextAlign.center,
             style: TextStyle(color: context.textSecondary),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             children: [
               Expanded(
@@ -1425,20 +1432,20 @@ class _AccountSubscriptionsScreenState
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide(color: Colors.grey.shade700),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Cancel'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: () => Navigator.pop(context, true),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: Text('Sign in with $providerName'),
@@ -1557,7 +1564,7 @@ class _AccountSubscriptionsScreenState
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.spacing24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1569,12 +1576,12 @@ class _AccountSubscriptionsScreenState
                 color: context.textPrimary,
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: AppTheme.spacing8),
             Text(
               'Link a sign-in method to keep your data',
               style: TextStyle(color: context.textSecondary),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             _SocialSignInButton(
               onPressed: () {
                 Navigator.pop(context);
@@ -1586,7 +1593,7 @@ class _AccountSubscriptionsScreenState
               textColor: Colors.black87,
             ),
             if (Platform.isIOS || Platform.isMacOS) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: AppTheme.spacing10),
               _SocialSignInButton(
                 onPressed: () {
                   Navigator.pop(context);
@@ -1598,7 +1605,7 @@ class _AccountSubscriptionsScreenState
                 textColor: Colors.white,
               ),
             ],
-            const SizedBox(height: 10),
+            const SizedBox(height: AppTheme.spacing10),
             _SocialSignInButton(
               onPressed: () {
                 Navigator.pop(context);
@@ -1609,7 +1616,7 @@ class _AccountSubscriptionsScreenState
               backgroundColor: Colors.black,
               textColor: Colors.white,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
           ],
         ),
       ),
@@ -1749,7 +1756,7 @@ class _ProfilePreviewCard extends StatelessWidget {
                   context.textTertiary.withValues(alpha: 0.05),
                 ],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(
           color: isSignedIn
               ? accentColor.withValues(alpha: 0.3)
@@ -1760,9 +1767,9 @@ class _ProfilePreviewCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: isInteractive ? onEditTap : null,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Row(
               children: [
                 // Avatar
@@ -1781,7 +1788,7 @@ class _ProfilePreviewCard extends StatelessWidget {
                       ? accentColor.withValues(alpha: 0.2)
                       : context.textTertiary.withValues(alpha: 0.1),
                 ),
-                SizedBox(width: 16),
+                SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1796,7 +1803,7 @@ class _ProfilePreviewCard extends StatelessWidget {
                               : context.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       if (isSignedIn && profile?.callsign != null)
                         Text(
                           profile!.callsign!,
@@ -1842,10 +1849,10 @@ class _LoadingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(AppTheme.spacing32),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.border),
       ),
       child: const Center(child: CircularProgressIndicator()),
@@ -1908,7 +1915,7 @@ class _MFAStatusButton extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.security, size: 18, color: context.textTertiary),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Expanded(
                     child: Text(
                       'Two-Factor Authentication',
@@ -1916,7 +1923,7 @@ class _MFAStatusButton extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 6,
@@ -1924,7 +1931,7 @@ class _MFAStatusButton extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       color: context.textTertiary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(AppTheme.radius6),
                     ),
                     child: Text(
                       'Offline',
@@ -1954,7 +1961,7 @@ class _MFAStatusButton extends ConsumerWidget {
                         color: context.textSecondary,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Expanded(
                       child: Text(
                         'Two-Factor Authentication',
@@ -1962,7 +1969,7 @@ class _MFAStatusButton extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Icon(
                       Icons.chevron_right,
                       size: 18,
@@ -1980,7 +1987,7 @@ class _MFAStatusButton extends ConsumerWidget {
                         size: 18,
                         color: context.textTertiary,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Expanded(
                         child: Text(
                           'Two-Factor Authentication',
@@ -1988,7 +1995,7 @@ class _MFAStatusButton extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 6,
@@ -1996,7 +2003,7 @@ class _MFAStatusButton extends ConsumerWidget {
                         ),
                         decoration: BoxDecoration(
                           color: AppTheme.errorRed.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(AppTheme.radius6),
                         ),
                         child: Text(
                           'Unavailable',
@@ -2029,7 +2036,7 @@ class _MFAStatusButton extends ConsumerWidget {
                         size: 18,
                         color: hasMFA ? AccentColors.green : null,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Expanded(
                         child: Text(
                           'Two-Factor Authentication',
@@ -2040,7 +2047,7 @@ class _MFAStatusButton extends ConsumerWidget {
                         ),
                       ),
                       if (hasMFA) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 6,
@@ -2048,7 +2055,9 @@ class _MFAStatusButton extends ConsumerWidget {
                           ),
                           decoration: BoxDecoration(
                             color: AccentColors.green.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius6,
+                            ),
                           ),
                           child: Text(
                             'ON',
@@ -2102,7 +2111,7 @@ class _SyncStatusBadge extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
       ),
       child: Text(
         text,
@@ -2136,7 +2145,7 @@ class _FeatureRow extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, size: 18, color: color),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppTheme.spacing10),
           Expanded(
             child: Text(
               text,
@@ -2337,14 +2346,14 @@ class _SocialSignInButton extends StatelessWidget {
           foregroundColor: textColor,
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             icon,
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
           ],
         ),
@@ -2652,8 +2661,6 @@ class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
   }
 
   Future<void> _purchase(StoreProduct product) async {
-    if (!mounted) return;
-
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
       AppLogging.subscriptions(
@@ -2685,7 +2692,7 @@ class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
     final accentColor = context.accentColor;
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       decoration: BoxDecoration(
         color: context.card,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -2699,21 +2706,21 @@ class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
             height: 4,
             decoration: BoxDecoration(
               color: context.border,
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(AppTheme.radius2),
             ),
           ),
-          SizedBox(height: 24),
+          SizedBox(height: AppTheme.spacing24),
 
           // Icon
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: accentColor.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.cloud_sync, size: 40, color: accentColor),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Title
           Text(
@@ -2724,14 +2731,14 @@ class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
 
           Text(
             'Sync and back up your mesh data across all your devices',
             textAlign: TextAlign.center,
             style: TextStyle(color: context.textSecondary),
           ),
-          SizedBox(height: 24),
+          SizedBox(height: AppTheme.spacing24),
 
           // Features — list actual premium sync types
           _FeatureRow(
@@ -2755,7 +2762,7 @@ class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
             text: 'Works fully offline without it',
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           // Products
           if (_isLoading)
@@ -2765,12 +2772,12 @@ class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
           else
             ..._products.map((p) => _buildProductButton(p)),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Restore - dismiss sheet so snackbar is visible
           const RestorePurchasesButton(dismissSheetOnComplete: true),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
 
           // Terms
           Text(
@@ -2779,7 +2786,7 @@ class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
             style: context.captionStyle?.copyWith(color: context.textTertiary),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
         ],
       ),
     );
@@ -2865,7 +2872,7 @@ class _ManageListTile extends StatelessWidget {
             child: Row(
               children: [
                 Icon(icon, color: context.textSecondary, size: 24),
-                SizedBox(width: 16),
+                SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2878,7 +2885,7 @@ class _ManageListTile extends StatelessWidget {
                         ),
                       ),
                       if (subtitle != null) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           subtitle!,
                           style: TextStyle(

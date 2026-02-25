@@ -220,7 +220,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
       ],
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Serial Enable
@@ -228,7 +228,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
               Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
                 child: Column(
@@ -291,17 +291,17 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // Baud Rate
               _buildSectionHeader('Baud Rate'),
               Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -312,7 +312,9 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                           height: 40,
                           decoration: BoxDecoration(
                             color: context.accentColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius10,
+                            ),
                           ),
                           child: Icon(
                             Icons.speed,
@@ -320,7 +322,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                             size: 20,
                           ),
                         ),
-                        SizedBox(width: 14),
+                        SizedBox(width: AppTheme.spacing14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,7 +335,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                                   color: context.textPrimary,
                                 ),
                               ),
-                              SizedBox(height: 2),
+                              SizedBox(height: AppTheme.spacing2),
                               Text(
                                 'Serial communication speed',
                                 style: TextStyle(
@@ -346,7 +348,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -366,7 +368,9 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                               color: isSelected
                                   ? context.accentColor
                                   : context.background,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius8,
+                              ),
                               border: Border.all(
                                 color: isSelected
                                     ? context.accentColor
@@ -391,17 +395,17 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // Timeout
               _buildSectionHeader('Timeout'),
               Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -412,7 +416,9 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                           height: 40,
                           decoration: BoxDecoration(
                             color: context.accentColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius10,
+                            ),
                           ),
                           child: Icon(
                             Icons.timer_outlined,
@@ -420,7 +426,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                             size: 20,
                           ),
                         ),
-                        SizedBox(width: 14),
+                        SizedBox(width: AppTheme.spacing14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,7 +439,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                                   color: context.textPrimary,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: AppTheme.spacing2),
                               Text(
                                 '$_timeout seconds',
                                 style: TextStyle(
@@ -446,7 +452,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                         ),
                       ],
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppTheme.spacing12),
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         activeTrackColor: context.accentColor,
@@ -471,14 +477,14 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // Mode Selection
               _buildSectionHeader('Serial Mode'),
               Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
                 child: Column(
@@ -533,7 +539,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                                         )
                                       : null,
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: AppTheme.spacing12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
@@ -551,7 +557,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                                               : context.textSecondary,
                                         ),
                                       ),
-                                      SizedBox(height: 2),
+                                      SizedBox(height: AppTheme.spacing2),
                                       Text(
                                         _getModeDescription(mode),
                                         style: TextStyle(
@@ -573,7 +579,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
             ]),
           ),
         ),
@@ -619,11 +625,11 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
             height: 40,
             decoration: BoxDecoration(
               color: context.accentColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppTheme.radius10),
             ),
             child: Icon(icon, color: context.accentColor, size: 20),
           ),
-          SizedBox(width: 14),
+          SizedBox(width: AppTheme.spacing14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -636,7 +642,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                     color: context.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   subtitle,
                   style: context.bodySmallStyle?.copyWith(
@@ -672,11 +678,11 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
             height: 40,
             decoration: BoxDecoration(
               color: context.accentColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppTheme.radius10),
             ),
             child: Icon(icon, color: context.accentColor, size: 20),
           ),
-          SizedBox(width: 14),
+          SizedBox(width: AppTheme.spacing14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -689,7 +695,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                     color: context.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   subtitle,
                   style: context.bodySmallStyle?.copyWith(

@@ -129,14 +129,14 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
         children: [
           // Action header
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             child: Row(
               children: [
                 Container(
@@ -144,7 +144,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                   height: 36,
                   decoration: BoxDecoration(
                     color: AppTheme.successGreen.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTheme.radius10),
                   ),
                   child: Icon(
                     widget.action.type.icon,
@@ -152,7 +152,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                     size: 18,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: BouncyTap(
                     onTap: () => _showActionTypePicker(context),
@@ -162,7 +162,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                           widget.action.type.displayName,
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         const Icon(
                           Icons.unfold_more,
                           size: 16,
@@ -273,7 +273,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing12, 0, 12, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -287,7 +287,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
               letterSpacing: 1,
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppTheme.spacing8),
           GestureDetector(
             onTap: () => toChannel
                 ? _showChannelPicker(context, channels)
@@ -296,7 +296,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: context.background,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 border: Border.all(color: context.border),
               ),
               child: Row(
@@ -308,7 +308,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                       color: Theme.of(
                         context,
                       ).colorScheme.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                     child: Icon(
                       toChannel ? Icons.forum : Icons.person,
@@ -316,7 +316,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                       size: 20,
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,10 +350,11 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Message text field - use default text from trigger type if empty
           VariableTextField(
+            maxLength: 500,
             key: _messageFieldKey,
             value:
                 widget.action.messageText ??
@@ -372,7 +373,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
             maxLines: 2,
             triggerType: widget.triggerType,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           VariableChipPicker(
             targetField: _insertTargetField,
             isActive: _insertTargetField != null,
@@ -422,7 +423,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 16, 0),
               child: Row(
                 children: [
                   Text(
@@ -532,7 +533,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                 height: 44,
                 decoration: BoxDecoration(
                   color: iconColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Stack(
                   children: [
@@ -557,7 +558,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                   ],
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -600,7 +601,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
     final hasSound = selectedSound != null && selectedSound.isNotEmpty;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing12, 0, 12, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -613,14 +614,14 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
               letterSpacing: 1,
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppTheme.spacing8),
           GestureDetector(
             onTap: () => _showSoundPicker(context),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: context.background,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 border: Border.all(color: context.border),
               ),
               child: Row(
@@ -630,7 +631,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                     height: 36,
                     decoration: BoxDecoration(
                       color: Colors.orange.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                     child: Icon(
                       Icons.music_note,
@@ -638,7 +639,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -669,7 +670,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
             ),
           ),
           if (hasSound) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Row(
               children: [
                 Expanded(
@@ -742,10 +743,11 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
         widget.action.notificationSoundName!.isNotEmpty;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing12, 0, 12, 12),
       child: Column(
         children: [
           VariableTextField(
+            maxLength: 100,
             key: _notificationTitleFieldKey,
             value: widget.action.notificationTitle ?? '',
             onChanged: (value) {
@@ -760,8 +762,9 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
             hintText: 'Tap variables below to insert',
             triggerType: widget.triggerType,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           VariableTextField(
+            maxLength: 500,
             key: _notificationBodyFieldKey,
             value: widget.action.notificationBody ?? '',
             onChanged: (value) {
@@ -777,14 +780,14 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
             maxLines: 2,
             triggerType: widget.triggerType,
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppTheme.spacing8),
           VariableChipPicker(
             targetField: _insertTargetField,
             isActive: _insertTargetField != null,
             triggerType: widget.triggerType,
             showDeleteHint: _insertTargetField != null,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           // Custom sound option
           GestureDetector(
             onTap: () => _showNotificationSoundPicker(context),
@@ -792,7 +795,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: context.background,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 border: Border.all(color: context.border),
               ),
               child: Row(
@@ -804,7 +807,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                       color: hasCustomSound
                           ? Colors.orange.withValues(alpha: 0.15)
                           : context.card,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                     ),
                     child: Icon(
                       Icons.music_note,
@@ -814,7 +817,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                       size: 18,
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -901,10 +904,11 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
 
   Widget _buildWebhookConfig(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing12, 0, 12, 12),
       child: Column(
         children: [
           TextField(
+            maxLength: 100,
             controller: _webhookEventController,
             onChanged: (value) {
               widget.onChanged(
@@ -918,21 +922,21 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
               hintText: 'e.g., meshtastic_alert',
               isDense: true,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppTheme.spacing8),
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(AppTheme.spacing8),
             decoration: BoxDecoration(
               color: context.background,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
             ),
             child: Row(
               children: [
                 const Icon(Icons.info_outline, size: 16, color: Colors.grey),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   child: Text(
                     'Uses your IFTTT Webhook key from Settings',
@@ -949,11 +953,12 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
 
   Widget _buildShortcutConfig(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing12, 0, 12, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextField(
+            maxLength: 100,
             controller: _shortcutNameController,
             onChanged: (value) {
               widget.onChanged(
@@ -967,7 +972,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
               hintText: 'Enter exact shortcut name',
               isDense: true,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.help_outline, size: 20),
@@ -975,7 +980,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           StatusBanner.info(
             title:
                 'Event data (node name, battery, location, etc.) will be passed as JSON input to your shortcut.',
@@ -997,7 +1002,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
             Row(
               children: [
                 Icon(Icons.lightbulb_outline, color: Colors.amber),
-                SizedBox(width: 8),
+                SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Using Shortcuts',
                   style: TextStyle(
@@ -1008,12 +1013,12 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             const Text(
               'Setting up your shortcut:',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _buildHelpStep(
               '1',
               'Add "Get Dictionary from" action\nSelect "Shortcut Input"',
@@ -1026,12 +1031,12 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
               '3',
               'Use the extracted value in your actions\n(e.g., Send Message, Show Notification)',
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             const Text(
               'Available keys in the dictionary:',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _buildKeyItem('node_name', 'Name of the node'),
             _buildKeyItem('node_num', 'Node number'),
             _buildKeyItem('trigger', 'Trigger type (nodeOffline, etc.)'),
@@ -1040,13 +1045,13 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
             _buildKeyItem('longitude', 'GPS longitude (if available)'),
             _buildKeyItem('message', 'Message text (if applicable)'),
             _buildKeyItem('timestamp', 'Event timestamp'),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             StatusBanner.warning(
               title:
                   'Note: Shortcuts app will briefly open when triggered. This is an iOS limitation.',
               margin: EdgeInsets.zero,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -1083,7 +1088,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Expanded(
             child: Text(text, style: Theme.of(context).textTheme.bodySmall),
           ),
@@ -1102,7 +1107,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
               color: context.background,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppTheme.radius4),
             ),
             child: Text(
               key,
@@ -1113,7 +1118,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Expanded(
             child: Text(
               description,
@@ -1135,7 +1140,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1147,7 +1152,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   color: Colors.grey[600],
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppTheme.radius2),
                 ),
               ),
             ),
@@ -1157,7 +1162,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -1201,7 +1206,9 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                                   context,
                                 ).colorScheme.primary.withValues(alpha: 0.2)
                               : context.card,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           border: Border.all(
                             color: isSelected
                                 ? Theme.of(context).colorScheme.primary
@@ -1218,7 +1225,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                                   ? Theme.of(context).colorScheme.primary
                                   : null,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             Text(
                               type.displayName,
                               style: TextStyle(
@@ -1343,7 +1350,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet>
               margin: const EdgeInsets.only(top: 12, bottom: 8),
               decoration: BoxDecoration(
                 color: Colors.grey[600],
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppTheme.radius2),
               ),
             ),
           ),
@@ -1357,11 +1364,11 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet>
                   height: 40,
                   decoration: BoxDecoration(
                     color: Colors.orange.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Icon(Icons.library_music, color: Colors.orange),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Text(
                   'Select Sound',
                   style: Theme.of(
@@ -1375,6 +1382,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet>
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
+              maxLength: 100,
               controller: _searchController,
               onChanged: _search,
               decoration: InputDecoration(
@@ -1384,7 +1392,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet>
                 filled: true,
                 fillColor: context.background,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -1392,7 +1400,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet>
           ),
           // Category label
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 4),
             child: Row(
               children: [
                 Text(
@@ -1406,7 +1414,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet>
                     letterSpacing: 1,
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppTheme.spacing8),
                 Text(
                   '${displayItems.length} sounds',
                   style: Theme.of(
@@ -1430,7 +1438,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet>
                           size: 48,
                           color: Colors.grey[600],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppTheme.spacing12),
                         Text(
                           'No sounds found',
                           style: TextStyle(color: Colors.grey[500]),
@@ -1460,7 +1468,9 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet>
                               color: isSelected
                                   ? Colors.orange.withValues(alpha: 0.15)
                                   : context.card,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius12,
+                              ),
                               border: Border.all(
                                 color: isSelected
                                     ? Colors.orange
@@ -1476,7 +1486,9 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet>
                                     color: isSelected
                                         ? Colors.orange.withValues(alpha: 0.2)
                                         : context.background,
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radius10,
+                                    ),
                                   ),
                                   child: Icon(
                                     Icons.music_note,
@@ -1486,7 +1498,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet>
                                     size: 20,
                                   ),
                                 ),
-                                SizedBox(width: 12),
+                                SizedBox(width: AppTheme.spacing12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:

@@ -96,10 +96,10 @@ class FieldNoteWidget extends StatelessWidget {
   Widget _buildExpanded(BuildContext context, String note) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: accentColor.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
         border: Border.all(
           color: accentColor.withValues(alpha: 0.12),
           width: 0.5,
@@ -117,7 +117,7 @@ class FieldNoteWidget extends StatelessWidget {
                 size: 14,
                 color: accentColor.withValues(alpha: 0.5),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Text(
                 'Field Note',
                 style: TextStyle(
@@ -129,7 +129,7 @@ class FieldNoteWidget extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
 
           // Note text
           Text(
@@ -240,7 +240,7 @@ class _CollapsibleFieldNoteState extends State<CollapsibleFieldNote>
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: widget.accentColor.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
         border: Border.all(
           color: widget.accentColor.withValues(alpha: 0.12),
           width: 0.5,
@@ -252,7 +252,7 @@ class _CollapsibleFieldNoteState extends State<CollapsibleFieldNote>
           // Tappable header
           InkWell(
             onTap: _toggle,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppTheme.radius10),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Row(
@@ -262,7 +262,7 @@ class _CollapsibleFieldNoteState extends State<CollapsibleFieldNote>
                     size: 14,
                     color: widget.accentColor.withValues(alpha: 0.5),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppTheme.spacing6),
                   Text(
                     'Field Note',
                     style: TextStyle(
@@ -298,7 +298,12 @@ class _CollapsibleFieldNoteState extends State<CollapsibleFieldNote>
                 );
               },
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing12,
+                  0,
+                  12,
+                  12,
+                ),
                 child: Text(
                   note,
                   style: TextStyle(
@@ -373,7 +378,7 @@ class TraitEvidenceList extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Expanded(
             child: Text(
               observation,

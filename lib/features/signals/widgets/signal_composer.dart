@@ -66,10 +66,10 @@ class _SignalComposerState extends ConsumerState<SignalComposer>
 
   Widget _buildCompact(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border.withValues(alpha: 0.5)),
       ),
       child: Row(
@@ -92,7 +92,7 @@ class _SignalComposerState extends ConsumerState<SignalComposer>
               onChanged: (_) => setState(() {}),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           IconButton(
             onPressed: _canSubmit ? _submit : null,
             icon: _isSubmitting
@@ -120,10 +120,10 @@ class _SignalComposerState extends ConsumerState<SignalComposer>
 
   Widget _buildFull(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.border.withValues(alpha: 0.5)),
       ),
       child: Column(
@@ -148,7 +148,7 @@ class _SignalComposerState extends ConsumerState<SignalComposer>
             ),
             onChanged: (_) => setState(() {}),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
 
           // TTL selector
           Text(
@@ -159,14 +159,14 @@ class _SignalComposerState extends ConsumerState<SignalComposer>
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppTheme.spacing6),
           TTLSelector(
             selectedMinutes: _ttlMinutes,
             onChanged: _isSubmitting
                 ? null
                 : (minutes) => setState(() => _ttlMinutes = minutes),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Submit button
           SizedBox(
@@ -180,7 +180,7 @@ class _SignalComposerState extends ConsumerState<SignalComposer>
                 disabledForegroundColor: context.textTertiary,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
               icon: _isSubmitting

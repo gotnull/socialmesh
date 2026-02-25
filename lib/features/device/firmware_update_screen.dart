@@ -103,7 +103,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
       ],
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Current Version Card
@@ -111,10 +111,10 @@ class FirmwareUpdateScreen extends ConsumerWidget {
               Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Row(
                   children: [
                     Container(
@@ -122,7 +122,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                       height: 48,
                       decoration: BoxDecoration(
                         color: context.accentColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Icon(
                         Icons.memory,
@@ -130,7 +130,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                         size: 24,
                       ),
                     ),
-                    SizedBox(width: 16),
+                    SizedBox(width: AppTheme.spacing16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +142,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                               color: context.textSecondary,
                             ),
                           ),
-                          SizedBox(height: 4),
+                          SizedBox(height: AppTheme.spacing4),
                           Text(
                             currentVersion,
                             style: TextStyle(
@@ -158,13 +158,13 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
 
               // Device Info
               Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
                 child: Column(
@@ -213,7 +213,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Update Check
               _buildSectionHeader(context, 'Available Update'),
@@ -236,14 +236,16 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                           color: isNewer
                               ? AppTheme.successGreen.withValues(alpha: 0.1)
                               : context.card,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           border: Border.all(
                             color: isNewer
                                 ? AppTheme.successGreen.withValues(alpha: 0.3)
                                 : context.border,
                           ),
                         ),
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
                         child: Column(
                           children: [
                             Row(
@@ -257,7 +259,9 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                                                 ? AppTheme.successGreen
                                                 : context.textTertiary)
                                             .withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radius12,
+                                    ),
                                   ),
                                   child: Icon(
                                     isNewer
@@ -269,7 +273,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                                     size: 24,
                                   ),
                                 ),
-                                SizedBox(width: 16),
+                                SizedBox(width: AppTheme.spacing16),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
@@ -287,7 +291,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                                               : context.textSecondary,
                                         ),
                                       ),
-                                      SizedBox(height: 2),
+                                      SizedBox(height: AppTheme.spacing2),
                                       Text(
                                         'Latest: ${info.latestVersion}',
                                         style: TextStyle(
@@ -306,7 +310,9 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                                     ),
                                     decoration: BoxDecoration(
                                       color: AppTheme.successGreen,
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radius8,
+                                      ),
                                     ),
                                     child: Text(
                                       'NEW',
@@ -320,7 +326,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                               ],
                             ),
                             if (isNewer) ...[
-                              SizedBox(height: 16),
+                              SizedBox(height: AppTheme.spacing16),
                               SizedBox(
                                 width: double.infinity,
                                 child: FilledButton.icon(
@@ -332,7 +338,9 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                                       vertical: 14,
                                     ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radius10,
+                                      ),
                                     ),
                                   ),
                                   icon: const Icon(Icons.download),
@@ -350,16 +358,18 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                       ),
 
                       if (isNewer) ...[
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppTheme.spacing16),
 
                         // Release Notes
                         Container(
                           decoration: BoxDecoration(
                             color: context.card,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
                             border: Border.all(color: context.border),
                           ),
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(AppTheme.spacing16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -370,7 +380,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                                     color: context.accentColor,
                                     size: 20,
                                   ),
-                                  SizedBox(width: 8),
+                                  SizedBox(width: AppTheme.spacing8),
                                   Text(
                                     'Release Notes',
                                     style: TextStyle(
@@ -389,7 +399,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 12),
+                              SizedBox(height: AppTheme.spacing12),
                               Text(
                                 info.releaseNotes,
                                 style: TextStyle(
@@ -408,14 +418,14 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                 loading: () => Container(
                   decoration: BoxDecoration(
                     color: context.card,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     border: Border.all(color: context.border),
                   ),
-                  padding: const EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(AppTheme.spacing32),
                   child: Column(
                     children: [
                       LoadingIndicator(size: 32),
-                      SizedBox(height: 16),
+                      SizedBox(height: AppTheme.spacing16),
                       Text(
                         'Checking for updates...',
                         style: TextStyle(
@@ -433,17 +443,17 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // Update Instructions
               _buildSectionHeader(context, 'How to Update'),
               Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Column(
                   children: [
                     _buildStep(
@@ -451,15 +461,15 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                       'Download the firmware file for your device',
                       context,
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppTheme.spacing12),
                     _buildStep(2, 'Connect your device via USB', context),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppTheme.spacing12),
                     _buildStep(
                       3,
                       'Use the Meshtastic Web Flasher or CLI to flash',
                       context,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppTheme.spacing12),
                     _buildStep(
                       4,
                       'Wait for device to reboot and reconnect',
@@ -469,7 +479,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
 
               // Web Flasher Link
               OutlinedButton.icon(
@@ -479,14 +489,14 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                   side: BorderSide(color: context.accentColor),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTheme.radius10),
                   ),
                 ),
                 icon: const Icon(Icons.open_in_browser),
                 label: const Text('Open Web Flasher'),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
 
               // Warning
               StatusBanner.warning(
@@ -497,7 +507,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                 margin: EdgeInsets.zero,
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
             ]),
           ),
         ),
@@ -530,7 +540,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
       child: Row(
         children: [
           Icon(icon, color: context.accentColor, size: 20),
-          SizedBox(width: 12),
+          SizedBox(width: AppTheme.spacing12),
           Text(
             label,
             style: Theme.of(
@@ -563,10 +573,10 @@ class FirmwareUpdateScreen extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       child: Column(
         children: [
           Icon(
@@ -574,7 +584,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
             size: 48,
             color: context.textTertiary.withValues(alpha: 0.5),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppTheme.spacing16),
           Text(
             'Unable to check for updates',
             style: TextStyle(
@@ -583,7 +593,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Visit the Meshtastic website for the latest firmware.',
             textAlign: TextAlign.center,
@@ -604,7 +614,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
           height: 28,
           decoration: BoxDecoration(
             color: context.accentColor.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
           ),
           child: Center(
             child: Text(
@@ -617,7 +627,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
             ),
           ),
         ),
-        SizedBox(width: 12),
+        SizedBox(width: AppTheme.spacing12),
         Expanded(
           child: Text(
             text,

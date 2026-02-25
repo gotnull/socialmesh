@@ -41,6 +41,7 @@ class MeshHealthDashboard extends ConsumerWidget {
         }
         if (!context.mounted) return;
         await _showBatteryReminder(context, ref, navigator, prefs);
+        if (!context.mounted) return;
       },
       child: HelpTourController(
         topicId: 'mesh_health_overview',
@@ -71,18 +72,18 @@ class MeshHealthDashboard extends ConsumerWidget {
           ],
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   const MeshHealthBatteryReminder(),
                   _buildStatusHeader(healthState),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   _buildMetricsRow(healthState),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   _buildUtilizationChart(healthState),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   _buildIssuesSection(healthState),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   _buildTopContributors(healthState),
                 ]),
               ),
@@ -105,13 +106,13 @@ class MeshHealthDashboard extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Icon(
             Icons.battery_alert_rounded,
             size: 40,
             color: AppTheme.warningYellow,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             'Monitoring is still active',
             style: TextStyle(
@@ -120,7 +121,7 @@ class MeshHealthDashboard extends ConsumerWidget {
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppTheme.spacing6),
           Text(
             'Mesh Health monitoring uses extra battery while '
             'running in the background.',
@@ -131,7 +132,7 @@ class MeshHealthDashboard extends ConsumerWidget {
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
@@ -141,7 +142,7 @@ class MeshHealthDashboard extends ConsumerWidget {
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
               child: const Text(
@@ -150,7 +151,7 @@ class MeshHealthDashboard extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppTheme.spacing10),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
@@ -159,7 +160,7 @@ class MeshHealthDashboard extends ConsumerWidget {
                 foregroundColor: context.textSecondary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 side: BorderSide(color: context.border.withValues(alpha: 0.3)),
               ),
@@ -169,7 +170,7 @@ class MeshHealthDashboard extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           TextButton(
             onPressed: () => Navigator.pop(context, 'dismiss'),
             child: Text(
@@ -180,6 +181,7 @@ class MeshHealthDashboard extends ConsumerWidget {
         ],
       ),
     );
+    if (!context.mounted) return;
 
     if (result == 'pause') {
       ref.read(meshHealthProvider.notifier).stopMonitoring();
@@ -220,16 +222,16 @@ class MeshHealthDashboard extends ConsumerWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: statusColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: statusColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Icon(statusIcon, color: statusColor, size: 32),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,7 +260,7 @@ class MeshHealthDashboard extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppTheme.radius16),
               ),
               child: Text(
                 '${status.issueCount} issues',
@@ -291,7 +293,7 @@ class MeshHealthDashboard extends ConsumerWidget {
             icon: Icons.network_check,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         Expanded(
           child: _MetricCard(
             title: 'Reliability',
@@ -310,10 +312,10 @@ class MeshHealthDashboard extends ConsumerWidget {
     final history = state.utilizationHistory;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
@@ -334,7 +336,7 @@ class MeshHealthDashboard extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFAB00).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: const Text(
                   '50% threshold',
@@ -343,7 +345,7 @@ class MeshHealthDashboard extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           SizedBox(
             height: 120,
             child: history.isEmpty
@@ -366,10 +368,10 @@ class MeshHealthDashboard extends ConsumerWidget {
     final issues = state.issues;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
@@ -383,7 +385,7 @@ class MeshHealthDashboard extends ConsumerWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           if (issues.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -395,7 +397,7 @@ class MeshHealthDashboard extends ConsumerWidget {
                       color: Colors.white.withValues(alpha: 0.3),
                       size: 32,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Text(
                       'No issues detected',
                       style: TextStyle(
@@ -419,10 +421,10 @@ class MeshHealthDashboard extends ConsumerWidget {
     final totalAirtime = snapshot?.totalAirtimeMs ?? 1;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
@@ -436,7 +438,7 @@ class MeshHealthDashboard extends ConsumerWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           if (contributors.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -495,10 +497,10 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -507,7 +509,7 @@ class _MetricCard extends StatelessWidget {
           Row(
             children: [
               Icon(icon, color: color, size: 18),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Text(
                 title,
                 style: TextStyle(
@@ -517,7 +519,7 @@ class _MetricCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             value,
             style: TextStyle(
@@ -552,17 +554,17 @@ class _IssueCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(_getSeverityIcon(issue.severity), color: color, size: 20),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppTheme.spacing10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -576,7 +578,7 @@ class _IssueCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: color.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(AppTheme.radius4),
                       ),
                       child: Text(
                         issue.typeLabel,
@@ -587,7 +589,7 @@ class _IssueCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     Text(
                       issue.severityLabel,
                       style: TextStyle(
@@ -597,7 +599,7 @@ class _IssueCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Text(
                   issue.message,
                   style: const TextStyle(color: Colors.white, fontSize: 13),
@@ -671,7 +673,7 @@ class _NodeContributorRow extends StatelessWidget {
               color: node.isKnownNode
                   ? const Color(0xFF00E5FF).withValues(alpha: 0.2)
                   : Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               border: Border.all(
                 color: hasIssue
                     ? const Color(0xFFFFAB00).withValues(alpha: 0.5)
@@ -688,7 +690,7 @@ class _NodeContributorRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -704,7 +706,7 @@ class _NodeContributorRow extends StatelessWidget {
                       ),
                     ),
                     if (node.isSpamming) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 4,
@@ -712,7 +714,7 @@ class _NodeContributorRow extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFAB00).withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: BorderRadius.circular(AppTheme.radius3),
                         ),
                         child: const Text(
                           'SPAM',
@@ -725,7 +727,7 @@ class _NodeContributorRow extends StatelessWidget {
                       ),
                     ],
                     if (node.isHopFlooding) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 4,
@@ -733,7 +735,7 @@ class _NodeContributorRow extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFF1744).withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: BorderRadius.circular(AppTheme.radius3),
                         ),
                         child: const Text(
                           'FLOOD',
@@ -747,7 +749,7 @@ class _NodeContributorRow extends StatelessWidget {
                     ],
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   '${node.packetCount} packets • ${node.totalAirtimeMs}ms airtime',
                   style: TextStyle(

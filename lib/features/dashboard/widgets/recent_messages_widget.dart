@@ -96,7 +96,7 @@ class _MessageTile extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               color: context.accentColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppTheme.radius10),
             ),
             child: Icon(
               isBroadcast ? Icons.campaign : Icons.person,
@@ -104,7 +104,7 @@ class _MessageTile extends StatelessWidget {
               size: 18,
             ),
           ),
-          SizedBox(width: 10),
+          SizedBox(width: AppTheme.spacing10),
           // Content
           Expanded(
             child: Column(
@@ -124,7 +124,7 @@ class _MessageTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Text(
                       timeAgo,
                       style: TextStyle(
@@ -134,7 +134,7 @@ class _MessageTile extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 2),
+                SizedBox(height: AppTheme.spacing2),
                 Text(
                   message,
                   style: Theme.of(

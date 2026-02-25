@@ -48,7 +48,7 @@ class AdminScreen extends ConsumerWidget {
                 iconColor: Colors.teal.shade400,
                 onTap: () => _navigateTo(context, const DeviceShopScreen()),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               const _SectionHeader(title: 'CONTENT MODERATION'),
               _AdminTile(
                 icon: Icons.rate_review_outlined,
@@ -87,7 +87,7 @@ class AdminScreen extends ConsumerWidget {
                 iconColor: Colors.deepPurple.shade400,
                 onTap: () => _navigateTo(context, const WidgetApprovalScreen()),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               const _SectionHeader(title: 'USER MANAGEMENT'),
               _AdminTile(
                 icon: Icons.group_add_rounded,
@@ -105,7 +105,7 @@ class AdminScreen extends ConsumerWidget {
                 onTap: () =>
                     _navigateTo(context, const UserPurchasesAdminScreen()),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               const _SectionHeader(title: 'APP CONFIGURATION'),
               _AdminTile(
                 icon: Icons.campaign_outlined,
@@ -152,7 +152,7 @@ class _SectionHeader extends StatelessWidget {
             size: 14,
             color: Colors.orange.withValues(alpha: 0.7),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Text(
             title,
             style: TextStyle(
@@ -194,12 +194,12 @@ class _AdminTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Row(
               children: [
                 Container(
@@ -207,11 +207,11 @@ class _AdminTile extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: iconColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTheme.radius10),
                   ),
                   child: Icon(icon, color: iconColor, size: 22),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,7 +222,7 @@ class _AdminTile extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         subtitle,
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -240,7 +240,7 @@ class _AdminTile extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: Colors.red,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Text(
                       badgeCount! > 99 ? '99+' : badgeCount.toString(),
@@ -251,7 +251,7 @@ class _AdminTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                 ],
                 Icon(
                   Icons.chevron_right,

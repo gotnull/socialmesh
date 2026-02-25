@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../models/tak_event.dart';
 import '../utils/cot_affiliation.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// List tile for a single TAK/CoT event in the event list.
 ///
@@ -28,12 +29,12 @@ class TakEventTile extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(
                 color: theme.colorScheme.outline.withValues(alpha: 0.15),
               ),
@@ -48,7 +49,7 @@ class TakEventTile extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       color: affiliationColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                       border: Border.all(
                         color: affiliationColor.withValues(alpha: 0.4),
                       ),
@@ -60,7 +61,7 @@ class TakEventTile extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 // Content — vertical stack
                 Expanded(
                   child: Column(
@@ -78,7 +79,7 @@ class TakEventTile extends StatelessWidget {
                               : null,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       // Subtitle
                       Text(
                         '${event.typeDescription}  \u2022  '
@@ -90,7 +91,7 @@ class TakEventTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.spacing4),
                       // Metadata chips
                       Wrap(
                         spacing: 6,
@@ -129,7 +130,7 @@ class TakEventTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.15),
         ),
@@ -142,7 +143,7 @@ class TakEventTile extends StatelessWidget {
             size: 12,
             color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
           ),
-          const SizedBox(width: 3),
+          const SizedBox(width: AppTheme.spacing3),
           Text(
             label,
             style: theme.textTheme.labelSmall?.copyWith(
@@ -161,14 +162,14 @@ class TakEventTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.shield, size: 12, color: color),
-          const SizedBox(width: 3),
+          const SizedBox(width: AppTheme.spacing3),
           Text(
             label,
             style: TextStyle(

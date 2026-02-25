@@ -143,12 +143,12 @@ class _TabWithBadge extends StatelessWidget {
         children: [
           Text(label),
           if (count > 0) ...[
-            const SizedBox(width: 6),
+            const SizedBox(width: AppTheme.spacing6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: Colors.red,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
               ),
               child: Text(
                 count > 99 ? '99+' : count.toString(),
@@ -192,7 +192,7 @@ class _ModerationQueueListState extends ConsumerState<_ModerationQueueList>
         if (snapshot.hasError) {
           return Center(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppTheme.spacing24),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -201,14 +201,14 @@ class _ModerationQueueListState extends ConsumerState<_ModerationQueueList>
                     size: 64,
                     color: theme.colorScheme.error.withAlpha(150),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     'Error loading moderation queue',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.error,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Text(
                     '${snapshot.error}',
                     textAlign: TextAlign.center,
@@ -234,14 +234,14 @@ class _ModerationQueueListState extends ConsumerState<_ModerationQueueList>
                   size: 64,
                   color: theme.hintColor.withAlpha(100),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 Text(
                   'No flagged content',
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.hintColor,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Text(
                   'Auto-moderation has not flagged any content',
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -471,7 +471,7 @@ class _ModerationCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -486,13 +486,13 @@ class _ModerationCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: bgColor,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(AppTheme.radius6),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(icon, size: 14, color: fgColor),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       Text(
                         contentType.toUpperCase(),
                         style: TextStyle(
@@ -504,7 +504,7 @@ class _ModerationCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 // Decision badge
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -513,13 +513,13 @@ class _ModerationCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: decisionBg,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(AppTheme.radius6),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(decisionIcon, size: 12, color: decisionFg),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       Text(
                         decisionLabel,
                         style: TextStyle(
@@ -542,16 +542,16 @@ class _ModerationCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Detected violations
             if (categories.isNotEmpty) ...[
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.errorContainer.withAlpha(50),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                   border: Border.all(
                     color: theme.colorScheme.error.withAlpha(50),
                   ),
@@ -566,7 +566,7 @@ class _ModerationCard extends StatelessWidget {
                           size: 16,
                           color: theme.colorScheme.error,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Text(
                           'Violations Detected',
                           style: theme.textTheme.bodyMedium?.copyWith(
@@ -576,7 +576,7 @@ class _ModerationCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Wrap(
                       spacing: 6,
                       runSpacing: 4,
@@ -592,7 +592,9 @@ class _ModerationCard extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: Colors.red.withAlpha(20),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius4,
+                            ),
                             border: Border.all(color: Colors.red.withAlpha(50)),
                           ),
                           child: Text(
@@ -606,7 +608,7 @@ class _ModerationCard extends StatelessWidget {
                       }).toList(),
                     ),
                     if (details != null && details.isNotEmpty) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppTheme.spacing8),
                       Text(
                         details,
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -617,13 +619,13 @@ class _ModerationCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
             ],
 
             // Content preview
             if (contentUrl != null && contentUrl.isNotEmpty) ...[
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 child: Image.network(
                   contentUrl,
                   height: 120,
@@ -638,15 +640,15 @@ class _ModerationCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
             ],
             if (textContent != null && textContent.isNotEmpty)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: Text(
                   textContent,
@@ -656,7 +658,7 @@ class _ModerationCard extends StatelessWidget {
                 ),
               ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Actions
             Row(
@@ -672,7 +674,7 @@ class _ModerationCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: onReject,
@@ -736,7 +738,7 @@ class _UserModerationCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -751,13 +753,13 @@ class _UserModerationCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: bgColor,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(AppTheme.radius6),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(icon, size: 14, color: fgColor),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       Text(
                         isSuspension ? 'SUSPENDED' : 'STRIKE',
                         style: TextStyle(
@@ -780,7 +782,7 @@ class _UserModerationCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
 
             // User info
             Row(
@@ -790,7 +792,7 @@ class _UserModerationCard extends StatelessWidget {
                   radius: 24,
                   child: Icon(Icons.person, size: 28, color: theme.hintColor),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -815,15 +817,15 @@ class _UserModerationCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Reason
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               decoration: BoxDecoration(
                 color: theme.colorScheme.errorContainer.withAlpha(50),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 border: Border.all(
                   color: theme.colorScheme.error.withAlpha(50),
                 ),
@@ -838,7 +840,7 @@ class _UserModerationCard extends StatelessWidget {
                         size: 16,
                         color: theme.colorScheme.error,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Text(
                         'Reason',
                         style: theme.textTheme.bodyMedium?.copyWith(
@@ -848,7 +850,7 @@ class _UserModerationCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Text(
                     reason,
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -859,7 +861,7 @@ class _UserModerationCard extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Actions
             Row(
@@ -875,7 +877,7 @@ class _UserModerationCard extends StatelessWidget {
                   ),
                 ),
                 if (isSuspension) ...[
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: onUnsuspend,
@@ -916,7 +918,7 @@ class _ReportsList extends ConsumerWidget {
         if (snapshot.hasError) {
           return Center(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppTheme.spacing24),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -925,14 +927,14 @@ class _ReportsList extends ConsumerWidget {
                     size: 64,
                     color: theme.colorScheme.error.withAlpha(150),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     'Error loading reports',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.error,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Text(
                     '${snapshot.error}',
                     textAlign: TextAlign.center,
@@ -940,7 +942,7 @@ class _ReportsList extends ConsumerWidget {
                       color: theme.hintColor,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   FilledButton.icon(
                     onPressed: () {
                       // Trigger rebuild
@@ -972,7 +974,7 @@ class _ReportsList extends ConsumerWidget {
                   size: 64,
                   color: theme.hintColor.withAlpha(100),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 Text(
                   filter == null
                       ? 'No pending reports'
@@ -1378,7 +1380,7 @@ class _ReportCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1392,13 +1394,13 @@ class _ReportCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: bgColor,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(AppTheme.radius6),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(icon, size: 14, color: fgColor),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       Text(
                         type.toUpperCase(),
                         style: TextStyle(
@@ -1421,14 +1423,14 @@ class _ReportCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Reason
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(AppTheme.spacing10),
               decoration: BoxDecoration(
                 color: theme.colorScheme.errorContainer.withAlpha(50),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 border: Border.all(
                   color: theme.colorScheme.error.withAlpha(50),
                 ),
@@ -1436,7 +1438,7 @@ class _ReportCard extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(Icons.flag, size: 16, color: theme.colorScheme.error),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Expanded(
                     child: Text(
                       reason,
@@ -1449,12 +1451,12 @@ class _ReportCard extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Content preview
             if (imageUrl != null && imageUrl.isNotEmpty) ...[
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 child: Image.network(
                   imageUrl,
                   height: 120,
@@ -1469,14 +1471,14 @@ class _ReportCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
             ],
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Text(
                 content,
@@ -1486,7 +1488,7 @@ class _ReportCard extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Actions
             Row(
@@ -1501,7 +1503,7 @@ class _ReportCard extends StatelessWidget {
                   onPressed: onDismiss,
                   child: const Text('Dismiss'),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 FilledButton(
                   onPressed: onDelete,
                   style: FilledButton.styleFrom(
@@ -1512,7 +1514,7 @@ class _ReportCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
 
             // Ban user action
             SizedBox(
@@ -1568,18 +1570,18 @@ class _BanUserSheetState extends State<_BanUserSheet> {
       children: [
         // Header
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 20, 20, 8),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppTheme.spacing10),
                 decoration: BoxDecoration(
                   color: Colors.red.withAlpha(30),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: const Icon(Icons.block, color: Colors.red, size: 24),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1617,7 +1619,7 @@ class _BanUserSheetState extends State<_BanUserSheet> {
                 size: 16,
                 color: context.textSecondary,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Text(
                 'User ID: ',
                 style: context.bodySmallStyle?.copyWith(
@@ -1639,7 +1641,7 @@ class _BanUserSheetState extends State<_BanUserSheet> {
 
         // Reason selection
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 8, 20, 4),
           child: Text(
             'Select ban reason',
             style: TextStyle(
@@ -1660,7 +1662,7 @@ class _BanUserSheetState extends State<_BanUserSheet> {
               final isSelected = _selectedReason == value;
               return InkWell(
                 onTap: () => setState(() => _selectedReason = value),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -1677,7 +1679,7 @@ class _BanUserSheetState extends State<_BanUserSheet> {
                             ? Theme.of(context).colorScheme.primary
                             : context.textSecondary,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Expanded(
                         child: Text(
                           label,
@@ -1717,11 +1719,11 @@ class _BanUserSheetState extends State<_BanUserSheet> {
           ),
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
 
         // Actions
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 8, 20, 20),
           child: Row(
             children: [
               Expanded(
@@ -1730,7 +1732,7 @@ class _BanUserSheetState extends State<_BanUserSheet> {
                   child: const Text('Cancel'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: _selectedReason == null
@@ -1773,7 +1775,7 @@ class _SignalPreviewContent extends StatelessWidget {
       children: [
         // Header
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 20, 20, 16),
           child: Row(
             children: [
               Container(
@@ -1783,13 +1785,13 @@ class _SignalPreviewContent extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: context.accentColor.withAlpha(30),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(AppTheme.radius6),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.sensors, size: 14, color: context.accentColor),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     Text(
                       'SIGNAL',
                       style: TextStyle(
@@ -1815,10 +1817,10 @@ class _SignalPreviewContent extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.errorContainer.withAlpha(50),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               border: Border.all(
                 color: Theme.of(context).colorScheme.error.withAlpha(50),
               ),
@@ -1830,7 +1832,7 @@ class _SignalPreviewContent extends StatelessWidget {
                   size: 16,
                   color: Theme.of(context).colorScheme.error,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   child: Text(
                     reason,
@@ -1842,7 +1844,7 @@ class _SignalPreviewContent extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // Signal content
         if (content != null && content!.isNotEmpty)
@@ -1850,10 +1852,10 @@ class _SignalPreviewContent extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               decoration: BoxDecoration(
                 color: context.card,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Text(
                 content!,
@@ -1868,11 +1870,11 @@ class _SignalPreviewContent extends StatelessWidget {
 
         // Image preview
         if (imageUrl != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               child: Image.network(
                 imageUrl!,
                 height: 200,
@@ -1882,7 +1884,7 @@ class _SignalPreviewContent extends StatelessWidget {
                   height: 100,
                   decoration: BoxDecoration(
                     color: context.card,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1892,7 +1894,7 @@ class _SignalPreviewContent extends StatelessWidget {
                         size: 36,
                         color: context.textTertiary,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppTheme.spacing8),
                       Text(
                         'Image unavailable',
                         style: TextStyle(
@@ -1913,10 +1915,10 @@ class _SignalPreviewContent extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppTheme.spacing24),
               decoration: BoxDecoration(
                 color: context.card,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Center(
                 child: Column(
@@ -1926,7 +1928,7 @@ class _SignalPreviewContent extends StatelessWidget {
                       size: 48,
                       color: context.textTertiary,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Text(
                       'Signal content not available',
                       style: TextStyle(color: context.textTertiary),
@@ -1939,7 +1941,7 @@ class _SignalPreviewContent extends StatelessWidget {
 
         // Author info
         if (authorId != null) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
@@ -1949,7 +1951,7 @@ class _SignalPreviewContent extends StatelessWidget {
                   size: 16,
                   color: context.textSecondary,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Author: ',
                   style: context.bodySmallStyle?.copyWith(
@@ -1971,7 +1973,7 @@ class _SignalPreviewContent extends StatelessWidget {
           ),
         ],
 
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
       ],
     );
   }
@@ -1999,7 +2001,7 @@ class _StoryPreviewContent extends StatelessWidget {
       children: [
         // Header
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 20, 20, 16),
           child: Row(
             children: [
               Container(
@@ -2009,7 +2011,7 @@ class _StoryPreviewContent extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: Colors.orange.withAlpha(30),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(AppTheme.radius6),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -2019,7 +2021,7 @@ class _StoryPreviewContent extends StatelessWidget {
                       size: 14,
                       color: Colors.orange,
                     ),
-                    SizedBox(width: 6),
+                    SizedBox(width: AppTheme.spacing6),
                     Text(
                       'STORY',
                       style: TextStyle(
@@ -2045,10 +2047,10 @@ class _StoryPreviewContent extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.errorContainer.withAlpha(50),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               border: Border.all(
                 color: Theme.of(context).colorScheme.error.withAlpha(50),
               ),
@@ -2060,7 +2062,7 @@ class _StoryPreviewContent extends StatelessWidget {
                   size: 16,
                   color: Theme.of(context).colorScheme.error,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   child: Text(
                     reason,
@@ -2072,7 +2074,7 @@ class _StoryPreviewContent extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // Media preview
         if (mediaUrl != null) ...[
@@ -2087,10 +2089,10 @@ class _StoryPreviewContent extends StatelessWidget {
                     color: context.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 if (mediaType == 'image')
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     child: Image.network(
                       mediaUrl!,
                       height: 250,
@@ -2100,7 +2102,9 @@ class _StoryPreviewContent extends StatelessWidget {
                         height: 150,
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -2110,7 +2114,7 @@ class _StoryPreviewContent extends StatelessWidget {
                               size: 48,
                               color: context.textTertiary,
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: AppTheme.spacing8),
                             Text(
                               'Image unavailable',
                               style: TextStyle(
@@ -2125,10 +2129,10 @@ class _StoryPreviewContent extends StatelessWidget {
                   )
                 else
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Row(
                       children: [
@@ -2136,7 +2140,7 @@ class _StoryPreviewContent extends StatelessWidget {
                           Icons.videocam_outlined,
                           color: context.textSecondary,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Text(
                             'Video content',
@@ -2153,10 +2157,10 @@ class _StoryPreviewContent extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppTheme.spacing24),
               decoration: BoxDecoration(
                 color: context.card,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Center(
                 child: Column(
@@ -2166,7 +2170,7 @@ class _StoryPreviewContent extends StatelessWidget {
                       size: 48,
                       color: context.textTertiary,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Text(
                       'Content not available',
                       style: TextStyle(color: context.textTertiary),
@@ -2179,7 +2183,7 @@ class _StoryPreviewContent extends StatelessWidget {
 
         // Author info
         if (authorId != null) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
@@ -2189,7 +2193,7 @@ class _StoryPreviewContent extends StatelessWidget {
                   size: 16,
                   color: context.textSecondary,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Author: ',
                   style: context.bodySmallStyle?.copyWith(
@@ -2211,7 +2215,7 @@ class _StoryPreviewContent extends StatelessWidget {
           ),
         ],
 
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
       ],
     );
   }
@@ -2248,13 +2252,13 @@ class _SignalCommentPreviewContent extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: Colors.teal.withAlpha(30),
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(AppTheme.radius6),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.chat_outlined, size: 14, color: Colors.teal),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppTheme.spacing6),
                   Text(
                     'SIGNAL COMMENT',
                     style: TextStyle(
@@ -2269,21 +2273,21 @@ class _SignalCommentPreviewContent extends StatelessWidget {
           ],
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // Report reason
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           decoration: BoxDecoration(
             color: theme.colorScheme.errorContainer.withAlpha(50),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
             border: Border.all(color: theme.colorScheme.error.withAlpha(50)),
           ),
           child: Row(
             children: [
               Icon(Icons.flag, size: 16, color: theme.colorScheme.error),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: Text(
                   reason,
@@ -2296,14 +2300,14 @@ class _SignalCommentPreviewContent extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // Author info
         if (authorName != null || authorId != null) ...[
           Row(
             children: [
               Icon(Icons.person_outlined, size: 16, color: theme.hintColor),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: Text(
                   authorName ?? authorId ?? 'Unknown',
@@ -2314,7 +2318,7 @@ class _SignalCommentPreviewContent extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
         ],
 
         // Signal ID reference
@@ -2322,7 +2326,7 @@ class _SignalCommentPreviewContent extends StatelessWidget {
           Row(
             children: [
               Icon(Icons.cell_tower, size: 16, color: theme.hintColor),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: Text(
                   'Signal: $signalId',
@@ -2335,16 +2339,16 @@ class _SignalCommentPreviewContent extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
         ],
 
         // Comment content
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
           ),
           child: Text(
             content ?? 'Content unavailable',
@@ -2352,7 +2356,7 @@ class _SignalCommentPreviewContent extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
       ],
     );
   }

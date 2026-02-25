@@ -10,6 +10,7 @@ import '../../../models/social.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
 import 'profile_social_screen.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Screen showing pending follow requests for the current user to approve/decline.
 class FollowRequestsScreen extends ConsumerWidget {
@@ -108,14 +109,14 @@ class FollowRequestsScreen extends ConsumerWidget {
             size: 64,
             color: theme.colorScheme.primary.withAlpha(100),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             'No pending requests',
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.textTheme.bodyLarge?.color?.withAlpha(150),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'When someone requests to follow you,\nyou\'ll see it here',
             textAlign: TextAlign.center,
@@ -138,9 +139,9 @@ class FollowRequestsScreen extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.error_outline, size: 48),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text('Failed to load: $error'),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           FilledButton(onPressed: onRetry, child: const Text('Retry')),
         ],
       ),
@@ -225,7 +226,7 @@ class _RequestTileState extends ConsumerState<_RequestTile>
             ),
           ),
           if (profile?.isVerified == true) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             const SimpleVerifiedBadge(size: 16),
           ],
         ],
@@ -270,7 +271,7 @@ class _RequestTileState extends ConsumerState<_RequestTile>
                   : const Text('Confirm', maxLines: 1),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           SizedBox(
             height: 32,
             width: 70,

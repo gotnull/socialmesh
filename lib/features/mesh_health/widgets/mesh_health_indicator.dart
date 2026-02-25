@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../services/mesh_health/mesh_health_models.dart';
 import '../../../services/mesh_health/mesh_health_providers.dart';
 import 'mesh_health_dashboard.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Compact health indicator for embedding in other screens
 class MeshHealthIndicator extends ConsumerWidget {
@@ -37,7 +38,7 @@ class MeshHealthIndicator extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -48,7 +49,7 @@ class MeshHealthIndicator extends ConsumerWidget {
               size: 16,
             ),
             if (showLabel) ...[
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               const Text(
                 'Health',
                 style: TextStyle(color: Colors.grey, fontSize: 12),
@@ -69,7 +70,7 @@ class MeshHealthIndicator extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
@@ -77,7 +78,7 @@ class MeshHealthIndicator extends ConsumerWidget {
           children: [
             Icon(_getHealthIcon(snapshot), color: color, size: 16),
             if (showLabel) ...[
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Text(
                 '${snapshot.channelUtilizationPercent.toStringAsFixed(0)}%',
                 style: TextStyle(
@@ -88,12 +89,12 @@ class MeshHealthIndicator extends ConsumerWidget {
               ),
             ],
             if (snapshot.issueCount > 0) ...[
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                 decoration: BoxDecoration(
                   color: color,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: Text(
                   '${snapshot.issueCount}',
@@ -187,7 +188,7 @@ class MeshIssueBadge extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
       ),
       child: Text(
         '${issues.length}',

@@ -57,11 +57,11 @@ class _NodeActivityTimelineState extends ConsumerState<NodeActivityTimeline> {
 
     return asyncEvents.when(
       loading: () => const Padding(
-        padding: EdgeInsets.all(24),
+        padding: EdgeInsets.all(AppTheme.spacing24),
         child: Center(child: CircularProgressIndicator.adaptive()),
       ),
       error: (e, st) => Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.spacing24),
         child: Center(
           child: Text(
             'Could not load timeline',
@@ -99,7 +99,7 @@ class _NodeActivityTimelineState extends ConsumerState<NodeActivityTimeline> {
               ),
             // Pagination footer
             if (totalPages > 1) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -112,7 +112,7 @@ class _NodeActivityTimelineState extends ConsumerState<NodeActivityTimeline> {
                       setState(() => _currentPage = page - 1);
                     },
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Text(
                     '${page + 1} / $totalPages',
                     style: TextStyle(
@@ -122,7 +122,7 @@ class _NodeActivityTimelineState extends ConsumerState<NodeActivityTimeline> {
                       fontFamily: AppTheme.fontFamily,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   _PaginationButton(
                     icon: Icons.chevron_right,
                     enabled: page < totalPages - 1,
@@ -163,7 +163,7 @@ class _EmptyTimeline extends StatelessWidget {
             size: 40,
             color: context.textTertiary.withValues(alpha: 0.4),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             'No activity yet',
             style: TextStyle(
@@ -172,7 +172,7 @@ class _EmptyTimeline extends StatelessWidget {
               color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             'Events will appear here as you interact with this node.',
             textAlign: TextAlign.center,
@@ -249,7 +249,7 @@ class _TimelineEventTile extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           // Content column
           Expanded(
             child: Padding(
@@ -268,7 +268,7 @@ class _TimelineEventTile extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   // Timestamp row
                   Text(
                     _formatTimestamp(event.timestamp),
@@ -457,7 +457,7 @@ class _PaginationButton extends StatelessWidget {
         height: 32,
         decoration: BoxDecoration(
           color: enabled ? accentColor.withValues(alpha: 0.1) : context.card,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(
             color: enabled
                 ? accentColor.withValues(alpha: 0.3)

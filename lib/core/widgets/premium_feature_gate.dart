@@ -110,7 +110,7 @@ class PremiumChip extends StatelessWidget {
           gradient: LinearGradient(
             colors: [Colors.amber.shade400, Colors.orange.shade600],
           ),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
         ),
         child: const Icon(Icons.star_rounded, size: 10, color: Colors.white),
       );
@@ -122,14 +122,14 @@ class PremiumChip extends StatelessWidget {
         gradient: LinearGradient(
           colors: [Colors.amber.shade400, Colors.orange.shade600],
         ),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.star_rounded, size: 12, color: Colors.white),
           if (label != null) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             Text(
               label!,
               style: const TextStyle(

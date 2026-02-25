@@ -95,7 +95,6 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
 
     // Pre-fill from existing config if resuming setup
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
       final configAsync = ref.read(globalLayerConfigProvider);
       configAsync.whenData((config) {
         if (config.host.isNotEmpty) {
@@ -279,7 +278,6 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
       if (!mounted) return;
       navigator.pop(true);
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to save configuration: $e');
     }
   }
@@ -432,7 +430,6 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
         _testReport = _testReport?.updateResult(result);
       });
     } catch (e) {
-      if (!mounted) return;
       safeSetState(() {
         _testReport = _testReport?.updateResult(
           DiagnosticCheckResult.failed(type, message: 'Unexpected error: $e'),
@@ -522,7 +519,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
   Widget _buildProgressBar(BuildContext context) {
     final reduceMotion = ref.watch(reduceMotionEnabledProvider);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 12, 24, 4),
       child: Column(
         children: [
           Row(
@@ -541,7 +538,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                     curve: AppCurves.smooth,
                     height: isCurrent ? 4 : 3,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(AppTheme.radius2),
                       color: isComplete
                           ? context.accentColor
                           : isCurrent
@@ -553,7 +550,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               );
             }),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Step ${_currentStep + 1} of $_totalSteps',
             style: TextStyle(
@@ -576,7 +573,12 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(24, 12, 24, 12 + bottomPadding),
+      padding: EdgeInsets.fromLTRB(
+        AppTheme.spacing24,
+        12,
+        24,
+        12 + bottomPadding,
+      ),
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: context.border, width: 0.5)),
       ),
@@ -597,7 +599,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           gradient: enabled
               ? LinearGradient(
                   colors: [
@@ -626,7 +628,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           gradient: AppTheme.brandGradient,
         ),
         child: Text(
@@ -647,7 +649,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
 
   Widget _buildStep0Explain(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 16, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -668,7 +670,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               child: Icon(Icons.public, size: 36, color: context.accentColor),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Text(
             GlobalLayerCopy.explainTitle,
             style: TextStyle(
@@ -677,7 +679,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             GlobalLayerCopy.explainBody,
             style: TextStyle(
@@ -686,7 +688,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           // What it does
           _buildInfoRow(
             context,
@@ -695,7 +697,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
             title: 'What it does',
             body: GlobalLayerCopy.explainWhatItDoes,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           // What it does NOT do
           _buildInfoRow(
             context,
@@ -704,13 +706,13 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
             title: 'What it does NOT do',
             body: GlobalLayerCopy.explainWhatItDoesNot,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           // Technical note
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(AppTheme.spacing14),
             decoration: BoxDecoration(
               color: context.card,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(color: context.border),
             ),
             child: Row(
@@ -721,7 +723,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                   size: 18,
                   color: context.textTertiary,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppTheme.spacing10),
                 Expanded(
                   child: Text(
                     'Under the hood, this uses an MQTT broker — a standard '
@@ -761,7 +763,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
           ),
           child: Icon(icon, size: 18, color: iconColor),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -774,7 +776,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                   color: context.textPrimary,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
               Text(
                 body,
                 style: TextStyle(
@@ -800,7 +802,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
     final isCustom = selectedPreset.isCustom;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 16, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -812,7 +814,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             GlobalLayerCopy.brokerBody,
             style: TextStyle(
@@ -821,7 +823,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
 
           // ------------------------------------------------------------------
           // Broker preset picker
@@ -847,12 +849,12 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                 child: AnimatedContainer(
                   duration: AppDurations.standard,
                   curve: AppCurves.smooth,
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(AppTheme.spacing14),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? context.accentColor.withAlpha(18)
                         : context.card,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     border: Border.all(
                       color: isSelected ? context.accentColor : context.border,
                       width: isSelected ? 1.5 : 1,
@@ -877,7 +879,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                               : context.textTertiary,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -892,7 +894,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                                     : context.textSecondary,
                               ),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: AppTheme.spacing2),
                             Text(
                               preset.description,
                               style: TextStyle(
@@ -906,7 +908,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       AnimatedOpacity(
                         duration: AppDurations.standard,
                         opacity: isSelected ? 1.0 : 0.0,
@@ -925,12 +927,12 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
 
           // Preset note (if selected preset has one)
           if (selectedPreset.note != null) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: AppTheme.spacing10),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               decoration: BoxDecoration(
                 color: context.card,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
                 border: Border.all(color: context.border),
               ),
               child: Row(
@@ -941,7 +943,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                     size: 16,
                     color: context.textTertiary,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Expanded(
                     child: Text(
                       selectedPreset.note!,
@@ -961,12 +963,13 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
           // Connection details (editable fields)
           // ------------------------------------------------------------------
           if (isCustom || _showAdvancedBrokerFields) ...[
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.spacing20),
             _SectionLabel(text: 'CONNECTION'),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Host
             _buildTextField(
+              maxLength: 256,
               context,
               controller: _hostController,
               label: 'Broker Address',
@@ -976,7 +979,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               textInputAction: TextInputAction.next,
               onChanged: (_) => safeSetState(() {}),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Port + TLS row — matched heights via IntrinsicHeight
             IntrinsicHeight(
@@ -986,6 +989,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                   Expanded(
                     flex: 2,
                     child: _buildTextField(
+                      maxLength: 10,
                       context,
                       controller: _portController,
                       label: 'Port',
@@ -996,14 +1000,14 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     flex: 3,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
                         color: context.card,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         border: Border.all(color: context.border),
                       ),
                       child: Row(
@@ -1017,7 +1021,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                                 ? context.accentColor
                                 : context.textTertiary,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           Expanded(
                             child: Text(
                               'TLS',
@@ -1057,12 +1061,13 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Authentication section
             _SectionLabel(text: 'AUTHENTICATION'),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _buildTextField(
+              maxLength: 100,
               context,
               controller: _usernameController,
               label: 'Username',
@@ -1070,8 +1075,9 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               icon: Icons.person_outlined,
               textInputAction: TextInputAction.next,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _buildTextField(
+              maxLength: 64,
               context,
               controller: _passwordController,
               label: 'Password',
@@ -1089,12 +1095,13 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                     safeSetState(() => _obscurePassword = !_obscurePassword),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Advanced section
             _SectionLabel(text: 'ADVANCED'),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _buildTextField(
+              maxLength: 100,
               context,
               controller: _clientIdController,
               label: 'Client ID',
@@ -1105,7 +1112,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
           ] else ...[
             // Non-custom preset: show a compact summary of what will be used
             // with a "Customise" affordance to reveal full fields
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             _buildPresetSummary(context, selectedPreset),
           ],
         ],
@@ -1116,10 +1123,10 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
   /// Compact summary shown when a non-custom preset is selected.
   Widget _buildPresetSummary(BuildContext context, BrokerPreset preset) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppTheme.spacing14),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -1131,7 +1138,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
             label: 'Server',
             value: preset.host,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppTheme.spacing10),
           _buildSummaryDetail(
             context,
             icon: Icons.numbers,
@@ -1147,7 +1154,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                       ? context.accentColor
                       : context.textTertiary,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 Text(
                   preset.useTls ? 'TLS' : 'No TLS',
                   style: TextStyle(
@@ -1162,7 +1169,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
             ),
           ),
           if (preset.hasDefaultCredentials) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: AppTheme.spacing10),
             _buildSummaryDetail(
               context,
               icon: Icons.person_outlined,
@@ -1170,7 +1177,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               value: 'Pre-configured (public credentials)',
             ),
           ],
-          const SizedBox(height: 14),
+          const SizedBox(height: AppTheme.spacing14),
           Center(
             child: BouncyTap(
               onTap: () {
@@ -1202,7 +1209,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
     return Row(
       children: [
         Icon(icon, size: 16, color: context.textTertiary),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         Text(
           '$label: ',
           style: TextStyle(fontSize: 13, color: context.textTertiary),
@@ -1241,7 +1248,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
 
   Widget _buildStep2Topics(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 16, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1253,7 +1260,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             GlobalLayerCopy.topicsBody,
             style: TextStyle(
@@ -1262,12 +1269,13 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
 
           // Topic root
           _SectionLabel(text: 'TOPIC ROOT'),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _buildTextField(
+            maxLength: 256,
             context,
             controller: _topicRootController,
             label: 'Topic Root',
@@ -1276,7 +1284,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
             textInputAction: TextInputAction.done,
             onChanged: (value) => safeSetState(() => _topicRoot = value),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Padding(
             padding: const EdgeInsets.only(left: 4),
             child: Text(
@@ -1289,11 +1297,11 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
 
           // Topic templates
           _SectionLabel(text: 'DATA TYPES'),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           ...List.generate(_topicSelections.length, (index) {
             final sel = _topicSelections[index];
             final previewTopic = TopicBuilder.resolveWithConfig(
@@ -1332,10 +1340,10 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
   }) {
     final iconData = _iconForTemplateName(template.iconName);
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppTheme.spacing14),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(
           color: enabled ? context.accentColor.withAlpha(100) : context.border,
         ),
@@ -1350,7 +1358,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                 size: 20,
                 color: enabled ? context.accentColor : context.textTertiary,
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppTheme.spacing10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1363,7 +1371,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                         color: context.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       template.description,
                       style: TextStyle(
@@ -1375,18 +1383,18 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               ThemedSwitch(value: enabled, onChanged: onChanged),
             ],
           ),
           if (enabled) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: AppTheme.spacing10),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: context.background,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Text(
                 previewTopic,
@@ -1420,7 +1428,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
 
   Widget _buildStep3Privacy(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 16, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1432,7 +1440,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             GlobalLayerCopy.privacyBody,
             style: TextStyle(
@@ -1441,7 +1449,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           // Toggles
           _buildPrivacyToggle(
@@ -1457,7 +1465,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               safeSetState(() => _shareMessages = value);
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildPrivacyToggle(
             context,
             icon: Icons.analytics_outlined,
@@ -1471,7 +1479,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               safeSetState(() => _shareTelemetry = value);
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildPrivacyToggle(
             context,
             icon: Icons.move_to_inbox_outlined,
@@ -1486,14 +1494,14 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
             },
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           // Trust warning
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(AppTheme.spacing14),
             decoration: BoxDecoration(
               color: AppTheme.warningYellow.withAlpha(15),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(color: AppTheme.warningYellow.withAlpha(60)),
             ),
             child: Row(
@@ -1504,7 +1512,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                   size: 20,
                   color: AppTheme.warningYellow,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppTheme.spacing10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1517,7 +1525,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                           color: context.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.spacing4),
                       Text(
                         GlobalLayerCopy.privacyBrokerTrustWarning,
                         style: TextStyle(
@@ -1546,10 +1554,10 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
     required ValueChanged<bool> onChanged,
   }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppTheme.spacing14),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(
           color: value ? context.accentColor.withAlpha(80) : context.border,
         ),
@@ -1562,7 +1570,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
             size: 20,
             color: value ? context.accentColor : context.textTertiary,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppTheme.spacing10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1575,7 +1583,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                     color: context.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Text(
                   subtitle,
                   style: TextStyle(
@@ -1587,7 +1595,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           ThemedSwitch(value: value, onChanged: onChanged),
         ],
       ),
@@ -1601,7 +1609,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
   Widget _buildStep4Test(BuildContext context) {
     final report = _testReport;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 16, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1613,7 +1621,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             GlobalLayerCopy.testBody,
             style: TextStyle(
@@ -1622,7 +1630,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
 
           // Run test button
           if (report == null) ...[
@@ -1635,7 +1643,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     border: Border.all(color: context.accentColor),
                   ),
                   child: Row(
@@ -1646,7 +1654,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                         size: 20,
                         color: context.accentColor,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Text(
                         'Run Connection Test',
                         style: TextStyle(
@@ -1660,7 +1668,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Center(
               child: Text(
                 'You can skip this step and test later.',
@@ -1678,9 +1686,9 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
 
             // Overall result
             if (report.isComplete) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _buildOverallResult(context, report),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               // Re-run button
               Center(
                 child: TextButton.icon(
@@ -1735,10 +1743,10 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
     }
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
         border: Border.all(
           color: result.status == DiagnosticStatus.failed
               ? AppTheme.errorRed.withAlpha(60)
@@ -1749,7 +1757,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           iconWidget,
-          const SizedBox(width: 10),
+          const SizedBox(width: AppTheme.spacing10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1763,7 +1771,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                   ),
                 ),
                 if (result.message.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Text(
                     result.message,
                     style: TextStyle(
@@ -1774,7 +1782,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                   ),
                 ],
                 if (result.suggestion != null) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Text(
                     result.suggestion!,
                     style: TextStyle(
@@ -1822,16 +1830,16 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
     };
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppTheme.spacing14),
       decoration: BoxDecoration(
         color: color.withAlpha(15),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: color.withAlpha(60)),
       ),
       child: Row(
         children: [
           Icon(icon, size: 24, color: color),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1844,7 +1852,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                     color: context.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   ConfigDiagnostics.plainEnglishDiagnosis(report),
                   style: TextStyle(
@@ -1871,7 +1879,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
     final privacy = config.privacy;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 16, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1883,7 +1891,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             GlobalLayerCopy.summaryBody,
             style: TextStyle(
@@ -1892,11 +1900,11 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           // Broker summary
           _SectionLabel(text: 'BROKER'),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _buildSummaryCard(
             context,
             children: [
@@ -1917,11 +1925,11 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                 _buildSummaryRow(context, 'Auth', 'Anonymous'),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Topics summary
           _SectionLabel(text: 'TOPICS'),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _buildSummaryCard(
             context,
             children: [
@@ -1935,11 +1943,11 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Privacy summary
           _SectionLabel(text: 'PRIVACY'),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _buildSummaryCard(
             context,
             children: [
@@ -1971,12 +1979,12 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
           ),
 
           if (!privacy.isAnythingShared) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               decoration: BoxDecoration(
                 color: AppTheme.successGreen.withAlpha(15),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
                 border: Border.all(color: AppTheme.successGreen.withAlpha(40)),
               ),
               child: Row(
@@ -1986,7 +1994,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
                     size: 18,
                     color: AppTheme.successGreen,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Expanded(
                     child: Text(
                       'All sharing is OFF. Your mesh data stays local until '
@@ -2005,9 +2013,9 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
 
           // Test results summary
           if (_testReport != null && _testReport!.isComplete) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             _SectionLabel(text: 'CONNECTION TEST'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _buildOverallResult(context, _testReport!),
           ],
         ],
@@ -2020,10 +2028,10 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
     required List<Widget> children,
   }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppTheme.spacing14),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(children: children),
@@ -2069,6 +2077,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
 
   Widget _buildTextField(
     BuildContext context, {
+    int maxLength = 100,
     required TextEditingController controller,
     required String label,
     required String hint,
@@ -2081,6 +2090,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
     ValueChanged<String>? onChanged,
   }) {
     return TextField(
+      maxLength: maxLength,
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
@@ -2098,15 +2108,15 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
         prefixIcon: Icon(icon, size: 20, color: context.textSecondary),
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           borderSide: BorderSide(color: context.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           borderSide: BorderSide(color: context.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           borderSide: BorderSide(color: context.accentColor),
         ),
         contentPadding: const EdgeInsets.symmetric(

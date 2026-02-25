@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../safety/lifecycle_mixin.dart';
 import '../widgets/app_bottom_sheet.dart';
 import '../../providers/review_providers.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// A dialog that asks the user if they're enjoying the app and offers
 /// to prompt for a review.
@@ -59,7 +60,6 @@ class _ReviewNudgeDialogState extends ConsumerState<ReviewNudgeDialog>
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (e) {
-      if (!mounted) return;
       Navigator.of(context).pop(false);
     }
   }
@@ -77,7 +77,7 @@ class _ReviewNudgeDialogState extends ConsumerState<ReviewNudgeDialog>
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           decoration: BoxDecoration(
             color: colorScheme.primaryContainer,
             shape: BoxShape.circle,
@@ -88,7 +88,7 @@ class _ReviewNudgeDialogState extends ConsumerState<ReviewNudgeDialog>
             color: colorScheme.primary,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         Text(
           'Enjoying Socialmesh?',
           style: theme.textTheme.titleLarge?.copyWith(
@@ -96,7 +96,7 @@ class _ReviewNudgeDialogState extends ConsumerState<ReviewNudgeDialog>
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
         Text(
           'Your feedback helps us improve the app and reach more mesh enthusiasts.',
           style: theme.textTheme.bodyMedium?.copyWith(
@@ -104,7 +104,7 @@ class _ReviewNudgeDialogState extends ConsumerState<ReviewNudgeDialog>
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
         Row(
           children: [
             Expanded(
@@ -114,7 +114,7 @@ class _ReviewNudgeDialogState extends ConsumerState<ReviewNudgeDialog>
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   side: BorderSide(color: Colors.grey.shade700),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                 ),
                 child: Text(
@@ -123,14 +123,14 @@ class _ReviewNudgeDialogState extends ConsumerState<ReviewNudgeDialog>
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: FilledButton.icon(
                 onPressed: _isLoading ? null : _handleRateIt,
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                 ),
                 icon: _isLoading

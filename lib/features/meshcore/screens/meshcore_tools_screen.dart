@@ -51,14 +51,14 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
                 size: 64,
                 color: Colors.white.withValues(alpha: 0.4),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               Text(
                 'MeshCore Disconnected',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: Colors.white.withValues(alpha: 0.8),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 'Connect to a MeshCore device to access tools',
                 textAlign: TextAlign.center,
@@ -79,7 +79,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
       body: RefreshIndicator(
         onRefresh: _refreshDeviceInfo,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           children: [
             // Device Status Card
             _buildDeviceStatusCard(
@@ -88,11 +88,11 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               selfInfoState: selfInfoState,
               battInfoState: battInfoState,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // Diagnostics Section
             _buildSectionHeader(context, 'Diagnostics'),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _buildToolCard(
               context: context,
               icon: Icons.info_rounded,
@@ -101,7 +101,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               color: AccentColors.cyan,
               onTap: () => _showDeviceInfo(selfInfoState),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _buildToolCard(
               context: context,
               icon: Icons.battery_full_rounded,
@@ -110,7 +110,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               color: AccentColors.green,
               onTap: () => _showBatteryInfo(battInfoState),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _buildToolCard(
               context: context,
               icon: Icons.route_rounded,
@@ -119,11 +119,11 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               color: AccentColors.purple,
               onTap: () => _showTracePathDialog(),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // Discovery Section
             _buildSectionHeader(context, 'Discovery'),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _buildToolCard(
               context: context,
               icon: Icons.radar_rounded,
@@ -132,11 +132,11 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               color: AccentColors.orange,
               onTap: () => _sendAdvertisement(),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // Analysis Section
             _buildSectionHeader(context, 'Analysis'),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _buildToolCard(
               context: context,
               icon: Icons.settings_input_antenna_rounded,
@@ -145,14 +145,14 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               color: AccentColors.pink,
               onTap: () => _showRadioSettings(selfInfoState),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppTheme.spacing32),
 
             // Connected indicator
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: AccentColors.green.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 border: Border.all(
                   color: AccentColors.green.withValues(alpha: 0.3),
                 ),
@@ -165,7 +165,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
                     size: 18,
                     color: AccentColors.green,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Text(
                     'Connected to $deviceName',
                     style: TextStyle(
@@ -176,7 +176,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
           ],
         ),
       ),
@@ -194,17 +194,17 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
       borderRadius: 16,
       borderWidth: 1.5,
       accentColor: AccentColors.cyan,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppTheme.spacing10),
                 decoration: BoxDecoration(
                   color: AccentColors.cyan.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Icon(
                   Icons.developer_board_rounded,
@@ -212,7 +212,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
                   size: 28,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,7 +225,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       _getDeviceTypeLabel(selfInfo),
                       style: TextStyle(
@@ -252,9 +252,9 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           const Divider(color: Colors.white12),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Row(
             children: [
               Expanded(
@@ -297,7 +297,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
     return Column(
       children: [
         Icon(icon, color: color, size: 22),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppTheme.spacing6),
         Text(
           value,
           style: TextStyle(
@@ -306,7 +306,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
             fontSize: 14,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppTheme.spacing2),
         Text(
           label,
           style: TextStyle(
@@ -345,21 +345,21 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
       child: Container(
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border, width: 1),
         ),
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppTheme.spacing14),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(AppTheme.spacing10),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
               ),
               child: Icon(icon, color: color, size: 22),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: AppTheme.spacing14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -372,7 +372,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
                       fontSize: 15,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     subtitle,
                     style: TextStyle(
@@ -474,7 +474,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
           _buildInfoRow('Name', info.nodeName.isNotEmpty ? info.nodeName : '-'),
           _buildInfoRow('Type', _getDeviceTypeLabel(info)),
           _buildInfoRow('TX Power', '${info.txPowerDbm} dBm'),
@@ -484,16 +484,16 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
           if (info.codingRate != null)
             _buildInfoRow('Coding Rate', '4/${info.codingRate}'),
           if (info.latitude != null && info.longitude != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             const Divider(color: Colors.white12),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _buildInfoRow(
               'Location',
               '${(info.latitude! / 1e7).toStringAsFixed(6)}, '
                   '${(info.longitude! / 1e7).toStringAsFixed(6)}',
             ),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Row(
             children: [
               Expanded(
@@ -551,13 +551,13 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
 
           // Battery section
           Row(
             children: [
               Icon(Icons.battery_full_rounded, color: battColor, size: 32),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -584,9 +584,9 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
             ],
           ),
           if (battPct != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             ClipRRect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppTheme.radius4),
               child: LinearProgressIndicator(
                 value: battPct / 100,
                 backgroundColor: Colors.white.withValues(alpha: 0.1),
@@ -595,12 +595,12 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               ),
             ),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: AccentColors.cyan.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               border: Border.all(
                 color: AccentColors.cyan.withValues(alpha: 0.3),
               ),
@@ -612,7 +612,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
                   size: 18,
                   color: AccentColors.cyan,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   child: Text(
                     'Based on LiPo voltage range (3.0V - 4.2V)',
@@ -651,12 +651,12 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Select a contact to trace the route through the mesh.',
             style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           ...contacts
               .take(10)
               .map(
@@ -750,19 +750,19 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
           _buildInfoRow('TX Power', '${info.txPowerDbm} dBm'),
           _buildInfoRow('Max TX Power', '${info.maxLoraTxPower} dBm'),
           if (info.spreadingFactor != null)
             _buildInfoRow('Spreading Factor', 'SF${info.spreadingFactor}'),
           if (info.codingRate != null)
             _buildInfoRow('Coding Rate', '4/${info.codingRate}'),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: AccentColors.pink.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               border: Border.all(
                 color: AccentColors.pink.withValues(alpha: 0.3),
               ),
@@ -774,7 +774,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
                   size: 18,
                   color: AccentColors.pink,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   child: Text(
                     'Radio settings are configured on the device firmware.',

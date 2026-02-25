@@ -148,7 +148,6 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
 
       showSuccessSnackBar(context, 'New key pair generated');
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to generate key: $e');
     } finally {
       safeSetState(() => _isKeyOperating = false);
@@ -231,7 +230,6 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
       showSuccessSnackBar(context, 'Security configuration saved');
       Navigator.pop(context);
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to save: $e');
     } finally {
       safeSetState(() => _saving = false);
@@ -270,12 +268,12 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
                 // PKI Keys Section
                 const _SectionHeader(title: 'DIRECT MESSAGE KEY'),
                 _buildKeySection(),
-                SizedBox(height: 16),
+                SizedBox(height: AppTheme.spacing16),
 
                 // Admin Keys Section
                 const _SectionHeader(title: 'ADMIN KEYS'),
                 _buildAdminKeysSection(),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
 
                 // Managed Device
                 const _SectionHeader(title: 'DEVICE MANAGEMENT'),
@@ -293,7 +291,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
                     },
                   ),
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppTheme.spacing16),
 
                 // Access Controls
                 const _SectionHeader(title: 'ACCESS CONTROLS'),
@@ -337,7 +335,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
                     },
                   ),
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppTheme.spacing16),
 
                 // Warning card
                 Padding(
@@ -351,7 +349,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
                     margin: EdgeInsets.zero,
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spacing32),
               ]),
             ),
           ),
@@ -364,10 +362,10 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -376,7 +374,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
           Row(
             children: [
               Icon(Icons.key, color: context.textSecondary, size: 20),
-              SizedBox(width: 8),
+              SizedBox(width: AppTheme.spacing8),
               Text(
                 'Public Key',
                 style: TextStyle(
@@ -386,13 +384,13 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: context.background,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               border: Border.all(color: context.border),
             ),
             child: SelectableText(
@@ -406,7 +404,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
               ),
             ),
           ),
-          SizedBox(height: 4),
+          SizedBox(height: AppTheme.spacing4),
           Text(
             'Your public key is sent to other nodes for secure messaging',
             style: TextStyle(color: context.textSecondary, fontSize: 12),
@@ -418,7 +416,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
           Row(
             children: [
               Icon(Icons.vpn_key, color: context.textSecondary, size: 20),
-              SizedBox(width: 8),
+              SizedBox(width: AppTheme.spacing8),
               Text(
                 'Private Key',
                 style: TextStyle(
@@ -439,8 +437,9 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
               ),
             ],
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppTheme.spacing8),
           TextFormField(
+            maxLength: 64,
             key: ValueKey('privateKey_${_privateKey.hashCode}'),
             initialValue: _privateKey,
             obscureText: !_privateKeyVisible,
@@ -451,19 +450,19 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
             ),
             decoration: InputDecoration(
               isDense: true,
-              contentPadding: const EdgeInsets.all(12),
+              contentPadding: const EdgeInsets.all(AppTheme.spacing12),
               fillColor: context.background,
               filled: true,
               hintText: 'Base64 encoded 32-byte key',
               hintStyle: TextStyle(color: context.textTertiary),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(
                   color: isValidPrivateKey ? context.border : AppTheme.errorRed,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(
                   color: isValidPrivateKey ? context.border : AppTheme.errorRed,
                 ),
@@ -474,7 +473,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
               _recalculatePublicKey();
             },
           ),
-          SizedBox(height: 4),
+          SizedBox(height: AppTheme.spacing4),
           Text(
             'Used to compute shared secret with remote devices',
             style: TextStyle(color: context.textSecondary, fontSize: 12),
@@ -486,7 +485,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
           Row(
             children: [
               Icon(Icons.refresh, color: context.textSecondary, size: 20),
-              SizedBox(width: 8),
+              SizedBox(width: AppTheme.spacing8),
               Text(
                 'Regenerate Key Pair',
                 style: TextStyle(
@@ -522,7 +521,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
           Row(
             children: [
               Icon(Icons.cloud_upload, color: context.textSecondary, size: 20),
-              SizedBox(width: 8),
+              SizedBox(width: AppTheme.spacing8),
               Text(
                 'Key Backup',
                 style: TextStyle(
@@ -532,12 +531,12 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
               ),
             ],
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppTheme.spacing8),
           Text(
             'Backup your private key to secure storage for recovery. Keys are stored in the device keychain with iCloud sync enabled.',
             style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
-          SizedBox(height: 12),
+          SizedBox(height: AppTheme.spacing12),
           Row(
             children: [
               Expanded(
@@ -555,7 +554,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
                   ),
                 ),
               ),
-              SizedBox(width: 8),
+              SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: _isKeyOperating ? null : _restorePrivateKey,
@@ -567,7 +566,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
                   ),
                 ),
               ),
-              SizedBox(width: 8),
+              SizedBox(width: AppTheme.spacing8),
               IconButton(
                 onPressed: _isKeyOperating ? null : _deleteBackup,
                 icon: Icon(Icons.delete_outline, size: 20),
@@ -712,10 +711,10 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
   Widget _buildAdminKeysSection() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -724,7 +723,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
             'Public keys authorized to send admin messages to this node',
             style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Admin Key 1
           _buildAdminKeyField(
@@ -732,7 +731,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
             value: _adminKey1,
             onChanged: (v) => setState(() => _adminKey1 = v),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
 
           // Admin Key 2
           _buildAdminKeyField(
@@ -740,7 +739,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
             value: _adminKey2,
             onChanged: (v) => setState(() => _adminKey2 = v),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
 
           // Admin Key 3
           _buildAdminKeyField(
@@ -770,7 +769,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
               color: context.textSecondary,
               size: 18,
             ),
-            SizedBox(width: 8),
+            SizedBox(width: AppTheme.spacing8),
             Text(
               label,
               style: TextStyle(
@@ -781,8 +780,9 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppTheme.spacing6),
         TextFormField(
+          maxLength: 64,
           key: ValueKey('adminKey_${value.hashCode}'),
           initialValue: value,
           style: TextStyle(
@@ -792,19 +792,19 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
           ),
           decoration: InputDecoration(
             isDense: true,
-            contentPadding: const EdgeInsets.all(12),
+            contentPadding: const EdgeInsets.all(AppTheme.spacing12),
             fillColor: context.background,
             filled: true,
             hintText: 'Base64 encoded public key',
             hintStyle: TextStyle(color: context.textTertiary, fontSize: 11),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               borderSide: BorderSide(
                 color: isValid ? context.border : AppTheme.errorRed,
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               borderSide: BorderSide(
                 color: isValid ? context.border : AppTheme.errorRed,
               ),
@@ -825,7 +825,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
       child: Text(
         title,
         style: TextStyle(
@@ -860,14 +860,14 @@ class _SettingsTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Icon(icon, color: iconColor ?? context.textSecondary),
-            SizedBox(width: 16),
+            SizedBox(width: AppTheme.spacing16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -880,7 +880,7 @@ class _SettingsTile extends StatelessWidget {
                       color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     subtitle,
                     style: context.bodySmallStyle?.copyWith(

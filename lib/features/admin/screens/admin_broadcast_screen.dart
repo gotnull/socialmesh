@@ -179,7 +179,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.check_circle, color: Colors.green.shade400, size: 48),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               testOnly ? 'Test Sent' : 'Broadcast Sent',
               style: TextStyle(
@@ -188,7 +188,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                 color: context.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               testOnly
                   ? 'Your test notification has been sent to all admins.'
@@ -196,7 +196,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: context.textSecondary),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -286,7 +286,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 24, 16),
               child: Text(
                 'Select Deep Link',
                 style: TextStyle(
@@ -327,7 +327,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 24, 16),
               child: Text(
                 'Select Icon',
                 style: TextStyle(
@@ -392,7 +392,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
 
           // Form content
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             sliver: SliverToBoxAdapter(
               child: Form(
                 key: _formKey,
@@ -401,10 +401,10 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                   children: [
                     // Warning banner
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppTheme.spacing12),
                       decoration: BoxDecoration(
                         color: Colors.orange.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         border: Border.all(
                           color: Colors.orange.withValues(alpha: 0.3),
                         ),
@@ -416,7 +416,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                             color: Colors.orange.shade400,
                             size: 24,
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppTheme.spacing12),
                           Expanded(
                             child: Text(
                               'This will send a push notification to every '
@@ -433,7 +433,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppTheme.spacing24),
 
                     // Icon selector
                     Text(
@@ -444,7 +444,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                         color: context.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     GestureDetector(
                       onTap: canInteract ? _showIconPicker : null,
                       child: Container(
@@ -454,7 +454,9 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                         ),
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           border: Border.all(
                             color: context.border.withValues(alpha: 0.3),
                           ),
@@ -468,7 +470,9 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                                 color: _selectedIcon.color.withValues(
                                   alpha: 0.2,
                                 ),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                               ),
                               child: Icon(
                                 _selectedIcon.icon,
@@ -476,7 +480,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                                 size: 20,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: AppTheme.spacing12),
                             Expanded(
                               child: Text(
                                 _selectedIcon.label,
@@ -496,7 +500,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // Clear form button
                     if (_titleController.text.isNotEmpty ||
@@ -529,7 +533,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                         ),
                       ),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
 
                     // Title field
                     Text(
@@ -540,7 +544,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                         color: context.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     TextFormField(
                       controller: _titleController,
                       maxLength: _maxTitleLength,
@@ -550,24 +554,32 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                         filled: true,
                         fillColor: context.card,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide.none,
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide(
                             color: context.border.withValues(alpha: 0.3),
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide(
                             color: context.accentColor,
                             width: 2,
                           ),
                         ),
                         errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide(color: Colors.red.shade400),
                         ),
                         counterStyle: TextStyle(
@@ -585,7 +597,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                       },
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // Body field
                     Text(
@@ -596,7 +608,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                         color: context.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     TextFormField(
                       controller: _bodyController,
                       maxLength: _maxBodyLength,
@@ -607,24 +619,32 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                         filled: true,
                         fillColor: context.card,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide.none,
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide(
                             color: context.border.withValues(alpha: 0.3),
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide(
                             color: context.accentColor,
                             width: 2,
                           ),
                         ),
                         errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide(color: Colors.red.shade400),
                         ),
                         counterStyle: TextStyle(
@@ -642,7 +662,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                       },
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // Deep link selector (optional)
                     Row(
@@ -677,7 +697,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                           ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Text(
                       'Screen to open when notification is tapped.',
                       style: TextStyle(
@@ -685,7 +705,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                         color: context.textTertiary,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     GestureDetector(
                       onTap: canInteract ? _showDeepLinkPicker : null,
                       child: Container(
@@ -695,7 +715,9 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                         ),
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           border: Border.all(
                             color: context.border.withValues(alpha: 0.3),
                           ),
@@ -710,7 +732,9 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                                     (_selectedDeepLink?.color ??
                                             context.textTertiary)
                                         .withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                               ),
                               child: Icon(
                                 _selectedDeepLink?.icon ?? Icons.link_off,
@@ -720,7 +744,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                                 size: 20,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: AppTheme.spacing12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -755,7 +779,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppTheme.spacing24),
 
                     // Test to Admins button
                     SizedBox(
@@ -787,12 +811,14 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                             color: context.accentColor.withValues(alpha: 0.5),
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Text(
                       'Send a test notification to admins before broadcasting to all users.',
                       style: TextStyle(
@@ -802,7 +828,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                       textAlign: TextAlign.center,
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppTheme.spacing24),
 
                     // Send to Everyone button (with countdown)
                     if (_isCountingDown)
@@ -817,7 +843,9 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius12,
+                              ),
                             ),
                           ),
                         ),
@@ -845,12 +873,14 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius12,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Text(
                       'Sends a push notification to all Socialmesh users. '
                       'A ${_countdownSeconds}s countdown gives you time to cancel.',
@@ -1121,7 +1151,7 @@ class _PreviewHeaderDelegate extends SliverPersistentHeaderDelegate {
   ) {
     return Container(
       color: context.background,
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -1135,7 +1165,7 @@ class _PreviewHeaderDelegate extends SliverPersistentHeaderDelegate {
               color: context.textTertiary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Expanded(
             child: _NotificationPreview(title: title, body: body, icon: icon),
           ),
@@ -1160,10 +1190,10 @@ class _NotificationPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.border.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
@@ -1182,11 +1212,11 @@ class _NotificationPreview extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: icon.color.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppTheme.radius10),
             ),
             child: Icon(icon.icon, color: icon.color, size: 22),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           // Content
           Expanded(
             child: Column(
@@ -1214,7 +1244,7 @@ class _NotificationPreview extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Text(
                   title,
                   style: TextStyle(
@@ -1225,7 +1255,7 @@ class _NotificationPreview extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   body,
                   style: TextStyle(
@@ -1263,9 +1293,9 @@ class _IconPickerContent extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildSection(context, 'GENERAL', _NotificationIconCategory.general),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildSection(context, 'SOCIAL', _NotificationIconCategory.social),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildSection(context, 'PREMIUM', _NotificationIconCategory.premium),
           SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
         ],
@@ -1309,7 +1339,7 @@ class _IconPickerContent extends StatelessWidget {
                   color: isSelected
                       ? icon.color.withValues(alpha: 0.15)
                       : context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(
                     color: isSelected
                         ? icon.color.withValues(alpha: 0.5)
@@ -1324,11 +1354,11 @@ class _IconPickerContent extends StatelessWidget {
                       height: 40,
                       decoration: BoxDecoration(
                         color: icon.color.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppTheme.radius10),
                       ),
                       child: Icon(icon.icon, color: icon.color, size: 22),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Text(
                         icon.label,
@@ -1551,11 +1581,11 @@ class _DeepLinkPickerContent extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildSection(context, 'CORE', _DeepLinkCategory.core),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildSection(context, 'SOCIAL', _DeepLinkCategory.social),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildSection(context, 'MESH', _DeepLinkCategory.mesh),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildSection(context, 'PREMIUM', _DeepLinkCategory.premium),
           SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
         ],
@@ -1599,7 +1629,7 @@ class _DeepLinkPickerContent extends StatelessWidget {
                   color: isSelected
                       ? link.color.withValues(alpha: 0.15)
                       : context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(
                     color: isSelected
                         ? link.color.withValues(alpha: 0.5)
@@ -1614,11 +1644,11 @@ class _DeepLinkPickerContent extends StatelessWidget {
                       height: 40,
                       decoration: BoxDecoration(
                         color: link.color.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppTheme.radius10),
                       ),
                       child: Icon(link.icon, color: link.color, size: 22),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

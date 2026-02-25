@@ -318,7 +318,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                     height: 72,
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppTheme.radius16),
                     ),
                     child: Icon(
                       Icons.people_outline,
@@ -326,7 +326,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                       color: context.textTertiary,
                     ),
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: AppTheme.spacing24),
                   Text(
                     _searchQuery.isNotEmpty
                         ? 'No contacts match "$_searchQuery"'
@@ -340,7 +340,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                     ),
                   ),
                   if (_searchQuery.isEmpty) ...[
-                    SizedBox(height: 8),
+                    SizedBox(height: AppTheme.spacing8),
                     Text(
                       'Discovered nodes will appear here',
                       style: TextStyle(
@@ -350,7 +350,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                     ),
                   ],
                   if (_searchQuery.isNotEmpty) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppTheme.spacing12),
                     TextButton(
                       onPressed: () => setState(() => _searchQuery = ''),
                       child: const Text('Clear search'),
@@ -588,7 +588,7 @@ class _ContactTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cardContent = Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       child: Row(
         children: [
           // Avatar with online indicator
@@ -621,7 +621,7 @@ class _ContactTile extends StatelessWidget {
                 ),
             ],
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppTheme.spacing12),
           // Content
           Expanded(
             child: Column(
@@ -642,7 +642,7 @@ class _ContactTile extends StatelessWidget {
                       ),
                     ),
                     if (contact.unreadCount > 0) ...[
-                      SizedBox(width: 8),
+                      SizedBox(width: AppTheme.spacing8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -650,7 +650,9 @@ class _ContactTile extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: context.accentColor,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius10,
+                          ),
                         ),
                         child: Text(
                           '${contact.unreadCount}',
@@ -664,7 +666,7 @@ class _ContactTile extends StatelessWidget {
                     ],
                   ],
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: AppTheme.spacing4),
                 Text(
                   contact.lastMessage ??
                       presenceStatusText(
@@ -685,7 +687,7 @@ class _ContactTile extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           // Favorite star icon (matches nodes screen position)
           if (contact.isFavorite)
             Padding(
@@ -705,7 +707,7 @@ class _ContactTile extends StatelessWidget {
         decoration: !contact.isFavorite
             ? BoxDecoration(
                 color: context.card,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 border: Border.all(color: context.border),
               )
             : null,
@@ -1135,13 +1137,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             title: 'Encryption Key Issue',
             subtitle: 'Direct message to $targetName failed',
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppTheme.spacing16),
           StatusBanner.warning(
             title:
                 message.routingError?.fixSuggestion ??
                 'The encryption keys may be out of sync. This can happen when a node has been reset or rolled out of the mesh database.',
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
           // Request User Info button
           SizedBox(
             width: double.infinity,
@@ -1166,7 +1168,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
               icon: const Icon(Icons.refresh, size: 20),
@@ -1178,7 +1180,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           // Retry message button
           SizedBox(
             width: double.infinity,
@@ -1194,7 +1196,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 side: BorderSide(color: context.border),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
               icon: const Icon(Icons.send, size: 20),
@@ -1206,7 +1208,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           // Advanced options link
           TextButton(
             onPressed: () {
@@ -1393,7 +1395,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                       : AppTheme.graphPurple,
                   size: 36,
                 ),
-              SizedBox(width: 12),
+              SizedBox(width: AppTheme.spacing12),
               Flexible(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1443,13 +1445,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             // Search bar (same design as Nodes screen)
             if (_isSearching)
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  8,
+                  16,
+                  16,
+                ),
                 child: Container(
                   decoration: BoxDecoration(
                     color: context.card,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: TextField(
+                    maxLength: 100,
                     controller: _searchController,
                     focusNode: _searchFocusNode,
                     style: TextStyle(color: context.textPrimary),
@@ -1490,7 +1498,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                       size: 16,
                       color: context.textSecondary.withValues(alpha: 0.8),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppTheme.spacing8),
                     Text(
                       '${filteredMessages.length} message${filteredMessages.length == 1 ? '' : 's'} found',
                       style: TextStyle(
@@ -1515,7 +1523,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             size: 48,
                             color: context.textTertiary,
                           ),
-                          SizedBox(height: 16),
+                          SizedBox(height: AppTheme.spacing16),
                           Text(
                             _isSearching
                                 ? 'No messages match your search'
@@ -1600,7 +1608,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             // Reply banner
             if (_replyingTo != null)
               Container(
-                padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  10,
+                  8,
+                  10,
+                ),
                 decoration: BoxDecoration(
                   color: context.card,
                   border: Border(
@@ -1615,7 +1628,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 child: Row(
                   children: [
                     Icon(Icons.reply, size: 18, color: context.accentColor),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1629,7 +1642,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                               color: context.accentColor,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: AppTheme.spacing2),
                           Text(
                             _replyingTo!.text.length > 80
                                 ? '${_replyingTo!.text.substring(0, 80)}...'
@@ -1664,7 +1677,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
             // Input
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               decoration: BoxDecoration(
                 color: context.card,
                 border: Border(
@@ -1696,14 +1709,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppTheme.spacing8),
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
                           color: context.background,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius24,
+                          ),
                         ),
                         child: TextField(
+                          maxLength: 500,
                           controller: _messageController,
                           focusNode: _messageFocusNode,
                           style: TextStyle(color: context.textPrimary),
@@ -1723,7 +1739,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppTheme.spacing12),
                     // Voice messaging not practical over LoRa due to bandwidth limits
                     // Show send button always
                     GestureDetector(
@@ -1880,13 +1896,13 @@ class _MessageBubble extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: _getSourceColor().withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: Colors.white),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             label,
             style: const TextStyle(
@@ -1928,7 +1944,7 @@ class _MessageBubble extends StatelessWidget {
         color: sentByMe
             ? Colors.white.withValues(alpha: 0.15)
             : context.textTertiary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
         border: Border(
           left: BorderSide(
             color: sentByMe
@@ -1948,7 +1964,7 @@ class _MessageBubble extends StatelessWidget {
                 ? Colors.white.withValues(alpha: 0.7)
                 : context.textTertiary,
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Flexible(
             child: Text(
               truncated,
@@ -2012,21 +2028,21 @@ class _MessageBubble extends StatelessWidget {
                             : isPending
                             ? context.accentColor.withValues(alpha: 0.6)
                             : context.accentColor,
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(AppTheme.radius18),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           if (message.replyId != null) ...[
                             _buildReplyQuote(context, sentByMe: true),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: AppTheme.spacing6),
                           ],
                           Text(
                             message.text,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(color: Colors.white),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: AppTheme.spacing2),
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -2037,7 +2053,7 @@ class _MessageBubble extends StatelessWidget {
                                   size: 11,
                                   color: Colors.white.withValues(alpha: 0.7),
                                 ),
-                                const SizedBox(width: 3),
+                                const SizedBox(width: AppTheme.spacing3),
                               ],
                               // Queued indicator
                               if (isQueued) ...[
@@ -2046,10 +2062,10 @@ class _MessageBubble extends StatelessWidget {
                                   size: 12,
                                   color: Colors.white.withValues(alpha: 0.7),
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: AppTheme.spacing4),
                               ] else if (isPending) ...[
                                 LoadingIndicator(size: 12),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: AppTheme.spacing4),
                               ],
                               Text(
                                 timeFormat.format(message.timestamp),
@@ -2059,7 +2075,7 @@ class _MessageBubble extends StatelessWidget {
                                 ),
                               ),
                               if (!isPending && !isFailed && !isQueued) ...[
-                                const SizedBox(width: 4),
+                                const SizedBox(width: AppTheme.spacing4),
                                 Icon(
                                   isDelivered ? Icons.done_all : Icons.done,
                                   size: 14,
@@ -2080,7 +2096,7 @@ class _MessageBubble extends StatelessWidget {
               child: TapbackDisplay(messageId: message.id),
             ),
             if (isFailed) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
               Padding(
                 padding: const EdgeInsets.only(right: 4),
                 child: Column(
@@ -2094,7 +2110,7 @@ class _MessageBubble extends StatelessWidget {
                           size: 14,
                           color: AppTheme.errorRed,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Flexible(
                           child: Text(
                             message.errorMessage ?? 'Failed to send',
@@ -2107,7 +2123,7 @@ class _MessageBubble extends StatelessWidget {
                           ),
                         ),
                         if (onRetry != null) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           GestureDetector(
                             onTap: onRetry,
                             child: Container(
@@ -2117,7 +2133,9 @@ class _MessageBubble extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: context.card,
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -2127,7 +2145,7 @@ class _MessageBubble extends StatelessWidget {
                                     size: 12,
                                     color: context.accentColor,
                                   ),
-                                  SizedBox(width: 4),
+                                  SizedBox(width: AppTheme.spacing4),
                                   Text(
                                     'Retry',
                                     style: TextStyle(
@@ -2183,7 +2201,7 @@ class _MessageBubble extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(AppTheme.radius18),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2200,11 +2218,11 @@ class _MessageBubble extends StatelessWidget {
                               ),
                             ),
                           ),
-                          SizedBox(height: 2),
+                          SizedBox(height: AppTheme.spacing2),
                         ],
                         if (message.replyId != null) ...[
                           _buildReplyQuote(context),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: AppTheme.spacing6),
                         ],
                         Text(
                           message.text,
@@ -2213,7 +2231,7 @@ class _MessageBubble extends StatelessWidget {
                             color: context.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -2223,7 +2241,7 @@ class _MessageBubble extends StatelessWidget {
                                 size: 10,
                                 color: context.textTertiary,
                               ),
-                              SizedBox(width: 3),
+                              SizedBox(width: AppTheme.spacing3),
                             ],
                             Text(
                               timeFormat.format(message.timestamp),
@@ -2281,7 +2299,7 @@ class _QuickResponsesSheet extends StatelessWidget {
         children: [
           // Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 0, 20, 8),
             child: Row(
               children: [
                 Container(
@@ -2289,11 +2307,11 @@ class _QuickResponsesSheet extends StatelessWidget {
                   height: 32,
                   decoration: BoxDecoration(
                     color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                   child: Icon(Icons.bolt, color: context.accentColor, size: 18),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppTheme.spacing12),
                 Text(
                   'Quick Responses',
                   style: TextStyle(
@@ -2310,7 +2328,7 @@ class _QuickResponsesSheet extends StatelessWidget {
           Flexible(
             child: responses.isEmpty
                 ? Padding(
-                    padding: const EdgeInsets.all(32),
+                    padding: const EdgeInsets.all(AppTheme.spacing32),
                     child: Text(
                       'No quick responses configured.\nAdd some in Settings → Quick responses.',
                       textAlign: TextAlign.center,
@@ -2318,7 +2336,7 @@ class _QuickResponsesSheet extends StatelessWidget {
                     ),
                   )
                 : GridView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     shrinkWrap: true,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
@@ -2360,7 +2378,7 @@ class _QuickResponsesSheet extends StatelessWidget {
                     size: 16,
                     color: context.textSecondary.withValues(alpha: 0.8),
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppTheme.spacing8),
                   Text(
                     'Configure quick responses in Settings',
                     style: TextStyle(
@@ -2368,7 +2386,7 @@ class _QuickResponsesSheet extends StatelessWidget {
                       fontSize: 13,
                     ),
                   ),
-                  SizedBox(width: 4),
+                  SizedBox(width: AppTheme.spacing4),
                   Icon(
                     Icons.arrow_forward_ios,
                     size: 12,
@@ -2395,13 +2413,13 @@ class _QuickResponseTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: context.background,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
       child: InkWell(
         onTap: () {
           HapticFeedback.selectionClick();
           onTap();
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: Center(
@@ -2464,7 +2482,7 @@ class MessagingPopupMenu extends ConsumerWidget {
               child: Row(
                 children: [
                   Icon(Icons.add, color: context.textSecondary, size: 20),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Text(
                     'Add channel',
                     style: TextStyle(color: context.textPrimary),
@@ -2485,7 +2503,7 @@ class MessagingPopupMenu extends ConsumerWidget {
                     color: context.textSecondary,
                     size: 20,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Text(
                     'Scan QR code',
                     style: TextStyle(color: context.textPrimary),
@@ -2505,7 +2523,7 @@ class MessagingPopupMenu extends ConsumerWidget {
                   color: context.textSecondary,
                   size: 20,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Text('Help', style: TextStyle(color: context.textPrimary)),
               ],
             ),
@@ -2519,7 +2537,7 @@ class MessagingPopupMenu extends ConsumerWidget {
                   color: context.textSecondary,
                   size: 20,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Text('Settings', style: TextStyle(color: context.textPrimary)),
               ],
             ),

@@ -257,7 +257,7 @@ class _WhatsNewCarouselState extends ConsumerState<_WhatsNewCarousel> {
                 margin: const EdgeInsets.only(top: 12, bottom: 20),
                 decoration: BoxDecoration(
                   color: context.textTertiary.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppTheme.radius2),
                 ),
               ),
 
@@ -282,7 +282,12 @@ class _WhatsNewCarouselState extends ConsumerState<_WhatsNewCarousel> {
 
               // Page indicator dots + dismiss button
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing24,
+                  8,
+                  24,
+                  24,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -293,7 +298,7 @@ class _WhatsNewCarouselState extends ConsumerState<_WhatsNewCarousel> {
                         accentColor: activeColor,
                         onDotTap: _goToPage,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                     ],
 
                     // Dismiss button
@@ -305,7 +310,9 @@ class _WhatsNewCarouselState extends ConsumerState<_WhatsNewCarousel> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
                             color: context.surface,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
                             border: Border.all(color: context.border),
                           ),
                           child: Center(
@@ -371,7 +378,7 @@ class _PageIndicator extends StatelessWidget {
                 color: isActive
                     ? accentColor
                     : context.textTertiary.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppTheme.radius4),
               ),
             ),
           ),
@@ -403,7 +410,7 @@ class _WhatsNewPage extends ConsumerWidget {
     const mascotRenderSize = mascotSize * 1.6; // 89.6
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 24, 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -413,7 +420,7 @@ class _WhatsNewPage extends ConsumerWidget {
             height: mascotRenderSize,
             child: MeshNodeBrain(mood: MeshBrainMood.excited, size: mascotSize),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
 
           // Headline
           Text(
@@ -429,7 +436,7 @@ class _WhatsNewPage extends ConsumerWidget {
 
           // Subtitle
           if (payload.subtitle != null) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               payload.subtitle!,
               style: TextStyle(
@@ -442,7 +449,7 @@ class _WhatsNewPage extends ConsumerWidget {
             ),
           ],
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Feature items
           ...payload.items.map(
@@ -481,10 +488,10 @@ class _WhatsNewItemCard extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: itemColor.withValues(alpha: 0.2)),
       ),
       child: Column(
@@ -498,11 +505,11 @@ class _WhatsNewItemCard extends ConsumerWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: itemColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Icon(item.icon, color: itemColor, size: 24),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Text(
                   item.title,
@@ -517,7 +524,7 @@ class _WhatsNewItemCard extends ConsumerWidget {
             ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
 
           // Description
           Text(
@@ -533,7 +540,7 @@ class _WhatsNewItemCard extends ConsumerWidget {
           // Action buttons (hidden in read-only / history mode)
           if (!readOnly &&
               (item.deepLinkRoute != null || item.helpTopicId != null)) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Row(
               children: [
                 // Primary CTA
@@ -545,7 +552,9 @@ class _WhatsNewItemCard extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
                           color: itemColor,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius10,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: itemColor.withValues(alpha: 0.3),
@@ -571,7 +580,7 @@ class _WhatsNewItemCard extends ConsumerWidget {
 
                 // Spacer between buttons
                 if (item.deepLinkRoute != null && item.helpTopicId != null)
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppTheme.spacing10),
 
                 // Learn more
                 if (item.helpTopicId != null)
@@ -582,7 +591,9 @@ class _WhatsNewItemCard extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
                           color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius10,
+                          ),
                           border: Border.all(
                             color: itemColor.withValues(alpha: 0.4),
                           ),

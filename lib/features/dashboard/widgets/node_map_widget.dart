@@ -72,7 +72,7 @@ class NodeMapContent extends ConsumerWidget {
         return SizedBox(
           height: height,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             child: Stack(
               children: [
                 // Use shared MeshMapWidget with mini node markers
@@ -115,7 +115,7 @@ class NodeMapContent extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       color: context.card.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       border: Border.all(
                         color: context.border.withValues(alpha: 0.5),
                       ),
@@ -131,7 +131,7 @@ class NodeMapContent extends ConsumerWidget {
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppTheme.spacing6),
                         Text(
                           '${nodesWithPosition.length}',
                           style: TextStyle(
@@ -155,7 +155,7 @@ class NodeMapContent extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       color: context.card.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -165,7 +165,7 @@ class NodeMapContent extends ConsumerWidget {
                           size: 12,
                           color: context.textTertiary,
                         ),
-                        SizedBox(width: 4),
+                        SizedBox(width: AppTheme.spacing4),
                         Text(
                           'Tap to expand',
                           style: TextStyle(
@@ -205,7 +205,7 @@ class NodeMapContent extends ConsumerWidget {
             size: 32,
             color: context.textTertiary.withValues(alpha: 0.5),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppTheme.spacing8),
           Text(
             'No GPS data',
             style: TextStyle(
@@ -214,7 +214,7 @@ class NodeMapContent extends ConsumerWidget {
               color: context.textSecondary,
             ),
           ),
-          SizedBox(height: 4),
+          SizedBox(height: AppTheme.spacing4),
           Text(
             'Nodes will appear when\nthey report position',
             style: Theme.of(

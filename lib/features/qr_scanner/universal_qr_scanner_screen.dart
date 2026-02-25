@@ -240,18 +240,18 @@ class _UniversalQrScannerScreenState
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             'This node is already in your list as "${existing.displayName}".',
             style: TextStyle(color: context.textSecondary, fontSize: 14),
           ),
           if (newName != null && newName != existing.longName) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               decoration: BoxDecoration(
                 color: context.accentColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Row(
                 children: [
@@ -260,7 +260,7 @@ class _UniversalQrScannerScreenState
                     color: context.accentColor,
                     size: 18,
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppTheme.spacing10),
                   Expanded(
                     child: Text(
                       'Update name to "$newName" and add to favorites?',
@@ -274,7 +274,7 @@ class _UniversalQrScannerScreenState
               ),
             ),
           ],
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             children: [
               Expanded(
@@ -284,7 +284,7 @@ class _UniversalQrScannerScreenState
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide(color: Colors.grey.shade700),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: Text(
@@ -293,7 +293,7 @@ class _UniversalQrScannerScreenState
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: () => Navigator.pop(context, true),
@@ -301,7 +301,7 @@ class _UniversalQrScannerScreenState
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: context.accentColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Update'),
@@ -336,16 +336,16 @@ class _UniversalQrScannerScreenState
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             'Add "$displayName" to your tracked nodes?',
             style: TextStyle(color: context.textSecondary, fontSize: 14),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildNodeInfoRow('Node ID', '!${nodeNum.toRadixString(16)}'),
           if (longName != null) _buildNodeInfoRow('Name', longName),
           if (shortName != null) _buildNodeInfoRow('Short', shortName),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             children: [
               Expanded(
@@ -355,7 +355,7 @@ class _UniversalQrScannerScreenState
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide(color: Colors.grey.shade700),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: Text(
@@ -364,7 +364,7 @@ class _UniversalQrScannerScreenState
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: () => Navigator.pop(context, true),
@@ -372,7 +372,7 @@ class _UniversalQrScannerScreenState
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: context.accentColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Add Node'),
@@ -599,26 +599,26 @@ class _UniversalQrScannerScreenState
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildChannelInfoRow('Name', channel.name),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _buildChannelInfoRow('Slot', '${channel.index}'),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _buildChannelInfoRow(
             'Encryption',
             '${channel.psk.length * 8}-bit AES',
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: context.accentColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
             ),
             child: Row(
               children: [
                 Icon(Icons.info_outline, color: context.accentColor, size: 18),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppTheme.spacing10),
                 Expanded(
                   child: Text(
                     'The channel will be synced to your connected device.',
@@ -628,7 +628,7 @@ class _UniversalQrScannerScreenState
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             children: [
               Expanded(
@@ -638,7 +638,7 @@ class _UniversalQrScannerScreenState
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide(color: Colors.grey.shade700),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: Text(
@@ -647,7 +647,7 @@ class _UniversalQrScannerScreenState
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.pop(context, false),
@@ -655,7 +655,7 @@ class _UniversalQrScannerScreenState
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide(color: context.accentColor),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: Text(
@@ -664,7 +664,7 @@ class _UniversalQrScannerScreenState
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: FilledButton(
                   onPressed: () => Navigator.pop(context, true),
@@ -672,7 +672,7 @@ class _UniversalQrScannerScreenState
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: context.accentColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Import'),
@@ -887,7 +887,7 @@ class _UniversalQrScannerScreenState
             left: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppTheme.spacing24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -907,13 +907,13 @@ class _UniversalQrScannerScreenState
                     size: 32,
                     color: context.accentColor,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
                   Text(
                     'Point your camera at a QR code',
                     style: TextStyle(color: context.textPrimary, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Text(
                     'Supports nodes, channels, automations, and more',
                     style: TextStyle(

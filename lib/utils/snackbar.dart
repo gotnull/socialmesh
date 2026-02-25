@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import '../core/widgets/loading_indicator.dart';
 import '../core/navigation.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Snackbar types with associated styling
 enum SnackBarType {
@@ -186,7 +187,7 @@ void _showStyledSnackBar(
       ),
     ),
     duration: duration,
-    margin: const EdgeInsets.all(16),
+    margin: const EdgeInsets.all(AppTheme.spacing16),
     padding: EdgeInsets.zero,
     content: ClipRRect(
       borderRadius: const BorderRadius.all(Radius.circular(12)),
@@ -219,11 +220,11 @@ void _showStyledSnackBar(
                     height: 36,
                     decoration: BoxDecoration(
                       color: type.iconColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                     child: Icon(type.icon, color: type.iconColor, size: 20),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Text(
                       message,
@@ -234,12 +235,12 @@ void _showStyledSnackBar(
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   GestureDetector(
                     onTap: () => messenger.hideCurrentSnackBar(),
                     behavior: HitTestBehavior.opaque,
                     child: Container(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(AppTheme.spacing4),
                       child: Icon(
                         Icons.close_rounded,
                         color: Colors.white.withValues(alpha: 0.7),
@@ -282,7 +283,7 @@ void showActionSnackBar(
       borderRadius: BorderRadius.all(Radius.circular(12)),
     ),
     duration: duration,
-    margin: const EdgeInsets.all(16),
+    margin: const EdgeInsets.all(AppTheme.spacing16),
     padding: EdgeInsets.zero,
     content: ClipRRect(
       borderRadius: const BorderRadius.all(Radius.circular(12)),
@@ -315,11 +316,11 @@ void showActionSnackBar(
                     height: 36,
                     decoration: BoxDecoration(
                       color: type.iconColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                     child: Icon(type.icon, color: type.iconColor, size: 20),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Text(
                       message,
@@ -330,7 +331,7 @@ void showActionSnackBar(
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   TextButton(
                     onPressed: () {
                       messenger.hideCurrentSnackBar();
@@ -373,7 +374,7 @@ void _showLoadingSnackBar(
       borderRadius: BorderRadius.all(Radius.circular(12)),
     ),
     duration: duration,
-    margin: const EdgeInsets.all(16),
+    margin: const EdgeInsets.all(AppTheme.spacing16),
     padding: EdgeInsets.zero,
     content: ClipRRect(
       borderRadius: const BorderRadius.all(Radius.circular(12)),
@@ -406,11 +407,11 @@ void _showLoadingSnackBar(
                     height: 36,
                     decoration: BoxDecoration(
                       color: SnackBarType.info.iconColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                     child: const Center(child: LoadingIndicator(size: 24)),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Text(
                       message,

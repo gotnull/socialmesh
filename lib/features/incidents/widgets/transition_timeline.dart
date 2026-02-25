@@ -23,7 +23,7 @@ class TransitionTimeline extends StatelessWidget {
   Widget build(BuildContext context) {
     if (transitions.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.spacing24),
         child: Center(
           child: Text('No transition history', style: context.bodyMutedStyle),
         ),
@@ -124,7 +124,7 @@ class _TimelineEntry extends StatelessWidget {
                         ),
                         _StateBadge(state: transition.toState, muted: isMuted),
                         if (isSuperseded) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,
@@ -134,7 +134,9 @@ class _TimelineEntry extends StatelessWidget {
                               color: context.textTertiary.withValues(
                                 alpha: 0.15,
                               ),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
                             ),
                             child: Text(
                               'superseded',
@@ -149,7 +151,7 @@ class _TimelineEntry extends StatelessWidget {
                       ],
                     ),
 
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
 
                     // Actor + timestamp
                     Text(
@@ -163,7 +165,7 @@ class _TimelineEntry extends StatelessWidget {
                     // Note
                     if (transition.note != null &&
                         transition.note!.isNotEmpty) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.spacing4),
                       Text(
                         transition.note!,
                         style: context.bodySmallStyle?.copyWith(
@@ -175,7 +177,7 @@ class _TimelineEntry extends StatelessWidget {
 
                     // Terminal finality indicator
                     if (isTerminal && !isSuperseded) ...[
-                      const SizedBox(height: 6),
+                      const SizedBox(height: AppTheme.spacing6),
                       Row(
                         children: [
                           Icon(
@@ -183,7 +185,7 @@ class _TimelineEntry extends StatelessWidget {
                             size: 12,
                             color: context.textTertiary,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: AppTheme.spacing4),
                           Text(
                             'Final state — no further transitions',
                             style: TextStyle(
@@ -238,7 +240,7 @@ class _StateBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: effectiveColor.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
         border: Border.all(color: effectiveColor.withValues(alpha: 0.3)),
       ),
       child: Text(

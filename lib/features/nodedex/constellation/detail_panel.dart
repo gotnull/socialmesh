@@ -176,7 +176,7 @@ class _DefaultContent extends StatelessWidget {
       children: [
         // Node count
         Icon(Icons.scatter_plot_outlined, size: 14, color: tertiaryColor),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppTheme.spacing6),
         Text(
           _formatCount(nodeCount, 'node', 'nodes'),
           style: TextStyle(
@@ -187,11 +187,11 @@ class _DefaultContent extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
 
         // Edge count
         Icon(Icons.link, size: 14, color: tertiaryColor),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppTheme.spacing6),
         Text(
           _formatCount(edgeCount, 'link', 'links'),
           style: TextStyle(
@@ -209,7 +209,7 @@ class _DefaultContent extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
             color: accent.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppTheme.radius6),
           ),
           child: Text(
             density.label,
@@ -276,7 +276,7 @@ class _SelectedContent extends ConsumerWidget {
       children: [
         // Sigil avatar
         SigilAvatar(sigil: sigil, nodeNum: nodeNum, size: 32),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppTheme.spacing10),
 
         // Name and trait
         Expanded(
@@ -296,7 +296,7 @@ class _SelectedContent extends ConsumerWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppTheme.spacing2),
 
               // Trait + link count
               Row(
@@ -310,12 +310,12 @@ class _SelectedContent extends ConsumerWidget {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTheme.spacing4),
                   Text(
                     trait.primary.displayLabel,
                     style: TextStyle(fontSize: 11, color: tertiaryText),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Text(
                     '${entry.coSeenCount} links',
                     style: TextStyle(
@@ -337,7 +337,7 @@ class _SelectedContent extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: sigil.primaryColor.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               border: Border.all(
                 color: sigil.primaryColor.withValues(alpha: 0.20),
               ),
@@ -354,7 +354,7 @@ class _SelectedContent extends ConsumerWidget {
           ),
         ),
 
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
 
         // Clear selection
         GestureDetector(

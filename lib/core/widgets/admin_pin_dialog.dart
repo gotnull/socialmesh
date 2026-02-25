@@ -139,7 +139,7 @@ class _AdminPinDialogState extends State<AdminPinDialog> {
   Widget _buildNumberKey(String number) {
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(AppTheme.spacing6),
         child: Center(
           child: SizedBox(
             width: 64,
@@ -186,7 +186,7 @@ class _AdminPinDialogState extends State<AdminPinDialog> {
   }) {
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(AppTheme.spacing6),
         child: Center(
           child: SizedBox(
             width: 64,
@@ -222,7 +222,7 @@ class _AdminPinDialogState extends State<AdminPinDialog> {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         decoration: BoxDecoration(
           color: const Color(0xFF1C1C1E),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppTheme.radius24),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -241,7 +241,7 @@ class _AdminPinDialogState extends State<AdminPinDialog> {
                 size: 28,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Title
             const Text(
@@ -252,7 +252,7 @@ class _AdminPinDialogState extends State<AdminPinDialog> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               'Admin access required',
               style: TextStyle(
@@ -260,7 +260,7 @@ class _AdminPinDialogState extends State<AdminPinDialog> {
                 fontSize: 14,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // PIN dots
             Row(

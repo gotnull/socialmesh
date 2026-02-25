@@ -364,13 +364,13 @@ class _TopBar extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppTheme.radius16),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.photo_library, size: 12, color: Colors.white),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppTheme.spacing6),
                   Text(
                     '${currentImageIndex + 1}/$totalImages',
                     style: const TextStyle(
@@ -382,14 +382,14 @@ class _TopBar extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
           ],
           // Signal counter
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.radius16),
             ),
             child: Text(
               '${currentIndex + 1} / $total',
@@ -402,7 +402,7 @@ class _TopBar extends StatelessWidget {
           ),
           const Spacer(),
           // Placeholder for symmetry
-          const SizedBox(width: 48),
+          const SizedBox(width: AppTheme.spacing48),
         ],
       ),
     );
@@ -686,7 +686,7 @@ class _BottomInfoOverlay extends ConsumerWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 48, 16, 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -714,7 +714,7 @@ class _BottomInfoOverlay extends ConsumerWidget {
                       imageUrl: author?.avatarUrl,
                       size: 40,
                     ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
 
                   // Author info
                   Expanded(
@@ -731,7 +731,7 @@ class _BottomInfoOverlay extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Row(
                           children: [
                             // Time ago
@@ -755,7 +755,7 @@ class _BottomInfoOverlay extends ConsumerWidget {
                                 size: 12,
                                 color: Colors.white.withValues(alpha: 0.7),
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: AppTheme.spacing4),
                               Text(
                                 meshNodeShort ?? '',
                                 style: TextStyle(
@@ -785,7 +785,7 @@ class _BottomInfoOverlay extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text('View'),
-                        SizedBox(width: 4),
+                        SizedBox(width: AppTheme.spacing4),
                         Icon(Icons.arrow_forward_ios, size: 12),
                       ],
                     ),
@@ -809,7 +809,7 @@ class _BottomInfoOverlay extends ConsumerWidget {
 
               // Content snippet
               if (signal.content.isNotEmpty) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 Text(
                   signal.content,
                   style: TextStyle(
@@ -823,7 +823,7 @@ class _BottomInfoOverlay extends ConsumerWidget {
               ],
 
               // Info badges row
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -937,14 +937,14 @@ class _InfoBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             label,
             style: TextStyle(

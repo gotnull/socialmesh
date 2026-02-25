@@ -104,7 +104,7 @@ class _AetherFlightDetailScreenState
           ),
         _isSharing
             ? Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 child: SizedBox(
                   width: 20,
                   height: 20,
@@ -145,7 +145,7 @@ class _AetherFlightDetailScreenState
               if (canReport && positionAsync != null)
                 _buildLivePositionCard(context, positionAsync)
               else
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
 
               // Flight details
               _buildDetailsCard(context, liveFlight),
@@ -153,14 +153,14 @@ class _AetherFlightDetailScreenState
               // Report button
               if (canReport)
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
                   child: ElevatedButton.icon(
                     onPressed: () => _reportReception(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: context.accentColor,
                       minimumSize: const Size(double.infinity, 52),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                     ),
                     icon: const Icon(
@@ -181,7 +181,7 @@ class _AetherFlightDetailScreenState
               // Reports section
               _buildReportsSection(context, reports),
 
-              const SizedBox(height: 100), // Bottom padding
+              const SizedBox(height: AppTheme.spacing100), // Bottom padding
             ],
           ),
         ),
@@ -221,7 +221,7 @@ class _AetherFlightDetailScreenState
             ],
           ),
           if (distKm != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               _formatRouteDistance(distKm),
               style: TextStyle(
@@ -262,7 +262,7 @@ class _AetherFlightDetailScreenState
             letterSpacing: 2,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Text(
           cityName ?? code,
           style: TextStyle(color: context.textTertiary, fontSize: 12),
@@ -276,11 +276,11 @@ class _AetherFlightDetailScreenState
     AsyncValue<FlightPositionState> positionAsync,
   ) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(AppTheme.spacing16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(
           color: context.accentColor.withValues(alpha: 0.5),
           width: 2,
@@ -292,7 +292,7 @@ class _AetherFlightDetailScreenState
           Row(
             children: [
               _AnimatedRadar(color: context.accentColor),
-              SizedBox(width: 12),
+              SizedBox(width: AppTheme.spacing12),
               Text(
                 'Live Position',
                 style: TextStyle(
@@ -309,7 +309,7 @@ class _AetherFlightDetailScreenState
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 500),
             switchInCurve: Curves.easeOut,
@@ -332,7 +332,7 @@ class _AetherFlightDetailScreenState
                       color: context.textTertiary,
                       size: 32,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Text(
                       'Error: $e',
                       style: TextStyle(color: context.textTertiary),
@@ -351,7 +351,7 @@ class _AetherFlightDetailScreenState
                           color: context.textTertiary,
                           size: 32,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppTheme.spacing8),
                         Text(
                           positionState.error ?? 'Position data unavailable',
                           style: TextStyle(color: context.textTertiary),
@@ -369,33 +369,33 @@ class _AetherFlightDetailScreenState
                       'Altitude',
                       '${positionState.position!.altitudeFeet.round().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ft',
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     _buildPositionRow(
                       context,
                       Icons.speed,
                       'Ground Speed',
                       '${positionState.position!.velocityKnots.round()} kts',
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     _buildPositionRow(
                       context,
                       Icons.explore,
                       'Heading',
                       '${positionState.position!.heading.round()}°',
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     _buildPositionRow(
                       context,
                       Icons.radar,
                       'Coverage Radius',
                       '~${positionState.position!.coverageRadiusKm.round()} km',
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppTheme.spacing12),
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppTheme.spacing12),
                       decoration: BoxDecoration(
                         color: context.accentColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                       ),
                       child: Row(
                         children: [
@@ -404,7 +404,7 @@ class _AetherFlightDetailScreenState
                             color: context.accentColor,
                             size: 18,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           Text(
                             '${positionState.position!.latitude.toStringAsFixed(4)}, ${positionState.position!.longitude.toStringAsFixed(4)}',
                             style: TextStyle(
@@ -435,7 +435,7 @@ class _AetherFlightDetailScreenState
     return Row(
       children: [
         Icon(icon, size: 18, color: context.textTertiary),
-        SizedBox(width: 8),
+        SizedBox(width: AppTheme.spacing8),
         Text(
           label,
           style: TextStyle(color: context.textSecondary, fontSize: 14),
@@ -455,11 +455,11 @@ class _AetherFlightDetailScreenState
 
   Widget _buildDetailsCard(BuildContext context, AetherFlight liveFlight) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -473,35 +473,35 @@ class _AetherFlightDetailScreenState
               fontSize: 16,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildDetailRow(
             Icons.schedule,
             'Departure',
             '${_dateFormat.format(widget.flight.scheduledDeparture.toLocal())}\n${_timeFormat.format(widget.flight.scheduledDeparture.toLocal())}',
           ),
           if (widget.flight.scheduledArrival != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _buildDetailRow(
               Icons.flight_land,
               'Arrival',
               '${_dateFormat.format(widget.flight.scheduledArrival!.toLocal())}\n${_timeFormat.format(widget.flight.scheduledArrival!.toLocal())}',
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildDetailRow(
             Icons.memory,
             'Node',
             widget.flight.nodeName ?? widget.flight.nodeId,
           ),
           if (widget.flight.userName != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _buildDetailRow(Icons.person, 'Operator', widget.flight.userName!),
           ],
           if (widget.flight.notes != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _buildDetailRow(Icons.notes, 'Notes', widget.flight.notes!),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildDetailRow(
             Icons.signal_cellular_alt,
             'Receptions',
@@ -517,7 +517,7 @@ class _AetherFlightDetailScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 18, color: context.textTertiary),
-        SizedBox(width: 12),
+        SizedBox(width: AppTheme.spacing12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -526,7 +526,7 @@ class _AetherFlightDetailScreenState
                 label,
                 style: TextStyle(color: context.textTertiary, fontSize: 12),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppTheme.spacing2),
               Text(
                 value,
                 style: TextStyle(color: context.textPrimary, fontSize: 14),
@@ -543,7 +543,7 @@ class _AetherFlightDetailScreenState
     AsyncValue<List<ReceptionReport>> reports,
   ) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -554,7 +554,7 @@ class _AetherFlightDetailScreenState
                 color: context.accentColor,
                 size: 20,
               ),
-              SizedBox(width: 8),
+              SizedBox(width: AppTheme.spacing8),
               Text(
                 'Reception Reports',
                 style: TextStyle(
@@ -565,7 +565,7 @@ class _AetherFlightDetailScreenState
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 500),
             switchInCurve: Curves.easeOut,
@@ -596,10 +596,10 @@ class _AetherFlightDetailScreenState
                 if (reportList.isEmpty) {
                   return Container(
                     key: const ValueKey('reports_empty'),
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(AppTheme.spacing24),
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       border: Border.all(color: context.border),
                     ),
                     child: Center(
@@ -610,14 +610,14 @@ class _AetherFlightDetailScreenState
                             color: context.textTertiary,
                             size: 32,
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppTheme.spacing8),
                           Text(
                             'No receptions reported yet',
                             style: TextStyle(color: context.textSecondary),
                           ),
                           if (widget.flight.isActive ||
                               widget.flight.isInFlight) ...[
-                            const SizedBox(height: 4),
+                            const SizedBox(height: AppTheme.spacing4),
                             Text(
                               'Be the first to report this flight!',
                               style: TextStyle(
@@ -649,10 +649,10 @@ class _AetherFlightDetailScreenState
   Widget _buildReportTile(BuildContext context, ReceptionReport report) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Row(
@@ -666,7 +666,7 @@ class _AetherFlightDetailScreenState
             ),
             child: Icon(Icons.sensors, color: context.accentColor, size: 20),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -903,23 +903,23 @@ class _SkeletonPositionContent extends StatelessWidget {
     return Column(
       children: [
         _buildSkeletonRow(Icons.height, 'Altitude'),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _buildSkeletonRow(Icons.speed, 'Ground Speed'),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _buildSkeletonRow(Icons.explore, 'Heading'),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _buildSkeletonRow(Icons.radar, 'Coverage Radius'),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           decoration: BoxDecoration(
             color: context.card,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
           ),
           child: Row(
             children: [
               const Bone.icon(size: 18),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Bone.text(words: 3, fontSize: 13),
             ],
           ),
@@ -932,7 +932,7 @@ class _SkeletonPositionContent extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: 18, color: context.textTertiary),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         Text(
           label,
           style: TextStyle(color: context.textSecondary, fontSize: 14),
@@ -955,32 +955,32 @@ class _SkeletonReportTile extends StatelessWidget {
   Widget build(BuildContext _) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Row(
         children: [
           const Bone.circle(size: 40),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Bone.text(words: 2),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Bone.text(words: 2, fontSize: 13),
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Bone.text(words: 1, fontSize: 12),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
               Bone.text(words: 1, fontSize: 12),
             ],
           ),
@@ -1201,7 +1201,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
       onTap: () => FocusScope.of(context).unfocus(),
       behavior: HitTestBehavior.opaque,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1209,7 +1209,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
             Row(
               children: [
                 Icon(Icons.signal_cellular_alt, color: context.accentColor),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Text(
                     'Report Reception',
@@ -1222,20 +1222,20 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'I received flight ${widget.flight.flightNumber} on my node!',
               style: TextStyle(color: context.textSecondary),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // Not-on-mesh warning
             if (!_flightNodeDetected)
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
                   color: Colors.orange.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(
                     color: Colors.orange.withValues(alpha: 0.3),
                   ),
@@ -1243,7 +1243,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                 child: Row(
                   children: [
                     const Icon(Icons.wifi_off, color: Colors.orange, size: 20),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Text(
                         'This flight\'s node is not in your mesh network. '
@@ -1259,20 +1259,21 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                 ),
               ),
 
-            if (!_flightNodeDetected) const SizedBox(height: 12),
+            if (!_flightNodeDetected)
+              const SizedBox(height: AppTheme.spacing12),
 
             // Auto-detected signal info (read-only)
             if (hasSignalData)
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
                   color: context.background,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Row(
                   children: [
                     Icon(Icons.sensors, color: context.accentColor, size: 20),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     if (_detectedRssi != null) ...[
                       Text(
                         'RSSI ',
@@ -1291,7 +1292,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                       ),
                     ],
                     if (_detectedRssi != null && _detectedSnr != null)
-                      const SizedBox(width: 16),
+                      const SizedBox(width: AppTheme.spacing16),
                     if (_detectedSnr != null) ...[
                       Text(
                         'SNR ',
@@ -1313,15 +1314,15 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                 ),
               ),
 
-            if (hasSignalData) const SizedBox(height: 12),
+            if (hasSignalData) const SizedBox(height: AppTheme.spacing12),
 
             // Auto-detected distance
             if (_estimatedDistance != null)
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
                   color: context.background,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Row(
                   children: [
@@ -1330,7 +1331,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                       color: context.accentColor,
                       size: 20,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Text(
                       'Estimated distance ',
                       style: TextStyle(
@@ -1350,14 +1351,15 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                 ),
               ),
 
-            if (_estimatedDistance != null) const SizedBox(height: 12),
+            if (_estimatedDistance != null)
+              const SizedBox(height: AppTheme.spacing12),
 
             // Location status
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               decoration: BoxDecoration(
                 color: context.background,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Row(
                 children: [
@@ -1368,7 +1370,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                         : context.textTertiary,
                     size: 20,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Text(
                     hasLocation
                         ? 'Location auto-detected'
@@ -1383,7 +1385,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Optional notes — matches NodeDex _UserNoteCard pattern
             if (!_showNotes)
@@ -1397,7 +1399,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                     ),
                     decoration: BoxDecoration(
                       color: context.accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Text(
                       'Add Notes',
@@ -1421,7 +1423,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                         size: 18,
                         color: context.textSecondary,
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       Text(
                         'Notes',
                         style: TextStyle(
@@ -1444,7 +1446,9 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                           ),
                           decoration: BoxDecoration(
                             color: context.textTertiary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
                           ),
                           child: Text(
                             'Remove',
@@ -1458,13 +1462,13 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   TextField(
                     controller: _notesController,
                     maxLines: 4,
                     maxLength: _maxReportNotesLength,
                     autofocus: true,
-                    scrollPadding: const EdgeInsets.all(80),
+                    scrollPadding: const EdgeInsets.all(AppTheme.spacing80),
                     onTapOutside: (_) {
                       FocusScope.of(context).unfocus();
                     },
@@ -1477,23 +1481,23 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                       ),
                       filled: true,
                       fillColor: context.background,
-                      contentPadding: const EdgeInsets.all(12),
+                      contentPadding: const EdgeInsets.all(AppTheme.spacing12),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         borderSide: BorderSide(
                           color: context.border.withValues(alpha: 0.3),
                           width: 0.5,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         borderSide: BorderSide(
                           color: context.border.withValues(alpha: 0.3),
                           width: 0.5,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         borderSide: BorderSide(
                           color: context.accentColor.withValues(alpha: 0.5),
                           width: 1.0,
@@ -1507,7 +1511,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                   ),
                 ],
               ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // Submit button
             ElevatedButton(
@@ -1516,7 +1520,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                 backgroundColor: context.accentColor,
                 minimumSize: const Size(double.infinity, 52),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
               child: _isSaving
@@ -1537,7 +1541,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                       ),
                     ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
           ],
         ),
       ),

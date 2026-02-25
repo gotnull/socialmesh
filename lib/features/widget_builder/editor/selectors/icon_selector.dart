@@ -340,12 +340,14 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
 
           // Search bar
           TextField(
+            maxLength: 100,
             controller: _searchController,
             onChanged: (value) => setState(() => _searchQuery = value),
             style: TextStyle(color: context.textPrimary),
             decoration: InputDecoration(
               hintText: 'Search icons...',
               hintStyle: TextStyle(color: context.textSecondary),
+              counterText: '',
               prefixIcon: Icon(
                 Icons.search,
                 color: context.textSecondary,
@@ -368,13 +370,13 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
               fillColor: context.background,
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide.none,
               ),
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Content
           Expanded(
@@ -395,7 +397,7 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.search_off, size: 48, color: context.textSecondary),
-            SizedBox(height: 8),
+            SizedBox(height: AppTheme.spacing8),
             Text(
               'No icons found',
               style: TextStyle(color: context.textSecondary),
@@ -452,7 +454,7 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
               itemBuilder: (context, iconIndex) =>
                   _buildIconTile(category.icons[iconIndex], accentColor),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
           ],
         );
       },
@@ -466,13 +468,13 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
       message: option.displayName,
       child: InkWell(
         onTap: () => Navigator.pop(context, option.name),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         child: Container(
           decoration: BoxDecoration(
             color: isSelected
                 ? accentColor.withValues(alpha: 0.2)
                 : context.background,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
             border: Border.all(
               color: isSelected ? accentColor : Colors.transparent,
               width: 2,
@@ -486,7 +488,7 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
                 size: 24,
                 color: isSelected ? accentColor : context.textSecondary,
               ),
-              SizedBox(height: 4),
+              SizedBox(height: AppTheme.spacing4),
               Text(
                 option.displayName,
                 style: TextStyle(

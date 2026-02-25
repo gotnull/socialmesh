@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/connection_providers.dart';
 import '../../utils/snackbar.dart';
 import '../command/commands.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// A widget that gates access to features based on their requirements.
 ///
@@ -122,12 +123,12 @@ class _DefaultUnavailablePlaceholder extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerHighest.withValues(
             alpha: 0.5,
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(
             color: theme.colorScheme.outline.withValues(alpha: 0.2),
           ),
@@ -140,7 +141,7 @@ class _DefaultUnavailablePlaceholder extends StatelessWidget {
               size: 18,
               color: theme.colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Flexible(
               child: Text(
                 reason,

@@ -90,12 +90,12 @@ class _ReviewList extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'Error loading reviews',
               style: TextStyle(color: context.textPrimary),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               e.toString(),
               style: TextStyle(color: context.textSecondary, fontSize: 12),
@@ -115,7 +115,7 @@ class _ReviewList extends ConsumerWidget {
                   color: context.accentColor,
                   size: 64,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 Text(
                   isPending ? 'All caught up!' : 'No reviews yet',
                   style: TextStyle(
@@ -124,7 +124,7 @@ class _ReviewList extends ConsumerWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Text(
                   isPending
                       ? 'No pending reviews to moderate'
@@ -137,7 +137,7 @@ class _ReviewList extends ConsumerWidget {
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           itemCount: reviews.length,
           itemBuilder: (context, index) {
             return _ReviewModerationCard(
@@ -214,7 +214,7 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
                 color: context.textPrimary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             TextField(
               controller: reasonController,
               decoration: const InputDecoration(
@@ -225,7 +225,7 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
               maxLength: 500,
               autofocus: true,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Row(
               children: [
                 Expanded(
@@ -235,13 +235,13 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: BorderSide(color: Colors.grey.shade700),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                     ),
                     child: const Text('Cancel'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: FilledButton(
                     onPressed: () =>
@@ -250,7 +250,7 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: AppTheme.errorRed,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                     ),
                     child: const Text('Reject'),
@@ -323,9 +323,11 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
     return Card(
       color: context.card,
       margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -336,7 +338,9 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
                       children: [
                         if (product.primaryImage != null)
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
                             child: Image.network(
                               product.primaryImage!,
                               width: 50,
@@ -352,7 +356,7 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
                               ),
                             ),
                           ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,9 +390,9 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
               error: (e, stack) => const SizedBox.shrink(),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Divider(color: context.border),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Review header
             Row(
@@ -398,7 +402,7 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
                   size: 40,
                   foregroundColor: context.textSecondary,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -413,13 +417,13 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
                             ),
                           ),
                           if (widget.review.isVerifiedPurchase) ...[
-                            const SizedBox(width: 4),
+                            const SizedBox(width: AppTheme.spacing4),
                             Icon(
                               Icons.verified,
                               size: 16,
                               color: context.accentColor,
                             ),
-                            const SizedBox(width: 2),
+                            const SizedBox(width: AppTheme.spacing2),
                             Text(
                               'Verified',
                               style: TextStyle(
@@ -458,7 +462,7 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
 
             // Review content
             if (widget.review.title != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               Text(
                 widget.review.title!,
                 style: TextStyle(
@@ -469,16 +473,16 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
               ),
             ],
             if (widget.review.body != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 widget.review.body!,
                 style: TextStyle(color: context.textSecondary),
               ),
             ],
 
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Divider(color: context.border),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Action buttons
             if (_isProcessing)
@@ -497,7 +501,7 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: _approve,
@@ -509,7 +513,7 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   IconButton(
                     onPressed: _delete,
                     icon: const Icon(Icons.delete_outline),
@@ -535,7 +539,7 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
                           : widget.review.status == 'legacy'
                           ? Colors.orange.withValues(alpha: 0.2)
                           : Colors.grey.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                     ),
                     child: Text(
                       widget.review.status == 'legacy'
@@ -554,7 +558,7 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   ElevatedButton.icon(
                     onPressed: _delete,
                     icon: const Icon(Icons.delete_outline),

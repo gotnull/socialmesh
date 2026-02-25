@@ -409,11 +409,16 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
             // Search bar
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  8,
+                  16,
+                  8,
+                ),
                 child: Container(
                   decoration: BoxDecoration(
                     color: context.card,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: TextField(
                     controller: _searchController,
@@ -457,12 +462,17 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                 connectivity.isBleConnected)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    0,
+                    16,
+                    8,
+                  ),
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       border: Border.all(
                         color: context.border.withValues(alpha: 0.3),
                       ),
@@ -475,7 +485,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                           size: 18,
                           color: context.textTertiary,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Expanded(
                           child: Text(
                             'iOS Airplane Mode can pause BLE mesh traffic even when connected. If signals stop, turn off Airplane Mode or toggle Bluetooth.',
@@ -514,7 +524,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                                 () => _activeFilter = SignalFilter.all,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             _FilterChip(
                               label: 'Saved',
                               count: savedCount,
@@ -525,7 +535,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                                 () => _activeFilter = SignalFilter.saved,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             _FilterChip(
                               label: 'Nearby',
                               count: nearbyCount,
@@ -536,7 +546,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                                 () => _activeFilter = SignalFilter.nearby,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             _FilterChip(
                               label: 'Mesh',
                               count: meshCount,
@@ -548,7 +558,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                                 () => _activeFilter = SignalFilter.meshOnly,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             _FilterChip(
                               label: 'Media',
                               count: mediaCount,
@@ -560,7 +570,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                                 () => _activeFilter = SignalFilter.withMedia,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             _FilterChip(
                               label: 'Location',
                               count: withLocationCount,
@@ -572,7 +582,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                                 () => _activeFilter = SignalFilter.withLocation,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             _FilterChip(
                               label: 'Replies',
                               count: withCommentsCount,
@@ -584,7 +594,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                                 () => _activeFilter = SignalFilter.withComments,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             _FilterChip(
                               label: 'Expiring',
                               count: expiringSoonCount,
@@ -597,7 +607,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                               ),
                             ),
                             if (hiddenCount > 0) ...[
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppTheme.spacing8),
                               _FilterChip(
                                 label: 'Hidden',
                                 count: hiddenCount,
@@ -610,19 +620,19 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                                 ),
                               ),
                             ],
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             _SortButton(
                               sortOrder: _sortOrder,
                               onChanged: (order) =>
                                   setState(() => _sortOrder = order),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                           ],
                         ),
                       ),
                     ),
                     // View toggle at end
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     _ViewModeSelector(
                       viewMode: ref.watch(signalViewModeProvider),
                       onModeChanged: (mode) => ref
@@ -631,20 +641,22 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                     ),
                     // Gallery button (only visible when media signals exist)
                     if (mediaCount > 0) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       _GalleryButton(
                         onTap: () =>
                             SignalGalleryView.show(context, signals: signals),
                       ),
                     ],
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                   ],
                 ),
               ),
             ),
 
             // Spacing
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: AppTheme.spacing8),
+            ),
 
             // Divider
             SliverToBoxAdapter(
@@ -780,13 +792,13 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
           gradient: gradient,
           animate: canGoActive,
           enabled: canGoActive,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppTheme.radius18),
           child: Container(
             width: 36,
             height: 36,
             decoration: BoxDecoration(
               color: canGoActive ? null : context.border.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppTheme.radius18),
             ),
             child: Icon(
               Icons.sensors,
@@ -829,7 +841,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
               height: 72,
               decoration: BoxDecoration(
                 color: context.card,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppTheme.radius16),
               ),
               child: Icon(
                 Icons.filter_list_off,
@@ -837,7 +849,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                 color: context.textTertiary,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Text(
               'No signals match this filter',
               style: TextStyle(
@@ -846,7 +858,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                 color: context.textSecondary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             TextButton(
               onPressed: () => setState(() {
                 _activeFilter = SignalFilter.all;
@@ -1085,7 +1097,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
 
           // Grid of signals
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
@@ -1145,7 +1157,9 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.black.withValues(alpha: 0.5),
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius4,
+                                  ),
                                   border: Border.all(
                                     color: Colors.white.withValues(alpha: 0.1),
                                     width: 0.5,
@@ -1168,7 +1182,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
           ),
 
           // Bottom padding
-          const SliverToBoxAdapter(child: SizedBox(height: 80)),
+          const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing80)),
         ],
       ),
     );
@@ -1239,6 +1253,7 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
 
   Future<void> _reportSignal(Post signal) async {
     // Capture provider before any await
+    if (!mounted) return;
     final socialService = ref.read(socialServiceProvider);
 
     final reason = await AppBottomSheet.showActions<String>(
@@ -1336,7 +1351,7 @@ class _FilterChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? chipColor.withValues(alpha: 0.2) : context.card,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppTheme.radius20),
           border: Border.all(
             color: isSelected
                 ? chipColor.withValues(alpha: 0.5)
@@ -1352,7 +1367,7 @@ class _FilterChip extends StatelessWidget {
                 size: 14,
                 color: isSelected ? chipColor : context.textTertiary,
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
             ],
             Text(
               label,
@@ -1362,14 +1377,14 @@ class _FilterChip extends StatelessWidget {
                 color: isSelected ? chipColor : context.textSecondary,
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppTheme.spacing6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
                 color: isSelected
                     ? chipColor.withValues(alpha: 0.3)
                     : context.border.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
               ),
               child: Text(
                 count.toString(),
@@ -1408,23 +1423,23 @@ class _SortButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppTheme.radius20),
       child: Material(
         color: context.card,
         child: InkWell(
           onTap: () => _showSortMenu(context),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppTheme.radius20),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppTheme.radius20),
               border: Border.all(color: context.border.withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.sort, size: 14, color: context.textTertiary),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 Text(
                   _sortLabel,
                   style: TextStyle(
@@ -1433,7 +1448,7 @@ class _SortButton extends StatelessWidget {
                     color: context.textSecondary,
                   ),
                 ),
-                const SizedBox(width: 2),
+                const SizedBox(width: AppTheme.spacing2),
                 Icon(
                   Icons.arrow_drop_down,
                   size: 18,
@@ -1465,7 +1480,9 @@ class _SortButton extends StatelessWidget {
         0,
       ),
       color: context.card,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
       items: [
         _buildMenuItem(
           SignalSortOrder.proximity,
@@ -1510,7 +1527,7 @@ class _SortButton extends StatelessWidget {
             size: 18,
             color: isSelected ? accentColor : context.textSecondary,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Text(label),
         ],
       ),
@@ -1540,14 +1557,14 @@ class _ViewModeSelector extends StatelessWidget {
           onTap: () => onModeChanged(SignalViewMode.list),
           tooltip: 'List view',
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         _ViewModeButton(
           icon: Icons.grid_view_rounded,
           isSelected: viewMode == SignalViewMode.grid,
           onTap: () => onModeChanged(SignalViewMode.grid),
           tooltip: 'Grid view',
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         _ViewModeButton(
           icon: Icons.map_outlined,
           isSelected: viewMode == SignalViewMode.map,
@@ -1579,12 +1596,12 @@ class _ViewModeButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(AppTheme.spacing6),
           decoration: BoxDecoration(
             color: isSelected
                 ? context.accentColor.withValues(alpha: 0.2)
                 : context.card,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
             border: Border.all(
               color: isSelected
                   ? context.accentColor.withValues(alpha: 0.5)
@@ -1615,10 +1632,10 @@ class _GalleryButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(AppTheme.spacing6),
           decoration: BoxDecoration(
             color: AccentColors.purple.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
             border: Border.all(
               color: AccentColors.purple.withValues(alpha: 0.4),
             ),
@@ -2241,7 +2258,7 @@ class _ActiveAuthorsHeaderState extends State<_ActiveAuthorsHeader>
 
                       // Extra count badge
                       if (remainingCount > 0) ...[
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Container(
                           width: 32,
                           height: 32,
@@ -2263,7 +2280,7 @@ class _ActiveAuthorsHeaderState extends State<_ActiveAuthorsHeader>
                         ),
                       ],
 
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
 
                       // Text info
                       Expanded(

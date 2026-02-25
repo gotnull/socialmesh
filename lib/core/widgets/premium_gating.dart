@@ -84,7 +84,7 @@ class PremiumPreviewBanner extends ConsumerWidget {
         child: Row(
           children: [
             const Icon(Icons.lock_outline, color: Colors.white, size: 18),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppTheme.spacing10),
             Expanded(
               child: Text(
                 customMessage ?? _defaultMessage,
@@ -99,7 +99,7 @@ class PremiumPreviewBanner extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: const Text(
                 'Upgrade',
@@ -269,7 +269,7 @@ class DisabledControlWithLock extends ConsumerWidget {
         children: [
           Opacity(opacity: 0.5, child: IgnorePointer(child: child)),
           if (showInlineLock) ...[
-            const SizedBox(width: 6),
+            const SizedBox(width: AppTheme.spacing6),
             Icon(Icons.lock, size: 14, color: Colors.grey.shade500),
           ],
         ],
@@ -413,6 +413,7 @@ class PremiumTextField extends ConsumerWidget {
 
     if (hasPremium) {
       return TextField(
+        maxLength: 100,
         controller: controller,
         decoration: baseDecoration,
         maxLines: maxLines,
@@ -428,6 +429,7 @@ class PremiumTextField extends ConsumerWidget {
         child: Opacity(
           opacity: 0.5,
           child: TextField(
+            maxLength: 100,
             controller: controller,
             decoration: baseDecoration.copyWith(
               suffixIcon: Icon(
@@ -664,7 +666,6 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
           safeSetState(() => _isLoading = false);
       }
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Something went wrong. Please try again.');
       safeSetState(() => _isLoading = false);
     }
@@ -699,7 +700,6 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
       showInfoSnackBar(context, 'No purchases found to restore');
       safeSetState(() => _isLoading = false);
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to restore purchases');
       safeSetState(() => _isLoading = false);
     }
@@ -729,7 +729,7 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
               margin: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.grey[600],
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppTheme.radius2),
               ),
             ),
           ),
@@ -765,7 +765,7 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
                     child: Icon(_featureIcon, size: 36, color: Colors.white),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppTheme.spacing20),
 
                 // Headline
                 Text(
@@ -775,7 +775,7 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
 
                 // Description
                 Text(
@@ -785,7 +785,7 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
                     color: context.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
 
                 // Benefits
                 ..._benefits.map(
@@ -798,7 +798,9 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
                           height: 40,
                           decoration: BoxDecoration(
                             color: context.accentColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius10,
+                            ),
                           ),
                           child: Icon(
                             b.icon,
@@ -806,7 +808,7 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
                             size: 20,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -832,7 +834,7 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppTheme.spacing20),
 
                 // Purchase button
                 BouncyTap(
@@ -847,7 +849,7 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
                           context.accentColor.withValues(alpha: 0.8),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       boxShadow: [
                         BoxShadow(
                           color: context.accentColor.withValues(alpha: 0.25),
@@ -874,7 +876,7 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
                                 Icons.star_rounded,
                                 color: Colors.white,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppTheme.spacing8),
                               Text(
                                 'Unlock for $displayPrice',
                                 style: const TextStyle(
@@ -887,7 +889,7 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
                           ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
 
                 // One-time purchase note
                 Text(
@@ -895,7 +897,7 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
                   textAlign: TextAlign.center,
                   style: TextStyle(color: context.textTertiary, fontSize: 12),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
 
                 // Secondary actions
                 Row(
@@ -911,7 +913,7 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppTheme.spacing16),
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(false),
                       child: Text(
@@ -989,7 +991,7 @@ class PremiumExplanationCard extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
       ),
       clipBehavior: Clip.antiAlias,
       child: Theme(
@@ -1002,7 +1004,12 @@ class PremiumExplanationCard extends ConsumerWidget {
         child: ExpansionTile(
           initiallyExpanded: initiallyExpanded,
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          childrenPadding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing16,
+            0,
+            16,
+            16,
+          ),
           iconColor: context.textSecondary,
           collapsedIconColor: context.textSecondary,
           leading: Icon(
@@ -1023,10 +1030,10 @@ class PremiumExplanationCard extends ConsumerWidget {
           children: [
             if (exampleTitle != null && exampleDescription != null) ...[
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1038,7 +1045,7 @@ class PremiumExplanationCard extends ConsumerWidget {
                           size: 16,
                           color: context.accentColor,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Text(
                           'Example',
                           style: TextStyle(
@@ -1049,7 +1056,7 @@ class PremiumExplanationCard extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Text(
                       exampleTitle!,
                       style: const TextStyle(
@@ -1057,7 +1064,7 @@ class PremiumExplanationCard extends ConsumerWidget {
                         fontSize: 14,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Text(
                       exampleDescription!,
                       style: TextStyle(
@@ -1068,7 +1075,7 @@ class PremiumExplanationCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
             ],
             SizedBox(
               width: double.infinity,

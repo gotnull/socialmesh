@@ -153,16 +153,16 @@ class _EmptyProfileView extends ConsumerWidget {
     final syncError = ref.watch(syncErrorProvider);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       child: Column(
         children: [
           // Sync error banner (if any)
           if (syncError != null) ...[
             _SyncErrorBanner(error: syncError),
-            SizedBox(height: 16),
+            SizedBox(height: AppTheme.spacing16),
           ],
 
-          const SizedBox(height: 40),
+          const SizedBox(height: AppTheme.spacing40),
 
           // Empty avatar placeholder
           Container(
@@ -183,7 +183,7 @@ class _EmptyProfileView extends ConsumerWidget {
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           Text(
             'Set up your profile',
@@ -194,7 +194,7 @@ class _EmptyProfileView extends ConsumerWidget {
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
 
           Text(
             'Add your name, photo, and bio to personalize your mesh presence.',
@@ -206,7 +206,7 @@ class _EmptyProfileView extends ConsumerWidget {
             textAlign: TextAlign.center,
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: AppTheme.spacing32),
 
           FilledButton.icon(
             onPressed: onEditTap,
@@ -217,7 +217,7 @@ class _EmptyProfileView extends ConsumerWidget {
             ),
           ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: AppTheme.spacing40),
         ],
       ),
     );
@@ -253,14 +253,14 @@ class _ProfileView extends ConsumerWidget {
           // Sync error banner (if any)
           if (syncError != null) ...[
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: _SyncErrorBanner(error: syncError),
             ),
           ],
 
           // Banner and Avatar section
           _BannerAvatarSection(profile: profile, accentColor: accentColor),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Display name and verified badge
           Padding(
@@ -284,12 +284,12 @@ class _ProfileView extends ConsumerWidget {
             ),
           ),
           if (profile.callsign != null) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
                 color: accentColor.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppTheme.radius16),
                 border: Border.all(color: accentColor.withValues(alpha: 0.5)),
               ),
               child: Text(
@@ -303,7 +303,7 @@ class _ProfileView extends ConsumerWidget {
               ),
             ),
           ],
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           // Padded content section
           Padding(
@@ -314,10 +314,10 @@ class _ProfileView extends ConsumerWidget {
                 if (profile.bio != null && profile.bio!.isNotEmpty) ...[
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       border: Border.all(
                         color: context.border.withValues(alpha: 0.3),
                       ),
@@ -332,7 +332,7 @@ class _ProfileView extends ConsumerWidget {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                 ],
 
                 // Info cards
@@ -361,7 +361,7 @@ class _ProfileView extends ConsumerWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
 
                 if (profile.website != null ||
                     profile.socialLinks?.isEmpty == false) ...[
@@ -406,11 +406,11 @@ class _ProfileView extends ConsumerWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
                 ],
 
                 // Edit profile button
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
@@ -424,10 +424,10 @@ class _ProfileView extends ConsumerWidget {
                 ),
 
                 // Cloud Backup Section (collapsible)
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 _CloudBackupSection(user: user),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spacing32),
               ],
             ),
           ),
@@ -522,7 +522,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
           'Linked accounts',
           style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         ...providers.map(
           (provider) => Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -538,7 +538,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(
           color: isSignedIn
               ? AccentColors.green.withValues(alpha: 0.3)
@@ -555,14 +555,14 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
               bottom: Radius.circular(_isExpanded ? 0 : 12),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(AppTheme.spacing8),
                     decoration: BoxDecoration(
                       color: _getStatusColor().withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                     ),
                     child: ref.watch(syncStatusProvider) == SyncStatus.syncing
                         ? SizedBox(
@@ -579,7 +579,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
                             color: _getStatusColor(),
                           ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -592,7 +592,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
                             color: context.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           _getBackupStatusText(),
                           style: TextStyle(
@@ -637,12 +637,12 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
 
   Widget _buildSignedOutContent(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Divider(color: context.border),
-          SizedBox(height: 12),
+          SizedBox(height: AppTheme.spacing12),
           Text(
             'Sign in to backup your profile to the cloud and sync across devices.',
             style: TextStyle(
@@ -651,7 +651,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Google Sign-In button
           _SocialSignInButton(
@@ -662,7 +662,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
             textColor: Colors.black87,
             isLoading: _isSigningIn,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppTheme.spacing10),
 
           // Apple Sign-In button (iOS/macOS only)
           if (Platform.isIOS || Platform.isMacOS) ...[
@@ -674,7 +674,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
               textColor: Colors.white,
               isLoading: _isSigningIn,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppTheme.spacing10),
           ],
 
           // GitHub Sign-In button
@@ -696,17 +696,17 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     final syncError = ref.watch(syncErrorProvider);
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Divider(color: context.border),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
 
           // Linked providers chips
           if (widget.user != null) ...[
             _buildLinkedProvidersRow(),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
           ],
 
           // Sync error with retry option (only shown when there's an error)
@@ -719,7 +719,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
               ),
               margin: EdgeInsets.zero,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
           ],
 
           // Sign out
@@ -730,7 +730,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
           ),
 
           // Delete account
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _AccountOptionTile(
             icon: Icons.delete_outline,
             label: 'Delete Account',
@@ -874,14 +874,14 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             'An account with ${e.email} already exists using $providerName.\n\n'
             'Sign in with $providerName to link your GitHub account?',
             textAlign: TextAlign.center,
             style: TextStyle(color: context.textSecondary),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             children: [
               Expanded(
@@ -891,20 +891,20 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide(color: Colors.grey.shade700),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Cancel'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: () => Navigator.pop(context, true),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: Text('Sign in with $providerName'),
@@ -1050,7 +1050,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
         child: Row(
           children: [
             const CircularProgressIndicator(),
-            const SizedBox(width: 20),
+            const SizedBox(width: AppTheme.spacing20),
             Expanded(
               child: Text(
                 'Deleting account...',
@@ -1319,13 +1319,13 @@ class _AccountOptionTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppTheme.radius8),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
         child: Row(
           children: [
             Icon(icon, size: 18, color: color),
-            SizedBox(width: 12),
+            SizedBox(width: AppTheme.spacing12),
             Text(
               label,
               style: context.bodySecondaryStyle?.copyWith(color: color),
@@ -1365,10 +1365,10 @@ class _SocialSignInButton extends StatelessWidget {
       opacity: isDisabled ? 0.6 : 1.0,
       child: Material(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         child: InkWell(
           onTap: isDisabled ? null : onPressed,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             child: Row(
@@ -1385,7 +1385,7 @@ class _SocialSignInButton extends StatelessWidget {
                   )
                 else
                   icon,
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Text(
                   isLoading ? 'Signing in...' : label,
                   style: TextStyle(
@@ -1425,13 +1425,13 @@ class _SyncErrorBanner extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: AccentColors.orange.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(color: AccentColors.orange.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Icon(Icons.cloud_off_outlined, size: 18, color: AccentColors.orange),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppTheme.spacing10),
           Expanded(
             child: Text(
               message,
@@ -1747,14 +1747,14 @@ class _ProfileInfoCard extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 8),
             child: Text(
               title.toUpperCase(),
               style: TextStyle(
@@ -1778,7 +1778,7 @@ class _ProfileInfoCard extends StatelessWidget {
       child: Row(
         children: [
           Icon(item.icon, size: 20, color: context.textTertiary),
-          SizedBox(width: 12),
+          SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1789,7 +1789,7 @@ class _ProfileInfoCard extends StatelessWidget {
                     color: context.textTertiary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   item.value,
                   style: context.bodySecondaryStyle?.copyWith(
@@ -2451,12 +2451,17 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
                   margin: const EdgeInsets.only(top: 12, bottom: 8),
                   decoration: BoxDecoration(
                     color: context.textTertiary.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(AppTheme.radius2),
                   ),
                 ),
                 // Header
                 Container(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    0,
+                    16,
+                    16,
+                  ),
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
@@ -2759,11 +2764,11 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppTheme.spacing16),
 
                             // Basic Info section
                             _buildSectionHeader('Basic Info'),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppTheme.spacing12),
                             _buildTextField(
                               controller: _displayNameController,
                               label: 'Display Name',
@@ -2780,7 +2785,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
                                 );
                               },
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppTheme.spacing12),
                             _buildTextField(
                               controller: _callsignController,
                               label: 'Callsign',
@@ -2804,14 +2809,14 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
                                 return null;
                               },
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppTheme.spacing12),
                             // Bio field - no prefix icon for multiline
                             _buildBioField(),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: AppTheme.spacing24),
 
                             // Links section
                             _buildSectionHeader('Links'),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppTheme.spacing12),
                             _buildTextField(
                               controller: _websiteController,
                               label: 'Website',
@@ -2835,11 +2840,11 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
                                 return null;
                               },
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: AppTheme.spacing24),
 
                             // Social links section
                             _buildSectionHeader('Social'),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppTheme.spacing12),
                             _buildTextField(
                               controller: _twitterController,
                               label: 'Twitter / X',
@@ -2848,7 +2853,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
                               prefixText: '@',
                               maxLength: 30,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppTheme.spacing12),
                             _buildTextField(
                               controller: _mastodonController,
                               label: 'Mastodon',
@@ -2856,7 +2861,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
                               icon: Icons.tag,
                               maxLength: 100,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppTheme.spacing12),
                             _buildTextField(
                               controller: _githubController,
                               label: 'GitHub',
@@ -2864,7 +2869,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
                               icon: Icons.code,
                               maxLength: 39,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppTheme.spacing12),
                             _buildTextField(
                               controller: _discordController,
                               label: 'Discord',
@@ -2872,7 +2877,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
                               icon: Icons.discord,
                               maxLength: 37,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppTheme.spacing12),
                             _buildTextField(
                               controller: _telegramController,
                               label: 'Telegram',
@@ -2918,7 +2923,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
         Row(
           children: [
             Icon(Icons.format_quote, size: 18, color: context.textTertiary),
-            SizedBox(width: 8),
+            SizedBox(width: AppTheme.spacing8),
             Text(
               'Bio',
               style: context.bodySmallStyle?.copyWith(
@@ -2927,7 +2932,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
             ),
           ],
         ),
-        SizedBox(height: 8),
+        SizedBox(height: AppTheme.spacing8),
         TextFormField(
           controller: _bioController,
           focusNode: _bioFocusNode,
@@ -2936,19 +2941,19 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
             filled: true,
             fillColor: context.card,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               borderSide: BorderSide(
                 color: context.border.withValues(alpha: 0.3),
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               borderSide: BorderSide(
                 color: context.border.withValues(alpha: 0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               borderSide: BorderSide(color: context.accentColor),
             ),
           ),
@@ -2996,19 +3001,19 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
             filled: true,
             fillColor: context.card,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               borderSide: BorderSide(
                 color: context.border.withValues(alpha: 0.3),
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               borderSide: BorderSide(
                 color: context.border.withValues(alpha: 0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               borderSide: BorderSide(color: context.accentColor),
             ),
             counterText: maxLength != null ? null : '',

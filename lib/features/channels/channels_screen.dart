@@ -164,7 +164,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                     height: 72,
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppTheme.radius16),
                     ),
                     child: Icon(
                       Icons.wifi_tethering,
@@ -172,7 +172,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                       color: context.textTertiary,
                     ),
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: AppTheme.spacing24),
                   Text(
                     _searchQuery.isNotEmpty
                         ? 'No channels match "$_searchQuery"'
@@ -184,7 +184,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                     ),
                   ),
                   if (_searchQuery.isEmpty) ...[
-                    SizedBox(height: 8),
+                    SizedBox(height: AppTheme.spacing8),
                     Text(
                       'Channels are still being loaded from device\nor use the icons above to add channels',
                       style: TextStyle(
@@ -195,7 +195,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                     ),
                   ],
                   if (_searchQuery.isNotEmpty) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppTheme.spacing12),
                     TextButton(
                       onPressed: () => setState(() => _searchQuery = ''),
                       child: const Text('Clear search'),
@@ -352,11 +352,11 @@ class _ChannelTile extends ConsumerWidget {
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Row(
             children: [
               Container(
@@ -364,7 +364,7 @@ class _ChannelTile extends ConsumerWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: isPrimary ? context.accentColor : context.background,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Center(
                   child: Text(
@@ -377,7 +377,7 @@ class _ChannelTile extends ConsumerWidget {
                   ),
                 ),
               ),
-              SizedBox(width: 16),
+              SizedBox(width: AppTheme.spacing16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,7 +394,7 @@ class _ChannelTile extends ConsumerWidget {
                         color: context.textPrimary,
                       ),
                     ),
-                    SizedBox(height: 6),
+                    SizedBox(height: AppTheme.spacing6),
                     Row(
                       children: [
                         Icon(
@@ -404,7 +404,7 @@ class _ChannelTile extends ConsumerWidget {
                               ? context.accentColor
                               : context.textTertiary,
                         ),
-                        SizedBox(width: 6),
+                        SizedBox(width: AppTheme.spacing6),
                         Text(
                           hasKey ? 'Encrypted' : 'No encryption',
                           style: TextStyle(
@@ -413,7 +413,7 @@ class _ChannelTile extends ConsumerWidget {
                           ),
                         ),
                         if (isPrimary) ...[
-                          SizedBox(width: 12),
+                          SizedBox(width: AppTheme.spacing12),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
@@ -421,7 +421,9 @@ class _ChannelTile extends ConsumerWidget {
                             ),
                             decoration: BoxDecoration(
                               color: context.accentColor.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
                             ),
                             child: Text(
                               'PRIMARY',
@@ -452,7 +454,7 @@ class _ChannelTile extends ConsumerWidget {
                   ),
                   decoration: BoxDecoration(
                     color: context.accentColor,
-                    borderRadius: BorderRadius.circular(11),
+                    borderRadius: BorderRadius.circular(AppTheme.radius11),
                   ),
                   child: Center(
                     child: Text(
@@ -465,7 +467,7 @@ class _ChannelTile extends ConsumerWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppTheme.spacing8),
               ],
               Icon(Icons.chevron_right, color: context.textTertiary),
             ],

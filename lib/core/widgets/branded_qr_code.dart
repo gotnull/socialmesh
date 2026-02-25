@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Custom clipper that creates a rounded rectangle path for the embedded image.
 class _RoundedRectangleClipper implements PrettyQrClipper {
@@ -87,7 +88,7 @@ class BrandedQrCode extends StatelessWidget {
               ? const PrettyQrDecorationImage(
                   image: AssetImage('assets/app_icons/socialmesh_icon_512.png'),
                   position: PrettyQrDecorationImagePosition.embedded,
-                  padding: EdgeInsets.all(8),
+                  padding: EdgeInsets.all(AppTheme.spacing8),
                   clipper: _RoundedRectangleClipper(borderRadius: 12),
                 )
               : null,

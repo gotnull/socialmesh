@@ -62,6 +62,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
     final haptics = ref.read(hapticServiceProvider);
     await haptics.trigger(HapticType.success);
 
+    if (!mounted) return;
     final notifier = ref.read(termsAcceptanceProvider.notifier);
     final appInit = ref.read(appInitProvider.notifier);
 
@@ -133,7 +134,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
 
                     // App icon
                     _buildAppIcon(context),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppTheme.spacing24),
 
                     // Title
                     Semantics(
@@ -147,7 +148,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // Subtitle / summary
                     Semantics(
@@ -161,7 +162,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: AppTheme.spacing32),
 
                     // Document links
                     _buildDocumentLinks(context, theme),
@@ -190,7 +191,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
         width: 80,
         height: 80,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppTheme.radius20),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -235,7 +236,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
             onTap: _openTerms,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
 
         // Privacy Policy link
         Semantics(
@@ -269,7 +270,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
                 backgroundColor: context.accentColor,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppTheme.radius14),
                 ),
                 disabledBackgroundColor: context.accentColor.withValues(
                   alpha: 0.5,
@@ -294,7 +295,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
 
         // Decline button
         Semantics(
@@ -307,7 +308,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
               style: TextButton.styleFrom(
                 foregroundColor: context.textSecondary,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppTheme.radius14),
                 ),
               ),
               child: const Text('Not Now', style: TextStyle(fontSize: 16)),
@@ -358,7 +359,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
                 color: context.textTertiary,
                 semanticLabel: 'Information',
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
               Semantics(
                 header: true,
                 child: Text(
@@ -370,7 +371,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
                   textAlign: TextAlign.center,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               Text(
                 'Accepting the Terms of Service and Privacy Policy is required to use Socialmesh. You can review them and accept whenever you are ready.',
                 style: theme.textTheme.bodyLarge?.copyWith(
@@ -379,7 +380,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
               Semantics(
                 button: true,
                 label: 'Go back to review and accept the terms',
@@ -394,7 +395,7 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
                       backgroundColor: context.accentColor,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(AppTheme.radius14),
                       ),
                     ),
                     child: const Text(
@@ -464,16 +465,16 @@ class _DocumentLinkTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: context.surface,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppTheme.radius14),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTheme.radius14),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
               Icon(icon, color: context.accentColor, size: 24),
-              const SizedBox(width: 14),
+              const SizedBox(width: AppTheme.spacing14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,7 +487,7 @@ class _DocumentLinkTile extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       subtitle,
                       style: TextStyle(

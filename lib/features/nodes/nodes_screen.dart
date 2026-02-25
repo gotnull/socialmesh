@@ -174,7 +174,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                         color: context.textSecondary,
                         size: 20,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Text(
                         'Help',
                         style: TextStyle(color: context.textPrimary),
@@ -191,7 +191,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                         color: context.textSecondary,
                         size: 20,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Text(
                         'Settings',
                         style: TextStyle(color: context.textPrimary),
@@ -204,7 +204,9 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
           ],
           slivers: [
             // Top padding to push content below the glass app bar
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: AppTheme.spacing8),
+            ),
             // Pinned search and filter controls
             SliverPersistentHeader(
               pinned: true,
@@ -319,7 +321,9 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                         height: 72,
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius16,
+                          ),
                         ),
                         child: Icon(
                           Icons.group,
@@ -327,7 +331,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                           color: context.textTertiary,
                         ),
                       ),
-                      SizedBox(height: 24),
+                      SizedBox(height: AppTheme.spacing24),
                       Text(
                         _activeFilter == NodeFilter.all
                             ? 'No nodes discovered yet'
@@ -339,7 +343,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                         ),
                       ),
                       if (_activeFilter != NodeFilter.all) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppTheme.spacing12),
                         TextButton(
                           onPressed: () =>
                               setState(() => _activeFilter = NodeFilter.all),
@@ -841,7 +845,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                       color: context.accentColor,
                       size: 40,
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -935,23 +939,23 @@ class _SortButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppTheme.radius20),
       child: Material(
         color: context.card,
         child: InkWell(
           onTap: () => _showSortMenu(context),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppTheme.radius20),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppTheme.radius20),
               border: Border.all(color: context.border.withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.sort, size: 14, color: context.textTertiary),
-                SizedBox(width: 4),
+                SizedBox(width: AppTheme.spacing4),
                 Text(
                   _sortLabel,
                   style: TextStyle(
@@ -960,7 +964,7 @@ class _SortButton extends StatelessWidget {
                     color: context.textSecondary,
                   ),
                 ),
-                SizedBox(width: 2),
+                SizedBox(width: AppTheme.spacing2),
                 Icon(
                   Icons.arrow_drop_down,
                   size: 18,
@@ -992,7 +996,9 @@ class _SortButton extends StatelessWidget {
         0,
       ),
       color: context.card,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
       items: [
         _buildMenuItem(
           NodeSortOrder.lastHeard,
@@ -1043,7 +1049,7 @@ class _SortButton extends StatelessWidget {
             size: 18,
             color: isSelected ? accentColor : context.textSecondary,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Text(label),
         ],
       ),
@@ -1141,7 +1147,7 @@ class _NodeCard extends StatelessWidget {
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             child: Stack(
               children: [
                 // Layer 1: Background fill only
@@ -1159,7 +1165,7 @@ class _NodeCard extends StatelessWidget {
                               ],
                             )
                           : null,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                 ),
@@ -1191,7 +1197,7 @@ class _NodeCard extends StatelessWidget {
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         border: Border(
                           top: BorderSide(color: context.border, width: 1),
                           left: BorderSide(color: context.border, width: 1),
@@ -1218,7 +1224,7 @@ class _NodeCard extends StatelessWidget {
                 ),
                 // Layer 4: Content — fully opaque on top
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
                   child: _buildCardContent(
                     context,
                     signalBars,
@@ -1257,7 +1263,7 @@ class _NodeCard extends StatelessWidget {
               ? Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2)
               : null,
         ),
-        SizedBox(width: 16),
+        SizedBox(width: AppTheme.spacing16),
         // Info
         Expanded(
           child: Column(
@@ -1273,7 +1279,7 @@ class _NodeCard extends StatelessWidget {
                         ? context.accentColor
                         : context.textTertiary,
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppTheme.spacing8),
                   // Name
                   Flexible(
                     child: Text(
@@ -1287,7 +1293,7 @@ class _NodeCard extends StatelessWidget {
                   ),
                   // "You" badge
                   if (isMyNode) ...[
-                    SizedBox(width: 8),
+                    SizedBox(width: AppTheme.spacing8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -1295,7 +1301,7 @@ class _NodeCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: context.accentColor,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(AppTheme.radius6),
                       ),
                       child: Text(
                         'YOU',
@@ -1310,7 +1316,7 @@ class _NodeCard extends StatelessWidget {
                   ],
                 ],
               ),
-              SizedBox(height: 6),
+              SizedBox(height: AppTheme.spacing6),
               // Status - show "This Device" for your own node
               if (isMyNode)
                 Row(
@@ -1320,7 +1326,7 @@ class _NodeCard extends StatelessWidget {
                       size: 14,
                       color: context.accentColor,
                     ),
-                    SizedBox(width: 6),
+                    SizedBox(width: AppTheme.spacing6),
                     Text(
                       'This Device',
                       style: TextStyle(
@@ -1361,7 +1367,7 @@ class _NodeCard extends StatelessWidget {
                             : null,
                       ),
                       child: Container(
-                        margin: const EdgeInsets.all(2),
+                        margin: const EdgeInsets.all(AppTheme.spacing2),
                         decoration: BoxDecoration(
                           color: presenceConfidence.isActive
                               ? statusColor.withValues(alpha: 0.3)
@@ -1370,7 +1376,7 @@ class _NodeCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppTheme.spacing8),
                     Tooltip(
                       message: kPresenceInferenceTooltip,
                       child: Text(
@@ -1383,13 +1389,13 @@ class _NodeCard extends StatelessWidget {
                     ),
                   ],
                 ),
-              SizedBox(height: 4),
+              SizedBox(height: AppTheme.spacing4),
               // Last heard
               if (node.lastHeard != null) ...[
                 Row(
                   children: [
                     Icon(Icons.check, size: 14, color: context.accentColor),
-                    SizedBox(width: 6),
+                    SizedBox(width: AppTheme.spacing6),
                     Text(
                       _formatLastHeard(node.lastHeard!),
                       style: TextStyle(
@@ -1399,7 +1405,7 @@ class _NodeCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: AppTheme.spacing4),
               ],
               // Role and GPS status
               Row(
@@ -1410,7 +1416,7 @@ class _NodeCard extends StatelessWidget {
                       size: 14,
                       color: context.textTertiary,
                     ),
-                    SizedBox(width: 6),
+                    SizedBox(width: AppTheme.spacing6),
                     Flexible(
                       child: Text(
                         node.role!,
@@ -1421,7 +1427,7 @@ class _NodeCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppTheme.spacing12),
                   ],
                   Icon(
                     Icons.gps_fixed,
@@ -1430,7 +1436,7 @@ class _NodeCard extends StatelessWidget {
                         ? context.accentColor
                         : context.textTertiary,
                   ),
-                  SizedBox(width: 4),
+                  SizedBox(width: AppTheme.spacing4),
                   Text(
                     node.hasPosition ? 'GPS' : 'No GPS',
                     style: TextStyle(
@@ -1444,11 +1450,11 @@ class _NodeCard extends StatelessWidget {
               ),
               // Distance & heading
               if (node.distance != null) ...[
-                SizedBox(height: 4),
+                SizedBox(height: AppTheme.spacing4),
                 Row(
                   children: [
                     Icon(Icons.near_me, size: 14, color: context.textTertiary),
-                    SizedBox(width: 6),
+                    SizedBox(width: AppTheme.spacing6),
                     Text(
                       _formatDistance(node.distance),
                       style: TextStyle(
@@ -1460,26 +1466,26 @@ class _NodeCard extends StatelessWidget {
                 ),
               ],
               // Logs indicators
-              SizedBox(height: 8),
+              SizedBox(height: AppTheme.spacing8),
               Row(
                 children: [
                   Icon(Icons.article, size: 14, color: context.textTertiary),
-                  SizedBox(width: 4),
+                  SizedBox(width: AppTheme.spacing4),
                   Text(
                     'Logs:',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: context.textTertiary,
                     ),
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppTheme.spacing8),
                   Icon(Icons.message, size: 14, color: context.textTertiary),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppTheme.spacing8),
                   Icon(Icons.place, size: 14, color: context.textTertiary),
                 ],
               ),
               // Signal bars
               if (node.rssi != null) ...[
-                SizedBox(height: 8),
+                SizedBox(height: AppTheme.spacing8),
                 Row(
                   children: [
                     Icon(
@@ -1487,7 +1493,7 @@ class _NodeCard extends StatelessWidget {
                       size: 14,
                       color: context.textTertiary,
                     ),
-                    SizedBox(width: 6),
+                    SizedBox(width: AppTheme.spacing6),
                     Text(
                       'Signal Good',
                       style: TextStyle(
@@ -1495,7 +1501,7 @@ class _NodeCard extends StatelessWidget {
                         color: context.textTertiary,
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppTheme.spacing12),
                     // Signal strength bars
                     Row(
                       children: List.generate(4, (i) {
@@ -1507,7 +1513,9 @@ class _NodeCard extends StatelessWidget {
                             color: i < signalBars
                                 ? context.accentColor
                                 : context.textTertiary.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(1),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius1,
+                            ),
                           ),
                         );
                       }),
@@ -1537,10 +1545,10 @@ class _NodeCard extends StatelessWidget {
                 if (node.isFavorite)
                   const Icon(Icons.star, color: AccentColors.yellow, size: 24)
                 else if (!node.isIgnored)
-                  const SizedBox(width: 24),
+                  const SizedBox(width: AppTheme.spacing24),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Icon(Icons.chevron_right, color: context.textTertiary, size: 24),
           ],
         ),

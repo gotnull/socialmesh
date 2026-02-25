@@ -119,7 +119,7 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
     AppBottomSheet.show<void>(
       context: context,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+        padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 8, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,14 +131,14 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
                   size: 18,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   _helpTitleForKey(key),
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               helpText,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -185,7 +185,6 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
       final settings = ref.read(takSettingsProvider).value;
       if (settings?.autoConnect ?? true) {
         Future.microtask(() {
-          if (!mounted) return;
           AppLogging.tak('TakScreen: deferred auto-connect after rebuild');
           client.connect();
         });
@@ -260,7 +259,7 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
                 child: Row(
                   children: [
                     Icon(Icons.dashboard_outlined, size: 18),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppTheme.spacing8),
                     Text('SA Dashboard'),
                   ],
                 ),
@@ -270,7 +269,7 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
                 child: Row(
                   children: [
                     Icon(Icons.settings, size: 18),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppTheme.spacing8),
                     Text('TAK Settings'),
                   ],
                 ),
@@ -292,7 +291,7 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
                 lastError: client.lastError,
                 onInfoTap: () => _showSectionHelp(context, 'status'),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               SearchFilterHeader(
                 searchController: _searchController,
                 searchQuery: filter.searchQuery,
@@ -343,7 +342,9 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
                                 height: 72,
                                 decoration: BoxDecoration(
                                   color: context.card,
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius16,
+                                  ),
                                 ),
                                 child: Icon(
                                   Icons.radar,
@@ -351,7 +352,7 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
                                   color: context.textTertiary,
                                 ),
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: AppTheme.spacing24),
                               Text(
                                 'No TAK Entities',
                                 style: TextStyle(
@@ -360,7 +361,7 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
                                   color: context.textSecondary,
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: AppTheme.spacing8),
                               Text(
                                 !isSignedIn
                                     ? 'Sign in and connect to start '
@@ -378,7 +379,7 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
                                   height: 1.4,
                                 ),
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: AppTheme.spacing24),
                               if (!isSignedIn)
                                 FilledButton.icon(
                                   onPressed: () {

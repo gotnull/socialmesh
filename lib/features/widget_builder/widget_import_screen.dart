@@ -167,7 +167,6 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
       showSuccessSnackBar(context, 'Widget imported successfully');
       navigator.pop();
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to import: $e');
     }
   }
@@ -239,23 +238,23 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
   Widget _buildError() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.spacing24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error_outline, size: 64, color: AppTheme.errorRed),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'Import Failed',
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               _error!,
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Go Back'),
@@ -270,16 +269,16 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
     final widgetSchema = _widget!;
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Preview Card using the actual widget preview
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: context.card,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(color: context.border),
             ),
             child: Column(
@@ -292,7 +291,7 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
                       color: context.accentColor,
                       size: 32,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,26 +312,26 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 const Divider(),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Text(
                   'Size',
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(color: context.accentColor),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Text(_getSizeDisplayName(widgetSchema.size)),
                 if (widgetSchema.tags.isNotEmpty) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     'Tags',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       color: context.accentColor,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Wrap(
                     spacing: 4,
                     runSpacing: 4,
@@ -351,7 +350,7 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Widget preview
           Text(
@@ -360,7 +359,7 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
               context,
             ).textTheme.titleSmall?.copyWith(color: context.accentColor),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Center(
             child: WidgetPreviewCard(
               schema: widgetSchema,
@@ -368,20 +367,20 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           // Info notice
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: context.accentColor.withOpacity(0.1),
               border: Border.all(color: context.accentColor),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
             ),
             child: Row(
               children: [
                 Icon(Icons.info_outline, color: context.accentColor),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Text(
                     'This widget will be added to your custom widgets. You can edit it anytime.',
@@ -404,7 +403,7 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
                   label: const Text('Edit First'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton.icon(
                   onPressed: _importWidget,

@@ -196,6 +196,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                 await ref
                     .read(userPostsNotifierProvider.notifier)
                     .refresh(widget.userId);
+                if (!mounted) return;
               }
               if (!isOwnProfile) {
                 ref.invalidate(followStateProvider(widget.userId));
@@ -293,7 +294,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppTheme.spacing24),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
@@ -315,7 +316,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                 color: context.textTertiary.withValues(alpha: 0.6),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.spacing20),
             Text(
               'Profile not found',
               style: TextStyle(
@@ -324,7 +325,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'This profile may have been removed or is no longer available.',
               style: TextStyle(
@@ -348,7 +349,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppTheme.spacing24),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
@@ -370,7 +371,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                 color: context.textTertiary.withValues(alpha: 0.6),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.spacing20),
             Text(
               'Failed to load profile',
               style: TextStyle(
@@ -379,7 +380,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               error.toString(),
               style: TextStyle(
@@ -391,7 +392,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.spacing20),
             BouncyTap(
               onTap: () =>
                   ref.invalidate(publicProfileStreamProvider(widget.userId)),
@@ -407,7 +408,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                       context.accentColor.withValues(alpha: 0.08),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                   border: Border.all(
                     color: context.accentColor.withValues(alpha: 0.25),
                     width: 0.5,
@@ -446,27 +447,32 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                 Container(height: 180, color: context.surface),
                 // Avatar + header skeleton
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    12,
+                    16,
+                    16,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           const Bone.circle(size: 80),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: AppTheme.spacing16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Bone.text(words: 2, fontSize: 18),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: AppTheme.spacing6),
                                 Bone.text(words: 1, fontSize: 13),
                               ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                       // Stats card skeleton
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -475,7 +481,9 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                         ),
                         decoration: BoxDecoration(
                           color: context.surface,
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius14,
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -486,18 +494,20 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                       // Bio skeleton
                       Bone.text(words: 8, fontSize: 14),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppTheme.spacing8),
                       Bone.text(words: 5, fontSize: 14),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                       // Action button skeleton
                       Container(
                         height: 40,
                         decoration: BoxDecoration(
                           color: context.surface,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius10,
+                          ),
                         ),
                       ),
                     ],
@@ -530,7 +540,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
     return Column(
       children: [
         Bone.text(words: 1, fontSize: 18),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Bone.text(words: 1, fontSize: 13),
       ],
     );
@@ -866,7 +876,9 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                                         onTap: _navigateToCreateStory,
                                         scaleFactor: 0.85,
                                         child: Container(
-                                          padding: const EdgeInsets.all(4),
+                                          padding: const EdgeInsets.all(
+                                            AppTheme.spacing4,
+                                          ),
                                           decoration: BoxDecoration(
                                             color: context.accentColor,
                                             shape: BoxShape.circle,
@@ -902,7 +914,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
         children: [
           if (profile.isPrivate) ...[
             Icon(Icons.lock, color: context.textPrimary, size: 16),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
           ],
           Flexible(
             child: Text(
@@ -953,7 +965,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
     bool isFollowing,
   ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -972,7 +984,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                     context.accentColor.withValues(alpha: 0.03),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppTheme.radius14),
                 border: Border.all(
                   color: context.accentColor.withValues(alpha: 0.15),
                   width: 0.5,
@@ -1013,7 +1025,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Online status chip
           Consumer(
@@ -1035,7 +1047,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                   ),
                   decoration: BoxDecoration(
                     color: AccentColors.green.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     border: Border.all(
                       color: AccentColors.green.withValues(alpha: 0.3),
                     ),
@@ -1051,7 +1063,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       Text(
                         'Online',
                         style: TextStyle(
@@ -1081,7 +1093,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
 
           // Bio
           if (profile.bio != null && profile.bio!.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               profile.bio!,
               style: TextStyle(color: context.textSecondary, fontSize: 14),
@@ -1090,7 +1102,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
 
           // Joined date
           if (profile.createdAt != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Row(
               children: [
                 Icon(
@@ -1098,7 +1110,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                   size: 14,
                   color: context.textTertiary,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 Text(
                   'Joined ${_formatJoinedDate(profile.createdAt!)}',
                   style: TextStyle(color: context.textTertiary, fontSize: 13),
@@ -1111,7 +1123,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
           if (profile.website != null ||
               (profile.socialLinks != null &&
                   !profile.socialLinks!.isEmpty)) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             SizedBox(
               height: 44,
               child: EdgeFade.end(
@@ -1123,7 +1135,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
             ),
           ],
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Action buttons
           if (isOwnProfile) ...[
@@ -1144,11 +1156,13 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                             context.accentColor.withValues(alpha: 0.08),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppTheme.radius10),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius10,
+                            ),
                             border: Border.all(
                               color: context.accentColor.withValues(
                                 alpha: 0.25,
@@ -1170,7 +1184,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   ScaleInAnimation(
                     delay: const Duration(milliseconds: 200),
                     duration: const Duration(milliseconds: 300),
@@ -1185,7 +1199,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                           ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   ScaleInAnimation(
                     delay: const Duration(milliseconds: 250),
                     duration: const Duration(milliseconds: 300),
@@ -1197,7 +1211,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   ScaleInAnimation(
                     delay: const Duration(milliseconds: 300),
                     duration: const Duration(milliseconds: 300),
@@ -1214,7 +1228,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   ScaleInAnimation(
                     delay: const Duration(milliseconds: 350),
                     duration: const Duration(milliseconds: 300),
@@ -1235,7 +1249,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
               child: Row(
                 children: [
                   FollowButton(targetUserId: widget.userId),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   SubscribeButton(authorId: widget.userId),
                 ],
               ),
@@ -1361,12 +1375,12 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppTheme.spacing20),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
@@ -1388,7 +1402,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                 color: context.textTertiary.withValues(alpha: 0.6),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               filterInfo.$2,
               style: TextStyle(
@@ -1397,7 +1411,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               filterInfo.$3,
               style: TextStyle(
@@ -1420,12 +1434,12 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
       hasScrollBody: false,
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(AppTheme.spacing32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppTheme.spacing24),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
@@ -1447,7 +1461,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                   color: context.textTertiary,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
               Text(
                 'This Account is Private',
                 style: TextStyle(
@@ -1456,7 +1470,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 'Follow ${profile.displayName} to see their posts and linked devices.',
                 style: TextStyle(
@@ -1503,12 +1517,12 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppTheme.spacing24),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
@@ -1530,7 +1544,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                 color: context.textTertiary,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Text(
               'No posts yet',
               style: TextStyle(
@@ -1606,16 +1620,16 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Container(
               width: 40,
               height: 4,
               decoration: BoxDecoration(
                 color: context.textTertiary,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppTheme.radius2),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             ListTile(
               leading: Icon(Icons.photo_library, color: context.accentColor),
               title: Text(
@@ -1639,7 +1653,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                   _removeBanner();
                 },
               ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
           ],
         ),
       ),
@@ -1687,6 +1701,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
 
   Future<void> _removeBanner() async {
     // Capture provider before any await
+    if (!mounted) return;
     final profileNotifier = ref.read(userProfileProvider.notifier);
     final userId = widget.userId;
 
@@ -1755,16 +1770,16 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Container(
               width: 36,
               height: 4,
               decoration: BoxDecoration(
                 color: context.textTertiary.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppTheme.radius2),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             ListTile(
               leading: const Icon(Icons.flag_outlined),
               title: const Text('Report'),
@@ -1789,7 +1804,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                 _shareProfile(profile);
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
           ],
         ),
       ),
@@ -1823,7 +1838,7 @@ class _GlassActionIcon extends StatelessWidget {
       onTap: onTap,
       scaleFactor: 0.9,
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(AppTheme.spacing10),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -1833,7 +1848,7 @@ class _GlassActionIcon extends StatelessWidget {
               context.accentColor.withValues(alpha: 0.04),
             ],
           ),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppTheme.radius10),
           border: Border.all(
             color: context.accentColor.withValues(alpha: 0.2),
             width: 0.5,
@@ -1898,7 +1913,7 @@ class _StatColumn extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppTheme.spacing2),
         Text(
           _getLabel(),
           style: TextStyle(color: context.textSecondary, fontSize: 13),
@@ -2193,10 +2208,10 @@ class _PostGridTile extends StatelessWidget {
               top: 8,
               left: 8,
               child: Container(
-                padding: const EdgeInsets.all(4),
+                padding: const EdgeInsets.all(AppTheme.spacing4),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                 ),
                 child: const Icon(Icons.router, color: Colors.white, size: 14),
               ),
@@ -2208,10 +2223,10 @@ class _PostGridTile extends StatelessWidget {
               top: 8,
               left: post.nodeId != null ? 36 : 8,
               child: Container(
-                padding: const EdgeInsets.all(4),
+                padding: const EdgeInsets.all(AppTheme.spacing4),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                 ),
                 child: const Icon(
                   Icons.location_on,
@@ -2228,7 +2243,7 @@ class _PostGridTile extends StatelessWidget {
               left: 0,
               right: 0,
               child: Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(AppTheme.spacing6),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
@@ -2243,7 +2258,7 @@ class _PostGridTile extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(Icons.favorite, color: Colors.white, size: 14),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppTheme.spacing4),
                     Text(
                       '${post.likeCount}',
                       style: const TextStyle(
@@ -2252,13 +2267,13 @@ class _PostGridTile extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     const Icon(
                       Icons.chat_bubble_outline,
                       color: Colors.white,
                       size: 14,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppTheme.spacing4),
                     Text(
                       '${post.commentCount}',
                       style: const TextStyle(
@@ -2285,7 +2300,7 @@ class _PostGridTile extends StatelessWidget {
           colors: [context.surface, context.card],
         ),
       ),
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(AppTheme.spacing10),
       child: Center(
         child: Text(
           post.content.isNotEmpty ? post.content : 'No content',

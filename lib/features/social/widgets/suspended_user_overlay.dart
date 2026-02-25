@@ -127,13 +127,13 @@ class _SuspensionNotice extends StatelessWidget {
             ),
             // Main content
             Padding(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(AppTheme.spacing32),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Warning icon with glow
                   Container(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(AppTheme.spacing24),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.red.withValues(alpha: 0.15),
@@ -151,7 +151,7 @@ class _SuspensionNotice extends StatelessWidget {
                       color: Colors.red,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppTheme.spacing32),
 
                   // Title
                   Text(
@@ -165,7 +165,7 @@ class _SuspensionNotice extends StatelessWidget {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   // Duration info
                   Container(
@@ -175,7 +175,7 @@ class _SuspensionNotice extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: Colors.red.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       border: Border.all(
                         color: Colors.red.withValues(alpha: 0.3),
                       ),
@@ -188,7 +188,7 @@ class _SuspensionNotice extends StatelessWidget {
                           color: Colors.red,
                           size: 20,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Text(
                           isPermanent
                               ? 'Indefinite suspension'
@@ -202,14 +202,14 @@ class _SuspensionNotice extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // Explanation
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(AppTheme.spacing20),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppTheme.radius16),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,7 +221,7 @@ class _SuspensionNotice extends StatelessWidget {
                               color: Colors.white.withValues(alpha: 0.7),
                               size: 18,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             Text(
                               'Why am I seeing this?',
                               style: TextStyle(
@@ -232,7 +232,7 @@ class _SuspensionNotice extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppTheme.spacing12),
                         Text(
                           reason ??
                               'Your account has been suspended due to repeated '
@@ -244,7 +244,7 @@ class _SuspensionNotice extends StatelessWidget {
                           ),
                         ),
                         if (strikeCount > 0) ...[
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
                           Row(
                             children: [
                               const Icon(
@@ -252,7 +252,7 @@ class _SuspensionNotice extends StatelessWidget {
                                 color: Colors.orange,
                                 size: 16,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppTheme.spacing8),
                               Text(
                                 '$strikeCount strike${strikeCount > 1 ? 's' : ''} on your account',
                                 style: const TextStyle(
@@ -267,14 +267,14 @@ class _SuspensionNotice extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // What you can do
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(AppTheme.spacing20),
                     decoration: BoxDecoration(
                       color: accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppTheme.radius16),
                       border: Border.all(
                         color: accentColor.withValues(alpha: 0.3),
                       ),
@@ -289,7 +289,7 @@ class _SuspensionNotice extends StatelessWidget {
                               color: accentColor.withValues(alpha: 0.9),
                               size: 18,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             Text(
                               'What can I do?',
                               style: TextStyle(
@@ -300,19 +300,19 @@ class _SuspensionNotice extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppTheme.spacing12),
                         _BulletPoint(
                           text: isPermanent
                               ? 'Wait for your appeal to be reviewed'
                               : 'Wait for the suspension period to end',
                           accentColor: accentColor,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppTheme.spacing8),
                         _BulletPoint(
                           text: 'Review our community guidelines',
                           accentColor: accentColor,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppTheme.spacing8),
                         _BulletPoint(
                           text: 'Contact support to appeal this decision',
                           accentColor: accentColor,
@@ -320,7 +320,7 @@ class _SuspensionNotice extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppTheme.spacing32),
 
                   // Contact support button
                   BouncyTap(
@@ -343,7 +343,7 @@ class _SuspensionNotice extends StatelessWidget {
                                 .toColor(),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(30),
+                        borderRadius: BorderRadius.circular(AppTheme.radius30),
                         boxShadow: [
                           BoxShadow(
                             color: accentColor.withValues(alpha: 0.4),
@@ -356,7 +356,7 @@ class _SuspensionNotice extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.email_outlined, color: Colors.white),
-                          SizedBox(width: 12),
+                          SizedBox(width: AppTheme.spacing12),
                           Text(
                             'Contact Support',
                             style: TextStyle(
@@ -369,7 +369,7 @@ class _SuspensionNotice extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   // Email hint
                   BouncyTap(
@@ -387,7 +387,7 @@ class _SuspensionNotice extends StatelessWidget {
                           size: 14,
                           color: Colors.white.withValues(alpha: 0.5),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Text(
                           'support@socialmesh.app',
                           style: TextStyle(
@@ -428,7 +428,7 @@ class _BulletPoint extends StatelessWidget {
             color: accentColor.withValues(alpha: 0.7),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         Expanded(
           child: Text(
             text,

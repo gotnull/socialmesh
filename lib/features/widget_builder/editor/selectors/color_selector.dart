@@ -59,7 +59,7 @@ class ColorSelector extends StatelessWidget {
               letterSpacing: 1,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
         ],
         Wrap(
           spacing: 8,
@@ -110,7 +110,7 @@ class _ColorSwatch extends StatelessWidget {
           height: 36,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
             border: Border.all(
               color: isSelected ? Colors.white : Colors.transparent,
               width: 2,
@@ -154,13 +154,13 @@ class _ColorSelectorSheet extends StatelessWidget {
             color: context.textPrimary,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         ColorSelector(
           currentColor: currentColor,
           onSelect: (color) => Navigator.pop(context, color),
           showLabel: false,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
       ],
     );
   }
@@ -192,16 +192,17 @@ class InlineColorSelector extends StatelessWidget {
           context,
           currentColor: displayColor,
         );
+        if (!context.mounted) return;
         if (color != null) {
           onSelect(color);
         }
       },
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppTheme.radius8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: context.background,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(color: context.border),
         ),
         child: Row(
@@ -211,11 +212,11 @@ class InlineColorSelector extends StatelessWidget {
               height: 24,
               decoration: BoxDecoration(
                 color: displayColor,
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(AppTheme.radius6),
                 border: Border.all(color: Colors.white24),
               ),
             ),
-            SizedBox(width: 10),
+            SizedBox(width: AppTheme.spacing10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

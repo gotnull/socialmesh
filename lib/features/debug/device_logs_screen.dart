@@ -232,7 +232,7 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
 
     AppBottomSheet.show(
       context: context,
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 24),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing0, 0, 0, 24),
       child: StatefulBuilder(
         builder: (context, setSheetState) => Column(
           mainAxisSize: MainAxisSize.min,
@@ -245,7 +245,7 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
                 subtitle: 'Select which levels to display',
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             ...allLevels.map((level) {
               return CheckboxListTile(
                 title: Text(
@@ -265,7 +265,7 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
                 },
               );
             }),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: BottomSheetButtons(
@@ -385,7 +385,7 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
               child: Row(
                 children: [
                   Icon(Icons.copy, color: context.textSecondary),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Text(
                     'Copy to Clipboard',
                     style: TextStyle(color: context.textPrimary),
@@ -398,7 +398,7 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
               child: Row(
                 children: [
                   Icon(Icons.share, color: context.textSecondary),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Text('Share', style: TextStyle(color: context.textPrimary)),
                 ],
               ),
@@ -409,7 +409,7 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
               child: Row(
                 children: [
                   const Icon(Icons.delete_outline, color: AppTheme.errorRed),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Text(
                     'Clear Logs',
                     style: TextStyle(color: context.textPrimary),
@@ -424,8 +424,9 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
         // Search bar
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(AppTheme.spacing8),
             child: TextField(
+              maxLength: 200,
               controller: _searchController,
               style: TextStyle(color: context.textPrimary),
               decoration: InputDecoration(
@@ -444,7 +445,7 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
                 filled: true,
                 fillColor: context.card,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -465,7 +466,7 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
           ),
         ),
 
-        const SliverToBoxAdapter(child: SizedBox(height: 8)),
+        const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing8)),
 
         // Log list
         if (logs.isEmpty)
@@ -476,7 +477,7 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.terminal, size: 64, color: context.textTertiary),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     'No device logs yet',
                     style: TextStyle(
@@ -484,7 +485,7 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
                       fontSize: 16,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Text(
                     'Logs will appear here as your device sends them',
                     style: TextStyle(color: context.textTertiary, fontSize: 14),
@@ -532,14 +533,14 @@ class _LogEntryTile extends StatelessWidget {
               fontFamily: 'monospace',
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
 
           // Level badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(
               color: levelColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppTheme.radius4),
             ),
             child: Text(
               entry.level.label,
@@ -551,7 +552,7 @@ class _LogEntryTile extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
 
           // Source (if not generic)
           if (entry.source != 'firmware') ...[
@@ -563,7 +564,7 @@ class _LogEntryTile extends StatelessWidget {
                 fontFamily: 'monospace',
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
           ],
 
           // Message

@@ -30,12 +30,12 @@ class SectionHeader extends StatelessWidget {
             ),
           ),
           if (count != null) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: context.card,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Text(
                 count.toString(),
@@ -117,12 +117,12 @@ class _BlurredSectionHeader extends StatelessWidget {
             ),
           ),
           if (count != null) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: context.card,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Text(
                 count.toString(),
@@ -156,12 +156,12 @@ class SectionHeadersToggle extends StatelessWidget {
     return GestureDetector(
       onTap: onToggle,
       child: Container(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(AppTheme.spacing6),
         decoration: BoxDecoration(
           color: enabled
               ? context.accentColor.withValues(alpha: 0.2)
               : context.card,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(
             color: enabled
                 ? context.accentColor.withValues(alpha: 0.5)
@@ -209,7 +209,7 @@ class SectionFilterChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? chipColor.withValues(alpha: 0.2) : context.card,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppTheme.radius20),
           border: Border.all(
             color: isSelected
                 ? chipColor.withValues(alpha: 0.5)
@@ -240,21 +240,21 @@ class SectionFilterChip extends StatelessWidget {
                       : null,
                 ),
                 child: Container(
-                  margin: const EdgeInsets.all(2),
+                  margin: const EdgeInsets.all(AppTheme.spacing2),
                   decoration: BoxDecoration(
                     color: chipColor.withValues(alpha: 0.3),
                     shape: BoxShape.circle,
                   ),
                 ),
               ),
-              SizedBox(width: 6),
+              SizedBox(width: AppTheme.spacing6),
             ] else if (icon != null) ...[
               Icon(
                 icon,
                 size: 14,
                 color: isSelected ? chipColor : context.textTertiary,
               ),
-              SizedBox(width: 4),
+              SizedBox(width: AppTheme.spacing4),
             ],
             Text(
               label,
@@ -265,14 +265,14 @@ class SectionFilterChip extends StatelessWidget {
               ),
             ),
             if (count != null) ...[
-              SizedBox(width: 6),
+              SizedBox(width: AppTheme.spacing6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? chipColor.withValues(alpha: 0.3)
                       : context.border.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Text(
                   count.toString(),

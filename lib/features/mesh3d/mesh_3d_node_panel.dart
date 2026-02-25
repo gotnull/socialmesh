@@ -222,11 +222,11 @@ class _PanelHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 8, 8),
       child: Row(
         children: [
           Icon(Icons.hub, size: 18, color: accentColor),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Expanded(
             child: Text(
               'Nodes',
@@ -242,7 +242,7 @@ class _PanelHeader extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: accentColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppTheme.radius10),
             ),
             child: Text(
               '$nodeCount',
@@ -253,7 +253,7 @@ class _PanelHeader extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           IconButton(
             icon: const Icon(Icons.close, size: 18),
             color: context.textTertiary,
@@ -280,7 +280,7 @@ class _PanelSearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing12, 0, 12, 8),
       child: SizedBox(
         height: 40,
         child: TextField(
@@ -398,7 +398,7 @@ class _NodeListTile extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
 
               // Node info.
               Expanded(
@@ -416,7 +416,9 @@ class _NodeListTile extends StatelessWidget {
                             margin: const EdgeInsets.only(right: 6),
                             decoration: BoxDecoration(
                               color: context.accentColor.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
                             ),
                             child: Text(
                               'ME',
@@ -441,7 +443,7 @@ class _NodeListTile extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: AppTheme.spacing3),
                     Row(
                       children: [
                         // Presence dot.
@@ -474,13 +476,13 @@ class _NodeListTile extends StatelessWidget {
                           ),
                         ),
                         if (node.snr != null) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: AppTheme.spacing6),
                           Icon(
                             Icons.signal_cellular_alt,
                             size: 11,
                             color: _snrColor(node.snr!.toDouble()),
                           ),
-                          const SizedBox(width: 2),
+                          const SizedBox(width: AppTheme.spacing2),
                           Text(
                             '${node.snr}dB',
                             style: TextStyle(
@@ -537,7 +539,7 @@ class _EmptyNodeList extends StatelessWidget {
               size: 36,
               color: context.textTertiary.withValues(alpha: 0.5),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'No nodes found',
               style: TextStyle(
@@ -546,7 +548,7 @@ class _EmptyNodeList extends StatelessWidget {
                 color: context.textTertiary,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               'Try a different search term',
               style: TextStyle(

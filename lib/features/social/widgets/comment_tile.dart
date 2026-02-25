@@ -12,6 +12,7 @@ import '../../../providers/social_providers.dart';
 import '../../../services/social_service.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../utils/snackbar.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// A tile displaying a comment with reply capability.
 class CommentTile extends ConsumerWidget {
@@ -67,7 +68,7 @@ class CommentTile extends ConsumerWidget {
                   size: depth == 0 ? 36 : 28,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
 
               // Content
               Expanded(
@@ -88,10 +89,10 @@ class CommentTile extends ConsumerWidget {
                           ),
                         ),
                         if (comment.author?.isVerified == true) ...[
-                          const SizedBox(width: 4),
+                          const SizedBox(width: AppTheme.spacing4),
                           const SimpleVerifiedBadge(size: 14),
                         ],
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Text(
                           timeago.format(comment.comment.createdAt),
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -102,14 +103,14 @@ class CommentTile extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
 
                     // Comment text
                     Text(
                       comment.comment.content,
                       style: theme.textTheme.bodyMedium,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
 
                     // Actions
                     Row(
@@ -120,13 +121,15 @@ class CommentTile extends ConsumerWidget {
                           likeCount: comment.comment.likeCount,
                           currentUserId: currentUser?.uid,
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: AppTheme.spacing16),
 
                         // Reply button (only show if we haven't hit max depth)
                         if (depth < maxDepth)
                           InkWell(
                             onTap: () => onReplyTap?.call(comment),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius4,
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
@@ -271,7 +274,7 @@ class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton>
 
     return InkWell(
       onTap: widget.currentUserId != null ? _handleLike : null,
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(AppTheme.radius4),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Row(
@@ -287,7 +290,7 @@ class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton>
                   : theme.colorScheme.onSurface.withAlpha(150),
             ),
             if (_displayLikeCount > 0) ...[
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
               Text(
                 _displayLikeCount.toString(),
                 style: theme.textTheme.bodySmall?.copyWith(

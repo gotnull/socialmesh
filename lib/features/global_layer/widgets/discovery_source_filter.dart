@@ -60,7 +60,7 @@ class DiscoverySourceFilterRow extends ConsumerWidget {
                 ref.read(discoverySourceFilterProvider.notifier).clear();
               },
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             _DiscoverySourceChip(
               source: NodeDiscoverySource.local,
               label: NodeDiscoverySource.local.displayLabel,
@@ -72,7 +72,7 @@ class DiscoverySourceFilterRow extends ConsumerWidget {
                     .toggle(NodeDiscoverySource.local);
               },
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             _DiscoverySourceChip(
               source: NodeDiscoverySource.remote,
               label: NodeDiscoverySource.remote.displayLabel,
@@ -85,7 +85,7 @@ class DiscoverySourceFilterRow extends ConsumerWidget {
                     .toggle(NodeDiscoverySource.remote);
               },
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             _DiscoverySourceChip(
               source: NodeDiscoverySource.mixed,
               label: NodeDiscoverySource.mixed.displayLabel,
@@ -136,14 +136,14 @@ class _DiscoverySourceChip extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: isSelected ? selectedBg : context.card,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppTheme.radius20),
             border: Border.all(
               color: isSelected ? selectedBorder : context.border,
               width: isSelected ? 1.5 : 1.0,
@@ -157,7 +157,7 @@ class _DiscoverySourceChip extends StatelessWidget {
                 size: 14,
                 color: isSelected ? color : context.textTertiary,
               ),
-              const SizedBox(width: 5),
+              const SizedBox(width: AppTheme.spacing5),
               Text(
                 label,
                 style: TextStyle(
@@ -168,7 +168,7 @@ class _DiscoverySourceChip extends StatelessWidget {
                 ),
               ),
               if (count != null && count! > 0) ...[
-                const SizedBox(width: 5),
+                const SizedBox(width: AppTheme.spacing5),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 5,
@@ -178,7 +178,7 @@ class _DiscoverySourceChip extends StatelessWidget {
                     color: isSelected
                         ? color.withValues(alpha: 0.2)
                         : context.textTertiary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                   child: Text(
                     _compactCount(count!),
@@ -237,12 +237,12 @@ class DiscoverySourceStatBadge extends ConsumerWidget {
               .read(discoverySourceFilterProvider.notifier)
               .toggle(NodeDiscoverySource.remote);
         },
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
             color: const Color(0xFF38BDF8).withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
             border: Border.all(
               color: const Color(0xFF38BDF8).withValues(alpha: 0.2),
             ),
@@ -255,7 +255,7 @@ class DiscoverySourceStatBadge extends ConsumerWidget {
                 size: 12,
                 color: Color(0xFF38BDF8),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
               Text(
                 '${stats.uniqueNodes} remote',
                 style: const TextStyle(
@@ -266,7 +266,7 @@ class DiscoverySourceStatBadge extends ConsumerWidget {
                 ),
               ),
               if (stats.recentSightings > 0) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 Container(
                   width: 5,
                   height: 5,

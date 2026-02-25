@@ -50,7 +50,7 @@ class SignalPresenceContext extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 6, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -68,7 +68,7 @@ class SignalPresenceContext extends StatelessWidget {
             ),
           // Short status quote
           if (hasStatus) ...[
-            if (hasChips) const SizedBox(height: 4),
+            if (hasChips) const SizedBox(height: AppTheme.spacing4),
             _buildStatusLine(context),
           ],
         ],
@@ -90,7 +90,7 @@ class SignalPresenceContext extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: context.accentColor.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -100,7 +100,7 @@ class SignalPresenceContext extends StatelessWidget {
             size: 12,
             color: context.accentColor,
           ),
-          const SizedBox(width: 3),
+          const SizedBox(width: AppTheme.spacing3),
           Text(
             intent!.label,
             style: TextStyle(
@@ -147,7 +147,7 @@ class SignalPresenceContext extends StatelessWidget {
     return Row(
       children: [
         Icon(Icons.format_quote, size: 14, color: context.textTertiary),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         Expanded(
           child: Text(
             shortStatus!,

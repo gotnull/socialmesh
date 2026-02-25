@@ -61,7 +61,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -70,7 +70,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
           // Channel indicator
           if (widget.channelIndex != null)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 4),
               child: Text(
                 'Channel: ${widget.channelIndex}',
                 style: context.bodySmallStyle?.copyWith(
@@ -123,7 +123,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
             },
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
         ],
       ),
     );
@@ -155,7 +155,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
         child: Row(
           children: [
             Icon(icon, size: 20, color: color),
-            SizedBox(width: 12),
+            SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Text(
                 label,
@@ -310,7 +310,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
             endIndent: 16,
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 4),
             child: Row(
               children: [
                 Expanded(
@@ -328,7 +328,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
           // Hops, SNR, RSSI for received messages
           if (!widget.isFromMe) ...[
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 4, 16, 4),
               child: Row(
                 children: [
                   Text(
@@ -342,7 +342,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 4, 16, 12),
               child: Wrap(
                 spacing: 16,
                 runSpacing: 6,
@@ -372,7 +372,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
           // Delivery status for sent messages
           if (widget.isFromMe) ...[
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 4, 16, 12),
               child: Row(
                 children: [
                   Text(
@@ -532,7 +532,7 @@ class _EmojiPickerSheet extends StatelessWidget {
               height: 4,
               decoration: BoxDecoration(
                 color: context.border.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppTheme.radius2),
               ),
             ),
           ),
@@ -612,7 +612,7 @@ class _DetailChip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 14, color: context.textTertiary),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         Text(
           label,
           style: TextStyle(fontSize: 13, color: context.textSecondary),

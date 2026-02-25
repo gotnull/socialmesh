@@ -54,13 +54,14 @@ class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen>
         // Search Bar
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: TextField(
+              maxLength: 100,
               decoration: InputDecoration(
                 hintText: 'Search sellers...',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -96,7 +97,7 @@ class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen>
                         size: 64,
                         color: context.textTertiary,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                       const Text('No sellers found'),
                     ],
                   ),
@@ -178,14 +179,14 @@ class _SellerListItem extends StatelessWidget {
           : Colors.red.withValues(alpha: 0.1),
       child: InkWell(
         onTap: onEdit,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Row(
             children: [
               // Seller Logo
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 child: seller.logoUrl != null
                     ? Image.network(
                         seller.logoUrl!,
@@ -197,7 +198,7 @@ class _SellerListItem extends StatelessWidget {
                       )
                     : _placeholderLogo(),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppTheme.spacing16),
 
               // Seller Info
               Expanded(
@@ -213,7 +214,7 @@ class _SellerListItem extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     // Status badges
                     Wrap(
                       spacing: 4,
@@ -227,7 +228,7 @@ class _SellerListItem extends StatelessWidget {
                           _buildBadge('VERIFIED', Colors.blue),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     if (seller.description != null)
                       Text(
                         seller.description!,
@@ -238,7 +239,7 @@ class _SellerListItem extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Row(
                       children: [
                         _buildStat(
@@ -246,13 +247,13 @@ class _SellerListItem extends StatelessWidget {
                           Icons.inventory_2,
                           '${seller.productCount}',
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: AppTheme.spacing16),
                         _buildStat(
                           context,
                           Icons.shopping_cart,
                           '${seller.salesCount}',
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: AppTheme.spacing16),
                         _buildStat(
                           context,
                           Icons.star,
@@ -282,7 +283,7 @@ class _SellerListItem extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(Icons.edit, size: 20),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppTheme.spacing8),
                         Text('Edit'),
                       ],
                     ),
@@ -297,7 +298,7 @@ class _SellerListItem extends StatelessWidget {
                               : Icons.visibility,
                           size: 20,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Text(seller.isActive ? 'Deactivate' : 'Activate'),
                       ],
                     ),
@@ -317,7 +318,7 @@ class _SellerListItem extends StatelessWidget {
       height: 56,
       decoration: BoxDecoration(
         color: Colors.grey.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
       ),
       child: const Icon(Icons.store, color: Colors.grey),
     );
@@ -329,7 +330,7 @@ class _SellerListItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
       ),
       child: Text(
         text,
@@ -347,7 +348,7 @@ class _SellerListItem extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 14, color: context.textTertiary),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         Text(
           value,
           style: context.bodySmallStyle?.copyWith(color: context.textTertiary),
@@ -448,18 +449,19 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
           child: Form(
             key: _formKey,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Logo Section
                   _buildSectionTitle('Seller Logo'),
                   _buildLogoSection(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // Basic Info
                   _buildSectionTitle('Basic Information'),
                   TextFormField(
+                    maxLength: 100,
                     controller: _nameController,
                     decoration: const InputDecoration(
                       labelText: 'Seller Name *',
@@ -467,9 +469,10 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                     ),
                     validator: (v) => v?.isEmpty == true ? 'Required' : null,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   TextFormField(
+                    maxLength: 500,
                     controller: _descriptionController,
                     decoration: const InputDecoration(
                       labelText: 'Description',
@@ -477,11 +480,12 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                     ),
                     maxLines: 3,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // Contact Info
                   _buildSectionTitle('Contact Information'),
                   TextFormField(
+                    maxLength: 100,
                     controller: _websiteUrlController,
                     decoration: const InputDecoration(
                       labelText: 'Website URL *',
@@ -491,9 +495,10 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                     keyboardType: TextInputType.url,
                     validator: (v) => v?.isEmpty == true ? 'Required' : null,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   TextFormField(
+                    maxLength: 100,
                     controller: _contactEmailController,
                     decoration: const InputDecoration(
                       labelText: 'Contact Email',
@@ -502,23 +507,24 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                     ),
                     keyboardType: TextInputType.emailAddress,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // Shipping Countries
                   _buildSectionTitle('Shipping Countries'),
                   TextFormField(
+                    maxLength: 100,
                     controller: _countriesController,
                     decoration: const InputDecoration(
                       labelText: 'Countries',
                       hintText: 'US, CA, UK, DE (comma separated)',
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // Discount Code Section
                   _buildSectionTitle('Partner Discount Code'),
                   _buildDiscountCodeSection(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // Status Toggles
                   _buildSectionTitle('Status & Verification'),
@@ -570,7 +576,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                     }),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppTheme.spacing32),
 
                   // Save Button
                   ConstrainedBox(
@@ -601,21 +607,21 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
 
                   // Delete Section for existing sellers
                   if (_isEditing) ...[
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppTheme.spacing24),
                     const Divider(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
                     _buildSectionTitle('Danger Zone'),
                     Card(
                       color: Colors.red.withValues(alpha: 0.1),
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Row(
                               children: [
                                 Icon(Icons.warning, color: Colors.red),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppTheme.spacing8),
                                 Text(
                                   'Delete Seller',
                                   style: TextStyle(
@@ -625,7 +631,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: AppTheme.spacing8),
                             Text(
                               'Permanently delete this seller and deactivate all their products. '
                               'This action cannot be undone.',
@@ -634,7 +640,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                                 fontSize: 13,
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppTheme.spacing16),
                             OutlinedButton(
                               onPressed: _confirmDelete,
                               style: OutlinedButton.styleFrom(
@@ -648,7 +654,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                       ),
                     ),
                   ],
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppTheme.spacing32),
                 ],
               ),
             ),
@@ -685,7 +691,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                 : Colors.green.withValues(alpha: 0.1))
           : Colors.white.withValues(alpha: 0.05),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -695,13 +701,13 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.orange.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.warning, color: Colors.orange, size: 16),
-                    SizedBox(width: 4),
+                    SizedBox(width: AppTheme.spacing4),
                     Text(
                       'Discount code has expired',
                       style: TextStyle(color: Colors.orange, fontSize: 12),
@@ -710,6 +716,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                 ),
               ),
             TextFormField(
+              maxLength: 100,
               controller: _discountCodeController,
               decoration: const InputDecoration(
                 labelText: 'Discount Code',
@@ -718,15 +725,16 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
               ),
               textCapitalization: TextCapitalization.characters,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             TextFormField(
+              maxLength: 100,
               controller: _discountLabelController,
               decoration: const InputDecoration(
                 labelText: 'Display Label',
                 hintText: 'e.g., 10% off for Socialmesh users',
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             InkWell(
               onTap: _selectExpiryDate,
               child: InputDecorator(
@@ -759,8 +767,9 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             TextFormField(
+              maxLength: 500,
               controller: _discountTermsController,
               decoration: const InputDecoration(
                 labelText: 'Terms & Conditions',
@@ -769,7 +778,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
               maxLines: 2,
             ),
             if (hasDiscount) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               TextButton.icon(
                 onPressed: _clearDiscountCode,
                 icon: const Icon(Icons.clear, size: 18),
@@ -811,7 +820,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
       children: [
         // Logo preview
         ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: _logoUrl != null
               ? Image.network(
                   _logoUrl!,
@@ -823,7 +832,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                 )
               : _placeholderLogo(),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: AppTheme.spacing16),
 
         // Upload button
         Column(
@@ -860,7 +869,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
       height: 80,
       decoration: BoxDecoration(
         color: Colors.grey.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: const Icon(Icons.store, color: Colors.grey, size: 32),
     );
@@ -994,22 +1003,22 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             'Are you sure you want to permanently delete "${widget.seller!.name}"?',
           ),
           if (productCount > 0) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               decoration: BoxDecoration(
                 color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Row(
                 children: [
                   const Icon(Icons.warning, color: Colors.orange),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Expanded(
                     child: Text(
                       '$productCount product(s) will be deactivated.',
@@ -1020,12 +1029,12 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
               ),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           const Text(
             'This action cannot be undone.',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             children: [
               Expanded(
@@ -1035,13 +1044,13 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide(color: Colors.grey.shade700),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Cancel'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: () => Navigator.pop(context, true),
@@ -1049,7 +1058,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: AppTheme.errorRed,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Delete'),

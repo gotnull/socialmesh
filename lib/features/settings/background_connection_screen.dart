@@ -116,6 +116,7 @@ class _BackgroundConnectionScreenState
       AppLogging.ble('BackgroundConnectionScreen: foreground service stopped');
     } else {
       // Re-start the foreground service if currently connected.
+      if (!mounted) return;
       final isRunning = ref.read(isBackgroundServiceRunningProvider);
       if (!isRunning) {
         // The service will auto-start on next connection. If already
@@ -185,7 +186,7 @@ class _BackgroundConnectionScreenState
           padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
 
               // -- Connection toggle ----------------------------------------
               _SectionHeader(title: 'CONNECTION'),
@@ -213,7 +214,7 @@ class _BackgroundConnectionScreenState
                       ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // -- Notification toggles -------------------------------------
               _SectionHeader(title: 'BACKGROUND NOTIFICATIONS'),
@@ -247,14 +248,14 @@ class _BackgroundConnectionScreenState
 
               // -- Notification style (Android only) ------------------------
               if (Platform.isAndroid) ...[
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 _SectionHeader(title: 'PERSISTENT NOTIFICATION'),
                 _NotifStyleSelector(
                   style: _notifStyle,
                   enabled: _bgBleEnabled,
                   onChanged: _bgBleEnabled ? _setNotifStyle : null,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 _SectionHeader(title: 'BATTERY'),
                 _SettingTile(
                   icon: Icons.battery_alert,
@@ -293,7 +294,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 8, 20, 8),
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -327,21 +328,21 @@ class _SettingTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
                 Icon(icon, color: context.textSecondary),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,7 +355,7 @@ class _SettingTile extends StatelessWidget {
                         ),
                       ),
                       if (subtitle != null) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           subtitle!,
                           style: Theme.of(context).textTheme.bodySmall
@@ -392,10 +393,10 @@ class _NotifStyleSelector extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -406,7 +407,7 @@ class _NotifStyleSelector extends StatelessWidget {
                 color: context.textPrimary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             SizedBox(
               width: double.infinity,
               child: SegmentedButton<NotificationStyle>(
@@ -430,7 +431,7 @@ class _NotifStyleSelector extends StatelessWidget {
                     : null,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               style == NotificationStyle.minimal
                   ? 'Shows "Connected to [device]"'

@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/vs_node_data_provider.dart';
+import 'package:socialmesh/core/theme.dart';
 
 class VSContextMenu extends StatefulWidget {
   /// Base context menu for creating new nodes.
@@ -101,7 +102,7 @@ class _VSContextMenuState extends State<VSContextMenu> {
                 size: 14,
                 color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Expanded(
                 child: Text(
                   parentLabel,
@@ -138,7 +139,7 @@ class _VSContextMenuState extends State<VSContextMenu> {
                   size: 16,
                   color: colorScheme.primary,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   child: Text(
                     entry.key,
@@ -228,7 +229,7 @@ class _VSContextMenuState extends State<VSContextMenu> {
         ),
         decoration: BoxDecoration(
           color: surfaceColor,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: borderColor, width: 1),
           boxShadow: [
             BoxShadow(
@@ -245,7 +246,7 @@ class _VSContextMenuState extends State<VSContextMenu> {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(vertical: 6),
             child: Column(
@@ -274,7 +275,7 @@ class _ContextMenuItem extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
         child: Padding(
           // Height of at least 44dp for Material Design touch target
           // compliance.

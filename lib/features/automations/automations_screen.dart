@@ -129,12 +129,12 @@ class AutomationsScreen extends ConsumerWidget {
                       size: 48,
                       color: AppTheme.errorRed,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
                     Text(
                       'Failed to load automations',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     TextButton(
                       onPressed: () =>
                           ref.read(automationsProvider.notifier).refresh(),
@@ -159,23 +159,23 @@ class AutomationsScreen extends ConsumerWidget {
 
     return [
       SliverPadding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         sliver: SliverList(
           delegate: SliverChildListDelegate([
             // Hero section - What this is
             _buildHeroSection(context, hasAutomationsPack),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // Create from scratch CTA - Primary action
             _buildCreateFromScratchCard(context, ref, hasAutomationsPack),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // Quick Start Templates - Secondary inspiration
             _buildTemplatesSection(context, ref, hasAutomationsPack),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // Start with a Trigger - Exploration path
             _buildTriggerCategoriesSection(context, ref, hasAutomationsPack),
@@ -193,7 +193,7 @@ class AutomationsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final accentColor = theme.colorScheme.primary;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -203,7 +203,7 @@ class AutomationsScreen extends ConsumerWidget {
             accentColor.withValues(alpha: 0.03),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         border: Border.all(color: accentColor.withValues(alpha: 0.2)),
       ),
       child: Column(
@@ -226,14 +226,14 @@ class AutomationsScreen extends ConsumerWidget {
             ),
             child: const Icon(Icons.bolt, size: 44, color: Colors.white),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             'Automate Your Mesh',
             style: Theme.of(
               context,
             ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Create automations to trigger actions automatically when events occur on your mesh network.',
             textAlign: TextAlign.center,
@@ -255,7 +255,7 @@ class AutomationsScreen extends ConsumerWidget {
     return BouncyTap(
       onTap: () => _createNewAutomation(context, ref),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -263,7 +263,7 @@ class AutomationsScreen extends ConsumerWidget {
               Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
             ],
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(
             color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
           ),
@@ -277,7 +277,7 @@ class AutomationsScreen extends ConsumerWidget {
                 color: Theme.of(
                   context,
                 ).colorScheme.primary.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppTheme.radius14),
               ),
               child: Icon(
                 Icons.add,
@@ -285,7 +285,7 @@ class AutomationsScreen extends ConsumerWidget {
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppTheme.spacing16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -294,7 +294,7 @@ class AutomationsScreen extends ConsumerWidget {
                     'Create from Scratch',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Text(
                     'Build a custom automation with full control over triggers and actions',
                     style: TextStyle(
@@ -328,7 +328,7 @@ class AutomationsScreen extends ConsumerWidget {
           child: Row(
             children: [
               Icon(Icons.flash_on, size: 18, color: Colors.amber),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Text(
                 'Quick Start Templates',
                 style: Theme.of(
@@ -338,7 +338,7 @@ class AutomationsScreen extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Padding(
           padding: const EdgeInsets.only(left: 4),
           child: Text(
@@ -348,7 +348,7 @@ class AutomationsScreen extends ConsumerWidget {
             ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
         SizedBox(
           height: 110,
           child: EdgeFade.horizontal(
@@ -358,17 +358,18 @@ class AutomationsScreen extends ConsumerWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: templates.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 12),
+              separatorBuilder: (context, index) =>
+                  const SizedBox(width: AppTheme.spacing12),
               itemBuilder: (context, index) {
                 final template = templates[index];
                 return BouncyTap(
                   onTap: () => _addFromTemplate(context, ref, template.id),
                   child: Container(
                     width: 140,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       border: Border.all(color: context.border),
                     ),
                     child: Column(
@@ -381,7 +382,9 @@ class AutomationsScreen extends ConsumerWidget {
                             color: _getTemplateColor(
                               template.id,
                             ).withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius10,
+                            ),
                           ),
                           child: Icon(
                             template.icon,
@@ -445,7 +448,7 @@ class AutomationsScreen extends ConsumerWidget {
           child: Row(
             children: [
               Icon(Icons.explore, size: 18, color: context.accentColor),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Text(
                 'Start with a Trigger',
                 style: Theme.of(
@@ -455,7 +458,7 @@ class AutomationsScreen extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Padding(
           padding: const EdgeInsets.only(left: 4),
           child: Text(
@@ -465,7 +468,7 @@ class AutomationsScreen extends ConsumerWidget {
             ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // Build categories
         ..._categoryOrder.map((category) {
@@ -487,7 +490,7 @@ class AutomationsScreen extends ConsumerWidget {
                       size: 14,
                       color: _categoryColor(context, category),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     Text(
                       category,
                       style: TextStyle(
@@ -498,7 +501,7 @@ class AutomationsScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 // Trigger chips
                 Wrap(
                   spacing: 8,
@@ -513,14 +516,16 @@ class AutomationsScreen extends ConsumerWidget {
                         ),
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius20,
+                          ),
                           border: Border.all(color: context.border),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(type.icon, size: 16),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: AppTheme.spacing6),
                             Text(
                               type.displayName,
                               style: Theme.of(context).textTheme.bodySmall,
@@ -615,11 +620,11 @@ class AutomationsScreen extends ConsumerWidget {
       // Stats header
       SliverToBoxAdapter(
         child: Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.all(AppTheme.spacing16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           decoration: BoxDecoration(
             color: context.card,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radius16),
             border: Border.all(color: context.border),
           ),
           child: Row(
@@ -682,7 +687,7 @@ class AutomationsScreen extends ConsumerWidget {
       ),
 
       // Bottom padding for FAB
-      const SliverToBoxAdapter(child: SizedBox(height: 100)),
+      const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing100)),
     ];
   }
 
@@ -696,7 +701,7 @@ class AutomationsScreen extends ConsumerWidget {
     return Column(
       children: [
         Icon(icon, size: 24, color: color ?? Colors.grey),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Text(
           value,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -894,7 +899,7 @@ class AutomationsScreen extends ConsumerWidget {
                 margin: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.grey[600],
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppTheme.radius2),
                 ),
               ),
               Padding(
@@ -1027,7 +1032,7 @@ class _AddAutomationSheet extends ConsumerWidget {
               margin: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.grey[600],
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppTheme.radius2),
               ),
             ),
           ),
@@ -1045,7 +1050,7 @@ class _AddAutomationSheet extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           // Scrollable content - matches empty state UI
           Expanded(
             child: ListView(
@@ -1055,12 +1060,12 @@ class _AddAutomationSheet extends ConsumerWidget {
                 // Create from scratch - same style as empty state
                 _buildCreateFromScratchCard(context),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
 
                 // Quick Start Templates - same style as empty state
                 _buildTemplatesSection(context),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
 
                 // Start with a Trigger - same style as empty state
                 _buildTriggerCategoriesSection(context),
@@ -1082,7 +1087,7 @@ class _AddAutomationSheet extends ConsumerWidget {
         BouncyTap(
           onTap: onCreateNew,
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -1090,7 +1095,7 @@ class _AddAutomationSheet extends ConsumerWidget {
                   Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
                 ],
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.radius16),
               border: Border.all(
                 color: Theme.of(
                   context,
@@ -1106,7 +1111,7 @@ class _AddAutomationSheet extends ConsumerWidget {
                     color: Theme.of(
                       context,
                     ).colorScheme.primary.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppTheme.radius14),
                   ),
                   child: Icon(
                     Icons.add,
@@ -1114,7 +1119,7 @@ class _AddAutomationSheet extends ConsumerWidget {
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1126,7 +1131,7 @@ class _AddAutomationSheet extends ConsumerWidget {
                           fontSize: 16,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.spacing4),
                       Text(
                         'Build a custom automation with full control over triggers and actions',
                         style: TextStyle(
@@ -1158,7 +1163,7 @@ class _AddAutomationSheet extends ConsumerWidget {
           child: Row(
             children: [
               Icon(Icons.flash_on, size: 18, color: Colors.amber),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Text(
                 'Quick Start Templates',
                 style: Theme.of(
@@ -1168,7 +1173,7 @@ class _AddAutomationSheet extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Padding(
           padding: const EdgeInsets.only(left: 4),
           child: Text(
@@ -1178,7 +1183,7 @@ class _AddAutomationSheet extends ConsumerWidget {
             ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
         SizedBox(
           height: 110,
           child: EdgeFade.horizontal(
@@ -1188,17 +1193,18 @@ class _AddAutomationSheet extends ConsumerWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: templates.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 12),
+              separatorBuilder: (context, index) =>
+                  const SizedBox(width: AppTheme.spacing12),
               itemBuilder: (context, index) {
                 final template = templates[index];
                 return BouncyTap(
                   onTap: () => onSelectTemplate(template.id),
                   child: Container(
                     width: 140,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       border: Border.all(color: context.border),
                     ),
                     child: Column(
@@ -1211,7 +1217,9 @@ class _AddAutomationSheet extends ConsumerWidget {
                             color: _getTemplateColor(
                               template.id,
                             ).withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius10,
+                            ),
                           ),
                           child: Icon(
                             template.icon,
@@ -1271,7 +1279,7 @@ class _AddAutomationSheet extends ConsumerWidget {
           child: Row(
             children: [
               Icon(Icons.explore, size: 18, color: context.accentColor),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Text(
                 'Start with a Trigger',
                 style: Theme.of(
@@ -1281,7 +1289,7 @@ class _AddAutomationSheet extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Padding(
           padding: const EdgeInsets.only(left: 4),
           child: Text(
@@ -1291,7 +1299,7 @@ class _AddAutomationSheet extends ConsumerWidget {
             ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // Build categories
         ..._categoryOrder.map((category) {
@@ -1313,7 +1321,7 @@ class _AddAutomationSheet extends ConsumerWidget {
                       size: 14,
                       color: _categoryColor(context, category),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     Text(
                       category,
                       style: TextStyle(
@@ -1324,7 +1332,7 @@ class _AddAutomationSheet extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 // Trigger chips
                 Wrap(
                   spacing: 8,
@@ -1339,14 +1347,16 @@ class _AddAutomationSheet extends ConsumerWidget {
                         ),
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius20,
+                          ),
                           border: Border.all(color: context.border),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(type.icon, size: 16),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: AppTheme.spacing6),
                             Text(
                               type.displayName,
                               style: Theme.of(context).textTheme.bodySmall,

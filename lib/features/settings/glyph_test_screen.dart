@@ -10,6 +10,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/glyph_provider.dart';
 import '../../services/glyph_matrix_service.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Nothing Phone 3 Glyph Matrix Test Screen
 /// Features a live on-screen preview of the 25x25 LED matrix with circular mask
@@ -446,7 +447,7 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
               valueColor: AlwaysStoppedAnimation(Colors.white30),
             ),
           ),
-          SizedBox(height: 24),
+          SizedBox(height: AppTheme.spacing24),
           Text(
             'INITIALIZING GLYPH MATRIX...',
             style: TextStyle(
@@ -463,12 +464,12 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
   Widget _buildErrorState(Object error) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.error_outline, size: 64, color: Colors.redAccent),
-            SizedBox(height: 16),
+            SizedBox(height: AppTheme.spacing16),
             Text(
               'INIT FAILED',
               style: TextStyle(
@@ -478,7 +479,7 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
                 letterSpacing: 2,
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: AppTheme.spacing8),
             Text(
               error.toString(),
               textAlign: TextAlign.center,
@@ -493,12 +494,12 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
   Widget _buildNotSupportedState() {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.phonelink_off, size: 64, color: Colors.white30),
-            SizedBox(height: 24),
+            SizedBox(height: AppTheme.spacing24),
             Text(
               'DEVICE NOT SUPPORTED',
               style: TextStyle(
@@ -508,7 +509,7 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
                 letterSpacing: 2,
               ),
             ),
-            SizedBox(height: 12),
+            SizedBox(height: AppTheme.spacing12),
             Text(
               'Glyph Matrix requires\nNothing Phone (3)',
               textAlign: TextAlign.center,
@@ -588,7 +589,7 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
           ),
         ),
 
-        SizedBox(height: 8),
+        SizedBox(height: AppTheme.spacing8),
 
         // Swipe hint
         Text(
@@ -600,7 +601,7 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
           ),
         ),
 
-        SizedBox(height: 24),
+        SizedBox(height: AppTheme.spacing24),
 
         // Swipeable pattern selector - swipe executes immediately
         SizedBox(
@@ -628,7 +629,7 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
                       color: isSelected
                           ? pattern.color.withValues(alpha: 0.2)
                           : Colors.white.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppTheme.radius16),
                       border: Border.all(
                         color: isSelected
                             ? pattern.color
@@ -653,7 +654,7 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
                           color: isSelected ? pattern.color : Colors.white54,
                           size: 36,
                         ),
-                        SizedBox(height: 8),
+                        SizedBox(height: AppTheme.spacing8),
                         Text(
                           pattern.name,
                           style: TextStyle(
@@ -674,7 +675,7 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
           ),
         ),
 
-        SizedBox(height: 24),
+        SizedBox(height: AppTheme.spacing24),
       ],
     );
   }
@@ -713,7 +714,7 @@ class _GlyphMatrixPreview extends StatelessWidget {
     return AspectRatio(
       aspectRatio: 1,
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppTheme.spacing16),
         child: LayoutBuilder(
           builder: (context, constraints) {
             final size = constraints.maxWidth;

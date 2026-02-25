@@ -121,9 +121,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
     // Show one-time disclosure before first IFTTT activation
     if (_enabled) {
       final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
       final accepted = prefs.getBool(_iftttDisclosureKey) ?? false;
       if (!accepted) {
-        if (!mounted) return;
         final confirmed = await AppBottomSheet.showConfirm(
           context: context,
           title: 'IFTTT Data Sharing',
@@ -140,9 +140,10 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
       }
     }
 
+    if (!mounted) return;
+
     // Require valid webhook key when IFTTT is enabled
     if (_enabled && _webhookKeyController.text.trim().isEmpty) {
-      if (!mounted) return;
       showErrorSnackBar(
         context,
         'Please enter your Webhook Key to enable IFTTT',
@@ -297,7 +298,12 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                 // Premium explanation card (only shown when not premium)
                 if (!hasPremium)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppTheme.spacing16,
+                      8,
+                      16,
+                      8,
+                    ),
                     child: PremiumExplanationCard(
                       feature: PremiumFeature.iftttIntegration,
                       title: 'Connect to 700+ Services',
@@ -312,27 +318,27 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                 _buildEnableTile(),
                 // Only show form fields when premium AND enabled
                 if (hasPremium && _enabled) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   const _SectionHeader(title: 'WEBHOOK'),
                   _buildWebhookSection(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   const _SectionHeader(title: 'MESSAGE TRIGGERS'),
                   _buildMessageTriggers(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   const _SectionHeader(title: 'NODE STATUS TRIGGERS'),
                   _buildNodeTriggers(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   const _SectionHeader(title: 'TELEMETRY TRIGGERS'),
                   _buildTelemetryTriggers(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   const _SectionHeader(title: 'GEOFENCING'),
                   _buildGeofenceSettings(),
                 ],
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 _buildInfoCard(),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _buildEventNamesCard(),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spacing32),
               ]),
             ),
           ),
@@ -369,7 +375,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.lock, size: 16, color: context.textSecondary),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   ThemedSwitch(value: false, onChanged: null),
                 ],
               ),
@@ -382,15 +388,16 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
       children: [
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           decoration: BoxDecoration(
             color: context.card,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextField(
+                maxLength: 64,
                 controller: _webhookKeyController,
                 autocorrect: false,
                 enableSuggestions: false,
@@ -406,15 +413,15 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                   helperText: 'Copy from IFTTT Webhooks URL after /use/',
                   helperStyle: TextStyle(color: context.textTertiary),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     borderSide: BorderSide(color: context.border),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     borderSide: BorderSide(color: context.border),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     borderSide: BorderSide(color: context.accentColor),
                   ),
                   prefixIcon: Icon(Icons.key, color: context.textSecondary),
@@ -422,7 +429,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                   fillColor: context.background,
                 ),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: AppTheme.spacing16),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
@@ -525,10 +532,10 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
         if (_batteryLow)
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: context.card,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -540,7 +547,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                       color: context.textSecondary,
                       size: 20,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Text(
                       'Battery Threshold',
                       style: TextStyle(
@@ -556,7 +563,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                       ),
                       decoration: BoxDecoration(
                         color: context.accentColor.withAlpha(30),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                       ),
                       child: Text(
                         '$_batteryThreshold%',
@@ -569,7 +576,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     trackHeight: 4,
@@ -632,10 +639,10 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
         if (_temperatureAlert)
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: context.card,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -647,7 +654,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                       color: context.textSecondary,
                       size: 20,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Text(
                       'Temperature Threshold',
                       style: TextStyle(
@@ -663,7 +670,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                       ),
                       decoration: BoxDecoration(
                         color: context.accentColor.withAlpha(30),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                       ),
                       child: Text(
                         '${_temperatureThreshold.toStringAsFixed(0)}°C',
@@ -676,7 +683,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     trackHeight: 4,
@@ -746,14 +753,15 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
         if (_positionUpdate)
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: context.card,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Column(
               children: [
                 TextField(
+                  maxLength: 10,
                   controller: _geofenceRadiusController,
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
@@ -764,15 +772,15 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                     hintText: '1000',
                     hintStyle: TextStyle(color: Colors.grey.shade600),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.border),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.border),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.accentColor),
                     ),
                     prefixIcon: Icon(Icons.radar, color: context.textSecondary),
@@ -782,8 +790,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                     fillColor: context.background,
                   ),
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppTheme.spacing16),
                 TextField(
+                  maxLength: 20,
                   controller: _geofenceLatController,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -797,15 +806,15 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                     hintText: '-33.8688',
                     hintStyle: TextStyle(color: Colors.grey.shade600),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.border),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.border),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.accentColor),
                     ),
                     prefixIcon: Icon(
@@ -816,8 +825,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                     fillColor: context.background,
                   ),
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppTheme.spacing16),
                 TextField(
+                  maxLength: 20,
                   controller: _geofenceLonController,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -832,15 +842,15 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                     hintText: '151.2093',
                     hintStyle: TextStyle(color: Colors.grey.shade600),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.border),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.border),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.accentColor),
                     ),
                     prefixIcon: Icon(
@@ -851,7 +861,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                     fillColor: context.background,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 // Mini map preview when coordinates are set
                 Builder(
                   builder: (context) {
@@ -865,7 +875,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                       return Column(
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
                             child: SizedBox(
                               height: 150,
                               child: IgnorePointer(
@@ -919,7 +931,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                               ),
                             ),
                           ),
-                          SizedBox(height: 16),
+                          SizedBox(height: AppTheme.spacing16),
                         ],
                       );
                     }
@@ -929,10 +941,10 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                 // Monitored node indicator
                 if (_geofenceNodeNum != null && _geofenceNodeName != null) ...[
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
                     decoration: BoxDecoration(
                       color: context.accentColor.withAlpha(20),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       border: Border.all(
                         color: context.accentColor.withAlpha(50),
                       ),
@@ -940,7 +952,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                     child: Row(
                       children: [
                         Icon(Icons.radar, color: context.accentColor, size: 20),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -952,7 +964,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                                   color: context.textTertiary,
                                 ),
                               ),
-                              SizedBox(height: 2),
+                              SizedBox(height: AppTheme.spacing2),
                               Text(
                                 _geofenceNodeName!,
                                 style: TextStyle(
@@ -976,13 +988,13 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                       ],
                     ),
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
                 ] else ...[
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
                     decoration: BoxDecoration(
                       color: AppTheme.warningYellow.withAlpha(20),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       border: Border.all(
                         color: AppTheme.warningYellow.withAlpha(50),
                       ),
@@ -994,7 +1006,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                           color: AppTheme.warningYellow,
                           size: 18,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Text(
                             'No node selected. All nodes will be monitored.',
@@ -1007,7 +1019,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                       ],
                     ),
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
                 ],
                 // Throttle setting
                 Row(
@@ -1017,7 +1029,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                       color: context.textSecondary,
                       size: 20,
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Text(
                         'Alert Cooldown',
@@ -1034,7 +1046,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                       ),
                       decoration: BoxDecoration(
                         color: context.background,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                         border: Border.all(color: context.border),
                       ),
                       child: DropdownButton<int>(
@@ -1070,14 +1082,14 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                     ),
                   ],
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: AppTheme.spacing8),
                 Text(
                   'Minimum time between geofence alerts for the same node',
                   style: context.bodySmallStyle?.copyWith(
                     color: context.textTertiary,
                   ),
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppTheme.spacing16),
                 // Pick on Map button
                 SizedBox(
                   width: double.infinity,
@@ -1143,10 +1155,10 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
   Widget _buildInfoCard() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.accentColor.withAlpha(20),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.accentColor.withAlpha(50)),
       ),
       child: Column(
@@ -1155,7 +1167,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
           Row(
             children: [
               Icon(Icons.info_outline, color: context.accentColor, size: 20),
-              SizedBox(width: 12),
+              SizedBox(width: AppTheme.spacing12),
               Text(
                 'Setup Guide',
                 style: TextStyle(
@@ -1166,7 +1178,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildStep('1', 'Create an account at ifttt.com'),
           _buildStep('2', 'Search for "Webhooks" service and connect it'),
           _buildStep('3', 'Go to Webhooks settings to find your key'),
@@ -1200,7 +1212,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
               ),
             ),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Text(
               text,
@@ -1219,7 +1231,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       clipBehavior: Clip.antiAlias,
       child: Theme(
@@ -1249,7 +1261,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
           collapsedIconColor: context.textSecondary,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 16),
               child: Column(
                 children: [
                   _buildEventRow(
@@ -1305,7 +1317,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
               ),
             ),
           ),
-          SizedBox(width: 8),
+          SizedBox(width: AppTheme.spacing8),
           Expanded(
             flex: 2,
             child: Text(
@@ -1329,7 +1341,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
       child: Text(
         title,
         style: TextStyle(
@@ -1364,14 +1376,14 @@ class _SettingsTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Icon(icon, color: iconColor ?? context.textSecondary),
-            SizedBox(width: 16),
+            SizedBox(width: AppTheme.spacing16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1384,7 +1396,7 @@ class _SettingsTile extends StatelessWidget {
                       color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     subtitle,
                     style: context.bodySmallStyle?.copyWith(

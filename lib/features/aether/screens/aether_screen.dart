@@ -223,7 +223,7 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
           Row(
             children: [
               Icon(Icons.radar, color: accentColor),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Text(
                 'Aether',
                 style: TextStyle(
@@ -234,44 +234,44 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             'Track Meshtastic nodes at altitude!',
             style: TextStyle(color: textSecondary, fontWeight: FontWeight.w500),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _InfoRow(
             icon: Icons.flight_takeoff,
             text: 'Schedule your flight with your node',
             iconColor: textTertiary,
             textColor: textSecondary,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _InfoRow(
             icon: Icons.radar,
             text: 'Ground stations watch for your signal',
             iconColor: textTertiary,
             textColor: textSecondary,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _InfoRow(
             icon: Icons.celebration,
             text: 'Report receptions & set range records!',
             iconColor: textTertiary,
             textColor: textSecondary,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: accentColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               border: Border.all(color: accentColor.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
                 Icon(Icons.lightbulb, color: accentColor, size: 20),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   child: Text(
                     'At 35,000ft, LoRa can reach 400+ km!',
@@ -306,11 +306,13 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
           gradient: gradient,
           animate: true,
           enabled: true,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppTheme.radius18),
           child: Container(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(18)),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppTheme.radius18),
+            ),
             child: const Icon(
               Icons.flight_takeoff,
               size: 20,
@@ -373,9 +375,9 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
           title: 'Aether',
           actions: [
             _buildScheduleFlightButton(context),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             _buildLeaderboardButton(context),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             AppBarOverflowMenu<String>(
               onSelected: (value) {
                 switch (value) {
@@ -403,7 +405,7 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
                         color: context.textSecondary,
                         size: 20,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Text(
                         'About Aether',
                         style: TextStyle(color: context.textPrimary),
@@ -420,7 +422,7 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
                         color: context.textSecondary,
                         size: 20,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Text(
                         'Help',
                         style: TextStyle(color: context.textPrimary),
@@ -437,7 +439,7 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
                         color: context.textSecondary,
                         size: 20,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Text(
                         'Settings',
                         style: TextStyle(color: context.textPrimary),
@@ -447,7 +449,7 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
                 ),
               ],
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
           ],
           body: _FlightsTabContent(
             flightsAsync: flightsAsync,
@@ -596,7 +598,7 @@ class _FlightsTabContent extends StatelessWidget {
         _buildFlightsList(context),
 
         // Bottom padding
-        const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing32)),
       ],
     );
   }
@@ -799,16 +801,16 @@ class _LeaderboardModalContent extends StatelessWidget {
       children: [
         // Header with trophy icon
         Padding(
-          padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing0, 0, 0, 8),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppTheme.spacing10),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: AccentColors.gradientFor(context.accentColor),
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: const Icon(
                   Icons.emoji_events,
@@ -816,7 +818,7 @@ class _LeaderboardModalContent extends StatelessWidget {
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -911,14 +913,14 @@ class _StatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
       child: GradientBorderContainer(
         borderRadius: 16,
         borderWidth: 1.5,
         accentOpacity: 0.4,
         enableDepthBlend: true,
         depthBlendOpacity: 0.08,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Row(
           children: [
             Expanded(
@@ -988,7 +990,7 @@ class _StatItem extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 18, color: color),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Text(
           value,
           style: TextStyle(
@@ -1057,7 +1059,7 @@ class _AetherFlightCard extends ConsumerWidget {
           enableDepthBlend:
               (flight.isActive || flight.isInFlight) && !flight.isPast,
           depthBlendOpacity: 0.1,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1079,7 +1081,7 @@ class _AetherFlightCard extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               // Route visualization
               Row(
                 children: [
@@ -1103,7 +1105,7 @@ class _AetherFlightCard extends ConsumerWidget {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.all(4),
+                            padding: const EdgeInsets.all(AppTheme.spacing4),
                             decoration: BoxDecoration(
                               color: context.card,
                               shape: BoxShape.circle,
@@ -1123,12 +1125,12 @@ class _AetherFlightCard extends ConsumerWidget {
                   _AirportCode(code: flight.arrival),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               // Info row
               Row(
                 children: [
                   Icon(Icons.schedule, size: 14, color: context.textTertiary),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTheme.spacing4),
                   Text(
                     dateFormat.format(flight.scheduledDeparture.toLocal()),
                     style: TextStyle(
@@ -1136,9 +1138,9 @@ class _AetherFlightCard extends ConsumerWidget {
                       fontSize: 13,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppTheme.spacing16),
                   Icon(Icons.memory, size: 14, color: context.textTertiary),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTheme.spacing4),
                   Expanded(
                     child: Text(
                       flight.nodeName ?? flight.nodeId,
@@ -1153,7 +1155,7 @@ class _AetherFlightCard extends ConsumerWidget {
               ),
               // Reception count
               if (flight.receptionCount > 0) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Row(
                   children: [
                     Icon(
@@ -1161,7 +1163,7 @@ class _AetherFlightCard extends ConsumerWidget {
                       size: 14,
                       color: context.accentColor,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppTheme.spacing4),
                     Text(
                       '${flight.receptionCount} reception${flight.receptionCount != 1 ? 's' : ''}',
                       style: TextStyle(
@@ -1194,7 +1196,7 @@ class _StatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
@@ -1202,7 +1204,7 @@ class _StatusBadge extends StatelessWidget {
         children: [
           if ((flight.isActive || flight.isInFlight) && !flight.isPast) ...[
             _PulsingDot(color: color),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppTheme.spacing6),
           ],
           Text(
             flight.statusText,
@@ -1237,7 +1239,7 @@ class _AirportCode extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: context.background,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(color: context.border.withValues(alpha: 0.5)),
       ),
       child: Column(
@@ -1579,7 +1581,7 @@ class _ReportCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Padding(
@@ -1588,7 +1590,7 @@ class _ReportCard extends StatelessWidget {
             children: [
               // Rank badge with sparkles for #1
               _RankBadge(rank: rank),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               // Details
               Expanded(
                 child: Column(
@@ -1605,13 +1607,13 @@ class _ReportCard extends StatelessWidget {
                         ),
                         if (report.reporterNodeName != null ||
                             report.reporterNodeId != null) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           Icon(
                             Icons.arrow_forward,
                             size: 12,
                             color: context.textTertiary,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: AppTheme.spacing4),
                           Expanded(
                             child: Text(
                               report.reporterNodeName ??
@@ -1627,7 +1629,7 @@ class _ReportCard extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Row(
                       children: [
                         if (report.estimatedDistance != null) ...[
@@ -1636,7 +1638,7 @@ class _ReportCard extends StatelessWidget {
                             size: 14,
                             color: context.accentColor,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: AppTheme.spacing4),
                           Text(
                             '${report.estimatedDistance!.round()} km',
                             style: TextStyle(
@@ -1645,7 +1647,7 @@ class _ReportCard extends StatelessWidget {
                               fontSize: 13,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppTheme.spacing12),
                         ],
                         if (report.rssi != null) ...[
                           Icon(
@@ -1653,7 +1655,7 @@ class _ReportCard extends StatelessWidget {
                             size: 14,
                             color: context.textTertiary,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: AppTheme.spacing4),
                           Text(
                             '${report.rssi!.round()} dBm',
                             style: TextStyle(
@@ -1708,19 +1710,19 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppTheme.spacing20),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: context.accentColor.withValues(alpha: 0.1),
               ),
               child: Icon(icon, size: 48, color: context.textTertiary),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.spacing20),
             Text(
               title,
               style: TextStyle(
@@ -1729,7 +1731,7 @@ class _EmptyState extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               subtitle,
               textAlign: TextAlign.center,
@@ -1740,7 +1742,7 @@ class _EmptyState extends StatelessWidget {
               ),
             ),
             if (showAction && actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
               FilledButton.icon(
                 onPressed: onAction,
                 icon: const Icon(Icons.add, size: 18),
@@ -1776,7 +1778,7 @@ class _InfoRow extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: 18, color: iconColor),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         Expanded(
           child: Text(text, style: TextStyle(color: textColor, fontSize: 14)),
         ),

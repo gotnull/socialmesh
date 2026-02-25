@@ -58,15 +58,15 @@ class ObservationTimeline extends StatelessWidget {
       children: [
         // Label row: "Observed" ... "Last Logged"
         _buildLabelRow(context),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppTheme.spacing6),
 
         // Timeline bar with markers
         _buildTimelineBar(context),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppTheme.spacing6),
 
         // Date row
         _buildDateRow(context),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppTheme.spacing2),
 
         // Relative time row
         _buildRelativeRow(context),
@@ -236,7 +236,7 @@ class _EncounterCountBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(color: color.withValues(alpha: 0.2), width: 0.5),
       ),
       child: Text(

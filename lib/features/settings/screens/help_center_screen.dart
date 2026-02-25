@@ -212,7 +212,7 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
                 size: 56,
                 color: context.textTertiary.withValues(alpha: 0.4),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               Text(
                 isFiltered
                     ? 'No topics in this category'
@@ -224,7 +224,7 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 isFiltered
                     ? 'Try selecting a different category from the filter chips above.'
@@ -406,7 +406,7 @@ class _ProgressHeader extends StatelessWidget {
     final allDone = completedCount == totalCount && totalCount > 0;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 8),
       child: Row(
         children: [
           // Ico mascot
@@ -418,7 +418,7 @@ class _ProgressHeader extends StatelessWidget {
               size: 60,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppTheme.spacing16),
 
           // Text + progress bar
           Expanded(
@@ -435,21 +435,21 @@ class _ProgressHeader extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Text(
                   allDone
                       ? 'You can replay any tour anytime.'
                       : 'Tap a topic to learn with interactive guides.',
                   style: TextStyle(color: context.textSecondary, fontSize: 13),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: AppTheme.spacing10),
 
                 // Progress bar + count
                 Row(
                   children: [
                     Expanded(
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(AppTheme.radius4),
                         child: LinearProgressIndicator(
                           value: progress,
                           minHeight: 6,
@@ -464,7 +464,7 @@ class _ProgressHeader extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Text(
                       '$completedCount / $totalCount',
                       style: TextStyle(
@@ -505,10 +505,10 @@ class _HelpTopicTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTheme.spacing12),
         decoration: BoxDecoration(
           color: context.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(
             color: isCompleted
                 ? AppTheme.successGreen.withValues(alpha: 0.3)
@@ -526,7 +526,7 @@ class _HelpTopicTile extends StatelessWidget {
                 color: isCompleted
                     ? AppTheme.successGreen.withValues(alpha: 0.1)
                     : AppTheme.primaryMagenta.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Icon(
                 topic.icon,
@@ -536,7 +536,7 @@ class _HelpTopicTile extends StatelessWidget {
                 size: 22,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
 
             // Title + description + metadata
             Expanded(
@@ -566,7 +566,7 @@ class _HelpTopicTile extends StatelessWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     topic.description,
                     style: TextStyle(
@@ -576,7 +576,7 @@ class _HelpTopicTile extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: AppTheme.spacing6),
                   Wrap(
                     spacing: 12,
                     runSpacing: 4,
@@ -622,7 +622,7 @@ class _MetadataChip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 13, color: chipColor),
-        const SizedBox(width: 3),
+        const SizedBox(width: AppTheme.spacing3),
         Text(
           label,
           style: TextStyle(
@@ -652,11 +652,11 @@ class _HelpSettingsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 0),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -671,7 +671,7 @@ class _HelpSettingsSection extends ConsumerWidget {
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
 
           // Show Help Hints toggle
           _HelpSettingRow(
@@ -703,7 +703,7 @@ class _HelpSettingsSection extends ConsumerWidget {
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
 
           // Reset progress button
           SizedBox(
@@ -716,7 +716,7 @@ class _HelpSettingsSection extends ConsumerWidget {
                 foregroundColor: AccentColors.cyan,
                 side: BorderSide(color: AccentColors.cyan),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
               ),
             ),
@@ -749,7 +749,7 @@ class _HelpSettingRow extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, color: context.textSecondary, size: 22),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -762,7 +762,7 @@ class _HelpSettingRow extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppTheme.spacing2),
               Text(
                 subtitle,
                 style: TextStyle(color: context.textTertiary, fontSize: 12),
@@ -770,7 +770,7 @@ class _HelpSettingRow extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         trailing,
       ],
     );

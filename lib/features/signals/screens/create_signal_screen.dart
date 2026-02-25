@@ -197,7 +197,6 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
   /// Show the cloud banner hint animation once per session if user isn't signed in
   void _maybeShowCloudBannerHint() {
-    if (!mounted) return;
     final connectivity = ref.read(signalConnectivityProvider);
     final meshOnlyDebug = ref.read(meshOnlyDebugModeProvider);
     final canUseCloud = connectivity.canUseCloud && !meshOnlyDebug;
@@ -463,7 +462,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
             maxHeight: MediaQuery.of(ctx).size.height * 0.7,
           ),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppTheme.spacing20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -474,11 +473,11 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                     height: 4,
                     decoration: BoxDecoration(
                       color: context.border,
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(AppTheme.radius2),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppTheme.spacing20),
                 Text(
                   'Your Intent',
                   style: TextStyle(
@@ -487,12 +486,12 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Text(
                   'Let others know why you\'re active',
                   style: TextStyle(color: context.textTertiary, fontSize: 13),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 ...PresenceIntent.values
                     .where((i) => i != PresenceIntent.unknown)
                     .map(
@@ -505,7 +504,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                         },
                       ),
                     ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 // Clear option
                 _IntentOption(
                   intent: PresenceIntent.unknown,
@@ -516,7 +515,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                     Navigator.pop(ctx);
                   },
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
               ],
             ),
           ),
@@ -885,7 +884,6 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
       safeSetState(() => _location = safeLocation);
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to get location');
     } finally {
       if (mounted) {
@@ -928,19 +926,19 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
           children: [
             Expanded(child: _buildImageThumbnail(0)),
             if (imageCount >= 2) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(child: _buildImageThumbnail(1)),
             ],
           ],
         ),
         // Second row - if 3 or 4 images
         if (imageCount >= 3) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Row(
             children: [
               Expanded(child: _buildImageThumbnail(2)),
               if (imageCount >= 4) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(child: _buildImageThumbnail(3)),
               ],
             ],
@@ -948,7 +946,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
         ],
         // Location info below grid if present
         if (_location != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Row(
             children: [
               Expanded(
@@ -957,11 +955,11 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                   label: _location!.name ?? 'Current location',
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               BouncyTap(
                 onTap: _isSubmitting ? null : _removeLocation,
                 child: Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(AppTheme.spacing6),
                   decoration: BoxDecoration(
                     color: context.card,
                     shape: BoxShape.circle,
@@ -1051,7 +1049,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                           icon: Icons.timer_outlined,
                           label: _getTTLDisplayText(),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         // Location pill with fade animation
                         IgnorePointer(
                           ignoring: _location == null,
@@ -1067,7 +1065,9 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.black.withValues(alpha: 0.55),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius16,
+                                  ),
                                 ),
                                 child: const Icon(
                                   Icons.location_on,
@@ -1092,7 +1092,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                       child: BouncyTap(
                         onTap: () => _removeImage(index),
                         child: Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(AppTheme.spacing8),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.5),
                             shape: BoxShape.circle,
@@ -1154,7 +1154,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                       child: BouncyTap(
                         onTap: () => _removeImage(index),
                         child: Container(
-                          padding: const EdgeInsets.all(6),
+                          padding: const EdgeInsets.all(AppTheme.spacing6),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.6),
                             shape: BoxShape.circle,
@@ -1199,7 +1199,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       ),
       builder: (ctx) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppTheme.spacing20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1210,11 +1210,11 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                   height: 4,
                   decoration: BoxDecoration(
                     color: context.border,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(AppTheme.radius2),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppTheme.spacing20),
               Text(
                 'Signal Duration',
                 style: TextStyle(
@@ -1223,12 +1223,12 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
               Text(
                 'How long until your signal fades',
                 style: TextStyle(color: context.textTertiary, fontSize: 13),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppTheme.spacing20),
               TTLSelector(
                 selectedMinutes: _ttlMinutes,
                 onChanged: (minutes) {
@@ -1236,7 +1236,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                   Navigator.of(ctx).pop();
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
             ],
           ),
         ),
@@ -1355,7 +1355,12 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                   physics: const AlwaysScrollableScrollPhysics(
                     parent: BouncingScrollPhysics(),
                   ),
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing20,
+                    8,
+                    20,
+                    20,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1369,7 +1374,9 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                           ),
                           decoration: BoxDecoration(
                             color: context.card,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
                             border: Border.all(
                               color: context.border.withValues(alpha: 0.3),
                             ),
@@ -1382,7 +1389,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                 size: 18,
                                 color: context.textTertiary,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppTheme.spacing8),
                               Expanded(
                                 child: Text(
                                   'Connected to BLE but no mesh traffic detected. On iOS, Airplane Mode can block BLE traffic even when connected. Turn off Airplane Mode or toggle Bluetooth.',
@@ -1395,7 +1402,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                             ],
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppTheme.spacing16),
                       ],
 
                       // Modern floating input container with gradient accent border
@@ -1608,14 +1615,14 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                       ),
 
                       // Intent picker row
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                       _PresenceIntentRow(
                         intent: _selectedIntent,
                         onTap: _isSubmitting ? null : _showIntentPicker,
                       ),
 
                       // Short status field
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppTheme.spacing12),
                       _ShortStatusField(
                         controller: _statusController,
                         enabled: !_isSubmitting,
@@ -1624,7 +1631,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
                       // Images preview grid
                       if (showImages) ...[
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppTheme.spacing16),
                         ScaleTransition(
                           scale: _imageScaleAnimation,
                           child: FadeTransition(
@@ -1636,7 +1643,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
                       // Location loading indicator
                       if (_isLoadingLocation && _location == null) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppTheme.spacing12),
                         FadeTransition(
                           opacity: _locationLoadingController,
                           child: Container(
@@ -1646,7 +1653,9 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                             ),
                             decoration: BoxDecoration(
                               color: context.card,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius12,
+                              ),
                               border: Border.all(
                                 color: context.border.withValues(alpha: 0.3),
                               ),
@@ -1661,7 +1670,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                     color: context.accentColor,
                                   ),
                                 ),
-                                const SizedBox(width: 10),
+                                const SizedBox(width: AppTheme.spacing10),
                                 Text(
                                   'Retrieving device location...',
                                   style: TextStyle(
@@ -1677,7 +1686,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
                       // Location preview (only if no images - otherwise shown as pill on image)
                       if (_location != null && !showImages) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppTheme.spacing12),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 14,
@@ -1685,7 +1694,9 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                           ),
                           decoration: BoxDecoration(
                             color: context.card,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
                             border: Border.all(
                               color: context.border.withValues(alpha: 0.3),
                             ),
@@ -1697,7 +1708,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                 size: 18,
                                 color: context.accentColor,
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: AppTheme.spacing10),
                               Expanded(
                                 child: Text(
                                   _location!.name ?? 'Current location',
@@ -1720,7 +1731,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                         ),
                       ],
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
 
                       // Privacy note
                       Row(
@@ -1731,7 +1742,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                             size: 14,
                             color: context.textTertiary,
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: AppTheme.spacing6),
                           Expanded(
                             child: Text(
                               'Signal location uses mesh device position, rounded to ~${signalRadiusMeters}m.',
@@ -1744,7 +1755,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                         ],
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
 
                       // Cloud availability banner
                       if (!canUseCloud)
@@ -1755,12 +1766,16 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                               final canTapToSubscribe =
                                   !meshOnlyDebug && connectivity.hasInternet;
                               final banner = Container(
-                                padding: const EdgeInsets.all(12),
+                                padding: const EdgeInsets.all(
+                                  AppTheme.spacing12,
+                                ),
                                 decoration: BoxDecoration(
                                   color: context.accentColor.withValues(
                                     alpha: 0.15,
                                   ),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius12,
+                                  ),
                                   border: Border.all(
                                     color: context.accentColor.withValues(
                                       alpha: 0.4,
@@ -1776,7 +1791,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                       size: 18,
                                       color: context.accentColor,
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: AppTheme.spacing8),
                                     Expanded(
                                       child: Text(
                                         meshOnlyDebug
@@ -1791,7 +1806,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                       ),
                                     ),
                                     if (canTapToSubscribe) ...[
-                                      const SizedBox(width: 8),
+                                      const SizedBox(width: AppTheme.spacing8),
                                       Icon(
                                         Icons.chevron_right,
                                         size: 20,
@@ -1844,10 +1859,12 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: Container(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(AppTheme.spacing12),
                             decoration: BoxDecoration(
                               color: context.card,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius8,
+                              ),
                               border: Border.all(
                                 color: context.border.withValues(alpha: 0.3),
                               ),
@@ -1860,7 +1877,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                   size: 18,
                                   color: context.textTertiary,
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: AppTheme.spacing8),
                                 Expanded(
                                   child: Text(
                                     'iOS Airplane Mode can pause BLE mesh traffic even when connected. If signals stop, turn off Airplane Mode or toggle Bluetooth.',
@@ -1941,7 +1958,9 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                             color: canSubmit
                                 ? null
                                 : context.border.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius16,
+                            ),
                             boxShadow: canSubmit
                                 ? [
                                     BoxShadow(
@@ -1975,7 +1994,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                           ? Colors.white
                                           : context.textTertiary,
                                     ),
-                                    const SizedBox(width: 10),
+                                    const SizedBox(width: AppTheme.spacing10),
                                     Text(
                                       'Send Signal',
                                       style: TextStyle(
@@ -2036,7 +2055,7 @@ class _MediaPickerSheet extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Camera option
               _PickerOption(
@@ -2047,7 +2066,7 @@ class _MediaPickerSheet extends StatelessWidget {
                     Navigator.pop(context, _MediaPickerResult.camera()),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
 
               // Gallery option
               _PickerOption(
@@ -2058,7 +2077,7 @@ class _MediaPickerSheet extends StatelessWidget {
                     Navigator.pop(context, _MediaPickerResult.gallery()),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
 
               // Cancel button
               TextButton(
@@ -2091,12 +2110,12 @@ class _PickerOption extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white.withValues(alpha: 0.05),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Row(
             children: [
               Container(
@@ -2104,11 +2123,11 @@ class _PickerOption extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   gradient: AppTheme.brandGradient,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Icon(icon, color: Colors.white, size: 24),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppTheme.spacing16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -2156,13 +2175,13 @@ class _InfoPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: Colors.white),
-          const SizedBox(width: 5),
+          const SizedBox(width: AppTheme.spacing5),
           Flexible(
             child: Text(
               label,
@@ -2213,7 +2232,7 @@ class _InputActionButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: isEnabled ? onTap : onDisabledTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           child: Row(
@@ -2231,7 +2250,7 @@ class _InputActionButton extends StatelessWidget {
               else
                 Icon(icon, size: 20, color: color),
               if (label != null) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 Text(
                   label!,
                   style: TextStyle(
@@ -2288,7 +2307,7 @@ class _PresenceIntentRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(
             color: hasIntent
                 ? context.accentColor.withValues(alpha: 0.4)
@@ -2302,7 +2321,7 @@ class _PresenceIntentRow extends StatelessWidget {
               size: 20,
               color: hasIntent ? context.accentColor : context.textTertiary,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2315,7 +2334,7 @@ class _PresenceIntentRow extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     hasIntent ? intent.label : 'Tap to set',
                     style: TextStyle(
@@ -2366,7 +2385,7 @@ class _IntentOption extends StatelessWidget {
           color: isSelected
               ? context.accentColor.withValues(alpha: 0.15)
               : context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(
             color: isSelected
                 ? context.accentColor.withValues(alpha: 0.5)
@@ -2380,7 +2399,7 @@ class _IntentOption extends StatelessWidget {
               size: 22,
               color: isSelected ? context.accentColor : context.textSecondary,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Text(
                 displayLabel,
@@ -2424,7 +2443,7 @@ class _ShortStatusField extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border.withValues(alpha: 0.3)),
       ),
       child: Row(
@@ -2438,7 +2457,7 @@ class _ShortStatusField extends StatelessWidget {
               color: context.textTertiary,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2451,7 +2470,7 @@ class _ShortStatusField extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 TextField(
                   controller: controller,
                   enabled: enabled,
@@ -2478,7 +2497,7 @@ class _ShortStatusField extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Padding(
             padding: const EdgeInsets.only(top: 16),
             child: Text(

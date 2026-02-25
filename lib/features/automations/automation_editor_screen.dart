@@ -243,14 +243,15 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
             onTap: () => FocusScope.of(context).unfocus(),
             behavior: HitTestBehavior.opaque,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Name field
                   _buildSectionTitle(context, 'Name'),
-                  SizedBox(height: 8),
+                  SizedBox(height: AppTheme.spacing8),
                   TextField(
+                    maxLength: 100,
                     controller: _nameController,
                     textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
@@ -258,15 +259,15 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                       filled: true,
                       fillColor: context.card,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         borderSide: BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         borderSide: BorderSide(color: context.border),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         borderSide: BorderSide(
                           color: Theme.of(context).colorScheme.primary,
                         ),
@@ -274,12 +275,13 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                     ),
                   ),
 
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
 
                   // Description field
                   _buildSectionTitle(context, 'Description (optional)'),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   TextField(
+                    maxLength: 500,
                     controller: _descriptionController,
                     textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
@@ -287,15 +289,15 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                       filled: true,
                       fillColor: context.card,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         borderSide: BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         borderSide: BorderSide(color: context.border),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         borderSide: BorderSide(
                           color: Theme.of(context).colorScheme.primary,
                         ),
@@ -304,7 +306,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                     maxLines: 2,
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // WHEN (Trigger)
                   _buildSectionTitle(
@@ -313,7 +315,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                     icon: Icons.bolt,
                     color: Colors.amber,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   TriggerSelector(
                     trigger: _trigger,
                     availableNodes: ref.watch(nodesProvider).values.toList(),
@@ -344,7 +346,9 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                             color: Theme.of(
                               context,
                             ).colorScheme.primary.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -354,7 +358,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                                 size: 16,
                                 color: Theme.of(context).colorScheme.primary,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: AppTheme.spacing4),
                               Text(
                                 'Add Action',
                                 style: TextStyle(
@@ -369,7 +373,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
 
                   // Actions list with flow connectors
                   ..._actions.asMap().entries.map((entry) {
@@ -405,7 +409,9 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                     );
                   }),
 
-                  const SizedBox(height: 100), // Space for bottom button
+                  const SizedBox(
+                    height: AppTheme.spacing100,
+                  ), // Space for bottom button
                 ],
               ),
             ),
@@ -430,7 +436,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: BouncyTap(
           onTap: _isSaving ? null : _save,
           child: Container(
@@ -438,7 +444,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
               gradient: LinearGradient(colors: gradientColors),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: _isSaving
                 ? const Row(
@@ -452,7 +458,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                           color: Colors.white,
                         ),
                       ),
-                      SizedBox(width: 10),
+                      SizedBox(width: AppTheme.spacing10),
                       Text(
                         'Saving...',
                         style: TextStyle(
@@ -488,7 +494,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
       children: [
         if (icon != null) ...[
           Icon(icon, size: 18, color: color ?? Colors.grey),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
         ],
         Text(
           title,
@@ -511,7 +517,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          const SizedBox(width: 18),
+          const SizedBox(width: AppTheme.spacing18),
           Column(
             children: [
               Container(
@@ -553,7 +559,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
               ),
             ],
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Text(
             isFirst ? 'then do...' : 'then...',
             style: TextStyle(
@@ -568,7 +574,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: AppTheme.successGreen.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
               ),
               child: Text(
                 'Step $stepNumber',
@@ -579,7 +585,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                 ),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppTheme.spacing16),
           ],
         ],
       ),
@@ -724,7 +730,7 @@ class _ActionTypeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -736,7 +742,7 @@ class _ActionTypeSelector extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
                 color: Colors.grey[600],
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppTheme.radius2),
               ),
             ),
           ),
@@ -746,7 +752,7 @@ class _ActionTypeSelector extends StatelessWidget {
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppTheme.spacing16),
 
           Wrap(
             spacing: 8,
@@ -761,14 +767,14 @@ class _ActionTypeSelector extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: context.card,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     border: Border.all(color: context.border),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(type.icon, size: 20),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Text(type.displayName),
                     ],
                   ),

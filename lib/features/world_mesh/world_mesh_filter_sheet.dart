@@ -51,7 +51,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
               margin: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.grey[600],
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppTheme.radius2),
               ),
             ),
             // Header
@@ -60,7 +60,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
               child: Row(
                 children: [
                   Icon(Icons.filter_list, color: accentColor),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Text(
                     'Filter Nodes',
                     style: theme.textTheme.titleLarge?.copyWith(
@@ -86,7 +86,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
             ),
             // Results count
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -94,13 +94,13 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                 ),
                 decoration: BoxDecoration(
                   color: accentColor.withAlpha(20),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.location_on, size: 16, color: accentColor),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Text(
                       '$filteredCount of $totalCount nodes',
                       style: TextStyle(
@@ -109,7 +109,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                       ),
                     ),
                     if (filters.hasActiveFilters) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -117,7 +117,9 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                         ),
                         decoration: BoxDecoration(
                           color: accentColor,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                         child: Text(
                           '${filters.activeFilterCount} filter${filters.activeFilterCount == 1 ? '' : 's'}',
@@ -138,7 +140,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
             Expanded(
               child: ListView(
                 controller: scrollController,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 children: [
                   // Status filter
                   _buildFilterSection(
@@ -152,7 +154,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                         _toggleCategory(WorldMeshFilterCategory.status),
                     child: _buildStatusFilters(options, filters, accentColor),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
 
                   // Hardware filter
                   _buildFilterSection(
@@ -173,7 +175,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                       accentColor: accentColor,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
 
                   // Modem Preset filter
                   _buildFilterSection(
@@ -195,7 +197,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                       accentColor: accentColor,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
 
                   // Region filter
                   _buildFilterSection(
@@ -216,7 +218,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                       accentColor: accentColor,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
 
                   // Role filter
                   _buildFilterSection(
@@ -237,7 +239,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                       accentColor: accentColor,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
 
                   // Firmware filter
                   _buildFilterSection(
@@ -258,7 +260,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                       accentColor: accentColor,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
 
                   // Boolean filters
                   _buildBooleanFilterSection(
@@ -272,7 +274,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                         .setHasEnvironmentSensors(value),
                     accentColor: accentColor,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
 
                   _buildBooleanFilterSection(
                     title: 'Battery Info',
@@ -285,7 +287,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                     accentColor: accentColor,
                   ),
 
-                  const SizedBox(height: 100), // Bottom padding
+                  const SizedBox(height: AppTheme.spacing100), // Bottom padding
                 ],
               ),
             ),
@@ -321,7 +323,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(
           color: activeCount > 0 ? accentColor : context.border,
         ),
@@ -332,7 +334,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
           BouncyTap(
             onTap: onToggle,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Row(
                 children: [
                   Container(
@@ -341,7 +343,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                     decoration: BoxDecoration(
                       color: (activeCount > 0 ? accentColor : Colors.grey)
                           .withAlpha(30),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                     child: Icon(
                       icon,
@@ -349,7 +351,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                       color: activeCount > 0 ? accentColor : Colors.grey,
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Text(
                       title,
@@ -367,7 +369,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                       ),
                       decoration: BoxDecoration(
                         color: accentColor,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Text(
                         '$activeCount',
@@ -378,7 +380,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                         ),
                       ),
                     ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   AnimatedRotation(
                     turns: isExpanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
@@ -395,7 +397,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
           AnimatedCrossFade(
             firstChild: const SizedBox.shrink(),
             secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 16),
               child: child,
             ),
             crossFadeState: isExpanded
@@ -424,7 +426,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
               .read(worldMeshFiltersProvider.notifier)
               .toggleStatus(PresenceConfidence.active),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: AppTheme.spacing8),
         _buildStatusChip(
           label: 'Fading (2-10m)',
           count: options.fadingCount,
@@ -434,7 +436,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
               .read(worldMeshFiltersProvider.notifier)
               .toggleStatus(PresenceConfidence.fading),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _buildStatusChip(
           label: 'Inactive (10-60m)',
           count: options.staleCount,
@@ -444,7 +446,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
               .read(worldMeshFiltersProvider.notifier)
               .toggleStatus(PresenceConfidence.stale),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _buildStatusChip(
           label: 'Unknown (>60m)',
           count: options.unknownCount,
@@ -471,7 +473,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected ? color.withAlpha(30) : context.background,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(color: isSelected ? color : context.border),
         ),
         child: Row(
@@ -481,7 +483,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
               height: 10,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
-            SizedBox(width: 12),
+            SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Text(
                 label,
@@ -495,7 +497,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
               count.toString(),
               style: TextStyle(color: context.textTertiary, fontSize: 13),
             ),
-            SizedBox(width: 8),
+            SizedBox(width: AppTheme.spacing8),
             Icon(
               isSelected ? Icons.check_circle : Icons.circle_outlined,
               size: 20,
@@ -515,7 +517,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
   }) {
     if (items.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(AppTheme.spacing8),
         child: Text(
           'No options available',
           style: TextStyle(color: context.textTertiary, fontSize: 13),
@@ -539,7 +541,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
               color: isSelected
                   ? accentColor.withAlpha(30)
                   : context.background,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppTheme.radius20),
               border: Border.all(
                 color: isSelected ? accentColor : context.border,
               ),
@@ -556,7 +558,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                   ),
                 ),
                 if (isSelected) ...[
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppTheme.spacing6),
                   Icon(Icons.check, size: 14, color: accentColor),
                 ],
               ],
@@ -576,10 +578,10 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
     required Color accentColor,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: value != null ? accentColor : context.border),
       ),
       child: Column(
@@ -594,7 +596,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                   color: (value != null ? accentColor : Colors.grey).withAlpha(
                     30,
                   ),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Icon(
                   icon,
@@ -602,7 +604,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                   color: value != null ? accentColor : Colors.grey,
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,7 +628,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Row(
             children: [
               Expanded(
@@ -637,7 +639,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                   accentColor: accentColor,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: _buildTriStateButton(
                   label: 'Yes',
@@ -646,7 +648,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                   accentColor: accentColor,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: _buildTriStateButton(
                   label: 'No',
@@ -677,7 +679,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: isSelected ? accentColor.withAlpha(30) : context.background,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(color: isSelected ? accentColor : context.border),
         ),
         child: Center(

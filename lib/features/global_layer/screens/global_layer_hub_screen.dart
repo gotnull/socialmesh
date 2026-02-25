@@ -19,6 +19,7 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/mqtt_providers.dart';
 import 'global_layer_setup_wizard.dart';
 import 'global_layer_status_screen.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Hub screen that routes to the appropriate Global Layer sub-screen
 /// based on the current setup state.
@@ -78,7 +79,7 @@ class _GlobalLayerHubScreenState extends ConsumerState<GlobalLayerHubScreen>
         title: GlobalLayerConstants.featureLabel,
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppTheme.spacing24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -87,13 +88,13 @@ class _GlobalLayerHubScreenState extends ConsumerState<GlobalLayerHubScreen>
                   size: 48,
                   color: Theme.of(context).colorScheme.error,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 Text(
                   'Failed to load Global Layer configuration',
                   style: Theme.of(context).textTheme.titleMedium,
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Text(
                   error.toString(),
                   style: Theme.of(context).textTheme.bodySmall,
@@ -101,7 +102,7 @@ class _GlobalLayerHubScreenState extends ConsumerState<GlobalLayerHubScreen>
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 FilledButton.icon(
                   onPressed: () {
                     ref.invalidate(globalLayerConfigProvider);

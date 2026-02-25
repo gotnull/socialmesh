@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../safety/safe_image.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// A fullscreen image gallery with swipe navigation and pinch-to-zoom.
 ///
@@ -132,7 +133,9 @@ class _FullscreenGalleryState extends State<FullscreenGallery> {
                         ),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius16,
+                          ),
                         ),
                         child: Text(
                           '${_currentIndex + 1} / ${widget.images.length}',

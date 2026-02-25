@@ -154,13 +154,13 @@ class ProximityBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: context.accentColor.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           ProximityIndicator(hopCount: hopCount, size: 5, spacing: 2),
-          const SizedBox(width: 5),
+          const SizedBox(width: AppTheme.spacing5),
           Text(
             _label,
             style: TextStyle(

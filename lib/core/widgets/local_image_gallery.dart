@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// A fullscreen gallery view for local image files.
 /// Used for previewing images before they're uploaded (e.g., in create signal screen).
@@ -142,7 +143,7 @@ class _LocalImageGalleryState extends State<LocalImageGallery> {
                       ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppTheme.radius16),
                       ),
                       child: Text(
                         '${_currentIndex + 1} / ${widget.imagePaths.length}',
@@ -155,7 +156,7 @@ class _LocalImageGalleryState extends State<LocalImageGallery> {
                     ),
                     const Spacer(),
                     // Placeholder for symmetry
-                    const SizedBox(width: 48),
+                    const SizedBox(width: AppTheme.spacing48),
                   ],
                 ),
               ),

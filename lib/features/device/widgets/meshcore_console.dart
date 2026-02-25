@@ -47,7 +47,7 @@ class _MeshCoreConsoleState extends ConsumerState<MeshCoreConsole> {
     return Container(
       decoration: BoxDecoration(
         color: context.background,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: AccentColors.purple.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -56,9 +56,9 @@ class _MeshCoreConsoleState extends ConsumerState<MeshCoreConsole> {
           // Header (always visible)
           InkWell(
             onTap: () => setState(() => _expanded = !_expanded),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Row(
                 children: [
                   Container(
@@ -66,7 +66,7 @@ class _MeshCoreConsoleState extends ConsumerState<MeshCoreConsole> {
                     height: 44,
                     decoration: BoxDecoration(
                       color: AccentColors.purple.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                     child: Icon(
                       Icons.terminal,
@@ -74,7 +74,7 @@ class _MeshCoreConsoleState extends ConsumerState<MeshCoreConsole> {
                       size: 22,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: AppTheme.spacing14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +89,7 @@ class _MeshCoreConsoleState extends ConsumerState<MeshCoreConsole> {
                                 color: context.textPrimary,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 6,
@@ -99,7 +99,9 @@ class _MeshCoreConsoleState extends ConsumerState<MeshCoreConsole> {
                                 color: AccentColors.purple.withValues(
                                   alpha: 0.15,
                                 ),
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius4,
+                                ),
                               ),
                               child: Text(
                                 'DEV',
@@ -112,7 +114,7 @@ class _MeshCoreConsoleState extends ConsumerState<MeshCoreConsole> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           '${captureSnapshot.totalCount} frames captured',
                           style: TextStyle(
@@ -155,7 +157,7 @@ class _MeshCoreConsoleState extends ConsumerState<MeshCoreConsole> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: captureSnapshot.hasFrames
@@ -171,7 +173,7 @@ class _MeshCoreConsoleState extends ConsumerState<MeshCoreConsole> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: captureSnapshot.hasFrames ? _onClear : null,
@@ -194,7 +196,12 @@ class _MeshCoreConsoleState extends ConsumerState<MeshCoreConsole> {
                 constraints: const BoxConstraints(maxHeight: 300),
                 child: ListView.builder(
                   shrinkWrap: true,
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    0,
+                    16,
+                    16,
+                  ),
                   itemCount: captureSnapshot.frames.length,
                   itemBuilder: (context, index) {
                     final frame = captureSnapshot.frames[index];
@@ -204,12 +211,17 @@ class _MeshCoreConsoleState extends ConsumerState<MeshCoreConsole> {
               )
             else
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  0,
+                  16,
+                  16,
+                ),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
                   decoration: BoxDecoration(
                     color: context.cardAlt,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                   child: Center(
                     child: Text(
@@ -272,7 +284,7 @@ class _FrameItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: context.cardAlt,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
       ),
       child: Row(
         children: [
@@ -281,7 +293,7 @@ class _FrameItem extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
               color: dirColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppTheme.radius4),
             ),
             child: Text(
               dirLabel,
@@ -293,7 +305,7 @@ class _FrameItem extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           // Timestamp
           Text(
             '@${frame.timestampMs}ms',
@@ -303,7 +315,7 @@ class _FrameItem extends StatelessWidget {
               fontFamily: 'monospace',
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           // Code
           Text(
             codeHex,
@@ -314,7 +326,7 @@ class _FrameItem extends StatelessWidget {
               fontFamily: 'monospace',
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           // Payload length
           Text(
             '${frame.payload.length}B',

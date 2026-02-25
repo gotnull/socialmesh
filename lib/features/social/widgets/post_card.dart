@@ -10,6 +10,7 @@ import '../../../models/social.dart';
 import '../../../providers/auth_providers.dart';
 import '../widgets/follow_button.dart';
 import '../widgets/post_actions_bar.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// A card displaying a post in the feed.
 class PostCard extends ConsumerWidget {
@@ -46,13 +47,13 @@ class PostCard extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(0),
+        borderRadius: BorderRadius.circular(AppTheme.radius0),
         side: BorderSide(color: theme.dividerColor.withAlpha(50)),
       ),
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -63,7 +64,7 @@ class PostCard extends ConsumerWidget {
                 onMoreTap: onMoreTap,
                 showFollowButton: showFollowButton && !isOwnPost,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
 
               // Post content
               if (post.content.isNotEmpty)
@@ -76,13 +77,13 @@ class PostCard extends ConsumerWidget {
 
               // Images (if any)
               if (post.imageUrls.isNotEmpty) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 _PostImages(imageUrls: post.imageUrls),
               ],
 
               // Location tag
               if (post.location != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _LocationTag(
                   location: post.location!,
                   onTap: onLocationTap != null
@@ -93,7 +94,7 @@ class PostCard extends ConsumerWidget {
 
               // Node reference
               if (post.nodeId != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _NodeTag(
                   nodeId: post.nodeId!,
                   onTap: onNodeTap != null
@@ -102,7 +103,7 @@ class PostCard extends ConsumerWidget {
                 ),
               ],
 
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
 
               // Actions bar
               PostActionsBar(
@@ -147,7 +148,7 @@ class _AuthorHeader extends StatelessWidget {
             size: 40,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
 
         // Name and time
         Expanded(
@@ -165,7 +166,7 @@ class _AuthorHeader extends StatelessWidget {
                       ),
                     ),
                     if (snapshot?.isVerified == true) ...[
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       const SimpleVerifiedBadge(size: 16),
                     ],
                   ],
@@ -209,7 +210,7 @@ class _PostImages extends StatelessWidget {
       return GestureDetector(
         onTap: () => FullscreenGallery.show(context, images: imageUrls),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: AspectRatio(
             aspectRatio: 16 / 9,
             child: Image.network(
@@ -236,7 +237,7 @@ class _PostImages extends StatelessWidget {
 
     // Grid for multiple images
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
       child: AspectRatio(
         aspectRatio: 1,
         child: GridView.count(
@@ -331,7 +332,7 @@ class _LocationTag extends StatelessWidget {
             size: 14,
             color: theme.colorScheme.primary.withAlpha(180),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             location.name ?? 'Location',
             style: theme.textTheme.bodySmall?.copyWith(
@@ -362,13 +363,13 @@ class _NodeTag extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: theme.colorScheme.secondaryContainer.withAlpha(100),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(AppTheme.radius4),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.router, size: 14, color: theme.colorScheme.secondary),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             Text(
               'Node $nodeId',
               style: theme.textTheme.bodySmall?.copyWith(

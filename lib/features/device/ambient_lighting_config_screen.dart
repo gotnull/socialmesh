@@ -183,15 +183,15 @@ class _AmbientLightingConfigScreenState
       ],
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // LED State toggle
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -229,7 +229,7 @@ class _AmbientLightingConfigScreenState
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Color preview
               Center(
@@ -254,7 +254,7 @@ class _AmbientLightingConfigScreenState
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Preset colors
               Text(
@@ -265,7 +265,7 @@ class _AmbientLightingConfigScreenState
                   color: context.textSecondary,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               Wrap(
                 spacing: 12,
                 runSpacing: 12,
@@ -296,7 +296,7 @@ class _AmbientLightingConfigScreenState
                 }).toList(),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // RGB sliders
               Text(
@@ -307,7 +307,7 @@ class _AmbientLightingConfigScreenState
                   color: context.textSecondary,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
 
               _ColorSlider(
                 label: 'Red',
@@ -345,7 +345,7 @@ class _AmbientLightingConfigScreenState
                 },
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // LED Brightness/Current
               Text(
@@ -356,12 +356,12 @@ class _AmbientLightingConfigScreenState
                   color: context.textSecondary,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,7 +383,9 @@ class _AmbientLightingConfigScreenState
                           ),
                           decoration: BoxDecoration(
                             color: context.accentColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius6,
+                            ),
                           ),
                           child: Text(
                             '$_current mA',
@@ -396,7 +398,7 @@ class _AmbientLightingConfigScreenState
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Text(
                       'LED drive current (brightness)',
                       style: TextStyle(
@@ -404,7 +406,7 @@ class _AmbientLightingConfigScreenState
                         fontSize: 12,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     SliderTheme(
                       data: SliderThemeData(
                         activeTrackColor: context.accentColor,
@@ -432,7 +434,7 @@ class _AmbientLightingConfigScreenState
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // Info card
               StatusBanner.accent(

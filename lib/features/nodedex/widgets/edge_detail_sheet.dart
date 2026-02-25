@@ -131,7 +131,7 @@ class EdgeDetailSheet extends ConsumerWidget {
         // Header
         _buildHeader(context, blendedColor),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: AppTheme.spacing20),
 
         // Endpoint nodes
         _buildEndpoints(
@@ -147,28 +147,28 @@ class EdgeDetailSheet extends ConsumerWidget {
           blendedColor: blendedColor,
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: AppTheme.spacing20),
 
         // Strength indicator
         _buildStrengthIndicator(context, relationship, blendedColor),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // Stats grid
         _buildStatsGrid(context, relationship, blendedColor),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // Timeline
         _buildTimeline(context, relationship, blendedColor),
 
         // Message activity section (if any messages)
         if (relationship.messageCount > 0) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildMessageActivity(context, relationship, blendedColor),
         ],
 
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
       ],
     );
   }
@@ -182,7 +182,7 @@ class EdgeDetailSheet extends ConsumerWidget {
           size: 48,
           color: context.textTertiary.withValues(alpha: 0.4),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
         Text(
           'No relationship data',
           style: TextStyle(
@@ -191,12 +191,12 @@ class EdgeDetailSheet extends ConsumerWidget {
             color: context.textSecondary,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppTheme.spacing6),
         Text(
           'These nodes have not been observed together.',
           style: TextStyle(fontSize: 13, color: context.textTertiary),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
       ],
     );
   }
@@ -219,7 +219,7 @@ class EdgeDetailSheet extends ConsumerWidget {
           ),
           child: Icon(Icons.link, size: 20, color: accent),
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: AppTheme.spacing14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,7 +233,7 @@ class EdgeDetailSheet extends ConsumerWidget {
                   fontFamily: AppTheme.fontFamily,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppTheme.spacing2),
               Text(
                 'Co-seen relationship details',
                 style: TextStyle(fontSize: 12, color: context.textTertiary),
@@ -260,10 +260,10 @@ class EdgeDetailSheet extends ConsumerWidget {
     final isDark = context.isDarkMode;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppTheme.spacing14),
       decoration: BoxDecoration(
         color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTheme.radius14),
         border: Border.all(color: context.border.withValues(alpha: 0.15)),
       ),
       child: Row(
@@ -355,7 +355,7 @@ class EdgeDetailSheet extends ConsumerWidget {
         Row(
           children: [
             Icon(Icons.signal_cellular_alt, size: 14, color: accent),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppTheme.spacing6),
             Text(
               'Link Strength',
               style: TextStyle(
@@ -369,7 +369,7 @@ class EdgeDetailSheet extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: accent.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Text(
                 strength,
@@ -383,7 +383,7 @@ class EdgeDetailSheet extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         // Strength bar
         Container(
           height: 6,
@@ -391,7 +391,7 @@ class EdgeDetailSheet extends ConsumerWidget {
             color: (isDark ? Colors.white : Colors.black).withValues(
               alpha: 0.06,
             ),
-            borderRadius: BorderRadius.circular(3),
+            borderRadius: BorderRadius.circular(AppTheme.radius3),
           ),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
@@ -401,7 +401,7 @@ class EdgeDetailSheet extends ConsumerWidget {
                 gradient: LinearGradient(
                   colors: [accent.withValues(alpha: 0.6), accent],
                 ),
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(AppTheme.radius3),
               ),
             ),
           ),
@@ -419,10 +419,10 @@ class EdgeDetailSheet extends ConsumerWidget {
     final isDark = context.isDarkMode;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppTheme.spacing14),
       decoration: BoxDecoration(
         color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTheme.radius14),
         border: Border.all(color: context.border.withValues(alpha: 0.15)),
       ),
       child: Column(
@@ -437,7 +437,7 @@ class EdgeDetailSheet extends ConsumerWidget {
                   color: accent,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: _StatCell(
                   icon: Icons.chat_bubble_outline,
@@ -448,7 +448,7 @@ class EdgeDetailSheet extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Row(
             children: [
               Expanded(
@@ -459,7 +459,7 @@ class EdgeDetailSheet extends ConsumerWidget {
                   color: accent,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: _StatCell(
                   icon: Icons.schedule_outlined,
@@ -471,7 +471,7 @@ class EdgeDetailSheet extends ConsumerWidget {
             ],
           ),
           if (relationship.relationshipAge.inHours >= 1) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Row(
               children: [
                 Expanded(
@@ -482,7 +482,7 @@ class EdgeDetailSheet extends ConsumerWidget {
                     color: accent,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 const Expanded(child: SizedBox.shrink()),
               ],
             ),
@@ -506,7 +506,7 @@ class EdgeDetailSheet extends ConsumerWidget {
         Row(
           children: [
             Icon(Icons.timeline, size: 14, color: accent),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppTheme.spacing6),
             Text(
               'Relationship Timeline',
               style: TextStyle(
@@ -517,7 +517,7 @@ class EdgeDetailSheet extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppTheme.spacing10),
         // Timeline visual
         Row(
           children: [
@@ -540,7 +540,7 @@ class EdgeDetailSheet extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     Text(
                       'First',
                       style: TextStyle(
@@ -551,7 +551,7 @@ class EdgeDetailSheet extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: AppTheme.spacing3),
                 Padding(
                   padding: const EdgeInsets.only(left: 16),
                   child: Text(
@@ -580,7 +580,7 @@ class EdgeDetailSheet extends ConsumerWidget {
                         accent.withValues(alpha: 0.6),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(1),
+                    borderRadius: BorderRadius.circular(AppTheme.radius1),
                   ),
                 ),
               ),
@@ -601,7 +601,7 @@ class EdgeDetailSheet extends ConsumerWidget {
                         color: context.textTertiary,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     Container(
                       width: 10,
                       height: 10,
@@ -613,7 +613,7 @@ class EdgeDetailSheet extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: AppTheme.spacing3),
                 Padding(
                   padding: const EdgeInsets.only(right: 16),
                   child: Text(
@@ -644,7 +644,7 @@ class EdgeDetailSheet extends ConsumerWidget {
                   color: (isDark ? Colors.white : Colors.black).withValues(
                     alpha: 0.04,
                   ),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: Text(
                   'Linked for ${_formatDuration(relationship.relationshipAge)}',
@@ -672,10 +672,10 @@ class EdgeDetailSheet extends ConsumerWidget {
         : '${relationship.messageCount}';
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppTheme.spacing14),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTheme.radius14),
         border: Border.all(color: accent.withValues(alpha: 0.12)),
       ),
       child: Row(
@@ -689,7 +689,7 @@ class EdgeDetailSheet extends ConsumerWidget {
             ),
             child: Icon(Icons.chat_outlined, size: 18, color: accent),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -702,7 +702,7 @@ class EdgeDetailSheet extends ConsumerWidget {
                     color: context.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   '${relationship.messageCount} messages exchanged while co-present',
                   style: TextStyle(fontSize: 11, color: context.textSecondary),
@@ -837,7 +837,7 @@ class _EndpointTile extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           // Name
           Text(
             name,
@@ -850,7 +850,7 @@ class _EndpointTile extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppTheme.spacing2),
           // Hex ID
           Text(
             '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}',
@@ -860,13 +860,13 @@ class _EndpointTile extends StatelessWidget {
               fontFamily: AppTheme.fontFamily,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           // Trait badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
               color: trait.primary.color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(AppTheme.radius6),
             ),
             child: Text(
               trait.primary.displayLabel,
@@ -878,7 +878,7 @@ class _EndpointTile extends StatelessWidget {
             ),
           ),
           if (onTap != null) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               'View profile',
               style: TextStyle(
@@ -915,7 +915,7 @@ class _StatCell extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: 14, color: color.withValues(alpha: 0.7)),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppTheme.spacing6),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -924,7 +924,7 @@ class _StatCell extends StatelessWidget {
                 label,
                 style: TextStyle(fontSize: 10, color: context.textTertiary),
               ),
-              const SizedBox(height: 1),
+              const SizedBox(height: AppTheme.spacing1),
               Text(
                 value,
                 style: TextStyle(

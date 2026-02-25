@@ -142,7 +142,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
     bool isFavorite,
   ) {
     final cardChild = ClipRRect(
-      borderRadius: BorderRadius.circular(15),
+      borderRadius: BorderRadius.circular(AppTheme.radius15),
       child: Material(
         color: Colors.transparent,
         child: Column(
@@ -170,7 +170,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(
           color: widget.isEditMode ? Colors.transparent : context.border,
           width: 1,
@@ -199,18 +199,18 @@ class _DashboardWidgetState extends State<DashboardWidget>
           if (widget.isEditMode) ...[
             // Drag handle
             Icon(Icons.drag_indicator, color: context.textTertiary, size: 20),
-            SizedBox(width: 8),
+            SizedBox(width: AppTheme.spacing8),
           ],
           // Icon
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(AppTheme.spacing6),
             decoration: BoxDecoration(
               color: context.accentColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
             ),
             child: Icon(displayIcon, color: context.accentColor, size: 16),
           ),
-          SizedBox(width: 10),
+          SizedBox(width: AppTheme.spacing10),
           // Title
           Expanded(
             child: Text(
@@ -225,7 +225,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
           // Custom trailing widget (e.g., LIVE indicator)
           if (widget.trailing != null && !widget.isEditMode) ...[
             widget.trailing!,
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
           ],
           // Favorite indicator (non-edit mode)
           if (!widget.isEditMode && widget.config.isFavorite)
@@ -297,9 +297,9 @@ class _EditButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           child: Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(AppTheme.spacing8),
             child: Icon(icon, color: color, size: 20),
           ),
         ),
@@ -327,7 +327,7 @@ class WidgetEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.spacing24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -336,7 +336,7 @@ class WidgetEmptyState extends StatelessWidget {
               size: 32,
               color: context.textTertiary.withValues(alpha: 0.5),
             ),
-            SizedBox(height: 12),
+            SizedBox(height: AppTheme.spacing12),
             Text(
               message,
               style: Theme.of(
@@ -345,7 +345,7 @@ class WidgetEmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             if (actionLabel != null && onAction != null) ...[
-              SizedBox(height: 12),
+              SizedBox(height: AppTheme.spacing12),
               TextButton(
                 onPressed: onAction,
                 child: Text(
@@ -374,13 +374,13 @@ class WidgetLoadingState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           LoadingIndicator(size: 24),
           if (message != null) ...[
-            SizedBox(height: 12),
+            SizedBox(height: AppTheme.spacing12),
             Text(
               message!,
               style: Theme.of(

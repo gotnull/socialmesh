@@ -88,12 +88,12 @@ class _ModerationStatusScreenState
   Widget _buildGoodStanding() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppTheme.spacing24),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.green.withValues(alpha: 0.15),
@@ -104,7 +104,7 @@ class _ModerationStatusScreenState
                 color: Colors.green,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             const Text(
               'Account in Good Standing',
               style: TextStyle(
@@ -113,7 +113,7 @@ class _ModerationStatusScreenState
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               'You have no active warnings or strikes.\nKeep up the great work!',
               style: TextStyle(
@@ -139,23 +139,23 @@ class _ModerationStatusScreenState
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Current status card
           _StatusOverviewCard(status: status),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           // Strike meter
           if (status.activeStrikes > 0) ...[
             _StrikeMeterCard(strikeCount: status.activeStrikes),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
           ],
 
           // Guidelines reminder
           _GuidelinesCard(),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           // History section
           if (status.history.isNotEmpty) ...[
@@ -167,11 +167,11 @@ class _ModerationStatusScreenState
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             ...status.history.map((item) => _HistoryItemCard(item: item)),
           ],
 
-          const SizedBox(height: 32),
+          const SizedBox(height: AppTheme.spacing32),
 
           // Contact support
           Center(
@@ -184,7 +184,7 @@ class _ModerationStatusScreenState
                 ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(
                     color: Colors.white.withValues(alpha: 0.2),
                   ),
@@ -197,7 +197,7 @@ class _ModerationStatusScreenState
                       color: Colors.white.withValues(alpha: 0.8),
                       size: 20,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Text(
                       'Questions? Contact Support',
                       style: TextStyle(
@@ -210,7 +210,7 @@ class _ModerationStatusScreenState
               ),
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: AppTheme.spacing32),
         ],
       ),
     );
@@ -251,7 +251,7 @@ class _StatusOverviewCard extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -261,7 +261,7 @@ class _StatusOverviewCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: statusColor.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -270,14 +270,14 @@ class _StatusOverviewCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: statusColor.withValues(alpha: 0.2),
                 ),
                 child: Icon(statusIcon, color: statusColor, size: 28),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppTheme.spacing16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,7 +291,7 @@ class _StatusOverviewCard extends StatelessWidget {
                       ),
                     ),
                     if (isSuspended && status.suspendedUntil != null) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.spacing4),
                       Text(
                         'Until ${DateFormat.yMMMd().add_jm().format(status.suspendedUntil!)}',
                         style: TextStyle(
@@ -306,9 +306,9 @@ class _StatusOverviewCard extends StatelessWidget {
             ],
           ),
           if (hasStrikes || hasWarnings) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Divider(color: statusColor.withValues(alpha: 0.2)),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -359,7 +359,7 @@ class _StatItem extends StatelessWidget {
             color: color,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Text(
           label,
           style: TextStyle(
@@ -381,10 +381,10 @@ class _StrikeMeterCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,7 +392,7 @@ class _StrikeMeterCard extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.trending_up, color: Colors.orange, size: 20),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               const Text(
                 'Strike Meter',
                 style: TextStyle(
@@ -412,7 +412,7 @@ class _StrikeMeterCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           // Visual strike meter
           Row(
             children: List.generate(maxStrikes, (index) {
@@ -424,7 +424,7 @@ class _StrikeMeterCard extends StatelessWidget {
                   ),
                   height: 8,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppTheme.radius4),
                     color: isActive
                         ? (index == maxStrikes - 1 ? Colors.red : Colors.orange)
                         : Colors.white.withValues(alpha: 0.1),
@@ -433,7 +433,7 @@ class _StrikeMeterCard extends StatelessWidget {
               );
             }),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             strikeCount >= maxStrikes
                 ? '⚠️ Maximum strikes reached. Your account may be suspended.'
@@ -459,7 +459,7 @@ class _GuidelinesCard extends StatelessWidget {
       borderWidth: 2,
       accentOpacity: 0.2,
       backgroundColor: context.accentColor.withValues(alpha: 0.1),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppTheme.spacing20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -470,7 +470,7 @@ class _GuidelinesCard extends StatelessWidget {
                 color: context.accentColor.withValues(alpha: 0.9),
                 size: 20,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               const Text(
                 'Community Guidelines',
                 style: TextStyle(
@@ -481,7 +481,7 @@ class _GuidelinesCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             'Please ensure your content follows our guidelines:',
             style: TextStyle(
@@ -489,7 +489,7 @@ class _GuidelinesCard extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.7),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _GuidelineItem(text: 'No explicit or adult content'),
           _GuidelineItem(text: 'No violent or graphic imagery'),
           _GuidelineItem(text: 'No harassment or hate speech'),
@@ -517,7 +517,7 @@ class _GuidelineItem extends StatelessWidget {
             size: 16,
             color: context.accentColor.withValues(alpha: 0.7),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Expanded(
             child: Text(
               text,
@@ -560,24 +560,24 @@ class _HistoryItemCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: typeColor.withValues(alpha: 0.2)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(AppTheme.spacing8),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: typeColor.withValues(alpha: 0.15),
             ),
             child: Icon(typeIcon, color: typeColor, size: 16),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -603,7 +603,7 @@ class _HistoryItemCard extends StatelessWidget {
                   ],
                 ),
                 if (item.reason != null) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Text(
                     item.reason!,
                     style: TextStyle(
@@ -613,7 +613,7 @@ class _HistoryItemCard extends StatelessWidget {
                   ),
                 ],
                 if (item.contentType != null) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -621,7 +621,7 @@ class _HistoryItemCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(AppTheme.radius6),
                     ),
                     child: Text(
                       item.contentType!,

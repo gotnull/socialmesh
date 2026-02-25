@@ -29,14 +29,14 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
     return GlassScaffold.body(
       title: 'QR Code Styles',
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         children: [
           // Description
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: context.card,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(color: context.border),
             ),
             child: Column(
@@ -45,7 +45,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                 Row(
                   children: [
                     Icon(Icons.qr_code_2, color: context.accentColor, size: 20),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Text(
                       'Branded QR Code Styles',
                       style: TextStyle(
@@ -56,7 +56,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Text(
                   'Preview different QR code styles with the Socialmesh '
                   'logo. All styles use Level H error correction for '
@@ -68,7 +68,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           // Style cards
           _StyleCard(
@@ -79,7 +79,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
             isSelected: _selectedStyle == QrStyle.smooth,
             onTap: () => _selectStyle(QrStyle.smooth),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           _StyleCard(
             style: QrStyle.dots,
@@ -89,7 +89,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
             isSelected: _selectedStyle == QrStyle.dots,
             onTap: () => _selectStyle(QrStyle.dots),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           _StyleCard(
             style: QrStyle.squares,
@@ -99,13 +99,13 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
             isSelected: _selectedStyle == QrStyle.squares,
             onTap: () => _selectStyle(QrStyle.squares),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: AppTheme.spacing32),
 
           // Elevated Styles Header
           Row(
             children: [
               Icon(Icons.auto_awesome, color: context.accentColor, size: 18),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Text(
                 'ELEVATED STYLES',
                 style: TextStyle(
@@ -117,14 +117,14 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppTheme.spacing6),
           Text(
             'Premium color treatments using ${_selectedStyle.name} pattern',
             style: Theme.of(
               context,
             ).textTheme.labelSmall?.copyWith(color: context.textSecondary),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Elevated styles horizontal scroll
           SizedBox(
@@ -143,7 +143,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                   qrBackground: const Color(0xFF0D0D0D),
                   containerDecoration: BoxDecoration(
                     color: const Color(0xFF0D0D0D),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTheme.radius16),
                     border: Border.all(
                       color: context.accentColor.withValues(alpha: 0.6),
                       width: 2,
@@ -162,7 +162,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
 
                 // 2. Frosted Glass
                 _ElevatedStyleCard(
@@ -181,14 +181,14 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                         Colors.white.withValues(alpha: 0.08),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTheme.radius16),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.3),
                       width: 1.5,
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
 
                 // 3. Inverted Dark
                 _ElevatedStyleCard(
@@ -200,14 +200,14 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                   qrBackground: const Color(0xFF1A1A1A),
                   containerDecoration: BoxDecoration(
                     color: const Color(0xFF1A1A1A),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTheme.radius16),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.2),
                       width: 1,
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
 
                 // 4. Holographic
                 _ElevatedStyleCard(
@@ -228,10 +228,10 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                         Color(0xFF3B82F6),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTheme.radius16),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
 
                 // 5. Accent Branded
                 _ElevatedStyleCard(
@@ -250,7 +250,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                         context.accentColor.withValues(alpha: 0.05),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTheme.radius16),
                     border: Border.all(
                       color: context.accentColor.withValues(alpha: 0.4),
                       width: 1.5,
@@ -264,7 +264,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
 
                 // 6. Minimal Outline
                 _ElevatedStyleCard(
@@ -276,11 +276,11 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                   qrBackground: Colors.transparent,
                   containerDecoration: BoxDecoration(
                     color: context.surface,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTheme.radius16),
                     border: Border.all(color: context.border, width: 1),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
 
                 // 7. Cyberpunk
                 _ElevatedStyleCard(
@@ -292,7 +292,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                   qrBackground: const Color(0xFF0A0A0A),
                   containerDecoration: BoxDecoration(
                     color: const Color(0xFF0A0A0A),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTheme.radius16),
                     border: Border.all(
                       color: const Color(0xFF00FF88).withValues(alpha: 0.7),
                       width: 2,
@@ -311,7 +311,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
 
                 // 8. Accent Gradient (Sunset-style using accent colors)
                 _AccentGradientStyleCard(
@@ -320,7 +320,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                   sampleData: sampleData,
                   style: _selectedStyle,
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
 
                 // 9. Ocean Deep
                 _ElevatedStyleCard(
@@ -340,7 +340,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                         Color(0xFF1E40AF),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTheme.radius16),
                     boxShadow: [
                       BoxShadow(
                         color: const Color(0xFF0284C7).withValues(alpha: 0.4),
@@ -350,7 +350,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
 
                 // 10. Monochrome Luxury
                 _ElevatedStyleCard(
@@ -370,7 +370,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                         Color(0xFF9CA3AF),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTheme.radius16),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.5),
                       width: 1.5,
@@ -387,14 +387,14 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           // Large preview of selected style
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppTheme.spacing24),
             decoration: BoxDecoration(
               color: context.card,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.radius16),
               border: Border.all(
                 color: context.accentColor.withValues(alpha: 0.3),
                 width: 2,
@@ -411,12 +411,12 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                     letterSpacing: 1,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: BrandedQrCode(
                     data: sampleData,
@@ -424,7 +424,7 @@ class _QrStylePreviewScreenState extends ConsumerState<QrStylePreviewScreen> {
                     style: _selectedStyle,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 Text(
                   'Scan to verify',
                   style: Theme.of(
@@ -469,14 +469,14 @@ class _StyleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: context.card,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(
               color: isSelected ? context.accentColor : context.border,
               width: isSelected ? 2 : 1,
@@ -486,14 +486,14 @@ class _StyleCard extends StatelessWidget {
             children: [
               // QR preview
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppTheme.spacing8),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: BrandedQrCode(data: sampleData, size: 80, style: style),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppTheme.spacing16),
               // Info
               Expanded(
                 child: Column(
@@ -510,7 +510,7 @@ class _StyleCard extends StatelessWidget {
                           ),
                         ),
                         if (isSelected) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           Icon(
                             Icons.check_circle,
                             size: 18,
@@ -519,7 +519,7 @@ class _StyleCard extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Text(
                       description,
                       style: TextStyle(
@@ -564,7 +564,7 @@ class _ElevatedStyleCard extends StatelessWidget {
     return SizedBox(
       width: 200,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: containerDecoration,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -574,7 +574,7 @@ class _ElevatedStyleCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(icon, color: _labelColor, size: 14),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppTheme.spacing6),
                 Text(
                   title.toUpperCase(),
                   style: TextStyle(
@@ -586,15 +586,15 @@ class _ElevatedStyleCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             // QR Code
             Expanded(
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
                   decoration: BoxDecoration(
                     color: qrBackground,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: BrandedQrCode(
                     data: sampleData,
@@ -606,13 +606,13 @@ class _ElevatedStyleCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             // Style indicator
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: _labelColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Text(
                 style.name,
@@ -680,14 +680,14 @@ class _AccentGradientStyleCard extends StatelessWidget {
     return SizedBox(
       width: 200,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [lightAccent, accent, darkAccent],
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           boxShadow: [
             BoxShadow(
               color: accent.withValues(alpha: 0.5),
@@ -709,7 +709,7 @@ class _AccentGradientStyleCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(icon, color: Colors.white, size: 14),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppTheme.spacing6),
                 Text(
                   title.toUpperCase(),
                   style: const TextStyle(
@@ -721,15 +721,15 @@ class _AccentGradientStyleCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             // QR Code
             Expanded(
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.95),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.15),
@@ -748,13 +748,13 @@ class _AccentGradientStyleCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             // Style indicator
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Text(
                 style.name,

@@ -99,15 +99,15 @@ class _ViewModeCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
         color: isSelected ? accentColor.withValues(alpha: 0.1) : context.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTheme.radius14),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppTheme.radius14),
           splashColor: accentColor.withValues(alpha: 0.08),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppTheme.radius14),
               border: Border.all(
                 color: isSelected
                     ? accentColor.withValues(alpha: 0.4)
@@ -125,7 +125,7 @@ class _ViewModeCard extends StatelessWidget {
                     color: isSelected
                         ? accentColor.withValues(alpha: 0.15)
                         : context.border.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTheme.radius10),
                   ),
                   child: Icon(
                     mode.icon,
@@ -133,7 +133,7 @@ class _ViewModeCard extends StatelessWidget {
                     color: isSelected ? accentColor : context.textSecondary,
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: AppTheme.spacing14),
 
                 // Text content
                 Expanded(
@@ -150,7 +150,7 @@ class _ViewModeCard extends StatelessWidget {
                           color: isSelected ? accentColor : context.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         mode.description,
                         style: TextStyle(

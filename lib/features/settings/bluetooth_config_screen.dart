@@ -108,6 +108,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
       }
     }
 
+    if (!mounted) return;
     final protocol = ref.read(protocolServiceProvider);
     final target = AdminTarget.fromNullable(
       ref.read(remoteAdminTargetProvider),
@@ -198,14 +199,14 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
             const SliverFillRemaining(child: ScreenLoadingIndicator())
           else
             SliverPadding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               sliver: SliverList.list(
                 children: [
                   // Bluetooth enabled toggle
                   Container(
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -218,7 +219,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
                           color: context.textSecondary,
                           size: 22,
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,7 +251,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
                       ],
                     ),
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: AppTheme.spacing24),
 
                   // Pairing mode section
                   Text(
@@ -262,12 +263,12 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
                       letterSpacing: 1,
                     ),
                   ),
-                  SizedBox(height: 12),
+                  SizedBox(height: AppTheme.spacing12),
 
                   Container(
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Column(
                       children: modes.asMap().entries.map((entry) {
@@ -314,7 +315,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
                       }).toList(),
                     ),
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: AppTheme.spacing24),
 
                   // Fixed PIN (only show when mode is Fixed PIN)
                   if (_mode ==
@@ -330,13 +331,13 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
                         letterSpacing: 1,
                       ),
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppTheme.spacing12),
                     Container(
                       decoration: BoxDecoration(
                         color: context.card,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -373,7 +374,9 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
                               filled: true,
                               fillColor: context.background,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide.none,
                               ),
                             ),
@@ -386,7 +389,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
                               }
                             },
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: AppTheme.spacing8),
                           Text(
                             'Enter a 6-digit PIN code for Bluetooth pairing',
                             style: TextStyle(
@@ -397,19 +400,19 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
                         ],
                       ),
                     ),
-                    SizedBox(height: 24),
+                    SizedBox(height: AppTheme.spacing24),
                   ],
 
                   // Info card
                   Container(
                     decoration: BoxDecoration(
                       color: context.accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       border: Border.all(
                         color: context.accentColor.withValues(alpha: 0.3),
                       ),
                     ),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -418,7 +421,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
                           color: context.accentColor.withValues(alpha: 0.8),
                           size: 20,
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Text(
                             'Bluetooth settings control how your device pairs with phones and other devices.',

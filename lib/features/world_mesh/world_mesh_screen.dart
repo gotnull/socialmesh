@@ -348,13 +348,14 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   /// Build search bar widget matching direct messages design
   Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
       child: Container(
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
         ),
         child: TextField(
+          maxLength: 100,
           controller: _searchController,
           focusNode: _searchFocusNode,
           style: TextStyle(color: context.textPrimary),
@@ -419,7 +420,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             right: 6,
             top: 6,
             child: Container(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(AppTheme.spacing4),
               decoration: BoxDecoration(
                 color: accentColor,
                 shape: BoxShape.circle,
@@ -457,7 +458,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         constraints: const BoxConstraints(maxHeight: 400),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
           boxShadow: [
             BoxShadow(
@@ -473,11 +474,11 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           children: [
             // Results header with count
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 8),
               child: Row(
                 children: [
                   Icon(Icons.search, size: 14, color: context.textTertiary),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppTheme.spacing8),
                   Text(
                     '${NumberFormatUtils.formatWithThousandsSeparators(results.length)} node${results.length == 1 ? '' : 's'} found',
                     style: context.bodySmallStyle?.copyWith(
@@ -524,9 +525,9 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                     color: AppTheme.successGreen,
                     label: 'Active (<1h)',
                   ),
-                  SizedBox(width: 16),
+                  SizedBox(width: AppTheme.spacing16),
                   _StatusLegendItem(color: Colors.amber, label: 'Idle (1-24h)'),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppTheme.spacing16),
                   _StatusLegendItem(
                     color: context.textTertiary,
                     label: 'Offline (>24h)',
@@ -544,7 +545,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     final accentColor = theme.colorScheme.primary;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -553,18 +554,18 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               size: 48,
               color: accentColor.withValues(alpha: 0.7),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: AppTheme.spacing16),
             Text(
               'Unable to load mesh map',
               style: TextStyle(color: context.textSecondary, fontSize: 16),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: AppTheme.spacing8),
             Text(
               error,
               style: TextStyle(color: context.textTertiary, fontSize: 12),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             TextButton(
               onPressed: () =>
                   ref.read(worldMeshMapProvider.notifier).forceRefresh(),
@@ -769,7 +770,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               _mapController.fitCamera(
                 CameraFit.bounds(
                   bounds: bounds,
-                  padding: const EdgeInsets.all(50),
+                  padding: const EdgeInsets.all(AppTheme.spacing50),
                 ),
               );
             }
@@ -828,7 +829,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
       height: 120,
       decoration: BoxDecoration(
         color: context.card.withValues(alpha: 0.98),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: accentColor.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
@@ -843,7 +844,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             LoadingIndicator(size: 20),
-            SizedBox(width: 12),
+            SizedBox(width: AppTheme.spacing12),
             Text(
               'Loading node info...',
               style: TextStyle(color: context.textSecondary, fontSize: 14),
@@ -897,7 +898,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 ),
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppTheme.spacing6),
             // Stats row below
             Row(
               children: [
@@ -908,7 +909,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   hasFilters ? 'filtered' : 'visible',
                   highlight: hasFilters,
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
                 _buildStatItem(
                   theme,
                   Icons.cloud_done,
@@ -949,7 +950,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                                   ),
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppTheme.spacing6),
                         Icon(
                           Icons.refresh,
                           size: 14,
@@ -981,7 +982,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     return Row(
       children: [
         Icon(icon, size: 16, color: color),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppTheme.spacing6),
         AnimatedCounter(
           value: value,
           duration: const Duration(milliseconds: 600),
@@ -991,7 +992,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             color: highlight ? theme.colorScheme.primary : null,
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
@@ -1155,7 +1156,7 @@ class _LazySearchResultsListState extends State<_LazySearchResultsList> {
         // Show loading indicator at the end if there's more to load
         if (index >= displayResults.length) {
           return Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Center(
               child: Text(
                 'Scroll for more...',
@@ -1195,7 +1196,7 @@ class _StatusLegendItem extends StatelessWidget {
           height: 8,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        SizedBox(width: 4),
+        SizedBox(width: AppTheme.spacing4),
         Text(
           label,
           style: context.captionStyle?.copyWith(color: context.textTertiary),
@@ -1253,7 +1254,7 @@ class _SearchResultTile extends StatelessWidget {
                     color: isActive
                         ? accentColor.withValues(alpha: 0.2)
                         : context.border.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTheme.radius10),
                   ),
                   child: Center(
                     child: Text(
@@ -1284,7 +1285,7 @@ class _SearchResultTile extends StatelessWidget {
                   ),
               ],
             ),
-            SizedBox(width: 12),
+            SizedBox(width: AppTheme.spacing12),
             // Info
             Expanded(
               child: Column(
@@ -1300,7 +1301,7 @@ class _SearchResultTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     _buildSubtitle(),
                     style: TextStyle(color: context.textTertiary, fontSize: 12),
@@ -1399,7 +1400,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
       constraints: const BoxConstraints(maxHeight: 400),
       decoration: BoxDecoration(
         color: context.card.withValues(alpha: 0.98),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: accentColor.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
@@ -1414,7 +1415,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
         children: [
           // STATIC HEADER - doesn't scroll
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 16),
             child: Row(
               children: [
                 Container(
@@ -1422,7 +1423,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                   height: 44,
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Center(
                     child: Text(
@@ -1436,7 +1437,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1461,7 +1462,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                                 fontSize: 12,
                               ),
                             ),
-                          if (node.hasName) SizedBox(width: 8),
+                          if (node.hasName) SizedBox(width: AppTheme.spacing8),
                           if (node.isRecentlySeen)
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -1472,7 +1473,9 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                                 color: AppTheme.successGreen.withValues(
                                   alpha: 0.2,
                                 ),
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius4,
+                                ),
                               ),
                               child: Text(
                                 'ACTIVE',
@@ -1516,17 +1519,17 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
           // SCROLLABLE CONTENT - middle section
           Flexible(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Mesh Intelligence Section - Derived from mesh-observer data
                   NodeIntelligencePanel(node: node, onShowOnMap: onFocus),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   // Device Info Section
                   _buildSectionHeader(theme, Icons.memory, 'Device'),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   _buildInfoGrid([
                     _InfoItem('Hardware', _formatHardware(node.hwModel)),
                     _InfoItem('Role', _formatRole(node.role)),
@@ -1542,9 +1545,9 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                   // Position Section
                   if (node.altitude != null ||
                       node.precisionMarginMeters != null) ...[
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
                     _buildSectionHeader(theme, Icons.location_on, 'Position'),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     _buildInfoGrid([
                       _InfoItem(
                         'Coordinates',
@@ -1566,13 +1569,13 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                       node.chUtil != null ||
                       node.airUtilTx != null ||
                       node.uptime != null) ...[
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
                     _buildSectionHeader(
                       theme,
                       Icons.analytics,
                       'Device Metrics',
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     _buildMetricsRow(theme, [
                       if (node.batteryLevel != null)
                         _MetricChip(
@@ -1618,9 +1621,9 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                       node.barometricPressure != null ||
                       node.windSpeed != null ||
                       node.lux != null) ...[
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
                     _buildSectionHeader(theme, Icons.thermostat, 'Environment'),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     _buildMetricsRow(theme, [
                       if (node.temperature != null)
                         _MetricChip(
@@ -1673,13 +1676,13 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
 
                   // Neighbors Section
                   if (node.neighbors != null && node.neighbors!.isNotEmpty) ...[
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
                     _buildSectionHeader(
                       theme,
                       Icons.people,
                       'Neighbors (${NumberFormatUtils.formatWithThousandsSeparators(node.neighbors!.length)})',
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -1692,7 +1695,9 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                           ),
                           decoration: BoxDecoration(
                             color: context.border.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
                           ),
                           child: Text(
                             '${entry.key}${snr != null ? ' (${snr.toStringAsFixed(1)}dB)' : ''}',
@@ -1708,13 +1713,13 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
 
                   // Seen By Section
                   if (node.seenBy.isNotEmpty) ...[
-                    SizedBox(height: 16),
+                    SizedBox(height: AppTheme.spacing16),
                     _buildSectionHeader(
                       theme,
                       Icons.wifi_tethering,
                       'Seen By (${NumberFormatUtils.formatWithThousandsSeparators(node.seenBy.length)} gateways)',
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Text(
                       node.seenBy.keys.take(3).join(', ') +
                           (node.seenBy.length > 3
@@ -1728,7 +1733,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                   ],
 
                   // Last Seen
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
                   Row(
                     children: [
                       Icon(
@@ -1736,7 +1741,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                         size: 14,
                         color: context.textSecondary,
                       ),
-                      SizedBox(width: 6),
+                      SizedBox(width: AppTheme.spacing6),
                       Text(
                         'Last seen: ${node.lastSeenString}',
                         style: TextStyle(
@@ -1755,7 +1760,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
 
           // STATIC FOOTER - action buttons
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Row(
               children: [
                 Expanded(
@@ -1771,7 +1776,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: onFocus,
@@ -1794,7 +1799,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
     return Row(
       children: [
         Icon(icon, size: 16, color: theme.colorScheme.primary),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         Text(
           title,
           style: TextStyle(
@@ -1844,14 +1849,14 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: chip.color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(color: chip.color.withValues(alpha: 0.3)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(chip.icon, size: 14, color: chip.color),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Text(
                 chip.value,
                 style: TextStyle(

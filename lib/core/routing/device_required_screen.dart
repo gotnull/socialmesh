@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/connection_providers.dart';
 import '../../utils/snackbar.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Mixin for screens that require device connection.
 /// Automatically shows a blocking overlay when device is disconnected.
@@ -80,7 +81,7 @@ class _DefaultDisconnectedOverlay extends StatelessWidget {
       child: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(AppTheme.spacing32),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -97,14 +98,14 @@ class _DefaultDisconnectedOverlay extends StatelessWidget {
                     color: Colors.orange,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 Text(
                   'Device Not Connected',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Text(
                   message,
                   textAlign: TextAlign.center,
@@ -112,13 +113,13 @@ class _DefaultDisconnectedOverlay extends StatelessWidget {
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spacing32),
                 FilledButton.icon(
                   onPressed: onReconnect,
                   icon: const Icon(Icons.bluetooth_searching),
                   label: const Text('Connect Device'),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 TextButton(
                   onPressed: () {
                     if (Navigator.of(context).canPop()) {

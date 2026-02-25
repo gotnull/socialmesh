@@ -73,12 +73,12 @@ class _MeshReachabilityScreenState
                   color: context.textPrimary,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppTheme.warningYellow.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                   border: Border.all(
                     color: AppTheme.warningYellow.withValues(alpha: 0.5),
                   ),
@@ -119,13 +119,19 @@ class _MeshReachabilityScreenState
             // Search bar
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  12,
+                  16,
+                  8,
+                ),
                 child: Container(
                   decoration: BoxDecoration(
                     color: context.card,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: TextField(
+                    maxLength: 100,
                     onChanged: (value) => setState(() => _searchQuery = value),
                     style: TextStyle(color: context.textPrimary),
                     decoration: InputDecoration(
@@ -196,7 +202,7 @@ class _MeshReachabilityScreenState
             Row(
               children: [
                 Icon(Icons.info_outline, color: context.textSecondary),
-                SizedBox(width: 12),
+                SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Text(
                     'About Reachability',
@@ -209,7 +215,7 @@ class _MeshReachabilityScreenState
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             const _InfoSection(
               title: 'What is this?',
               content:
@@ -217,7 +223,7 @@ class _MeshReachabilityScreenState
                   'your messages will reach each node. It is NOT a guarantee '
                   'of delivery.',
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             const _InfoSection(
               title: 'Scoring Model',
               content:
@@ -228,7 +234,7 @@ class _MeshReachabilityScreenState
                   'Meshtastic forwards packets opportunistically without routing. '
                   'A high score does not guarantee delivery.',
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             const _InfoSection(
               title: 'How is it calculated?',
               content:
@@ -239,7 +245,7 @@ class _MeshReachabilityScreenState
                   '• Observation Pattern: Direct vs relayed packets\n'
                   '• ACK History: DM acknowledgement success rate',
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             const _InfoSection(
               title: 'What the levels mean',
               content:
@@ -247,7 +253,7 @@ class _MeshReachabilityScreenState
                   '• Medium: Moderate confidence based on available data\n'
                   '• Low: Weak or stale indicators, delivery unlikely',
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             const _InfoSection(
               title: 'Important limitations',
               content:
@@ -257,7 +263,7 @@ class _MeshReachabilityScreenState
                   '• Mesh topology changes constantly\n'
                   '• All estimates based on passive observation only',
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -291,7 +297,7 @@ class _InfoSection extends StatelessWidget {
             color: context.textPrimary,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Text(
           content,
           style: TextStyle(
@@ -309,7 +315,7 @@ class _DisclaimerBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 0),
       child: StatusBanner.warning(
         title:
             'Likelihood estimates only. Delivery is never guaranteed in a mesh network.',
@@ -333,7 +339,7 @@ class _ReachabilitySummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 0),
       child: Row(
         children: [
           _SummaryChip(
@@ -341,13 +347,13 @@ class _ReachabilitySummary extends StatelessWidget {
             count: highCount,
             color: _ReachabilityColors.high,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           _SummaryChip(
             label: 'Medium',
             count: mediumCount,
             color: _ReachabilityColors.medium,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           _SummaryChip(
             label: 'Low',
             count: lowCount,
@@ -377,7 +383,7 @@ class _SummaryChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppTheme.radius10),
           border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
@@ -390,7 +396,7 @@ class _SummaryChip extends StatelessWidget {
                 color: color,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: AppTheme.spacing2),
             Text(
               label,
               style: TextStyle(
@@ -418,11 +424,11 @@ class _EmptyState extends StatelessWidget {
             height: 72,
             decoration: BoxDecoration(
               color: context.card,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.radius16),
             ),
             child: Icon(Icons.wifi_find, size: 40, color: context.textTertiary),
           ),
-          SizedBox(height: 24),
+          SizedBox(height: AppTheme.spacing24),
           Text(
             'No nodes discovered yet',
             style: TextStyle(
@@ -431,7 +437,7 @@ class _EmptyState extends StatelessWidget {
               color: context.textSecondary,
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppTheme.spacing8),
           Text(
             'Nodes will appear as they\'re observed\non the mesh network.',
             textAlign: TextAlign.center,
@@ -486,11 +492,11 @@ class _ReachabilityNodeCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -500,7 +506,7 @@ class _ReachabilityNodeCard extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: _getAvatarColor().withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Center(
                   child: Text(
@@ -516,7 +522,7 @@ class _ReachabilityNodeCard extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppTheme.spacing12),
 
               // Info
               Expanded(
@@ -546,7 +552,9 @@ class _ReachabilityNodeCard extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: likelihoodColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius6,
+                            ),
                             border: Border.all(
                               color: likelihoodColor.withValues(alpha: 0.4),
                             ),
@@ -562,7 +570,7 @@ class _ReachabilityNodeCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
 
                     // Short ID
                     Text(
@@ -573,7 +581,7 @@ class _ReachabilityNodeCard extends StatelessWidget {
                         fontFamily: AppTheme.fontFamily,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
 
                     // Metrics row
                     Row(
@@ -582,12 +590,12 @@ class _ReachabilityNodeCard extends StatelessWidget {
                           icon: Icons.route_outlined,
                           label: nodeData.reachability.pathDepthLabel,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         _MetricItem(
                           icon: Icons.schedule_outlined,
                           label: nodeData.reachability.freshnessLabel,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         _ScoreIndicator(
                           score: nodeData.reachability.score,
                           color: likelihoodColor,
@@ -617,7 +625,7 @@ class _MetricItem extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 14, color: context.textTertiary),
-        SizedBox(width: 4),
+        SizedBox(width: AppTheme.spacing4),
         Text(
           label,
           style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
@@ -646,7 +654,7 @@ class _ScoreIndicator extends StatelessWidget {
           height: 4,
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(AppTheme.radius2),
           ),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
@@ -654,12 +662,12 @@ class _ScoreIndicator extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppTheme.radius2),
               ),
             ),
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppTheme.spacing6),
         Text(
           '$percentage%',
           style: TextStyle(

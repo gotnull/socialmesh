@@ -120,7 +120,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
                           // Comments header
                           SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(AppTheme.spacing16),
                               child: Text(
                                 'Comments',
                                 style: Theme.of(context).textTheme.titleMedium
@@ -134,7 +134,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
                             data: (comments) => _buildCommentsSliver(comments),
                             loading: () => const SliverToBoxAdapter(
                               child: Padding(
-                                padding: EdgeInsets.all(32),
+                                padding: EdgeInsets.all(AppTheme.spacing32),
                                 child: Center(
                                   child: CircularProgressIndicator(),
                                 ),
@@ -142,7 +142,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
                             ),
                             error: (e, _) => SliverToBoxAdapter(
                               child: Padding(
-                                padding: const EdgeInsets.all(32),
+                                padding: const EdgeInsets.all(
+                                  AppTheme.spacing32,
+                                ),
                                 child: Center(child: Text('Error: $e')),
                               ),
                             ),
@@ -183,7 +185,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
     if (visibleComments.isEmpty) {
       return SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(AppTheme.spacing32),
           child: Center(
             child: Text(
               'No comments yet. Be the first!',
@@ -610,12 +612,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
                 color: context.textPrimary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               'Why are you reporting this post?',
               style: TextStyle(color: context.textSecondary),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             TextField(
               controller: reasonController,
               textCapitalization: TextCapitalization.sentences,
@@ -626,7 +628,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
               maxLines: 3,
               maxLength: 500,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Row(
               children: [
                 Expanded(
@@ -636,13 +638,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: BorderSide(color: Colors.grey.shade700),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                     ),
                     child: const Text('Cancel'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: FilledButton(
                     onPressed: () => Navigator.pop(
@@ -653,7 +655,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: context.accentColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                     ),
                     child: const Text('Report'),
@@ -829,7 +831,7 @@ class _CommentTileState extends ConsumerState<_CommentTile>
                 size: isReply ? 24 : 32,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppTheme.spacing10),
 
             // Content
             Expanded(
@@ -870,7 +872,7 @@ class _CommentTileState extends ConsumerState<_CommentTile>
                     ),
                   ),
 
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
 
                   // Actions row - compact
                   Row(
@@ -886,7 +888,7 @@ class _CommentTileState extends ConsumerState<_CommentTile>
 
                       // Like count text (if > 0)
                       if (_likeCount > 0) ...[
-                        const SizedBox(width: 16),
+                        const SizedBox(width: AppTheme.spacing16),
                         Text(
                           '$_likeCount ${_likeCount == 1 ? 'like' : 'likes'}',
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -899,7 +901,7 @@ class _CommentTileState extends ConsumerState<_CommentTile>
 
                       // Reply button - text only
                       if (widget.depth < 3) ...[
-                        const SizedBox(width: 16),
+                        const SizedBox(width: AppTheme.spacing16),
                         GestureDetector(
                           onTap: widget.onReplyTap,
                           child: Text(
@@ -915,7 +917,7 @@ class _CommentTileState extends ConsumerState<_CommentTile>
 
                       // Show deleting indicator
                       if (widget.isDeleting) ...[
-                        const SizedBox(width: 16),
+                        const SizedBox(width: AppTheme.spacing16),
                         const SizedBox(
                           width: 14,
                           height: 14,
@@ -962,7 +964,7 @@ class _CommentTileState extends ConsumerState<_CommentTile>
               margin: const EdgeInsets.only(top: 12, bottom: 8),
               decoration: BoxDecoration(
                 color: theme.hintColor.withAlpha(80),
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppTheme.radius2),
               ),
             ),
 
@@ -1006,7 +1008,7 @@ class _CommentTileState extends ConsumerState<_CommentTile>
                 },
               ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
           ],
         ),
       ),
@@ -1079,7 +1081,7 @@ class _PostContent extends StatelessWidget {
     final snapshot = post.authorSnapshot;
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1094,7 +1096,7 @@ class _PostContent extends StatelessWidget {
                   size: 48,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: GestureDetector(
                   onTap: onAuthorTap,
@@ -1110,7 +1112,7 @@ class _PostContent extends StatelessWidget {
                             ),
                           ),
                           if (snapshot?.isVerified == true) ...[
-                            const SizedBox(width: 4),
+                            const SizedBox(width: AppTheme.spacing4),
                             const SimpleVerifiedBadge(size: 18),
                           ],
                         ],
@@ -1133,7 +1135,7 @@ class _PostContent extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Content
           if (post.content.isNotEmpty)
@@ -1141,13 +1143,13 @@ class _PostContent extends StatelessWidget {
 
           // Images
           if (post.imageUrls.isNotEmpty) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             _buildImages(context),
           ],
 
           // Location
           if (post.location != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             GestureDetector(
               onTap: onLocationTap != null
                   ? () => onLocationTap!(post.location!)
@@ -1159,7 +1161,7 @@ class _PostContent extends StatelessWidget {
                     size: 16,
                     color: theme.colorScheme.primary.withAlpha(180),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTheme.spacing4),
                   Text(
                     post.location!.name ?? 'Location',
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -1177,14 +1179,14 @@ class _PostContent extends StatelessWidget {
 
           // Tagged node
           if (post.nodeId != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             GestureDetector(
               onTap: onNodeTap != null ? () => onNodeTap!(post.nodeId!) : null,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.secondaryContainer.withAlpha(100),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1194,7 +1196,7 @@ class _PostContent extends StatelessWidget {
                       size: 14,
                       color: theme.colorScheme.secondary,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppTheme.spacing4),
                     Text(
                       'Node ${post.nodeId}',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -1211,7 +1213,7 @@ class _PostContent extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Actions
           PostActionsBar(
@@ -1230,7 +1232,7 @@ class _PostContent extends StatelessWidget {
       return GestureDetector(
         onTap: () => FullscreenGallery.show(context, images: post.imageUrls),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Image.network(
             post.imageUrls.first,
             fit: BoxFit.cover,
@@ -1253,7 +1255,7 @@ class _PostContent extends StatelessWidget {
     }
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
       child: AspectRatio(
         aspectRatio: 1,
         child: GridView.count(
@@ -1360,7 +1362,7 @@ class _CommentInput extends StatelessWidget {
                       size: 16,
                       color: theme.colorScheme.primary,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Text(
                       'Replying to $replyingTo',
                       style: theme.textTheme.bodySmall,
@@ -1378,7 +1380,7 @@ class _CommentInput extends StatelessWidget {
 
             // Input field
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               child: Row(
                 children: [
                   Expanded(
@@ -1390,7 +1392,9 @@ class _CommentInput extends StatelessWidget {
                             ? 'Write a reply...'
                             : 'Add a comment...',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius24,
+                          ),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -1403,7 +1407,7 @@ class _CommentInput extends StatelessWidget {
                       textCapitalization: TextCapitalization.sentences,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   isSubmitting
                       ? const SizedBox(
                           width: 48,
@@ -1465,14 +1469,14 @@ Future<String?> _showReportReasonSheet(BuildContext context) {
                 color: context.textPrimary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               'Why are you reporting this comment?',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: context.textSecondary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             ...reasons.map(
               (reason) => InkWell(
                 onTap: () => setState(() => selectedReason = reason),
@@ -1489,14 +1493,14 @@ Future<String?> _showReportReasonSheet(BuildContext context) {
                             ? context.accentColor
                             : theme.hintColor,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Text(reason, style: theme.textTheme.bodyMedium),
                     ],
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Row(
               children: [
                 Expanded(
@@ -1506,13 +1510,13 @@ Future<String?> _showReportReasonSheet(BuildContext context) {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: BorderSide(color: Colors.grey.shade700),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                     ),
                     child: const Text('Cancel'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: FilledButton(
                     onPressed: selectedReason != null
@@ -1522,7 +1526,7 @@ Future<String?> _showReportReasonSheet(BuildContext context) {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: AppTheme.errorRed,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                     ),
                     child: const Text('Report'),

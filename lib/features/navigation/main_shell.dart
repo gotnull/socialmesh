@@ -793,7 +793,8 @@ class _MainShellState extends ConsumerState<MainShell> {
                           },
                   ),
                   // Add spacing between items within a section
-                  if (!isLastInSection) const SizedBox(height: 4),
+                  if (!isLastInSection)
+                    const SizedBox(height: AppTheme.spacing4),
                   // Add divider after last item in section
                   if (isLastInSection && !isLastSection)
                     Padding(
@@ -893,7 +894,7 @@ class _MainShellState extends ConsumerState<MainShell> {
             _navigateFromDrawer(context, const AccountSubscriptionsScreen());
           }
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
@@ -908,7 +909,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 foregroundColor: accentColor,
                 backgroundColor: accentColor.withValues(alpha: 0.15),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               // Name and subtitle
               Expanded(
                 child: Column(
@@ -924,7 +925,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Row(
                       children: [
                         if (isOnline && syncStatus == SyncStatus.syncing)
@@ -1079,7 +1080,12 @@ class _MainShellState extends ConsumerState<MainShell> {
 
             // Settings button
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing16,
+                12,
+                16,
+                16,
+              ),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: _SettingsButton(
@@ -1171,7 +1177,6 @@ class _MainShellState extends ConsumerState<MainShell> {
         previous,
         next,
       ) {
-        if (!mounted) return;
         final matcher = ref.read(aetherFlightMatcherProvider.notifier);
         final unnotified = matcher.unnotifiedMatches;
         for (final match in unnotified) {
@@ -1196,7 +1201,6 @@ class _MainShellState extends ConsumerState<MainShell> {
         previous,
         next,
       ) {
-        if (!mounted) return;
         final notifier = ref.read(aetherFlightLifecycleProvider.notifier);
         for (final event in next.pendingEvents) {
           notifier.acknowledgeEvent(event);
@@ -1506,7 +1510,7 @@ class _NavBarItem extends StatelessWidget {
           color: isSelected
               ? accentColor.withValues(alpha: 0.15)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1558,7 +1562,7 @@ class _NavBarItem extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: Colors.red,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                         border: Border.all(
                           color: theme.scaffoldBackgroundColor,
                           width: 2,
@@ -1601,7 +1605,7 @@ class _NavBarItem extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             isSelected
                 ? ShaderMask(
                     shaderCallback: (bounds) {
@@ -1689,7 +1693,7 @@ class _DrawerMenuTile extends StatelessWidget {
               : isLocked
               ? lockedColor.withValues(alpha: 0.05)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: isSelected
               ? Border.all(color: accentColor.withValues(alpha: 0.3))
               : isLocked
@@ -1702,14 +1706,14 @@ class _DrawerMenuTile extends StatelessWidget {
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppTheme.spacing10),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? accentColor.withValues(alpha: 0.2)
                       : isLocked
                       ? lockedColor.withValues(alpha: 0.1)
                       : theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Stack(
                   clipBehavior: Clip.none,
@@ -1732,7 +1736,7 @@ class _DrawerMenuTile extends StatelessWidget {
                         right: -6,
                         top: -4,
                         child: Container(
-                          padding: const EdgeInsets.all(4),
+                          padding: const EdgeInsets.all(AppTheme.spacing4),
                           decoration: BoxDecoration(
                             color: Colors.red,
                             shape: BoxShape.circle,
@@ -1783,7 +1787,7 @@ class _DrawerMenuTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: AppTheme.spacing14),
               Expanded(
                 child: Row(
                   children: [
@@ -1809,7 +1813,7 @@ class _DrawerMenuTile extends StatelessWidget {
                       ),
                     ),
                     if (showNewChip) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 6,
@@ -1822,7 +1826,7 @@ class _DrawerMenuTile extends StatelessWidget {
                               AccentColors.gradientFor(accentColor).last,
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(AppTheme.radius6),
                           boxShadow: [
                             BoxShadow(
                               color: accentColor.withValues(alpha: 0.3),
@@ -1848,7 +1852,7 @@ class _DrawerMenuTile extends StatelessWidget {
               ),
               // Show lock icon and PRO badge for locked premium features
               if (isLocked) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -1860,7 +1864,7 @@ class _DrawerMenuTile extends StatelessWidget {
                       end: Alignment.bottomRight,
                       colors: [lockedColor, lockedColor.withValues(alpha: 0.8)],
                     ),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     boxShadow: [
                       BoxShadow(
                         color: lockedColor.withValues(alpha: 0.3),
@@ -1877,7 +1881,7 @@ class _DrawerMenuTile extends StatelessWidget {
                         size: 12,
                         color: Colors.white,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       Text(
                         'PRO',
                         style: TextStyle(
@@ -1893,7 +1897,7 @@ class _DrawerMenuTile extends StatelessWidget {
                 ),
               ] else if (showTryIt) ...[
                 // Show "TRY IT" badge when upsell is enabled but not owned
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -1901,13 +1905,13 @@ class _DrawerMenuTile extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: Colors.amber.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.star, size: 12, color: Colors.amber),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       Text(
                         'TRY IT',
                         style: TextStyle(
@@ -1966,7 +1970,7 @@ class _DrawerNodeHeader extends ConsumerWidget {
     final nodeId = myNodeNum != null ? '!${myNodeNum.toRadixString(16)}' : '';
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 20, 20, 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1987,7 +1991,7 @@ class _DrawerNodeHeader extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           // Node info - flexible column
           Expanded(
             child: Column(
@@ -2005,7 +2009,7 @@ class _DrawerNodeHeader extends ConsumerWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 // Node ID + connection status chip on same row
                 Row(
                   children: [
@@ -2020,7 +2024,8 @@ class _DrawerNodeHeader extends ConsumerWidget {
                           ),
                         ),
                       ),
-                    if (nodeId.isNotEmpty) const SizedBox(width: 8),
+                    if (nodeId.isNotEmpty)
+                      const SizedBox(width: AppTheme.spacing8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -2030,7 +2035,7 @@ class _DrawerNodeHeader extends ConsumerWidget {
                         color: isConnected
                             ? AppTheme.successGreen.withValues(alpha: 0.15)
                             : AppTheme.errorRed.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -2045,7 +2050,7 @@ class _DrawerNodeHeader extends ConsumerWidget {
                               shape: BoxShape.circle,
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: AppTheme.spacing4),
                           Text(
                             isConnected ? 'Online' : 'Offline',
                             style: TextStyle(
@@ -2195,7 +2200,7 @@ class _DrawerEnterpriseSection extends ConsumerWidget {
                 size: 14,
                 color: Colors.teal.withValues(alpha: 0.7),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Text(
                 'ENTERPRISE',
                 style: TextStyle(
@@ -2228,7 +2233,7 @@ class _DrawerEnterpriseSection extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
 
               // View team tasks — all org roles (observer+)
               RoleGate(
@@ -2245,7 +2250,7 @@ class _DrawerEnterpriseSection extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
 
               // Create field report — operator+
               PermissionGate(
@@ -2262,7 +2267,7 @@ class _DrawerEnterpriseSection extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
 
               // Export reports — supervisor+
               PermissionGate(
@@ -2281,7 +2286,7 @@ class _DrawerEnterpriseSection extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
 
               // Manage users — admin only
               RoleGate(
@@ -2298,7 +2303,7 @@ class _DrawerEnterpriseSection extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
 
               // Manage devices — admin only
               RoleGate(
@@ -2315,7 +2320,7 @@ class _DrawerEnterpriseSection extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
 
               // Configure org settings — admin only
               RoleGate(
@@ -2404,7 +2409,7 @@ class _DrawerAdminSectionState extends ConsumerState<_DrawerAdminSection> {
                           size: 14,
                           color: Colors.orange.withValues(alpha: 0.7),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppTheme.spacing6),
                         Text(
                           'ADMIN',
                           style: TextStyle(

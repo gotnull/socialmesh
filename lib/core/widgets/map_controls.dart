@@ -43,7 +43,7 @@ class MapZoomControls extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.card.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -173,7 +173,7 @@ class MapNavigationControls extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.card.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -271,7 +271,7 @@ class MapCompass extends StatelessWidget {
                   height: 12,
                   decoration: BoxDecoration(
                     color: AppTheme.errorRed,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(AppTheme.radius2),
                   ),
                 ),
               ),
@@ -283,7 +283,7 @@ class MapCompass extends StatelessWidget {
                   height: 12,
                   decoration: BoxDecoration(
                     color: context.textSecondary,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(AppTheme.radius2),
                   ),
                 ),
               ),

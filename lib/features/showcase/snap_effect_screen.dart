@@ -5,6 +5,7 @@ import 'package:socialmesh/core/logging.dart';
 
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/snappable.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Demo screen to test the Thanos snap disintegration effect
 class SnapEffectScreen extends StatefulWidget {
@@ -134,12 +135,12 @@ class _SnapEffectScreenState extends State<SnapEffectScreen> {
         // Instructions
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
               ),
               child: Row(
@@ -149,7 +150,7 @@ class _SnapEffectScreenState extends State<SnapEffectScreen> {
                     color: Colors.white.withValues(alpha: 0.6),
                     size: 20,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Text(
                       'Tap a card to snap it away (Thanos style)',
@@ -199,7 +200,7 @@ class _SnapEffectScreenState extends State<SnapEffectScreen> {
           height: 140,
           decoration: BoxDecoration(
             gradient: card.gradient,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppTheme.radius20),
             boxShadow: [
               BoxShadow(
                 color: (card.gradient.colors.first).withValues(alpha: 0.4),
@@ -213,7 +214,7 @@ class _SnapEffectScreenState extends State<SnapEffectScreen> {
               // Background pattern
               Positioned.fill(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppTheme.radius20),
                   child: CustomPaint(
                     painter: _PatternPainter(
                       color: Colors.white.withValues(alpha: 0.1),
@@ -224,7 +225,7 @@ class _SnapEffectScreenState extends State<SnapEffectScreen> {
 
               // Content
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(AppTheme.spacing20),
                 child: Row(
                   children: [
                     // Icon
@@ -237,7 +238,7 @@ class _SnapEffectScreenState extends State<SnapEffectScreen> {
                       ),
                       child: Icon(card.icon, color: Colors.white, size: 28),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppTheme.spacing16),
 
                     // Text
                     Expanded(
@@ -255,7 +256,7 @@ class _SnapEffectScreenState extends State<SnapEffectScreen> {
                               letterSpacing: 2,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppTheme.spacing4),
                           Text(
                             card.subtitle,
                             style: TextStyle(

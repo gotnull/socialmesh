@@ -26,7 +26,7 @@ class SocialHubScreen extends ConsumerWidget {
           SliverFillRemaining(
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(AppTheme.spacing32),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -35,7 +35,7 @@ class SocialHubScreen extends ConsumerWidget {
                       size: 64,
                       color: context.textTertiary,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
                     Text(
                       'Sign in to access Social',
                       style: TextStyle(
@@ -44,7 +44,7 @@ class SocialHubScreen extends ConsumerWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Text(
                       'Create posts, follow users, and connect with the mesh community.',
                       style: TextStyle(
@@ -53,7 +53,7 @@ class SocialHubScreen extends ConsumerWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppTheme.spacing24),
                     FilledButton.icon(
                       onPressed: () =>
                           Navigator.pushNamed(context, '/settings'),

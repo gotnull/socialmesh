@@ -151,7 +151,7 @@ class _CountdownRow extends StatelessWidget {
             size: 14,
             color: accentColor.withValues(alpha: 0.8),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
 
           // Label
           Expanded(
@@ -167,14 +167,14 @@ class _CountdownRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
 
           // Progress bar
           SizedBox(
             width: 48,
             height: 4,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(AppTheme.radius2),
               child: LinearProgressIndicator(
                 value: 1.0 - progress,
                 backgroundColor: context.textTertiary.withValues(alpha: 0.12),
@@ -184,7 +184,7 @@ class _CountdownRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
 
           // Remaining seconds
           SizedBox(

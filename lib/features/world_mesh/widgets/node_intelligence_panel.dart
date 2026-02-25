@@ -172,7 +172,9 @@ class NodeIntelligencePanel extends StatelessWidget {
     return GestureDetector(
       onTap: () => _openAnalyticsScreen(context),
       child: Container(
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -182,7 +184,7 @@ class NodeIntelligencePanel extends StatelessWidget {
               'Mesh Intelligence',
               context,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Primary metrics row - Health & Connectivity
             Row(
@@ -195,7 +197,7 @@ class NodeIntelligencePanel extends StatelessWidget {
                     color: _getHealthColor(intelligence.healthScore),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: _IntelligenceGauge(
                     label: 'Connectivity',
@@ -209,7 +211,7 @@ class NodeIntelligencePanel extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Secondary metrics
             Wrap(
@@ -245,7 +247,7 @@ class NodeIntelligencePanel extends StatelessWidget {
 
             // Channel utilization bar if available
             if (intelligence.channelUtilization != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _ChannelUtilizationBar(
                 utilization: intelligence.channelUtilization!,
                 accentColor: accentColor,
@@ -253,7 +255,7 @@ class NodeIntelligencePanel extends StatelessWidget {
             ],
 
             // Tap hint
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Center(
               child: Container(
                 padding: const EdgeInsets.symmetric(
@@ -262,14 +264,14 @@ class NodeIntelligencePanel extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTheme.radius16),
                   border: Border.all(color: accentColor.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.analytics, size: 14, color: accentColor),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     Text(
                       'Tap for deep analytics',
                       style: TextStyle(
@@ -278,7 +280,7 @@ class NodeIntelligencePanel extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppTheme.spacing4),
                     Icon(Icons.chevron_right, size: 14, color: accentColor),
                   ],
                 ),
@@ -299,7 +301,7 @@ class NodeIntelligencePanel extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: 16, color: theme.colorScheme.primary),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         Text(
           title,
           style: TextStyle(
@@ -313,7 +315,7 @@ class NodeIntelligencePanel extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: Colors.cyan.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppTheme.radius4),
           ),
           child: Text(
             'DERIVED',
@@ -393,10 +395,10 @@ class _IntelligenceGauge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -424,7 +426,7 @@ class _IntelligenceGauge extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppTheme.spacing8),
           Text(
             label,
             style: TextStyle(color: context.textSecondary, fontSize: 11),
@@ -519,14 +521,14 @@ class _IntelligenceChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Text(
             label,
             style: TextStyle(
@@ -555,14 +557,14 @@ class _ActivityChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Text(
             activity,
             style: TextStyle(
@@ -611,10 +613,10 @@ class _ChannelUtilizationBar extends StatelessWidget {
         : Colors.green;
 
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(AppTheme.spacing10),
       decoration: BoxDecoration(
         color: context.border.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -637,9 +639,9 @@ class _ChannelUtilizationBar extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppTheme.spacing6),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppTheme.radius4),
             child: LinearProgressIndicator(
               value: utilization / 100,
               backgroundColor: color.withValues(alpha: 0.2),

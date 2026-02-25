@@ -93,7 +93,7 @@ class _IncidentDetailScreenState extends ConsumerState<IncidentDetailScreen>
                           size: 14,
                           color: context.textTertiary,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppTheme.spacing6),
                         Text(
                           'This incident is ${incident.state.name} — '
                           'no further actions available.',
@@ -111,7 +111,12 @@ class _IncidentDetailScreenState extends ConsumerState<IncidentDetailScreen>
               // Timeline section header
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    16,
+                    16,
+                    8,
+                  ),
                   child: Text(
                     'Transition History',
                     style: context.titleSmallStyle?.copyWith(
@@ -125,11 +130,11 @@ class _IncidentDetailScreenState extends ConsumerState<IncidentDetailScreen>
               SliverToBoxAdapter(
                 child: transitionsAsync.when(
                   loading: () => const Padding(
-                    padding: EdgeInsets.all(24),
+                    padding: EdgeInsets.all(AppTheme.spacing24),
                     child: Center(child: CircularProgressIndicator()),
                   ),
                   error: (e, _) => Padding(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(AppTheme.spacing24),
                     child: Text(
                       'Failed to load transitions: $e',
                       style: context.bodyMutedStyle,
@@ -143,7 +148,9 @@ class _IncidentDetailScreenState extends ConsumerState<IncidentDetailScreen>
               ),
 
               // Bottom padding
-              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppTheme.spacing32),
+              ),
             ],
           );
         },
@@ -164,7 +171,7 @@ class _IncidentHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -176,7 +183,7 @@ class _IncidentHeader extends StatelessWidget {
 
           if (incident.description != null &&
               incident.description!.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               incident.description!,
               style: context.bodySecondaryStyle?.copyWith(
@@ -185,7 +192,7 @@ class _IncidentHeader extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
 
           // Badges
           Wrap(
@@ -209,7 +216,7 @@ class _IncidentHeader extends StatelessWidget {
 
           // Location snippet
           if (incident.locationLat != null && incident.locationLon != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Row(
               children: [
                 Icon(
@@ -217,7 +224,7 @@ class _IncidentHeader extends StatelessWidget {
                   size: 14,
                   color: context.textTertiary,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 Text(
                   '${incident.locationLat!.toStringAsFixed(5)}, '
                   '${incident.locationLon!.toStringAsFixed(5)}',
@@ -229,7 +236,7 @@ class _IncidentHeader extends StatelessWidget {
 
           // Assignee
           if (incident.assigneeId != null) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Row(
               children: [
                 Icon(
@@ -237,7 +244,7 @@ class _IncidentHeader extends StatelessWidget {
                   size: 14,
                   color: context.textTertiary,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 Text(
                   'Assigned: ${incident.assigneeId}',
                   style: context.captionMutedStyle,
@@ -312,7 +319,7 @@ class _ActionButtons extends ConsumerWidget {
                 ),
                 decoration: BoxDecoration(
                   color: action.color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                   border: Border.all(
                     color: action.color.withValues(alpha: 0.3),
                   ),
@@ -321,7 +328,7 @@ class _ActionButtons extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(action.icon, size: 16, color: action.color),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     Text(
                       action.label,
                       style: TextStyle(
@@ -407,7 +414,7 @@ class _ActionButtons extends ConsumerWidget {
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           TextField(
             controller: controller,
             maxLength: 200,
@@ -416,7 +423,7 @@ class _ActionButtons extends ConsumerWidget {
               hintText: 'Enter user ID',
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             children: [
               Expanded(
@@ -426,13 +433,13 @@ class _ActionButtons extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide(color: Colors.grey.shade700),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Cancel'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: () {
@@ -443,7 +450,7 @@ class _ActionButtons extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: context.accentColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Assign'),
@@ -472,7 +479,7 @@ class _ActionButtons extends ConsumerWidget {
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           TextField(
             controller: controller,
             maxLength: 500,
@@ -482,7 +489,7 @@ class _ActionButtons extends ConsumerWidget {
               hintText: 'Optional note for this transition',
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             children: [
               Expanded(
@@ -492,13 +499,13 @@ class _ActionButtons extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide(color: Colors.grey.shade700),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Skip'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: () {
@@ -509,7 +516,7 @@ class _ActionButtons extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: context.accentColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Continue'),
@@ -661,7 +668,7 @@ class _Badge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(

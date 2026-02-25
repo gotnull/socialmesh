@@ -99,6 +99,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
   Future<void> _initializeCamera() async {
     try {
       final cameras = await availableCameras();
+      if (!mounted) return;
       if (cameras.isEmpty) {
         setState(() => _cameraError = 'No cameras available');
         return;
@@ -300,7 +301,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
                 color: Colors.white24,
                 size: 64,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               Text(
                 _cameraError!,
                 style: const TextStyle(color: Colors.white54),
@@ -356,14 +357,14 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
                   label: '${stats.totalNodes}',
                   color: const Color(0xFF00E5FF),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 _buildStatusChip(
                   icon: Icons.visibility,
                   label: '${stats.visibleNodes}',
                   color: const Color(0xFF00FF88),
                 ),
                 if (stats.warningNodes > 0) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   _buildStatusChip(
                     icon: Icons.warning_amber,
                     label: '${stats.warningNodes}',
@@ -386,14 +387,14 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
                     );
                   },
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 // Debug button
                 _buildControlButton(
                   icon: Icons.bug_report,
                   isActive: _showDebug,
                   onTap: () => setState(() => _showDebug = !_showDebug),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 // Settings button
                 _buildControlButton(icon: Icons.tune, onTap: _showSettings),
               ],
@@ -433,7 +434,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
           color: isActive
               ? const Color(0xFF00E5FF).withValues(alpha: 0.3)
               : Colors.black.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(
             color: isActive
                 ? const Color(0xFF00E5FF)
@@ -459,14 +460,14 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color, size: 14),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             label,
             style: TextStyle(
@@ -500,7 +501,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
                 },
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             const Text(
               'INITIALIZING AR ENGINE',
               style: TextStyle(
@@ -511,7 +512,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
                 letterSpacing: 2,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Calibrating sensors...',
               style: TextStyle(
@@ -531,7 +532,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
       color: Colors.black87,
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(AppTheme.spacing32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -540,7 +541,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
                 color: Color(0xFFFF1744),
                 size: 64,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               const Text(
                 'AR ENGINE ERROR',
                 style: TextStyle(
@@ -550,7 +551,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
                   fontFamily: AppTheme.fontFamily,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 error,
                 style: TextStyle(
@@ -559,7 +560,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
               ElevatedButton(
                 onPressed: _startAR,
                 style: ElevatedButton.styleFrom(
@@ -580,10 +581,10 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
       top: MediaQuery.of(context).padding.top + 60,
       right: 16,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(AppTheme.spacing8),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(
             color: const Color(0xFF00E5FF).withValues(alpha: 0.3),
           ),
@@ -642,7 +643,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
               fontFamily: AppTheme.fontFamily,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Text(
             value,
             style: const TextStyle(

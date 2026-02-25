@@ -359,7 +359,6 @@ class _SnapSwipeableSignalItemState extends State<SnapSwipeableSignalItem>
     _swipeController.reset();
 
     void animateBack() {
-      if (!mounted) return;
       setState(() {
         _dragExtent = startExtent * (1 - _swipeController.value);
       });
@@ -536,7 +535,7 @@ class _SwipeActionIndicator extends StatelessWidget {
             duration: const Duration(milliseconds: 150),
             scale: isTriggered ? 1.2 : (0.6 + effectiveProgress * 0.4),
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: isTriggered ? 1.0 : 0.9),
                 shape: BoxShape.circle,
@@ -558,7 +557,7 @@ class _SwipeActionIndicator extends StatelessWidget {
               child: Icon(icon, color: Colors.white, size: 24),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppTheme.spacing6),
           AnimatedOpacity(
             duration: const Duration(milliseconds: 100),
             opacity: effectiveProgress > 0.3 ? 1.0 : 0.0,

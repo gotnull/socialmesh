@@ -50,7 +50,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
           SliverFillRemaining(
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppTheme.spacing24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -59,7 +59,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
                       size: 64,
                       color: context.textTertiary,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
                     Text(
                       'Sign In Required',
                       style: TextStyle(
@@ -68,7 +68,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Text(
                       'Sign in to link your Meshtastic devices to your social profile.',
                       style: TextStyle(
@@ -98,12 +98,12 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
                 // Header info
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     child: Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
                       decoration: BoxDecoration(
                         color: context.accentColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         border: Border.all(
                           color: context.accentColor.withValues(alpha: 0.3),
                         ),
@@ -115,7 +115,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
                             color: context.accentColor,
                             size: 24,
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppTheme.spacing12),
                           Expanded(
                             child: Text(
                               'Link your Meshtastic devices to your profile so others can find and follow you from the nodes list.',
@@ -148,7 +148,12 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
                 // Section header
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppTheme.spacing16,
+                      24,
+                      16,
+                      8,
+                    ),
                     child: Row(
                       children: [
                         Text(
@@ -159,7 +164,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -167,7 +172,9 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
                           ),
                           decoration: BoxDecoration(
                             color: context.accentColor.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius10,
+                            ),
                           ),
                           child: Text(
                             linkedNodeIds.length.toString(),
@@ -189,7 +196,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
                     hasScrollBody: false,
                     child: Center(
                       child: Padding(
-                        padding: const EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(AppTheme.spacing32),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -198,7 +205,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
                               size: 48,
                               color: context.textTertiary,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppTheme.spacing16),
                             Text(
                               'No Linked Devices',
                               style: TextStyle(
@@ -207,7 +214,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: AppTheme.spacing8),
                             Text(
                               'Connect to a Meshtastic device and tap "Link Current Device" above.',
                               style: TextStyle(
@@ -242,12 +249,17 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
                 // Tip at bottom
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppTheme.spacing16,
+                      24,
+                      16,
+                      32,
+                    ),
                     child: Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppTheme.spacing12),
                       decoration: BoxDecoration(
                         color: context.card,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                         border: Border.all(color: context.border),
                       ),
                       child: Row(
@@ -257,7 +269,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
                             color: context.textTertiary,
                             size: 20,
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppTheme.spacing12),
                           Expanded(
                             child: Text(
                               'To link another device, disconnect from your current device and connect to the new one.',
@@ -288,12 +300,12 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
                     size: 48,
                     color: context.textTertiary,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     'Failed to load linked devices',
                     style: TextStyle(color: context.textSecondary),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   OutlinedButton(
                     onPressed: () => ref.invalidate(linkedNodeIdsProvider),
                     child: const Text('Retry'),
@@ -493,10 +505,10 @@ class _LinkCurrentDeviceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: AccentColors.green.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: AccentColors.green.withValues(alpha: 0.3)),
       ),
       child: Row(
@@ -506,7 +518,7 @@ class _LinkCurrentDeviceCard extends StatelessWidget {
             height: 48,
             decoration: BoxDecoration(
               color: AccentColors.green.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: const Icon(
               Icons.smartphone,
@@ -514,7 +526,7 @@ class _LinkCurrentDeviceCard extends StatelessWidget {
               size: 24,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -527,7 +539,7 @@ class _LinkCurrentDeviceCard extends StatelessWidget {
                     fontSize: 15,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   node?.displayName ?? '!${nodeNum.toRadixString(16)}',
                   style: TextStyle(color: context.textSecondary, fontSize: 13),
@@ -597,7 +609,7 @@ class _LinkedDeviceCard extends StatelessWidget {
           color: isPrimary
               ? context.accentColor.withValues(alpha: 0.1)
               : context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(
             color: isPrimary
                 ? context.accentColor.withValues(alpha: 0.5)
@@ -607,10 +619,10 @@ class _LinkedDeviceCard extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             onTap: () => _showOptionsSheet(context),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               child: Row(
                 children: [
                   NodeAvatar(
@@ -618,7 +630,7 @@ class _LinkedDeviceCard extends StatelessWidget {
                     color: _getNodeColor(nodeId),
                     size: 44,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -637,7 +649,7 @@ class _LinkedDeviceCard extends StatelessWidget {
                               ),
                             ),
                             if (isPrimary) ...[
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppTheme.spacing8),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 6,
@@ -645,7 +657,9 @@ class _LinkedDeviceCard extends StatelessWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color: context.accentColor,
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius4,
+                                  ),
                                 ),
                                 child: const Text(
                                   'PRIMARY',
@@ -660,7 +674,7 @@ class _LinkedDeviceCard extends StatelessWidget {
                             ],
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppTheme.spacing4),
                         Row(
                           children: [
                             Text(
@@ -672,12 +686,12 @@ class _LinkedDeviceCard extends StatelessWidget {
                               ),
                             ),
                             if (node?.hardwareModel != null) ...[
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppTheme.spacing8),
                               Text(
                                 '•',
                                 style: TextStyle(color: context.textTertiary),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppTheme.spacing8),
                               Flexible(
                                 child: Text(
                                   node!.hardwareModel!,

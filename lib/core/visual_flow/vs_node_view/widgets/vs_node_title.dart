@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import '../common.dart';
 import '../data/vs_node_data.dart';
 import '../data/vs_node_data_provider.dart';
+import 'package:socialmesh/core/theme.dart';
 
 enum PopupOptions { rename, delete }
 
@@ -85,6 +86,7 @@ class _VSNodeTitleState extends State<VSNodeTitle> {
             Expanded(
               child: isRenaming
                   ? TextField(
+                      maxLength: 100,
                       controller: titleController,
                       focusNode: focusNode,
                       textAlign: TextAlign.center,
@@ -162,7 +164,7 @@ class _VSNodeTitleState extends State<VSNodeTitle> {
                           size: 16,
                           color: colorScheme.onSurface,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         const Text("Rename", style: TextStyle(fontSize: 13)),
                       ],
                     ),
@@ -177,7 +179,7 @@ class _VSNodeTitleState extends State<VSNodeTitle> {
                           size: 16,
                           color: colorScheme.error,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Text(
                           "Delete",
                           style: TextStyle(

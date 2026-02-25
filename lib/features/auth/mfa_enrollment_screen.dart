@@ -68,6 +68,7 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
 
     safeSetState(() => _isLoading = true);
 
+    if (!mounted) return;
     final authService = ref.read(authServiceProvider);
     final phoneNumber = _phoneController.text.trim();
 
@@ -277,14 +278,14 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
     return GlassScaffold.body(
       title: 'Enable Two-Factor Auth',
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Icon(Icons.security, size: 64, color: context.accentColor),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
               Text(
                 'Add an extra layer of security',
                 style: TextStyle(
@@ -294,13 +295,13 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 'You\'ll receive a verification code via SMS when signing in',
                 style: TextStyle(fontSize: 14, color: context.textSecondary),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
               if (!_isCodeSent) ...[
                 TextFormField(
                   controller: _phoneController,
@@ -312,15 +313,15 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
                     hintText: '+1 234 567 890',
                     prefixIcon: Icon(Icons.phone, color: context.accentColor),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       borderSide: BorderSide(color: context.border),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       borderSide: BorderSide(color: context.border),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       borderSide: BorderSide(
                         color: context.accentColor,
                         width: 2,
@@ -337,7 +338,7 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
                     return null;
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 FilledButton.icon(
                   onPressed: _isLoading ? null : _sendCode,
                   icon: _isLoading
@@ -354,7 +355,7 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                 ),
@@ -375,15 +376,15 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
                     hintText: '000000',
                     counterText: '',
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       borderSide: BorderSide(color: context.border),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       borderSide: BorderSide(color: context.border),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       borderSide: BorderSide(
                         color: context.accentColor,
                         width: 2,
@@ -391,13 +392,13 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 Text(
                   'Enter the 6-digit code sent to ${_phoneController.text}',
                   style: TextStyle(fontSize: 12, color: context.textSecondary),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 FilledButton.icon(
                   onPressed: _isLoading ? null : _verifyCode,
                   icon: _isLoading
@@ -414,11 +415,11 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 TextButton(
                   onPressed: _isLoading
                       ? null

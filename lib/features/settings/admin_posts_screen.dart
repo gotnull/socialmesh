@@ -61,8 +61,9 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 4),
             child: TextField(
+              maxLength: 100,
               decoration: InputDecoration(
                 hintText: 'Filter by content or author ID',
                 prefixIcon: const Icon(Icons.search),
@@ -187,7 +188,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
                                     _showWithMedia = false;
                                   }),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: AppTheme.spacing8),
                                 _AdminFilterChip(
                                   label: 'Signals',
                                   count: signalCount,
@@ -198,7 +199,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
                                     _showExpiredOnly = false;
                                   }),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: AppTheme.spacing8),
                                 _AdminFilterChip(
                                   label: 'Expired',
                                   count: expiredCount,
@@ -209,7 +210,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
                                     _showExpiredOnly = true;
                                   }),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: AppTheme.spacing8),
                                 _AdminFilterChip(
                                   label: 'Location',
                                   count: locationCount,
@@ -219,7 +220,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
                                     _showWithLocation = !_showWithLocation;
                                   }),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: AppTheme.spacing8),
                                 _AdminFilterChip(
                                   label: 'Media',
                                   count: mediaCount,
@@ -236,7 +237,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Expanded(
                     child: ListView.separated(
                       padding: const EdgeInsets.only(
@@ -246,7 +247,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
                       ),
                       itemCount: entries.length,
                       separatorBuilder: (context, index) =>
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppTheme.spacing8),
                       itemBuilder: (context, index) {
                         final entry = entries[index];
                         return _AdminPostCard(
@@ -313,24 +314,25 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
                 color: context.textPrimary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               hasFilters
                   ? 'Delete filtered ($filteredCount) or all ($totalCount) signals.'
                   : 'Delete all $totalCount signals.',
               style: TextStyle(color: context.textPrimary),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               'This cannot be undone. Type DELETE to confirm.',
               style: TextStyle(color: context.textSecondary),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             TextField(
+              maxLength: 100,
               onChanged: (value) => setSheetState(() => input = value.trim()),
               decoration: const InputDecoration(hintText: 'DELETE'),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Row(
               children: [
                 Expanded(
@@ -340,14 +342,14 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: BorderSide(color: Colors.grey.shade700),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                     ),
                     child: const Text('Cancel'),
                   ),
                 ),
                 if (hasFilters) ...[
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: FilledButton(
                       onPressed: input == 'DELETE'
@@ -357,7 +359,9 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         backgroundColor: AppTheme.errorRed,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                       ),
                       child: Text('Filtered ($filteredCount)'),
@@ -366,7 +370,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
                 ],
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -377,7 +381,7 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: AppTheme.errorRed,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                 ),
                 child: Text('Delete all ($totalCount)'),
@@ -479,17 +483,17 @@ class _AdminPostCard extends StatelessWidget {
     final isExpired = expiresAt != null && expiresAt.isBefore(DateTime.now());
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTheme.radius14),
         border: Border.all(color: context.border.withValues(alpha: 0.5)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _PostMediaPreview(imageUrl: hasMedia ? post.mediaUrls.first : null),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -504,12 +508,12 @@ class _AdminPostCard extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: AppTheme.spacing6),
                 Text(
                   'Author ${post.authorId}',
                   style: TextStyle(color: context.textSecondary, fontSize: 12),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
@@ -543,7 +547,7 @@ class _AdminPostCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Row(
                   children: [
                     Text(
@@ -579,7 +583,7 @@ class _PostMediaPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
       child: Container(
         width: 72,
         height: 72,
@@ -630,7 +634,7 @@ class _AdminFilterChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? chipColor.withValues(alpha: 0.15) : context.card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(
             color: isSelected
                 ? chipColor.withValues(alpha: 0.4)
@@ -648,14 +652,14 @@ class _AdminFilterChip extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppTheme.spacing6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: isSelected
                     ? chipColor.withValues(alpha: 0.2)
                     : context.border.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
               ),
               child: Text(
                 count.toString(),
@@ -684,7 +688,7 @@ class _MetaPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
       ),
       child: Text(
         label,

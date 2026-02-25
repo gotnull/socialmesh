@@ -148,7 +148,6 @@ class _SubscribeButtonState extends ConsumerState<SubscribeButton>
           }
         },
         commitApply: (_) {
-          if (!mounted) return;
           showInfoSnackBar(
             context,
             isSubscribed ? 'Unsubscribed' : 'Subscribed',

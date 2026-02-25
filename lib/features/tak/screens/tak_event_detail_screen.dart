@@ -19,6 +19,7 @@ import '../providers/tak_tracking_provider.dart';
 import '../services/tak_database.dart';
 import '../utils/cot_affiliation.dart';
 import 'tak_navigate_screen.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Detail view for a single TAK/CoT event.
 class TakEventDetailScreen extends ConsumerWidget {
@@ -112,7 +113,7 @@ class TakEventDetailScreen extends ConsumerWidget {
                 child: Row(
                   children: [
                     Icon(Icons.navigation_outlined, size: 18),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppTheme.spacing8),
                     Text('Navigate to'),
                   ],
                 ),
@@ -121,7 +122,7 @@ class TakEventDetailScreen extends ConsumerWidget {
           ),
         ],
         body: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           children: [
             _HeaderCard(
               event: event,
@@ -129,7 +130,7 @@ class TakEventDetailScreen extends ConsumerWidget {
               affiliationColor: affiliationColor,
               affiliationLabel: affiliation.label,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             _buildSection(theme, affiliationColor, 'Identity', [
               _row('UID', event.uid, dimStyle, valueStyle),
               _row('Type', event.type, dimStyle, valueStyle),
@@ -137,7 +138,7 @@ class TakEventDetailScreen extends ConsumerWidget {
               if (event.callsign != null)
                 _row('Callsign', event.callsign!, dimStyle, valueStyle),
             ], helpKey: 'identity'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _buildSection(theme, affiliationColor, 'Position', [
               _row(
                 'Latitude',
@@ -153,7 +154,7 @@ class TakEventDetailScreen extends ConsumerWidget {
               ),
             ], helpKey: 'position'),
             if (event.hasMotionData) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _buildSection(theme, affiliationColor, 'Motion', [
                 _row('Speed', event.formattedSpeed, dimStyle, valueStyle),
                 if (event.formattedCourse != null)
@@ -167,7 +168,7 @@ class TakEventDetailScreen extends ConsumerWidget {
                   ),
               ], helpKey: 'motion'),
             ],
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _buildSection(theme, affiliationColor, 'Timestamps', [
               _row(
                 'Event Time',
@@ -196,7 +197,7 @@ class TakEventDetailScreen extends ConsumerWidget {
                 ),
               ),
             ], helpKey: 'timestamps'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _PositionHistorySection(
               event: event,
               theme: theme,
@@ -205,10 +206,10 @@ class TakEventDetailScreen extends ConsumerWidget {
               valueStyle: valueStyle,
             ),
             if (event.rawPayloadJson != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _buildSection(theme, affiliationColor, 'Raw Payload', [
                 Padding(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(AppTheme.spacing8),
                   child: SelectableText(
                     event.rawPayloadJson!,
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -235,7 +236,7 @@ class TakEventDetailScreen extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.2),
         ),
@@ -244,7 +245,7 @@ class TakEventDetailScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 8),
             child: Row(
               children: [
                 Text(
@@ -255,14 +256,14 @@ class TakEventDetailScreen extends ConsumerWidget {
                   ),
                 ),
                 if (helpKey != null) ...[
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTheme.spacing4),
                   _TakSectionInfoButton(helpKey: helpKey),
                 ],
               ],
             ),
           ),
           ...children,
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
         ],
       ),
     );
@@ -278,7 +279,10 @@ class TakEventDetailScreen extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
         children: [
-          SizedBox(width: 100, child: Text(label, style: dimStyle)),
+          SizedBox(
+            width: AppTheme.spacing100,
+            child: Text(label, style: dimStyle),
+          ),
           Expanded(child: SelectableText(value, style: valueStyle)),
         ],
       ),
@@ -309,10 +313,10 @@ class _HeaderCard extends StatelessWidget {
     final isStale = event.isStale;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: affiliationColor.withValues(alpha: 0.3)),
       ),
       child: Row(
@@ -325,7 +329,7 @@ class _HeaderCard extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: affiliationColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 border: Border.all(
                   color: affiliationColor.withValues(alpha: 0.4),
                 ),
@@ -337,13 +341,13 @@ class _HeaderCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(event.displayName, style: theme.textTheme.titleMedium),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   '${event.typeDescription}  \u2022  '
                   '${event.lat.toStringAsFixed(4)}, '
@@ -352,7 +356,7 @@ class _HeaderCard extends StatelessWidget {
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 // Affiliation badge
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -361,7 +365,7 @@ class _HeaderCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: affiliationColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(AppTheme.radius6),
                     border: Border.all(
                       color: affiliationColor.withValues(alpha: 0.4),
                     ),
@@ -384,7 +388,7 @@ class _HeaderCard extends StatelessWidget {
               color: (isStale ? Colors.red : Colors.green).withValues(
                 alpha: 0.15,
               ),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
             ),
             child: Text(
               isStale ? 'STALE' : 'ACTIVE',
@@ -451,7 +455,7 @@ class _PositionHistorySectionState
         return Container(
           decoration: BoxDecoration(
             color: widget.theme.colorScheme.surface.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(
               color: widget.theme.colorScheme.outline.withValues(alpha: 0.2),
             ),
@@ -460,7 +464,12 @@ class _PositionHistorySectionState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  12,
+                  16,
+                  8,
+                ),
                 child: Row(
                   children: [
                     Text(
@@ -470,7 +479,7 @@ class _PositionHistorySectionState
                         letterSpacing: 1.2,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Text(
                       '(${history.length} positions)',
                       style: widget.theme.textTheme.labelSmall?.copyWith(
@@ -533,7 +542,7 @@ class _PositionHistorySectionState
                     ),
                   ),
                 ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
             ],
           ),
         );
@@ -547,7 +556,10 @@ class _PositionHistorySectionState
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
       child: Row(
         children: [
-          SizedBox(width: 70, child: Text(age, style: widget.dimStyle)),
+          SizedBox(
+            width: AppTheme.spacing70,
+            child: Text(age, style: widget.dimStyle),
+          ),
           Expanded(
             child: Text(
               '${point.lat.toStringAsFixed(5)}, '
@@ -618,7 +630,7 @@ class _TakSectionInfoButton extends StatelessWidget {
       onTap: () => _showHelp(context),
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(AppTheme.spacing4),
         child: Icon(
           Icons.info_outline,
           size: 14,
@@ -636,7 +648,7 @@ class _TakSectionInfoButton extends StatelessWidget {
     AppBottomSheet.show<void>(
       context: context,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+        padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 8, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -648,14 +660,14 @@ class _TakSectionInfoButton extends StatelessWidget {
                   size: 18,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   _titleForKey(helpKey),
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               helpText,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(

@@ -38,12 +38,12 @@ class FavoritesScreen extends ConsumerWidget {
                     color: context.textTertiary,
                     size: 64,
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
                   Text(
                     'Sign in to save favorites',
                     style: TextStyle(color: context.textPrimary, fontSize: 18),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Text(
                     'Your favorite devices will appear here',
                     style: TextStyle(color: context.textSecondary),
@@ -77,7 +77,7 @@ class FavoritesScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     'Error loading favorites',
                     style: TextStyle(color: context.textPrimary),
@@ -103,7 +103,7 @@ class FavoritesScreen extends ConsumerWidget {
                         color: context.textTertiary,
                         size: 64,
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: AppTheme.spacing16),
                       Text(
                         'No favorites yet',
                         style: TextStyle(
@@ -111,7 +111,7 @@ class FavoritesScreen extends ConsumerWidget {
                           fontSize: 18,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppTheme.spacing8),
                       Text(
                         'Tap the heart icon on products to save them',
                         style: TextStyle(color: context.textSecondary),
@@ -123,7 +123,7 @@ class FavoritesScreen extends ConsumerWidget {
             }
 
             return SliverPadding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   return _FavoriteProductCard(
@@ -168,10 +168,12 @@ class _FavoriteProductCard extends ConsumerWidget {
     return Card(
       color: context.card,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
       child: Container(
         height: 100,
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTheme.spacing12),
         child: const Center(child: CircularProgressIndicator()),
       ),
     );
@@ -181,7 +183,9 @@ class _FavoriteProductCard extends ConsumerWidget {
     return Card(
       color: context.card,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
       child: ListTile(
         leading: Icon(Icons.error_outline, color: AppTheme.errorRed),
         title: Text(
@@ -200,7 +204,9 @@ class _FavoriteProductCard extends ConsumerWidget {
     return Card(
       color: context.card,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
       child: ListTile(
         leading: Icon(Icons.inventory_2_outlined, color: context.textTertiary),
         title: Text(
@@ -227,7 +233,7 @@ class _FavoriteProductCard extends ConsumerWidget {
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: Colors.red,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
         ),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
@@ -237,7 +243,9 @@ class _FavoriteProductCard extends ConsumerWidget {
       child: Card(
         color: context.card,
         margin: const EdgeInsets.only(bottom: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+        ),
         child: InkWell(
           onTap: () => Navigator.push(
             context,
@@ -245,14 +253,14 @@ class _FavoriteProductCard extends ConsumerWidget {
               builder: (_) => ProductDetailScreen(productId: product.id),
             ),
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             child: Row(
               children: [
                 // Image
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                   child: product.primaryImage != null
                       ? Image.network(
                           product.primaryImage!,
@@ -264,7 +272,7 @@ class _FavoriteProductCard extends ConsumerWidget {
                         )
                       : _imagePlaceholder(context),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppTheme.spacing12),
 
                 // Details
                 Expanded(
@@ -281,7 +289,7 @@ class _FavoriteProductCard extends ConsumerWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.spacing4),
                       Text(
                         product.sellerName,
                         style: TextStyle(
@@ -289,7 +297,7 @@ class _FavoriteProductCard extends ConsumerWidget {
                           fontSize: 12,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppTheme.spacing8),
                       Row(
                         children: [
                           Text(
@@ -301,7 +309,7 @@ class _FavoriteProductCard extends ConsumerWidget {
                             ),
                           ),
                           if (product.isOnSale) ...[
-                            const SizedBox(width: 6),
+                            const SizedBox(width: AppTheme.spacing6),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 4,
@@ -309,7 +317,9 @@ class _FavoriteProductCard extends ConsumerWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.red,
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius4,
+                                ),
                               ),
                               child: Text(
                                 '-${product.discountPercent}%',
@@ -332,7 +342,9 @@ class _FavoriteProductCard extends ConsumerWidget {
                               color: product.isInStock
                                   ? Colors.green.withValues(alpha: 0.2)
                                   : Colors.red.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
                             ),
                             child: Text(
                               product.isInStock ? 'In Stock' : 'Out of Stock',
@@ -349,11 +361,11 @@ class _FavoriteProductCard extends ConsumerWidget {
                       ),
                       // Reviews
                       if (product.reviewCount > 0) ...[
-                        const SizedBox(height: 6),
+                        const SizedBox(height: AppTheme.spacing6),
                         Row(
                           children: [
                             Icon(Icons.star, color: Colors.amber, size: 14),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: AppTheme.spacing4),
                             Text(
                               product.rating.toStringAsFixed(1),
                               style: TextStyle(

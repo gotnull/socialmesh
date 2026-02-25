@@ -66,7 +66,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       title: 'Settings',
       actions: [const MeshCoreDeviceStatusButton()],
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         children: [
           _buildDeviceInfoCard(
             context,
@@ -76,13 +76,13 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
             contactCount: contactsState.contacts.length,
             channelCount: channelsState.channels.length,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildNodeSettingsCard(context, selfInfo),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildActionsCard(context, isConnected),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildDebugCard(context),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildAboutCard(context),
         ],
       ),
@@ -101,14 +101,14 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       accentColor: AccentColors.cyan,
       borderRadius: 16,
       borderWidth: 1,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Icon(Icons.info_outline_rounded, color: AccentColors.cyan),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Text(
                 'Device Info',
                 style: TextStyle(
@@ -119,7 +119,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildInfoRow(
             'Status',
             isConnected ? 'Connected' : 'Disconnected',
@@ -205,11 +205,11 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
             child: Row(
               children: [
                 Icon(Icons.tune_rounded, color: AccentColors.purple),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Node Settings',
                   style: TextStyle(
@@ -263,11 +263,11 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
             child: Row(
               children: [
                 Icon(Icons.bolt_rounded, color: AccentColors.green),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Actions',
                   style: TextStyle(
@@ -328,11 +328,11 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
             child: Row(
               children: [
                 const Icon(Icons.bug_report_outlined, color: Colors.grey),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Debug',
                   style: TextStyle(
@@ -388,7 +388,10 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
         children: [
           Row(
             children: [
-              if (leading != null) ...[leading, const SizedBox(width: 8)],
+              if (leading != null) ...[
+                leading,
+                const SizedBox(width: AppTheme.spacing8),
+              ],
               Text(
                 label,
                 style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
@@ -412,7 +415,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     if (onTap != null) {
       return InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
         child: content,
       );
     }
@@ -487,7 +490,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           TextField(
             controller: controller,
             autofocus: true,
@@ -499,12 +502,12 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.1),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide.none,
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Row(
             children: [
               Expanded(
@@ -519,7 +522,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                   child: const Text('Cancel'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: () async {
@@ -544,6 +547,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     if (name.isEmpty) return;
 
     // Capture providers before any await
+    if (!mounted) return;
     final session = ref.read(meshCoreSessionProvider);
     final selfInfoNotifier = ref.read(meshCoreSelfInfoProvider.notifier);
 
@@ -588,12 +592,12 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Column(
               children: [
@@ -603,7 +607,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
@@ -634,19 +638,19 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: const Text(
               'Location settings coming soon.\n\nThis will allow you to manually set your node position or use GPS.',
               style: TextStyle(color: Colors.white70),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
@@ -677,19 +681,19 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: const Text(
               'Privacy settings coming soon.\n\nThis will control whether your node broadcasts advertisements.',
               style: TextStyle(color: Colors.white70),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
@@ -818,12 +822,12 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -833,7 +837,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Row(
             children: [
               Expanded(
@@ -854,7 +858,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                 ),
               ),
               if (captureState.hasFrames) ...[
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () {
@@ -892,19 +896,19 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             'Version $_appVersion',
             style: TextStyle(color: context.textSecondary),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             'SocialMesh is a mesh radio companion app supporting '
             'Meshtastic and MeshCore devices.',
             textAlign: TextAlign.center,
             style: TextStyle(color: context.textSecondary),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
@@ -913,7 +917,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: context.accentColor,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
               child: const Text('Close'),

@@ -158,7 +158,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // only Scanner #2 starts BLE operations. The synchronous state reads
     // above (hints, pairing invalidation) are harmless and stay in initState.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
       if (widget.isOnboarding || widget.isInline) {
         AppLogging.connection(
           '📡 SCANNER: Onboarding/inline mode - starting manual scan',
@@ -273,7 +272,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   /// is the root route (pushed via /app after disconnect), set
   /// appInit to initialized so _AppRouter shows MainShell.
   void _navigateToMain() {
-    if (!mounted) return;
     final navigator = Navigator.of(context);
     if (navigator.canPop()) {
       AppLogging.connection(
@@ -993,6 +991,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       );
 
       // Update connected device provider
+      if (!mounted) return;
       connectedDeviceNotifier.setState(device);
 
       // Mark as paired in device connection provider
@@ -1323,8 +1322,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // Success - don't reset _connecting, let navigation handle the transition
       return;
     } catch (e, stack) {
-      if (!mounted) return;
-
       // Log error to Crashlytics ONLY for unexpected errors
       // Don't log expected errors like timeouts (device busy/connected elsewhere),
       // pairing/auth errors which are user-recoverable, or GATT errors (133)
@@ -1493,7 +1490,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
             return Container(
               color: context.background,
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
               child: SafeArea(
                 top: false,
                 child: Column(
@@ -1507,7 +1504,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       '© 2026 Socialmesh. All rights reserved.',
                       style: TextStyle(
@@ -1559,7 +1556,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
             return Container(
               color: context.background,
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
               child: SafeArea(
                 top: false,
                 child: Column(
@@ -1573,7 +1570,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       '© 2026 Socialmesh. All rights reserved.',
                       style: TextStyle(
@@ -1589,7 +1586,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         ),
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // Info banner when saved device wasn't found
@@ -1607,11 +1604,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                 // Info banner when auto-reconnect is disabled
                 if (_showAutoReconnectDisabledHint)
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
                       color: context.accentColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       border: Border.all(
                         color: context.accentColor.withValues(alpha: 0.3),
                       ),
@@ -1624,7 +1621,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                           color: context.accentColor,
                           size: 22,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1637,7 +1634,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                                   fontSize: 14,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: AppTheme.spacing4),
                               Text(
                                 _savedDeviceName != null
                                     ? 'Select "$_savedDeviceName" below, or enable auto-reconnect.'
@@ -1650,7 +1647,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                             ],
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Switch.adaptive(
                           value: false,
                           activeColor: context.accentColor,
@@ -1698,11 +1695,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
                 if (_showPairingInvalidationHint)
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
                       color: context.accentColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       border: Border.all(
                         color: context.accentColor.withValues(alpha: 0.3),
                       ),
@@ -1717,7 +1714,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                             color: context.textSecondary,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppTheme.spacing8),
                         Row(
                           children: [
                             TextButton.icon(
@@ -1744,7 +1741,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             TextButton(
                               onPressed: () {
                                 setState(() {
@@ -1845,7 +1842,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                               letterSpacing: 0.5,
                             ),
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppTheme.spacing8),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
@@ -1853,7 +1850,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                             ),
                             decoration: BoxDecoration(
                               color: context.accentColor.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius8,
+                              ),
                             ),
                             child: Text(
                               '${filteredDevices.length}',
@@ -1894,7 +1893,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                   Center(
                     child: Column(
                       children: [
-                        SizedBox(height: 100),
+                        SizedBox(height: AppTheme.spacing100),
                         SizedBox(
                           width: 80,
                           height: 80,
@@ -1903,7 +1902,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                             color: context.textTertiary,
                           ),
                         ),
-                        SizedBox(height: 24),
+                        SizedBox(height: AppTheme.spacing24),
                         Text(
                           'Looking for devices\u2026',
                           style: TextStyle(
@@ -1912,7 +1911,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                             color: context.textSecondary,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        SizedBox(height: AppTheme.spacing8),
                         Text(
                           'Make sure Bluetooth is enabled and\nyour Meshtastic device is powered on',
                           textAlign: TextAlign.center,
@@ -1996,7 +1995,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.warning_amber, color: Colors.orange),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Text(
                 'Unknown Protocol',
                 style: TextStyle(
@@ -2007,18 +2006,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             'This device was not detected as Meshtastic or MeshCore.',
             textAlign: TextAlign.center,
             style: TextStyle(color: context.textSecondary),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: context.cardAlt,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2038,14 +2037,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             'This device cannot be connected automatically. '
             'Only Meshtastic and MeshCore devices are supported.',
             textAlign: TextAlign.center,
             style: TextStyle(color: context.textSecondary),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
@@ -2054,7 +2053,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: context.accentColor,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
               child: const Text('OK'),
@@ -2088,22 +2087,22 @@ class _DeviceCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: Material(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           splashColor: context.accentColor.withValues(alpha: 0.2),
           highlightColor: context.accentColor.withValues(alpha: 0.1),
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(
                 color: isUnknown && showDebugInfo
                     ? Colors.orange.withValues(alpha: 0.5)
                     : context.border,
               ),
             ),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Row(
               children: [
                 Container(
@@ -2111,7 +2110,7 @@ class _DeviceCard extends StatelessWidget {
                   height: 48,
                   decoration: BoxDecoration(
                     color: context.background,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Icon(
                     device.type == TransportType.ble
@@ -2123,7 +2122,7 @@ class _DeviceCard extends StatelessWidget {
                     size: 24,
                   ),
                 ),
-                SizedBox(width: 16),
+                SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2136,7 +2135,7 @@ class _DeviceCard extends StatelessWidget {
                           color: context.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.spacing4),
                       Row(
                         children: [
                           Text(
@@ -2152,7 +2151,7 @@ class _DeviceCard extends StatelessWidget {
                           // Show for unknown devices only in debug mode
                           if (protocolType != MeshProtocolType.unknown ||
                               showDebugInfo) ...[
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             _ProtocolBadge(protocolType: protocolType),
                           ],
                         ],
@@ -2173,12 +2172,14 @@ class _DeviceCard extends StatelessWidget {
                             color: i < signalBars
                                 ? context.accentColor
                                 : context.textTertiary.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(1),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius1,
+                            ),
                           ),
                         ),
                     ],
                   ),
-                SizedBox(width: 4),
+                SizedBox(width: AppTheme.spacing4),
                 Icon(Icons.chevron_right, color: context.textTertiary),
               ],
             ),
@@ -2216,7 +2217,7 @@ class _ProtocolBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(
@@ -2274,11 +2275,11 @@ class _DeviceDetailsTable extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16, top: 4),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(AppTheme.radius11),
         child: Column(
           children: details.asMap().entries.map((entry) {
             final index = entry.key;

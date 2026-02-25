@@ -48,75 +48,75 @@ class _AppearanceAccessibilityScreenState
           padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
 
               // Live Preview Card
               _PreviewCard(preferences: prefs),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Font Mode Section
               _SectionHeader(title: 'Font', icon: Icons.text_fields_rounded),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _FontModeSelector(
                 currentMode: prefs.fontMode,
                 onChanged: (mode) => _updateFontMode(mode),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Text Size Section
               _SectionHeader(
                 title: 'Text Size',
                 icon: Icons.format_size_rounded,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _TextScaleSelector(
                 currentMode: prefs.textScaleMode,
                 onChanged: (mode) => _updateTextScale(mode),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Density Section
               _SectionHeader(
                 title: 'Display Density',
                 icon: Icons.view_compact_rounded,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _DensitySelector(
                 currentMode: prefs.densityMode,
                 onChanged: (mode) => _updateDensity(mode),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Contrast Section
               _SectionHeader(title: 'Contrast', icon: Icons.contrast_rounded),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _ContrastToggle(
                 isHighContrast: prefs.contrastMode.isHighContrast,
                 onChanged: (enabled) => _updateContrast(enabled),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Reduce Motion Section
               _SectionHeader(title: 'Motion', icon: Icons.animation_rounded),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _ReduceMotionToggle(
                 reduceMotion: prefs.reduceMotionMode.shouldReduceMotion,
                 onChanged: (enabled) => _updateReduceMotion(enabled),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
 
               // Elemental Atmosphere toggle
               _AtmosphereToggle(
                 reduceMotionActive: prefs.reduceMotionMode.shouldReduceMotion,
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Reset Button (always visible as escape hatch)
               _ResetButton(
@@ -141,18 +141,21 @@ class _AppearanceAccessibilityScreenState
 
   Future<void> _updateTextScale(TextScaleMode mode) async {
     HapticFeedback.selectionClick();
+    if (!mounted) return;
     final notifier = ref.read(accessibilityPreferencesProvider.notifier);
     await notifier.setTextScaleMode(mode);
   }
 
   Future<void> _updateDensity(DensityMode mode) async {
     HapticFeedback.selectionClick();
+    if (!mounted) return;
     final notifier = ref.read(accessibilityPreferencesProvider.notifier);
     await notifier.setDensityMode(mode);
   }
 
   Future<void> _updateContrast(bool enabled) async {
     HapticFeedback.selectionClick();
+    if (!mounted) return;
     final notifier = ref.read(accessibilityPreferencesProvider.notifier);
     await notifier.setContrastMode(
       enabled ? ContrastMode.high : ContrastMode.normal,
@@ -161,6 +164,7 @@ class _AppearanceAccessibilityScreenState
 
   Future<void> _updateReduceMotion(bool enabled) async {
     HapticFeedback.selectionClick();
+    if (!mounted) return;
     final notifier = ref.read(accessibilityPreferencesProvider.notifier);
     await notifier.setReduceMotionMode(
       enabled ? ReduceMotionMode.on : ReduceMotionMode.off,
@@ -205,7 +209,7 @@ class _SectionHeader extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: 20, color: context.textSecondary),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -231,7 +235,7 @@ class _PreviewCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(
           color: preferences.contrastMode.isHighContrast
               ? (isDark ? Colors.white54 : Colors.black38)
@@ -239,7 +243,9 @@ class _PreviewCard extends StatelessWidget {
           width: preferences.contrastMode.isHighContrast ? 2 : 1,
         ),
       ),
-      padding: EdgeInsets.all(16 * preferences.densityMode.spacingMultiplier),
+      padding: EdgeInsets.all(
+        AppTheme.spacing16 * preferences.densityMode.spacingMultiplier,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -250,7 +256,7 @@ class _PreviewCard extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   color: context.accentColor,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: const Icon(
                   Icons.accessibility_new_rounded,
@@ -258,7 +264,11 @@ class _PreviewCard extends StatelessWidget {
                   size: 24,
                 ),
               ),
-              SizedBox(width: 12 * preferences.densityMode.spacingMultiplier),
+              SizedBox(
+                width:
+                    AppTheme.spacing12 *
+                    preferences.densityMode.spacingMultiplier,
+              ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,7 +279,7 @@ class _PreviewCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       'Changes apply instantly',
                       style: Theme.of(context).textTheme.bodySmall,
@@ -279,19 +289,25 @@ class _PreviewCard extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 16 * preferences.densityMode.spacingMultiplier),
+          SizedBox(
+            height:
+                AppTheme.spacing16 * preferences.densityMode.spacingMultiplier,
+          ),
           Text(
             'Sample body text to preview your settings. '
             'Adjust the options below to find what works best for you.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
-          SizedBox(height: 12 * preferences.densityMode.spacingMultiplier),
+          SizedBox(
+            height:
+                AppTheme.spacing12 * preferences.densityMode.spacingMultiplier,
+          ),
           Row(
             children: [
               _PreviewChip(label: preferences.fontMode.displayName),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               _PreviewChip(label: preferences.textScaleMode.displayName),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               _PreviewChip(label: preferences.densityMode.displayName),
             ],
           ),
@@ -312,7 +328,7 @@ class _PreviewChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: context.accentColor.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Text(
         label,
@@ -337,7 +353,7 @@ class _FontModeSelector extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -375,7 +391,7 @@ class _FontModeSelector extends StatelessWidget {
                                         : FontWeight.w500,
                                   ),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: AppTheme.spacing2),
                             Text(
                               mode.description,
                               style: Theme.of(context).textTheme.bodySmall,
@@ -418,7 +434,7 @@ class _TextScaleSelector extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -456,7 +472,7 @@ class _TextScaleSelector extends StatelessWidget {
                                         : FontWeight.w500,
                                   ),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: AppTheme.spacing2),
                             Text(
                               mode.description,
                               style: Theme.of(context).textTheme.bodySmall,
@@ -496,7 +512,7 @@ class _DensitySelector extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -534,7 +550,7 @@ class _DensitySelector extends StatelessWidget {
                                         : FontWeight.w500,
                                   ),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: AppTheme.spacing2),
                             Text(
                               mode.description,
                               style: Theme.of(context).textTheme.bodySmall,
@@ -577,7 +593,7 @@ class _ContrastToggle extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: SwitchListTile(
@@ -591,7 +607,9 @@ class _ContrastToggle extends StatelessWidget {
         ),
         value: isHighContrast,
         onChanged: onChanged,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+        ),
       ),
     );
   }
@@ -619,7 +637,9 @@ class _AtmosphereToggle extends ConsumerWidget {
     return Card(
       margin: EdgeInsets.zero,
       color: context.card,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
       child: SwitchListTile(
         title: Text(
           'Elemental Atmosphere',
@@ -667,7 +687,7 @@ class _ReduceMotionToggle extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: SwitchListTile(
@@ -681,7 +701,9 @@ class _ReduceMotionToggle extends StatelessWidget {
         ),
         value: reduceMotion,
         onChanged: onChanged,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+        ),
       ),
     );
   }
@@ -699,7 +721,7 @@ class _ResetButton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: ListTile(
@@ -725,7 +747,9 @@ class _ResetButton extends StatelessWidget {
             ? Icon(Icons.chevron_right_rounded, color: context.textTertiary)
             : null,
         onTap: hasCustomSettings ? onReset : null,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+        ),
       ),
     );
   }
@@ -754,7 +778,7 @@ class _ResetConfirmationSheet extends StatelessWidget {
             height: 48,
             decoration: BoxDecoration(
               color: AppTheme.warningYellow.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: const Icon(
               Icons.restore_rounded,
@@ -762,14 +786,14 @@ class _ResetConfirmationSheet extends StatelessWidget {
               size: 28,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             'Reset to Defaults?',
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'This will restore all appearance and accessibility '
             'settings to their recommended values.',
@@ -778,7 +802,7 @@ class _ResetConfirmationSheet extends StatelessWidget {
               context,
             ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             children: [
               Expanded(
@@ -787,7 +811,7 @@ class _ResetConfirmationSheet extends StatelessWidget {
                   child: const Text('Cancel'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: onConfirm,

@@ -30,11 +30,11 @@ class InfoTable extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(AppTheme.radius11),
         child: Column(
           children: rows.asMap().entries.map((entry) {
             final index = entry.key;
@@ -74,7 +74,7 @@ class InfoTable extends StatelessWidget {
                                 size: 16,
                                 color: item.iconColor ?? accentColor,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppTheme.spacing8),
                             ],
                             Expanded(
                               child: Text(

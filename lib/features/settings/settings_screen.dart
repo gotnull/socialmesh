@@ -1177,7 +1177,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   size: 64,
                   color: context.textTertiary.withValues(alpha: 0.5),
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppTheme.spacing16),
                 Text(
                   'No settings found',
                   style: TextStyle(
@@ -1186,7 +1186,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     color: context.textSecondary,
                   ),
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: AppTheme.spacing8),
                 Text(
                   'Try a different search term',
                   style: Theme.of(
@@ -1259,7 +1259,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         },
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
               ],
             );
           }, childCount: grouped.length),
@@ -1300,7 +1300,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 accentColor.withValues(alpha: 0.05),
               ],
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(
               color: accentColor.withValues(alpha: 0.5),
               width: 1.5,
@@ -1308,16 +1308,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
           child: Material(
             color: Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
               ),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Row(
                   children: [
                     Container(
@@ -1325,7 +1325,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       height: 48,
                       decoration: BoxDecoration(
                         color: accentColor.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Icon(
                         Icons.rocket_launch_rounded,
@@ -1333,7 +1333,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         size: 26,
                       ),
                     ),
-                    SizedBox(width: 16),
+                    SizedBox(width: AppTheme.spacing16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1346,7 +1346,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               color: accentColor,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: AppTheme.spacing2),
                           Text(
                             ownedCount == totalCount
                                 ? 'All features unlocked!'
@@ -1366,7 +1366,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         // Premium feature tiles - order matches drawer
         _PremiumFeatureTile(
           icon: Icons.palette_outlined,
@@ -1540,7 +1540,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             color: remoteState.isRemote
                 ? accentColor.withValues(alpha: 0.1)
                 : context.card,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: remoteState.isRemote
                 ? Border.all(color: accentColor.withValues(alpha: 0.5))
                 : null,
@@ -1553,6 +1553,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     context,
                     currentTarget: remoteState.targetNodeNum,
                   );
+                  if (!mounted) return;
                   if (selection != null) {
                     if (selection.isLocal) {
                       ref.read(remoteAdminProvider.notifier).clearTarget();
@@ -1601,7 +1602,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       ),
                     ),
                     if (remoteState.isRemote) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       Icon(
                         Icons.lock,
                         size: 12,
@@ -1619,7 +1620,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         color: context.textTertiary,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppTheme.spacing4),
                     Icon(
                       Icons.chevron_right,
                       color: remoteState.isRemote
@@ -1631,12 +1632,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               ),
               if (remoteState.isRemote)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    0,
+                    16,
+                    12,
+                  ),
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
                     decoration: BoxDecoration(
                       color: Colors.orange.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       border: Border.all(
                         color: Colors.orange.withValues(alpha: 0.3),
                       ),
@@ -1648,7 +1654,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           color: Colors.orange,
                           size: 20,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Expanded(
                           child: Text(
                             'Remote admin requires the target node to have your public key in its Admin Keys list.',
@@ -1663,7 +1669,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
       ],
     );
   }
@@ -1697,11 +1703,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             // Search bar
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  8,
+                  16,
+                  8,
+                ),
                 child: Container(
                   decoration: BoxDecoration(
                     color: context.card,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: TextField(
                     controller: _searchController,
@@ -1769,12 +1780,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             size: 48,
                             color: Colors.red,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
                           Text(
                             'Error loading settings: $error',
                             style: TextStyle(color: context.textSecondary),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
                           ElevatedButton(
                             onPressed: () =>
                                 ref.invalidate(settingsServiceProvider),
@@ -1800,7 +1811,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                     context.accentColor.withOpacity(0.8),
                                   ],
                                 ),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                               ),
                               child: Container(
                                 constraints: const BoxConstraints(
@@ -1851,7 +1864,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           // Subscription Section
                           _buildPremiumSection(context),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // Profile Section - right after Premium, before Connection
                           _SectionHeader(title: 'ACCOUNT'),
@@ -1886,7 +1899,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 
                           // Social Notifications Section (only for signed-in users)
                           // const _SocialNotificationsSection(),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // Feedback Section
                           const _SectionHeader(title: 'FEEDBACK'),
@@ -1986,7 +1999,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // Connection Section
                           _SectionHeader(title: 'CONNECTION'),
@@ -2017,7 +2030,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // Haptic Feedback Section
                           const _SectionHeader(title: 'HAPTIC FEEDBACK'),
@@ -2059,7 +2072,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // Appearance & Accessibility Section
                           const _SectionHeader(title: 'APPEARANCE'),
@@ -2077,7 +2090,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // What's New Section
                           const _SectionHeader(title: "WHAT'S NEW"),
@@ -2089,7 +2102,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             onTap: () => WhatsNewSheet.showHistory(context),
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // Animations Section
                           const _SectionHeader(title: 'ANIMATIONS'),
@@ -2143,7 +2156,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // Notifications Section
                           _SectionHeader(title: 'NOTIFICATIONS'),
@@ -2287,7 +2300,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ],
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // Messaging Section
                           _SectionHeader(title: 'MESSAGING'),
@@ -2316,7 +2329,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // Data Section
                           const _SectionHeader(title: 'DATA & STORAGE'),
@@ -2365,7 +2378,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             onTap: () => _confirmClearData(context, ref),
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // Remote Admin Selector
                           _buildRemoteAdminSelector(context, ref),
@@ -2537,7 +2550,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 Navigator.pushNamed(context, '/qr-scanner'),
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // Modules Section
                           _SectionHeader(title: 'MODULES'),
@@ -2660,7 +2673,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // Telemetry Section
                           _SectionHeader(title: 'TELEMETRY LOGS'),
@@ -2755,7 +2768,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // Tools Section
                           _SectionHeader(title: 'TOOLS'),
@@ -2829,7 +2842,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             },
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
 
                           // About Section
                           _SectionHeader(title: 'ABOUT'),
@@ -2877,12 +2890,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppTheme.spacing24),
 
                           // Meshtastic Powered footer
                           _MeshtasticPoweredFooter(),
 
-                          const SizedBox(height: 32),
+                          const SizedBox(height: AppTheme.spacing32),
                         ]),
                       ),
                     ),
@@ -2916,7 +2929,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(AppTheme.spacing16),
               child: Text(
                 'Haptic Intensity',
                 style: TextStyle(
@@ -2965,7 +2978,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 },
               );
             }),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
           ],
         ),
       ),
@@ -3116,7 +3129,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       child: Row(
         children: [
           LoadingIndicator(size: 40),
-          const SizedBox(width: 20),
+          const SizedBox(width: AppTheme.spacing20),
           Text(
             'Syncing from device...',
             style: TextStyle(color: context.textPrimary),
@@ -3244,7 +3257,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           InfoTable(
             rows: [
               InfoTableRow(
@@ -3284,7 +3297,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
         ],
       ),
     );
@@ -3299,7 +3312,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 8),
       child: Text(
         title,
         style: TextStyle(
@@ -3341,21 +3354,21 @@ class _SettingsTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
                 Icon(icon, color: iconColor ?? context.textSecondary),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -3368,7 +3381,7 @@ class _SettingsTile extends StatelessWidget {
                         ),
                       ),
                       if (subtitle != null) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           subtitle!,
                           style: Theme.of(context).textTheme.bodySmall
@@ -3439,15 +3452,15 @@ class _PremiumFeatureTile extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
@@ -3458,7 +3471,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
                       ? (iconColor ?? accentColor)
                       : context.textTertiary,
                 ),
-                SizedBox(width: 16),
+                SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: Text(
                     title,
@@ -3482,7 +3495,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
                         : upsellEnabled
                         ? Colors.amber.withValues(alpha: 0.2)
                         : context.textTertiary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -3490,7 +3503,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
                       if (!hasFeature && !upsellEnabled) ...[
                         // Show locked badge when upsell is disabled (not owned)
                         Icon(Icons.lock, size: 12, color: context.textTertiary),
-                        SizedBox(width: 4),
+                        SizedBox(width: AppTheme.spacing4),
                         Text(
                           priceLabel ?? 'LOCKED',
                           style: context.captionStyle!.copyWith(
@@ -3501,7 +3514,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
                       ] else if (!hasFeature && upsellEnabled) ...[
                         // Show "TRY IT" badge when upsell is enabled but not owned
                         Icon(Icons.star, size: 12, color: Colors.amber),
-                        SizedBox(width: 4),
+                        SizedBox(width: AppTheme.spacing4),
                         Text(
                           'TRY IT',
                           style: context.captionStyle!.copyWith(
@@ -3522,7 +3535,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppTheme.spacing8),
                 Icon(
                   Icons.chevron_right,
                   color: isExplorable ? accentColor : context.textTertiary,
@@ -3564,18 +3577,18 @@ class _ProfileTile extends ConsumerWidget {
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           decoration: BoxDecoration(
             color: context.card,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(color: context.border.withValues(alpha: 0.3)),
           ),
           child: Material(
             color: Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: onTap,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 child: Row(
                   children: [
                     // Avatar
@@ -3588,7 +3601,7 @@ class _ProfileTile extends ConsumerWidget {
                       foregroundColor: accentColor,
                       backgroundColor: context.surface,
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppTheme.spacing12),
                     // Info
                     Expanded(
                       child: Column(
@@ -3608,7 +3621,7 @@ class _ProfileTile extends ConsumerWidget {
                                 ),
                               ),
                               if (profile.callsign != null) ...[
-                                const SizedBox(width: 8),
+                                const SizedBox(width: AppTheme.spacing8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 6,
@@ -3616,7 +3629,9 @@ class _ProfileTile extends ConsumerWidget {
                                   ),
                                   decoration: BoxDecoration(
                                     color: accentColor.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radius8,
+                                    ),
                                   ),
                                   child: Text(
                                     profile.callsign!,
@@ -3630,7 +3645,7 @@ class _ProfileTile extends ConsumerWidget {
                               ],
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppTheme.spacing4),
                           Row(
                             children: [
                               Icon(
@@ -3640,7 +3655,7 @@ class _ProfileTile extends ConsumerWidget {
                                     ? AccentColors.green
                                     : context.textTertiary,
                               ),
-                              SizedBox(width: 4),
+                              SizedBox(width: AppTheme.spacing4),
                               Text(
                                 isSignedIn ? 'Synced' : 'Local only',
                                 style: TextStyle(
@@ -3802,7 +3817,7 @@ class _MeshtasticPoweredFooter extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: InkWell(
           onTap: () => _openMeshtasticWebsite(context),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             child: Opacity(
@@ -3894,7 +3909,7 @@ class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen>
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -3903,7 +3918,7 @@ class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen>
               size: 48,
               color: accentColor.withValues(alpha: 0.7),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'Unable to load page',
               style: TextStyle(
@@ -3912,7 +3927,7 @@ class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen>
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'This content requires an internet connection. '
               'Please check your connection and try again.',
@@ -3920,7 +3935,7 @@ class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen>
               textAlign: TextAlign.center,
             ),
             if (_errorDescription.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 _errorDescription,
                 style: TextStyle(color: context.textTertiary, fontSize: 11),
@@ -3929,7 +3944,7 @@ class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen>
                 overflow: TextOverflow.ellipsis,
               ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             FilledButton.icon(
               onPressed: _retry,
               icon: const Icon(Icons.refresh, size: 18),
@@ -3940,7 +3955,7 @@ class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen>
                   vertical: 12,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
             ),
@@ -4024,7 +4039,6 @@ class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen>
                       safeSetState(() => _progress = progress / 100);
                     },
                     onLoadStop: (controller, url) async {
-                      if (!mounted) return;
                       safeSetState(() => _progress = 1.0);
                       final canGoBack = await controller.canGoBack();
                       safeSetState(() => _canGoBack = canGoBack);
@@ -4187,7 +4201,7 @@ class _SocialNotificationsSectionState
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           const _SectionHeader(title: 'SOCIAL NOTIFICATIONS'),
           _SettingsTile(
             icon: Icons.notifications_active_outlined,
@@ -4201,7 +4215,7 @@ class _SocialNotificationsSectionState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         const _SectionHeader(title: 'SOCIAL NOTIFICATIONS'),
         _SettingsTile(
           icon: Icons.person_add_outlined,

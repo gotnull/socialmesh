@@ -358,17 +358,17 @@ class GaugeRenderer extends StatelessWidget {
           height: height,
           decoration: BoxDecoration(
             border: Border.all(color: effectiveColor, width: 1.5),
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(AppTheme.radius2),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(2),
+            padding: const EdgeInsets.all(AppTheme.spacing2),
             child: FractionallySizedBox(
               widthFactor: normalizedValue,
               alignment: Alignment.centerLeft,
               child: Container(
                 decoration: BoxDecoration(
                   color: effectiveColor,
-                  borderRadius: BorderRadius.circular(1),
+                  borderRadius: BorderRadius.circular(AppTheme.radius1),
                 ),
               ),
             ),
@@ -413,7 +413,7 @@ class GaugeRenderer extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 1),
           decoration: BoxDecoration(
             color: isActive ? gaugeColor : backgroundColor,
-            borderRadius: BorderRadius.circular(1),
+            borderRadius: BorderRadius.circular(AppTheme.radius1),
           ),
         );
       }),

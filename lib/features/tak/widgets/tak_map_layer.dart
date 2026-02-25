@@ -8,6 +8,7 @@ import '../../../core/logging.dart';
 import '../models/tak_event.dart';
 import '../utils/cot_affiliation.dart';
 import 'tak_map_marker.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Marker threshold: when the total number of visible TAK entities exceeds
 /// this value, the layer enables clustering to keep the map readable.
@@ -137,7 +138,7 @@ class _TakMapLayerState extends State<TakMapLayer> {
         options: MarkerClusterLayerOptions(
           maxClusterRadius: 80,
           size: const Size(48, 48),
-          padding: const EdgeInsets.all(50),
+          padding: const EdgeInsets.all(AppTheme.spacing50),
           markers: _markers,
           popupOptions: PopupOptions(
             popupBuilder: (_, _) => const SizedBox.shrink(),

@@ -103,7 +103,6 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
 
     // Set initial viewport offset so the starting area is visible.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
       _initializeGraph();
     });
   }
@@ -142,7 +141,6 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
     // nodes are visible. For new empty graphs, just center the canvas at
     // the default position.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
       if (widget.automation != null &&
           (_nodeDataProvider?.nodes.isNotEmpty ?? false)) {
         _zoomToFit();
@@ -310,7 +308,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
       ),
       builder: (sheetContext) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,7 +320,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
                     color: Colors.grey[600],
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(AppTheme.radius2),
                   ),
                 ),
               ),
@@ -333,7 +331,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                     color: AppTheme.errorRed,
                     size: 24,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Text(
                     'Compilation Issues',
                     style: Theme.of(sheetContext).textTheme.titleLarge
@@ -341,7 +339,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               if (errors.isNotEmpty) ...[
                 Text(
                   'Errors',
@@ -350,7 +348,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 ...errors.map(
                   (e) => Padding(
                     padding: const EdgeInsets.only(bottom: 6),
@@ -362,7 +360,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                           size: 16,
                           color: AppTheme.errorRed,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Expanded(
                           child: Text(
                             e.message,
@@ -375,7 +373,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                 ),
               ],
               if (warnings.isNotEmpty) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 Text(
                   'Warnings',
                   style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
@@ -383,7 +381,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 ...warnings.map(
                   (w) => Padding(
                     padding: const EdgeInsets.only(bottom: 6),
@@ -395,7 +393,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                           size: 16,
                           color: AppTheme.warningYellow,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Expanded(
                           child: Text(
                             w.message,
@@ -407,7 +405,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                   ),
                 ),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
             ],
           ),
         ),
@@ -662,7 +660,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
     return Container(
       decoration: BoxDecoration(
         color: context.card.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
         boxShadow: [
           BoxShadow(
@@ -680,9 +678,10 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
             size: 18,
             color: context.textTertiary,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Expanded(
             child: TextField(
+              maxLength: 100,
               controller: _nameController,
               textCapitalization: TextCapitalization.sentences,
               style: Theme.of(
@@ -705,7 +704,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
               color: AppTheme.primaryPurple.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
             ),
             child: Text(
               '${ref.read(visualFlowProvider.notifier).nodeCount} nodes',
@@ -757,7 +756,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
             isActive: _showNodePalette,
             onTap: _toggleNodePalette,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
 
           // Undo.
           _ToolbarButton(
@@ -766,7 +765,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
             color: context.textSecondary,
             onTap: (_historyManager?.canUndo ?? false) ? _undo : null,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
 
           // Redo.
           _ToolbarButton(
@@ -787,7 +786,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
               onTap: _deleteSelected,
             ),
 
-          if (selectedCount > 0) const SizedBox(width: 8),
+          if (selectedCount > 0) const SizedBox(width: AppTheme.spacing8),
 
           // Zoom to fit.
           _ToolbarButton(
@@ -866,7 +865,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
       margin: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: context.card.withValues(alpha: 0.97),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.border),
         boxShadow: [
           BoxShadow(
@@ -881,7 +880,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
         children: [
           // Header.
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 8, 8),
             child: Row(
               children: [
                 Icon(
@@ -889,7 +888,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                   size: 18,
                   color: context.textSecondary,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Add Node',
                   style: Theme.of(
@@ -910,7 +909,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 320),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -943,7 +942,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                 Row(
                   children: [
                     Icon(icon, size: 14, color: color),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     Text(
                       categoryName,
                       style: TextStyle(
@@ -954,7 +953,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
@@ -1028,13 +1027,13 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
           gradient: const LinearGradient(
             colors: [AppTheme.primaryMagenta, AppTheme.primaryPurple],
           ),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.save_outlined, size: 16, color: Colors.white),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppTheme.spacing6),
             Text(
               _isEditing ? 'Save' : 'Create',
               style: const TextStyle(
@@ -1086,13 +1085,13 @@ class _ToolbarButton extends StatelessWidget {
           color: isActive
               ? AppTheme.primaryPurple.withValues(alpha: 0.15)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 18, color: effectiveColor),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             Text(
               label,
               style: TextStyle(
@@ -1131,7 +1130,7 @@ class _PaletteChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Text(

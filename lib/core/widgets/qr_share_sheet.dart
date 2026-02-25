@@ -229,14 +229,14 @@ class _AsyncQrShareSheetState extends State<_AsyncQrShareSheet> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _QrShareHeader(title: widget.title, subtitle: widget.subtitle),
-        const SizedBox(height: 48),
+        const SizedBox(height: AppTheme.spacing48),
         const CircularProgressIndicator(),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         Text(
           'Preparing share link...',
           style: TextStyle(color: context.textSecondary),
         ),
-        const SizedBox(height: 48),
+        const SizedBox(height: AppTheme.spacing48),
         SizedBox(height: MediaQuery.of(context).padding.bottom),
       ],
     );
@@ -247,9 +247,9 @@ class _AsyncQrShareSheetState extends State<_AsyncQrShareSheet> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _QrShareHeader(title: widget.title, subtitle: widget.subtitle),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
         StatusBanner.error(title: _error!),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         FilledButton.icon(
           onPressed: () {
             setState(() {
@@ -261,7 +261,7 @@ class _AsyncQrShareSheetState extends State<_AsyncQrShareSheet> {
           icon: const Icon(Icons.refresh),
           label: const Text('Retry'),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
         SizedBox(height: MediaQuery.of(context).padding.bottom),
       ],
     );
@@ -306,19 +306,19 @@ class _QrShareContentState extends State<_QrShareContent> {
       children: [
         // Header
         _QrShareHeader(title: widget.title, subtitle: widget.subtitle),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
 
         // QR Code with accent gradient style
         _AccentGradientQrContainer(qrData: widget.qrData),
 
         // Info text
         if (widget.infoText != null) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           StatusBanner.accent(title: widget.infoText!, margin: EdgeInsets.zero),
         ],
 
         // Action buttons
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
         _buildButtons(context),
 
         // Bottom safe area
@@ -350,12 +350,12 @@ class _QrShareContentState extends State<_QrShareContent> {
               side: BorderSide(color: context.accentColor),
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         // Copy Link button (filled, right)
         Expanded(
           child: FilledButton.icon(
@@ -367,7 +367,7 @@ class _QrShareContentState extends State<_QrShareContent> {
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
             ),
           ),
@@ -423,14 +423,14 @@ class _QrShareHeader extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(AppTheme.spacing10),
           decoration: BoxDecoration(
             color: context.accentColor.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
           ),
           child: Icon(Icons.qr_code_2, color: context.accentColor, size: 24),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -443,7 +443,7 @@ class _QrShareHeader extends StatelessWidget {
                   color: context.textPrimary,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppTheme.spacing2),
               Text(
                 subtitle,
                 style: Theme.of(
@@ -507,10 +507,10 @@ class _AccentGradientQrContainer extends ConsumerWidget {
     // Default: black on white, no gradient container
     if (!useAccentColor) {
       return Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
         ),
         child: BrandedQrCode(
           data: qrData,
@@ -535,14 +535,14 @@ class _AccentGradientQrContainer extends ConsumerWidget {
         .toColor();
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [lightAccent, accent, darkAccent],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         boxShadow: [
           BoxShadow(
             color: accent.withValues(alpha: 0.4),
@@ -557,10 +557,10 @@ class _AccentGradientQrContainer extends ConsumerWidget {
         ],
       ),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),

@@ -607,6 +607,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     // This handles the case where user turned device back on after auto-reconnect failed
     try {
       final settings = await ref.read(settingsServiceProvider.future);
+      if (!mounted) return;
       final lastDeviceId = settings.lastDeviceId;
 
       if (lastDeviceId != null && settings.autoReconnect) {
@@ -750,6 +751,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       try {
         // Check system devices first (peripherals iOS already knows about)
         final systemDevices = await FlutterBluePlus.systemDevices([]);
+        if (!mounted) return;
         AppLogging.connection(
           '📱 RECONNECT ON RESUME: Found ${systemDevices.length} system devices',
         );
@@ -817,6 +819,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           '📱 RECONNECT ON RESUME: Direct connect succeeded!',
         );
         await _finalizeMeshCoreReconnect(foundDevice, result);
+        if (!mounted) return;
         return;
       }
 
@@ -848,6 +851,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         AppLogging.connection(
           '📱 RECONNECT ON RESUME: Scan found: ${device.id} (${device.name})',
         );
+        if (!mounted) return;
         if (device.id == deviceId) {
           foundDevice = device;
           AppLogging.connection(
@@ -885,6 +889,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       }
 
       await _finalizeMeshCoreReconnect(foundDevice, result);
+      if (!mounted) return;
     } catch (e) {
       AppLogging.connection('📱 RECONNECT ON RESUME: MeshCore failed: $e');
       ref
@@ -921,6 +926,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         .setState(AutoReconnectState.success);
 
     await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
     ref
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.idle);
@@ -943,6 +949,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
 
       await for (final device in scanStream) {
         AppLogging.connection('📱 RECONNECT ON RESUME: Found ${device.id}');
+        if (!mounted) return;
         if (device.id == deviceId) {
           foundDevice = device;
           AppLogging.connection('📱 RECONNECT ON RESUME: Target device found!');
@@ -965,6 +972,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           // Clear all previous device data before starting new connection
           await clearDeviceDataBeforeConnect(ref);
 
+          if (!mounted) return;
           final protocol = ref.read(protocolServiceProvider);
 
           // Set device info for hardware model inference
@@ -985,6 +993,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           AppLogging.connection(
             '📱 RECONNECT ON RESUME: Protocol started, myNodeNum=${protocol.myNodeNum}',
           );
+          if (!mounted) return;
           ref.read(connectedDeviceProvider.notifier).setState(foundDevice);
           ref
               .read(autoReconnectStateProvider.notifier)
@@ -997,6 +1006,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           AppLogging.connection('📱 RECONNECT ON RESUME: ✅ Success!');
 
           await Future.delayed(const Duration(milliseconds: 500));
+          if (!mounted) return;
           ref
               .read(autoReconnectStateProvider.notifier)
               .setState(AutoReconnectState.idle);
@@ -1038,6 +1048,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       }
 
       // Initialize cloud sync entitlement service
+      if (!mounted) return;
       final cloudSyncService = ref.read(cloudSyncEntitlementServiceProvider);
       await cloudSyncService.initialize();
       AppLogging.debug('☁️ Cloud sync entitlement service initialized');
@@ -1049,6 +1060,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   Future<void> _initializeDeepLinks() async {
     try {
       // Use DeepLinkManager for lifecycle-safe navigation
+      if (!mounted) return;
       final deepLinkManager = ref.read(deepLinkManagerProvider);
       await deepLinkManager.initialize();
       AppLogging.debug('🔗 Deep link manager initialized');
@@ -1061,6 +1073,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   Future<void> _initializeGlyphService() async {
     try {
       await ref.read(glyphServiceInitProvider.future);
+      if (!mounted) return;
       final isSupported = ref.read(glyphSupportedProvider);
       if (isSupported) {
         AppLogging.app('🔆 Glyph interface ready');
@@ -1198,6 +1211,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     // Just load the theme mode from local settings
     final localThemeModeIndex = settings.themeMode;
     final localThemeMode = ThemeMode.values[localThemeModeIndex];
+    if (!mounted) return;
     ref.read(themeModeProvider.notifier).setThemeMode(localThemeMode);
 
     // Wait for Firebase to be ready before syncing from cloud
@@ -1277,6 +1291,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   /// Initialize user presence tracking
   Future<void> _initializePresence() async {
     // Initialize extended presence service first (loads cached remote presence)
+    if (!mounted) return;
     final extendedPresenceService = ref.read(extendedPresenceServiceProvider);
     await extendedPresenceService.init();
 
@@ -1290,6 +1305,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
 
     // Wait for user to be signed in
     final authState = await ref.read(authStateProvider.future);
+    if (!mounted) return;
     if (authState != null) {
       ref.read(userPresenceServiceProvider).setOnline();
     }
@@ -1403,6 +1419,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         touchIntensity: prefs.splashMeshTouchIntensity ?? 0.5,
         stretchIntensity: prefs.splashMeshStretchIntensity ?? 0.3,
       );
+      if (!mounted) return;
       // Invalidate the provider so it reloads with new config
       ref.invalidate(splashMeshConfigProvider);
       AppLogging.debug('✨ Loaded splash mesh config from cloud');
@@ -1413,6 +1430,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       try {
         final automationRepo = ref.read(automationRepositoryProvider);
         await automationRepo.loadFromJson(prefs.automationsJson!);
+        if (!mounted) return;
         AppLogging.automations(
           '⚡ Loaded ${automationRepo.automations.length} automations from cloud',
         );
@@ -1767,9 +1785,9 @@ class _SignalDetailLoader extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text('Error loading signal: ${snapshot.error}'),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Go Back'),
@@ -1786,9 +1804,9 @@ class _SignalDetailLoader extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.signal_wifi_off, size: 48),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   const Text('Signal not found'),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Go Back'),
@@ -1845,13 +1863,13 @@ class _AetherFlightDeepLinkLoader extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     snapshot.hasError
                         ? 'Error loading flight: ${snapshot.error}'
                         : 'Flight not found',
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Go Back'),
@@ -1906,9 +1924,9 @@ class _ChannelImportLoader extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text('Error loading channel: ${snapshot.error}'),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Go Back'),
@@ -1925,15 +1943,15 @@ class _ChannelImportLoader extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.lock_outline, size: 48),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   const Text('Channel not available'),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   const Text(
                     'You may not have access to this channel,\n'
                     'or the owner needs to re-share it.',
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Go Back'),
@@ -2064,7 +2082,6 @@ class _ChannelInviteRedeemerState
         );
       });
     } catch (e) {
-      if (!mounted) return;
       AppLogging.channels('[ChannelInvite] Redemption failed: $e');
       setState(() => _error = _friendlyError(e));
     }
@@ -2110,7 +2127,7 @@ class _ChannelInviteRedeemerState
                         color: SnackBarType.error.iconColor.withValues(
                           alpha: 0.15,
                         ),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppTheme.radius20),
                       ),
                       child: Icon(
                         Icons.error_outline_rounded,
@@ -2118,7 +2135,7 @@ class _ChannelInviteRedeemerState
                         color: SnackBarType.error.iconColor,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppTheme.spacing20),
                     Text(
                       _error!,
                       textAlign: TextAlign.center,
@@ -2128,7 +2145,7 @@ class _ChannelInviteRedeemerState
                         color: context.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppTheme.spacing24),
                     OutlinedButton(
                       onPressed: () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
@@ -2139,7 +2156,9 @@ class _ChannelInviteRedeemerState
                           vertical: 14,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                       ),
                       child: const Text('Go Back'),
@@ -2155,7 +2174,7 @@ class _ChannelInviteRedeemerState
               mainAxisSize: MainAxisSize.min,
               children: [
                 const LoadingIndicator(size: 32, strokeWidth: 3),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppTheme.spacing20),
                 Text(
                   'Joining channel...',
                   style: TextStyle(fontSize: 15, color: context.textSecondary),
@@ -2278,9 +2297,9 @@ class _WidgetDetailLoaderState extends ConsumerState<_WidgetDetailLoader> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.error_outline, size: 48, color: Colors.red),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               Text(_error!),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text('Go Back'),
@@ -2356,9 +2375,9 @@ class _ProfileDisplayNameLoader extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.cloud_off_outlined, size: 48),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   const Text('Cloud services not available yet'),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Go Back'),
@@ -2394,9 +2413,9 @@ class _ProfileDisplayNameLoader extends ConsumerWidget {
                           size: 48,
                           color: Colors.red,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppTheme.spacing16),
                         Text('Error looking up user: ${snapshot.error}'),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppTheme.spacing16),
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(),
                           child: const Text('Go Back'),
@@ -2416,9 +2435,9 @@ class _ProfileDisplayNameLoader extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.person_off, size: 48),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppTheme.spacing16),
                         Text('User "@$displayName" not found'),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppTheme.spacing16),
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(),
                           child: const Text('Go Back'),
@@ -2490,7 +2509,7 @@ class _BlockedRouteScreen extends ConsumerWidget {
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(AppTheme.spacing32),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -2503,14 +2522,14 @@ class _BlockedRouteScreen extends ConsumerWidget {
                   ),
                   child: Icon(iconData, size: 40, color: iconColor),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 Text(
                   title,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Text(
                   description,
                   textAlign: TextAlign.center,
@@ -2518,7 +2537,7 @@ class _BlockedRouteScreen extends ConsumerWidget {
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spacing32),
                 FilledButton.icon(
                   onPressed: () {
                     Navigator.of(context).pushNamed('/scanner');
@@ -2528,7 +2547,7 @@ class _BlockedRouteScreen extends ConsumerWidget {
                     isInvalidated ? 'Scan for Devices' : 'Connect Device',
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 TextButton(
                   onPressed: () {
                     if (Navigator.of(context).canPop()) {
@@ -2746,7 +2765,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
 
           return Container(
             color: context.background,
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
             child: SafeArea(
               top: false,
               child: Column(
@@ -2760,7 +2779,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     '© 2026 Socialmesh. All rights reserved.',
                     style: TextStyle(
@@ -3183,7 +3202,7 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
             height: widget.cardHeight,
             decoration: BoxDecoration(
               color: context.surface.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.radius16),
               border: Border.all(
                 color: context.accentColor.withValues(alpha: 0.1),
                 width: 1,
@@ -3264,7 +3283,7 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
           ],
           stops: const [0.0, 0.5, 1.0],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(
           color: context.accentColor.withValues(alpha: 0.4),
           width: 1.5,
@@ -3284,7 +3303,7 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         child: Stack(
           children: [
             // Subtle gradient overlay for depth
@@ -3334,7 +3353,7 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
             ),
             // Content
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -3362,7 +3381,7 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
                             context.accentColor.withValues(alpha: 0.25),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -3372,7 +3391,7 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
                             color: context.accentColor,
                             size: 10,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: AppTheme.spacing4),
                           Text(
                             'DISCOVERED',
                             style: TextStyle(
@@ -3430,7 +3449,7 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
                       );
                     },
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   // Node ID with glitch/scan effect
                   AnimatedBuilder(
                     animation: _textAnimationController,
@@ -3511,7 +3530,7 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
     final adjustedProgress = ((progress - 0.5) / 0.5).clamp(0.0, 1.0);
 
     if (adjustedProgress <= 0) {
-      return const SizedBox(height: 12);
+      return const SizedBox(height: AppTheme.spacing12);
     }
 
     final fullId = '!$nodeId';
@@ -3654,7 +3673,7 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
               height: 36,
               decoration: BoxDecoration(
                 color: context.accentColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
               ),
               child: Center(
                 child: shortName.isNotEmpty
@@ -3669,7 +3688,7 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
                     : Icon(Icons.person, color: context.accentColor, size: 18),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             // Node info
             Expanded(
               child: Column(
@@ -3702,13 +3721,13 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: context.accentColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(AppTheme.radius6),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.radar, size: 12, color: context.accentColor),
-                  SizedBox(width: 4),
+                  SizedBox(width: AppTheme.spacing4),
                   Text(
                     'Found',
                     style: TextStyle(
@@ -3737,12 +3756,12 @@ class _ErrorScreen extends ConsumerWidget {
       backgroundColor: context.background,
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(AppTheme.spacing32),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, size: 64, color: Colors.red),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
               Text(
                 'Something went wrong',
                 style: TextStyle(
@@ -3751,7 +3770,7 @@ class _ErrorScreen extends ConsumerWidget {
                   color: context.textPrimary,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 'Failed to initialize the app. Please try again.',
                 style: context.titleSmallStyle?.copyWith(
@@ -3759,7 +3778,7 @@ class _ErrorScreen extends ConsumerWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 32),
+              SizedBox(height: AppTheme.spacing32),
               ElevatedButton(
                 onPressed: () {
                   ref.read(appInitProvider.notifier).initialize();
@@ -3772,7 +3791,7 @@ class _ErrorScreen extends ConsumerWidget {
                     vertical: 16,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                 ),
                 child: const Text('Retry'),

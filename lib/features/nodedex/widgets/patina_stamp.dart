@@ -63,7 +63,7 @@ class PatinaStamp extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: accentColor.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(AppTheme.radius6),
           border: Border.all(
             color: accentColor.withValues(alpha: 0.2),
             width: 0.75,
@@ -121,7 +121,7 @@ class PatinaStamp extends StatelessWidget {
       builder: (sheetContext) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 16, 24, 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,11 +133,11 @@ class PatinaStamp extends StatelessWidget {
                     height: 4,
                     decoration: BoxDecoration(
                       color: context.textTertiary.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(AppTheme.radius2),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
 
                 // Title row with overall score
                 Row(
@@ -158,12 +158,12 @@ class PatinaStamp extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Text(
                   'Accumulated history across six dimensions',
                   style: TextStyle(fontSize: 12, color: context.textTertiary),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppTheme.spacing20),
 
                 // Axis breakdowns
                 _AxisRow(
@@ -265,11 +265,11 @@ class _AxisRow extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           // Subtle bar visualization (not a progress bar — just a
           // proportional fill for quick visual comparison)
           ClipRRect(
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(AppTheme.radius2),
             child: SizedBox(
               height: 3,
               child: LayoutBuilder(
@@ -292,7 +292,7 @@ class _AxisRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppTheme.spacing2),
           Text(
             description,
             style: TextStyle(fontSize: 10, color: buildContext.textTertiary),
@@ -326,7 +326,7 @@ class PatinaIndicator extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
         color: accentColor.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
       ),
       child: Text(
         '${result.score}',

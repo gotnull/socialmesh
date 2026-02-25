@@ -83,7 +83,7 @@ class RemoteBadge extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(AppTheme.radius6),
           border: Border.all(color: color.withValues(alpha: 0.25), width: 0.5),
         ),
         child: Row(
@@ -169,14 +169,14 @@ class RemoteSourceBadge extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: color),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -191,7 +191,7 @@ class RemoteSourceBadge extends ConsumerWidget {
                 ),
               ),
               if (latestSighting.topic.isNotEmpty) ...[
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   'via ${latestSighting.topic}',
                   style: TextStyle(

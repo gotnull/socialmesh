@@ -115,15 +115,15 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen>
       title: 'Privacy',
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Info card
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,7 +133,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen>
                       color: context.accentColor,
                       size: 24,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Text(
                         'Socialmesh collects minimal data to improve app '
@@ -147,7 +147,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen>
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Section header
               Padding(
@@ -161,7 +161,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen>
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
 
               // Analytics toggle
               _PrivacyToggleTile(
@@ -174,7 +174,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen>
                 onChanged: _consentService != null ? _toggleAnalytics : null,
               ),
 
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
 
               // Crashlytics toggle
               _PrivacyToggleTile(
@@ -187,22 +187,22 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen>
                 onChanged: _consentService != null ? _toggleCrashlytics : null,
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Privacy Policy link
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Material(
                   color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     onTap: () => LegalDocumentSheet.showPrivacy(context),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -214,7 +214,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen>
                             Icons.description_outlined,
                             color: context.textSecondary,
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: AppTheme.spacing16),
                           Expanded(
                             child: Text(
                               'Privacy Policy',
@@ -235,7 +235,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen>
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Third-party services disclosure
               Padding(
@@ -249,7 +249,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen>
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _ThirdPartyInfoTile(
                 title: 'Firebase (Google)',
                 categories: 'Crash reports, usage analytics (if opted in)',
@@ -263,7 +263,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen>
                 categories: 'Hashed node identifiers for artwork generation',
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
             ]),
           ),
         ),
@@ -294,7 +294,7 @@ class _PrivacyToggleTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -305,7 +305,7 @@ class _PrivacyToggleTile extends StatelessWidget {
               padding: const EdgeInsets.only(top: 2),
               child: Icon(icon, color: context.textSecondary),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppTheme.spacing16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,7 +317,7 @@ class _PrivacyToggleTile extends StatelessWidget {
                       color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     subtitle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -327,7 +327,7 @@ class _PrivacyToggleTile extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             ThemedSwitch(value: value, onChanged: onChanged),
           ],
         ),
@@ -349,7 +349,7 @@ class _ThirdPartyInfoTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -360,7 +360,7 @@ class _ThirdPartyInfoTile extends StatelessWidget {
               padding: const EdgeInsets.only(top: 2),
               child: Icon(Icons.cloud_outlined, color: context.textSecondary),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppTheme.spacing16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -372,7 +372,7 @@ class _ThirdPartyInfoTile extends StatelessWidget {
                       color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     categories,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(

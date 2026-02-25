@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/logging.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Available accent colors for the app
 class AccentColors {
@@ -461,6 +462,61 @@ final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
 );
 
 class AppTheme {
+  // -------------------------------------------------------
+  // Spacing scale (use for EdgeInsets, SizedBox, gaps)
+  // -------------------------------------------------------
+  static const double spacing0 = 0;
+  static const double spacing1 = 1;
+  static const double spacing2 = 2;
+  static const double spacing3 = 3;
+  static const double spacing4 = 4;
+  static const double spacing5 = 5;
+  static const double spacing6 = 6;
+  static const double spacing8 = 8;
+  static const double spacing10 = 10;
+  static const double spacing12 = 12;
+  static const double spacing14 = 14;
+  static const double spacing16 = 16;
+  static const double spacing18 = 18;
+  static const double spacing20 = 20;
+  static const double spacing24 = 24;
+  static const double spacing32 = 32;
+  static const double spacing40 = 40;
+  static const double spacing28 = 28;
+  static const double spacing48 = 48;
+  static const double spacing50 = 50;
+  static const double spacing60 = 60;
+  static const double spacing64 = 64;
+  static const double spacing70 = 70;
+  static const double spacing80 = 80;
+  static const double spacing100 = 100;
+  static const double spacing200 = 200;
+
+  // -------------------------------------------------------
+  // Border-radius scale (use for BorderRadius / Radius)
+  // -------------------------------------------------------
+  static const double radius0 = 0;
+  static const double radius1 = 1;
+  static const double radius2 = 2;
+  static const double radius3 = 3;
+  static const double radius4 = 4;
+  static const double radius5 = 5;
+  static const double radius6 = 6;
+  static const double radius8 = 8;
+  static const double radius9 = 9;
+  static const double radius10 = 10;
+  static const double radius11 = 11;
+  static const double radius12 = 12;
+  static const double radius14 = 14;
+  static const double radius15 = 15;
+  static const double radius16 = 16;
+  static const double radius18 = 18;
+  static const double radius19 = 19;
+  static const double radius20 = 20;
+  static const double radius24 = 24;
+  static const double radius28 = 28;
+  static const double radius30 = 30;
+
   // Font families
   static const fontFamily = 'JetBrainsMono';
   static const fontFamilyFallback = 'Inter';

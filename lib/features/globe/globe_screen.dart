@@ -142,6 +142,7 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen>
                     title: 'Select Node',
                     allowBroadcast: false,
                   );
+                  if (!mounted) return;
                   if (selection != null && selection.nodeNum != null) {
                     final node = nodes[selection.nodeNum];
                     if (node != null && node.hasPosition) {
@@ -156,14 +157,14 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen>
                   ),
                   decoration: BoxDecoration(
                     color: context.card.withAlpha(220),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppTheme.radius20),
                     border: Border.all(color: context.border),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.public, size: 14, color: context.accentColor),
-                      SizedBox(width: 6),
+                      SizedBox(width: AppTheme.spacing6),
                       Text(
                         '${NumberFormatUtils.formatWithThousandsSeparators(nodesList.length)} nodes',
                         style: TextStyle(
@@ -216,7 +217,7 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen>
                       size: 64,
                       color: context.textTertiary.withAlpha(100),
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppTheme.spacing16),
                     Text(
                       'No nodes with GPS',
                       style: TextStyle(
@@ -224,7 +225,7 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen>
                         fontSize: 16,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppTheme.spacing8),
                     Text(
                       'Nodes with position data will appear here',
                       style: TextStyle(

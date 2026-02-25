@@ -56,7 +56,7 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen>
         // Search and Filter Bar
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Row(
               children: [
                 Expanded(
@@ -65,7 +65,7 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen>
                       hintText: 'Search products...',
                       prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -75,7 +75,7 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen>
                     onChanged: (value) => setState(() => _searchQuery = value),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 PopupMenuButton<DeviceCategory?>(
                   icon: Icon(
                     Icons.filter_list,
@@ -128,7 +128,7 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen>
                         size: 64,
                         color: context.textTertiary,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                       const Text('No products found'),
                     ],
                   ),
@@ -246,14 +246,14 @@ class _ProductListItem extends StatelessWidget {
           : Colors.red.withValues(alpha: 0.1),
       child: InkWell(
         onTap: onEdit,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           child: Row(
             children: [
               // Product Image
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 child: product.primaryImage != null
                     ? Image.network(
                         product.primaryImage!,
@@ -265,7 +265,7 @@ class _ProductListItem extends StatelessWidget {
                       )
                     : _placeholderImage(),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppTheme.spacing12),
 
               // Product Info
               Expanded(
@@ -290,7 +290,9 @@ class _ProductListItem extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: Colors.red.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
                             ),
                             child: Text(
                               'INACTIVE',
@@ -310,7 +312,9 @@ class _ProductListItem extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: Colors.amber.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
                             ),
                             child: const Text(
                               'FEATURED',
@@ -323,7 +327,7 @@ class _ProductListItem extends StatelessWidget {
                           ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Text(
                       '${product.category.label} • ${product.sellerName}',
                       style: TextStyle(
@@ -331,7 +335,7 @@ class _ProductListItem extends StatelessWidget {
                         color: context.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Row(
                       children: [
                         Text(
@@ -341,13 +345,13 @@ class _ProductListItem extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Icon(
                           Icons.visibility,
                           size: 14,
                           color: context.textTertiary,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Text(
                           '${product.viewCount}',
                           style: TextStyle(
@@ -355,13 +359,13 @@ class _ProductListItem extends StatelessWidget {
                             color: context.textTertiary,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Icon(
                           Icons.shopping_cart,
                           size: 14,
                           color: context.textTertiary,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Text(
                           '${product.salesCount}',
                           style: TextStyle(
@@ -396,7 +400,7 @@ class _ProductListItem extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(Icons.edit, size: 20),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppTheme.spacing8),
                         Text('Edit'),
                       ],
                     ),
@@ -411,7 +415,7 @@ class _ProductListItem extends StatelessWidget {
                               : Icons.visibility,
                           size: 20,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Text(product.isActive ? 'Deactivate' : 'Activate'),
                       ],
                     ),
@@ -421,7 +425,7 @@ class _ProductListItem extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(Icons.delete, size: 20, color: Colors.red),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppTheme.spacing8),
                         Text('Delete', style: TextStyle(color: Colors.red)),
                       ],
                     ),
@@ -569,14 +573,14 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
           child: Form(
             key: _formKey,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Images Section
                   _buildSectionTitle('Product Images'),
                   _buildImageSection(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // Basic Info
                   _buildSectionTitle('Basic Information'),
@@ -588,7 +592,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                     ),
                     validator: (v) => v?.isEmpty == true ? 'Required' : null,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   TextFormField(
                     controller: _shortDescriptionController,
@@ -598,7 +602,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                     ),
                     maxLength: 150,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   TextFormField(
                     controller: _descriptionController,
@@ -609,7 +613,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                     maxLines: 5,
                     validator: (v) => v?.isEmpty == true ? 'Required' : null,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // Category & Seller
                   _buildSectionTitle('Category & Seller'),
@@ -630,7 +634,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                       },
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   sellersAsync.when(
                     data: (sellers) => InputDecorator(
@@ -662,7 +666,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                     loading: () => const LinearProgressIndicator(),
                     error: (e, s) => Text('Error loading sellers: $e'),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // Pricing
                   _buildSectionTitle('Pricing'),
@@ -683,7 +687,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                           },
                         ),
                       ),
-                      SizedBox(width: 16),
+                      SizedBox(width: AppTheme.spacing16),
                       Expanded(
                         child: TextFormField(
                           controller: _compareAtPriceController,
@@ -697,7 +701,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // External URL
                   _buildSectionTitle('Purchase Link'),
@@ -710,7 +714,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                     ),
                     keyboardType: TextInputType.url,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // Technical Specs
                   _buildSectionTitle('Technical Specifications'),
@@ -725,7 +729,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                           ),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: AppTheme.spacing16),
                       Expanded(
                         child: TextFormField(
                           controller: _loraChipController,
@@ -737,7 +741,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   Row(
                     children: [
@@ -750,7 +754,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                           ),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: AppTheme.spacing16),
                       Expanded(
                         child: TextFormField(
                           controller: _weightController,
@@ -762,7 +766,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   // Features checkboxes
                   Wrap(
@@ -807,7 +811,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   // Frequency Bands
                   _buildSectionTitle('Frequency Bands'),
@@ -835,7 +839,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                       );
                     }).toList(),
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: AppTheme.spacing24),
 
                   // Physical Specs
                   _buildSectionTitle('Physical Specifications'),
@@ -846,7 +850,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                       hintText: 'e.g., 100x50x25mm',
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // Tags
                   _buildSectionTitle('Tags'),
@@ -857,7 +861,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                       hintText: 'meshtastic, lora, gps (comma separated)',
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // Stock & Status
                   _buildSectionTitle('Stock & Status'),
@@ -869,7 +873,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                     ),
                     keyboardType: TextInputType.number,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   SwitchListTile(
                     title: const Text('In Stock'),
@@ -914,7 +918,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                         keyboardType: TextInputType.number,
                       ),
                     ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   SwitchListTile(
                     title: const Text('Active'),
                     subtitle: const Text('Product is visible in the shop'),
@@ -930,7 +934,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                       return null;
                     }),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // Vendor Verification Section
                   _buildSectionTitle('Vendor Verification'),
@@ -963,7 +967,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppTheme.spacing32),
 
                   // Save Button
                   ConstrainedBox(
@@ -991,7 +995,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppTheme.spacing32),
                 ],
               ),
             ),
@@ -1040,7 +1044,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                   child: Stack(
                     children: [
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                         child: Image.network(
                           _imageUrls[index],
                           width: 100,
@@ -1063,7 +1067,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                             setState(() => _imageUrls.removeAt(index));
                           },
                           child: Container(
-                            padding: const EdgeInsets.all(4),
+                            padding: const EdgeInsets.all(AppTheme.spacing4),
                             decoration: BoxDecoration(
                               color: Colors.red,
                               shape: BoxShape.circle,
@@ -1087,7 +1091,9 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                             ),
                             decoration: BoxDecoration(
                               color: context.accentColor,
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
                             ),
                             child: const Text(
                               'Main',
@@ -1104,7 +1110,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
               },
             ),
           ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
 
         // Add image button
         OutlinedButton.icon(
@@ -1140,6 +1146,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
 
     try {
       final image = await service.pickImage();
+      if (!mounted) return;
       if (image == null) {
         setState(() => _isUploadingImage = false);
         return;
@@ -1152,6 +1159,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
         imageFile: File(image.path),
       );
 
+      if (!mounted) return;
       setState(() {
         _imageUrls.add(url);
         _isUploadingImage = false;

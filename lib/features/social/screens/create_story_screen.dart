@@ -729,7 +729,9 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
     return PopupMenuButton<AlbumFilterType>(
       offset: const Offset(0, 40),
       color: context.card,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
       onSelected: _changeAlbumFilter,
       itemBuilder: (context) => AlbumFilterType.values.map((filter) {
         return PopupMenuItem<AlbumFilterType>(
@@ -743,7 +745,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
                     : context.textPrimary,
                 size: 22,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Text(
                 filter.label,
                 style: TextStyle(
@@ -767,7 +769,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -780,7 +782,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
                 fontSize: 15,
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             const Icon(
               Icons.keyboard_arrow_down,
               color: Colors.white,
@@ -815,7 +817,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
   Widget _buildPermissionRequest() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -824,7 +826,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
               size: 64,
               color: Colors.white.withValues(alpha: 0.5),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             const Text(
               'Allow access to your photos',
               style: TextStyle(
@@ -834,7 +836,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'To create stories, we need access to your photo library.',
               style: TextStyle(
@@ -843,7 +845,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             FilledButton(
               onPressed: () async {
                 await PhotoManager.openSetting();
@@ -858,7 +860,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
 
   Widget _buildMediaGrid() {
     return GridView.builder(
-      padding: const EdgeInsets.all(2),
+      padding: const EdgeInsets.all(AppTheme.spacing2),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         mainAxisSpacing: 2,
@@ -889,7 +891,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
           children: [
             // Header with actions
             Padding(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppTheme.spacing8),
               child: Row(
                 children: [
                   if (_isTextInputMode)
@@ -1045,7 +1047,9 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
                           return RepaintBoundary(
                             key: _storyPreviewKey,
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius12,
+                              ),
                               child: Stack(
                                 fit: StackFit.expand,
                                 children: [
@@ -1149,7 +1153,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
                     color: _hasTextBackground
                         ? Colors.black54
                         : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     border: _isEditingText || _isTextInputMode
                         ? Border.all(
                             color: Colors.white.withValues(alpha: 0.5),
@@ -1294,6 +1298,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
                 child: Opacity(
                   opacity: 0,
                   child: TextField(
+                    maxLength: 100,
                     controller: _textController,
                     focusNode: _textFocusNode,
                     autofocus: true,
@@ -1340,7 +1345,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           // Action buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1350,13 +1355,13 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
                 label: 'Edit',
                 onTap: _startTextEditing,
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppTheme.spacing16),
               _buildToolbarButton(
                 icon: Icons.check,
                 label: 'Done',
                 onTap: _confirmText,
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppTheme.spacing16),
               _buildToolbarButton(
                 icon: Icons.delete_outline,
                 label: 'Delete',
@@ -1382,7 +1387,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppTheme.radius24),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1392,7 +1397,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
               color: isDestructive ? Colors.red : Colors.white,
               size: 20,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Text(
               label,
               style: TextStyle(
@@ -1466,13 +1471,13 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(AppTheme.radius24),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(_visibilityIcon, color: Colors.white, size: 18),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Text(
                           _visibilityLabel,
                           style: const TextStyle(
@@ -1498,7 +1503,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
                         ? null
                         : AppTheme.brandGradientHorizontal,
                     color: _isUploading ? Colors.grey : null,
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(AppTheme.radius24),
                   ),
                   child: _isUploading
                       ? const SizedBox(
@@ -1513,7 +1518,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.send, color: Colors.white, size: 18),
-                            SizedBox(width: 8),
+                            SizedBox(width: AppTheme.spacing8),
                             Text(
                               'Share',
                               style: TextStyle(
@@ -1571,7 +1576,7 @@ class _CameraButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.camera_alt, color: Colors.white, size: 32),
-            SizedBox(height: 4),
+            SizedBox(height: AppTheme.spacing4),
             Text(
               'Camera',
               style: TextStyle(
@@ -1646,13 +1651,13 @@ class _MediaThumbnailState extends State<_MediaThumbnail>
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 decoration: BoxDecoration(
                   color: Colors.black54,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.videocam, color: Colors.white, size: 12),
-                    const SizedBox(width: 2),
+                    const SizedBox(width: AppTheme.spacing2),
                     Text(
                       _formatDuration(widget.asset.videoDuration),
                       style: const TextStyle(color: Colors.white, fontSize: 10),
@@ -1670,7 +1675,7 @@ class _MediaThumbnailState extends State<_MediaThumbnail>
               ),
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(AppTheme.spacing4),
                   decoration: BoxDecoration(
                     color: context.accentColor,
                     shape: BoxShape.circle,
@@ -1743,7 +1748,7 @@ class _AlbumListTileState extends State<_AlbumListTile>
       onTap: widget.onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       leading: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         child: SizedBox(
           width: 56,
           height: 56,

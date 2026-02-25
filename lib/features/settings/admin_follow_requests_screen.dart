@@ -66,12 +66,12 @@ class _AdminFollowRequestsScreenState
         if (snapshot.hasError) {
           return Center(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppTheme.spacing24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.error_outline, size: 48, color: AppTheme.errorRed),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     'Error loading requests',
                     style: TextStyle(
@@ -80,7 +80,7 @@ class _AdminFollowRequestsScreenState
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Text(
                     snapshot.error.toString(),
                     style: TextStyle(color: context.textTertiary, fontSize: 13),
@@ -108,7 +108,7 @@ class _AdminFollowRequestsScreenState
                   size: 64,
                   color: context.textTertiary,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 Text(
                   'No pending requests',
                   style: TextStyle(color: context.textSecondary, fontSize: 16),
@@ -119,7 +119,7 @@ class _AdminFollowRequestsScreenState
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           itemCount: requests.length,
           itemBuilder: (context, index) {
             final doc = requests[index];
@@ -162,7 +162,6 @@ class _AdminFollowRequestsScreenState
 
       showSuccessSnackBar(context, 'Request approved');
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to approve: $e');
     }
   }
@@ -177,7 +176,6 @@ class _AdminFollowRequestsScreenState
 
       showSuccessSnackBar(context, 'Request declined');
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to decline: $e');
     }
   }
@@ -207,10 +205,10 @@ class _FollowRequestCard extends StatelessWidget {
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           decoration: BoxDecoration(
             color: context.card,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(color: context.border),
           ),
           child: Column(
@@ -225,13 +223,13 @@ class _FollowRequestCard extends StatelessWidget {
                     userId: request.requesterId,
                     label: 'FROM',
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Icon(
                     Icons.arrow_forward,
                     color: context.textTertiary,
                     size: 16,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   // Target
                   _ProfileBadge(
                     profile: targetProfile,
@@ -240,13 +238,13 @@ class _FollowRequestCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               // Time
               Text(
                 'Requested ${_formatTime(request.createdAt)}',
                 style: TextStyle(color: context.textTertiary, fontSize: 12),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               // Actions
               Row(
                 children: [
@@ -262,7 +260,7 @@ class _FollowRequestCard extends StatelessWidget {
                       child: const Text('Decline'),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: FilledButton(
                       onPressed: onAccept,
@@ -326,10 +324,10 @@ class _ProfileBadge extends StatelessWidget {
 
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(AppTheme.spacing8),
         decoration: BoxDecoration(
           color: context.background,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,7 +341,7 @@ class _ProfileBadge extends StatelessWidget {
                 letterSpacing: 1,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Row(
               children: [
                 NodeAvatar(
@@ -351,7 +349,7 @@ class _ProfileBadge extends StatelessWidget {
                   color: _getColorForUserId(userId),
                   size: 24,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   child: Text(
                     displayName,
@@ -658,14 +656,14 @@ class _SeedDataTabState extends State<_SeedDataTab>
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       children: [
         // Summary card
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           decoration: BoxDecoration(
             color: context.card,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(color: context.border),
           ),
           child: Column(
@@ -674,7 +672,7 @@ class _SeedDataTabState extends State<_SeedDataTab>
               Row(
                 children: [
                   Icon(Icons.dataset_outlined, color: context.accentColor),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Text(
                     'Test Data',
                     style: TextStyle(
@@ -685,7 +683,7 @@ class _SeedDataTabState extends State<_SeedDataTab>
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _buildStatRow(context, '${_dummyUsers.length}', 'Profiles'),
               _buildStatRow(context, '${_samplePosts.length}', 'Posts'),
               _buildStatRow(context, '${_sampleStories.length}', 'Stories'),
@@ -698,14 +696,14 @@ class _SeedDataTabState extends State<_SeedDataTab>
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // User preview
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           decoration: BoxDecoration(
             color: context.card,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(color: context.border),
           ),
           child: Column(
@@ -720,7 +718,7 @@ class _SeedDataTabState extends State<_SeedDataTab>
                   letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               ...List.generate(_dummyUsers.length, (index) {
                 final user = _dummyUsers[index];
                 final isPrivate = user['isPrivate'] as bool;
@@ -735,7 +733,7 @@ class _SeedDataTabState extends State<_SeedDataTab>
                             ? context.textTertiary
                             : AccentColors.green,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Text(
                         user['displayName'] as String,
                         style: TextStyle(
@@ -744,7 +742,7 @@ class _SeedDataTabState extends State<_SeedDataTab>
                         ),
                       ),
                       if (user['isVerified'] == true) ...[
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Icon(
                           Icons.verified,
                           size: 12,
@@ -759,16 +757,16 @@ class _SeedDataTabState extends State<_SeedDataTab>
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // Log output (only show when seeding)
         if (_log.isNotEmpty)
           Container(
             height: 150,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: Colors.black87,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -780,7 +778,7 @@ class _SeedDataTabState extends State<_SeedDataTab>
                       size: 14,
                       color: Colors.green.shade400,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     Text(
                       'Log',
                       style: TextStyle(
@@ -801,7 +799,7 @@ class _SeedDataTabState extends State<_SeedDataTab>
                       ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Expanded(
                   child: ListView.builder(
                     controller: _logScrollController,
@@ -821,12 +819,12 @@ class _SeedDataTabState extends State<_SeedDataTab>
           ),
 
         if (_isSeeding) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           LinearProgressIndicator(
             backgroundColor: context.border,
             valueColor: AlwaysStoppedAnimation(context.accentColor),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             _status,
             style: TextStyle(color: context.textTertiary, fontSize: 12),
@@ -834,7 +832,7 @@ class _SeedDataTabState extends State<_SeedDataTab>
           ),
         ],
 
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
 
         // Action buttons
         Row(
@@ -850,7 +848,7 @@ class _SeedDataTabState extends State<_SeedDataTab>
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: FilledButton.icon(
                 onPressed: _isSeeding ? null : _seedUsers,
@@ -864,7 +862,7 @@ class _SeedDataTabState extends State<_SeedDataTab>
           ],
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
 
         // Help text
         Text(
@@ -874,7 +872,7 @@ class _SeedDataTabState extends State<_SeedDataTab>
           textAlign: TextAlign.center,
         ),
 
-        const SizedBox(height: 32),
+        const SizedBox(height: AppTheme.spacing32),
       ],
     );
   }
@@ -1125,7 +1123,6 @@ class _SeedDataTabState extends State<_SeedDataTab>
       _log.add('✓ ${_dummyUsers.length} users created (profiles + users)');
 
       // Step 2: Create posts
-      if (!mounted) return;
       safeSetState(() => _status = 'Creating posts...');
       _log.add('');
       _log.add('Creating posts...');
@@ -1255,7 +1252,6 @@ class _SeedDataTabState extends State<_SeedDataTab>
       // Step 4: Create follows from current user to public users with stories
       // This ensures the story bar shows stories from followed users
       if (_currentUserId != null) {
-        if (!mounted) return;
         safeSetState(
           () => _status = 'Creating follows for story visibility...',
         );
@@ -1326,7 +1322,6 @@ class _SeedDataTabState extends State<_SeedDataTab>
       }
 
       // Step 5: Create comments on posts
-      if (!mounted) return;
       safeSetState(() => _status = 'Creating comments...');
       _log.add('');
       _log.add('Creating comments...');

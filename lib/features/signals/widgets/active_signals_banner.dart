@@ -45,7 +45,7 @@ class _ActiveSignalsBannerState extends State<ActiveSignalsBanner>
     final accentColor = context.accentColor;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 8),
       child: GradientBorderContainer(
         borderRadius: 12,
         borderWidth: 2,
@@ -77,7 +77,7 @@ class _ActiveSignalsBannerState extends State<ActiveSignalsBanner>
                 );
               },
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppTheme.spacing10),
             Text(
               '${widget.count} ${widget.count == 1 ? "signal" : "signals"} active',
               style: TextStyle(

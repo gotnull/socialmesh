@@ -248,7 +248,9 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
 
             return [
               // Top padding below the glass app bar
-              const SliverToBoxAdapter(child: SizedBox(height: 8)),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppTheme.spacing8),
+              ),
 
               // Pinned search + filter chips
               SliverPersistentHeader(
@@ -333,7 +335,9 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
                             height: 72,
                             decoration: BoxDecoration(
                               color: context.card,
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius16,
+                              ),
                             ),
                             child: Icon(
                               Icons.battery_unknown,
@@ -341,7 +345,7 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
                               color: context.textTertiary,
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppTheme.spacing24),
                           Text(
                             _hasDateFilter ||
                                     _activeFilter != _MetricFilter.all ||
@@ -354,7 +358,7 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
                               color: context.textSecondary,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppTheme.spacing8),
                           Text(
                             _hasDateFilter ||
                                     _activeFilter != _MetricFilter.all ||
@@ -370,7 +374,7 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
                           if (_activeFilter != _MetricFilter.all ||
                               _searchQuery.isNotEmpty ||
                               _hasDateFilter) ...[
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppTheme.spacing16),
                             FilledButton.icon(
                               onPressed: () {
                                 _searchController.clear();
@@ -398,7 +402,8 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
                   ),
                   sliver: SliverList.separated(
                     itemCount: filtered.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppTheme.spacing8),
                     itemBuilder: (context, index) {
                       final log = filtered[index];
                       final nodeName =
@@ -499,7 +504,7 @@ class _DeviceMetricsChart extends StatelessWidget {
     if (lineBars.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -616,7 +621,7 @@ class _DeviceMetricsChart extends StatelessWidget {
           ),
 
           // Bottom spacing
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
         ],
       ),
     );
@@ -746,7 +751,7 @@ class _LegendItem extends StatelessWidget {
           height: 10,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         Text(
           label,
           style: TextStyle(fontSize: 12, color: context.textSecondary),
@@ -774,7 +779,7 @@ class _DeviceMetricsCard extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTheme.spacing12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -782,7 +787,7 @@ class _DeviceMetricsCard extends StatelessWidget {
             Row(
               children: [
                 Icon(Icons.memory, size: 16, color: context.accentColor),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   child: Text(
                     nodeName,
@@ -799,7 +804,7 @@ class _DeviceMetricsCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Battery indicator
             if (log.batteryLevel != null) ...[
@@ -810,10 +815,10 @@ class _DeviceMetricsCard extends StatelessWidget {
                     size: 20,
                     color: _getBatteryColor(log.batteryLevel!),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Expanded(
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(AppTheme.radius4),
                       child: LinearProgressIndicator(
                         value:
                             (log.batteryLevel! > 100
@@ -826,7 +831,7 @@ class _DeviceMetricsCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Text(
                     log.batteryLevel! > 100
                         ? 'Charging'
@@ -838,7 +843,7 @@ class _DeviceMetricsCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
             ],
 
             // Metric chips — single-line pill layout matching SectionFilterChip
@@ -934,14 +939,14 @@ class _MetricChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             label,
             style: TextStyle(

@@ -329,7 +329,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                 children: [
                   const _SectionHeader(title: 'GPS MODE'),
                   _buildGpsModeSelector(),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
                   const _SectionHeader(title: 'BROADCAST SETTINGS'),
                   _SettingsTile(
                     icon: Icons.tune,
@@ -352,10 +352,10 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                       horizontal: 16,
                       vertical: 2,
                     ),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,7 +379,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                                 color: context.accentColor.withValues(
                                   alpha: 0.15,
                                 ),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius6,
+                                ),
                               ),
                               child: Text(
                                 _formatDuration(_positionBroadcastSecs),
@@ -392,7 +394,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                             ),
                           ],
                         ),
-                        SizedBox(height: 4),
+                        SizedBox(height: AppTheme.spacing4),
                         Text(
                           'How often to share position',
                           style: TextStyle(
@@ -400,7 +402,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                             fontSize: 13,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        SizedBox(height: AppTheme.spacing8),
                         SliderTheme(
                           data: SliderThemeData(
                             inactiveTrackColor: context.border,
@@ -442,7 +444,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                                 color: context.accentColor.withValues(
                                   alpha: 0.15,
                                 ),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius6,
+                                ),
                               ),
                               child: Text(
                                 '${_gpsUpdateInterval}s',
@@ -455,7 +459,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                             ),
                           ],
                         ),
-                        SizedBox(height: 4),
+                        SizedBox(height: AppTheme.spacing4),
                         Text(
                           'How often GPS checks for position',
                           style: TextStyle(
@@ -463,7 +467,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                             fontSize: 13,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        SizedBox(height: AppTheme.spacing8),
                         SliderTheme(
                           data: SliderThemeData(
                             inactiveTrackColor: context.border,
@@ -488,7 +492,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                       ],
                     ),
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
                   // Fixed position is local-only (uses localAdmin routing)
                   if (!isRemote) ...[
                     const _SectionHeader(title: 'FIXED POSITION'),
@@ -511,14 +515,17 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                           horizontal: 16,
                           vertical: 2,
                         ),
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                         child: Column(
                           children: [
                             TextField(
+                              maxLength: 100,
                               controller: _latController,
                               style: TextStyle(color: context.textPrimary),
                               keyboardType:
@@ -538,15 +545,21 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                                 filled: true,
                                 fillColor: context.background,
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
                                   borderSide: BorderSide(color: context.border),
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
                                   borderSide: BorderSide(color: context.border),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
                                   borderSide: BorderSide(
                                     color: context.accentColor,
                                   ),
@@ -557,8 +570,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                                 ),
                               ),
                             ),
-                            SizedBox(height: 16),
+                            SizedBox(height: AppTheme.spacing16),
                             TextField(
+                              maxLength: 100,
                               controller: _lonController,
                               style: TextStyle(color: context.textPrimary),
                               keyboardType:
@@ -578,15 +592,21 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                                 filled: true,
                                 fillColor: context.background,
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
                                   borderSide: BorderSide(color: context.border),
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
                                   borderSide: BorderSide(color: context.border),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
                                   borderSide: BorderSide(
                                     color: context.accentColor,
                                   ),
@@ -597,8 +617,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                                 ),
                               ),
                             ),
-                            SizedBox(height: 16),
+                            SizedBox(height: AppTheme.spacing16),
                             TextField(
+                              maxLength: 100,
                               controller: _altController,
                               style: TextStyle(color: context.textPrimary),
                               keyboardType: TextInputType.number,
@@ -617,15 +638,21 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                                 filled: true,
                                 fillColor: context.background,
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
                                   borderSide: BorderSide(color: context.border),
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
                                   borderSide: BorderSide(color: context.border),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
                                   borderSide: BorderSide(
                                     color: context.accentColor,
                                   ),
@@ -676,7 +703,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                             side: BorderSide(color: context.accentColor),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius10,
+                              ),
                             ),
                           ),
                         ),
@@ -688,12 +717,14 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                         ),
                         decoration: BoxDecoration(
                           color: context.accentColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           border: Border.all(
                             color: context.accentColor.withValues(alpha: 0.3),
                           ),
                         ),
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -702,7 +733,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                               color: context.accentColor.withValues(alpha: 0.8),
                               size: 20,
                             ),
-                            SizedBox(width: 12),
+                            SizedBox(width: AppTheme.spacing12),
                             Expanded(
                               child: Text(
                                 'Fixed position is useful for stationary installations like routers or base stations.',
@@ -717,7 +748,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                       ),
                     ],
                   ], // end if (!isRemote)
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
                   if (_smartBroadcastEnabled) ...[
                     const _SectionHeader(title: 'SMART BROADCAST SETTINGS'),
                     Container(
@@ -725,10 +756,10 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                         horizontal: 16,
                         vertical: 2,
                       ),
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
                       decoration: BoxDecoration(
                         color: context.card,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -752,7 +783,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                                   color: context.accentColor.withValues(
                                     alpha: 0.15,
                                   ),
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius6,
+                                  ),
                                 ),
                                 child: Text(
                                   '${_smartMinimumDistance}m',
@@ -765,7 +798,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                               ),
                             ],
                           ),
-                          SizedBox(height: 4),
+                          SizedBox(height: AppTheme.spacing4),
                           Text(
                             'Minimum distance moved before broadcasting',
                             style: TextStyle(
@@ -773,7 +806,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                               fontSize: 13,
                             ),
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: AppTheme.spacing8),
                           SliderTheme(
                             data: SliderThemeData(
                               inactiveTrackColor: context.border,
@@ -815,7 +848,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                                   color: context.accentColor.withValues(
                                     alpha: 0.15,
                                   ),
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius6,
+                                  ),
                                 ),
                                 child: Text(
                                   '${_smartMinimumIntervalSecs}s',
@@ -828,7 +863,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                               ),
                             ],
                           ),
-                          SizedBox(height: 4),
+                          SizedBox(height: AppTheme.spacing4),
                           Text(
                             'Minimum time between broadcasts',
                             style: TextStyle(
@@ -836,7 +871,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                               fontSize: 13,
                             ),
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: AppTheme.spacing8),
                           SliderTheme(
                             data: SliderThemeData(
                               inactiveTrackColor: context.border,
@@ -862,7 +897,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                         ],
                       ),
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppTheme.spacing16),
                   ],
                   const _SectionHeader(title: 'GPS SETTINGS'),
                   Container(
@@ -870,10 +905,10 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                       horizontal: 16,
                       vertical: 2,
                     ),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -897,7 +932,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                                 color: context.accentColor.withValues(
                                   alpha: 0.15,
                                 ),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius6,
+                                ),
                               ),
                               child: Text(
                                 '${_gpsAttemptTime}s',
@@ -910,7 +947,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                             ),
                           ],
                         ),
-                        SizedBox(height: 4),
+                        SizedBox(height: AppTheme.spacing4),
                         Text(
                           'How long to wait for GPS lock before giving up',
                           style: TextStyle(
@@ -918,7 +955,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                             fontSize: 13,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        SizedBox(height: AppTheme.spacing8),
                         SliderTheme(
                           data: SliderThemeData(
                             inactiveTrackColor: context.border,
@@ -941,20 +978,20 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                       ],
                     ),
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
                   const _SectionHeader(title: 'GPS GPIO'),
                   _buildGpioSettings(),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
                   const _SectionHeader(title: 'POSITION FLAGS'),
                   Container(
                     margin: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 2,
                     ),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Column(
                       children: [
@@ -1022,7 +1059,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppTheme.spacing32),
                 ],
               ),
             ),
@@ -1054,7 +1091,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                       color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     subtitle,
                     style: context.bodySmallStyle?.copyWith(
@@ -1081,10 +1118,10 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
   Widget _buildGpioSettings() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1103,7 +1140,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
               Container(
                 decoration: BoxDecoration(
                   color: context.background,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                   border: Border.all(color: context.border),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1125,7 +1162,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             'GPIO pin for GPS RX signal',
             style: TextStyle(color: context.textSecondary, fontSize: 13),
@@ -1145,7 +1182,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
               Container(
                 decoration: BoxDecoration(
                   color: context.background,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                   border: Border.all(color: context.border),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1167,7 +1204,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             'GPIO pin for GPS TX signal',
             style: TextStyle(color: context.textSecondary, fontSize: 13),
@@ -1187,7 +1224,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
               Container(
                 decoration: BoxDecoration(
                   color: context.background,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                   border: Border.all(color: context.border),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1209,7 +1246,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             'GPIO pin to control GPS power',
             style: TextStyle(color: context.textSecondary, fontSize: 13),
@@ -1243,10 +1280,10 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1257,11 +1294,11 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
               padding: const EdgeInsets.only(bottom: 8),
               child: InkWell(
                 onTap: () => setState(() => _gpsMode = m.$1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     border: Border.all(
                       color: isSelected ? context.accentColor : context.border,
                       width: isSelected ? 2 : 1,
@@ -1278,7 +1315,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                             ? context.accentColor
                             : context.textSecondary,
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppTheme.spacing12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1333,7 +1370,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
       child: Text(
         title,
         style: TextStyle(
@@ -1368,14 +1405,14 @@ class _SettingsTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Icon(icon, color: iconColor ?? context.textSecondary),
-            SizedBox(width: 16),
+            SizedBox(width: AppTheme.spacing16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1388,7 +1425,7 @@ class _SettingsTile extends StatelessWidget {
                       color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     subtitle,
                     style: context.bodySmallStyle?.copyWith(

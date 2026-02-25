@@ -33,7 +33,9 @@ class AppSkeletonConfig {
       SkeletonizerConfigData(
         effect: effect(context),
         justifyMultiLineText: true,
-        textBorderRadius: TextBoneBorderRadius(BorderRadius.circular(4)),
+        textBorderRadius: TextBoneBorderRadius(
+          BorderRadius.circular(AppTheme.radius4),
+        ),
       );
 
   /// Wrap a widget with skeletonizer using app defaults
@@ -62,31 +64,31 @@ class SkeletonNodeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Row(
         children: [
           // Avatar skeleton
           const Bone.circle(size: 56),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppTheme.spacing16),
           // Content skeleton
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Bone.text(words: 2),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Bone.text(words: 4, fontSize: 12),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Bone.text(words: 3, fontSize: 12),
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           // Chevron
           const Bone.icon(),
         ],
@@ -103,17 +105,17 @@ class SkeletonConversationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Row(
         children: [
           // Avatar skeleton
           const Bone.circle(size: 52),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           // Content skeleton
           Expanded(
             child: Column(
@@ -126,7 +128,7 @@ class SkeletonConversationCard extends StatelessWidget {
                     Bone.text(words: 1, fontSize: 11),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Bone.text(words: 5, fontSize: 13),
               ],
             ),
@@ -145,24 +147,27 @@ class SkeletonChannelCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Row(
         children: [
           // Icon skeleton
-          Bone.square(size: 48, borderRadius: BorderRadius.circular(12)),
-          const SizedBox(width: 16),
+          Bone.square(
+            size: 48,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+          ),
+          const SizedBox(width: AppTheme.spacing16),
           // Content skeleton
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Bone.text(words: 2),
-                const SizedBox(height: 6),
+                const SizedBox(height: AppTheme.spacing6),
                 Bone.text(words: 3, fontSize: 13),
               ],
             ),
@@ -181,10 +186,10 @@ class SkeletonDashboardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,12 +199,12 @@ class SkeletonDashboardWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [Bone.text(words: 2), const Bone.icon(size: 20)],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           // Content lines
           Bone.text(words: 4),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Bone.text(words: 6),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Bone.text(words: 3),
         ],
       ),
@@ -214,12 +219,12 @@ class SkeletonNodeDexStatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 4, 16, 4),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppTheme.radius14),
           border: Border.all(color: context.border, width: 0.5),
         ),
         child: Row(
@@ -228,7 +233,7 @@ class SkeletonNodeDexStatsCard extends StatelessWidget {
               child: Row(
                 children: [
                   const Bone.icon(size: 14),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppTheme.spacing6),
                   Flexible(child: Bone.text(words: 2, fontSize: 12)),
                 ],
               ),
@@ -239,15 +244,15 @@ class SkeletonNodeDexStatsCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Bone.icon(size: 12),
-                  const SizedBox(width: 3),
+                  const SizedBox(width: AppTheme.spacing3),
                   Bone.text(words: 1, fontSize: 12),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   const Bone.icon(size: 12),
-                  const SizedBox(width: 3),
+                  const SizedBox(width: AppTheme.spacing3),
                   Bone.text(words: 1, fontSize: 12),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   const Bone.icon(size: 12),
-                  const SizedBox(width: 3),
+                  const SizedBox(width: AppTheme.spacing3),
                   Bone.text(words: 1, fontSize: 12),
                 ],
               ),
@@ -271,7 +276,7 @@ class SkeletonNodeDexCard extends StatelessWidget {
         children: [
           // Sigil avatar placeholder
           const Bone.circle(size: 48),
-          const SizedBox(width: 14),
+          const SizedBox(width: AppTheme.spacing14),
           // Name + metadata
           Expanded(
             child: Column(
@@ -281,29 +286,29 @@ class SkeletonNodeDexCard extends StatelessWidget {
                 Row(
                   children: [
                     Flexible(child: Bone.text(words: 2)),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     Bone.text(words: 1, fontSize: 11),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 // Trait + metrics row
                 Row(
                   children: [
                     Bone(
                       width: 60,
                       height: 18,
-                      borderRadius: BorderRadius.circular(9),
+                      borderRadius: BorderRadius.circular(AppTheme.radius9),
                     ),
                     const Spacer(),
                     const Bone.icon(size: 12),
-                    const SizedBox(width: 3),
+                    const SizedBox(width: AppTheme.spacing3),
                     Bone.text(words: 1, fontSize: 11),
                   ],
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           // Chevron
           const Bone.icon(size: 20),
         ],

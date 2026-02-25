@@ -127,10 +127,10 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen>
                     horizontal: 16,
                     vertical: 2,
                   ),
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
                   decoration: BoxDecoration(
                     color: context.card,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,7 +154,9 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen>
                               color: context.accentColor.withValues(
                                 alpha: 0.15,
                               ),
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius6,
+                              ),
                             ),
                             child: Text(
                               '${_signalLocationRadiusMeters}m',
@@ -167,7 +169,7 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen>
                           ),
                         ],
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: AppTheme.spacing4),
                       Text(
                         'Signals are rounded to this radius, not an exact address',
                         style: TextStyle(
@@ -175,7 +177,7 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen>
                           fontSize: 13,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppTheme.spacing8),
                       SliderTheme(
                         data: SliderThemeData(
                           inactiveTrackColor: context.border,
@@ -198,7 +200,7 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen>
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 // Admin-only section
                 if (isAdmin) ...[
                   const _SectionHeader(title: 'SIGNAL CONTENT'),
@@ -209,10 +211,10 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen>
                     ),
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -222,7 +224,7 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen>
                                 Icons.photo_library_outlined,
                                 color: context.textSecondary,
                               ),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: AppTheme.spacing16),
                               Expanded(
                                 child: Text(
                                   'Max Images per Signal',
@@ -242,7 +244,9 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen>
                                   color: context.accentColor.withValues(
                                     alpha: 0.2,
                                   ),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
                                 ),
                                 child: Text(
                                   '$_maxSignalImages',
@@ -255,7 +259,7 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen>
                               ),
                             ],
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: AppTheme.spacing8),
                           Text(
                             'Limit: 1-4 images',
                             style: TextStyle(
@@ -263,7 +267,7 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen>
                               color: context.textTertiary,
                             ),
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: AppTheme.spacing8),
                           SliderTheme(
                             data: SliderThemeData(
                               inactiveTrackColor: context.border,
@@ -299,7 +303,7 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                 ],
                 const _SectionHeader(title: 'SIGNAL NOTIFICATIONS'),
                 if (!_notificationsLoading) ...[
@@ -324,7 +328,7 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen>
                     ),
                   ),
                 ],
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spacing32),
               ]),
             ),
           ),
@@ -341,7 +345,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
       child: Text(
         title,
         style: TextStyle(
@@ -374,7 +378,7 @@ class _SettingsTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -382,7 +386,7 @@ class _SettingsTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(icon, color: context.textSecondary),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppTheme.spacing16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,7 +399,7 @@ class _SettingsTile extends StatelessWidget {
                       color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     subtitle,
                     style: context.bodySmallStyle?.copyWith(

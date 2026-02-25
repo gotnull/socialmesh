@@ -16,6 +16,7 @@ import '../data/vs_node_data_provider.dart';
 import 'vs_node_input.dart';
 import 'vs_node_output.dart';
 import 'vs_node_title.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Default width of a node card — increased from upstream 125 to 180 for
 /// mobile readability.
@@ -229,7 +230,7 @@ class _GlassNodeCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: surfaceColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: borderColor, width: borderWidth),
         boxShadow: [
           // Ambient shadow for depth.
@@ -248,8 +249,11 @@ class _GlassNodeCard extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(padding: const EdgeInsets.all(14.0), child: child),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spacing14),
+          child: child,
+        ),
       ),
     );
   }

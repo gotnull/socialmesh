@@ -352,7 +352,7 @@ class _Flip3DPercentageState extends State<Flip3DPercentage>
 
             // Label
             if (widget.label != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 widget.label!,
                 style: TextStyle(
@@ -498,7 +498,7 @@ class _FlipDigitState extends State<_FlipDigit>
                 end: Alignment.bottomCenter,
                 colors: [SemanticColors.glow(0.1), Colors.transparent],
               ),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppTheme.radius4),
             ),
             child: Text(displayDigit.toString(), style: widget.style),
           ),
@@ -654,7 +654,7 @@ class _Flip3DPercentageMinimalState extends State<Flip3DPercentageMinimal>
 
             // Label
             if (widget.label != null) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
               Text(
                 widget.label!,
                 style: TextStyle(

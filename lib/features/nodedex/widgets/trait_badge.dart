@@ -131,14 +131,14 @@ class TraitBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: color.withValues(alpha: 0.25), width: 0.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(_traitIcon, size: 12, color: color),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             trait.displayLabel,
             style: TextStyle(
@@ -167,14 +167,14 @@ class TraitBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: color.withValues(alpha: 0.3), width: 0.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(_traitIcon, size: 14, color: color),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Text(
             trait.displayLabel,
             style: TextStyle(
@@ -184,7 +184,7 @@ class TraitBadge extends StatelessWidget {
             ),
           ),
           if (showConfidence && effectiveConfidence > 0) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             _ConfidenceDot(
               confidence: effectiveConfidence,
               color: color,
@@ -207,10 +207,10 @@ class TraitBadge extends StatelessWidget {
     final effectiveConfidence = confidence ?? 0.0;
 
     Widget content = Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: color.withValues(alpha: 0.2), width: 0.5),
       ),
       child: Column(
@@ -229,7 +229,7 @@ class TraitBadge extends StatelessWidget {
                 ),
                 child: Icon(_traitIcon, size: 18, color: color),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,7 +242,7 @@ class TraitBadge extends StatelessWidget {
                         color: context.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       trait.description,
                       style: TextStyle(
@@ -265,7 +265,7 @@ class TraitBadge extends StatelessWidget {
 
           // Confidence bar
           if (showConfidence && effectiveConfidence > 0) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _ConfidenceBar(confidence: effectiveConfidence, color: color),
           ],
         ],
@@ -332,7 +332,7 @@ class TraitBadgeRow extends StatelessWidget {
           size: size,
         ),
         if (result.secondary != null) ...[
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Opacity(
             opacity: 0.7,
             child: TraitBadge(
@@ -385,7 +385,7 @@ class _ConfidenceDot extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppTheme.spacing2),
           Text(
             '$percentage%',
             style: TextStyle(
@@ -446,9 +446,9 @@ class _ConfidenceBar extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         ClipRRect(
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(AppTheme.radius3),
           child: SizedBox(
             height: 4,
             child: LinearProgressIndicator(
@@ -620,7 +620,7 @@ class SocialTagSelector extends StatelessWidget {
           'This is only visible to you.',
           style: TextStyle(fontSize: 13, color: context.textSecondary),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         ...NodeSocialTag.values.map((tag) {
           final isSelected = tag == currentTag;
           return _SocialTagOption(
@@ -630,7 +630,7 @@ class SocialTagSelector extends StatelessWidget {
           );
         }),
         if (currentTag != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _ClearTagOption(onTap: () => onTagSelected(null)),
         ],
       ],
@@ -678,12 +678,12 @@ class _SocialTagOption extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: isSelected ? color.withValues(alpha: 0.1) : context.card,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(
                 color: isSelected
                     ? color.withValues(alpha: 0.4)
@@ -702,7 +702,7 @@ class _SocialTagOption extends StatelessWidget {
                   ),
                   child: Icon(icon, size: 18, color: color),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -715,7 +715,7 @@ class _SocialTagOption extends StatelessWidget {
                           color: isSelected ? color : context.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         description,
                         style: TextStyle(
@@ -748,12 +748,12 @@ class _ClearTagOption extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: context.card,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(
               color: context.border.withValues(alpha: 0.3),
               width: 0.5,
@@ -770,7 +770,7 @@ class _ClearTagOption extends StatelessWidget {
                 ),
                 child: Icon(Icons.clear, size: 18, color: context.textTertiary),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Text(
                 'Remove Classification',
                 style: TextStyle(

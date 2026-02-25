@@ -19,10 +19,10 @@ class ARViewModeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(AppTheme.spacing4),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(
           color: const Color(0xFF00E5FF).withValues(alpha: 0.3),
         ),
@@ -35,13 +35,13 @@ class ARViewModeSelector extends StatelessWidget {
             icon: Icons.grid_view,
             label: 'TAC',
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           _buildModeButton(
             mode: ARViewMode.explorer,
             icon: Icons.explore,
             label: 'EXP',
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           _buildModeButton(
             mode: ARViewMode.minimal,
             icon: Icons.radio_button_unchecked,
@@ -73,7 +73,7 @@ class ARViewModeSelector extends StatelessWidget {
           color: isSelected
               ? const Color(0xFF00E5FF).withValues(alpha: 0.3)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: isSelected
               ? Border.all(color: const Color(0xFF00E5FF))
               : null,
@@ -88,7 +88,7 @@ class ARViewModeSelector extends StatelessWidget {
                   : Colors.white.withValues(alpha: 0.5),
               size: 20,
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: AppTheme.spacing2),
             Text(
               label,
               style: TextStyle(

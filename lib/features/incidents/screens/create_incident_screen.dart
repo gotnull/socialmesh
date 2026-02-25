@@ -70,7 +70,7 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen>
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -78,7 +78,7 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen>
                   children: [
                     // -- Title --
                     _buildSectionTitle(context, 'Title'),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     TextFormField(
                       controller: _titleController,
                       maxLength: 200,
@@ -95,11 +95,11 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen>
                       },
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // -- Description --
                     _buildSectionTitle(context, 'Description (optional)'),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     TextFormField(
                       controller: _descriptionController,
                       maxLength: 2000,
@@ -111,29 +111,29 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // -- Priority --
                     _buildSectionTitle(context, 'Priority'),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     _buildPrioritySelector(context),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // -- Classification --
                     _buildSectionTitle(context, 'Classification'),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     _buildClassificationSelector(context),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // -- Location --
                     _buildSectionTitle(context, 'Location (optional)'),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     _buildLocationCapture(context),
 
                     // Bottom padding for keyboard
-                    const SizedBox(height: 80),
+                    const SizedBox(height: AppTheme.spacing80),
                   ],
                 ),
               ),
@@ -163,23 +163,23 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen>
       filled: true,
       fillColor: context.card,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         borderSide: BorderSide(color: context.border),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         borderSide: const BorderSide(color: Colors.red),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         borderSide: const BorderSide(color: Colors.red),
       ),
     );
@@ -243,7 +243,7 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen>
       return Row(
         children: [
           Icon(Icons.location_on, size: 16, color: Colors.green),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Text(
             '${_locationLat!.toStringAsFixed(5)}, '
             '${_locationLon!.toStringAsFixed(5)}',
@@ -251,7 +251,7 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen>
               color: context.textSecondary,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           TextButton(
             onPressed: () {
               ref.haptics.toggle();
@@ -321,7 +321,7 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen>
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: PermissionGate(
           permission: Permission.createIncident,
           child: BouncyTap(
@@ -331,7 +331,7 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen>
               padding: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(colors: gradientColors),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: _isSubmitting
                   ? const Row(
@@ -345,7 +345,7 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen>
                             color: Colors.white,
                           ),
                         ),
-                        SizedBox(width: 10),
+                        SizedBox(width: AppTheme.spacing10),
                         Text(
                           'Creating...',
                           style: TextStyle(

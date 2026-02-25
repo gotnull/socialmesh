@@ -97,7 +97,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                 ),
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             Icon(Icons.edit, size: 14, color: context.textTertiary),
           ],
         ),
@@ -114,7 +114,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
             ),
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
       ],
       body: SafeArea(
         top: false,
@@ -153,7 +153,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           onPressed: () => setState(() => _showToolbox = !_showToolbox),
           tooltip: 'Toggle Toolbox',
         ),
-        SizedBox(width: 8),
+        SizedBox(width: AppTheme.spacing8),
         // Save button
         TextButton.icon(
           onPressed: _saveWidget,
@@ -166,7 +166,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
       ],
       body: SafeArea(
         top: false,
@@ -205,7 +205,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _buildSizeOption(CustomWidgetSize.medium, 'M'),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         _buildSizeOption(CustomWidgetSize.large, 'L'),
       ],
     );
@@ -224,7 +224,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           Expanded(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: DragTarget<ElementType>(
                   onAcceptWithDetails: (details) => _addElement(details.data),
                   builder: (context, candidateData, rejectedData) {
@@ -241,7 +241,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                               : Colors.transparent,
                           width: isHovering ? 2 : 1,
                         ),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(AppTheme.radius14),
                       ),
                       child: _showPreview
                           ? _buildPreviewContent()
@@ -282,7 +282,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                 ),
               ),
               if (_selectedElementId != null) ...[
-                SizedBox(width: 8),
+                SizedBox(width: AppTheme.spacing8),
                 // Edit selected element
                 OutlinedButton.icon(
                   onPressed: _showPropertySheet,
@@ -297,14 +297,14 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                     ),
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppTheme.spacing8),
                 // Delete selected element
                 IconButton(
                   onPressed: () => _deleteElement(_selectedElementId!),
                   icon: Icon(Icons.delete_outline, color: AppTheme.errorRed),
                   style: IconButton.styleFrom(
                     backgroundColor: context.background,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
                   ),
                 ),
               ],
@@ -338,7 +338,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                 height: 4,
                 decoration: BoxDecoration(
                   color: context.border,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppTheme.radius2),
                 ),
               ),
             ),
@@ -352,7 +352,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                     size: 20,
                     color: context.accentColor,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Text(
                     'Add Block',
                     style: TextStyle(
@@ -364,7 +364,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             // Simplified block grid
             Expanded(
               child: ListView(
@@ -407,7 +407,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                       'Add a row for more blocks',
                     ),
                   ]),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                 ],
               ),
             ),
@@ -434,7 +434,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           ),
         ),
         ...items.map((item) => _buildBlockPickerCard(item)),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
       ],
     );
   }
@@ -460,7 +460,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                 height: 4,
                 decoration: BoxDecoration(
                   color: context.border,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppTheme.radius2),
                 ),
               ),
             ),
@@ -475,7 +475,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.spacing20),
             // Simple, clear options with visual previews
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -516,7 +516,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
           ],
         ),
       ),
@@ -540,12 +540,12 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
             Navigator.pop(ctx);
             _addChildToElement(parent, type);
           },
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: context.background,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(color: context.border),
             ),
             child: Row(
@@ -555,11 +555,11 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                   height: 44,
                   decoration: BoxDecoration(
                     color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTheme.radius10),
                   ),
                   child: Icon(icon, size: 22, color: context.accentColor),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -620,12 +620,12 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
             Navigator.pop(context);
             _addBlock(item.type);
           },
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: context.background,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(color: context.border),
             ),
             child: Row(
@@ -635,11 +635,11 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                   height: 44,
                   decoration: BoxDecoration(
                     color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTheme.radius10),
                   ),
                   child: Icon(item.icon, size: 22, color: context.accentColor),
                 ),
-                SizedBox(width: 16),
+                SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -652,7 +652,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                           color: context.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         item.description,
                         style: TextStyle(
@@ -968,7 +968,12 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                   children: [
                     // Handle + Live preview row
                     Container(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppTheme.spacing16,
+                        8,
+                        16,
+                        0,
+                      ),
                       child: Column(
                         children: [
                           // Drag handle
@@ -978,11 +983,13 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                               height: 4,
                               decoration: BoxDecoration(
                                 color: context.border,
-                                borderRadius: BorderRadius.circular(2),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius2,
+                                ),
                               ),
                             ),
                           ),
-                          SizedBox(height: 12),
+                          SizedBox(height: AppTheme.spacing12),
                           // Full widget preview - EXACT same size as canvas
                           SizedBox(
                             height: _getPreviewHeight(),
@@ -998,13 +1005,13 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                         ],
                       ),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppTheme.spacing8),
                     // Breadcrumb path showing where in hierarchy
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: _buildElementBreadcrumb(element),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     // Title row
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1015,7 +1022,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                             size: 18,
                             color: context.accentColor,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           Text(
                             _getElementTypeName(element.type),
                             style: TextStyle(
@@ -1045,7 +1052,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                     Expanded(
                       child: ListView(
                         controller: scrollController,
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
                         children: [
                           _buildPropertySection(
                             'Content',
@@ -1053,7 +1060,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                           ),
                           // Only show binding for bindable elements (text, gauge, chart)
                           if (_shouldShowBinding(element)) ...[
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppTheme.spacing16),
                             _buildPropertySection(
                               'Data Binding',
                               _buildBindingProperties(element),
@@ -1061,7 +1068,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                           ],
                           // Only show actions for actionable elements (container, button)
                           if (_isActionableElement(element.type)) ...[
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppTheme.spacing16),
                             _buildPropertySection(
                               'Action',
                               _buildActionProperties(element),
@@ -1069,13 +1076,13 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                           ],
                           // Only show style for styleable elements
                           if (_isStyleableElement(element.type)) ...[
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppTheme.spacing16),
                             _buildPropertySection(
                               'Style',
                               _buildStyleProperties(element),
                             ),
                           ],
-                          const SizedBox(height: 32),
+                          const SizedBox(height: AppTheme.spacing32),
                         ],
                       ),
                     ),
@@ -1104,7 +1111,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: context.border)),
             ),
@@ -1115,7 +1122,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                   size: 18,
                   color: context.textPrimary,
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Elements',
                   style: TextStyle(
@@ -1130,7 +1137,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           // Element list
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppTheme.spacing8),
               children: [
                 _buildToolboxSection('Layout', [
                   _ToolboxItem(ElementType.row, 'Row', Icons.view_column),
@@ -1143,7 +1150,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                   _ToolboxItem(ElementType.stack, 'Stack', Icons.layers),
                   _ToolboxItem(ElementType.spacer, 'Spacer', Icons.space_bar),
                 ]),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 _buildToolboxSection('Content', [
                   _ToolboxItem(ElementType.text, 'Text', Icons.text_fields),
                   _ToolboxItem(
@@ -1154,13 +1161,13 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                   _ToolboxItem(ElementType.image, 'Image', Icons.image),
                   _ToolboxItem(ElementType.shape, 'Shape', Icons.square),
                 ]),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 _buildToolboxSection('Data Display', [
                   _ToolboxItem(ElementType.gauge, 'Gauge', Icons.speed),
                   _ToolboxItem(ElementType.chart, 'Chart', Icons.show_chart),
                   _ToolboxItem(ElementType.map, 'Map', Icons.map),
                 ]),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 _buildToolboxSection('Logic', [
                   _ToolboxItem(
                     ElementType.conditional,
@@ -1206,13 +1213,13 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: context.accentColor.withValues(alpha: 0.9),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(item.icon, size: 16, color: Colors.white),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Text(
                 item.label,
                 style: const TextStyle(color: Colors.white, fontSize: 13),
@@ -1236,18 +1243,18 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _addElement(item.type),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(AppTheme.radius6),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             decoration: BoxDecoration(
               color: context.background,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(AppTheme.radius6),
               border: Border.all(color: context.border),
             ),
             child: Row(
               children: [
                 Icon(item.icon, size: 16, color: context.textSecondary),
-                SizedBox(width: 8),
+                SizedBox(width: AppTheme.spacing8),
                 Text(
                   item.label,
                   style: context.bodySmallStyle?.copyWith(
@@ -1293,7 +1300,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                             color: context.textPrimary,
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Icon(Icons.edit, size: 14, color: context.textTertiary),
                       ],
                     ),
@@ -1308,7 +1315,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           Expanded(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(AppTheme.spacing32),
                 child: DragTarget<ElementType>(
                   onAcceptWithDetails: (details) => _addElement(details.data),
                   builder: (context, candidateData, rejectedData) {
@@ -1326,7 +1333,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                               : Colors.transparent,
                           width: isHovering ? 2 : 1,
                         ),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(AppTheme.radius14),
                       ),
                       child: _showPreview
                           ? _buildPreviewContent()
@@ -1346,7 +1353,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
     return Row(
       children: [
         _buildSizeOption(CustomWidgetSize.medium, 'M'),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         _buildSizeOption(CustomWidgetSize.large, 'L'),
       ],
     );
@@ -1362,7 +1369,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           color: isSelected
               ? context.accentColor.withValues(alpha: 0.2)
               : context.background,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(AppTheme.radius4),
           border: Border.all(
             color: isSelected ? context.accentColor : context.border,
           ),
@@ -1436,14 +1443,14 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: context.border)),
             ),
             child: Row(
               children: [
                 Icon(Icons.tune, size: 18, color: context.textPrimary),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   child: Text(
                     _getElementTypeName(element.type),
@@ -1470,28 +1477,28 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           // Properties
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               children: [
                 _buildPropertySection(
                   'Content',
                   _buildContentProperties(element),
                 ),
                 if (_shouldShowBinding(element)) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   _buildPropertySection(
                     'Data Binding',
                     _buildBindingProperties(element),
                   ),
                 ],
                 if (_isActionableElement(element.type)) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   _buildPropertySection(
                     'Action',
                     _buildActionProperties(element),
                   ),
                 ],
                 if (_isStyleableElement(element.type)) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   _buildPropertySection(
                     'Style',
                     _buildStyleProperties(element),
@@ -1520,7 +1527,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
             letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         ...children,
       ],
     );
@@ -1535,6 +1542,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
         if (element.binding == null || element.binding!.path.isEmpty) {
           properties.add(
             _buildTextField(
+              maxLength: 100,
               label: 'Text',
               value: element.text ?? '',
               onChanged: (value) =>
@@ -1569,7 +1577,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
             ),
           ),
         );
-        properties.add(const SizedBox(height: 8));
+        properties.add(const SizedBox(height: AppTheme.spacing8));
         properties.add(
           _buildSliderField(
             label: 'Min',
@@ -1580,7 +1588,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                 _updateElement(element.id, element.copyWith(gaugeMin: value)),
           ),
         );
-        properties.add(const SizedBox(height: 8));
+        properties.add(const SizedBox(height: AppTheme.spacing8));
         properties.add(
           _buildSliderField(
             label: 'Max',
@@ -1648,7 +1656,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
             ),
           ),
         );
-        properties.add(const SizedBox(height: 12));
+        properties.add(const SizedBox(height: AppTheme.spacing12));
         // For rows: vertical alignment (top/middle/bottom)
         // For columns: horizontal alignment (left/center/right)
         properties.add(
@@ -1668,7 +1676,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
         );
         if (element.type == ElementType.row ||
             element.type == ElementType.column) {
-          properties.add(const SizedBox(height: 12));
+          properties.add(const SizedBox(height: AppTheme.spacing12));
           properties.add(
             _buildSliderField(
               label: 'Gap between items',
@@ -1683,7 +1691,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           );
         }
         // Children count with Add button
-        properties.add(const SizedBox(height: 16));
+        properties.add(const SizedBox(height: AppTheme.spacing16));
         properties.add(
           FilledButton.icon(
             onPressed: () => _showAddChildDialog(element),
@@ -1801,8 +1809,9 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
       ),
       if (element.action != null &&
           element.action!.type == ActionType.openUrl) ...[
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _buildTextField(
+          maxLength: 256,
           label: 'URL',
           value: element.action?.url ?? '',
           onChanged: (value) => _updateElement(
@@ -1819,8 +1828,9 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
       ],
       if (element.action != null &&
           element.action!.type == ActionType.navigate) ...[
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _buildTextField(
+          maxLength: 100,
           label: 'Screen',
           value: element.action?.navigateTo ?? '',
           onChanged: (value) => _updateElement(
@@ -1886,7 +1896,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           label,
           style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: AppTheme.spacing8),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -1955,7 +1965,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                 ? Icon(Icons.check, color: Colors.white, size: 18)
                 : null,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             label,
             style: TextStyle(
@@ -1972,6 +1982,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
     required String label,
     required String value,
     required void Function(String) onChanged,
+    int maxLength = 100,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1980,8 +1991,9 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           label,
           style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: AppTheme.spacing4),
         TextFormField(
+          maxLength: maxLength,
           initialValue: value,
           onChanged: onChanged,
           style: TextStyle(color: context.textPrimary, fontSize: 13),
@@ -1994,11 +2006,11 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
             filled: true,
             fillColor: context.background,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppTheme.radius4),
               borderSide: BorderSide(color: context.border),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppTheme.radius4),
               borderSide: BorderSide(color: context.border),
             ),
           ),
@@ -2037,7 +2049,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: context.background,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppTheme.radius4),
               ),
               child: Text(
                 isZero ? (zeroLabel ?? '0') : '$displayValue${unit ?? ''}',
@@ -2051,7 +2063,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
             ),
           ],
         ),
-        SizedBox(height: 4),
+        SizedBox(height: AppTheme.spacing4),
         SliderTheme(
           data: SliderThemeData(
             activeTrackColor: accentColor,
@@ -2115,7 +2127,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           label,
           style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         Row(
           children: options.map((opt) {
             final isSelected = value == opt.$1;
@@ -2171,7 +2183,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           label,
           style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         Row(
           children: options.map((opt) {
             final isSelected = value == opt.$1;
@@ -2207,7 +2219,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           color: isSelected
               ? accentColor.withValues(alpha: 0.15)
               : context.background,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(
             color: isSelected ? accentColor : context.border,
             width: isSelected ? 2 : 1,
@@ -2221,7 +2233,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
               size: 20,
               color: isSelected ? accentColor : context.textSecondary,
             ),
-            SizedBox(height: 2),
+            SizedBox(height: AppTheme.spacing2),
             Text(
               label,
               style: TextStyle(
@@ -2250,12 +2262,12 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           label,
           style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: AppTheme.spacing4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             color: context.background,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppTheme.radius4),
             border: Border.all(color: context.border),
           ),
           child: DropdownButton<String>(
@@ -2302,29 +2314,30 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           label,
           style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         InkWell(
           onTap: () async {
             final result = await IconSelector.show(
               context: context,
               selectedIcon: value,
             );
+            if (!mounted) return;
             if (result != null) {
               onChanged(result);
             }
           },
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(AppTheme.radius4),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: context.background,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppTheme.radius4),
               border: Border.all(color: context.border),
             ),
             child: Row(
               children: [
                 Icon(iconData, size: 20, color: accentColor),
-                SizedBox(width: 12),
+                SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Text(
                     value,
@@ -2363,23 +2376,24 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
           label,
           style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         InkWell(
           onTap: () async {
             final result = await BindingSelector.show(
               context: context,
               selectedPath: value,
             );
+            if (!mounted) return;
             if (result != null) {
               onChanged(result.isEmpty ? null : result);
             }
           },
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(AppTheme.radius4),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: context.background,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppTheme.radius4),
               border: Border.all(color: context.border),
             ),
             child: Row(
@@ -2389,7 +2403,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                   size: 18,
                   color: hasBinding ? accentColor : context.textSecondary,
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2781,7 +2795,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                   color: i == path.length - 1
                       ? context.accentColor.withValues(alpha: 0.15)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                 ),
                 child: Text(
                   _getElementTypeName(path[i].$2),
@@ -2890,8 +2904,9 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           TextField(
+            maxLength: 100,
             controller: controller,
             autofocus: true,
             style: TextStyle(color: context.textPrimary),
@@ -2900,7 +2915,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
               hintStyle: TextStyle(color: context.textTertiary),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             children: [
               Expanded(
@@ -2910,13 +2925,13 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide(color: Colors.grey.shade700),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Cancel'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: () => Navigator.pop(context, controller.text),
@@ -2924,7 +2939,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: context.accentColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Save'),
@@ -2935,6 +2950,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
         ],
       ),
     );
+    if (!mounted) return;
 
     if (result != null && result.isNotEmpty) {
       setState(() {

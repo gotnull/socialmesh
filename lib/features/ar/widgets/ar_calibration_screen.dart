@@ -143,7 +143,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Row(
         children: [
           IconButton(
@@ -163,7 +163,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
               ),
             ),
           ),
-          const SizedBox(width: 48), // Balance the close button
+          const SizedBox(width: AppTheme.spacing48), // Balance the close button
         ],
       ),
     );
@@ -240,7 +240,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
                           color: const Color(0xFF00E5FF).withValues(alpha: 0.8),
                           width: 2,
                         ),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(
@@ -264,7 +264,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
           ),
         ),
 
-        const SizedBox(height: 32),
+        const SizedBox(height: AppTheme.spacing32),
 
         // Progress percentage
         Text(
@@ -277,7 +277,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // Instructions
         Padding(
@@ -320,7 +320,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
                   size: 64,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
               const Text(
                 'CALIBRATION COMPLETE',
                 style: TextStyle(
@@ -331,7 +331,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
                   letterSpacing: 2,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 'Compass accuracy improved',
                 style: TextStyle(
@@ -372,7 +372,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
 
   Widget _buildBottomActions() {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       child: Column(
         children: [
           if (!_isCalibrating && _phase != CalibrationPhase.complete)
@@ -383,7 +383,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
                 foregroundColor: Colors.black,
                 minimumSize: const Size(double.infinity, 56),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
               child: const Text(
@@ -415,7 +415,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
                 foregroundColor: Colors.black,
                 minimumSize: const Size(double.infinity, 56),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
               child: const Text(
@@ -600,14 +600,14 @@ class GPSAccuracyBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color, size: 14),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             label,
             style: TextStyle(
@@ -674,14 +674,14 @@ class CompassAccuracyBadge extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.7),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: color, size: 14),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             Text(
               label,
               style: TextStyle(
@@ -692,7 +692,7 @@ class CompassAccuracyBadge extends StatelessWidget {
               ),
             ),
             if (needsCalibration) ...[
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
               Icon(
                 Icons.touch_app,
                 color: color.withValues(alpha: 0.7),
@@ -741,7 +741,7 @@ class ARAccuracyStatusBar extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         GPSAccuracyBadge(accuracy: gpsAccuracy, hasSignal: hasGps),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         CompassAccuracyBadge(
           isCalibrated: compassCalibrated,
           needsCalibration: needsCompassCalibration,

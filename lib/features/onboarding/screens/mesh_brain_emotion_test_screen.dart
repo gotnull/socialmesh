@@ -71,7 +71,7 @@ class _MeshBrainEmotionTestScreenState
 
         // Scrollable emotion grid
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverGrid(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
@@ -135,7 +135,7 @@ class _MeshBrainEmotionTestScreenState
                     _selectedMood.emoji,
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Text(
                     _selectedMood.displayName,
                     style: TextStyle(
@@ -144,7 +144,7 @@ class _MeshBrainEmotionTestScreenState
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -154,7 +154,7 @@ class _MeshBrainEmotionTestScreenState
                       color: _getCategoryColor(
                         _selectedMood.category,
                       ).withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                       border: Border.all(
                         color: _getCategoryColor(
                           _selectedMood.category,
@@ -247,7 +247,7 @@ class _MeshBrainEmotionTestScreenState
           color: isDark
               ? (isSelected ? const Color(0xFF1A1A2E) : const Color(0xFF12121A))
               : (isSelected ? Colors.white : Colors.grey[200]),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(
             color: isSelected
                 ? _getCategoryColor(mood.category)
@@ -272,12 +272,12 @@ class _MeshBrainEmotionTestScreenState
             // Static mood indicator (no animations for performance)
             _buildStaticMoodIndicator(mood, isSelected),
 
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
 
             // Emoji
             Text(mood.emoji, style: context.titleStyle),
 
-            const SizedBox(height: 2),
+            const SizedBox(height: AppTheme.spacing2),
 
             // Name
             Text(
@@ -380,7 +380,7 @@ class _MeshBrainEmotionTestScreenState
             color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppTheme.spacing24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,12 +392,12 @@ class _MeshBrainEmotionTestScreenState
                   height: 4,
                   decoration: BoxDecoration(
                     color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(AppTheme.radius2),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               Text(
                 'Brain Settings',
@@ -408,7 +408,7 @@ class _MeshBrainEmotionTestScreenState
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Size slider
               _buildSliderRow('Size', _brainSize, 80, 240, (value) {
@@ -416,7 +416,7 @@ class _MeshBrainEmotionTestScreenState
                 setState(() => _brainSize = value);
               }, isDark),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
 
               // Glow intensity slider
               _buildSliderRow('Glow Intensity', _glowIntensity, 0, 2, (value) {
@@ -424,7 +424,7 @@ class _MeshBrainEmotionTestScreenState
                 setState(() => _glowIntensity = value);
               }, isDark),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Toggle switches
               _buildToggleRow('Show Particles', _showParticles, (value) {
@@ -432,7 +432,7 @@ class _MeshBrainEmotionTestScreenState
                 setState(() => _showParticles = value);
               }, isDark),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
 
               _buildToggleRow('Show Expression Effects', _showExpression, (
                 value,
@@ -441,7 +441,7 @@ class _MeshBrainEmotionTestScreenState
                 setState(() => _showExpression = value);
               }, isDark),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
 
               // Reset button
               SizedBox(

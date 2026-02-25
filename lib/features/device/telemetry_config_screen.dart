@@ -212,7 +212,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
       ],
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Device Metrics Section
@@ -221,7 +221,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
                 icon: Icons.memory,
                 color: AccentColors.blue,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _TelemetrySection(
                 enabled: _deviceMetricsEnabled,
                 updateInterval: _deviceMetricsUpdateInterval,
@@ -241,7 +241,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
                     'Battery level, voltage, channel utilization, air util TX',
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Environment Metrics Section
               _SectionHeader(
@@ -249,7 +249,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
                 icon: Icons.thermostat,
                 color: AccentColors.green,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _TelemetrySection(
                 enabled: _environmentMetricsEnabled,
                 updateInterval: _environmentMetricsUpdateInterval,
@@ -280,7 +280,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
                         });
                       },
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppTheme.spacing12),
                     _ToggleTile(
                       title: 'Display Fahrenheit',
                       subtitle:
@@ -297,7 +297,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Air Quality Section
               _SectionHeader(
@@ -305,7 +305,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
                 icon: Icons.air,
                 color: AccentColors.teal,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _TelemetrySection(
                 enabled: _airQualityEnabled,
                 updateInterval: _airQualityUpdateInterval,
@@ -324,7 +324,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
                 description: 'PM1.0, PM2.5, PM10, particle counts, CO2',
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Power Metrics Section
               _SectionHeader(
@@ -332,7 +332,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
                 icon: Icons.electric_bolt,
                 color: AccentColors.orange,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _TelemetrySection(
                 enabled: _powerMetricsEnabled,
                 updateInterval: _powerMetricsUpdateInterval,
@@ -351,7 +351,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
                 description: 'Voltage and current for channels 1-3',
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // Info card
               StatusBanner.accent(
@@ -384,14 +384,14 @@ class _SectionHeader extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(AppTheme.spacing8),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
           ),
           child: Icon(icon, color: color, size: 20),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         Text(
           title,
           style: TextStyle(
@@ -426,10 +426,10 @@ class _TelemetrySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final accentColor = context.accentColor;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -463,16 +463,16 @@ class _TelemetrySection extends StatelessWidget {
             ],
           ),
           if (enabled) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Divider(color: context.border, height: 1),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'Update Interval',
               style: context.bodySmallStyle?.copyWith(
                 color: context.textSecondary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Row(
               children: [
                 Text(
@@ -507,7 +507,7 @@ class _TelemetrySection extends StatelessWidget {
               ),
             ),
             if (additionalWidget != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               additionalWidget!,
             ],
           ],

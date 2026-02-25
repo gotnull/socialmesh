@@ -65,6 +65,8 @@ class _AnimatedTaglineState extends State<AnimatedTagline>
   }
 
   Future<void> _cycleToNext() async {
+    if (!mounted) return;
+
     // Fade out
     await _controller.reverse();
     if (!mounted) return;

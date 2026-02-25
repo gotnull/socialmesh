@@ -66,7 +66,12 @@ class _SensitiveContentSettingsScreenState
               delegate: SliverChildListDelegate([
                 // Header explanation
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    0,
+                    16,
+                    16,
+                  ),
                   child: Text(
                     'Control how much sensitive content you see in Explore and recommendations. '
                     'This doesn\'t affect content from accounts you follow.',
@@ -118,7 +123,7 @@ class _SensitiveContentSettingsScreenState
                   ],
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
 
                 // Additional settings
                 _buildSection(
@@ -139,16 +144,16 @@ class _SensitiveContentSettingsScreenState
                   ],
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
 
                 // Info section
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     decoration: BoxDecoration(
                       color: context.surfaceVariant.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,7 +165,7 @@ class _SensitiveContentSettingsScreenState
                               size: 20,
                               color: context.textSecondary,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             Text(
                               'About Sensitive Content',
                               style: TextStyle(
@@ -171,7 +176,7 @@ class _SensitiveContentSettingsScreenState
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppTheme.spacing8),
                         Text(
                           'Sensitive content may include posts that depict violence, '
                           'nudity, or other content that some people may find offensive. '
@@ -201,7 +206,7 @@ class _SensitiveContentSettingsScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 8),
           child: Text(
             title,
             style: TextStyle(
@@ -216,7 +221,7 @@ class _SensitiveContentSettingsScreenState
           margin: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             color: context.card,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
           ),
           child: Column(children: children),
         ),
@@ -248,7 +253,7 @@ class _FilterLevelTile extends StatelessWidget {
 
     return InkWell(
       onTap: onChanged != null ? () => onChanged!(value) : null,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppTheme.radius8),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
@@ -270,7 +275,7 @@ class _FilterLevelTile extends StatelessWidget {
                         ),
                       ),
                       if (isDefault) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 6,
@@ -278,7 +283,9 @@ class _FilterLevelTile extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: context.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius4,
+                            ),
                           ),
                           child: Text(
                             'Default',
@@ -292,7 +299,7 @@ class _FilterLevelTile extends StatelessWidget {
                       ],
                     ],
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     subtitle,
                     style: TextStyle(
@@ -391,7 +398,7 @@ class _StrikeWarningDialogState extends ConsumerState<StrikeWarningDialog>
               ? Colors.orange
               : Colors.red.shade700,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         Text(
           isSuspension
               ? 'Account Suspended'
@@ -405,14 +412,14 @@ class _StrikeWarningDialogState extends ConsumerState<StrikeWarningDialog>
             color: context.textPrimary,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         Text(
           strike.reason,
           style: context.bodySecondaryStyle?.copyWith(
             color: context.textSecondary,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         if (strike.expiresAt != null) ...[
           _InfoRow(label: 'Expires', value: _formatDate(strike.expiresAt!)),
         ],
@@ -420,12 +427,12 @@ class _StrikeWarningDialogState extends ConsumerState<StrikeWarningDialog>
         if (strike.contentType != null) ...[
           _InfoRow(label: 'Content Type', value: strike.contentType!),
         ],
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           decoration: BoxDecoration(
             color: context.surfaceVariant.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
           ),
           child: Text(
             isSuspension
@@ -439,7 +446,7 @@ class _StrikeWarningDialogState extends ConsumerState<StrikeWarningDialog>
           ),
         ),
         if (widget.strikes.length > 1) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             '${_currentIndex + 1} of ${widget.strikes.length} notices',
             style: context.bodySmallStyle?.copyWith(
@@ -447,7 +454,7 @@ class _StrikeWarningDialogState extends ConsumerState<StrikeWarningDialog>
             ),
           ),
         ],
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
         SizedBox(
           width: double.infinity,
           child: FilledButton(
@@ -544,19 +551,19 @@ class ContentBlockedSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: Colors.red.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.block, size: 40, color: Colors.red),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             'Content Removed',
             style: TextStyle(
@@ -565,7 +572,7 @@ class ContentBlockedSheet extends StatelessWidget {
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             reason,
             textAlign: TextAlign.center,
@@ -573,13 +580,13 @@ class ContentBlockedSheet extends StatelessWidget {
               color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           if (appealable && onAppeal != null) ...[
             OutlinedButton(
               onPressed: onAppeal,
               child: const Text('Appeal Decision'),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
           ],
           SizedBox(
             width: double.infinity,
@@ -639,7 +646,7 @@ class ModerationStatusBanner extends ConsumerWidget {
                 child: Row(
                   children: [
                     Icon(icon, color: Colors.white, size: 20),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Text(
                         status.statusMessage,
@@ -688,7 +695,7 @@ class _ModerationStatusDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -701,7 +708,7 @@ class _ModerationStatusDetails extends StatelessWidget {
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _StatusRow(
             label: 'Active Strikes',
             value: '${status.activeStrikes}',
@@ -728,13 +735,13 @@ class _ModerationStatusDetails extends StatelessWidget {
                   '${status.suspendedUntil!.day}/${status.suspendedUntil!.month}/${status.suspendedUntil!.year}',
             ),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           if (!status.isPermanentlyBanned) ...[
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               decoration: BoxDecoration(
                 color: context.surfaceVariant.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Row(
                 children: [
@@ -743,7 +750,7 @@ class _ModerationStatusDetails extends StatelessWidget {
                     size: 18,
                     color: context.textSecondary,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Expanded(
                     child: Text(
                       'Strikes expire after 90 days of no violations.',
@@ -757,7 +764,7 @@ class _ModerationStatusDetails extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           SizedBox(
             width: double.infinity,
             child: FilledButton(

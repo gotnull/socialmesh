@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/tak_gateway_client.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Status card showing TAK Gateway connection state and counters.
 class TakStatusCard extends StatelessWidget {
@@ -31,11 +32,11 @@ class TakStatusCard extends StatelessWidget {
     final stateLabel = _stateLabel;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 0),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: stateColor.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -51,7 +52,7 @@ class TakStatusCard extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Text(
                 stateLabel,
                 style: theme.textTheme.titleSmall?.copyWith(
@@ -68,12 +69,12 @@ class TakStatusCard extends StatelessWidget {
                 ),
               ),
               if (onInfoTap != null) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 GestureDetector(
                   onTap: onInfoTap,
                   behavior: HitTestBehavior.opaque,
                   child: Padding(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(AppTheme.spacing4),
                     child: Icon(
                       Icons.info_outline,
                       size: 14,
@@ -84,7 +85,7 @@ class TakStatusCard extends StatelessWidget {
               ],
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Wrap(
             spacing: 16,
             runSpacing: 8,
@@ -97,7 +98,7 @@ class TakStatusCard extends StatelessWidget {
           ),
           if (lastError != null &&
               connectionState != TakConnectionState.connected) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               lastError!,
               style: theme.textTheme.bodySmall?.copyWith(

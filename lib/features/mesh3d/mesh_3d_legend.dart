@@ -37,14 +37,14 @@ class Mesh3DLegend extends StatelessWidget {
     if (items.isEmpty) return const SizedBox.shrink();
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(AppTheme.radius10),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           decoration: BoxDecoration(
             color: context.card.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppTheme.radius10),
             border: Border.all(color: context.border.withValues(alpha: 0.2)),
           ),
           child: Column(
@@ -56,7 +56,7 @@ class Mesh3DLegend extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(mode.icon, size: 11, color: context.textTertiary),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTheme.spacing4),
                   Text(
                     mode.label,
                     style: TextStyle(
@@ -68,7 +68,7 @@ class Mesh3DLegend extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: AppTheme.spacing5),
               // Legend items
               ...items.map(
                 (item) => Padding(
@@ -148,7 +148,7 @@ class _LegendItem extends StatelessWidget {
           height: 8,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(AppTheme.radius2),
             boxShadow: [
               BoxShadow(
                 color: color.withValues(alpha: 0.35),
@@ -158,7 +158,7 @@ class _LegendItem extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppTheme.spacing6),
         Text(
           label,
           style: TextStyle(

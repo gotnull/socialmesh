@@ -473,7 +473,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                     size: 16,
                     color: AppTheme.errorRed,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Text(
                     'Disconnected - Messages will queue',
                     style: TextStyle(color: AppTheme.errorRed, fontSize: 12),
@@ -488,7 +488,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                 ? _buildEmptyState()
                 : ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
                       return _buildMessageBubble(_messages[index]);
@@ -510,7 +510,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(),
-            SizedBox(height: 16),
+            SizedBox(height: AppTheme.spacing16),
             Text(
               'Loading messages...',
               style: TextStyle(color: Colors.white70),
@@ -530,14 +530,14 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
             size: 64,
             color: Colors.white.withValues(alpha: 0.3),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             'No messages yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: Colors.white.withValues(alpha: 0.6),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Send a message to start the conversation',
             style: TextStyle(
@@ -560,7 +560,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
             ? MainAxisAlignment.end
             : MainAxisAlignment.start,
         children: [
-          if (!isOutgoing) const SizedBox(width: 40),
+          if (!isOutgoing) const SizedBox(width: AppTheme.spacing40),
           Flexible(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -582,7 +582,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                     message.text,
                     style: const TextStyle(color: Colors.white, fontSize: 15),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -594,7 +594,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                         ),
                       ),
                       if (isOutgoing) ...[
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         _buildStatusIcon(message.status),
                       ],
                     ],
@@ -603,7 +603,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
               ),
             ),
           ),
-          if (isOutgoing) const SizedBox(width: 40),
+          if (isOutgoing) const SizedBox(width: AppTheme.spacing40),
         ],
       ),
     );
@@ -661,6 +661,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
         children: [
           Expanded(
             child: TextField(
+              maxLength: 500,
               controller: _messageController,
               focusNode: _focusNode,
               maxLines: 4,
@@ -681,7 +682,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
               onSubmitted: (_) => _sendMessage(),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Container(
             decoration: BoxDecoration(
               color: _accentColor.withValues(alpha: 0.2),
@@ -726,7 +727,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   Widget _buildContactInfo() {
     final contact = widget.contact!;
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -742,7 +743,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             contact.name,
             style: const TextStyle(
@@ -751,16 +752,16 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             contact.typeLabel,
             style: TextStyle(color: _accentColor, fontSize: 14),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildInfoRow('Public Key', contact.shortPubKeyHex),
           _buildInfoRow('Path', contact.pathLabel),
           _buildInfoRow('Last Seen', _formatDateTime(contact.lastSeen)),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -784,7 +785,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   Widget _buildChannelInfo() {
     final channel = widget.channel!;
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -797,7 +798,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
               size: 32,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             channel.displayName,
             style: const TextStyle(
@@ -806,12 +807,12 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             channel.isPublic ? 'Public Channel' : 'Private Channel',
             style: TextStyle(color: _accentColor, fontSize: 14),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildInfoRow('Index', '${channel.index}'),
           _buildInfoRow(
             'PSK',
@@ -819,7 +820,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                 ? '${channel.pskHex.substring(0, 8)}...${channel.pskHex.substring(channel.pskHex.length - 8)}'
                 : channel.pskHex,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(

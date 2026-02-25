@@ -176,7 +176,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen>
               child: Row(
                 children: [
                   Icon(Icons.restore, color: context.textSecondary),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppTheme.spacing12),
                   Text('Reset to defaults'),
                 ],
               ),
@@ -187,7 +187,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen>
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Text(
               _isReordering
                   ? 'Drag to reorder responses'
@@ -238,7 +238,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen>
                     padding: const EdgeInsets.only(right: 20),
                     decoration: BoxDecoration(
                       color: AppTheme.errorRed.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: const Icon(Icons.delete, color: AppTheme.errorRed),
                   ),
@@ -285,7 +285,7 @@ class _ResponseTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: ListTile(
         onTap: isReordering ? null : onTap,
@@ -295,7 +295,7 @@ class _ResponseTile extends StatelessWidget {
           height: 40,
           decoration: BoxDecoration(
             color: context.accentColor.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
           ),
           child: Center(
             child: Icon(Icons.bolt, size: 20, color: context.accentColor),
@@ -365,7 +365,7 @@ class _EditResponseContentState extends State<_EditResponseContent> {
           title: _isEditing ? 'Edit Response' : 'Add Response',
           subtitle: 'Create a quick message for fast sending',
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
         BottomSheetTextField(
           controller: _textController,
           label: 'Message',
@@ -374,7 +374,7 @@ class _EditResponseContentState extends State<_EditResponseContent> {
           autofocus: true,
           onSubmitted: (_) => _submit(),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
         BottomSheetButtons(
           onCancel: () => Navigator.pop(context),
           onConfirm: _submit,

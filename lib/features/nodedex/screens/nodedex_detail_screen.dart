@@ -125,7 +125,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 size: 56,
                 color: context.textTertiary.withValues(alpha: 0.4),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               Text(
                 'Node not found in NodeDex',
                 style: TextStyle(
@@ -134,7 +134,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                   color: context.textSecondary,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 'This node has not been discovered yet.',
                 style: TextStyle(fontSize: 13, color: context.textTertiary),
@@ -525,7 +525,7 @@ class _ScoredTraitsList extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -535,7 +535,7 @@ class _ScoredTraitsList extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: scored.trait.color.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                   border: Border.all(
                     color: scored.trait.color.withValues(alpha: 0.15),
                     width: 0.5,
@@ -552,7 +552,7 @@ class _ScoredTraitsList extends StatelessWidget {
                         color: scored.trait.color.withValues(alpha: 0.8),
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppTheme.spacing4),
                     Text(
                       '$pct%',
                       style: TextStyle(
@@ -567,7 +567,7 @@ class _ScoredTraitsList extends StatelessWidget {
             }).toList(),
           ),
           if (showEvidence) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             ...remaining
                 .where((s) => s.evidence.isNotEmpty && s.confidence >= 0.2)
                 .take(3)
@@ -591,7 +591,7 @@ class _ScoredTraitsList extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: AppTheme.spacing6),
                               Expanded(
                                 child: Text(
                                   '${s.trait.displayLabel}: ${e.observation}',
@@ -694,7 +694,7 @@ class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
     final isOnline = _isOnline(widget.node);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -705,21 +705,21 @@ class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
                 .withValues(alpha: 0.04),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         border: Border.all(
           color: context.border.withValues(alpha: 0.2),
           width: 0.5,
         ),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         child: Stack(
           children: [
             // Subtle atmosphere behind the hero content.
             // Only starlight and embers — very low intensity.
             const Positioned.fill(child: DetailAtmosphere()),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppTheme.spacing24),
               child: Column(
                 children: [
                   // Sigil display
@@ -766,7 +766,7 @@ class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
 
                   // Name
                   Text(
@@ -778,11 +778,11 @@ class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
 
                   // Inline nickname editor
                   _buildNicknameRow(context),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
 
                   // Hex ID
                   Text(
@@ -795,7 +795,7 @@ class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
                       letterSpacing: 1.0,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
 
                   // Role badge (if known)
                   if (widget.node?.role != null &&
@@ -807,7 +807,7 @@ class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
                       ),
                       decoration: BoxDecoration(
                         color: context.textTertiary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Text(
                         widget.node!.role!,
@@ -845,7 +845,7 @@ class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
 
                   // Patina stamp (shown when disclosure permits)
                   if (widget.patinaResult != null) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppTheme.spacing12),
                     PatinaStamp(
                       result: widget.patinaResult!,
                       accentColor:
@@ -855,7 +855,7 @@ class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
                   ],
 
                   // Color palette
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   _ColorPalette(entry: widget.entry),
                 ],
               ),
@@ -892,26 +892,26 @@ class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
                   vertical: 6,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                   borderSide: BorderSide(
                     color: context.border.withValues(alpha: 0.3),
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                   borderSide: BorderSide(
                     color: context.border.withValues(alpha: 0.3),
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                   borderSide: BorderSide(color: context.accentColor),
                 ),
               ),
               onSubmitted: (_) => _saveNickname(),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           GestureDetector(
             onTap: _saveNickname,
             child: Icon(
@@ -920,7 +920,7 @@ class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
               color: context.accentColor,
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           GestureDetector(
             onTap: _cancelEditing,
             child: Icon(
@@ -946,7 +946,7 @@ class _SigilHeroSectionState extends ConsumerState<_SigilHeroSection> {
             size: 12,
             color: context.textTertiary.withValues(alpha: 0.5),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             hasNickname ? widget.entry.localNickname! : 'Set nickname',
             style: TextStyle(
@@ -985,9 +985,9 @@ class _ColorPalette extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _PaletteDot(color: sigil.primaryColor, label: 'Primary'),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         _PaletteDot(color: sigil.secondaryColor, label: 'Secondary'),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         _PaletteDot(color: sigil.tertiaryColor, label: 'Tertiary'),
       ],
     );
@@ -1206,7 +1206,7 @@ class _SocialTagCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
             color: context.accentColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
           ),
           child: Text(
             entry.socialTag != null ? 'Change' : 'Classify',
@@ -1287,7 +1287,7 @@ class _UserNoteCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: context.textTertiary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Text(
                         'Cancel',
@@ -1299,7 +1299,7 @@ class _UserNoteCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   GestureDetector(
                     onTap: () {
                       FocusScope.of(context).unfocus();
@@ -1312,7 +1312,7 @@ class _UserNoteCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: context.accentColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Text(
                         'Save',
@@ -1335,7 +1335,7 @@ class _UserNoteCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: context.accentColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Text(
                     entry.userNote != null ? 'Edit' : 'Add Note',
@@ -1356,7 +1356,7 @@ class _UserNoteCard extends StatelessWidget {
                   maxLength: 280,
                   autofocus: true,
                   // Allow scroll to ensure field is visible above keyboard
-                  scrollPadding: const EdgeInsets.all(80),
+                  scrollPadding: const EdgeInsets.all(AppTheme.spacing80),
                   onTapOutside: (_) {
                     FocusScope.of(context).unfocus();
                   },
@@ -1369,23 +1369,23 @@ class _UserNoteCard extends StatelessWidget {
                     ),
                     filled: true,
                     fillColor: context.background,
-                    contentPadding: const EdgeInsets.all(12),
+                    contentPadding: const EdgeInsets.all(AppTheme.spacing12),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       borderSide: BorderSide(
                         color: context.border.withValues(alpha: 0.3),
                         width: 0.5,
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       borderSide: BorderSide(
                         color: context.border.withValues(alpha: 0.3),
                         width: 0.5,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       borderSide: BorderSide(
                         color: context.accentColor.withValues(alpha: 0.5),
                         width: 1.0,
@@ -1461,7 +1461,7 @@ class _RegionHistoryCard extends StatelessWidget {
                     color: context.accentColor,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1474,7 +1474,7 @@ class _RegionHistoryCard extends StatelessWidget {
                           color: context.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         '${region.encounterCount} encounter${region.encounterCount == 1 ? '' : 's'} '
                         '\u00B7 ${dateFormat.format(region.firstSeen)} \u2013 ${dateFormat.format(region.lastSeen)}',
@@ -1646,19 +1646,19 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
             },
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Signal sparkline (if any encounters have SNR data)
           if (allEncounters.any((e) => e.snr != null)) ...[
             _SignalSparkline(encounters: allEncounters),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
           ],
 
           // Recent encounters header with calendar action
           Row(
             children: [
               Icon(Icons.history, size: 12, color: context.textTertiary),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
               Text(
                 _selectedDate != null
                     ? DateFormat(
@@ -1675,7 +1675,7 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
                 ),
               ),
               if (_selectedDate != null) ...[
-                const SizedBox(width: 6),
+                const SizedBox(width: AppTheme.spacing6),
                 GestureDetector(
                   onTap: () {
                     setState(() {
@@ -1690,13 +1690,13 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
                     ),
                     decoration: BoxDecoration(
                       color: context.accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(AppTheme.radius6),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.close, size: 10, color: context.accentColor),
-                        const SizedBox(width: 2),
+                        const SizedBox(width: AppTheme.spacing2),
                         Text(
                           'Clear',
                           style: TextStyle(
@@ -1716,16 +1716,16 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
                   '${encounters.length} encounter${encounters.length == 1 ? '' : 's'}',
                   style: TextStyle(fontSize: 9, color: context.textTertiary),
                 ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               GestureDetector(
                 onTap: _showCalendarPicker,
                 child: Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(AppTheme.spacing4),
                   decoration: BoxDecoration(
                     color: _selectedDate != null
                         ? context.accentColor.withValues(alpha: 0.1)
                         : Colors.transparent,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(AppTheme.radius6),
                   ),
                   child: Icon(
                     Icons.calendar_month,
@@ -1738,7 +1738,7 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppTheme.spacing6),
 
           // Paginated encounter list
           if (pageItems.isEmpty)
@@ -1765,7 +1765,7 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
 
           // Pagination footer
           if (totalPages > 1) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -1774,7 +1774,7 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
                   enabled: page > 0,
                   onTap: () => setState(() => _currentPage = page - 1),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Text(
                   '${page + 1} / $totalPages',
                   style: TextStyle(
@@ -1784,7 +1784,7 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
                     fontFamily: AppTheme.fontFamily,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _PaginationButton(
                   icon: Icons.chevron_right,
                   enabled: page < totalPages - 1,
@@ -1907,7 +1907,8 @@ class _EncounterBarChart extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (i < displayDays.length - 1) const SizedBox(width: 6),
+                      if (i < displayDays.length - 1)
+                        const SizedBox(width: AppTheme.spacing6),
                     ],
                   ],
                 )
@@ -1937,7 +1938,7 @@ class _EncounterBarChart extends StatelessWidget {
                 ),
         ),
 
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
 
         // Date labels
         SizedBox(
@@ -1964,15 +1965,15 @@ class _EncounterBarChart extends StatelessWidget {
         ),
 
         // Legend
-        const SizedBox(height: 6),
+        const SizedBox(height: AppTheme.spacing6),
         Row(
           children: [
             _LegendDot(color: _signalColor(context, 'good'), label: 'Strong'),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppTheme.spacing10),
             _LegendDot(color: _signalColor(context, 'mid'), label: 'Fair'),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppTheme.spacing10),
             _LegendDot(color: _signalColor(context, 'weak'), label: 'Weak'),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppTheme.spacing10),
             _LegendDot(
               color: context.accentColor.withValues(alpha: 0.5),
               label: 'No data',
@@ -2055,7 +2056,7 @@ class _SingleDaySummary extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
         color: context.accentColor.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.accentColor.withValues(alpha: 0.12)),
       ),
       child: Column(
@@ -2071,7 +2072,7 @@ class _SingleDaySummary extends StatelessWidget {
               height: 1,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             'encounter${count == 1 ? '' : 's'}',
             style: TextStyle(
@@ -2080,7 +2081,7 @@ class _SingleDaySummary extends StatelessWidget {
               color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppTheme.spacing2),
           Text(
             dayFormat.format(day),
             style: TextStyle(
@@ -2089,10 +2090,10 @@ class _SingleDaySummary extends StatelessWidget {
               fontFamily: AppTheme.fontFamily,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           // Signal quality breakdown bar
           ClipRRect(
-            borderRadius: BorderRadius.circular(3),
+            borderRadius: BorderRadius.circular(AppTheme.radius3),
             child: SizedBox(
               height: 6,
               child: Row(
@@ -2123,22 +2124,22 @@ class _SingleDaySummary extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           // Legend row
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (strong > 0) ...[
                 _LegendDot(color: const Color(0xFF4ADE80), label: '$strong'),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppTheme.spacing10),
               ],
               if (fair > 0) ...[
                 _LegendDot(color: const Color(0xFFFBBF24), label: '$fair'),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppTheme.spacing10),
               ],
               if (weak > 0) ...[
                 _LegendDot(color: const Color(0xFFF87171), label: '$weak'),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppTheme.spacing10),
               ],
               if (noData > 0)
                 _LegendDot(
@@ -2213,7 +2214,7 @@ class _LegendDot extends StatelessWidget {
           height: 6,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 3),
+        const SizedBox(width: AppTheme.spacing3),
         Text(label, style: TextStyle(fontSize: 9, color: context.textTertiary)),
       ],
     );
@@ -2248,7 +2249,7 @@ class _SignalSparkline extends StatelessWidget {
               size: 12,
               color: context.textTertiary,
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             Text(
               'SNR TREND',
               style: TextStyle(
@@ -2265,7 +2266,7 @@ class _SignalSparkline extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppTheme.spacing6),
         SizedBox(
           height: 40,
           child: CustomPaint(
@@ -2376,7 +2377,7 @@ class _CompactEncounterRow extends StatelessWidget {
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           // Date
           Text(
             dateFormat.format(encounter.timestamp),
@@ -2396,7 +2397,7 @@ class _CompactEncounterRow extends StatelessWidget {
               context: context,
             ),
           if (encounter.rssi != null) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             _CompactMetric(
               label: 'RSSI',
               value: '${encounter.rssi}',
@@ -2404,7 +2405,7 @@ class _CompactEncounterRow extends StatelessWidget {
             ),
           ],
           if (encounter.distanceMeters != null) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             _CompactMetric(
               label: 'RNG',
               value: _shortDist(encounter.distanceMeters!),
@@ -2527,7 +2528,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
             'Nodes frequently seen in the same session',
             style: TextStyle(fontSize: 12, color: context.textTertiary),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           ...pageItems.map((coSeen) {
             final relationship = coSeen.value;
             final coSeenNode = nodes[coSeen.key];
@@ -2563,7 +2564,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                       },
                     );
                   },
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Row(
@@ -2573,7 +2574,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                           nodeNum: coSeen.key,
                           size: 32,
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: AppTheme.spacing10),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2588,7 +2589,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: AppTheme.spacing2),
                               Row(
                                 children: [
                                   Icon(
@@ -2596,7 +2597,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                                     size: 10,
                                     color: context.textTertiary,
                                   ),
-                                  const SizedBox(width: 3),
+                                  const SizedBox(width: AppTheme.spacing3),
                                   Text(
                                     dateFormat.format(relationship.lastSeen),
                                     style: TextStyle(
@@ -2605,13 +2606,13 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                                     ),
                                   ),
                                   if (relationship.messageCount > 0) ...[
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: AppTheme.spacing8),
                                     Icon(
                                       Icons.chat_bubble_outline,
                                       size: 10,
                                       color: context.textTertiary,
                                     ),
-                                    const SizedBox(width: 3),
+                                    const SizedBox(width: AppTheme.spacing3),
                                     Text(
                                       '${relationship.messageCount}',
                                       style: TextStyle(
@@ -2634,7 +2635,9 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                             ),
                             decoration: BoxDecoration(
                               color: context.accentColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius10,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -2644,7 +2647,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                                   size: 10,
                                   color: context.accentColor,
                                 ),
-                                const SizedBox(width: 3),
+                                const SizedBox(width: AppTheme.spacing3),
                                 Text(
                                   '${relationship.count}',
                                   style: TextStyle(
@@ -2658,7 +2661,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Icon(
                           Icons.chevron_right,
                           size: 16,
@@ -2674,7 +2677,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
 
           // Pagination footer
           if (totalPages > 1) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -2689,7 +2692,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                     setState(() => _currentPage = page - 1);
                   },
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Text(
                   '${page + 1} / $totalPages',
                   style: TextStyle(
@@ -2699,7 +2702,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                     fontFamily: AppTheme.fontFamily,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _PaginationButton(
                   icon: Icons.chevron_right,
                   enabled: page < totalPages - 1,
@@ -2742,7 +2745,7 @@ class _PaginationButton extends StatelessWidget {
           color: enabled
               ? context.accentColor.withValues(alpha: 0.1)
               : context.card,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(
             color: enabled
                 ? context.accentColor.withValues(alpha: 0.3)
@@ -2874,10 +2877,10 @@ class _CardContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(
           color: context.border.withValues(alpha: 0.15),
           width: 0.5,
@@ -2890,7 +2893,7 @@ class _CardContainer extends StatelessWidget {
           Row(
             children: [
               Icon(icon, size: 16, color: context.textTertiary),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Text(
                 title.toUpperCase(),
                 style: TextStyle(
@@ -2901,14 +2904,14 @@ class _CardContainer extends StatelessWidget {
                 ),
               ),
               if (helpKey != null) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 _SectionInfoButton(helpKey: helpKey!),
               ],
               const Spacer(),
               if (trailing != null) trailing!,
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           child,
         ],
       ),
@@ -2936,7 +2939,7 @@ class _SectionInfoButton extends StatelessWidget {
       onTap: () => _showHelp(context),
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(AppTheme.spacing4),
         child: Icon(
           Icons.info_outline,
           size: 14,
@@ -2954,7 +2957,7 @@ class _SectionInfoButton extends StatelessWidget {
     AppBottomSheet.show<void>(
       context: context,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+        padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 8, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2966,7 +2969,7 @@ class _SectionInfoButton extends StatelessWidget {
                   size: 18,
                   color: context.accentColor,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   _titleForKey(helpKey),
                   style: TextStyle(
@@ -2977,7 +2980,7 @@ class _SectionInfoButton extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               helpText,
               style: TextStyle(
@@ -3095,7 +3098,7 @@ class _NodeDexStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
             child: Row(
               children: [
                 Icon(icon, size: 16, color: context.textTertiary),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   title.toUpperCase(),
                   style: TextStyle(
@@ -3105,7 +3108,7 @@ class _NodeDexStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
                     letterSpacing: 0.8,
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 _SectionInfoButton(helpKey: helpKey),
                 const Spacer(),
                 if (trailing != null)
@@ -3158,7 +3161,7 @@ class _StickyCardBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(left: 16, right: 16, bottom: 4),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
       decoration: BoxDecoration(
         color: context.card,
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
@@ -3243,7 +3246,6 @@ class _DetailEntranceState extends State<_DetailEntrance>
       // Stagger: 60ms per section, capped at 600ms.
       final delay = math.min(widget.index * 60, 600);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
         if (delay == 0) {
           _controller.forward();
         } else {
@@ -3298,7 +3300,7 @@ class _InfoRow extends StatelessWidget {
             size: 14,
             color: context.textTertiary.withValues(alpha: 0.6),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppTheme.spacing10),
           Text(
             label,
             style: TextStyle(fontSize: 13, color: context.textSecondary),

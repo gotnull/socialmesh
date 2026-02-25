@@ -90,7 +90,7 @@ class _ChannelTile extends StatelessWidget {
                   color: isPrimary
                       ? context.accentColor.withValues(alpha: 0.15)
                       : context.background,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Center(
                   child: Text(
@@ -128,7 +128,7 @@ class _ChannelTile extends StatelessWidget {
                 ),
             ],
           ),
-          SizedBox(width: 10),
+          SizedBox(width: AppTheme.spacing10),
           // Channel info
           Expanded(
             child: Column(
@@ -157,7 +157,7 @@ class _ChannelTile extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: context.accentColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(AppTheme.radius4),
                         ),
                         child: Text(
                           'PRIMARY',
@@ -170,7 +170,7 @@ class _ChannelTile extends StatelessWidget {
                       ),
                   ],
                 ),
-                SizedBox(height: 2),
+                SizedBox(height: AppTheme.spacing2),
                 Text(
                   messageCount == 0
                       ? 'No recent activity'

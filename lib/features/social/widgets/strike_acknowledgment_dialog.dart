@@ -114,10 +114,12 @@ class _StrikeAcknowledgmentDialogState
 
     return Dialog(
       backgroundColor: context.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
+      ),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 400),
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.spacing24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -143,7 +145,7 @@ class _StrikeAcknowledgmentDialogState
                   );
                 }),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               Text(
                 '${_currentIndex + 1} of $totalStrikes',
                 style: TextStyle(
@@ -151,19 +153,19 @@ class _StrikeAcknowledgmentDialogState
                   fontSize: 12,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
             ],
 
             // Icon
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppTheme.spacing20),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: typeColor.withValues(alpha: 0.15),
               ),
               child: Icon(typeIcon, size: 48, color: typeColor),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.spacing20),
 
             // Title
             Text(
@@ -174,7 +176,7 @@ class _StrikeAcknowledgmentDialogState
                 color: typeColor,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Message
             Text(
@@ -188,15 +190,15 @@ class _StrikeAcknowledgmentDialogState
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.spacing20),
 
             // Reason box
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 border: Border.all(color: typeColor.withValues(alpha: 0.3)),
               ),
               child: Column(
@@ -209,7 +211,7 @@ class _StrikeAcknowledgmentDialogState
                         size: 16,
                         color: typeColor.withValues(alpha: 0.8),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Text(
                         'Reason',
                         style: TextStyle(
@@ -220,7 +222,7 @@ class _StrikeAcknowledgmentDialogState
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Text(
                     strike.reason,
                     style: TextStyle(
@@ -229,7 +231,7 @@ class _StrikeAcknowledgmentDialogState
                     ),
                   ),
                   if (strike.contentType != null) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -237,7 +239,7 @@ class _StrikeAcknowledgmentDialogState
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(AppTheme.radius6),
                       ),
                       child: Text(
                         'Content: ${strike.contentType}',
@@ -251,7 +253,7 @@ class _StrikeAcknowledgmentDialogState
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Strike count warning for strikes
             if (strike.type == 'strike') ...[
@@ -262,7 +264,7 @@ class _StrikeAcknowledgmentDialogState
                 ),
                 decoration: BoxDecoration(
                   color: Colors.red.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Row(
                   children: [
@@ -271,7 +273,7 @@ class _StrikeAcknowledgmentDialogState
                       color: Colors.red,
                       size: 18,
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: AppTheme.spacing10),
                     Expanded(
                       child: Text(
                         '3 strikes result in account suspension',
@@ -284,7 +286,7 @@ class _StrikeAcknowledgmentDialogState
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
             ],
 
             // Contact support link
@@ -303,7 +305,7 @@ class _StrikeAcknowledgmentDialogState
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.spacing20),
 
             // Acknowledge button
             SizedBox(
@@ -318,7 +320,7 @@ class _StrikeAcknowledgmentDialogState
                           ? [Colors.grey, Colors.grey.shade700]
                           : [typeColor, typeColor.withValues(alpha: 0.8)],
                     ),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Center(
                     child: _isAcknowledging

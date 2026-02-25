@@ -796,7 +796,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
 
     final validation = _validateRtttl(_rtttlController.text);
     if (validation != null) {
-      if (!mounted) return;
       showErrorSnackBar(context, validation);
       return;
     }
@@ -944,7 +943,6 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
 
       showSuccessSnackBar(context, 'Ringtone saved to device');
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to save ringtone: $e');
     } finally {
       safeSetState(() => _saving = false);
@@ -1053,7 +1051,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
       maxChildSize: 0.9,
       builder: (scrollController) => SingleChildScrollView(
         controller: scrollController,
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 24, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1065,7 +1063,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                 color: context.textPrimary,
               ),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: AppTheme.spacing16),
             _buildHelpSection(
               'What is RTTTL?',
               'Ring Tone Text Transfer Language (RTTTL) is a format for creating musical output with simple text strings.',
@@ -1092,12 +1090,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                   'Plays C, E, G, high C at 120 BPM\n'
                   'Default quarter notes in octave 5',
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               decoration: BoxDecoration(
                 color: context.accentColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 border: Border.all(
                   color: context.accentColor.withValues(alpha: 0.3),
                 ),
@@ -1109,7 +1107,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                     color: context.accentColor.withValues(alpha: 0.8),
                     size: 20,
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Text(
                       'Try Nokia Composer online to create and preview RTTTL strings',
@@ -1122,7 +1120,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                 ],
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppTheme.spacing32),
           ],
         ),
       ),
@@ -1143,7 +1141,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
               color: context.accentColor,
             ),
           ),
-          SizedBox(height: 4),
+          SizedBox(height: AppTheme.spacing4),
           Text(
             content,
             style: TextStyle(
@@ -1195,7 +1193,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
               ]
             : [
                 SliverPadding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
                       // Current RTTTL input
@@ -1208,13 +1206,15 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                           letterSpacing: 1,
                         ),
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppTheme.spacing12),
                       Container(
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -1239,7 +1239,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                 filled: true,
                                 fillColor: context.background,
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
                                   borderSide: _validationError != null
                                       ? BorderSide(
                                           color: AppTheme.errorRed,
@@ -1248,7 +1250,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                       : BorderSide.none,
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
                                   borderSide: _validationError != null
                                       ? BorderSide(
                                           color: AppTheme.errorRed,
@@ -1257,7 +1261,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                       : BorderSide.none,
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
                                   borderSide: BorderSide(
                                     color: _validationError != null
                                         ? AppTheme.errorRed
@@ -1265,11 +1271,13 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                     width: 1,
                                   ),
                                 ),
-                                contentPadding: const EdgeInsets.all(12),
+                                contentPadding: const EdgeInsets.all(
+                                  AppTheme.spacing12,
+                                ),
                               ),
                             ),
                             if (_validationError != null) ...[
-                              SizedBox(height: 8),
+                              SizedBox(height: AppTheme.spacing8),
                               Row(
                                 children: [
                                   const Icon(
@@ -1277,7 +1285,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                     size: 14,
                                     color: AppTheme.errorRed,
                                   ),
-                                  const SizedBox(width: 6),
+                                  const SizedBox(width: AppTheme.spacing6),
                                   Expanded(
                                     child: Text(
                                       _validationError!,
@@ -1290,7 +1298,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                 ],
                               ),
                             ],
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppTheme.spacing12),
                             Row(
                               children: [
                                 // Play/Preview button
@@ -1311,7 +1319,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                       vertical: 12,
                                     ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radius8,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1335,7 +1345,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                 ),
                               ],
                             ),
-                            SizedBox(height: 8),
+                            SizedBox(height: AppTheme.spacing8),
                             Row(
                               children: [
                                 Expanded(
@@ -1374,7 +1384,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                           ],
                         ),
                       ),
-                      SizedBox(height: 24),
+                      SizedBox(height: AppTheme.spacing24),
 
                       // Browse Library section
                       Text(
@@ -1386,19 +1396,21 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                           letterSpacing: 1,
                         ),
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppTheme.spacing12),
                       InkWell(
                         onTap: _showLibraryBrowser,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         child: Container(
                           decoration: BoxDecoration(
                             color: context.card,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
                             border: Border.all(
                               color: context.accentColor.withValues(alpha: 0.3),
                             ),
                           ),
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(AppTheme.spacing16),
                           child: Row(
                             children: [
                               Container(
@@ -1408,7 +1420,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                   color: context.accentColor.withValues(
                                     alpha: 0.15,
                                   ),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius12,
+                                  ),
                                 ),
                                 child: Icon(
                                   Icons.library_music,
@@ -1416,7 +1430,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                   size: 24,
                                 ),
                               ),
-                              SizedBox(width: 16),
+                              SizedBox(width: AppTheme.spacing16),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1436,7 +1450,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                             PremiumFeature.customRingtones,
                                           ),
                                         )) ...[
-                                          SizedBox(width: 8),
+                                          SizedBox(width: AppTheme.spacing8),
                                           Icon(
                                             Icons.star,
                                             color: context.accentColor,
@@ -1445,7 +1459,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                         ],
                                       ],
                                     ),
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: AppTheme.spacing4),
                                     Text(
                                       'Search classic tunes, TV themes, movie soundtracks, and more',
                                       style: TextStyle(
@@ -1458,7 +1472,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                   ],
                                 ),
                               ),
-                              SizedBox(width: 8),
+                              SizedBox(width: AppTheme.spacing8),
                               Icon(
                                 Icons.arrow_forward_ios,
                                 color: context.accentColor,
@@ -1468,7 +1482,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                           ),
                         ),
                       ),
-                      SizedBox(height: 24),
+                      SizedBox(height: AppTheme.spacing24),
 
                       // Selected ringtone section (unified across all sources)
                       if (_selectedName != null) ...[
@@ -1481,11 +1495,13 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                             letterSpacing: 1,
                           ),
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppTheme.spacing12),
                         Container(
                           decoration: BoxDecoration(
                             color: context.card,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
                             border: Border.all(
                               color: context.accentColor.withValues(alpha: 0.3),
                               width: 1,
@@ -1506,7 +1522,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                     color: context.accentColor.withValues(
                                       alpha: 0.15,
                                     ),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radius8,
+                                    ),
                                   ),
                                   child: Icon(
                                     _selectedSource == 'library'
@@ -1518,7 +1536,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                     size: 20,
                                   ),
                                 ),
-                                SizedBox(width: 12),
+                                SizedBox(width: AppTheme.spacing12),
                                 // Title and description
                                 Expanded(
                                   child: Column(
@@ -1557,7 +1575,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                               alpha: 0.15,
                                             )
                                           : context.background,
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radius8,
+                                      ),
                                     ),
                                     child: Icon(
                                       _playingSelected
@@ -1570,7 +1590,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: AppTheme.spacing8),
                                 // Clear button
                                 GestureDetector(
                                   onTap: () async {
@@ -1587,6 +1607,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                         settingsServiceProvider.future,
                                       );
                                       await settings.clearSelectedRingtone();
+                                      if (!mounted) return;
                                     } catch (e) {
                                       // Ignore
                                     }
@@ -1596,7 +1617,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                     height: 36,
                                     decoration: BoxDecoration(
                                       color: context.background,
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radius8,
+                                      ),
                                     ),
                                     child: Icon(
                                       Icons.close,
@@ -1609,7 +1632,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                             ),
                           ),
                         ),
-                        SizedBox(height: 24),
+                        SizedBox(height: AppTheme.spacing24),
                       ],
 
                       // Built-in presets section
@@ -1626,7 +1649,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                             ),
                           ),
                           if (!hasPremium) ...[
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppTheme.spacing8),
                             Icon(
                               Icons.star,
                               color: context.accentColor,
@@ -1635,11 +1658,13 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                           ],
                         ],
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppTheme.spacing12),
                       Container(
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                         child: Column(
                           children: _builtInPresets.asMap().entries.map((
@@ -1697,7 +1722,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                             size: 20,
                                           ),
                                         ),
-                                        SizedBox(width: 12),
+                                        SizedBox(width: AppTheme.spacing12),
                                         // Title and description
                                         Expanded(
                                           child: Column(
@@ -1717,7 +1742,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                                   fontSize: 15,
                                                 ),
                                               ),
-                                              SizedBox(height: 2),
+                                              SizedBox(
+                                                height: AppTheme.spacing2,
+                                              ),
                                               Text(
                                                 preset.description,
                                                 style: TextStyle(
@@ -1728,7 +1755,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                             ],
                                           ),
                                         ),
-                                        SizedBox(width: 8),
+                                        SizedBox(width: AppTheme.spacing8),
                                         // Play button
                                         SizedBox(
                                           width: 40,
@@ -1746,7 +1773,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                               onTap: () =>
                                                   _playPreset(preset, index),
                                               borderRadius:
-                                                  BorderRadius.circular(20),
+                                                  BorderRadius.circular(
+                                                    AppTheme.radius20,
+                                                  ),
                                               child: Icon(
                                                 isPlaying
                                                     ? Icons.stop
@@ -1759,7 +1788,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                             ),
                                           ),
                                         ),
-                                        SizedBox(width: 8),
+                                        SizedBox(width: AppTheme.spacing8),
                                         // Selected indicator
                                         SizedBox(
                                           width: 24,
@@ -1790,7 +1819,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                           }).toList(),
                         ),
                       ),
-                      SizedBox(height: 24),
+                      SizedBox(height: AppTheme.spacing24),
 
                       // Custom presets section
                       Row(
@@ -1821,15 +1850,17 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                           ),
                         ],
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: AppTheme.spacing12),
 
                       if (customRingtones.isEmpty)
                         Container(
                           decoration: BoxDecoration(
                             color: context.card,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
                           ),
-                          padding: const EdgeInsets.all(24),
+                          padding: const EdgeInsets.all(AppTheme.spacing24),
                           child: Column(
                             children: [
                               Icon(
@@ -1839,7 +1870,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                   alpha: 0.5,
                                 ),
                               ),
-                              SizedBox(height: 12),
+                              SizedBox(height: AppTheme.spacing12),
                               Text(
                                 'No custom ringtones',
                                 style: TextStyle(
@@ -1847,7 +1878,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                   fontSize: 14,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              SizedBox(height: AppTheme.spacing4),
                               Text(
                                 'Tap "Add" to create your own presets',
                                 style: TextStyle(
@@ -1862,11 +1893,15 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                         )
                       else
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           child: Container(
                             decoration: BoxDecoration(
                               color: context.card,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius12,
+                              ),
                             ),
                             child: Column(
                               children: customRingtones.asMap().entries.map((
@@ -1915,7 +1950,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                                             )
                                                       : context.background,
                                                   borderRadius:
-                                                      BorderRadius.circular(8),
+                                                      BorderRadius.circular(
+                                                        AppTheme.radius8,
+                                                      ),
                                                 ),
                                                 child: Icon(
                                                   isSelected
@@ -1928,7 +1965,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                                   size: 20,
                                                 ),
                                               ),
-                                              SizedBox(width: 12),
+                                              SizedBox(
+                                                width: AppTheme.spacing12,
+                                              ),
                                               // Title and description
                                               Expanded(
                                                 child: Column(
@@ -1950,7 +1989,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                                         fontSize: 15,
                                                       ),
                                                     ),
-                                                    SizedBox(height: 2),
+                                                    SizedBox(
+                                                      height: AppTheme.spacing2,
+                                                    ),
                                                     Text(
                                                       preset.description,
                                                       style: TextStyle(
@@ -1962,7 +2003,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                                   ],
                                                 ),
                                               ),
-                                              SizedBox(width: 8),
+                                              SizedBox(
+                                                width: AppTheme.spacing8,
+                                              ),
                                               // Play button
                                               SizedBox(
                                                 width: 40,
@@ -1975,7 +2018,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                                             )
                                                       : context.background,
                                                   borderRadius:
-                                                      BorderRadius.circular(20),
+                                                      BorderRadius.circular(
+                                                        AppTheme.radius20,
+                                                      ),
                                                   child: InkWell(
                                                     onTap: () => _playPreset(
                                                       preset,
@@ -1999,7 +2044,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                                   ),
                                                 ),
                                               ),
-                                              SizedBox(width: 8),
+                                              SizedBox(
+                                                width: AppTheme.spacing8,
+                                              ),
                                               // Selected indicator
                                               SizedBox(
                                                 width: 24,
@@ -2034,7 +2081,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                             ),
                           ),
                         ),
-                      SizedBox(height: 24),
+                      SizedBox(height: AppTheme.spacing24),
 
                       // Info card
                       StatusBanner.warning(
@@ -2044,7 +2091,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                         icon: Icons.lightbulb_outline,
                         margin: EdgeInsets.zero,
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: AppTheme.spacing32),
                     ]),
                   ),
                 ),
@@ -2117,13 +2164,13 @@ class _AddCustomRingtoneContentState extends State<_AddCustomRingtoneContent> {
             title: 'Add Custom Ringtone',
             subtitle: 'Create a custom RTTTL ringtone preset',
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           BottomSheetTextField(
             controller: _nameController,
             label: 'Name',
             hint: 'e.g., My Ringtone',
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           BottomSheetTextField(
             controller: _rtttlController,
             label: 'RTTTL String',
@@ -2138,13 +2185,13 @@ class _AddCustomRingtoneContentState extends State<_AddCustomRingtoneContent> {
               });
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           BottomSheetTextField(
             controller: _descController,
             label: 'Description (optional)',
             hint: 'e.g., Classic beep melody',
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           BottomSheetButtons(
             onCancel: () => Navigator.pop(context),
             onConfirm: _submit,
@@ -2278,7 +2325,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
         children: [
           // Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 24, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -2290,7 +2337,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
                     color: context.textPrimary,
                   ),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: AppTheme.spacing4),
                 Text(
                   _totalCount > 0
                       ? 'Search ${_totalCount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')} available tones'
@@ -2302,7 +2349,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
               ],
             ),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppTheme.spacing16),
 
           // Search field
           Padding(
@@ -2338,11 +2385,11 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
                 filled: true,
                 fillColor: context.card,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   borderSide: BorderSide(color: context.accentColor, width: 1),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
@@ -2352,7 +2399,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
               ),
             ),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppTheme.spacing16),
 
           // Results header
           Padding(
@@ -2371,13 +2418,13 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
                   ),
                 ),
                 if (_loading) ...[
-                  SizedBox(width: 8),
+                  SizedBox(width: AppTheme.spacing8),
                   LoadingIndicator(size: 12),
                 ],
               ],
             ),
           ),
-          SizedBox(height: 12),
+          SizedBox(height: AppTheme.spacing12),
 
           // Results list
           Expanded(
@@ -2395,7 +2442,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
                           size: 48,
                           color: context.textTertiary.withValues(alpha: 0.5),
                         ),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppTheme.spacing12),
                         Text(
                           hasSearch
                               ? 'No results found'
@@ -2406,7 +2453,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
                           ),
                         ),
                         if (hasSearch) ...[
-                          SizedBox(height: 4),
+                          SizedBox(height: AppTheme.spacing4),
                           Text(
                             'Try a different search term',
                             style: TextStyle(
@@ -2432,13 +2479,17 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
                         margin: const EdgeInsets.only(bottom: 8),
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                         child: InkWell(
                           onTap: () => widget.onSelect(item),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           child: Padding(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(AppTheme.spacing12),
                             child: Row(
                               children: [
                                 // Music icon
@@ -2449,7 +2500,9 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
                                     color: context.accentColor.withValues(
                                       alpha: 0.12,
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radius10,
+                                    ),
                                   ),
                                   child: Icon(
                                     Icons.music_note,
@@ -2457,7 +2510,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
                                     size: 22,
                                   ),
                                 ),
-                                SizedBox(width: 12),
+                                SizedBox(width: AppTheme.spacing12),
                                 // Title and subtitle
                                 Expanded(
                                   child: Column(
@@ -2475,7 +2528,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 2),
+                                      const SizedBox(height: AppTheme.spacing2),
                                       Text(
                                         item.subtitle ??
                                             '${item.rtttl.length} chars',
@@ -2489,7 +2542,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
                                     ],
                                   ),
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: AppTheme.spacing8),
                                 // Play button
                                 SizedBox(
                                   width: 40,
@@ -2500,10 +2553,14 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
                                             alpha: 0.15,
                                           )
                                         : context.background,
-                                    borderRadius: BorderRadius.circular(20),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radius20,
+                                    ),
                                     child: InkWell(
                                       onTap: () => _playItem(item),
-                                      borderRadius: BorderRadius.circular(20),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radius20,
+                                      ),
                                       child: Icon(
                                         isPlaying
                                             ? Icons.stop
@@ -2516,7 +2573,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
                                     ),
                                   ),
                                 ),
-                                SizedBox(width: 4),
+                                SizedBox(width: AppTheme.spacing4),
                                 // Select indicator
                                 Icon(
                                   Icons.chevron_right,
@@ -2533,7 +2590,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
           ),
 
           // Bottom safe area
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
         ],
       ),
     );

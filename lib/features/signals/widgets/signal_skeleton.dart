@@ -46,7 +46,7 @@ class _SignalCardSkeletonState extends State<SignalCardSkeleton>
         return Container(
           decoration: BoxDecoration(
             color: context.card,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radius16),
             border: Border.all(color: context.border.withValues(alpha: 0.5)),
           ),
           child: Column(
@@ -54,17 +54,17 @@ class _SignalCardSkeletonState extends State<SignalCardSkeleton>
             children: [
               // Header skeleton
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Row(
                   children: [
                     _shimmerBox(40, 40, isCircle: true),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _shimmerBox(120, 14),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: AppTheme.spacing6),
                           _shimmerBox(80, 10),
                         ],
                       ),
@@ -80,17 +80,17 @@ class _SignalCardSkeletonState extends State<SignalCardSkeleton>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _shimmerBox(double.infinity, 14),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     _shimmerBox(200, 14),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
 
               // Footer skeleton
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Row(
                   children: [
                     _shimmerBox(80, 12),
@@ -114,7 +114,7 @@ class _SignalCardSkeletonState extends State<SignalCardSkeleton>
       width: width,
       height: height,
       decoration: BoxDecoration(
-        borderRadius: isCircle ? null : BorderRadius.circular(4),
+        borderRadius: isCircle ? null : BorderRadius.circular(AppTheme.radius4),
         shape: isCircle ? BoxShape.circle : BoxShape.rectangle,
         gradient: LinearGradient(
           begin: Alignment.centerLeft,

@@ -334,7 +334,6 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
         );
       }
     } catch (e) {
-      if (!mounted) return;
       safeSetState(() => _isSendingTraceroute = false);
       if (context.mounted) {
         showErrorSnackBar(context, 'Failed to send traceroute: $e');
@@ -586,15 +585,15 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     final avatarColor = isMyNode ? context.accentColor : _getAvatarColor(node);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 4),
+      padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [context.card, avatarColor.withValues(alpha: 0.04)],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         border: Border.all(
           color: context.border.withValues(alpha: 0.2),
           width: 0.5,
@@ -630,7 +629,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                 ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppTheme.spacing14),
 
           // Name
           AutoScrollText(
@@ -641,7 +640,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
 
           // Hex ID
           Text(
@@ -654,7 +653,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
               letterSpacing: 1.0,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppTheme.spacing10),
 
           // Badges row
           Wrap(
@@ -691,7 +690,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Quick stat chips
           _buildStatChipsRow(context, node),
@@ -775,7 +774,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
           Row(
             children: [
               Icon(icon, size: 16, color: context.accentColor),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Text(
                 title.toUpperCase(),
                 style: TextStyle(
@@ -787,7 +786,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppTheme.spacing10),
           InfoTable(rows: rows),
         ],
       ),
@@ -1042,7 +1041,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
               icon: const Icon(Icons.restart_alt, size: 20),
@@ -1052,7 +1051,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () => _showShutdownConfirmation(context, node),
@@ -1063,7 +1062,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
               icon: const Icon(Icons.power_settings_new, size: 20),
@@ -1092,7 +1091,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
               ? 'Remove from favorites'
               : 'Add to favorites',
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         // Mute
         _ActionIconButton(
           isLoading: _isTogglingMute,
@@ -1102,14 +1101,14 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
           iconColor: node.isIgnored ? AppTheme.errorRed : context.textSecondary,
           tooltip: node.isIgnored ? 'Unmute node' : 'Mute node',
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         // Traceroute
         _TracerouteButton(
           node: node,
           isSending: _isSendingTraceroute,
           onPressed: () => _sendTraceroute(context, node),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         // Message button
         Expanded(
           child: FilledButton.icon(
@@ -1120,7 +1119,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
               backgroundColor: context.accentColor,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
             ),
           ),
@@ -1153,7 +1152,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                         : _getAvatarColor(node),
                     size: 28,
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppTheme.spacing10),
                   Flexible(
                     child: Text(
                       node.displayName,
@@ -1185,7 +1184,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
               top: BorderSide(color: context.border.withValues(alpha: 0.3)),
             ),
           ),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 12),
           child: _buildActionButtons(context, node),
         ),
       ),
@@ -1348,7 +1347,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
         if (node.lastHeard != null)
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -1357,7 +1356,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                     size: 12,
                     color: context.textTertiary,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTheme.spacing4),
                   Text(
                     'Last heard ${DateFormat('MMM d, yyyy HH:mm').format(node.lastHeard!)}',
                     style: TextStyle(fontSize: 11, color: context.textTertiary),
@@ -1400,11 +1399,11 @@ class _ActionIconButton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: context.border),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: isLoading
           ? Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               child: SizedBox(
                 width: 22,
                 height: 22,
@@ -1418,7 +1417,7 @@ class _ActionIconButton extends StatelessWidget {
               onPressed: onPressed,
               icon: Icon(icon, color: iconColor, size: 22),
               tooltip: tooltip,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               constraints: const BoxConstraints(),
             ),
     );
@@ -1449,11 +1448,11 @@ class _TracerouteButton extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: context.border),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: isSending
           ? Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               child: SizedBox(
                 width: 22,
                 height: 22,
@@ -1467,7 +1466,7 @@ class _TracerouteButton extends ConsumerWidget {
           ? Tooltip(
               message: 'Traceroute cooldown: ${cooldownRemaining}s',
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 child: SizedBox(
                   width: 22,
                   height: 22,
@@ -1505,7 +1504,7 @@ class _TracerouteButton extends ConsumerWidget {
               onPressed: onPressed,
               icon: Icon(Icons.route, color: context.textSecondary, size: 22),
               tooltip: 'Traceroute',
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               constraints: const BoxConstraints(),
             ),
     );
@@ -1532,14 +1531,14 @@ class _BadgePill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: filled ? color : color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
             Icon(icon, size: 12, color: filled ? Colors.white : color),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
           ],
           Text(
             label,
@@ -1574,14 +1573,14 @@ class _QuickStatChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 13, color: color),
-          const SizedBox(width: 5),
+          const SizedBox(width: AppTheme.spacing5),
           Text(
             value,
             style: TextStyle(

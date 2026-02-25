@@ -8,6 +8,7 @@ import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
 import '../widgets/post_actions_bar.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// A tile displaying a feed item (post from followed users).
 class FeedItemTile extends ConsumerWidget {
@@ -36,13 +37,13 @@ class FeedItemTile extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(0),
+        borderRadius: BorderRadius.circular(AppTheme.radius0),
         side: BorderSide(color: theme.dividerColor.withAlpha(50)),
       ),
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -53,7 +54,7 @@ class FeedItemTile extends ConsumerWidget {
                 onAuthorTap: onAuthorTap,
                 onMoreTap: onMoreTap,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
 
               // Post content
               if (feedItem.content.isNotEmpty)
@@ -66,17 +67,17 @@ class FeedItemTile extends ConsumerWidget {
 
               // Images (if any)
               if (feedItem.imageUrls.isNotEmpty) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 _FeedImages(imageUrls: feedItem.imageUrls),
               ],
 
               // Location tag
               if (feedItem.location != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _FeedLocationTag(location: feedItem.location!),
               ],
 
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
 
               // Actions bar - convert FeedItem to Post for the actions bar
               PostActionsBar(
@@ -122,7 +123,7 @@ class _FeedAuthorHeader extends StatelessWidget {
             size: 40,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
 
         // Name and time
         Expanded(
@@ -140,7 +141,7 @@ class _FeedAuthorHeader extends StatelessWidget {
                       ),
                     ),
                     if (authorSnapshot.isVerified) ...[
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       const SimpleVerifiedBadge(size: 16),
                     ],
                   ],
@@ -180,7 +181,7 @@ class _FeedImages extends StatelessWidget {
       return GestureDetector(
         onTap: () => FullscreenGallery.show(context, images: imageUrls),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: AspectRatio(
             aspectRatio: 16 / 9,
             child: Image.network(
@@ -207,7 +208,7 @@ class _FeedImages extends StatelessWidget {
 
     // Grid for multiple images
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
       child: AspectRatio(
         aspectRatio: 1,
         child: GridView.count(
@@ -299,7 +300,7 @@ class _FeedLocationTag extends StatelessWidget {
           size: 14,
           color: theme.colorScheme.primary.withAlpha(180),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         Text(
           location.name ?? 'Location',
           style: theme.textTheme.bodySmall?.copyWith(

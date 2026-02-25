@@ -85,11 +85,11 @@ class AlbumPageHeader extends StatelessWidget {
         children: [
           // Leading ornament line
           _LeadingOrnament(color: accentColor),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
 
           // Group icon
           _GroupIcon(groupKey: groupKey, color: accentColor),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
 
           // Title
           Expanded(
@@ -106,12 +106,12 @@ class AlbumPageHeader extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
 
           // Count badge
           _CountBadge(count: count, color: accentColor),
 
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
 
           // Trailing ornament line
           _TrailingOrnament(color: accentColor),
@@ -213,7 +213,7 @@ class _GroupIcon extends StatelessWidget {
       height: AlbumConstants.pageHeaderIconSize + 8,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
       ),
       child: Icon(
         _iconFor(groupKey),
@@ -266,7 +266,7 @@ class _CountBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
         border: Border.all(color: color.withValues(alpha: 0.2), width: 0.5),
       ),
       child: Text(

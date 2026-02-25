@@ -241,7 +241,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
                     size: 80,
                     color: Colors.white.withValues(alpha: 0.2),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     'No GPS Points',
                     style: TextStyle(
@@ -281,7 +281,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.pop(context),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,13 +433,13 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
                     ],
                   ),
                   if (route.notes != null && route.notes!.isNotEmpty) ...[
-                    SizedBox(height: 12),
+                    SizedBox(height: AppTheme.spacing12),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppTheme.spacing12),
                       decoration: BoxDecoration(
                         color: context.card,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Text(
                         route.notes!,
@@ -497,7 +497,10 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
 
     final bounds = LatLngBounds.fromPoints(points);
     _mapController.fitCamera(
-      CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(50)),
+      CameraFit.bounds(
+        bounds: bounds,
+        padding: const EdgeInsets.all(AppTheme.spacing50),
+      ),
     );
   }
 
@@ -587,7 +590,7 @@ class _NodeInfoCard extends StatelessWidget {
     return Card(
       color: context.card.withValues(alpha: 0.95),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTheme.spacing12),
         child: Row(
           children: [
             // Status indicator
@@ -601,7 +604,7 @@ class _NodeInfoCard extends StatelessWidget {
                     : context.textTertiary,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             // Node info
             Expanded(
               child: Column(
@@ -619,7 +622,7 @@ class _NodeInfoCard extends StatelessWidget {
                         ),
                       ),
                       if (isMyNode) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 6,
@@ -627,7 +630,9 @@ class _NodeInfoCard extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: AppTheme.primaryBlue.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius4,
+                            ),
                           ),
                           child: const Text(
                             'You',
@@ -641,7 +646,7 @@ class _NodeInfoCard extends StatelessWidget {
                       ],
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Tooltip(
                     message: kPresenceInferenceTooltip,
                     child: Text(
@@ -689,7 +694,7 @@ class _StatItem extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 24, color: AccentColors.blue),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Text(
           value,
           style: TextStyle(

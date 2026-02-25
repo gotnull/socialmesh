@@ -50,7 +50,7 @@ class _PostSkeletonState extends State<PostSkeleton>
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 child: Row(
                   children: [
                     _buildShimmer(
@@ -59,13 +59,13 @@ class _PostSkeletonState extends State<PostSkeleton>
                       height: 40,
                       borderRadius: 20,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildShimmer(context, width: 120, height: 14),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: AppTheme.spacing6),
                           _buildShimmer(context, width: 80, height: 12),
                         ],
                       ),
@@ -86,9 +86,9 @@ class _PostSkeletonState extends State<PostSkeleton>
                 child: Row(
                   children: [
                     _buildShimmer(context, width: 24, height: 24),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppTheme.spacing16),
                     _buildShimmer(context, width: 24, height: 24),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppTheme.spacing16),
                     _buildShimmer(context, width: 24, height: 24),
                     const Spacer(),
                     _buildShimmer(context, width: 24, height: 24),
@@ -102,7 +102,7 @@ class _PostSkeletonState extends State<PostSkeleton>
                 child: _buildShimmer(context, width: 80, height: 12),
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
 
               // Caption
               Padding(
@@ -111,13 +111,13 @@ class _PostSkeletonState extends State<PostSkeleton>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildShimmer(context, width: double.infinity, height: 12),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppTheme.spacing6),
                     _buildShimmer(context, width: 200, height: 12),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
             ],
           ),
         );

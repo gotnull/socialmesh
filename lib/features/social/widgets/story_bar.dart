@@ -182,7 +182,7 @@ class CompactStoryBar extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const SizedBox(height: 80),
+      loading: () => const SizedBox(height: AppTheme.spacing80),
       error: (error, stackTrace) => const SizedBox.shrink(),
     );
   }
@@ -205,7 +205,7 @@ class _AddStoryButton extends StatelessWidget {
         margin: const EdgeInsets.only(left: 12),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Column(
@@ -220,7 +220,7 @@ class _AddStoryButton extends StatelessWidget {
               ),
               child: const Icon(Icons.add, color: Colors.white, size: 20),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               'Add',
               style: TextStyle(color: context.textSecondary, fontSize: 10),
@@ -247,11 +247,11 @@ class _StoryThumbnail extends StatelessWidget {
         width: 56,
         height: 80,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border, width: 2),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppTheme.radius10),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -271,10 +271,10 @@ class _StoryThumbnail extends StatelessWidget {
                   top: 4,
                   right: 4,
                   child: Container(
-                    padding: const EdgeInsets.all(2),
+                    padding: const EdgeInsets.all(AppTheme.spacing2),
                     decoration: BoxDecoration(
                       color: Colors.black54,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(AppTheme.radius4),
                     ),
                     child: const Icon(
                       Icons.play_arrow,
@@ -329,13 +329,13 @@ class _StoryBarShimmer extends StatelessWidget {
                           color: context.card,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: AppTheme.spacing6),
                       Container(
                         width: 48,
                         height: 12,
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(AppTheme.radius6),
                         ),
                       ),
                     ],

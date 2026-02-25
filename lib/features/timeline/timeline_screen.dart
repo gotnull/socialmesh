@@ -383,7 +383,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           centerTitle: true,
           actions: [IcoHelpAppBarButton(topicId: 'timeline_overview')],
           slivers: [
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: AppTheme.spacing8),
+            ),
 
             // Pinned search + filter chips (consistent with Nodes, NodeDex,
             // Bug Reports)
@@ -479,7 +481,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             height: 72,
             decoration: BoxDecoration(
               color: context.card,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.radius16),
             ),
             child: Icon(
               hasActiveSearch
@@ -491,7 +493,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               color: context.textTertiary,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Text(
             hasActiveSearch
                 ? 'No events match your search'
@@ -502,7 +504,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             hasActiveSearch || hasActiveFilter
                 ? 'Try a different search or filter'
@@ -512,7 +514,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             ),
           ),
           if (hasActiveFilter && !hasActiveSearch) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             TextButton(
               onPressed: () => setState(() => _filter = TimelineFilter.all),
               child: const Text('Show all events'),
@@ -605,7 +607,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 height: 40,
                 decoration: BoxDecoration(
                   color: event.color.withAlpha(51),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Icon(event.icon, color: event.color, size: 20),
               ),
@@ -616,14 +618,14 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               ),
             ],
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           // Event content
           Expanded(
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               decoration: BoxDecoration(
                 color: context.surface,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -648,7 +650,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     ],
                   ),
                   if (event.subtitle != null) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Text(
                       event.subtitle!,
                       style: theme.textTheme.bodySmall?.copyWith(

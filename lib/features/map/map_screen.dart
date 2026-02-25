@@ -676,7 +676,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           ? context.accentColor
                           : context.textSecondary,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Text(style.label),
                   ],
                 ),
@@ -761,7 +761,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             ? context.textTertiary
                             : context.textSecondary,
                       ),
-                      SizedBox(width: 8),
+                      SizedBox(width: AppTheme.spacing8),
                       Text(
                         _isRefreshing ? 'Refreshing...' : 'Refresh positions',
                       ),
@@ -779,7 +779,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             ? context.accentColor
                             : context.textSecondary,
                       ),
-                      SizedBox(width: 8),
+                      SizedBox(width: AppTheme.spacing8),
                       Text(_showHeatmap ? 'Hide heatmap' : 'Show heatmap'),
                     ],
                   ),
@@ -797,7 +797,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             ? context.accentColor
                             : context.textSecondary,
                       ),
-                      SizedBox(width: 8),
+                      SizedBox(width: AppTheme.spacing8),
                       Text(
                         _showConnectionLines
                             ? 'Hide connection lines'
@@ -833,7 +833,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ? context.accentColor
                               : context.textTertiary,
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppTheme.spacing8),
                         const Text('1 km'),
                       ],
                     ),
@@ -851,7 +851,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ? context.accentColor
                               : context.textTertiary,
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppTheme.spacing8),
                         const Text('5 km'),
                       ],
                     ),
@@ -869,7 +869,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ? context.accentColor
                               : context.textTertiary,
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppTheme.spacing8),
                         const Text('10 km'),
                       ],
                     ),
@@ -887,7 +887,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ? context.accentColor
                               : context.textTertiary,
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppTheme.spacing8),
                         const Text('25 km'),
                       ],
                     ),
@@ -905,7 +905,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ? context.accentColor
                               : context.textTertiary,
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppTheme.spacing8),
                         const Text('All'),
                       ],
                     ),
@@ -923,7 +923,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             ? context.accentColor
                             : context.textSecondary,
                       ),
-                      SizedBox(width: 8),
+                      SizedBox(width: AppTheme.spacing8),
                       Text(
                         _showRangeCircles
                             ? 'Hide range circles'
@@ -944,7 +944,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           ? context.accentColor
                           : context.textSecondary,
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppTheme.spacing8),
                     Text(
                       _measureMode ? 'Exit measure mode' : 'Measure distance',
                     ),
@@ -957,7 +957,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 child: Row(
                   children: [
                     Icon(Icons.public, size: 18, color: context.textSecondary),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppTheme.spacing8),
                     const Text('3D Globe View'),
                   ],
                 ),
@@ -977,7 +977,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             ? context.accentColor
                             : context.textSecondary,
                       ),
-                      SizedBox(width: 8),
+                      SizedBox(width: AppTheme.spacing8),
                       Text(
                         _showTakLayer
                             ? 'Hide TAK entities'
@@ -995,7 +995,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         size: 18,
                         color: context.textSecondary,
                       ),
-                      SizedBox(width: 8),
+                      SizedBox(width: AppTheme.spacing8),
                       const Text('SA Dashboard'),
                     ],
                   ),
@@ -1011,7 +1011,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       size: 18,
                       color: context.textSecondary,
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppTheme.spacing8),
                     const Text('Help'),
                   ],
                 ),
@@ -1025,7 +1025,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       size: 18,
                       color: context.textSecondary,
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppTheme.spacing8),
                     const Text('Settings'),
                   ],
                 ),
@@ -1370,7 +1370,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             ),
                             decoration: BoxDecoration(
                               color: Colors.black.withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
                             ),
                             child: Text(
                               _mapStyle == MapTileStyle.satellite
@@ -1447,7 +1449,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           ),
                           decoration: BoxDecoration(
                             color: AppTheme.warningYellow,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius20,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -1457,7 +1461,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                 size: 16,
                                 color: Colors.black,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppTheme.spacing8),
                               Text(
                                 _measureStart == null
                                     ? 'Tap to set start point'
@@ -1468,7 +1472,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                   color: Colors.black,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppTheme.spacing8),
                               GestureDetector(
                                 onTap: () => setState(() {
                                   _measureMode = false;
@@ -1679,7 +1683,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ),
                               decoration: BoxDecoration(
                                 color: context.card.withValues(alpha: 0.9),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius20,
+                                ),
                                 border: Border.all(
                                   color: context.border.withValues(alpha: 0.5),
                                 ),
@@ -1696,7 +1702,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                     ),
                                   ),
                                   if (takCount > 0) ...[
-                                    const SizedBox(width: 6),
+                                    const SizedBox(width: AppTheme.spacing6),
                                     Text(
                                       '\u2022 $takCount entities',
                                       style: TextStyle(
@@ -1706,7 +1712,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                       ),
                                     ),
                                   ],
-                                  const SizedBox(width: 4),
+                                  const SizedBox(width: AppTheme.spacing4),
                                   Icon(
                                     Icons.chevron_right,
                                     size: 16,
@@ -1836,7 +1842,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             '${waypoint.position.latitude.toStringAsFixed(6)}, ${waypoint.position.longitude.toStringAsFixed(6)}',
             style: context.bodySecondaryStyle?.copyWith(
@@ -1923,7 +1929,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     final cameraFit = CameraFit.bounds(
       bounds: bounds,
-      padding: const EdgeInsets.all(50),
+      padding: const EdgeInsets.all(AppTheme.spacing50),
     );
 
     final camera = cameraFit.fit(_mapController.camera);
@@ -1937,7 +1943,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -1954,7 +1960,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 color: context.accentColor,
               ),
             ),
-            SizedBox(height: 24),
+            SizedBox(height: AppTheme.spacing24),
             Text(
               'No Nodes with GPS',
               style: TextStyle(
@@ -1963,7 +1969,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 color: context.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               totalNodes > 0
                   ? '$totalNodes nodes discovered but none have\nreported GPS position yet.'
@@ -1973,7 +1979,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 24),
+            SizedBox(height: AppTheme.spacing24),
             ElevatedButton.icon(
               onPressed: _isRefreshing ? null : _refreshPositions,
               icon: _isRefreshing
@@ -1990,11 +1996,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   vertical: 12,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
             ),
-            SizedBox(height: 12),
+            SizedBox(height: AppTheme.spacing12),
             Text(
               'Position broadcasts can take up to 15 minutes.\nTap to request immediately.',
               style: context.bodySmallStyle?.copyWith(
@@ -2127,7 +2133,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: context.card.withValues(alpha: 0.85),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
                 border: Border.all(
                   color: context.accentColor.withValues(alpha: 0.3),
                 ),
@@ -2406,11 +2412,11 @@ class _NodeListPanel extends StatelessWidget {
           children: [
             // Header with close button
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 8, 0),
               child: Row(
                 children: [
                   Icon(Icons.list, size: 20, color: context.accentColor),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppTheme.spacing8),
                   Expanded(
                     child: Text(
                       activeTab == 0 ? 'Nodes' : 'Entities',
@@ -2480,7 +2486,7 @@ class _NodeListPanel extends StatelessWidget {
             // Search field
             if (activeTab == 0)
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 child: TextField(
                   controller: searchController,
                   style: TextStyle(color: context.textPrimary, fontSize: 14),
@@ -2514,7 +2520,7 @@ class _NodeListPanel extends StatelessWidget {
                       vertical: 8,
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                       borderSide: BorderSide.none,
                     ),
                   ),
@@ -2563,7 +2569,7 @@ class _NodeListPanel extends StatelessWidget {
               ),
             if (activeTab == 1)
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 child: TextField(
                   controller: takSearchController,
                   style: TextStyle(color: context.textPrimary, fontSize: 14),
@@ -2597,7 +2603,7 @@ class _NodeListPanel extends StatelessWidget {
                       vertical: 8,
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                       borderSide: BorderSide.none,
                     ),
                   ),
@@ -2630,7 +2636,7 @@ class _NodeListPanel extends StatelessWidget {
                             size: 48,
                             color: context.textTertiary.withValues(alpha: 0.5),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: AppTheme.spacing12),
                           Text(
                             query.isEmpty
                                 ? 'No entities'
@@ -2773,7 +2779,7 @@ class _NodeListItem extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppTheme.spacing10),
               // Node info
               Expanded(
                 child: Column(
@@ -2797,7 +2803,7 @@ class _NodeListItem extends StatelessWidget {
                           ),
                         ),
                         if (isMyNode) ...[
-                          SizedBox(width: 6),
+                          SizedBox(width: AppTheme.spacing6),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 4,
@@ -2805,7 +2811,9 @@ class _NodeListItem extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: context.accentColor.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(3),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius3,
+                              ),
                             ),
                             child: Text(
                               'YOU',
@@ -2819,7 +2827,7 @@ class _NodeListItem extends StatelessWidget {
                         ],
                       ],
                     ),
-                    SizedBox(height: 2),
+                    SizedBox(height: AppTheme.spacing2),
                     Row(
                       children: [
                         // Presence status
@@ -2833,7 +2841,7 @@ class _NodeListItem extends StatelessWidget {
                             shape: BoxShape.circle,
                           ),
                         ),
-                        SizedBox(width: 4),
+                        SizedBox(width: AppTheme.spacing4),
                         Tooltip(
                           message: kPresenceInferenceTooltip,
                           child: Text(
@@ -2844,7 +2852,7 @@ class _NodeListItem extends StatelessWidget {
                           ),
                         ),
                         if (nodeWithPos.isStale) ...[
-                          SizedBox(width: 6),
+                          SizedBox(width: AppTheme.spacing6),
                           Text(
                             '• Last known',
                             style: TextStyle(
@@ -2869,7 +2877,7 @@ class _NodeListItem extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: context.background,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Text(
                     _formatDistance(distance!),
@@ -2880,7 +2888,7 @@ class _NodeListItem extends StatelessWidget {
                     ),
                   ),
                 ),
-              SizedBox(width: 4),
+              SizedBox(width: AppTheme.spacing4),
               // Arrow indicator
               Icon(
                 Icons.chevron_right,
@@ -2914,10 +2922,10 @@ class _FilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.card.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -2934,7 +2942,7 @@ class _FilterBar extends StatelessWidget {
           Row(
             children: [
               Icon(Icons.filter_alt, size: 16, color: context.accentColor),
-              SizedBox(width: 8),
+              SizedBox(width: AppTheme.spacing8),
               Text(
                 'Filter Nodes',
                 style: TextStyle(
@@ -2952,7 +2960,7 @@ class _FilterBar extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -2970,7 +2978,7 @@ class _FilterBar extends StatelessWidget {
                     color: isSelected
                         ? context.accentColor.withValues(alpha: 0.2)
                         : context.background,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppTheme.radius20),
                     border: Border.all(
                       color: isSelected ? context.accentColor : context.border,
                       width: isSelected ? 1.5 : 1,
@@ -3033,10 +3041,10 @@ class _MeasurementCard extends StatelessWidget {
     final distance = _calculateDistance();
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.card.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(
           color: AppTheme.warningYellow.withValues(alpha: 0.5),
         ),
@@ -3063,7 +3071,7 @@ class _MeasurementCard extends StatelessWidget {
               color: AppTheme.warningYellow,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3153,7 +3161,7 @@ class _PanelTab extends StatelessWidget {
                           : context.textSecondary,
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTheme.spacing4),
                   Text(
                     '$count',
                     style: TextStyle(
@@ -3173,7 +3181,7 @@ class _PanelTab extends StatelessWidget {
               height: 2,
               decoration: BoxDecoration(
                 color: isActive ? context.accentColor : Colors.transparent,
-                borderRadius: BorderRadius.circular(1),
+                borderRadius: BorderRadius.circular(AppTheme.radius1),
               ),
             ),
           ],
@@ -3225,7 +3233,7 @@ class _TakEntityListItem extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppTheme.spacing10),
               // Entity info
               Expanded(
                 child: Column(
@@ -3242,7 +3250,7 @@ class _TakEntityListItem extends StatelessWidget {
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Row(
                       children: [
                         Container(
@@ -3255,7 +3263,7 @@ class _TakEntityListItem extends StatelessWidget {
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Text(
                           isStale ? 'Stale' : 'Active',
                           style: TextStyle(
@@ -3265,7 +3273,7 @@ class _TakEntityListItem extends StatelessWidget {
                                 : AppTheme.successGreen,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 4,
@@ -3273,7 +3281,9 @@ class _TakEntityListItem extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: affiliationColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(3),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius3,
+                            ),
                           ),
                           child: Text(
                             affiliation.label,
@@ -3289,7 +3299,7 @@ class _TakEntityListItem extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
               Icon(
                 Icons.my_location,
                 size: 16,
@@ -3333,10 +3343,10 @@ class _TakEntityInfoCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTapDetail,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: context.card.withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(color: affiliationColor.withValues(alpha: 0.3)),
           boxShadow: [
             BoxShadow(
@@ -3355,7 +3365,7 @@ class _TakEntityInfoCard extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: affiliationColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(
                     color: affiliationColor.withValues(alpha: 0.4),
                   ),
@@ -3367,7 +3377,7 @@ class _TakEntityInfoCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -3381,7 +3391,7 @@ class _TakEntityInfoCard extends StatelessWidget {
                       color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     '${event.typeDescription}  \u2022  '
                     '${event.lat.toStringAsFixed(4)}, '
@@ -3391,7 +3401,7 @@ class _TakEntityInfoCard extends StatelessWidget {
                       color: context.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Row(
                     children: [
                       Container(
@@ -3401,7 +3411,7 @@ class _TakEntityInfoCard extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: affiliationColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(AppTheme.radius6),
                           border: Border.all(
                             color: affiliationColor.withValues(alpha: 0.4),
                           ),
@@ -3415,7 +3425,7 @@ class _TakEntityInfoCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 6,
@@ -3424,7 +3434,7 @@ class _TakEntityInfoCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: (isStale ? Colors.red : Colors.green)
                               .withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(AppTheme.radius6),
                         ),
                         child: Text(
                           isStale ? 'STALE' : 'ACTIVE',
@@ -3435,7 +3445,7 @@ class _TakEntityInfoCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Text(
                         age,
                         style: TextStyle(
@@ -3462,7 +3472,7 @@ class _TakEntityInfoCard extends StatelessWidget {
                       color: isTracked
                           ? affiliationColor.withValues(alpha: 0.15)
                           : context.card.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       border: Border.all(
                         color: affiliationColor.withValues(alpha: 0.3),
                       ),
@@ -3475,7 +3485,7 @@ class _TakEntityInfoCard extends StatelessWidget {
                           size: 12,
                           color: affiliationColor,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Text(
                           isTracked ? 'Tracked' : 'Track',
                           style: TextStyle(
@@ -3488,7 +3498,7 @@ class _TakEntityInfoCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -3532,7 +3542,7 @@ class _TakEntityInfoCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             Icon(Icons.chevron_right, size: 20, color: context.textTertiary),
           ],
         ),

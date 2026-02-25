@@ -171,7 +171,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
   ) {
     if (isLoading) {
       return [
-        const SliverToBoxAdapter(child: SizedBox(height: 8)),
+        const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing8)),
         SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, index) => Skeletonizer(
@@ -219,7 +219,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
   }) {
     return [
       // Top padding below glass app bar
-      const SliverToBoxAdapter(child: SizedBox(height: 8)),
+      const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing8)),
 
       // Stats summary — not pinned, sizes itself naturally
       if (isLoading)
@@ -533,7 +533,7 @@ class _NodeDexStatsCard extends StatelessWidget {
     final title = stats.explorerTitle;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 4, 16, 4),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
@@ -545,7 +545,7 @@ class _NodeDexStatsCard extends StatelessWidget {
               context.accentColor.withValues(alpha: 0.03),
             ],
           ),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppTheme.radius14),
           border: Border.all(
             color: context.accentColor.withValues(alpha: 0.15),
             width: 0.5,
@@ -562,7 +562,7 @@ class _NodeDexStatsCard extends StatelessWidget {
                     size: 14,
                     color: context.accentColor,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppTheme.spacing6),
                   Flexible(
                     child: Text(
                       title.displayLabel,
@@ -591,18 +591,18 @@ class _NodeDexStatsCard extends StatelessWidget {
                     icon: Icons.hexagon_outlined,
                     value: stats.totalNodes.toString(),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   _CompactStat(
                     icon: Icons.public_outlined,
                     value: stats.totalRegions.toString(),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   _CompactStat(
                     icon: Icons.repeat,
                     value: _compactNumber(stats.totalEncounters),
                   ),
                   if (stats.longestDistance != null) ...[
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     _CompactStat(
                       icon: Icons.straighten,
                       value: _formatDistance(stats.longestDistance),
@@ -644,7 +644,7 @@ class _CompactStat extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 12, color: context.textTertiary),
-        const SizedBox(width: 3),
+        const SizedBox(width: AppTheme.spacing3),
         Text(
           value,
           style: TextStyle(
@@ -720,7 +720,7 @@ class _SocialTagFilterChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? color.withValues(alpha: 0.15) : context.card,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppTheme.radius20),
           border: Border.all(
             color: isSelected
                 ? color.withValues(alpha: 0.4)
@@ -736,7 +736,7 @@ class _SocialTagFilterChip extends StatelessWidget {
               size: 13,
               color: isSelected ? color : context.textSecondary,
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             Text(
               tag.displayLabel,
               style: TextStyle(
@@ -746,14 +746,14 @@ class _SocialTagFilterChip extends StatelessWidget {
               ),
             ),
             if (count > 0) ...[
-              const SizedBox(width: 5),
+              const SizedBox(width: AppTheme.spacing5),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? color.withValues(alpha: 0.25)
                       : context.border.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Text(
                   count.toString(),
@@ -798,7 +798,7 @@ class _TraitFilterChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? color.withValues(alpha: 0.15) : context.card,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppTheme.radius20),
           border: Border.all(
             color: isSelected
                 ? color.withValues(alpha: 0.4)
@@ -810,7 +810,7 @@ class _TraitFilterChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             TraitIcon(trait: trait, size: 13),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             Text(
               trait.displayLabel,
               style: TextStyle(
@@ -820,14 +820,14 @@ class _TraitFilterChip extends StatelessWidget {
               ),
             ),
             if (count > 0) ...[
-              const SizedBox(width: 5),
+              const SizedBox(width: AppTheme.spacing5),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? color.withValues(alpha: 0.25)
                       : context.border.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Text(
                   count.toString(),
@@ -874,7 +874,7 @@ class _NodeDexSortButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppTheme.radius20),
           border: Border.all(
             color: context.border.withValues(alpha: 0.3),
             width: 0.5,
@@ -884,7 +884,7 @@ class _NodeDexSortButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.sort, size: 14, color: context.textSecondary),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             Text(
               _sortLabel,
               style: TextStyle(
@@ -969,7 +969,7 @@ class _NodeDexSortButton extends StatelessWidget {
             size: 18,
             color: isSelected ? context.accentColor : context.textSecondary,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppTheme.spacing10),
           Text(
             label,
             style: TextStyle(
@@ -1038,7 +1038,7 @@ class _NodeDexListTile extends ConsumerWidget {
                   trait: traitResult.primary,
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: AppTheme.spacing14),
 
               // Name, ID, and metadata
               Expanded(
@@ -1060,7 +1060,7 @@ class _NodeDexListTile extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppTheme.spacing6),
                         Text(
                           hexId,
                           style: TextStyle(
@@ -1072,7 +1072,7 @@ class _NodeDexListTile extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
 
                     // Metadata row: trait + stats + patina indicator
                     Row(
@@ -1091,7 +1091,7 @@ class _NodeDexListTile extends ConsumerWidget {
                                   ),
                                 ),
                               if (entry.socialTag != null) ...[
-                                const SizedBox(width: 6),
+                                const SizedBox(width: AppTheme.spacing6),
                                 Flexible(
                                   flex: 0,
                                   child: SocialTagBadge(
@@ -1101,7 +1101,7 @@ class _NodeDexListTile extends ConsumerWidget {
                                 ),
                               ],
                               if (disclosure.showPatinaStamp) ...[
-                                const SizedBox(width: 6),
+                                const SizedBox(width: AppTheme.spacing6),
                                 Flexible(
                                   flex: 0,
                                   child: PatinaIndicator(
@@ -1114,7 +1114,7 @@ class _NodeDexListTile extends ConsumerWidget {
                               ],
                               if (disclosure.showPrimaryTrait &&
                                   trustResult.level != TrustLevel.unknown) ...[
-                                const SizedBox(width: 6),
+                                const SizedBox(width: AppTheme.spacing6),
                                 Flexible(
                                   flex: 0,
                                   child: TrustIndicator(
@@ -1126,7 +1126,7 @@ class _NodeDexListTile extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppTheme.spacing6),
                         // Encounter count
                         _MetricChip(
                           icon: Icons.repeat,
@@ -1134,7 +1134,7 @@ class _NodeDexListTile extends ConsumerWidget {
                           tooltip: '${entry.encounterCount} encounters',
                         ),
                         if (entry.maxDistanceSeen != null) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: AppTheme.spacing6),
                           _MetricChip(
                             icon: Icons.straighten,
                             value: _shortDistance(entry.maxDistanceSeen!),
@@ -1150,7 +1150,7 @@ class _NodeDexListTile extends ConsumerWidget {
 
                     // User note preview
                     if (entry.userNote != null) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.spacing4),
                       Text(
                         entry.userNote!,
                         style: TextStyle(
@@ -1167,7 +1167,7 @@ class _NodeDexListTile extends ConsumerWidget {
               ),
 
               // Chevron
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
               Icon(
                 Icons.chevron_right,
                 size: 20,
@@ -1268,7 +1268,7 @@ class _DiscoveryAgeBadge extends StatelessWidget {
             size: 10,
             color: context.textTertiary.withValues(alpha: 0.5),
           ),
-          const SizedBox(width: 3),
+          const SizedBox(width: AppTheme.spacing3),
           Text(
             label,
             style: TextStyle(
@@ -1312,7 +1312,7 @@ class _MetricChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 11, color: context.textTertiary),
-          const SizedBox(width: 3),
+          const SizedBox(width: AppTheme.spacing3),
           Text(
             value,
             style: TextStyle(
@@ -1385,7 +1385,6 @@ class _StaggeredListTileState extends State<_StaggeredListTile>
     // renders, preventing Future.delayed from firing on a disposed widget.
     final delay = math.min(widget.index * 40, 400);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
       if (delay == 0) {
         _controller.forward();
         _hasAnimated = true;
@@ -1532,7 +1531,7 @@ class _EmptyState extends StatelessWidget {
               size: 56,
               color: context.textTertiary.withValues(alpha: 0.4),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               title,
               style: TextStyle(
@@ -1542,7 +1541,7 @@ class _EmptyState extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               subtitle,
               style: TextStyle(

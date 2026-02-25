@@ -256,7 +256,9 @@ class _EnvironmentMetricsLogScreenState
 
             return [
               // Top padding below the glass app bar
-              const SliverToBoxAdapter(child: SizedBox(height: 8)),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppTheme.spacing8),
+              ),
 
               // Pinned search + filter chips
               SliverPersistentHeader(
@@ -330,7 +332,9 @@ class _EnvironmentMetricsLogScreenState
                             height: 72,
                             decoration: BoxDecoration(
                               color: context.card,
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius16,
+                              ),
                             ),
                             child: Icon(
                               Icons.thermostat,
@@ -338,7 +342,7 @@ class _EnvironmentMetricsLogScreenState
                               color: context.textTertiary,
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppTheme.spacing24),
                           Text(
                             _hasDateFilter ||
                                     _activeFilter != _MetricFilter.all ||
@@ -351,7 +355,7 @@ class _EnvironmentMetricsLogScreenState
                               color: context.textSecondary,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppTheme.spacing8),
                           Text(
                             _hasDateFilter ||
                                     _activeFilter != _MetricFilter.all ||
@@ -367,7 +371,7 @@ class _EnvironmentMetricsLogScreenState
                           if (_activeFilter != _MetricFilter.all ||
                               _searchQuery.isNotEmpty ||
                               _hasDateFilter) ...[
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppTheme.spacing16),
                             FilledButton.icon(
                               onPressed: () {
                                 _searchController.clear();
@@ -395,7 +399,8 @@ class _EnvironmentMetricsLogScreenState
                   ),
                   sliver: SliverList.separated(
                     itemCount: filtered.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppTheme.spacing8),
                     itemBuilder: (context, index) {
                       final log = filtered[index];
                       final nodeName =
@@ -441,7 +446,7 @@ class _EnvironmentMetricsCard extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTheme.spacing12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -449,7 +454,7 @@ class _EnvironmentMetricsCard extends StatelessWidget {
             Row(
               children: [
                 Icon(Icons.thermostat, size: 16, color: context.accentColor),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   child: Text(
                     nodeName,
@@ -466,7 +471,7 @@ class _EnvironmentMetricsCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Metric chips — single-line pill layout matching SectionFilterChip
             Wrap(
@@ -602,7 +607,7 @@ class _EnvironmentMetricsChart extends StatelessWidget {
 
     // Legend is now pinned in _ChartLegendHeaderDelegate above.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -722,7 +727,7 @@ class _EnvironmentMetricsChart extends StatelessWidget {
           ),
 
           // Bottom spacing (readings count is now in the pinned legend header)
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
         ],
       ),
     );
@@ -784,7 +789,7 @@ class _LegendItem extends StatelessWidget {
           height: 10,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         Text(
           label,
           style: TextStyle(fontSize: 12, color: context.textSecondary),
@@ -887,14 +892,14 @@ class _MetricChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             label,
             style: TextStyle(

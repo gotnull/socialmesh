@@ -93,7 +93,6 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
   void _startReconnectWatchdog() {
     _cancelReconnectWatchdog();
     _reconnectWatchdog = Timer(_kReconnectTimeout, () {
-      if (!mounted) return;
       AppLogging.connection(
         '📡 TopStatusBanner: Reconnect watchdog fired after '
         '${_kReconnectTimeout.inSeconds}s — cancelling auto-reconnect',
@@ -453,7 +452,7 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
                               ],
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppTheme.spacing12),
                           Expanded(
                             child: Text(
                               message,
@@ -494,7 +493,7 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: AppTheme.spacing4),
                             Icon(
                               Icons.chevron_right_rounded,
                               size: 18,
@@ -509,7 +508,7 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: AppTheme.spacing4),
                             Icon(
                               Icons.chevron_right_rounded,
                               size: 18,
@@ -524,7 +523,7 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: AppTheme.spacing4),
                             Icon(
                               Icons.chevron_right_rounded,
                               size: 18,
@@ -540,7 +539,7 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: AppTheme.spacing4),
                             Icon(
                               Icons.chevron_right_rounded,
                               size: 18,

@@ -237,7 +237,7 @@ class _StoryAvatarState extends State<StoryAvatar>
 
             // Name label with marquee for long names
             if (widget.showName) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
               ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: totalSize),
                 child: AutoScrollText(
@@ -289,7 +289,7 @@ class SmallStoryAvatar extends StatelessWidget {
             size: size,
             backgroundColor: context.cardAlt,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Text(
               displayName ?? 'User',

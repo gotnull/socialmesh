@@ -285,7 +285,7 @@ class _PremiumScanningIndicator extends StatelessWidget {
         final pulseValue = pulseController.value;
 
         return ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppTheme.radius24),
           child: BackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
@@ -299,7 +299,7 @@ class _PremiumScanningIndicator extends StatelessWidget {
                     context.surface.withValues(alpha: 0.6),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(AppTheme.radius24),
                 border: Border.all(
                   color: context.accentColor.withValues(
                     alpha: 0.3 + (pulseValue * 0.2),
@@ -326,7 +326,7 @@ class _PremiumScanningIndicator extends StatelessWidget {
                 children: [
                   // Animated scanning icon
                   _ScanningOrb(pulseValue: pulseValue),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,7 +340,7 @@ class _PremiumScanningIndicator extends StatelessWidget {
                           letterSpacing: 0.3,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         nodeCount == 0
                             ? 'Searching for nodes...'
@@ -789,12 +789,12 @@ class _PremiumCardState extends State<_PremiumCard>
     final signalQuality = _getSignalQuality(rssi);
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(AppTheme.radius24),
       child: BackdropFilter(
         filter: ui.ImageFilter.blur(sigmaX: 25, sigmaY: 25),
         child: Container(
           width: 290,
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(AppTheme.spacing18),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -806,7 +806,7 @@ class _PremiumCardState extends State<_PremiumCard>
               ],
               stops: const [0.0, 0.5, 1.0],
             ),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppTheme.radius24),
             border: Border.all(
               color: context.accentColor.withValues(alpha: 0.35),
               width: 1.5,
@@ -845,14 +845,14 @@ class _PremiumCardState extends State<_PremiumCard>
                     shortName: shortName,
                     signalQuality: signalQuality,
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: AppTheme.spacing14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Discovery badge with animation
                         _DiscoveryBadge(),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppTheme.spacing8),
                         Text(
                           displayName,
                           style: TextStyle(
@@ -869,7 +869,7 @@ class _PremiumCardState extends State<_PremiumCard>
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppTheme.spacing14),
               // Info chips row
               Row(
                 children: [
@@ -1137,7 +1137,7 @@ class _DiscoveryBadgeState extends State<_DiscoveryBadge>
                 context.accentColor.withValues(alpha: 0.1),
               ],
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(
               color: context.accentColor.withValues(
                 alpha: 0.4 * _pulseAnimation.value,
@@ -1175,7 +1175,7 @@ class _DiscoveryBadgeState extends State<_DiscoveryBadge>
                   ],
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Text(
                 'DISCOVERED',
                 style: TextStyle(
@@ -1213,14 +1213,14 @@ class _InfoChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: context.background.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
         border: Border.all(color: context.border.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: color.withValues(alpha: 0.7)),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Text(
             label,
             style: TextStyle(
@@ -1273,7 +1273,7 @@ class _SignalChipState extends State<_SignalChip>
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: widget.signalQuality.color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
         border: Border.all(
           color: widget.signalQuality.color.withValues(alpha: 0.3),
         ),
@@ -1287,7 +1287,7 @@ class _SignalChipState extends State<_SignalChip>
             color: widget.signalQuality.color,
             strength: widget.signalQuality.strength,
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Text(
             '${widget.rssi} dBm',
             style: TextStyle(
@@ -1337,7 +1337,7 @@ class _AnimatedSignalBars extends StatelessWidget {
                 color: isActive
                     ? color.withValues(alpha: 0.9)
                     : color.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(1),
+                borderRadius: BorderRadius.circular(AppTheme.radius1),
               ),
             );
           }),
@@ -1441,7 +1441,7 @@ class _PremiumNodeAvatarState extends State<_PremiumNodeAvatar>
                     ],
                     stops: const [0.0, 0.5, 1.0],
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTheme.radius16),
                   boxShadow: [
                     BoxShadow(
                       color: context.accentColor.withValues(
@@ -1466,7 +1466,7 @@ class _PremiumNodeAvatarState extends State<_PremiumNodeAvatar>
                 height: 52,
                 decoration: BoxDecoration(
                   color: context.accentColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppTheme.radius14),
                   border: Border.all(
                     color: context.accentColor.withValues(alpha: 0.5),
                     width: 1.5,

@@ -10,6 +10,7 @@ import '../../../providers/connectivity_providers.dart';
 import '../../../providers/subscription_providers.dart';
 import '../../../services/subscription/cloud_sync_entitlement_service.dart';
 import '../../../utils/snackbar.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Soft paywall for cloud sync feature
 /// Shows subscription options when user doesn't have access
@@ -149,7 +150,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -164,13 +165,13 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
             margin: const EdgeInsets.only(bottom: 24),
             decoration: BoxDecoration(
               color: theme.colorScheme.outline.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(AppTheme.radius2),
             ),
           ),
 
           // Icon
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: theme.colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
@@ -181,7 +182,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
               color: theme.colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Title
           Text(
@@ -190,7 +191,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
 
           // Description
           Text(
@@ -200,7 +201,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           // Features — list actual premium sync types
           _buildFeatureItem(
@@ -220,7 +221,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
             'Works fully offline without it',
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           // Loading or error state
           if (_isLoading)
@@ -234,7 +235,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
             // Product buttons
             for (final product in _products) _buildProductButton(product),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Restore button
             TextButton(
@@ -243,7 +244,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
             ),
           ],
 
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
 
           // Terms
           Text(
@@ -265,7 +266,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
       child: Row(
         children: [
           Icon(icon, size: 20, color: theme.colorScheme.primary),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Text(text, style: theme.textTheme.bodyMedium),
         ],
       ),
@@ -368,9 +369,9 @@ class CloudSyncGate extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.lock_outline, size: 48, color: theme.colorScheme.outline),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text('Cloud Sync Required', style: theme.textTheme.titleMedium),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           TextButton(
             onPressed: () => showCloudSyncPaywall(context),
             child: const Text('Unlock Cloud Sync'),
@@ -400,7 +401,7 @@ class CloudSyncExpiredBanner extends ConsumerWidget {
       child: Row(
         children: [
           Icon(Icons.warning_amber, color: theme.colorScheme.onErrorContainer),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Text(
               'Your Cloud Sync subscription has expired. Your data is read-only.',
@@ -439,7 +440,7 @@ class CloudSyncGracePeriodBanner extends ConsumerWidget {
       child: Row(
         children: [
           Icon(Icons.payment, color: theme.colorScheme.onTertiaryContainer),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Text(
               'There\'s an issue with your payment. Please update your payment method.',

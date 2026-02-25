@@ -101,7 +101,10 @@ class DrawerScreenAppBar extends StatelessWidget
                 ),
               ),
             ),
-            if (titleBadge != null) ...[const SizedBox(width: 8), titleBadge!],
+            if (titleBadge != null) ...[
+              const SizedBox(width: AppTheme.spacing8),
+              titleBadge!,
+            ],
           ],
         ),
         if (hasSubtitle)
@@ -130,7 +133,7 @@ class DrawerScreenAppBar extends StatelessWidget
           icon: Icon(Icons.more_vert, color: context.textSecondary),
           color: context.surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
           ),
           onSelected: (index) {
             HapticFeedback.selectionClick();
@@ -149,7 +152,7 @@ class DrawerScreenAppBar extends StatelessWidget
                         ? AppTheme.errorRed
                         : context.textSecondary,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Text(
                     action.label,
                     style: TextStyle(
@@ -212,7 +215,7 @@ class TitleBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: badgeColor.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
         border: Border.all(color: badgeColor.withValues(alpha: 0.5)),
       ),
       child: Text(

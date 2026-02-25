@@ -52,7 +52,7 @@ class AirQualityLogScreen extends ConsumerWidget {
             }
             final sortedLogs = logs.reversed.toList();
             return SliverPadding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) => _AirQualityCard(log: sortedLogs[index]),
@@ -76,7 +76,7 @@ class AirQualityLogScreen extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.air, size: 64, color: context.textTertiary),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             message,
             style: context.titleSmallStyle?.copyWith(
@@ -100,10 +100,10 @@ class _AirQualityCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +121,7 @@ class _AirQualityCard extends StatelessWidget {
                 _AqiIndicator(pm25: log.pm25Standard!),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // PM values
           Text(
@@ -132,7 +132,7 @@ class _AirQualityCard extends StatelessWidget {
               color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Row(
             children: [
               if (log.pm10Standard != null)
@@ -157,7 +157,7 @@ class _AirQualityCard extends StatelessWidget {
           // Environmental PM
           if (log.pm10Environmental != null ||
               log.pm25Environmental != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               'Particulate Matter (Environmental)',
               style: TextStyle(
@@ -166,7 +166,7 @@ class _AirQualityCard extends StatelessWidget {
                 color: context.textSecondary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Row(
               children: [
                 if (log.pm10Environmental != null)
@@ -196,9 +196,9 @@ class _AirQualityCard extends StatelessWidget {
 
           // Particle counts
           if (log.particles03um != null || log.particles05um != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             const Divider(color: Colors.white12, height: 1),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               'Particle Counts (per 0.1L)',
               style: TextStyle(
@@ -207,7 +207,7 @@ class _AirQualityCard extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Wrap(
               spacing: 12,
               runSpacing: 8,
@@ -230,9 +230,9 @@ class _AirQualityCard extends StatelessWidget {
 
           // CO2
           if (log.co2 != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             const Divider(color: Colors.white12, height: 1),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _Co2Indicator(ppm: log.co2!),
           ],
         ],
@@ -269,7 +269,7 @@ class _AqiIndicator extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Text(
         _getAqiLabel(),
@@ -298,12 +298,12 @@ class _PmTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(AppTheme.spacing8),
       decoration: BoxDecoration(
         color: highlight
             ? AccentColors.teal.withValues(alpha: 0.1)
             : Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: highlight
             ? Border.all(color: AccentColors.teal.withValues(alpha: 0.3))
             : null,
@@ -350,7 +350,7 @@ class _ParticleChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
       ),
       child: Text(
         '$label: $count',
@@ -388,7 +388,7 @@ class _Co2Indicator extends StatelessWidget {
     return Row(
       children: [
         Icon(Icons.co2, color: color, size: 24),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

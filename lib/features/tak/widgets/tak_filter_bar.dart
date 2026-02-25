@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/tak_filter_provider.dart';
 import '../utils/cot_affiliation.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Horizontal filter bar for TAK entities.
 ///
@@ -61,12 +62,12 @@ class _TakFilterBarState extends ConsumerState<TakFilterBar> {
                       filter.affiliations.contains(aff),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   // Stale mode toggle
                   _buildStaleModeChip(context, filter.staleMode),
                   // Clear all button
                   if (filter.isActive) ...[
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     ActionChip(
                       avatar: Icon(
                         Icons.clear_all,
@@ -85,7 +86,7 @@ class _TakFilterBarState extends ConsumerState<TakFilterBar> {
                 ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             // Search field
             SizedBox(
               height: 36,
@@ -128,19 +129,19 @@ class _TakFilterBarState extends ConsumerState<TakFilterBar> {
                   isDense: true,
                   counter: const SizedBox.shrink(),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     borderSide: BorderSide(
                       color: theme.colorScheme.outline.withValues(alpha: 0.2),
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     borderSide: BorderSide(
                       color: theme.colorScheme.outline.withValues(alpha: 0.2),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     borderSide: BorderSide(
                       color: theme.colorScheme.primary.withValues(alpha: 0.5),
                     ),
@@ -155,7 +156,7 @@ class _TakFilterBarState extends ConsumerState<TakFilterBar> {
                 },
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
           ],
         ),
       ),

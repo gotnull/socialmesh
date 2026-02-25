@@ -79,7 +79,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
       children: [
         // Header (DragPill is added by AppBottomSheet.showScrollable)
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 8, 20, 16),
           child: Row(
             children: [
               Container(
@@ -89,7 +89,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
                   color: isConnected
                       ? context.accentColor.withValues(alpha: 0.15)
                       : context.background,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Icon(
                   Icons.router,
@@ -99,7 +99,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
                   size: 24,
                 ),
               ),
-              SizedBox(width: 16),
+              SizedBox(width: AppTheme.spacing16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +112,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
                         color: context.textPrimary,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: AppTheme.spacing4),
                     Row(
                       children: [
                         Container(
@@ -127,7 +127,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
                             shape: BoxShape.circle,
                           ),
                         ),
-                        SizedBox(width: 6),
+                        SizedBox(width: AppTheme.spacing6),
                         Text(
                           _getStatusText(connectionState, autoReconnectState),
                           style: TextStyle(
@@ -156,22 +156,22 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
         Expanded(
           child: ListView(
             controller: widget.scrollController,
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppTheme.spacing20),
             children: [
               // Connection Details
               _buildSectionTitle(context, 'Connection Details'),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _DeviceInfoCard(
                 device: connectedDevice,
                 connectionState: connectionState,
                 batteryLevel: batteryLevel,
                 nodeLongName: myNode?.longName,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Quick Actions
               _buildSectionTitle(context, 'Quick Actions'),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _ActionTile(
                 icon: Icons.tune_outlined,
                 title: 'Device Config',
@@ -224,27 +224,27 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
               if (MeshCoreConsole.shouldShow(
                 ref.watch(meshProtocolTypeProvider),
               )) ...[
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 _buildSectionTitle(context, 'Developer Tools'),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 // MeshCore battery refresh (debug-only)
                 _MeshCoreBatteryRefreshTile(enabled: actionsEnabled),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 const MeshCoreConsole(),
               ],
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Connection Actions
               if (isConnected) ...[
                 _buildSectionTitle(context, 'Connection'),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 _buildDisconnectButton(context),
               ] else if (!isReconnecting) ...[
                 _buildSectionTitle(context, 'Connection'),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 _buildScanButton(context),
               ],
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
             ],
           ),
         ),
@@ -315,7 +315,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
                   : AppTheme.errorRed,
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
           ),
         ),
@@ -339,7 +339,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
             backgroundColor: context.accentColor,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
           ),
         ),
@@ -406,6 +406,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
 
       // Set appInit to needsScanner so _AppRouter shows Scanner when
       // the '/app' route mounts.
+      if (!mounted) return;
       ref.read(appInitProvider.notifier).setNeedsScanner();
 
       // Navigate imperatively to '/app' which mounts a fresh _AppRouter.
@@ -457,6 +458,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
         await protocol.nodeDbReset();
 
         // Clear local nodes from the app's state and storage
+        if (!mounted) return;
         ref.read(nodesProvider.notifier).clearNodes();
 
         if (context.mounted) {
@@ -522,7 +524,7 @@ class _DeviceInfoCard extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.background,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: InfoTable(
@@ -686,16 +688,16 @@ class _ActionTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           color: context.background,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: isEnabled ? onTap : null,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Row(
                 children: [
                   Container(
@@ -703,11 +705,11 @@ class _ActionTile extends StatelessWidget {
                     height: 44,
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                     child: Icon(icon, color: context.accentColor, size: 22),
                   ),
-                  SizedBox(width: 14),
+                  SizedBox(width: AppTheme.spacing14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -722,7 +724,7 @@ class _ActionTile extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           subtitle,
                           style: TextStyle(
@@ -800,16 +802,16 @@ class _MeshCoreBatteryRefreshTile extends ConsumerWidget {
       child: Container(
         decoration: BoxDecoration(
           color: context.background,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: isEnabled ? () => _onRefresh(ref) : null,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Row(
                 children: [
                   Container(
@@ -817,7 +819,7 @@ class _MeshCoreBatteryRefreshTile extends ConsumerWidget {
                     height: 44,
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                     child: Icon(
                       Icons.battery_charging_full,
@@ -825,7 +827,7 @@ class _MeshCoreBatteryRefreshTile extends ConsumerWidget {
                       size: 22,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: AppTheme.spacing14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -840,7 +842,7 @@ class _MeshCoreBatteryRefreshTile extends ConsumerWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           subtitle,
                           style: TextStyle(

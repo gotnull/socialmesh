@@ -116,12 +116,12 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.location_off, size: 64, color: Colors.grey.shade600),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'No signals with location',
               style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Signals will appear here when they include GPS coordinates',
               style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
@@ -207,7 +207,7 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
                   ),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppTheme.radius4),
                   ),
                   child: Text(
                     _mapStyle == MapTileStyle.satellite
@@ -227,10 +227,10 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
           top: 16,
           right: 16,
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: Colors.black87,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(color: Colors.white10),
             ),
             child: Column(
@@ -238,11 +238,11 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
               mainAxisSize: MainAxisSize.min,
               children: [
                 _LegendItem(color: Colors.green, label: '< 5 min'),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 _LegendItem(color: Colors.amber, label: '< 30 min'),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 _LegendItem(color: Colors.orange, label: '< 2 hrs'),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 _LegendItem(color: Colors.red.shade300, label: '> 2 hrs'),
               ],
             ),
@@ -307,7 +307,7 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
                   ),
                   decoration: BoxDecoration(
                     color: Colors.black87,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppTheme.radius20),
                     border: Border.all(
                       color: AccentColors.cyan.withValues(alpha: 0.5),
                     ),
@@ -316,7 +316,7 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.sensors, color: AccentColors.cyan, size: 16),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       Text(
                         '${_signalsWithLocation.length} on map',
                         style: const TextStyle(
@@ -325,7 +325,7 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       Icon(
                         Icons.chevron_right,
                         size: 16,
@@ -386,7 +386,7 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
 
     final cameraFit = CameraFit.bounds(
       bounds: bounds,
-      padding: const EdgeInsets.all(50),
+      padding: const EdgeInsets.all(AppTheme.spacing50),
     );
 
     final camera = cameraFit.fit(_mapController.camera);
@@ -418,7 +418,7 @@ class _MapControlButton extends StatelessWidget {
           height: 44,
           decoration: BoxDecoration(
             color: Colors.black87,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(color: Colors.white10),
           ),
           child: Icon(icon, color: Colors.white70, size: 22),
@@ -444,7 +444,7 @@ class _LegendItem extends StatelessWidget {
           height: 12,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         Text(
           label,
           style: const TextStyle(color: Colors.white70, fontSize: 11),
@@ -476,7 +476,7 @@ class _SignalPreviewCard extends StatelessWidget {
         borderWidth: 2,
         accentOpacity: 0.5,
         backgroundColor: const Color(0xFF1a1a2e),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -492,7 +492,7 @@ class _SignalPreviewCard extends StatelessWidget {
                   borderRadius: 12,
                   borderColor: context.accentColor.withValues(alpha: 0.3),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 // Signal content
                 Expanded(
                   child: Column(
@@ -519,7 +519,7 @@ class _SignalPreviewCard extends StatelessWidget {
                             fontStyle: FontStyle.italic,
                           ),
                         ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.spacing4),
                       // Location name if available
                       if (signal.location?.name != null &&
                           signal.location!.name!.isNotEmpty)
@@ -530,7 +530,7 @@ class _SignalPreviewCard extends StatelessWidget {
                               color: AccentColors.cyan,
                               size: 14,
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: AppTheme.spacing4),
                             Expanded(
                               child: Text(
                                 signal.location!.name!,
@@ -559,13 +559,13 @@ class _SignalPreviewCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             // Stats row
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Row(
                 children: [
@@ -581,7 +581,7 @@ class _SignalPreviewCard extends StatelessWidget {
                           ? Colors.amber
                           : Colors.orange,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                   ],
                   // Time ago
                   _StatChip(
@@ -601,7 +601,7 @@ class _SignalPreviewCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             // Footer row with additional info
             Row(
               children: [
@@ -615,7 +615,7 @@ class _SignalPreviewCard extends StatelessWidget {
                     color: signal.origin == SignalOrigin.mesh
                         ? AccentColors.cyan.withValues(alpha: 0.2)
                         : Colors.purple.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppTheme.radius4),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -629,7 +629,7 @@ class _SignalPreviewCard extends StatelessWidget {
                             ? AccentColors.cyan
                             : Colors.purple.shade300,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       Text(
                         signal.origin == SignalOrigin.mesh ? 'Mesh' : 'Cloud',
                         style: TextStyle(
@@ -642,7 +642,7 @@ class _SignalPreviewCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 // Mesh node ID if available
                 if (signal.meshNodeId != null)
                   Text(
@@ -665,7 +665,7 @@ class _SignalPreviewCard extends StatelessWidget {
                         color: Colors.grey.shade600,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppTheme.spacing4),
                     Icon(
                       Icons.arrow_forward_ios,
                       size: 10,
@@ -700,7 +700,7 @@ class _StatChip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 14, color: color),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         Text(label, style: context.bodySmallStyle?.copyWith(color: color)),
       ],
     );
@@ -743,14 +743,14 @@ class _SignalListPanel extends StatelessWidget {
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 8, 12),
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: Colors.white10)),
             ),
             child: Row(
               children: [
                 Icon(Icons.list, size: 20, color: AccentColors.cyan),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 const Expanded(
                   child: Text(
                     'Signals',
@@ -851,7 +851,7 @@ class _SignalListItem extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppTheme.spacing10),
               // Thumbnail
               SignalThumbnail(
                 signal: signal,
@@ -859,7 +859,7 @@ class _SignalListItem extends StatelessWidget {
                 borderRadius: 8,
                 borderColor: ageColor.withValues(alpha: 0.5),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppTheme.spacing10),
               // Signal info
               Expanded(
                 child: Column(
@@ -876,12 +876,12 @@ class _SignalListItem extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Row(
                       children: [
                         if (signal.hopCount != null) ...[
                           Icon(Icons.route, size: 12, color: Colors.white38),
-                          const SizedBox(width: 3),
+                          const SizedBox(width: AppTheme.spacing3),
                           Text(
                             '${signal.hopCount}',
                             style: const TextStyle(
@@ -889,14 +889,14 @@ class _SignalListItem extends StatelessWidget {
                               color: Colors.white38,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                         ],
                         Icon(
                           Icons.access_time,
                           size: 12,
                           color: Colors.white38,
                         ),
-                        const SizedBox(width: 3),
+                        const SizedBox(width: AppTheme.spacing3),
                         Text(
                           formatTimeAgo(signal.createdAt),
                           style: const TextStyle(
@@ -905,13 +905,13 @@ class _SignalListItem extends StatelessWidget {
                           ),
                         ),
                         if (signal.expiresAt != null) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           Icon(
                             Icons.timer_outlined,
                             size: 12,
                             color: getTtlColor(signal.expiresAt),
                           ),
-                          const SizedBox(width: 3),
+                          const SizedBox(width: AppTheme.spacing3),
                           Text(
                             formatTtlRemaining(signal.expiresAt, compact: true),
                             style: TextStyle(

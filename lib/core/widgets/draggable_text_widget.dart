@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
+import 'package:socialmesh/core/theme.dart';
 
 /// A draggable, resizable, and rotatable text widget for story creation.
 /// Based on sticker_view's gesture handling approach.
@@ -147,7 +148,7 @@ class _DraggableTextWidgetState extends State<DraggableTextWidget> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: widget.backgroundColor ?? Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               border: widget.isSelected
                   ? Border.all(
                       color: Colors.white.withValues(alpha: 0.5),
@@ -299,7 +300,7 @@ class _StoryTextEditorState extends State<StoryTextEditor> {
                               fontSize: 14,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppTheme.spacing8),
                           Expanded(
                             child: RotatedBox(
                               quarterTurns: 3,
@@ -327,7 +328,7 @@ class _StoryTextEditorState extends State<StoryTextEditor> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppTheme.spacing8),
                           const Text(
                             'A',
                             style: TextStyle(
@@ -355,10 +356,13 @@ class _StoryTextEditorState extends State<StoryTextEditor> {
                             color: _hasBackground
                                 ? Colors.black.withValues(alpha: 0.6)
                                 : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius8,
+                            ),
                           ),
                           child: IntrinsicWidth(
                             child: TextField(
+                              maxLength: 100,
                               controller: _controller,
                               focusNode: _focusNode,
                               autofocus: true,
@@ -390,7 +394,7 @@ class _StoryTextEditorState extends State<StoryTextEditor> {
                   ),
 
                   // Balance spacer
-                  const SizedBox(width: 48),
+                  const SizedBox(width: AppTheme.spacing48),
                 ],
               ),
             ),

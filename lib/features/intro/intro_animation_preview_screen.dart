@@ -69,7 +69,7 @@ class _IntroAnimationPreviewScreenState
                     ),
                     decoration: BoxDecoration(
                       color: Colors.black54,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppTheme.radius20),
                     ),
                     child: Text(
                       _getAnimationName(animationType),
@@ -128,7 +128,7 @@ class _IntroAnimationPreviewScreenState
                     ),
                     decoration: BoxDecoration(
                       color: Colors.black54,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppTheme.radius20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -137,7 +137,9 @@ class _IntroAnimationPreviewScreenState
                         SizedBox(
                           width: 100,
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(3),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius3,
+                            ),
                             child: LinearProgressIndicator(
                               value:
                                   (_currentIndex + 1) /
@@ -150,7 +152,7 @@ class _IntroAnimationPreviewScreenState
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Text(
                           '${_currentIndex + 1} / ${IntroAnimationType.values.length}',
                           style: const TextStyle(

@@ -118,7 +118,7 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
         return FadeTransition(
           opacity: _fadeAnimation,
           child: Container(
-            margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -128,7 +128,7 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(
                 color: context.accentColor.withValues(alpha: 0.3),
               ),
@@ -136,7 +136,7 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -144,7 +144,7 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
                   child: Row(
                     children: [
                       Container(
@@ -152,7 +152,9 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
                         height: 40,
                         decoration: BoxDecoration(
                           color: context.accentColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius10,
+                          ),
                         ),
                         child: Icon(
                           Icons.link,
@@ -160,7 +162,7 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
                           size: 20,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,7 +176,7 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
                                 fontSize: 13,
                               ),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: AppTheme.spacing2),
                             Text(
                               'Others can find and follow you',
                               style: TextStyle(
@@ -185,7 +187,7 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       _isLinking
                           ? SizedBox(
                               width: 20,
@@ -215,7 +217,7 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
                                 ),
                               ),
                             ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       IconButton(
                         onPressed: () => _dismiss(myNodeNum),
                         icon: Icon(

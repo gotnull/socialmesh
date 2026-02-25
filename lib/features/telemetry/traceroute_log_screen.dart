@@ -164,7 +164,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
                         size: 20,
                         color: context.textSecondary,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Text(_isExporting ? 'Exporting...' : 'Export CSV'),
                     ],
                   ),
@@ -178,7 +178,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
                         size: 20,
                         color: AppTheme.errorRed,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Text(
                         'Clear Data',
                         style: TextStyle(color: AppTheme.errorRed),
@@ -199,7 +199,9 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
           ],
           slivers: [
             // Top padding to push content below the glass app bar
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: AppTheme.spacing8),
+            ),
             // Pinned search and filter controls
             SliverPersistentHeader(
               pinned: true,
@@ -275,7 +277,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
                 }
 
                 return SliverPadding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => _TraceRouteCard(
@@ -331,7 +333,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
             height: 72,
             decoration: BoxDecoration(
               color: context.card,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.radius16),
             ),
             child: Icon(
               Icons.route_outlined,
@@ -339,7 +341,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
               color: context.textTertiary,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Text(
             message,
             style: context.titleSmallStyle?.copyWith(
@@ -347,7 +349,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Send a traceroute from a node to see network paths',
             style: context.bodySecondaryStyle?.copyWith(
@@ -356,7 +358,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
             textAlign: TextAlign.center,
           ),
           if (showClearFilters) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             TextButton.icon(
               onPressed: () {
                 safeSetState(() {
@@ -469,7 +471,6 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
       if (!mounted) return;
       showSuccessSnackBar(context, 'Exported ${logs.length} traceroutes');
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Export failed: $e');
     } finally {
       if (mounted) {
@@ -508,7 +509,6 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
         const SnackBar(content: Text('Traceroute data cleared')),
       );
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to clear data: $e');
     }
   }
@@ -537,10 +537,10 @@ class _TraceRouteCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -558,7 +558,7 @@ class _TraceRouteCard extends StatelessWidget {
               _ResponseBadge(gotResponse: log.response),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
 
           // Destination
           Row(
@@ -568,7 +568,7 @@ class _TraceRouteCard extends StatelessWidget {
                 size: 18,
                 color: AccentColors.blue,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,7 +591,7 @@ class _TraceRouteCard extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
 
           // Overall SNR (packet-level)
           if (log.response && log.snr != null)
@@ -604,7 +604,7 @@ class _TraceRouteCard extends StatelessWidget {
                     size: 16,
                     color: AccentColors.green,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Text(
                     'SNR: ${log.snr!.toStringAsFixed(1)} dB',
                     style: const TextStyle(
@@ -636,9 +636,9 @@ class _TraceRouteCard extends StatelessWidget {
 
           // Forward route path
           if (forwardHops.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             const Divider(color: Colors.white12, height: 1),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _RoutePathSection(
               title: 'Forward Path',
               icon: Icons.arrow_forward,
@@ -650,9 +650,9 @@ class _TraceRouteCard extends StatelessWidget {
 
           // Return route path
           if (returnHops.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             const Divider(color: Colors.white12, height: 1),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _RoutePathSection(
               title: 'Return Path',
               icon: Icons.arrow_back,
@@ -668,11 +668,11 @@ class _TraceRouteCard extends StatelessWidget {
               returnHops.isEmpty &&
               log.hopsTowards == 0 &&
               log.hopsBack == 0) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Row(
               children: [
                 Icon(Icons.link, size: 14, color: context.textTertiary),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppTheme.spacing6),
                 Expanded(
                   child: Text(
                     'Direct connection — no intermediate hops',
@@ -719,7 +719,7 @@ class _RoutePathSection extends StatelessWidget {
         Row(
           children: [
             Icon(icon, size: 14, color: color),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppTheme.spacing6),
             Text(
               title,
               style: TextStyle(
@@ -731,7 +731,7 @@ class _RoutePathSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         ...hops.asMap().entries.map((entry) {
           final index = entry.key;
           final hop = entry.value;
@@ -771,7 +771,7 @@ class _ResponseBadge extends StatelessWidget {
         color: gotResponse
             ? AccentColors.green.withValues(alpha: 0.2)
             : AppTheme.errorRed.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -781,7 +781,7 @@ class _ResponseBadge extends StatelessWidget {
             size: 12,
             color: gotResponse ? AccentColors.green : AppTheme.errorRed,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             gotResponse ? 'Response' : 'No Response',
             style: TextStyle(
@@ -817,7 +817,7 @@ class _HopCountChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
       ),
       child: Text(
         '$label $count',
@@ -884,7 +884,7 @@ class _HopItem extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(bottom: isLast ? 0 : 16),

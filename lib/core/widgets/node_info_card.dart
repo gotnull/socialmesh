@@ -132,7 +132,7 @@ class NodeInfoCard extends ConsumerWidget {
       borderWidth: 2,
       accentOpacity: 0.4,
       backgroundColor: context.card.withAlpha(230),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -148,7 +148,7 @@ class NodeInfoCard extends ConsumerWidget {
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Flexible(
                 child: Text(
                   node.displayName,
@@ -161,11 +161,11 @@ class NodeInfoCard extends ConsumerWidget {
                 ),
               ),
               if (isMyNode) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Icon(Icons.person, size: 14, color: context.accentColor),
               ],
               if (onClose != null) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 SizedBox(
                   width: 24,
                   height: 24,
@@ -180,7 +180,7 @@ class NodeInfoCard extends ConsumerWidget {
             ],
           ),
           if (node.hasPosition) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Lat: ${node.latitude?.toStringAsFixed(4) ?? 'N/A'}°',
               style: TextStyle(
@@ -198,7 +198,7 @@ class NodeInfoCard extends ConsumerWidget {
               ),
             ),
           ],
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -207,7 +207,7 @@ class NodeInfoCard extends ConsumerWidget {
                 size: 14,
                 color: _presenceColor(context, presence),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
               Tooltip(
                 message: kPresenceInferenceTooltip,
                 child: Text(
@@ -229,10 +229,10 @@ class NodeInfoCard extends ConsumerWidget {
     final presenceMap = ref.watch(presenceMapProvider);
     final presence = presenceConfidenceFor(presenceMap, node);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
@@ -274,7 +274,7 @@ class NodeInfoCard extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               // Node info
               Expanded(
                 child: Column(
@@ -294,7 +294,7 @@ class NodeInfoCard extends ConsumerWidget {
                           ),
                         ),
                         if (isMyNode) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,
@@ -302,7 +302,9 @@ class NodeInfoCard extends ConsumerWidget {
                             ),
                             decoration: BoxDecoration(
                               color: context.accentColor.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
                             ),
                             child: Text(
                               'YOU',
@@ -316,7 +318,7 @@ class NodeInfoCard extends ConsumerWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Row(
                       children: [
                         Text(
@@ -327,7 +329,7 @@ class NodeInfoCard extends ConsumerWidget {
                           ),
                         ),
                         if (distanceFromMe != null) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           Container(
                             width: 3,
                             height: 3,
@@ -336,7 +338,7 @@ class NodeInfoCard extends ConsumerWidget {
                               shape: BoxShape.circle,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           Text(
                             _formatDistance(distanceFromMe!),
                             style: TextStyle(
@@ -347,7 +349,7 @@ class NodeInfoCard extends ConsumerWidget {
                           ),
                         ],
                         if (bearingFromMe != null) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: AppTheme.spacing6),
                           Text(
                             _formatBearing(bearingFromMe!),
                             style: TextStyle(
@@ -361,7 +363,7 @@ class NodeInfoCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               // Close button
               if (onClose != null)
                 SizedBox(
@@ -376,7 +378,7 @@ class NodeInfoCard extends ConsumerWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           // Stats row
           Wrap(
             spacing: 8,
@@ -414,7 +416,7 @@ class NodeInfoCard extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           // Action buttons: all in a single row — flexible text buttons
           // followed by fixed-size icon buttons. Flexible ensures the text
           // buttons shrink gracefully on narrow devices (Nothing Phone,
@@ -442,13 +444,13 @@ class NodeInfoCard extends ConsumerWidget {
                         ),
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppTheme.radius8),
                         ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Flexible(
                   child: SizedBox(
                     height: 40,
@@ -465,7 +467,7 @@ class NodeInfoCard extends ConsumerWidget {
                         foregroundColor: SemanticColors.onAccent,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppTheme.radius8),
                         ),
                       ),
                     ),
@@ -473,16 +475,17 @@ class NodeInfoCard extends ConsumerWidget {
                 ),
               ],
               if (onShareLocation != null) ...[
-                if (!isMyNode && onMessage != null) const SizedBox(width: 8),
+                if (!isMyNode && onMessage != null)
+                  const SizedBox(width: AppTheme.spacing8),
                 SizedBox(
                   width: 36,
                   height: 36,
                   child: Material(
                     color: context.background,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     child: InkWell(
                       onTap: onShareLocation,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       child: Center(
                         child: Icon(
                           Icons.share,
@@ -496,16 +499,16 @@ class NodeInfoCard extends ConsumerWidget {
               ],
               if (onCopyCoordinates != null) ...[
                 if (onShareLocation != null || (!isMyNode && onMessage != null))
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                 SizedBox(
                   width: 36,
                   height: 36,
                   child: Material(
                     color: context.background,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     child: InkWell(
                       onTap: onCopyCoordinates,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       child: Center(
                         child: Icon(
                           Icons.copy,
@@ -544,13 +547,13 @@ class NodeStatChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: context.background,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppTheme.spacing4),
           Text(
             value,
             style: TextStyle(

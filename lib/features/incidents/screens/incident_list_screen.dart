@@ -62,7 +62,7 @@ class IncidentListScreen extends ConsumerWidget {
             error: (e, _) => SliverFillRemaining(
               child: Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(AppTheme.spacing24),
                   child: Text(
                     'Failed to load incidents:\n$e',
                     textAlign: TextAlign.center,
@@ -99,7 +99,7 @@ class _EmptyState extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -108,19 +108,19 @@ class _EmptyState extends ConsumerWidget {
               size: 64,
               color: context.textTertiary,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'No incidents',
               style: context.titleStyle?.copyWith(color: context.textPrimary),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Incidents track operational events from creation '
               'through resolution. Create one to get started.',
               textAlign: TextAlign.center,
               style: context.bodyMutedStyle,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             PermissionGate(
               permission: Permission.createIncident,
               child: FilledButton.icon(
@@ -158,9 +158,9 @@ class _IncidentTile extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Material(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           onTap: () {
             ref.haptics.itemSelect();
             Navigator.of(context).push(
@@ -170,7 +170,7 @@ class _IncidentTile extends ConsumerWidget {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -182,7 +182,7 @@ class _IncidentTile extends ConsumerWidget {
                   ),
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
 
                 // Badges + metadata
                 Wrap(
@@ -210,7 +210,7 @@ class _IncidentTile extends ConsumerWidget {
                             size: 12,
                             color: context.textTertiary,
                           ),
-                          const SizedBox(width: 2),
+                          const SizedBox(width: AppTheme.spacing2),
                           Text(
                             incident.assigneeId!.length > 8
                                 ? '${incident.assigneeId!.substring(0, 8)}...'
@@ -267,7 +267,7 @@ class _Badge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(

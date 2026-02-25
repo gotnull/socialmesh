@@ -459,6 +459,7 @@ class _SearchField extends StatelessWidget {
         ),
       ),
       child: TextField(
+        maxLength: 100,
         controller: controller,
         focusNode: focusNode,
         onChanged: onChanged,
@@ -466,6 +467,7 @@ class _SearchField extends StatelessWidget {
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(color: context.textTertiary),
+          counterText: '',
           prefixIcon: Icon(Icons.search, color: context.textTertiary),
           suffixIcon: query.isNotEmpty
               ? IconButton(

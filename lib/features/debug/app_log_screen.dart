@@ -181,7 +181,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
 
     AppBottomSheet.show(
       context: context,
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 24),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing0, 0, 0, 24),
       child: StatefulBuilder(
         builder: (context, setSheetState) => Column(
           mainAxisSize: MainAxisSize.min,
@@ -194,7 +194,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
                 subtitle: 'Select which levels to display',
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             ...LogLevel.values.map((level) {
               return CheckboxListTile(
                 title: Text(
@@ -214,7 +214,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
                 },
               );
             }),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: BottomSheetButtons(
@@ -348,7 +348,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
                         : context.textSecondary,
                     size: 20,
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppTheme.spacing12),
                   Text('Filter', style: TextStyle(color: context.textPrimary)),
                 ],
               ),
@@ -358,7 +358,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
               child: Row(
                 children: [
                   Icon(Icons.copy, color: context.textSecondary, size: 20),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppTheme.spacing12),
                   Text('Copy', style: TextStyle(color: context.textPrimary)),
                 ],
               ),
@@ -368,7 +368,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
               child: Row(
                 children: [
                   Icon(Icons.share, color: context.textSecondary, size: 20),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppTheme.spacing12),
                   Text(
                     'Share Log',
                     style: TextStyle(color: context.textPrimary),
@@ -381,7 +381,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
               child: Row(
                 children: [
                   Icon(Icons.bug_report, color: context.accentColor, size: 20),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppTheme.spacing12),
                   Text(
                     'Export Debug JSON',
                     style: TextStyle(color: context.accentColor),
@@ -398,7 +398,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
                     color: AppTheme.errorRed,
                     size: 20,
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: AppTheme.spacing12),
                   Text('Clear', style: TextStyle(color: AppTheme.errorRed)),
                 ],
               ),
@@ -410,8 +410,9 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
         // Search bar
         SliverToBoxAdapter(
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: TextField(
+              maxLength: 200,
               controller: _searchController,
               style: TextStyle(color: context.textPrimary),
               decoration: InputDecoration(
@@ -430,7 +431,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
                 filled: true,
                 fillColor: context.card,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   borderSide: BorderSide.none,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
@@ -466,7 +467,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
                     ),
                     decoration: BoxDecoration(
                       color: context.accentColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(AppTheme.radius6),
                     ),
                     child: Text(
                       'Filtered',
@@ -482,7 +483,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
           ),
         ),
 
-        SliverToBoxAdapter(child: SizedBox(height: 8)),
+        SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing8)),
 
         // Log list
         if (logs.isEmpty)
@@ -497,7 +498,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
                     size: 64,
                     color: context.textTertiary.withValues(alpha: 0.5),
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
                   Text(
                     'No log entries',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -538,7 +539,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
             : entry.level == LogLevel.warning
             ? AppTheme.warningYellow.withValues(alpha: 0.05)
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -552,7 +553,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
               color: context.textTertiary,
             ),
           ),
-          SizedBox(width: 8),
+          SizedBox(width: AppTheme.spacing8),
 
           // Level badge
           Container(
@@ -560,7 +561,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(
               color: entry.level.getColor(context).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppTheme.radius4),
             ),
             child: Text(
               entry.level.label,
@@ -573,7 +574,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
 
           // Source
           Text(
@@ -584,7 +585,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
               color: context.accentColor.withValues(alpha: 0.8),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
 
           // Message
           Expanded(

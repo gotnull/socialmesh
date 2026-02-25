@@ -35,7 +35,7 @@ class ShopAdminDashboard extends ConsumerWidget {
                         size: 64,
                         color: Colors.red.withValues(alpha: 0.5),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                       const Text(
                         'Admin Access Required',
                         style: TextStyle(
@@ -43,7 +43,7 @@ class ShopAdminDashboard extends ConsumerWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppTheme.spacing8),
                       Text(
                         'You do not have permission to access this area.',
                         style: TextStyle(color: context.textSecondary),
@@ -87,14 +87,14 @@ class _AdminDashboardContent extends ConsumerWidget {
       titleWidget: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(AppTheme.spacing8),
             decoration: BoxDecoration(
               color: context.accentColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
             ),
             child: Icon(Icons.admin_panel_settings, color: context.accentColor),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           const Text('Shop Admin'),
         ],
       ),
@@ -106,7 +106,7 @@ class _AdminDashboardContent extends ConsumerWidget {
         ),
       ],
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -115,14 +115,14 @@ class _AdminDashboardContent extends ConsumerWidget {
               data: (stats) => _buildStatisticsGrid(context, stats),
               loading: () => const Center(
                 child: Padding(
-                  padding: EdgeInsets.all(32),
+                  padding: EdgeInsets.all(AppTheme.spacing32),
                   child: CircularProgressIndicator(),
                 ),
               ),
               error: (e, _) => Center(child: Text('Error: $e')),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: AppTheme.spacing32),
 
             // Quick Actions
             Text(
@@ -131,10 +131,10 @@ class _AdminDashboardContent extends ConsumerWidget {
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             _buildQuickActions(context),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: AppTheme.spacing32),
 
             // Management Sections
             Text(
@@ -143,7 +143,7 @@ class _AdminDashboardContent extends ConsumerWidget {
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             _buildManagementCards(context),
           ],
         ),
@@ -239,7 +239,7 @@ class _AdminDashboardContent extends ConsumerWidget {
             },
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         Expanded(
           child: _ActionButton(
             icon: Icons.store,
@@ -271,7 +271,7 @@ class _AdminDashboardContent extends ConsumerWidget {
             );
           },
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
         _ManagementCard(
           icon: Icons.store,
           title: 'Sellers',
@@ -282,7 +282,7 @@ class _AdminDashboardContent extends ConsumerWidget {
             );
           },
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
         _ManagementCard(
           icon: Icons.star,
           title: 'Featured Products',
@@ -293,7 +293,7 @@ class _AdminDashboardContent extends ConsumerWidget {
             );
           },
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
         _ManagementCard(
           icon: Icons.rate_review,
           title: 'Reviews',
@@ -327,10 +327,10 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -392,21 +392,21 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: color.withValues(alpha: 0.15),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, color: color),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Text(
                 label,
                 style: TextStyle(color: color, fontWeight: FontWeight.w600),
@@ -436,23 +436,23 @@ class _ManagementCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white.withValues(alpha: 0.05),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 decoration: BoxDecoration(
                   color: context.accentColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Icon(icon, color: context.accentColor),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppTheme.spacing16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

@@ -295,7 +295,7 @@ class _MeshCoreQrScannerScreenState
                   color: _isProcessing ? Colors.green : accentColor,
                   width: 3,
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppTheme.radius16),
               ),
             ),
           ),
@@ -322,10 +322,10 @@ class _MeshCoreQrScannerScreenState
             left: 20,
             right: 20,
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               decoration: BoxDecoration(
                 color: Colors.black54,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Text(
                 widget.mode == MeshCoreScanMode.contact

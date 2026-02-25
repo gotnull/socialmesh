@@ -84,7 +84,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings>
         mainAxisSize: MainAxisSize.min,
         children: [
           const BottomSheetHeader(title: 'Select Intent'),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           ...PresenceIntent.values.map((intent) {
             final isSelected = intent == _intent;
             return ListTile(
@@ -122,7 +122,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings>
         mainAxisSize: MainAxisSize.min,
         children: [
           const BottomSheetHeader(title: 'Set Status'),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
@@ -132,7 +132,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings>
               decoration: InputDecoration(
                 hintText: 'What are you up to?',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 suffixIcon: _statusController.text.isNotEmpty
                     ? IconButton(
@@ -148,7 +148,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings>
               autofocus: true,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -164,7 +164,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings>
                     ),
                   ),
                 if (_shortStatus != null && _shortStatus!.isNotEmpty)
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: FilledButton(
                     onPressed: () {
@@ -178,7 +178,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings>
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
         ],
       ),
     );

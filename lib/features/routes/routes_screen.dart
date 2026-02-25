@@ -67,7 +67,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen>
                         color: AccentColors.green,
                         size: 20,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       const Text('Start Route'),
                     ],
                   ),
@@ -81,7 +81,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen>
                       color: context.textSecondary,
                       size: 20,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     const Text('Import GPX'),
                   ],
                 ),
@@ -99,7 +99,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen>
             SliverFillRemaining(hasScrollBody: false, child: _buildEmptyState())
           else
             SliverPadding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final route = routes[index];
@@ -128,7 +128,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.route_outlined, size: 80, color: context.textTertiary),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Text(
             'No Routes Yet',
             style: TextStyle(
@@ -137,7 +137,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen>
               color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Record your first route or import a GPX file',
             style: context.bodySecondaryStyle?.copyWith(
@@ -175,6 +175,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen>
       confirmLabel: 'Delete',
       isDestructive: true,
     );
+    if (!mounted) return;
 
     if (confirmed == true) {
       ref.read(routesProvider.notifier).deleteRoute(route.id);
@@ -296,14 +297,14 @@ class _ActiveRouteBannerState extends ConsumerState<_ActiveRouteBanner> {
   Widget build(BuildContext context) {
     final route = widget.route;
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(AppTheme.spacing16),
       child: GradientBorderContainer(
         borderRadius: 16,
         borderWidth: 2,
         accentColor: AccentColors.green,
         accentOpacity: 0.5,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -311,7 +312,7 @@ class _ActiveRouteBannerState extends ConsumerState<_ActiveRouteBanner> {
                 AccentColors.teal.withValues(alpha: 0.2),
               ],
             ),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppTheme.radius14),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,7 +334,7 @@ class _ActiveRouteBannerState extends ConsumerState<_ActiveRouteBanner> {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   const Text(
                     'Recording',
                     style: TextStyle(
@@ -352,7 +353,7 @@ class _ActiveRouteBannerState extends ConsumerState<_ActiveRouteBanner> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               Text(
                 route.name,
                 style: TextStyle(
@@ -361,14 +362,14 @@ class _ActiveRouteBannerState extends ConsumerState<_ActiveRouteBanner> {
                   color: context.textPrimary,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
               Text(
                 '${_formatDistance(route.totalDistance)} • ${_formatDuration(DateTime.now().difference(route.createdAt))}',
                 style: context.bodySecondaryStyle?.copyWith(
                   color: context.textSecondary,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               Row(
                 children: [
                   Expanded(
@@ -393,13 +394,14 @@ class _ActiveRouteBannerState extends ConsumerState<_ActiveRouteBanner> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: () async {
                         final completed = await ref
                             .read(activeRouteProvider.notifier)
                             .stopRecording();
+                        if (!mounted) return;
                         if (completed != null) {
                           ref.read(routesProvider.notifier).refresh();
                         }
@@ -460,15 +462,15 @@ class _RouteCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -479,10 +481,10 @@ class _RouteCard extends StatelessWidget {
                       height: 40,
                       decoration: BoxDecoration(
                         color: Color(route.color),
-                        borderRadius: BorderRadius.circular(2),
+                        borderRadius: BorderRadius.circular(AppTheme.radius2),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -495,7 +497,7 @@ class _RouteCard extends StatelessWidget {
                               color: context.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: AppTheme.spacing2),
                           Text(
                             dateFormat.format(route.createdAt),
                             style: TextStyle(
@@ -517,7 +519,7 @@ class _RouteCard extends StatelessWidget {
                           child: Row(
                             children: [
                               Icon(Icons.file_download, size: 18),
-                              SizedBox(width: 8),
+                              SizedBox(width: AppTheme.spacing8),
                               Text('Export GPX'),
                             ],
                           ),
@@ -531,7 +533,7 @@ class _RouteCard extends StatelessWidget {
                                 size: 18,
                                 color: AppTheme.errorRed,
                               ),
-                              SizedBox(width: 8),
+                              SizedBox(width: AppTheme.spacing8),
                               Text(
                                 'Delete',
                                 style: TextStyle(color: AppTheme.errorRed),
@@ -543,25 +545,25 @@ class _RouteCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 Row(
                   children: [
                     _StatChip(
                       icon: Icons.straighten,
                       value: _formatDistance(route.totalDistance),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppTheme.spacing16),
                     if (route.duration != null)
                       _StatChip(
                         icon: Icons.timer_outlined,
                         value: _formatDuration(route.duration!),
                       ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppTheme.spacing16),
                     _StatChip(
                       icon: Icons.terrain,
                       value: '${route.elevationGain.toStringAsFixed(0)}m ↑',
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppTheme.spacing16),
                     _StatChip(
                       icon: Icons.location_on,
                       value: '${route.locations.length} pts',
@@ -569,7 +571,7 @@ class _RouteCard extends StatelessWidget {
                   ],
                 ),
                 if (route.notes != null && route.notes!.isNotEmpty) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
                   Text(
                     route.notes!,
                     style: TextStyle(
@@ -615,7 +617,7 @@ class _StatChip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 14, color: AccentColors.blue),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         Text(
           value,
           style: context.bodySmallStyle?.copyWith(color: context.textSecondary),
@@ -669,22 +671,24 @@ class _NewRouteSheetState extends State<_NewRouteSheet> {
           title: 'New Route',
           subtitle: 'Start recording your GPS track',
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
         BottomSheetTextField(
+          maxLength: 100,
           controller: _nameController,
           label: 'Route Name',
           hint: 'Morning hike',
           autofocus: true,
           onChanged: (_) => setState(() {}),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         BottomSheetTextField(
+          maxLength: 500,
           controller: _notesController,
           label: 'Notes (optional)',
           hint: 'Trail conditions, weather, etc.',
           maxLines: 2,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppTheme.spacing20),
         Text(
           'Color',
           style: TextStyle(
@@ -693,7 +697,7 @@ class _NewRouteSheetState extends State<_NewRouteSheet> {
             color: context.textSecondary,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
         Wrap(
           spacing: 12,
           runSpacing: 12,
@@ -727,7 +731,7 @@ class _NewRouteSheetState extends State<_NewRouteSheet> {
             );
           }).toList(),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
         BottomSheetButtons(
           cancelLabel: 'Cancel',
           confirmLabel: 'Start',

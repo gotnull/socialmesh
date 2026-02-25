@@ -299,7 +299,7 @@ class _MiniNamePlate extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 3),
+              const SizedBox(width: AppTheme.spacing3),
             ],
             Flexible(
               child: Text(
@@ -317,7 +317,7 @@ class _MiniNamePlate extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 1),
+        const SizedBox(height: AppTheme.spacing1),
         Text(
           hexId,
           style: TextStyle(

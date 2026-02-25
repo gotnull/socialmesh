@@ -100,11 +100,11 @@ class _AirportPickerSheetState extends State<AirportPickerSheet> {
           // Search bar
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
               child: Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: TextField(
                   controller: _searchController,
@@ -141,7 +141,7 @@ class _AirportPickerSheetState extends State<AirportPickerSheet> {
           // Results count
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 4, 20, 8),
               child: Text(
                 _hasQuery
                     ? '${_filtered.length} result${_filtered.length == 1 ? '' : 's'}'
@@ -185,12 +185,12 @@ class _AirportPickerSheetState extends State<AirportPickerSheet> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.flight_outlined, size: 48, color: context.textTertiary),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               'No airports found',
               style: TextStyle(
@@ -199,7 +199,7 @@ class _AirportPickerSheetState extends State<AirportPickerSheet> {
                 color: context.textSecondary,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               'You can still type the code manually',
               style: TextStyle(fontSize: 13, color: context.textTertiary),
@@ -239,7 +239,7 @@ class _AirportTile extends StatelessWidget {
                 color: isSelected
                     ? context.accentColor.withValues(alpha: 0.2)
                     : context.card,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 border: Border.all(
                   color: isSelected ? context.accentColor : context.border,
                 ),
@@ -256,7 +256,7 @@ class _AirportTile extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: AppTheme.spacing14),
             // Airport info
             Expanded(
               child: Column(
@@ -270,7 +270,7 @@ class _AirportTile extends StatelessWidget {
                       color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     '${airport.name} (${airport.icao})',
                     style: TextStyle(fontSize: 12, color: context.textTertiary),
@@ -288,7 +288,7 @@ class _AirportTile extends StatelessWidget {
               ),
             ),
             if (isSelected) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Icon(Icons.check_circle, color: context.accentColor, size: 20),
             ],
           ],

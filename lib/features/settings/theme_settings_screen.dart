@@ -57,38 +57,38 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
         title: 'Theme Settings',
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // Header with current theme preview
                 _buildThemePreview(context, currentColor),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
 
                 // Accent Color Section
                 _buildSectionHeader('ACCENT COLOR'),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 _buildAccentColorGrid(
                   context,
                   ref,
                   settingsService,
                   currentColor,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
 
                 // QR Code Style Section (Premium)
                 _buildSectionHeader('QR CODE STYLE'),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 _buildQrStyleSection(
                   context,
                   ref,
                   settingsService,
                   currentColor,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
 
                 // Theme Preview Section
                 _buildSectionHeader('PREVIEW'),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 _buildPreviewElements(context, currentColor),
               ]),
             ),
@@ -102,7 +102,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -112,7 +112,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
             accentColor.withValues(alpha: 0.1),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: accentColor.withValues(alpha: 0.5)),
       ),
       child: Row(
@@ -122,7 +122,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
             height: 56,
             decoration: BoxDecoration(
               color: accentColor,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppTheme.radius14),
               boxShadow: [
                 BoxShadow(
                   color: accentColor.withValues(alpha: 0.4),
@@ -133,7 +133,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
             ),
             child: const Icon(Icons.palette, color: Colors.white, size: 28),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppTheme.spacing16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,10 +193,10 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
     const freeColorCount = 3;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: theme.dividerColor),
       ),
       child: Wrap(
@@ -226,6 +226,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
                 if (!purchased) return;
               }
               HapticFeedback.selectionClick();
+              if (!mounted) return;
               final accentNotifier = ref.read(accentColorProvider.notifier);
               final profileNotifier = ref.read(userProfileProvider.notifier);
               await accentNotifier.setColor(color);
@@ -319,10 +320,10 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
     ];
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
@@ -336,10 +337,10 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
                     styles[currentStyleIndex].$1,
                   )
                 : Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: BrandedQrCode(
                       data: 'socialmesh://preview',
@@ -350,7 +351,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
                     ),
                   ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
 
           // Style selector
           Text(
@@ -361,7 +362,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Row(
             children: styles.asMap().entries.map((entry) {
               final index = entry.key;
@@ -397,7 +398,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
                         color: isSelected
                             ? accentColor.withValues(alpha: 0.15)
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                         border: Border.all(
                           color: isSelected ? accentColor : theme.dividerColor,
                           width: isSelected ? 2 : 1,
@@ -425,7 +426,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
                                       alpha: 0.4,
                                     ),
                             ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppTheme.spacing4),
                           Text(
                             name,
                             style: TextStyle(
@@ -446,7 +447,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
               );
             }).toList(),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Accent color toggle (premium)
           BouncyTap(
@@ -464,12 +465,12 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
               safeSetState(() {});
             },
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               decoration: BoxDecoration(
                 color: usesAccentColor
                     ? accentColor.withValues(alpha: 0.1)
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 border: Border.all(
                   color: usesAccentColor ? accentColor : theme.dividerColor,
                 ),
@@ -501,10 +502,10 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
                               .toColor(),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(AppTheme.radius6),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -559,10 +560,10 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
@@ -577,7 +578,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Row(
             children: [
               ElevatedButton(
@@ -586,24 +587,24 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
                   backgroundColor: accentColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                 ),
                 child: const Text('Primary'),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               OutlinedButton(
                 onPressed: () {},
                 style: OutlinedButton.styleFrom(
                   foregroundColor: accentColor,
                   side: BorderSide(color: accentColor),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                 ),
                 child: const Text('Secondary'),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               TextButton(
                 onPressed: () {},
                 style: TextButton.styleFrom(foregroundColor: accentColor),
@@ -611,7 +612,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
 
           // Switch & Checkbox preview
           Text(
@@ -622,7 +623,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Row(
             children: [
               Switch.adaptive(
@@ -631,13 +632,13 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
                 activeTrackColor: accentColor,
                 thumbColor: WidgetStateProperty.all(Colors.white),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppTheme.spacing16),
               Checkbox(
                 value: true,
                 onChanged: (_) {},
                 activeColor: accentColor,
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppTheme.spacing16),
               // Radio indicator (styled to match accent)
               Container(
                 width: 20,
@@ -659,7 +660,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
 
           // Progress indicators
           Text(
@@ -670,11 +671,11 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Row(
             children: [
               LoadingIndicator(size: 24),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppTheme.spacing16),
               Expanded(
                 child: LinearProgressIndicator(
                   value: 0.7,
@@ -684,7 +685,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
 
           // Badge/Chip preview
           Text(
@@ -695,7 +696,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Row(
             children: [
               Container(
@@ -705,7 +706,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
                 ),
                 decoration: BoxDecoration(
                   color: accentColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTheme.radius16),
                   border: Border.all(color: accentColor.withValues(alpha: 0.5)),
                 ),
                 child: Text(
@@ -717,7 +718,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -725,7 +726,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
                 ),
                 decoration: BoxDecoration(
                   color: accentColor,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTheme.radius16),
                 ),
                 child: const Text(
                   '5 new',
@@ -757,14 +758,14 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
         .toColor();
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppTheme.spacing14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [lightAccent, accent, darkAccent],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         boxShadow: [
           BoxShadow(
             color: accent.withValues(alpha: 0.4),
@@ -774,10 +775,10 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen>
         ],
       ),
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(AppTheme.spacing10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),

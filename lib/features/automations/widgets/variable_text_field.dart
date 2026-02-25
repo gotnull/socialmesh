@@ -281,6 +281,7 @@ class VariableTextField extends StatefulWidget {
   final String labelText;
   final String hintText;
   final int maxLines;
+  final int maxLength;
   final FocusNode? focusNode;
   final VoidCallback? onFocusChange;
   final TriggerType? triggerType;
@@ -292,6 +293,7 @@ class VariableTextField extends StatefulWidget {
     required this.labelText,
     this.hintText = '',
     this.maxLines = 1,
+    this.maxLength = 500,
     this.focusNode,
     this.onFocusChange,
     this.triggerType,
@@ -434,6 +436,7 @@ class VariableTextFieldState extends State<VariableTextField> {
     final hasError = invalidVars.isNotEmpty;
 
     return TextField(
+      maxLength: widget.maxLength,
       controller: _controller,
       focusNode: _focusNode,
       onChanged: (value) {
@@ -448,16 +451,18 @@ class VariableTextFieldState extends State<VariableTextField> {
         labelText: widget.labelText,
         hintText: widget.hintText,
         isDense: true,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
+        ),
         enabledBorder: hasError
             ? OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: AppTheme.errorRed),
               )
             : null,
         focusedBorder: hasError
             ? OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: AppTheme.errorRed, width: 2),
               )
             : null,
@@ -497,10 +502,10 @@ class VariableChipPicker extends StatelessWidget {
         .toList();
 
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(AppTheme.spacing8),
       decoration: BoxDecoration(
         color: context.background,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -511,7 +516,7 @@ class VariableChipPicker extends StatelessWidget {
                 : 'Tap a field, then tap a variable:',
             style: TextStyle(color: Colors.grey[600], fontSize: 11),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppTheme.spacing6),
           Wrap(
             spacing: 8,
             runSpacing: 6,
@@ -520,12 +525,12 @@ class VariableChipPicker extends StatelessWidget {
                 .toList(),
           ),
           if (triggerVars.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Trigger context:',
               style: TextStyle(color: Colors.grey[600], fontSize: 10),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Wrap(
               spacing: 8,
               runSpacing: 6,
@@ -535,12 +540,12 @@ class VariableChipPicker extends StatelessWidget {
             ),
           ],
           if (showDeleteHint) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(Icons.info_outline, size: 12, color: Colors.grey[500]),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 Expanded(
                   child: Text(
                     'Tap a variable to select it (turns red), then press backspace to remove',
@@ -577,7 +582,7 @@ class VariableChipPicker extends StatelessWidget {
                       ? Colors.amber.withValues(alpha: 0.15)
                       : AppTheme.successGreen.withValues(alpha: 0.15))
                 : context.card,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
             border: Border.all(
               color: isActive
                   ? (isTriggerSpecific

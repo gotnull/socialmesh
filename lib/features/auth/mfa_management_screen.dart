@@ -344,7 +344,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
         title: 'Two-Factor Authentication',
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(AppTheme.spacing32),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -353,7 +353,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
                   size: 48,
                   color: context.textSecondary.withOpacity(0.7),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 Text(
                   'No Internet Connection',
                   style: TextStyle(
@@ -362,14 +362,14 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
                     color: context.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Text(
                   'Two-factor authentication management requires an internet connection. '
                   'Please connect and try again.',
                   style: TextStyle(fontSize: 14, color: context.textSecondary),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 OutlinedButton.icon(
                   onPressed: () {
                     final online = ref.read(isOnlineProvider);
@@ -431,16 +431,16 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
       title: 'Two-Factor Authentication',
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Offline banner
               if (offlineBanner) ...[
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
                   decoration: BoxDecoration(
                     color: Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     border: Border.all(color: Colors.orange.withOpacity(0.3)),
                   ),
                   child: Row(
@@ -450,7 +450,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
                         size: 20,
                         color: Colors.orange,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Expanded(
                         child: Text(
                           'You are offline. Changes cannot be made until you reconnect.',
@@ -463,15 +463,15 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
               ],
 
               // Info Card
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
                 child: Row(
@@ -481,7 +481,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
                       size: 48,
                       color: hasMFA ? Colors.green : context.textSecondary,
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppTheme.spacing16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -494,7 +494,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
                               color: context.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppTheme.spacing4),
                           Text(
                             hasMFA
                                 ? 'Your account is protected with 2FA'
@@ -510,7 +510,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Enrolled Factors List
               if (enrolledFactors.isNotEmpty) ...[
@@ -522,21 +522,21 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
                     color: context.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 ...enrolledFactors.map((factor) {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       border: Border.all(color: context.border),
                     ),
                     child: ListTile(
                       leading: Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(AppTheme.spacing8),
                         decoration: BoxDecoration(
                           color: context.accentColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppTheme.radius8),
                         ),
                         child: Icon(
                           Icons.phone_android,
@@ -567,7 +567,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
                     ),
                   );
                 }),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
               ],
 
               // Add Button
@@ -579,13 +579,13 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                 ),
 
               // Info Section
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
               Text(
                 'How it works',
                 style: TextStyle(
@@ -594,7 +594,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
                   color: context.textPrimary,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _buildInfoTile(
                 context,
                 icon: Icons.phone_android,
@@ -602,7 +602,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
                 description:
                     'Receive a verification code via text message when signing in',
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _buildInfoTile(
                 context,
                 icon: Icons.security,
@@ -610,7 +610,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
                 description:
                     'Protects your account even if your password is compromised',
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _buildInfoTile(
                 context,
                 icon: Icons.access_time,
@@ -632,16 +632,16 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
     required String description,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.card.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(color: context.border.withOpacity(0.5)),
       ),
       child: Row(
         children: [
           Icon(icon, size: 24, color: context.accentColor),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

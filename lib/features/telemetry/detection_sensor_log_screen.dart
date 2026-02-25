@@ -52,7 +52,7 @@ class DetectionSensorLogScreen extends ConsumerWidget {
             }
             final sortedLogs = logs.reversed.toList();
             return SliverPadding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) =>
@@ -77,14 +77,14 @@ class DetectionSensorLogScreen extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.sensors_outlined, size: 64, color: context.textTertiary),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             message,
             style: context.titleSmallStyle?.copyWith(
               color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Detection sensors report motion and presence',
             style: context.bodySecondaryStyle?.copyWith(
@@ -108,10 +108,10 @@ class _DetectionSensorCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: log.detected
             ? Border.all(
                 color: AccentColors.orange.withValues(alpha: 0.5),
@@ -129,7 +129,7 @@ class _DetectionSensorCard extends StatelessWidget {
               color: log.detected
                   ? AccentColors.orange.withValues(alpha: 0.2)
                   : Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Icon(
               log.detected ? Icons.sensors : Icons.sensors_off,
@@ -137,7 +137,7 @@ class _DetectionSensorCard extends StatelessWidget {
               size: 24,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppTheme.spacing16),
 
           // Info
           Expanded(
@@ -158,7 +158,7 @@ class _DetectionSensorCard extends StatelessWidget {
                     _DetectionBadge(detected: log.detected),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Text(
                   timeFormat.format(log.timestamp),
                   style: context.bodySmallStyle?.copyWith(
@@ -187,7 +187,7 @@ class _DetectionBadge extends StatelessWidget {
         color: detected
             ? AccentColors.orange.withValues(alpha: 0.2)
             : Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
       ),
       child: Text(
         detected ? 'DETECTED' : 'Clear',

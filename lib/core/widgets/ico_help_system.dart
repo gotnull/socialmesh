@@ -24,7 +24,7 @@ class IcoHelpButton extends ConsumerStatefulWidget {
     super.key,
     required this.topicId,
     this.alignment = Alignment.bottomRight,
-    this.margin = const EdgeInsets.all(16),
+    this.margin = const EdgeInsets.all(AppTheme.spacing16),
     this.autoTrigger = false,
   });
 
@@ -46,7 +46,6 @@ class _IcoHelpButtonState extends ConsumerState<IcoHelpButton>
     );
     // Only start repeating animation if enabled (disabled in tests)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
       final animationsEnabled = ref.read(helpAnimationsEnabledProvider);
       if (animationsEnabled) {
         _pulseController.repeat(reverse: true);
@@ -195,7 +194,6 @@ class _IcoHelpAppBarButtonState extends ConsumerState<IcoHelpAppBarButton>
     );
     // Only start repeating animation if enabled (disabled in tests)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
       final animationsEnabled = ref.read(helpAnimationsEnabledProvider);
       if (animationsEnabled) {
         _ringController.repeat(reverse: true);
@@ -638,7 +636,7 @@ class IcoHighlightedField extends ConsumerStatefulWidget {
     this.borderRadius = 12,
     this.autoFocus = true,
     this.focusNode,
-    this.borderPadding = const EdgeInsets.all(4),
+    this.borderPadding = const EdgeInsets.all(AppTheme.spacing4),
   }) : assert(
          builder != null || child != null,
          'Either builder or child must be provided',
@@ -760,7 +758,7 @@ class AnimatedDottedBorder extends StatelessWidget {
     this.dashLength = 6,
     this.gapLength = 4,
     this.borderRadius = 12,
-    this.padding = const EdgeInsets.all(4),
+    this.padding = const EdgeInsets.all(AppTheme.spacing4),
   });
 
   @override
@@ -1010,7 +1008,7 @@ class _IcoSpeechBubbleWithArrowState
                   maxWidth: MediaQuery.of(context).size.width * 0.92,
                 ),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTheme.radius16),
                   boxShadow: [
                     // Animated outer glow like onboarding
                     BoxShadow(
@@ -1028,11 +1026,11 @@ class _IcoSpeechBubbleWithArrowState
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTheme.radius16),
                   child: Container(
                     decoration: BoxDecoration(
                       color: context.card.withValues(alpha: 0.95),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppTheme.radius16),
                       border: Border.all(
                         color: context.accentColor.withValues(
                           alpha: _glow.value,
@@ -1132,7 +1130,7 @@ class _IcoSpeechBubbleWithArrowState
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: AppTheme.spacing8),
                                   Text(
                                     'Ico',
                                     style: TextStyle(
@@ -1158,7 +1156,7 @@ class _IcoSpeechBubbleWithArrowState
                                         decoration: TextDecoration.none,
                                       ),
                                     ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: AppTheme.spacing8),
                                   // Haptic toggle
                                   GestureDetector(
                                     onTap: () {
@@ -1184,7 +1182,7 @@ class _IcoSpeechBubbleWithArrowState
                             ),
                             // Message content
                             Padding(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(AppTheme.spacing16),
                               child: RichText(
                                 text: TextSpan(
                                   children: _RichTextParser.parse(
@@ -1225,7 +1223,9 @@ class _IcoSpeechBubbleWithArrowState
                                             color: context.accentColor
                                                 .withValues(alpha: 0.7),
                                           ),
-                                          const SizedBox(width: 4),
+                                          const SizedBox(
+                                            width: AppTheme.spacing4,
+                                          ),
                                           Text(
                                             'Back',
                                             style: TextStyle(

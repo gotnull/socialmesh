@@ -37,7 +37,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
       title: 'Export Data',
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Messages
@@ -45,7 +45,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
               Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
                 child: Column(
@@ -63,14 +63,14 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // Telemetry
               _buildSectionHeader('Telemetry'),
               Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
                 child: Column(
@@ -124,14 +124,14 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // Position Data
               _buildSectionHeader('Position Data'),
               Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
                 child: Column(
@@ -171,14 +171,14 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // Automations
               _buildSectionHeader('Automations'),
               Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
                 child: Column(
@@ -208,14 +208,14 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // Nodes
               _buildSectionHeader('Network'),
               Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
                 child: Column(
@@ -233,14 +233,14 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // All Data
               _buildSectionHeader('Complete Export'),
               Container(
                 decoration: BoxDecoration(
                   color: context.accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(
                     color: context.accentColor.withValues(alpha: 0.3),
                   ),
@@ -257,23 +257,23 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // Clear All Data
               _buildSectionHeader('Clear Data'),
               Container(
                 decoration: BoxDecoration(
                   color: AppTheme.errorRed.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(
                     color: AppTheme.errorRed.withValues(alpha: 0.3),
                   ),
                 ),
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   onTap: () => _confirmClearAll(),
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     child: Row(
                       children: [
                         Container(
@@ -281,7 +281,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                           height: 44,
                           decoration: BoxDecoration(
                             color: AppTheme.errorRed.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
                           ),
                           child: const Icon(
                             Icons.delete_forever,
@@ -289,7 +291,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                             size: 22,
                           ),
                         ),
-                        const SizedBox(width: 14),
+                        const SizedBox(width: AppTheme.spacing14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,7 +304,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                                   color: AppTheme.errorRed,
                                 ),
                               ),
-                              SizedBox(height: 2),
+                              SizedBox(height: AppTheme.spacing2),
                               Text(
                                 'Delete all stored telemetry, routes, and logs',
                                 style: TextStyle(
@@ -324,14 +326,14 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Info
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
                   color: AccentColors.blue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(
                     color: AccentColors.blue.withValues(alpha: 0.3),
                   ),
@@ -343,7 +345,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                       color: AccentColors.blue.withValues(alpha: 0.8),
                       size: 24,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Text(
                         'Exported files can be shared via email, AirDrop, or saved to Files. Tap the trash icon to clear specific data.',
@@ -357,7 +359,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
             ]),
           ),
         ),
@@ -401,7 +403,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
     final isClearing = _clearingTypes.contains(type);
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Row(
         children: [
           Container(
@@ -410,7 +412,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
             decoration: BoxDecoration(
               color: (isHighlighted ? context.accentColor : context.accentColor)
                   .withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Icon(
               icon,
@@ -418,7 +420,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
               size: 22,
             ),
           ),
-          SizedBox(width: 14),
+          SizedBox(width: AppTheme.spacing14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,7 +435,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                         : context.textPrimary,
                   ),
                 ),
-                SizedBox(height: 2),
+                SizedBox(height: AppTheme.spacing2),
                 Text(
                   subtitle,
                   style: context.bodySmallStyle?.copyWith(
@@ -447,7 +449,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: context.background,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(AppTheme.radius6),
             ),
             child: Text(
               format,
@@ -458,7 +460,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
               ),
             ),
           ),
-          SizedBox(width: 8),
+          SizedBox(width: AppTheme.spacing8),
           // Clear button
           if (onClear != null) ...[
             if (isClearing)
@@ -476,7 +478,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
                 tooltip: 'Clear data',
               ),
           ],
-          SizedBox(width: 4),
+          SizedBox(width: AppTheme.spacing4),
           // Export button
           if (isExporting)
             LoadingIndicator(size: 20)
@@ -606,7 +608,6 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
       if (!mounted) return;
       showSuccessSnackBar(context, 'Data cleared');
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to clear data: $e');
     } finally {
       safeSetState(() {
@@ -659,7 +660,6 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
       if (!mounted) return;
       showSuccessSnackBar(context, 'All data cleared');
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to clear data: $e');
     } finally {
       safeSetState(() {
@@ -916,10 +916,12 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
     final airQuality = await ref.read(airQualityMetricsLogsProvider.future);
     final powerMetrics = await ref.read(powerMetricsLogsProvider.future);
     final positions = await ref.read(positionLogsProvider.future);
+    if (!mounted) return;
     final routes = ref.read(routesProvider);
     final traceroutes = await ref.read(traceRouteLogsProvider.future);
 
     // Get automation data
+    if (!mounted) return;
     final automationRepo = ref.read(automationRepositoryProvider);
 
     final data = {

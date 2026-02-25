@@ -209,7 +209,6 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
           safeSetState(() => _isLoading = false);
       }
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Something went wrong. Please try again.');
       safeSetState(() => _isLoading = false);
     }
@@ -245,7 +244,6 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
       showInfoSnackBar(context, 'No purchases found to restore');
       safeSetState(() => _isLoading = false);
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to restore purchases');
       safeSetState(() => _isLoading = false);
     }
@@ -281,7 +279,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
               margin: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.grey[600],
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppTheme.radius2),
               ),
             ),
           ),
@@ -319,7 +317,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: AppTheme.spacing20),
 
                 // Headline
                 Text(
@@ -330,7 +328,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                   ),
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
 
                 // Subtitle
                 Text(
@@ -341,7 +339,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
 
                 // Benefits list
                 ..._benefits.map(
@@ -354,7 +352,9 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                           height: 44,
                           decoration: BoxDecoration(
                             color: context.accentColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
                           ),
                           child: Icon(
                             benefit.icon,
@@ -362,7 +362,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                             size: 22,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -389,14 +389,14 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                   ),
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
 
                 // "Your automation is safe" message
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
                   decoration: BoxDecoration(
                     color: AppTheme.successGreen.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     border: Border.all(
                       color: AppTheme.successGreen.withValues(alpha: 0.3),
                     ),
@@ -408,7 +408,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                         color: AppTheme.successGreen,
                         size: 20,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Expanded(
                         child: Text(
                           'Your configuration is saved. After purchase, just tap save again.',
@@ -422,7 +422,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
 
                 // Purchase button
                 BouncyTap(
@@ -434,7 +434,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                       gradient: LinearGradient(
                         colors: [Colors.amber.shade400, Colors.orange.shade600],
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.amber.withValues(alpha: 0.3),
@@ -461,7 +461,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                                 Icons.star_rounded,
                                 color: Colors.white,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppTheme.spacing8),
                               Text(
                                 'Unlock for $displayPrice',
                                 style: const TextStyle(
@@ -475,7 +475,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                   ),
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
 
                 // One-time purchase note
                 Text(
@@ -484,7 +484,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                   style: TextStyle(color: context.textTertiary, fontSize: 12),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
 
                 // Restore purchases
                 TextButton(

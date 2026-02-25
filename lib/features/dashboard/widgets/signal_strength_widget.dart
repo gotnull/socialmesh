@@ -162,7 +162,12 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
           height: 180,
           child: hasData
               ? Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing12,
+                    12,
+                    16,
+                    8,
+                  ),
                   child: CustomPaint(
                     painter: MultiLineChartPainter(
                       _signalHistory,
@@ -199,7 +204,7 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
             color: signalColor,
             size: Flip3DSize.medium,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           // Signal stats column
           Expanded(
             child: Column(
@@ -229,7 +234,7 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Text(
                   '${rssi.toInt()} dBm',
                   style: TextStyle(
@@ -239,7 +244,7 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
                     fontFamily: AppTheme.fontFamily,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: AppTheme.spacing6),
                 Row(
                   children: [
                     _CompactStatChip(
@@ -248,7 +253,7 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
                       unit: 'dB',
                       color: AppTheme.graphBlue,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     _CompactStatChip(
                       label: 'Ch',
                       value: channelUtil,
@@ -272,9 +277,9 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _LegendItem(color: context.accentColor, label: 'RSSI'),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppTheme.spacing16),
           _LegendItem(color: AppTheme.graphBlue, label: 'SNR'),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppTheme.spacing16),
           _LegendItem(color: AppTheme.accentOrange, label: 'Ch Util'),
         ],
       ),
@@ -302,7 +307,7 @@ class _CompactStatChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
       ),
       child: Text(
         '$label ${value.toStringAsFixed(1)}$unit',
@@ -323,7 +328,7 @@ Widget buildLiveIndicator() {
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     decoration: BoxDecoration(
       color: AppTheme.errorRed.withValues(alpha: 0.15),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppTheme.radius8),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
@@ -343,7 +348,7 @@ Widget buildLiveIndicator() {
             ],
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppTheme.spacing6),
         const Text(
           'LIVE',
           style: TextStyle(
@@ -375,10 +380,10 @@ class _LegendItem extends StatelessWidget {
           height: 3,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(AppTheme.radius2),
           ),
         ),
-        SizedBox(width: 6),
+        SizedBox(width: AppTheme.spacing6),
         Text(
           label,
           style: Theme.of(

@@ -227,7 +227,7 @@ class _GlobalLayerTopicExplorerScreenState
         // Section header
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 16, 20, 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -247,7 +247,7 @@ class _GlobalLayerTopicExplorerScreenState
                     ),
                     decoration: BoxDecoration(
                       color: context.accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       border: Border.all(
                         color: context.accentColor.withValues(alpha: 0.2),
                       ),
@@ -256,7 +256,7 @@ class _GlobalLayerTopicExplorerScreenState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.add, size: 14, color: context.accentColor),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Text(
                           'Add',
                           style: Theme.of(context).textTheme.labelSmall
@@ -305,13 +305,13 @@ class _GlobalLayerTopicExplorerScreenState
           },
           loading: () => const SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.all(48),
+              padding: EdgeInsets.all(AppTheme.spacing48),
               child: Center(child: CircularProgressIndicator()),
             ),
           ),
           error: (error, _) => SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppTheme.spacing24),
               child: Center(
                 child: Text(
                   'Failed to load topics: $error',
@@ -387,7 +387,7 @@ class _ConnectionStatusPill extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: connectionState.statusColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppTheme.radius20),
               border: Border.all(
                 color: connectionState.statusColor.withValues(alpha: 0.3),
               ),
@@ -403,7 +403,7 @@ class _ConnectionStatusPill extends StatelessWidget {
                     color: connectionState.statusColor,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   connectionState.displayLabel,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -443,7 +443,7 @@ class _SubscriptionStats extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Row(
@@ -516,7 +516,7 @@ class _StatColumn extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 14, color: color),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Text(
           value,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -526,7 +526,7 @@ class _StatColumn extends StatelessWidget {
             fontSize: 14,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppTheme.spacing2),
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -597,7 +597,7 @@ class _TopicSubscriptionTile extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(
             color: subscription.enabled
                 ? context.accentColor.withValues(alpha: 0.2)
@@ -607,7 +607,7 @@ class _TopicSubscriptionTile extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             onLongPress: onRemove,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -619,7 +619,7 @@ class _TopicSubscriptionTile extends StatelessWidget {
                     isEnabled: subscription.enabled,
                   ),
 
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
 
                   // Topic info
                   Expanded(
@@ -638,7 +638,7 @@ class _TopicSubscriptionTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
 
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
 
                         // Topic string
                         Text(
@@ -653,7 +653,7 @@ class _TopicSubscriptionTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
 
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppTheme.spacing4),
 
                         // Metrics row
                         _TopicMetricsRow(
@@ -665,7 +665,7 @@ class _TopicSubscriptionTile extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
 
                   // Enable/disable toggle
                   ThemedSwitch(
@@ -755,7 +755,7 @@ class _TopicMetricsRow extends StatelessWidget {
             value: '${metrics!.messageCount}',
             color: context.accentColor,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
         ],
 
         // Last message timestamp
@@ -765,7 +765,7 @@ class _TopicMetricsRow extends StatelessWidget {
             value: _formatTimestamp(subscription.lastMessageAt!),
             color: context.textTertiary,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
         ],
 
         // Status indicator
@@ -820,7 +820,7 @@ class _MetricChip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 10, color: color),
-        const SizedBox(width: 3),
+        const SizedBox(width: AppTheme.spacing3),
         Text(
           value,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -859,7 +859,7 @@ class _EmptyTopicsState extends StatelessWidget {
             size: 48,
             color: context.textTertiary.withValues(alpha: 0.5),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             'No Topic Subscriptions',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -868,7 +868,7 @@ class _EmptyTopicsState extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Add topics to control which types of mesh data flow '
             'through the Global Layer. Each topic corresponds to a '
@@ -879,7 +879,7 @@ class _EmptyTopicsState extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -888,7 +888,7 @@ class _EmptyTopicsState extends StatelessWidget {
                 icon: const Icon(Icons.library_add_outlined, size: 18),
                 label: const Text('From Template'),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               FilledButton.icon(
                 onPressed: onAddCustom,
                 icon: const Icon(Icons.edit_outlined, size: 18),
@@ -975,7 +975,7 @@ class _AddTopicSheetState extends ConsumerState<_AddTopicSheet> {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             'Subscribe to a custom MQTT topic. Wildcards (+, #) '
             'are allowed for subscribe topics.',
@@ -983,33 +983,35 @@ class _AddTopicSheetState extends ConsumerState<_AddTopicSheet> {
               context,
             ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
 
           // Label field
           TextField(
+            maxLength: 100,
             controller: _labelController,
             decoration: InputDecoration(
               labelText: 'Label',
               hintText: 'e.g. Weather Reports',
               prefixIcon: const Icon(Icons.label_outline, size: 20),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
             ),
             textInputAction: TextInputAction.next,
             onChanged: (_) => setState(() {}),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
 
           // Topic field
           TextField(
+            maxLength: 256,
             controller: _topicController,
             decoration: InputDecoration(
               labelText: 'MQTT Topic',
               hintText: 'e.g. msh/weather/+',
               prefixIcon: const Icon(Icons.tag, size: 20),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               errorText: _validation != null && !_validation!.isValid
                   ? _validation!.error
@@ -1029,7 +1031,7 @@ class _AddTopicSheetState extends ConsumerState<_AddTopicSheet> {
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
 
           // Submit button
           SizedBox(
@@ -1095,7 +1097,7 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             'Choose a predefined topic template. Placeholders will '
             'be resolved using the values below.',
@@ -1103,20 +1105,21 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
               context,
             ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Placeholder inputs
           Row(
             children: [
               Expanded(
                 child: TextField(
+                  maxLength: 32,
                   controller: _channelController,
                   decoration: InputDecoration(
                     labelText: 'Channel',
                     hintText: 'LongFast',
                     isDense: true,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                   ),
                   textInputAction: TextInputAction.next,
@@ -1128,16 +1131,17 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: TextField(
+                  maxLength: 100,
                   controller: _nodeIdController,
                   decoration: InputDecoration(
                     labelText: 'Node ID',
                     hintText: '!a1b2c3d4',
                     isDense: true,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                   ),
                   textInputAction: TextInputAction.done,
@@ -1152,7 +1156,7 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
             ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Template list
           ...templates.map((template) {
@@ -1219,13 +1223,13 @@ class _TemplateTile extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppTheme.radius10),
           onTap: onTap,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: context.card,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppTheme.radius10),
               border: Border.all(
                 color: isDisabled
                     ? context.border.withValues(alpha: 0.5)
@@ -1241,7 +1245,7 @@ class _TemplateTile extends StatelessWidget {
                       ? context.textTertiary
                       : context.accentColor,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1253,7 +1257,7 @@ class _TemplateTile extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         resolvedTopic,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -1275,7 +1279,7 @@ class _TemplateTile extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: context.textTertiary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(AppTheme.radius6),
                     ),
                     child: Text(
                       'Added',

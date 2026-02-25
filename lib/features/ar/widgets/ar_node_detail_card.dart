@@ -33,7 +33,7 @@ class ARNodeDetailCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(
           color: _getThreatColor(node.threatLevel).withValues(alpha: 0.5),
           width: 1,
@@ -62,7 +62,7 @@ class ARNodeDetailCard extends StatelessWidget {
 
           // Stats grid
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Row(
               children: [
                 Expanded(
@@ -134,7 +134,7 @@ class ARNodeDetailCard extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
 
           // Status badges
           Padding(
@@ -156,11 +156,11 @@ class ARNodeDetailCard extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Action buttons
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 16),
             child: Row(
               children: [
                 Expanded(
@@ -170,13 +170,13 @@ class ARNodeDetailCard extends StatelessWidget {
                     onTap: onNavigate,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _buildIconButton(
                   icon: isFavorite ? Icons.star : Icons.star_border,
                   color: isFavorite ? const Color(0xFFFFAB00) : null,
                   onTap: onFavorite,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 _buildIconButton(
                   icon: Icons.share,
                   onTap: () {
@@ -194,7 +194,7 @@ class ARNodeDetailCard extends StatelessWidget {
 
   Widget _buildHeader(dynamic meshNode) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Row(
         children: [
           // Node icon with threat color
@@ -225,7 +225,7 @@ class ARNodeDetailCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
 
           // Name and ID
           Expanded(
@@ -242,7 +242,7 @@ class ARNodeDetailCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   '!${meshNode.nodeNum.toRadixString(16).toUpperCase()}',
                   style: TextStyle(
@@ -285,7 +285,7 @@ class ARNodeDetailCard extends StatelessWidget {
             letterSpacing: 1,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Text(
           value,
           style: const TextStyle(
@@ -322,7 +322,7 @@ class ARNodeDetailCard extends StatelessWidget {
             color: const Color(0xFF00E5FF).withValues(alpha: 0.6),
             size: 16,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Text(
             label,
             style: TextStyle(
@@ -350,7 +350,7 @@ class ARNodeDetailCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(
@@ -379,7 +379,7 @@ class ARNodeDetailCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: const Color(0xFF00E5FF).withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(
             color: const Color(0xFF00E5FF).withValues(alpha: 0.5),
           ),
@@ -388,7 +388,7 @@ class ARNodeDetailCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: const Color(0xFF00E5FF), size: 18),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Text(
               label,
               style: const TextStyle(
@@ -418,7 +418,7 @@ class ARNodeDetailCard extends StatelessWidget {
         height: 44,
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
         ),
         child: Icon(icon, color: color ?? Colors.white54, size: 20),
       ),

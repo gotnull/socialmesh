@@ -55,7 +55,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       ? AppTheme.warningYellow
                       : Theme.of(context).colorScheme.primary,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Text(
                     actionName,
@@ -68,7 +68,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               warningMessage ??
                   'Are you sure you want to $actionName? This action cannot be undone.',
@@ -76,7 +76,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Row(
               children: [
                 Expanded(
@@ -86,7 +86,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: BorderSide(color: Colors.grey.shade700),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                     ),
                     child: Text(
@@ -97,7 +97,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: FilledButton(
                     onPressed: () => Navigator.pop(context, true),
@@ -110,7 +110,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                           ? Colors.black
                           : Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                     ),
                     child: const Text('Confirm'),
@@ -178,7 +178,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
           const SliverFillRemaining(child: ScreenLoadingIndicator())
         else
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             sliver: SliverList.list(
               children: [
                 if (!isConnected)
@@ -187,14 +187,14 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     child: Card(
                       color: theme.colorScheme.errorContainer,
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
                         child: Row(
                           children: [
                             Icon(
                               Icons.warning_rounded,
                               color: theme.colorScheme.onErrorContainer,
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: AppTheme.spacing12),
                             Expanded(
                               child: Text(
                                 'Device not connected. Connect to a device to manage it.',
@@ -209,7 +209,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     ),
                   ),
                 _SectionHeader(title: 'POWER'),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _ActionCard(
                   icon: Icons.refresh,
                   iconColor: theme.colorScheme.primary,
@@ -233,6 +233,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         await protocol.reboot(delaySeconds: 2, target: target);
                         // Clear stale manualConnecting so auto-reconnect
                         // manager can handle the reboot/reconnect cycle
+                        if (!mounted) return;
                         autoReconnectNotifier.setState(AutoReconnectState.idle);
                         AppLogging.connection(
                           '🔧 DeviceManagement: Reboot command sent — '
@@ -251,7 +252,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     causesDisconnect: true,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _ActionCard(
                   icon: Icons.power_settings_new,
                   iconColor: theme.colorScheme.secondary,
@@ -278,6 +279,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         );
                         // Clear stale manualConnecting so if user powers
                         // device back on, auto-reconnect isn't blocked
+                        if (!mounted) return;
                         autoReconnectNotifier.setState(AutoReconnectState.idle);
                         AppLogging.connection(
                           '🔧 DeviceManagement: Shutdown command sent — '
@@ -299,9 +301,9 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     causesDisconnect: true,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 _SectionHeader(title: 'TIME'),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _ActionCard(
                   icon: Icons.access_time,
                   iconColor: theme.colorScheme.tertiary,
@@ -314,9 +316,9 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     requiresConfirmation: false,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 _SectionHeader(title: 'RESET'),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _ActionCard(
                   icon: Icons.cleaning_services,
                   iconColor: Colors.orange,
@@ -334,6 +336,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         'will clear all discovered nodes from device',
                       );
                       await protocol.nodeDbReset(target: target);
+                      if (!mounted) return;
                       AppLogging.connection(
                         '🔧 DeviceManagement: nodeDbReset sent',
                       );
@@ -350,7 +353,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         'This will clear all discovered nodes from the device and app. Nodes will be rediscovered over time.',
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _ActionCard(
                   icon: Icons.settings_backup_restore,
                   iconColor: Colors.deepOrange,
@@ -369,6 +372,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         'Device will reboot in ~5s',
                       );
                       await protocol.factoryResetConfig(target: target);
+                      if (!mounted) return;
                       AppLogging.connection(
                         '🔧 DeviceManagement: factoryResetConfig command sent',
                       );
@@ -400,6 +404,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                           '🔧 DeviceManagement: Local channels cleared — '
                           'expecting device disconnect shortly',
                         );
+                        if (!mounted) return;
                         autoReconnectNotifier.setState(AutoReconnectState.idle);
                         AppLogging.connection(
                           '🔧 DeviceManagement: autoReconnectState set '
@@ -414,7 +419,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     causesDisconnect: true,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _ActionCard(
                   icon: Icons.delete_forever,
                   iconColor: theme.colorScheme.error,
@@ -446,6 +451,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       if (!target.isLocal) return;
 
                       // Capture ALL providers before any more awaits
+                      if (!mounted) return;
                       final settingsAsync = ref.read(settingsServiceProvider);
                       final nodesNotifier = ref.read(nodesProvider.notifier);
                       final channelsNotifier = ref.read(
@@ -545,9 +551,9 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     causesDisconnect: false, // Navigation handled in action
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 _SectionHeader(title: 'FIRMWARE'),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _ActionCard(
                   icon: Icons.system_update,
                   iconColor: Colors.indigo,
@@ -578,7 +584,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     causesDisconnect: true,
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spacing32),
               ],
             ),
           ),
@@ -635,11 +641,11 @@ class _ActionCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       child: InkWell(
         onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Opacity(
           opacity: enabled ? 1.0 : 0.5,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Row(
               children: [
                 Container(
@@ -647,11 +653,11 @@ class _ActionCard extends StatelessWidget {
                   height: 48,
                   decoration: BoxDecoration(
                     color: effectiveIconColor.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Icon(icon, color: effectiveIconColor),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -663,7 +669,7 @@ class _ActionCard extends StatelessWidget {
                           color: effectiveTextColor,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         subtitle,
                         style: theme.textTheme.bodySmall?.copyWith(

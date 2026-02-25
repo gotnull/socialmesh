@@ -111,19 +111,19 @@ class ConnectingContent extends StatelessWidget {
         children: [
           if (showMeshNode) ...[
             const ConfiguredSplashMeshNode(),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppTheme.spacing32),
           ],
           SocialmeshSplitFlapLogo(fontSize: 32, accentColor: accentColor),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           const AnimatedTagline(taglines: appTaglines),
-          const SizedBox(height: 48),
+          const SizedBox(height: AppTheme.spacing48),
           // Status indicator
           ConnectionStatusIndicator(
             statusInfo: statusInfo,
             pulseAnimation: pulseAnimation,
           ),
           if (showCancel) ...[
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             TextButton(
               onPressed: onCancel,
               child: Text(
@@ -168,8 +168,12 @@ class ConnectionStatusIndicator extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         // Spinner or icon
-        SizedBox(width: 48, height: 48, child: Center(child: indicator)),
-        const SizedBox(height: 16),
+        SizedBox(
+          width: AppTheme.spacing48,
+          height: 48,
+          child: Center(child: indicator),
+        ),
+        const SizedBox(height: AppTheme.spacing16),
         // Animated text with dots
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),

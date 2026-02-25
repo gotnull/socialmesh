@@ -91,11 +91,11 @@ class _PortalViewState extends ConsumerState<PortalView>
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.border),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         child: Stack(
           children: [
             // Background gradient
@@ -295,7 +295,7 @@ class _PortalNode extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         iconWidget,
-        const SizedBox(height: 6),
+        const SizedBox(height: AppTheme.spacing6),
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -307,7 +307,7 @@ class _PortalNode extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppTheme.spacing2),
         Text(
           sublabel,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -769,7 +769,7 @@ class _ThroughputBar extends StatelessWidget {
                 size: 10,
                 color: hasTraffic ? context.accentColor : context.textTertiary,
               ),
-              const SizedBox(width: 2),
+              const SizedBox(width: AppTheme.spacing2),
               Text(
                 _formatRate(outRate),
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -804,7 +804,7 @@ class _ThroughputBar extends StatelessWidget {
                     ? const Color(0xFF60A5FA)
                     : context.textTertiary,
               ),
-              const SizedBox(width: 2),
+              const SizedBox(width: AppTheme.spacing2),
               Text(
                 _formatRate(inRate),
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(

@@ -113,11 +113,11 @@ class _UserPurchasesAdminScreenState
     for (var i = 0; i < children.length; i++) {
       spaced.add(Expanded(child: children[i]));
       if (i < children.length - 1) {
-        spaced.add(const SizedBox(width: 12));
+        spaced.add(const SizedBox(width: AppTheme.spacing12));
       }
     }
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 8),
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -562,6 +562,7 @@ class _UserPurchasesAdminScreenState
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
+              maxLength: 100,
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search users...',
@@ -578,7 +579,7 @@ class _UserPurchasesAdminScreenState
                 filled: true,
                 fillColor: context.surface,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -590,7 +591,7 @@ class _UserPurchasesAdminScreenState
         // Info banner about data sources
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 0),
             child: StatusBanner.info(
               title:
                   'Shows purchases synced via app login or RevenueCat webhooks.',
@@ -604,24 +605,24 @@ class _UserPurchasesAdminScreenState
         // Filter chips
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 0),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
                   _buildFilterChip(context, _UserFilter.all, 'All'),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   _buildFilterChip(context, _UserFilter.paying, 'Paying'),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   _buildFilterChip(context, _UserFilter.free, 'Free'),
                   if (_hasExclusions) ...[
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     _buildFilterChip(context, _UserFilter.excluded, 'Excluded'),
                   ],
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   _buildFilterChip(context, _UserFilter.anonymous, 'Anonymous'),
                   if (_users.any((u) => u.isDeleted)) ...[
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     _buildFilterChip(context, _UserFilter.deleted, 'Deleted'),
                   ],
                 ],
@@ -630,7 +631,7 @@ class _UserPurchasesAdminScreenState
           ),
         ),
 
-        const SliverToBoxAdapter(child: SizedBox(height: 16)),
+        const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing16)),
 
         // Content
         if (_isLoading)
@@ -648,17 +649,17 @@ class _UserPurchasesAdminScreenState
                     size: 48,
                     color: context.textSecondary,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     'Error loading users',
                     style: TextStyle(color: context.textSecondary),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Text(
                     _error!,
                     style: TextStyle(color: context.textTertiary, fontSize: 12),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   ElevatedButton.icon(
                     onPressed: _loadUsers,
                     icon: const Icon(Icons.refresh),
@@ -679,7 +680,7 @@ class _UserPurchasesAdminScreenState
                     size: 48,
                     color: context.textSecondary,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     _searchController.text.isNotEmpty
                         ? 'No users match your search'
@@ -739,7 +740,7 @@ class _UserPurchasesAdminScreenState
           color: isActive
               ? context.accentColor.withValues(alpha: 0.2)
               : context.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppTheme.radius20),
           border: Border.all(
             color: isActive ? context.accentColor : context.border,
           ),
@@ -755,14 +756,14 @@ class _UserPurchasesAdminScreenState
                 color: isActive ? context.accentColor : context.textSecondary,
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppTheme.spacing6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: isActive
                     ? context.accentColor.withValues(alpha: 0.15)
                     : context.card,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
               ),
               child: Text(
                 '$count',
@@ -809,10 +810,10 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget card = Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -822,7 +823,7 @@ class _StatCard extends StatelessWidget {
           Row(
             children: [
               Icon(icon, size: 16, color: color),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Flexible(
                 child: Text(
                   label,
@@ -835,7 +836,7 @@ class _StatCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             value,
             maxLines: 1,
@@ -847,7 +848,7 @@ class _StatCard extends StatelessWidget {
             ),
           ),
           if (subtitle != null) ...[
-            const SizedBox(height: 2),
+            const SizedBox(height: AppTheme.spacing2),
             Text(
               subtitle!,
               style: TextStyle(
@@ -894,12 +895,12 @@ class _UserTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Material(
           color: context.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: InkWell(
             onTap: onTap,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               child: Row(
                 children: [
                   // Avatar
@@ -913,7 +914,7 @@ class _UserTile extends StatelessWidget {
                         ? Colors.white
                         : context.textSecondary,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   // User info
                   Expanded(
                     child: Column(
@@ -934,7 +935,7 @@ class _UserTile extends StatelessWidget {
                               ),
                             ),
                             if (user.isAnonymous) ...[
-                              const SizedBox(width: 6),
+                              const SizedBox(width: AppTheme.spacing6),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 6,
@@ -942,7 +943,9 @@ class _UserTile extends StatelessWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.orange.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius4,
+                                  ),
                                 ),
                                 child: Text(
                                   'Anonymous',
@@ -955,7 +958,7 @@ class _UserTile extends StatelessWidget {
                               ),
                             ],
                             if (isDeleted) ...[
-                              const SizedBox(width: 6),
+                              const SizedBox(width: AppTheme.spacing6),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 6,
@@ -963,7 +966,9 @@ class _UserTile extends StatelessWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.red.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius4,
+                                  ),
                                 ),
                                 child: Text(
                                   'Deleted',
@@ -978,7 +983,7 @@ class _UserTile extends StatelessWidget {
                           ],
                         ),
                         if (user.email != null) ...[
-                          const SizedBox(height: 2),
+                          const SizedBox(height: AppTheme.spacing2),
                           Text(
                             user.email!,
                             style: TextStyle(
@@ -988,7 +993,7 @@ class _UserTile extends StatelessWidget {
                           ),
                         ],
                         if (user.purchases.isNotEmpty) ...[
-                          const SizedBox(height: 6),
+                          const SizedBox(height: AppTheme.spacing6),
                           Wrap(
                             spacing: 4,
                             runSpacing: 4,
@@ -1002,7 +1007,9 @@ class _UserTile extends StatelessWidget {
                                   color: _getProductColor(
                                     p.productId,
                                   ).withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius4,
+                                  ),
                                 ),
                                 child: Text(
                                   _formatProductName(p.productId),
@@ -1021,7 +1028,7 @@ class _UserTile extends StatelessWidget {
                   ),
                   // Purchase count badge
                   if (hasPurchases) ...[
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -1029,7 +1036,7 @@ class _UserTile extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: Colors.green.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Text(
                         '${user.purchases.length}',
@@ -1043,12 +1050,12 @@ class _UserTile extends StatelessWidget {
                   ],
                   // Exclude from revenue toggle
                   if (hasPurchases) ...[
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppTheme.spacing4),
                     GestureDetector(
                       onTap: onToggleExclude,
                       behavior: HitTestBehavior.opaque,
                       child: Padding(
-                        padding: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.all(AppTheme.spacing4),
                         child: Icon(
                           isExcluded
                               ? Icons.money_off_csred_outlined
@@ -1062,7 +1069,7 @@ class _UserTile extends StatelessWidget {
                     ),
                   ],
                   // Chevron
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTheme.spacing4),
                   Icon(
                     Icons.chevron_right,
                     color: context.textTertiary,
@@ -1129,7 +1136,7 @@ class _UserDetailSheet extends StatelessWidget {
                   height: 4,
                   decoration: BoxDecoration(
                     color: context.textTertiary,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(AppTheme.radius2),
                   ),
                 ),
 
@@ -1137,7 +1144,7 @@ class _UserDetailSheet extends StatelessWidget {
                 Expanded(
                   child: ListView(
                     controller: scrollController,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     children: [
                       // User header
                       Row(
@@ -1148,7 +1155,7 @@ class _UserDetailSheet extends StatelessWidget {
                             backgroundColor: context.surface,
                             foregroundColor: context.textSecondary,
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: AppTheme.spacing16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1166,7 +1173,7 @@ class _UserDetailSheet extends StatelessWidget {
                                       ),
                                     ),
                                     if (user.isAnonymous) ...[
-                                      const SizedBox(width: 8),
+                                      const SizedBox(width: AppTheme.spacing8),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 8,
@@ -1191,7 +1198,7 @@ class _UserDetailSheet extends StatelessWidget {
                                       ),
                                     ],
                                     if (user.isDeleted) ...[
-                                      const SizedBox(width: 8),
+                                      const SizedBox(width: AppTheme.spacing8),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 8,
@@ -1231,7 +1238,7 @@ class _UserDetailSheet extends StatelessWidget {
                         ],
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppTheme.spacing24),
 
                       // IDs section
                       _SectionHeader(title: 'Identifiers'),
@@ -1256,7 +1263,7 @@ class _UserDetailSheet extends StatelessWidget {
                           value: dateFormat.format(user.createdAt!),
                         ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppTheme.spacing24),
 
                       // Purchases section
                       _SectionHeader(
@@ -1272,10 +1279,12 @@ class _UserDetailSheet extends StatelessWidget {
 
                       if (user.purchases.isEmpty)
                         Container(
-                          padding: const EdgeInsets.all(24),
+                          padding: const EdgeInsets.all(AppTheme.spacing24),
                           decoration: BoxDecoration(
                             color: context.surface,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
                           ),
                           child: Center(
                             child: Column(
@@ -1285,7 +1294,7 @@ class _UserDetailSheet extends StatelessWidget {
                                   size: 48,
                                   color: context.textTertiary,
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: AppTheme.spacing8),
                                 Text(
                                   'No purchases',
                                   style: TextStyle(
@@ -1364,15 +1373,15 @@ class _InfoTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.surface,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
       ),
       child: Row(
         children: [
           Icon(icon, size: 20, color: context.textSecondary),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1416,10 +1425,10 @@ class _PurchaseTile extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.surface,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -1428,10 +1437,10 @@ class _PurchaseTile extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppTheme.spacing8),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: Icon(
                   _getProductIcon(purchase.productId),
@@ -1439,7 +1448,7 @@ class _PurchaseTile extends StatelessWidget {
                   size: 20,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1467,7 +1476,7 @@ class _PurchaseTile extends StatelessWidget {
                   color: _getStatusColor(
                     purchase.status,
                   ).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Text(
                   purchase.status.toUpperCase(),
@@ -1480,7 +1489,7 @@ class _PurchaseTile extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Row(
             children: [
               if (purchase.purchasedAt != null) ...[
@@ -1489,28 +1498,28 @@ class _PurchaseTile extends StatelessWidget {
                   size: 12,
                   color: context.textTertiary,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 Text(
                   dateFormat.format(purchase.purchasedAt!),
                   style: context.captionStyle?.copyWith(
                     color: context.textSecondary,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
               ],
               if (_productPricesAud.containsKey(purchase.productId)) ...[
                 Icon(Icons.attach_money, size: 12, color: context.textTertiary),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 Text(
                   'A\$${_productPricesAud[purchase.productId]!.toStringAsFixed(2)}',
                   style: context.captionStyle?.copyWith(
                     color: context.textSecondary,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
               ],
               Icon(Icons.store, size: 12, color: context.textTertiary),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
               Text(
                 purchase.source,
                 style: context.captionStyle?.copyWith(

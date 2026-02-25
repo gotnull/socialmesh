@@ -199,33 +199,33 @@ class _TrafficManagementConfigScreenState
           const SliverFillRemaining(child: ScreenLoadingIndicator())
         else
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _SectionHeader(title: 'GENERAL'),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _buildGeneralSection(),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 _SectionHeader(title: 'POSITION DEDUPLICATION'),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _buildPositionDedupSection(),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 _SectionHeader(title: 'NODEINFO DIRECT RESPONSE'),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _buildNodeinfoSection(),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 _SectionHeader(title: 'RATE LIMITING'),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _buildRateLimitSection(),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 _SectionHeader(title: 'UNKNOWN PACKETS'),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _buildUnknownPacketsSection(),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 _SectionHeader(title: 'HOP MANAGEMENT'),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 _buildHopManagementSection(),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spacing32),
               ]),
             ),
           ),
@@ -237,9 +237,9 @@ class _TrafficManagementConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: _SettingsTile(
         icon: Icons.traffic,
         title: 'Enable Traffic Management',
@@ -259,9 +259,9 @@ class _TrafficManagementConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -280,9 +280,9 @@ class _TrafficManagementConfigScreenState
             ),
           ),
           if (_positionDedupEnabled && _enabled) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Divider(color: context.border),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Precision Bits: $_positionPrecisionBits',
               style: TextStyle(
@@ -291,7 +291,7 @@ class _TrafficManagementConfigScreenState
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               'Lower values mean more aggressive deduplication',
               style: TextStyle(color: context.textSecondary, fontSize: 12),
@@ -313,7 +313,7 @@ class _TrafficManagementConfigScreenState
                 },
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Min Interval: ${_positionMinIntervalSecs}s',
               style: TextStyle(
@@ -322,7 +322,7 @@ class _TrafficManagementConfigScreenState
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               'Minimum seconds between position updates',
               style: TextStyle(color: context.textSecondary, fontSize: 12),
@@ -354,9 +354,9 @@ class _TrafficManagementConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -375,9 +375,9 @@ class _TrafficManagementConfigScreenState
             ),
           ),
           if (_nodeinfoDirectResponse && _enabled) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Divider(color: context.border),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Max Hops: $_nodeinfoDirectResponseMaxHops',
               style: TextStyle(
@@ -386,7 +386,7 @@ class _TrafficManagementConfigScreenState
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               'Maximum hops for direct NodeInfo response',
               style: TextStyle(color: context.textSecondary, fontSize: 12),
@@ -420,9 +420,9 @@ class _TrafficManagementConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -441,9 +441,9 @@ class _TrafficManagementConfigScreenState
             ),
           ),
           if (_rateLimitEnabled && _enabled) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Divider(color: context.border),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Window: ${_rateLimitWindowSecs}s',
               style: TextStyle(
@@ -452,7 +452,7 @@ class _TrafficManagementConfigScreenState
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               'Time window for rate limit calculation',
               style: TextStyle(color: context.textSecondary, fontSize: 12),
@@ -474,7 +474,7 @@ class _TrafficManagementConfigScreenState
                 },
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Max Packets: $_rateLimitMaxPackets',
               style: TextStyle(
@@ -483,7 +483,7 @@ class _TrafficManagementConfigScreenState
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               'Maximum packets per window before dropping',
               style: TextStyle(color: context.textSecondary, fontSize: 12),
@@ -515,9 +515,9 @@ class _TrafficManagementConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -536,9 +536,9 @@ class _TrafficManagementConfigScreenState
             ),
           ),
           if (_dropUnknownEnabled && _enabled) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Divider(color: context.border),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Threshold: $_unknownPacketThreshold',
               style: TextStyle(
@@ -547,7 +547,7 @@ class _TrafficManagementConfigScreenState
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               'Number of unknown packets before dropping',
               style: TextStyle(color: context.textSecondary, fontSize: 12),
@@ -579,9 +579,9 @@ class _TrafficManagementConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -599,7 +599,7 @@ class _TrafficManagementConfigScreenState
                   : null,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _SettingsTile(
             icon: Icons.compress,
             title: 'Exhaust Hop on Position',
@@ -614,7 +614,7 @@ class _TrafficManagementConfigScreenState
                   : null,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _SettingsTile(
             icon: Icons.route,
             title: 'Preserve Router Hops',
@@ -653,7 +653,7 @@ class _SettingsTile extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, color: context.textSecondary, size: 22),
-        SizedBox(width: 12),
+        SizedBox(width: AppTheme.spacing12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

@@ -149,7 +149,6 @@ mixin LifecycleSafeMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     Color? backgroundColor,
     SnackBarType type = SnackBarType.info,
   }) {
-    if (!mounted) return;
     if (backgroundColor == Colors.green ||
         backgroundColor == AppTheme.successGreen) {
       showSuccessSnackBar(context, message, duration: duration);
@@ -311,7 +310,6 @@ mixin StatefulLifecycleSafeMixin<T extends StatefulWidget> on State<T> {
     Color? backgroundColor,
     SnackBarType type = SnackBarType.info,
   }) {
-    if (!mounted) return;
     if (backgroundColor == Colors.green ||
         backgroundColor == AppTheme.successGreen) {
       showSuccessSnackBar(context, message, duration: duration);

@@ -51,7 +51,7 @@ class AppBarOverflowMenu<T> extends StatelessWidget {
     final resolvedShape =
         shape ??
         RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           side: BorderSide(color: context.border),
         );
     return PopupMenuButton<T>(

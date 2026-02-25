@@ -187,13 +187,13 @@ class _EncryptionKeyContentState extends State<EncryptionKeyContent> {
           title: 'Encryption Key',
           subtitle: '$keyBits-bit · $keyBytes bytes · Base64',
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppTheme.spacing20),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           decoration: BoxDecoration(
             color: context.background,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(color: context.border),
           ),
           child: _showKey
@@ -218,7 +218,7 @@ class _EncryptionKeyContentState extends State<EncryptionKeyContent> {
                   ),
                 ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
         Row(
           children: [
             Expanded(
@@ -229,7 +229,7 @@ class _EncryptionKeyContentState extends State<EncryptionKeyContent> {
                   side: BorderSide(color: context.border),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                 ),
                 icon: Icon(
@@ -245,7 +245,7 @@ class _EncryptionKeyContentState extends State<EncryptionKeyContent> {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: _showKey
@@ -264,7 +264,7 @@ class _EncryptionKeyContentState extends State<EncryptionKeyContent> {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                 ),
                 icon: const Icon(Icons.copy, size: 20),

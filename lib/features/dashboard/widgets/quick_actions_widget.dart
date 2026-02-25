@@ -58,7 +58,7 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
                   onTap: () => _showQuickMessageSheet(context),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: _ActionButton(
                   icon: Icons.location_on,
@@ -67,7 +67,7 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
                   onTap: () => _shareLocation(context),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: hasTracerouteCooldown && tracerouteTask != null
                     ? _TracerouteCooldownButton(
@@ -81,7 +81,7 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
                         onTap: () => _showTracerouteSheet(context),
                       ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: _PositionRequestButton(
                   isConnected: isConnected,
@@ -90,7 +90,7 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           // Second row: SOS button
           _SosButton(enabled: isConnected, onTap: () => _showSosSheet(context)),
         ],
@@ -125,7 +125,6 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
       // navigation and confirms propagation to the mesh.
       ref.read(countdownProvider.notifier).startPositionBroadcastCountdown();
     } catch (e) {
-      if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(content: Text('Failed to share location: $e')),
       );
@@ -162,7 +161,6 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
       // across navigation and sets expectations for trickle-in time.
       notifier.startPositionRequestCountdown();
     } catch (e) {
-      if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(content: Text('Failed to request positions: $e')),
       );
@@ -198,7 +196,7 @@ class _ActionButton extends StatelessWidget {
           color: enabled
               ? context.accentColor.withValues(alpha: 0.08)
               : context.background,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(
             color: enabled
                 ? context.accentColor.withValues(alpha: 0.2)
@@ -209,7 +207,7 @@ class _ActionButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 18, color: color),
-            const SizedBox(height: 2),
+            const SizedBox(height: AppTheme.spacing2),
             Text(
               label,
               style: TextStyle(
@@ -244,7 +242,7 @@ class _TracerouteCooldownButton extends StatelessWidget {
       height: 48,
       decoration: BoxDecoration(
         color: context.background,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -279,7 +277,7 @@ class _TracerouteCooldownButton extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppTheme.spacing2),
           Text(
             'Traceroute',
             style: TextStyle(
@@ -320,7 +318,7 @@ class _PositionRequestButton extends ConsumerWidget {
         height: 48,
         decoration: BoxDecoration(
           color: context.background,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Column(
@@ -358,7 +356,7 @@ class _PositionRequestButton extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: AppTheme.spacing2),
             Text(
               'Positions',
               style: TextStyle(
@@ -407,7 +405,7 @@ class _SosButton extends StatelessWidget {
             color: enabled
                 ? AppTheme.errorRed.withValues(alpha: 0.15)
                 : context.background,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(
               color: enabled
                   ? AppTheme.errorRed.withValues(alpha: 0.4)
@@ -422,7 +420,7 @@ class _SosButton extends StatelessWidget {
                 size: 16,
                 color: enabled ? AppTheme.errorRed : context.textTertiary,
               ),
-              SizedBox(width: 6),
+              SizedBox(width: AppTheme.spacing6),
               Text(
                 'Emergency SOS',
                 style: TextStyle(

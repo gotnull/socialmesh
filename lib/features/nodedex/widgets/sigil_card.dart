@@ -265,7 +265,7 @@ class _CardBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = width / 320.0;
-    final borderRadius = BorderRadius.circular(14 * s);
+    final borderRadius = BorderRadius.circular(AppTheme.radius14 * s);
 
     // The outermost container paints a solid dark background behind
     // everything so captured PNGs never show transparent corners.
@@ -544,7 +544,7 @@ class _TraitBanner extends StatelessWidget {
         children: [
           // Trait icon
           TraitIcon(trait: trait, size: 13 * scale),
-          SizedBox(width: 5 * scale),
+          SizedBox(width: AppTheme.spacing5 * scale),
 
           // Trait name
           Text(
@@ -560,7 +560,7 @@ class _TraitBanner extends StatelessWidget {
 
           // Role badge
           if (role != null && role!.isNotEmpty) ...[
-            SizedBox(width: 8 * scale),
+            SizedBox(width: AppTheme.spacing8 * scale),
             Container(
               padding: EdgeInsets.symmetric(
                 horizontal: 6 * scale,
@@ -568,7 +568,7 @@ class _TraitBanner extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.07),
-                borderRadius: BorderRadius.circular(4 * scale),
+                borderRadius: BorderRadius.circular(AppTheme.radius4 * scale),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.1),
                   width: 0.5,
@@ -753,7 +753,12 @@ class _NamePlate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(16 * scale, 0, 16 * scale, 2 * scale),
+      padding: EdgeInsets.fromLTRB(
+        AppTheme.spacing16 * scale,
+        0,
+        16 * scale,
+        2 * scale,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -771,7 +776,7 @@ class _NamePlate extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          SizedBox(height: 3 * scale),
+          SizedBox(height: AppTheme.spacing3 * scale),
           // Hex ID in mono
           Text(
             hexId,
@@ -942,7 +947,7 @@ class _DeviceInfoGrid extends StatelessWidget {
             color: sigil.primaryColor,
             scale: scale,
           ),
-          SizedBox(height: 4 * scale),
+          SizedBox(height: AppTheme.spacing4 * scale),
           // Role + Firmware side by side
           Row(
             children: [
@@ -954,7 +959,7 @@ class _DeviceInfoGrid extends StatelessWidget {
                   scale: scale,
                 ),
               ),
-              SizedBox(width: 4 * scale),
+              SizedBox(width: AppTheme.spacing4 * scale),
               Expanded(
                 child: _DeviceInfoCell(
                   label: 'FIRMWARE',
@@ -1015,7 +1020,7 @@ class _DeviceInfoCell extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 7 * scale),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(6 * scale),
+        borderRadius: BorderRadius.circular(AppTheme.radius6 * scale),
         border: Border.all(color: color.withValues(alpha: 0.12), width: 0.5),
       ),
       child: Row(
@@ -1076,9 +1081,9 @@ class _PaletteLine extends StatelessWidget {
         children: [
           // Color palette dots
           _PaletteDot(color: sigil.primaryColor, size: 7 * scale),
-          SizedBox(width: 3 * scale),
+          SizedBox(width: AppTheme.spacing3 * scale),
           _PaletteDot(color: sigil.secondaryColor, size: 7 * scale),
-          SizedBox(width: 3 * scale),
+          SizedBox(width: AppTheme.spacing3 * scale),
           _PaletteDot(color: sigil.tertiaryColor, size: 7 * scale),
           const Spacer(),
         ],
@@ -1169,7 +1174,7 @@ class _BrandFooter extends StatelessWidget {
                 size: 9 * scale,
                 color: Colors.white.withValues(alpha: 0.25),
               ),
-              SizedBox(width: 3 * scale),
+              SizedBox(width: AppTheme.spacing3 * scale),
               Text(
                 'SOCIALMESH',
                 style: TextStyle(

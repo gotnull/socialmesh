@@ -43,23 +43,23 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
   Widget build(BuildContext context) {
     if (widget.history.length < 2) {
       return Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.spacing24),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Column(
           children: [
             Icon(Icons.show_chart, size: 40, color: context.textTertiary),
-            SizedBox(height: 12),
+            SizedBox(height: AppTheme.spacing12),
             Text(
               'Need more data for charts',
               style: context.bodySecondaryStyle?.copyWith(
                 color: context.textSecondary,
               ),
             ),
-            SizedBox(height: 4),
+            SizedBox(height: AppTheme.spacing4),
             Text(
               '${widget.history.length}/2 data points',
               style: context.bodySmallStyle?.copyWith(
@@ -74,7 +74,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -82,7 +82,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
         children: [
           // Metric selector
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -102,7 +102,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
                                 ? widget.accentColor
                                 : context.textSecondary,
                           ),
-                          SizedBox(width: 6),
+                          SizedBox(width: AppTheme.spacing6),
                           Text(metric.label),
                         ],
                       ),
@@ -132,7 +132,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
           SizedBox(
             height: 200,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 16, 8),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing8, 0, 16, 8),
               child: _buildChart(),
             ),
           ),
@@ -176,7 +176,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(_selectedMetric.icon, size: 32, color: context.textTertiary),
-            SizedBox(height: 8),
+            SizedBox(height: AppTheme.spacing8),
             Text(
               'No ${_selectedMetric.label.toLowerCase()} data',
               style: context.bodySmallStyle?.copyWith(

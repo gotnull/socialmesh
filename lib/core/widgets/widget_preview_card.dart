@@ -62,7 +62,7 @@ class WidgetPreviewCard extends ConsumerWidget {
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(color: context.border, width: 1),
         ),
         clipBehavior: Clip.antiAlias,
@@ -72,7 +72,7 @@ class WidgetPreviewCard extends ConsumerWidget {
             // Widget preview - auto-sizes to content
             // This is the actual widget structure that goes on the dashboard
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               child: WidgetRenderer(
                 schema: schema,
                 node: node,
@@ -87,7 +87,7 @@ class WidgetPreviewCard extends ConsumerWidget {
             Container(height: 1, color: context.border),
             // Info section inside the card
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               child: Row(
                 children: [
                   Expanded(
@@ -108,13 +108,13 @@ class WidgetPreviewCard extends ConsumerWidget {
                               ),
                             ),
                             if (titleLeading != null) ...[
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppTheme.spacing8),
                               titleLeading!,
                             ],
                           ],
                         ),
                         if (subtitle != null) ...[
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppTheme.spacing4),
                           Text(
                             subtitle!,
                             style: TextStyle(
@@ -133,7 +133,7 @@ class WidgetPreviewCard extends ConsumerWidget {
                     GestureDetector(
                       onTap: onShare,
                       child: Padding(
-                        padding: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.all(AppTheme.spacing4),
                         child: Icon(
                           Icons.qr_code_2,
                           color: context.accentColor,
@@ -141,7 +141,8 @@ class WidgetPreviewCard extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    if (trailing != null) const SizedBox(width: 8),
+                    if (trailing != null)
+                      const SizedBox(width: AppTheme.spacing8),
                   ],
                   ?trailing,
                 ],
@@ -178,7 +179,7 @@ class WidgetPreviewCardLoading extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.border, width: 1),
       ),
       clipBehavior: Clip.antiAlias,
@@ -202,7 +203,7 @@ class WidgetPreviewCardLoading extends StatelessWidget {
           // Show placeholder text if provided
           if (title != null || subtitle != null)
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               child: Row(
                 children: [
                   Expanded(
@@ -220,7 +221,7 @@ class WidgetPreviewCardLoading extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         if (subtitle != null) ...[
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppTheme.spacing4),
                           Text(
                             subtitle!,
                             style: TextStyle(
@@ -264,7 +265,7 @@ class WidgetMarketplaceStats extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(Icons.star, size: 14, color: AppTheme.warningYellow),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         Text(
           rating.toStringAsFixed(1),
           style: TextStyle(
@@ -273,15 +274,15 @@ class WidgetMarketplaceStats extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         Icon(Icons.download_done, size: 14, color: context.textTertiary),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         Text(
           _formatInstalls(installs),
           style: TextStyle(color: context.textSecondary, fontSize: 12),
         ),
         if (onFavoriteToggle != null) ...[
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           GestureDetector(
             onTap: onFavoriteToggle,
             child: Icon(

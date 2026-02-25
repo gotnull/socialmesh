@@ -467,7 +467,7 @@ class _ConstellationScreenState extends ConsumerState<ConstellationScreen>
   Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(48),
+        padding: const EdgeInsets.all(AppTheme.spacing48),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -476,7 +476,7 @@ class _ConstellationScreenState extends ConsumerState<ConstellationScreen>
               size: 64,
               color: context.textTertiary.withValues(alpha: 0.5),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Text(
               'No Constellation Yet',
               style: TextStyle(
@@ -486,7 +486,7 @@ class _ConstellationScreenState extends ConsumerState<ConstellationScreen>
                 color: context.textPrimary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               'Discover more nodes to see how they connect.\n'
               'Nodes seen together form constellation links.',
@@ -1040,6 +1040,7 @@ class _ConstellationSearchBarState extends State<_ConstellationSearchBar> {
         ),
       ),
       child: TextField(
+        maxLength: 100,
         controller: _controller,
         autofocus: true,
         style: TextStyle(
@@ -1073,18 +1074,19 @@ class _ConstellationSearchBarState extends State<_ConstellationSearchBar> {
             horizontal: 12,
             vertical: 10,
           ),
+          counterText: '',
           filled: true,
           fillColor: isDark ? const Color(0xFF151B2B) : const Color(0xFFE8EAF0),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppTheme.radius10),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppTheme.radius10),
             borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppTheme.radius10),
             borderSide: BorderSide(
               color: context.accentColor.withValues(alpha: 0.30),
               width: 1.0,

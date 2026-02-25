@@ -15,6 +15,7 @@ import '../interfaces/event_signal_interface.dart';
 import '../vs_node_view/common.dart';
 import '../vs_node_view/data/vs_subgroup.dart';
 import '../vs_node_view/special_nodes/vs_widget_node.dart';
+import 'package:socialmesh/core/theme.dart';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -272,7 +273,7 @@ Widget _buildBatteryWidget(_BatteryConfig config, String triggerType) {
           value: config.nodeNum,
           onChanged: (v) => config.nodeNum = v,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _ThresholdSlider(
           label: 'Threshold',
           suffix: '%',
@@ -312,9 +313,9 @@ Widget _buildGeofenceWidget(_GeofenceConfig config, String triggerType) {
           value: config.nodeNum,
           onChanged: (v) => config.nodeNum = v,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _CoordinateDisplay(lat: config.lat, lon: config.lon),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _ThresholdSlider(
           label: 'Radius',
           suffix: 'm',
@@ -341,7 +342,7 @@ Widget _buildSilentWidget(_SilentConfig config) {
           value: config.nodeNum,
           onChanged: (v) => config.nodeNum = v,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _ThresholdSlider(
           label: 'Silent for',
           suffix: 'min',
@@ -381,7 +382,7 @@ Widget _buildSignalWeakWidget(_SignalWeakConfig config) {
           value: config.nodeNum,
           onChanged: (v) => config.nodeNum = v,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _ThresholdSlider(
           label: 'SNR below',
           suffix: 'dB',
@@ -792,7 +793,7 @@ class _TriggerConfigWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 14, color: kEventSignalColor),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Flexible(
               child: Text(
                 label,
@@ -808,7 +809,7 @@ class _TriggerConfigWidget extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppTheme.spacing10),
         child,
       ],
     );
@@ -853,6 +854,7 @@ class _TextInputFieldState extends State<_TextInputField> {
     return SizedBox(
       height: 36,
       child: TextField(
+        maxLength: 100,
         controller: _controller,
         onChanged: widget.onChanged,
         style: TextStyle(fontSize: 12, color: colorScheme.onSurface),
@@ -868,19 +870,19 @@ class _TextInputFieldState extends State<_TextInputField> {
             vertical: 8,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppTheme.radius6),
             borderSide: BorderSide(
               color: colorScheme.onSurface.withValues(alpha: 0.2),
             ),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppTheme.radius6),
             borderSide: BorderSide(
               color: colorScheme.onSurface.withValues(alpha: 0.15),
             ),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppTheme.radius6),
             borderSide: BorderSide(color: kEventSignalColor, width: 1.5),
           ),
         ),
@@ -936,11 +938,12 @@ class _NodeNumFieldState extends State<_NodeNumField> {
             color: colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         Expanded(
           child: SizedBox(
             height: 32,
             child: TextField(
+              maxLength: 10,
               controller: _controller,
               keyboardType: TextInputType.number,
               onChanged: (v) {
@@ -959,19 +962,19 @@ class _NodeNumFieldState extends State<_NodeNumField> {
                   vertical: 6,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                   borderSide: BorderSide(
                     color: colorScheme.onSurface.withValues(alpha: 0.15),
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                   borderSide: BorderSide(
                     color: colorScheme.onSurface.withValues(alpha: 0.1),
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                   borderSide: BorderSide(
                     color: kEventSignalColor.withValues(alpha: 0.6),
                   ),
@@ -1094,7 +1097,7 @@ class _CoordinateDisplay extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
         border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.1)),
       ),
       child: Text(

@@ -472,10 +472,10 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
               duration: const Duration(milliseconds: 200),
               opacity: _showNodeList ? 0.0 : 1.0,
               child: Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 decoration: BoxDecoration(
                   color: context.card.withAlpha(230),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
                 child: Column(
@@ -489,7 +489,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
                           color: context.accentColor,
                           size: 20,
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppTheme.spacing8),
                         Expanded(
                           child: Text(
                             _center == null
@@ -504,7 +504,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
                       ],
                     ),
                     if (_center != null) ...[
-                      SizedBox(height: 8),
+                      SizedBox(height: AppTheme.spacing8),
                       Text(
                         'Radius: ${_radiusMeters >= 1000 ? '${(_radiusMeters / 1000).toStringAsFixed(1)} km' : '${_radiusMeters.toStringAsFixed(0)} m'}',
                         style: TextStyle(
@@ -534,7 +534,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
                   ),
                   decoration: BoxDecoration(
                     color: context.card.withAlpha(230),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppTheme.radius20),
                     border: Border.all(color: context.border.withAlpha(128)),
                   ),
                   child: Row(
@@ -548,7 +548,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Text(
                         '${allNodesWithPosition.length} nodes',
                         style: TextStyle(
@@ -557,7 +557,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
                           color: context.textPrimary,
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       Icon(
                         Icons.chevron_right,
                         size: 16,
@@ -636,7 +636,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
                       ),
                       decoration: BoxDecoration(
                         color: context.accentColor.withAlpha(26),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                         border: Border.all(
                           color: context.accentColor.withAlpha(77),
                         ),
@@ -648,7 +648,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
                             size: 18,
                             color: context.accentColor,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppTheme.spacing8),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -681,7 +681,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
                               });
                             },
                             child: Container(
-                              padding: const EdgeInsets.all(4),
+                              padding: const EdgeInsets.all(AppTheme.spacing4),
                               child: Icon(
                                 Icons.close,
                                 size: 18,
@@ -692,7 +692,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
                         ],
                       ),
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: AppTheme.spacing12),
                   ],
                   // Radius slider
                   if (_center != null) ...[
@@ -718,7 +718,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppTheme.spacing8),
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         inactiveTrackColor: context.border,
@@ -738,7 +738,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
                         },
                       ),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: AppTheme.spacing8),
                   ],
 
                   // Buttons row
@@ -767,7 +767,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppTheme.spacing12),
                       // Confirm button
                       Expanded(
                         child: FilledButton.icon(
@@ -908,7 +908,7 @@ class _NodeListPanel extends StatelessWidget {
           children: [
             // Header
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 8, 12),
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(color: context.border.withAlpha(128)),
@@ -917,7 +917,7 @@ class _NodeListPanel extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(Icons.list, size: 20, color: context.accentColor),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppTheme.spacing8),
                   Expanded(
                     child: Text(
                       'Select Node',
@@ -947,8 +947,9 @@ class _NodeListPanel extends StatelessWidget {
             ),
             // Search field
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               child: TextField(
+                maxLength: 100,
                 controller: searchController,
                 style: TextStyle(color: context.textPrimary, fontSize: 14),
                 decoration: InputDecoration(
@@ -979,7 +980,7 @@ class _NodeListPanel extends StatelessWidget {
                     vertical: 8,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTheme.radius10),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -1090,7 +1091,7 @@ class _NodeListItem extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppTheme.spacing12),
               // Node info
               Expanded(
                 child: Column(
@@ -1111,7 +1112,7 @@ class _NodeListItem extends StatelessWidget {
                           ),
                         ),
                         if (isMyNode) ...[
-                          SizedBox(width: 6),
+                          SizedBox(width: AppTheme.spacing6),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 4,
@@ -1119,7 +1120,9 @@ class _NodeListItem extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: context.accentColor.withAlpha(51),
-                              borderRadius: BorderRadius.circular(3),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius3,
+                              ),
                             ),
                             child: Text(
                               'YOU',
@@ -1133,7 +1136,7 @@ class _NodeListItem extends StatelessWidget {
                         ],
                       ],
                     ),
-                    SizedBox(height: 2),
+                    SizedBox(height: AppTheme.spacing2),
                     Text(
                       node.shortName ??
                           '!${node.nodeNum.toRadixString(16).toUpperCase()}',
@@ -1154,13 +1157,13 @@ class _NodeListItem extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: context.accentColor.withAlpha(51),
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppTheme.radius4),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.radar, size: 12, color: context.accentColor),
-                      SizedBox(width: 4),
+                      SizedBox(width: AppTheme.spacing4),
                       Text(
                         'Monitored',
                         style: TextStyle(
@@ -1182,7 +1185,7 @@ class _NodeListItem extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: context.border.withAlpha(100),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(AppTheme.radius4),
                     ),
                     child: Text(
                       'Monitor',

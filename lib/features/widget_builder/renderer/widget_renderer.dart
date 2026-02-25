@@ -80,7 +80,7 @@ class WidgetRenderer extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       clipBehavior: Clip.antiAlias,
@@ -143,7 +143,7 @@ class _ElementRenderer extends StatelessWidget {
           decoration: isSelected
               ? BoxDecoration(
                   border: Border.all(color: accentColor, width: 2),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                 )
               : null,
           child: child,
@@ -252,7 +252,7 @@ class _ElementRenderer extends StatelessWidget {
               color: element.style.textColorValue ?? Colors.white,
             ),
             if (element.text != null && element.text!.isNotEmpty)
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
           ],
           if (element.text != null && element.text!.isNotEmpty)
             Text(
@@ -371,7 +371,7 @@ class _ElementRenderer extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: context.card.withValues(alpha: 0.8),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppTheme.radius4),
               ),
               child: Text(
                 'Map View',

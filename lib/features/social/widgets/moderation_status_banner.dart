@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../providers/social_providers.dart';
 import '../screens/moderation_status_screen.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Banner showing current moderation status (warnings, strikes).
 /// Displayed at top of social screens when user has active moderation items.
@@ -62,13 +63,13 @@ class ModerationStatusBanner extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: backgroundColor,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(color: textColor.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
                 Icon(icon, color: textColor, size: 20),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Text(
                     message,
@@ -87,7 +88,7 @@ class ModerationStatusBanner extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       color: textColor,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Text(
                       '${status.unacknowledgedCount}',
@@ -98,7 +99,7 @@ class ModerationStatusBanner extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                 ],
                 Icon(
                   Icons.chevron_right,

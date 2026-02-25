@@ -226,7 +226,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
   Widget _buildDisconnectedState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -235,14 +235,14 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
               size: 64,
               color: Colors.white.withValues(alpha: 0.4),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'MeshCore Disconnected',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: Colors.white.withValues(alpha: 0.8),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Connect to a MeshCore device to view the map',
               textAlign: TextAlign.center,
@@ -259,7 +259,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -268,14 +268,14 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
               size: 64,
               color: Colors.white.withValues(alpha: 0.4),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'No Contacts with Location',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: Colors.white.withValues(alpha: 0.8),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Contacts with GPS coordinates will appear on the map.\n'
               'Make sure your contacts have location sharing enabled.',
@@ -307,7 +307,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
             child: Column(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(AppTheme.spacing8),
                   decoration: BoxDecoration(
                     color: _getContactColor(contact.type),
                     shape: BoxShape.circle,
@@ -373,7 +373,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(color: context.border),
           boxShadow: [
             BoxShadow(
@@ -384,7 +384,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -397,7 +397,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                   color: context.textPrimary,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _buildLegendItem(Icons.person, 'Chat', Colors.blue),
               _buildLegendItem(
                 Icons.cell_tower_rounded,
@@ -420,7 +420,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: color),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Text(
             label,
             style: context.bodySmallStyle?.copyWith(
@@ -441,7 +441,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
           color: context.card,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppTheme.spacing20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,7 +456,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                     color: _getContactColor(
                       contact.type,
                     ).withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Icon(
                     _getContactIcon(contact.type),
@@ -464,7 +464,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                     size: 24,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -477,7 +477,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                           color: context.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.spacing4),
                       Text(
                         contact.typeLabel,
                         style: TextStyle(
@@ -494,7 +494,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             // Location
             _buildInfoRow(
               'Location',
@@ -502,7 +502,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
             ),
             _buildInfoRow('Path', contact.pathLabel),
             _buildInfoRow('Public Key', contact.shortPubKeyHex),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             // Actions
             Row(
               children: [
@@ -527,7 +527,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 OutlinedButton.icon(
                   onPressed: () {
                     Navigator.pop(ctx);
@@ -587,7 +587,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
             color: this.context.card,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppTheme.spacing20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -600,7 +600,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                   color: this.context.textPrimary,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               _buildFilterSwitch(
                 ctx,
                 setSheetState,
@@ -637,7 +637,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                   setState(() {});
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
@@ -666,7 +666,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
       child: Row(
         children: [
           Icon(icon, color: color, size: 24),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Text(
               label,

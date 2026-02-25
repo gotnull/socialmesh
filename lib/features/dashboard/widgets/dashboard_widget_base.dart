@@ -34,7 +34,7 @@ class DashboardWidgetBase extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(
           color: isEditMode
               ? context.accentColor.withValues(alpha: 0.5)
@@ -46,7 +46,7 @@ class DashboardWidgetBase extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -71,9 +71,9 @@ class DashboardWidgetBase extends StatelessWidget {
         children: [
           // Drag handle
           Icon(Icons.drag_indicator, color: context.textTertiary, size: 20),
-          SizedBox(width: 8),
+          SizedBox(width: AppTheme.spacing8),
           Icon(icon, color: context.accentColor, size: 18),
-          SizedBox(width: 8),
+          SizedBox(width: AppTheme.spacing8),
           Expanded(
             child: Text(
               title,
@@ -156,20 +156,20 @@ class StatCardWidget extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppTheme.spacing24),
             child: Column(
               children: [
                 Icon(icon, size: 40, color: context.textPrimary),
-                SizedBox(height: 16),
+                SizedBox(height: AppTheme.spacing16),
                 Text(
                   value,
                   style: TextStyle(
@@ -178,7 +178,7 @@ class StatCardWidget extends StatelessWidget {
                     color: valueColor ?? context.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Text(
                   label,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -217,16 +217,16 @@ class ActionCardWidget extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Row(
               children: [
                 Container(
@@ -234,11 +234,11 @@ class ActionCardWidget extends StatelessWidget {
                   height: 48,
                   decoration: BoxDecoration(
                     color: context.background,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Icon(icon, color: context.accentColor, size: 24),
                 ),
-                SizedBox(width: 16),
+                SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,7 +251,7 @@ class ActionCardWidget extends StatelessWidget {
                           color: context.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.spacing4),
                       Text(
                         subtitle,
                         style: TextStyle(

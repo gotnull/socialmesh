@@ -40,7 +40,7 @@ class NetworkOverviewContent extends ConsumerWidget {
         .length;
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Row(
         children: [
           // Connection status
@@ -103,10 +103,10 @@ class _StatItem extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(AppTheme.spacing10),
               decoration: BoxDecoration(
                 color: iconColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Icon(icon, color: iconColor, size: 22),
             ),
@@ -115,7 +115,7 @@ class _StatItem extends StatelessWidget {
                 right: -4,
                 top: -4,
                 child: Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(AppTheme.spacing4),
                   decoration: BoxDecoration(
                     color: AppTheme.errorRed,
                     shape: BoxShape.circle,
@@ -137,7 +137,7 @@ class _StatItem extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         Text(
           value,
           style: TextStyle(
@@ -146,7 +146,7 @@ class _StatItem extends StatelessWidget {
             color: context.textPrimary,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppTheme.spacing2),
         Text(
           label,
           style: Theme.of(

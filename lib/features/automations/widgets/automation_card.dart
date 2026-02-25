@@ -30,10 +30,10 @@ class AutomationCard extends StatelessWidget {
     return BouncyTap(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(
             color: isEnabled
                 ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
@@ -55,7 +55,7 @@ class AutomationCard extends StatelessWidget {
                             context,
                           ).colorScheme.primary.withValues(alpha: 0.2)
                         : context.background,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Icon(
                     trigger.type.icon,
@@ -65,7 +65,7 @@ class AutomationCard extends StatelessWidget {
                     size: 22,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
 
                 // Name and description
                 Expanded(
@@ -81,7 +81,7 @@ class AutomationCard extends StatelessWidget {
                             ),
                       ),
                       if (automation.description != null) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           automation.description!,
                           style: Theme.of(
@@ -100,9 +100,9 @@ class AutomationCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             const Divider(height: 1),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Trigger and actions summary
             Row(
@@ -117,12 +117,12 @@ class AutomationCard extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
 
                 // Arrow
                 const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
 
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
 
                 // Actions count
                 Expanded(
@@ -138,21 +138,22 @@ class AutomationCard extends StatelessWidget {
             ),
 
             // Stats row
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Row(
               children: [
                 if (automation.triggerCount > 0) ...[
                   Icon(Icons.trending_up, size: 14, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTheme.spacing4),
                   Text(
                     '${automation.triggerCount} runs',
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
                 ],
                 if (automation.lastTriggered != null) ...[
-                  if (automation.triggerCount > 0) const SizedBox(width: 16),
+                  if (automation.triggerCount > 0)
+                    const SizedBox(width: AppTheme.spacing16),
                   Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTheme.spacing4),
                   Text(
                     _formatLastTriggered(automation.lastTriggered!),
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
@@ -169,7 +170,7 @@ class AutomationCard extends StatelessWidget {
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                 ],
                 // Delete button - always visible
                 GestureDetector(
@@ -198,13 +199,13 @@ class AutomationCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Flexible(
             child: Text(
               label,

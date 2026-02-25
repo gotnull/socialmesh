@@ -63,7 +63,7 @@ class _CategoryProductsScreenState
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     'Error loading products',
                     style: TextStyle(color: context.textPrimary),
@@ -91,7 +91,7 @@ class _CategoryProductsScreenState
                         color: context.textTertiary,
                         size: 64,
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: AppTheme.spacing16),
                       Text(
                         'No products found',
                         style: TextStyle(
@@ -99,7 +99,7 @@ class _CategoryProductsScreenState
                           fontSize: 18,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppTheme.spacing8),
                       Text(
                         'Try adjusting your filters',
                         style: TextStyle(color: context.textSecondary),
@@ -147,7 +147,7 @@ class _CategoryProductsScreenState
 
                 // Product grid
                 SliverPadding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
                   sliver: SliverGrid(
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
@@ -249,8 +249,8 @@ class _CategoryProductsScreenState
           if (_sortBy == value)
             Icon(Icons.check, color: context.accentColor, size: 18)
           else
-            const SizedBox(width: 18),
-          const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing18),
+          const SizedBox(width: AppTheme.spacing8),
           Text(label, style: TextStyle(color: context.textPrimary)),
         ],
       ),
@@ -275,7 +275,7 @@ class _CategoryProductsScreenState
             builder: (context, scrollController) {
               return SingleChildScrollView(
                 controller: scrollController,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(AppTheme.spacing20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -286,11 +286,11 @@ class _CategoryProductsScreenState
                         height: 4,
                         decoration: BoxDecoration(
                           color: context.border,
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: BorderRadius.circular(AppTheme.radius2),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppTheme.spacing20),
 
                     // Title
                     Row(
@@ -316,7 +316,7 @@ class _CategoryProductsScreenState
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppTheme.spacing24),
 
                     // In Stock Only
                     SwitchListTile(
@@ -342,7 +342,7 @@ class _CategoryProductsScreenState
                         return null;
                       }),
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppTheme.spacing16),
 
                     // Price Range
                     Text(
@@ -353,7 +353,7 @@ class _CategoryProductsScreenState
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -378,7 +378,7 @@ class _CategoryProductsScreenState
                         setState(() => _priceRange = v);
                       },
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppTheme.spacing24),
 
                     // Frequency Bands
                     Text(
@@ -389,7 +389,7 @@ class _CategoryProductsScreenState
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppTheme.spacing12),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -423,7 +423,7 @@ class _CategoryProductsScreenState
                         );
                       }).toList(),
                     ),
-                    SizedBox(height: 32),
+                    SizedBox(height: AppTheme.spacing32),
 
                     // Apply button
                     SizedBox(
@@ -435,7 +435,9 @@ class _CategoryProductsScreenState
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
                           ),
                         ),
                         child: const Text(
@@ -473,7 +475,7 @@ class _ProductGridCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Material(
       color: context.card,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
       child: InkWell(
         onTap: () => Navigator.push(
           context,
@@ -481,7 +483,7 @@ class _ProductGridCard extends ConsumerWidget {
             builder: (_) => ProductDetailScreen(productId: product.id),
           ),
         ),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -515,7 +517,7 @@ class _ProductGridCard extends ConsumerWidget {
                         ),
                         decoration: BoxDecoration(
                           color: Colors.red,
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(AppTheme.radius4),
                         ),
                         child: Text(
                           '-${product.discountPercent}%',
@@ -556,7 +558,7 @@ class _ProductGridCard extends ConsumerWidget {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppTheme.spacing10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -570,7 +572,7 @@ class _ProductGridCard extends ConsumerWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Text(
                       product.sellerName,
                       style: TextStyle(
@@ -592,7 +594,7 @@ class _ProductGridCard extends ConsumerWidget {
                           ),
                         ),
                         if (product.isOnSale) ...[
-                          SizedBox(width: 4),
+                          SizedBox(width: AppTheme.spacing4),
                           Text(
                             product.formattedComparePrice!,
                             style: TextStyle(
@@ -605,11 +607,11 @@ class _ProductGridCard extends ConsumerWidget {
                       ],
                     ),
                     if (product.reviewCount > 0) ...[
-                      SizedBox(height: 4),
+                      SizedBox(height: AppTheme.spacing4),
                       Row(
                         children: [
                           Icon(Icons.star, color: Colors.amber, size: 12),
-                          const SizedBox(width: 2),
+                          const SizedBox(width: AppTheme.spacing2),
                           Text(
                             '${product.rating.toStringAsFixed(1)} (${product.reviewCount})',
                             style: TextStyle(

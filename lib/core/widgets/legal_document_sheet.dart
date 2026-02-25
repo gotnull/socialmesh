@@ -119,7 +119,7 @@ class _LegalWebViewScreenState extends State<_LegalWebViewScreen> {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -128,7 +128,7 @@ class _LegalWebViewScreenState extends State<_LegalWebViewScreen> {
               size: 48,
               color: accentColor.withValues(alpha: 0.7),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'Unable to load page',
               style: TextStyle(
@@ -137,7 +137,7 @@ class _LegalWebViewScreenState extends State<_LegalWebViewScreen> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'This content requires an internet connection. '
               'Please check your connection and try again.',
@@ -145,7 +145,7 @@ class _LegalWebViewScreenState extends State<_LegalWebViewScreen> {
               textAlign: TextAlign.center,
             ),
             if (_errorDescription.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 _errorDescription,
                 style: TextStyle(color: context.textTertiary, fontSize: 11),
@@ -154,7 +154,7 @@ class _LegalWebViewScreenState extends State<_LegalWebViewScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             FilledButton.icon(
               onPressed: _retry,
               icon: const Icon(Icons.refresh, size: 18),
@@ -165,7 +165,7 @@ class _LegalWebViewScreenState extends State<_LegalWebViewScreen> {
                   vertical: 12,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
               ),
             ),
@@ -249,7 +249,6 @@ class _LegalWebViewScreenState extends State<_LegalWebViewScreen> {
                       if (mounted) setState(() => _progress = progress / 100);
                     },
                     onLoadStop: (controller, url) async {
-                      if (!mounted) return;
                       setState(() => _progress = 1.0);
                       final canGoBack = await controller.canGoBack();
                       if (mounted) setState(() => _canGoBack = canGoBack);

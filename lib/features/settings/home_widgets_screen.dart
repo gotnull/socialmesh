@@ -25,16 +25,16 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
       title: 'Home Widgets',
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Header
               _buildHeader(context, accentColor),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Available Widgets Section
               _buildSectionHeader('AVAILABLE WIDGETS'),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _buildWidgetCard(
                 context,
                 icon: Icons.people,
@@ -43,7 +43,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
                 sizes: ['Small', 'Medium'],
                 accentColor: accentColor,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _buildWidgetCard(
                 context,
                 icon: Icons.message,
@@ -52,7 +52,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
                 sizes: ['Medium', 'Large'],
                 accentColor: accentColor,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _buildWidgetCard(
                 context,
                 icon: Icons.battery_full,
@@ -61,7 +61,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
                 sizes: ['Small'],
                 accentColor: accentColor,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _buildWidgetCard(
                 context,
                 icon: Icons.send,
@@ -70,7 +70,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
                 sizes: ['Small', 'Medium'],
                 accentColor: accentColor,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _buildWidgetCard(
                 context,
                 icon: Icons.gps_fixed,
@@ -79,17 +79,17 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
                 sizes: ['Small'],
                 accentColor: accentColor,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // How to Add Section
               _buildSectionHeader('HOW TO ADD WIDGETS'),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _buildInstructions(context, accentColor),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Tips Section
               _buildSectionHeader('TIPS'),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _buildTipsSection(context, accentColor),
             ]),
           ),
@@ -110,7 +110,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
         'Widget Pack';
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -120,7 +120,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
             accentColor.withValues(alpha: 0.1),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: accentColor.withValues(alpha: 0.5)),
       ),
       child: Row(
@@ -130,7 +130,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
             height: 56,
             decoration: BoxDecoration(
               color: accentColor,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppTheme.radius14),
               boxShadow: [
                 BoxShadow(
                   color: accentColor.withValues(alpha: 0.4),
@@ -141,7 +141,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
             ),
             child: Icon(Icons.widgets, color: Colors.white, size: 28),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppTheme.spacing16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,10 +192,10 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
     required Color accentColor,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Row(
@@ -205,11 +205,11 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
             height: 48,
             decoration: BoxDecoration(
               color: accentColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Icon(icon, color: accentColor, size: 24),
           ),
-          SizedBox(width: 16),
+          SizedBox(width: AppTheme.spacing16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,14 +222,14 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
                     color: context.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   description,
                   style: context.bodySmallStyle?.copyWith(
                     color: context.textTertiary,
                   ),
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: AppTheme.spacing8),
                 Wrap(
                   spacing: 6,
                   children: sizes.map((size) {
@@ -240,7 +240,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: context.background,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(AppTheme.radius6),
                         border: Border.all(color: context.border),
                       ),
                       child: Text(
@@ -315,10 +315,10 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
           ];
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -331,7 +331,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
                 color: accentColor,
                 size: 20,
               ),
-              SizedBox(width: 8),
+              SizedBox(width: AppTheme.spacing8),
               Text(
                 isIOS ? 'iOS Instructions' : 'Android Instructions',
                 style: TextStyle(
@@ -342,7 +342,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           ...steps.map(
             (step) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -367,7 +367,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -401,10 +401,10 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
 
   Widget _buildTipsSection(BuildContext context, Color accentColor) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -415,19 +415,19 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
             'Widgets update automatically when connected',
             accentColor,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildTipRow(
             Icons.wifi_off,
             'Offline data shown when disconnected',
             accentColor,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildTipRow(
             Icons.touch_app,
             'Tap any widget to open the app',
             accentColor,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildTipRow(
             Icons.palette,
             'Widget colors match your accent color',
@@ -442,7 +442,7 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
     return Row(
       children: [
         Icon(icon, size: 18, color: accentColor.withValues(alpha: 0.7)),
-        SizedBox(width: 12),
+        SizedBox(width: AppTheme.spacing12),
         Expanded(
           child: Text(
             text,

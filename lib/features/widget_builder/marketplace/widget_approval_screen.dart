@@ -90,7 +90,6 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen>
       showSuccessSnackBar(context, '${widget.name} approved');
       _loadPendingWidgets();
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to approve: $e');
     } finally {
       safeSetState(() => _processingWidgetId = null);
@@ -114,13 +113,14 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Why is "${widget.name}" being rejected?',
             style: TextStyle(color: context.textSecondary),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           TextField(
+            maxLength: 500,
             controller: controller,
             maxLines: 3,
             decoration: InputDecoration(
@@ -129,13 +129,13 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen>
               filled: true,
               fillColor: context.background,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide.none,
               ),
             ),
             style: TextStyle(color: context.textPrimary),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Row(
             children: [
               Expanded(
@@ -145,13 +145,13 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen>
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide(color: Colors.grey.shade700),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Cancel'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
                   onPressed: () {
@@ -165,7 +165,7 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen>
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: AppTheme.errorRed,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                   child: const Text('Reject'),
@@ -198,7 +198,6 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen>
       showSuccessSnackBar(context, '${widget.name} rejected');
       _loadPendingWidgets();
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to reject: $e');
     } finally {
       safeSetState(() => _processingWidgetId = null);
@@ -232,13 +231,13 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.error_outline, size: 64, color: AppTheme.errorRed),
-                SizedBox(height: 16),
+                SizedBox(height: AppTheme.spacing16),
                 Text(
                   _error!,
                   style: TextStyle(color: context.textSecondary),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 TextButton(
                   onPressed: _loadPendingWidgets,
                   child: const Text('Retry'),
@@ -262,7 +261,7 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen>
                   size: 64,
                   color: AppTheme.successGreen,
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppTheme.spacing16),
                 Text(
                   'No widgets pending approval',
                   style: TextStyle(color: context.textSecondary, fontSize: 18),
@@ -276,7 +275,7 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen>
 
     return [
       SliverPadding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         sliver: SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
             final widget = _pendingWidgets[index];
@@ -313,7 +312,7 @@ class _PendingWidgetCard extends StatelessWidget {
       color: context.card,
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -337,7 +336,7 @@ class _PendingWidgetCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: AppTheme.warningYellow.withAlpha(51),
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppTheme.radius4),
                   ),
                   child: Text(
                     'PENDING',
@@ -350,7 +349,7 @@ class _PendingWidgetCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
 
             // Description
             if (widget.description.isNotEmpty)
@@ -360,7 +359,7 @@ class _PendingWidgetCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-            SizedBox(height: 12),
+            SizedBox(height: AppTheme.spacing12),
 
             // Meta info
             Row(
@@ -370,32 +369,32 @@ class _PendingWidgetCard extends StatelessWidget {
                   size: 16,
                   color: context.textSecondary,
                 ),
-                SizedBox(width: 4),
+                SizedBox(width: AppTheme.spacing4),
                 Text(
                   widget.author,
                   style: TextStyle(color: context.textSecondary, fontSize: 12),
                 ),
-                SizedBox(width: 16),
+                SizedBox(width: AppTheme.spacing16),
                 Icon(
                   Icons.category_outlined,
                   size: 16,
                   color: context.textSecondary,
                 ),
-                SizedBox(width: 4),
+                SizedBox(width: AppTheme.spacing4),
                 Text(
                   WidgetCategories.getDisplayName(widget.category),
                   style: TextStyle(color: context.textSecondary, fontSize: 12),
                 ),
-                SizedBox(width: 16),
+                SizedBox(width: AppTheme.spacing16),
                 Icon(Icons.schedule, size: 16, color: context.textSecondary),
-                SizedBox(width: 4),
+                SizedBox(width: AppTheme.spacing4),
                 Text(
                   _formatDate(widget.createdAt),
                   style: TextStyle(color: context.textSecondary, fontSize: 12),
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            SizedBox(height: AppTheme.spacing16),
 
             // Tags
             if (widget.tags.isNotEmpty)
@@ -410,7 +409,7 @@ class _PendingWidgetCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: context.background,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(AppTheme.radius4),
                     ),
                     child: Text(
                       tag,
@@ -422,7 +421,7 @@ class _PendingWidgetCard extends StatelessWidget {
                   );
                 }).toList(),
               ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Actions
             Row(
@@ -441,7 +440,7 @@ class _PendingWidgetCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 FilledButton.icon(
                   onPressed: isProcessing ? null : onApprove,
                   icon: isProcessing

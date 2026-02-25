@@ -204,7 +204,6 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   }
 
   Future<void> _loadComments() async {
-    if (!mounted) return;
     setState(() => _isLoadingComments = true);
 
     try {
@@ -238,8 +237,6 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
 
   /// Refresh comments without showing loading indicator (preserves scroll position).
   Future<void> _refreshComments() async {
-    if (!mounted) return;
-
     try {
       final signalService = ref.read(signalServiceProvider);
       final responses = await signalService.getComments(widget.signal.id);
@@ -312,6 +309,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   Future<void> _setVote(SignalResponse response, int value) async {
     final previousVote = _myVotes[response.id];
     // Capture providers before any await
+    if (!mounted) return;
     final service = ref.read(signalServiceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
     final queue = ref.read(mutationQueueProvider);
@@ -489,6 +487,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
         '📝 SignalDetailScreen: Submitting response to signal ${widget.signal.id}'
         '${_replyingToId != null ? ' (reply to $_replyingToId)' : ''}',
       );
+      if (!mounted) return;
       final myNodeNum = ref.read(myNodeNumProvider);
       final response = await service.createResponse(
         signalId: widget.signal.id,
@@ -534,7 +533,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   Widget _buildCommentsList(BuildContext context) {
     if (_isLoadingComments) {
       return Container(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           children: [
             SizedBox(
@@ -545,7 +544,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                 strokeWidth: 2,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'Loading comments...',
               style: TextStyle(color: context.textTertiary, fontSize: 13),
@@ -559,10 +558,10 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
 
     if (allResponses.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(color: context.border.withValues(alpha: 0.3)),
           boxShadow: [
             BoxShadow(
@@ -587,7 +586,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                 color: context.accentColor.withValues(alpha: 0.7),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'No comments yet',
               style: TextStyle(
@@ -596,7 +595,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppTheme.spacing6),
             Text(
               'Be the first to respond to this signal',
               style: TextStyle(color: context.textTertiary, fontSize: 13),
@@ -736,7 +735,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                   color: context.textSecondary,
                   size: 20,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Text('Delete', style: TextStyle(color: context.textPrimary)),
               ],
             ),
@@ -751,7 +750,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                   color: context.textSecondary,
                   size: 20,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Text('Report', style: TextStyle(color: context.textPrimary)),
               ],
             ),
@@ -952,7 +951,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                     child: Row(
                       children: [
                         Icon(Icons.reply, size: 16, color: context.accentColor),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Text(
                           'Replying to $_replyingToAuthor',
                           style: TextStyle(
@@ -975,7 +974,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
 
                 // Input field
                 Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
                   child: Row(
                     children: [
                       Expanded(
@@ -991,7 +990,9 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                                 : 'Respond to this signal...',
                             hintStyle: TextStyle(color: context.textTertiary),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius24,
+                              ),
                               borderSide: BorderSide.none,
                             ),
                             filled: true,
@@ -1009,7 +1010,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                           onChanged: (_) => setState(() {}),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       _isSubmittingReply
                           ? SizedBox(
                               width: 48,
@@ -1064,7 +1065,12 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
           bottomNavigationBar: buildReplyInput(),
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing16,
+                16,
+                16,
+                16,
+              ),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   // Animated signal card
@@ -1075,7 +1081,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                       child: SignalCard(signal: signal, showActions: false),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
 
                   // Animated responses header
                   SlideTransition(
@@ -1089,7 +1095,9 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                         ),
                         decoration: BoxDecoration(
                           color: context.accentColor.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           border: Border.all(
                             color: context.accentColor.withValues(alpha: 0.1),
                           ),
@@ -1103,7 +1111,9 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                                 color: context.accentColor.withValues(
                                   alpha: 0.15,
                                 ),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                               ),
                               child: Icon(
                                 Icons.forum_rounded,
@@ -1111,7 +1121,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                                 color: context.accentColor,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: AppTheme.spacing12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1150,7 +1160,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppTheme.spacing20),
 
                   // Animated responses list
                   FadeTransition(
@@ -1161,7 +1171,9 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
               ),
             ),
             // Add some space at bottom to not be hidden by sticky header
-            const SliverToBoxAdapter(child: SizedBox(height: 60)),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: AppTheme.spacing60),
+            ),
           ],
         ),
       ),
@@ -1245,7 +1257,7 @@ class _ResponseTile extends StatelessWidget {
                     margin: const EdgeInsets.only(left: 6),
                     decoration: BoxDecoration(
                       color: context.accentColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(1),
+                      borderRadius: BorderRadius.circular(AppTheme.radius1),
                     ),
                   ),
                 ),
@@ -1316,7 +1328,7 @@ class _ResponseTile extends StatelessWidget {
                         ),
                       ),
                       if (response.isLocal) ...[
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 4,
@@ -1324,7 +1336,9 @@ class _ResponseTile extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: context.accentColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(3),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius3,
+                            ),
                           ),
                           child: Text(
                             'you',
@@ -1336,7 +1350,7 @@ class _ResponseTile extends StatelessWidget {
                           ),
                         ),
                       ],
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       Text(
                         '· ${formatTimeAgo(response.createdAt)}',
                         style: TextStyle(
@@ -1347,7 +1361,7 @@ class _ResponseTile extends StatelessWidget {
                     ],
                   ),
 
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
 
                   // Content text (use displayContent for soft-deleted support)
                   Text(
@@ -1364,7 +1378,7 @@ class _ResponseTile extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 6),
+                  const SizedBox(height: AppTheme.spacing6),
 
                   // Actions row
                   Row(
@@ -1399,7 +1413,7 @@ class _ResponseTile extends StatelessWidget {
                         onTap: onDownvote,
                         activeColor: Colors.blue,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       GestureDetector(
                         onTap: onReplyTap,
                         child: Row(
@@ -1409,7 +1423,7 @@ class _ResponseTile extends StatelessWidget {
                               size: 14,
                               color: context.textTertiary,
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: AppTheme.spacing4),
                             Text(
                               response.replyCount > 0
                                   ? 'Reply (${response.replyCount})'
@@ -1424,7 +1438,7 @@ class _ResponseTile extends StatelessWidget {
                         ),
                       ),
                       if (onReport != null) ...[
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         GestureDetector(
                           onTap: onReport,
                           child: Icon(
@@ -1437,7 +1451,7 @@ class _ResponseTile extends StatelessWidget {
                     ],
                   ),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                 ],
               ),
             ),
@@ -1472,7 +1486,7 @@ class _VoteButton extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(AppTheme.spacing8),
         child: Icon(icon, size: 18, color: color),
       ),
     );

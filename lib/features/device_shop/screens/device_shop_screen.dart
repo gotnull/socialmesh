@@ -125,7 +125,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.store, color: context.accentColor, size: 24),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       AutoScrollText(
                         'Device Shop',
                         style: TextStyle(
@@ -230,12 +230,12 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
 
   Widget _buildMarketplaceDisclaimer() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 8),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: context.card.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(
             color: context.accentColor.withValues(alpha: 0.3),
             width: 1,
@@ -245,7 +245,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(Icons.info_outline, color: context.accentColor, size: 20),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,7 +258,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                       fontSize: 14,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: AppTheme.spacing6),
                   Text(
                     'Purchases are completed on the seller\'s official store. Socialmesh does not handle payment, shipping, warranty, or returns.',
                     style: TextStyle(
@@ -279,7 +279,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
   Widget _buildSearchSuggestions() {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -302,7 +302,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -319,7 +319,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                     )
                     .toList(),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
             ],
 
             // Trending products
@@ -331,7 +331,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             ref
                 .watch(lilygoTrendingProductsProvider)
                 .when(
@@ -344,9 +344,13 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                                   padding: const EdgeInsets.only(bottom: 8),
                                   child: Material(
                                     color: context.card,
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radius12,
+                                    ),
                                     child: InkWell(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radius12,
+                                      ),
                                       onTap: () => Navigator.push(
                                         context,
                                         MaterialPageRoute<void>(
@@ -367,7 +371,9 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                                               size: 18,
                                               color: context.accentColor,
                                             ),
-                                            const SizedBox(width: 12),
+                                            const SizedBox(
+                                              width: AppTheme.spacing12,
+                                            ),
                                             Expanded(
                                               child: Text(
                                                 p.name,
@@ -402,7 +408,9 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                           height: 48,
                           decoration: BoxDecoration(
                             color: context.card,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
+                            ),
                           ),
                         ),
                       ),
@@ -414,7 +422,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                         ref.invalidate(lilygoTrendingProductsProvider),
                   ),
                 ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
 
             // Browse by category
             Text(
@@ -425,7 +433,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             ...DeviceCategory.values.map(
               (cat) => ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -434,7 +442,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                   child: Icon(
                     _categoryIcon(cat),
@@ -509,7 +517,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                         size: 64,
                         color: context.textTertiary,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                       Text(
                         'No results for "$_searchQuery"',
                         style: TextStyle(
@@ -517,7 +525,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                           fontSize: 16,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppTheme.spacing8),
                       Text(
                         'Try different keywords',
                         style: TextStyle(
@@ -532,7 +540,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
             }
 
             return SliverPadding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
@@ -576,7 +584,7 @@ class _CategoriesSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 20, 16, 12),
           child: Text(
             'Categories',
             style: TextStyle(
@@ -642,18 +650,18 @@ class _CategoryCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Material(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Container(
             width: 80,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(_icon, color: context.accentColor, size: 28),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 SizedBox(
                   width: 80,
                   child: Center(
@@ -726,11 +734,16 @@ class _PartnersSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing16,
+                24,
+                16,
+                12,
+              ),
               child: Row(
                 children: [
                   Icon(Icons.verified, color: Colors.blue, size: 20),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Text(
                     'Official Partners',
                     style: TextStyle(
@@ -776,7 +789,7 @@ class _PartnerCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Material(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: InkWell(
           onTap: () => Navigator.push(
             context,
@@ -784,17 +797,17 @@ class _PartnerCard extends StatelessWidget {
               builder: (_) => SellerProfileScreen(sellerId: seller.id),
             ),
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Container(
             width: 120,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (seller.logoUrl != null)
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     child: Image.network(
                       seller.logoUrl!,
                       width: 32,
@@ -806,7 +819,7 @@ class _PartnerCard extends StatelessWidget {
                   )
                 else
                   Icon(Icons.store, color: context.accentColor, size: 28),
-                const SizedBox(height: 6),
+                const SizedBox(height: AppTheme.spacing6),
                 Text(
                   seller.name,
                   style: TextStyle(
@@ -917,8 +930,8 @@ class _BecomeSellerSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 32, 16, 16),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 32, 16, 16),
+      padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -928,7 +941,7 @@ class _BecomeSellerSection extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -937,10 +950,10 @@ class _BecomeSellerSection extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppTheme.spacing10),
                 decoration: BoxDecoration(
                   color: context.accentColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Icon(
                   Icons.storefront,
@@ -948,7 +961,7 @@ class _BecomeSellerSection extends StatelessWidget {
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -973,7 +986,7 @@ class _BecomeSellerSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             'Are you a manufacturer or distributor of Meshtastic-compatible '
             'devices? Join our marketplace to reach mesh radio enthusiasts '
@@ -984,7 +997,7 @@ class _BecomeSellerSection extends StatelessWidget {
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Row(
             children: [
               Expanded(
@@ -1001,7 +1014,7 @@ class _BecomeSellerSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Center(
             child: Text(
               'support@socialmesh.app',
@@ -1079,7 +1092,7 @@ class _ProductSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 24, 16, 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1088,7 +1101,7 @@ class _ProductSection extends StatelessWidget {
                 children: [
                   if (titleIcon != null) ...[
                     Icon(titleIcon, color: context.accentColor, size: 20),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                   ],
                   Text(
                     title,
@@ -1182,7 +1195,7 @@ class _ProductCardState extends ConsumerState<ProductCard>
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Material(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         child: InkWell(
           onTap: () => Navigator.push(
             context,
@@ -1190,11 +1203,11 @@ class _ProductCardState extends ConsumerState<ProductCard>
               builder: (_) => ProductDetailScreen(productId: widget.product.id),
             ),
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Container(
             width: 160,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(
                 color: widget.product.isOnSale
                     ? (widget.highlightColor ?? Colors.red).withValues(
@@ -1285,7 +1298,9 @@ class _ProductCardState extends ConsumerState<ProductCard>
                           ),
                           decoration: BoxDecoration(
                             color: widget.highlightColor ?? Colors.red,
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius4,
+                            ),
                           ),
                           child: Text(
                             '-${widget.product.discountPercent}%',
@@ -1342,7 +1357,7 @@ class _ProductCardState extends ConsumerState<ProductCard>
                 // Details
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(AppTheme.spacing10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1356,7 +1371,7 @@ class _ProductCardState extends ConsumerState<ProductCard>
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppTheme.spacing4),
                         Text(
                           widget.product.sellerName,
                           style: TextStyle(
@@ -1379,7 +1394,7 @@ class _ProductCardState extends ConsumerState<ProductCard>
                               ),
                             ),
                             if (widget.product.isOnSale) ...[
-                              SizedBox(width: 6),
+                              SizedBox(width: AppTheme.spacing6),
                               Text(
                                 widget.product.formattedComparePrice!,
                                 style: TextStyle(
@@ -1393,11 +1408,11 @@ class _ProductCardState extends ConsumerState<ProductCard>
                         ),
                         // Rating
                         if (widget.product.reviewCount > 0) ...[
-                          SizedBox(height: 4),
+                          SizedBox(height: AppTheme.spacing4),
                           Row(
                             children: [
                               Icon(Icons.star, color: Colors.amber, size: 14),
-                              const SizedBox(width: 2),
+                              const SizedBox(width: AppTheme.spacing2),
                               Text(
                                 widget.product.rating.toStringAsFixed(1),
                                 style: TextStyle(
@@ -1454,7 +1469,7 @@ class _SectionLoading extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 24, 16, 12),
           child: Text(
             title,
             style: TextStyle(
@@ -1480,7 +1495,7 @@ class _SectionLoading extends StatelessWidget {
                     width: 160,
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: const Center(child: CircularProgressIndicator()),
                   ),
@@ -1507,10 +1522,10 @@ class _SectionOffline extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.spacing24),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Column(
@@ -1521,7 +1536,7 @@ class _SectionOffline extends StatelessWidget {
               color: context.textTertiary,
               size: 32,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               isOnline ? 'Unable to load products' : 'No internet connection',
               style: TextStyle(
@@ -1530,12 +1545,12 @@ class _SectionOffline extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               isOnline ? 'Try again in a moment' : 'Connect to browse devices',
               style: TextStyle(color: context.textSecondary, fontSize: 13),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             TextButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh, size: 18),
@@ -1566,23 +1581,23 @@ class _SearchChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: context.card,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppTheme.radius20),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, color: context.textTertiary, size: 16),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Text(
                 label,
                 style: TextStyle(color: context.textPrimary, fontSize: 13),
               ),
               if (onDelete != null) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 GestureDetector(
                   onTap: onDelete,
                   child: Icon(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../generated/meshtastic/config.pb.dart';
 import 'app_bottom_sheet.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Action taken by user in device privacy warning dialog
 enum DevicePrivacyAction { proceed, cancel }
@@ -86,7 +87,7 @@ class _DevicePrivacyWarningContent extends StatelessWidget {
       children: [
         // Header with location icon
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 24, 20, 16),
           child: Column(
             children: [
               Container(
@@ -104,7 +105,7 @@ class _DevicePrivacyWarningContent extends StatelessWidget {
                   color: sharesLocation ? Colors.blue : Colors.grey,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               Text(
                 'Device Location Sharing',
                 style: theme.textTheme.titleLarge?.copyWith(
@@ -112,7 +113,7 @@ class _DevicePrivacyWarningContent extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 sharesLocation
                     ? 'This device is configured to share its GPS location.'
@@ -130,14 +131,14 @@ class _DevicePrivacyWarningContent extends StatelessWidget {
         if (sharesLocation) ...[
           const Divider(height: 1),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     Icon(Icons.info_outline, size: 18, color: Colors.blue),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Text(
                       'What This Means',
                       style: theme.textTheme.titleSmall?.copyWith(
@@ -146,7 +147,7 @@ class _DevicePrivacyWarningContent extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 _buildInfoItem(
                   context,
                   icon: Icons.public,
@@ -154,7 +155,7 @@ class _DevicePrivacyWarningContent extends StatelessWidget {
                   description:
                       'Device location will be visible to all users on the mesh network and in the app\'s World Map.',
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 _buildInfoItem(
                   context,
                   icon: Icons.people_outline,
@@ -164,7 +165,7 @@ class _DevicePrivacyWarningContent extends StatelessWidget {
                 ),
                 if (positionConfig != null &&
                     positionConfig!.positionBroadcastSecs > 0) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
                   _buildInfoItem(
                     context,
                     icon: Icons.schedule,
@@ -180,14 +181,14 @@ class _DevicePrivacyWarningContent extends StatelessWidget {
 
         // Privacy recommendation
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 16),
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: sharesLocation
                   ? Colors.blue.withAlpha(20)
                   : theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(
                 color: sharesLocation
                     ? Colors.blue.withAlpha(50)
@@ -203,7 +204,7 @@ class _DevicePrivacyWarningContent extends StatelessWidget {
                   size: 20,
                   color: sharesLocation ? Colors.blue : Colors.green,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Text(
                     sharesLocation
@@ -221,7 +222,7 @@ class _DevicePrivacyWarningContent extends StatelessWidget {
 
         // Action buttons
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 24),
           child: Column(
             children: [
               // Primary action: Link device
@@ -242,7 +243,7 @@ class _DevicePrivacyWarningContent extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               // Cancel
               SizedBox(
                 width: double.infinity,
@@ -274,7 +275,7 @@ class _DevicePrivacyWarningContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 16, color: Colors.blue.shade300),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,7 +287,7 @@ class _DevicePrivacyWarningContent extends StatelessWidget {
                   color: theme.textTheme.bodyMedium?.color,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppTheme.spacing2),
               Text(
                 description,
                 style: theme.textTheme.bodySmall?.copyWith(

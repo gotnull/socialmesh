@@ -138,7 +138,7 @@ class _MessagesContainerScreenState
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text('Contacts'),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       _TabBadge(count: contactsCount, showDot: hasUnreadDm),
                     ],
                   ),
@@ -148,7 +148,7 @@ class _MessagesContainerScreenState
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text('Channels'),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       _TabBadge(
                         count: channels.length,
                         showDot: hasUnreadChannel,
@@ -185,7 +185,7 @@ class _TabBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: context.border.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -199,7 +199,7 @@ class _TabBadge extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
           ],
           Text(
             count.toString(),

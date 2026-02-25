@@ -202,14 +202,15 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                         horizontal: 16,
                         vertical: 2,
                       ),
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
                       decoration: BoxDecoration(
                         color: context.card,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Column(
                         children: [
                           TextField(
+                            maxLength: 32,
                             controller: _ssidController,
                             textInputAction: TextInputAction.next,
                             style: TextStyle(color: context.textPrimary),
@@ -221,15 +222,21 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                               filled: true,
                               fillColor: context.background,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(color: context.border),
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(color: context.border),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(
                                   color: context.accentColor,
                                 ),
@@ -240,8 +247,9 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                               ),
                             ),
                           ),
-                          SizedBox(height: 12),
+                          SizedBox(height: AppTheme.spacing12),
                           TextField(
+                            maxLength: 64,
                             controller: _passwordController,
                             obscureText: _obscurePassword,
                             textInputAction: TextInputAction.done,
@@ -256,15 +264,21 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                               filled: true,
                               fillColor: context.background,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(color: context.border),
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(color: context.border),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(
                                   color: context.accentColor,
                                 ),
@@ -289,7 +303,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                         ],
                       ),
                     ),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
 
                   // Ethernet Section
                   const _SectionHeader(title: 'ETHERNET'),
@@ -307,12 +321,12 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                       },
                     ),
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
 
                   // Address Mode Section
                   const _SectionHeader(title: 'IP ADDRESS'),
                   _buildAddressModeSelector(),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
 
                   // NTP Server Section
                   const _SectionHeader(title: 'TIME SYNC'),
@@ -324,9 +338,9 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                     ),
                     decoration: BoxDecoration(
                       color: context.card,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -337,8 +351,9 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        SizedBox(height: AppTheme.spacing8),
                         TextField(
+                          maxLength: 256,
                           controller: _ntpController,
                           textInputAction: TextInputAction.done,
                           onSubmitted: (_) => FocusScope.of(context).unfocus(),
@@ -349,15 +364,21 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                             filled: true,
                             fillColor: context.background,
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius8,
+                              ),
                               borderSide: BorderSide(color: context.border),
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius8,
+                              ),
                               borderSide: BorderSide(color: context.border),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius8,
+                              ),
                               borderSide: BorderSide(
                                 color: context.accentColor,
                               ),
@@ -368,7 +389,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                             ),
                           ),
                         ),
-                        SizedBox(height: 8),
+                        SizedBox(height: AppTheme.spacing8),
                         Text(
                           'Server used for time synchronization',
                           style: TextStyle(
@@ -379,7 +400,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                       ],
                     ),
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
 
                   // UDP Broadcast Section
                   const _SectionHeader(title: 'UDP BROADCAST'),
@@ -404,12 +425,12 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                       ),
                       decoration: BoxDecoration(
                         color: context.accentColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         border: Border.all(
                           color: context.accentColor.withValues(alpha: 0.3),
                         ),
                       ),
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppTheme.spacing12),
                       child: Row(
                         children: [
                           Icon(
@@ -417,7 +438,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                             color: context.accentColor.withValues(alpha: 0.8),
                             size: 18,
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: AppTheme.spacing10),
                           Expanded(
                             child: Text(
                               'Enables broadcasting mesh packets via UDP over the local network when WiFi or Ethernet is connected.',
@@ -430,12 +451,12 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                         ],
                       ),
                     ),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
 
                   // Rsyslog Server Section
                   const _SectionHeader(title: 'LOGGING'),
                   _buildRsyslogSettings(),
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
 
                   // Info card
                   Container(
@@ -445,12 +466,12 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                     ),
                     decoration: BoxDecoration(
                       color: context.accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                       border: Border.all(
                         color: context.accentColor.withValues(alpha: 0.3),
                       ),
                     ),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -459,7 +480,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                           color: context.accentColor.withValues(alpha: 0.8),
                           size: 20,
                         ),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppTheme.spacing12),
                         Expanded(
                           child: Text(
                             'Network settings are only available on devices with WiFi or Ethernet hardware support.',
@@ -472,7 +493,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppTheme.spacing32),
                 ],
               ),
             ),
@@ -499,10 +520,10 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -525,7 +546,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                         ? context.accentColor
                         : context.textSecondary,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Icon(
                     m.$4,
                     color: isSelected
@@ -533,7 +554,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
                         : context.textSecondary,
                     size: 20,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -571,9 +592,9 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -584,8 +605,9 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           TextField(
+            maxLength: 256,
             controller: _rsyslogController,
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => FocusScope.of(context).unfocus(),
@@ -596,15 +618,15 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
               filled: true,
               fillColor: context.background,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.border),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.border),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.accentColor),
               ),
               prefixIcon: Icon(
@@ -613,7 +635,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Remote syslog server for device logs',
             style: TextStyle(color: context.textSecondary, fontSize: 13),
@@ -632,7 +654,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
       child: Text(
         title,
         style: TextStyle(
@@ -667,14 +689,14 @@ class _SettingsTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Icon(icon, color: iconColor ?? context.textSecondary),
-            SizedBox(width: 16),
+            SizedBox(width: AppTheme.spacing16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -687,7 +709,7 @@ class _SettingsTile extends StatelessWidget {
                       color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     subtitle,
                     style: context.bodySmallStyle?.copyWith(

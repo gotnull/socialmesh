@@ -94,7 +94,7 @@ class Mesh3DStatsCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTheme.radius14),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
           child: Container(
@@ -108,7 +108,7 @@ class Mesh3DStatsCard extends StatelessWidget {
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppTheme.radius14),
               border: Border.all(
                 color: context.border.withValues(alpha: 0.2),
                 width: 0.5,
@@ -219,7 +219,7 @@ class _CompactStat extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, size: 13, color: color),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
               Flexible(
                 child: Text(
                   value,
@@ -234,7 +234,7 @@ class _CompactStat extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppTheme.spacing2),
           Text(
             label,
             style: TextStyle(

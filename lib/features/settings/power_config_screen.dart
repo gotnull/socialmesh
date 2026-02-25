@@ -225,10 +225,12 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                           horizontal: 16,
                           vertical: 2,
                         ),
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                         child: _buildSliderSetting(
                           title: 'Shutdown Delay',
@@ -244,7 +246,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                           ),
                         ),
                       ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppTheme.spacing16),
 
                     // Battery Section (ADC Multiplier)
                     const _SectionHeader(title: 'BATTERY'),
@@ -274,10 +276,12 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                           horizontal: 16,
                           vertical: 2,
                         ),
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,6 +299,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                                 SizedBox(
                                   width: 80,
                                   child: TextFormField(
+                                    maxLength: 10,
                                     key: ValueKey(
                                       'adc_${_adcMultiplier.toStringAsFixed(2)}',
                                     ),
@@ -316,13 +321,17 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                                       fillColor: context.background,
                                       filled: true,
                                       border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(
+                                          AppTheme.radius8,
+                                        ),
                                         borderSide: BorderSide(
                                           color: context.border,
                                         ),
                                       ),
                                       enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(
+                                          AppTheme.radius8,
+                                        ),
                                         borderSide: BorderSide(
                                           color: context.border,
                                         ),
@@ -342,7 +351,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                                 ),
                               ],
                             ),
-                            SizedBox(height: 4),
+                            SizedBox(height: AppTheme.spacing4),
                             Text(
                               'Voltage divider ratio (2.0 - 6.0)',
                               style: TextStyle(
@@ -353,7 +362,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                           ],
                         ),
                       ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppTheme.spacing16),
 
                     // Sleep Settings Section
                     const _SectionHeader(title: 'SLEEP SETTINGS'),
@@ -365,9 +374,9 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                       ),
                       decoration: BoxDecoration(
                         color: context.card,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -385,9 +394,9 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                               () => _waitBluetoothSecs = value.toInt(),
                             ),
                           ),
-                          SizedBox(height: 20),
+                          SizedBox(height: AppTheme.spacing20),
                           Divider(height: 1, color: context.border),
-                          SizedBox(height: 20),
+                          SizedBox(height: AppTheme.spacing20),
 
                           // Light Sleep
                           _buildSliderSetting(
@@ -402,9 +411,9 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                             onChanged: (value) =>
                                 setState(() => _lsSecs = value.toInt()),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: AppTheme.spacing20),
                           Divider(height: 1, color: context.border),
-                          SizedBox(height: 20),
+                          SizedBox(height: AppTheme.spacing20),
 
                           // Deep Sleep
                           _buildSliderSetting(
@@ -418,9 +427,9 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                             onChanged: (value) =>
                                 setState(() => _sdsSecs = value.toInt()),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: AppTheme.spacing20),
                           Divider(height: 1, color: context.border),
-                          SizedBox(height: 20),
+                          SizedBox(height: AppTheme.spacing20),
 
                           // Min Wake
                           _buildSliderSetting(
@@ -437,7 +446,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // Info card
                     Padding(
@@ -451,7 +460,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                         margin: EdgeInsets.zero,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: AppTheme.spacing32),
                   ]),
                 ),
               ),
@@ -486,7 +495,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: context.accentColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(AppTheme.radius6),
               ),
               child: Text(
                 formatValue(value),
@@ -499,12 +508,12 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
             ),
           ],
         ),
-        SizedBox(height: 4),
+        SizedBox(height: AppTheme.spacing4),
         Text(
           subtitle,
           style: TextStyle(color: context.textSecondary, fontSize: 13),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: AppTheme.spacing8),
         SliderTheme(
           data: SliderThemeData(
             inactiveTrackColor: context.border,
@@ -533,7 +542,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
       child: Text(
         title,
         style: TextStyle(
@@ -568,14 +577,14 @@ class _SettingsTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Icon(icon, color: iconColor ?? context.textSecondary),
-            SizedBox(width: 16),
+            SizedBox(width: AppTheme.spacing16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -588,7 +597,7 @@ class _SettingsTile extends StatelessWidget {
                       color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     subtitle,
                     style: context.bodySmallStyle?.copyWith(

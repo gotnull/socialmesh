@@ -146,7 +146,9 @@ class _NodeDexConstellationScreenState
                           transformationController: _transformController,
                           minScale: 0.3,
                           maxScale: 5.0,
-                          boundaryMargin: const EdgeInsets.all(200),
+                          boundaryMargin: const EdgeInsets.all(
+                            AppTheme.spacing200,
+                          ),
                           child: LayoutBuilder(
                             builder: (context, constraints) {
                               final size = Size(
@@ -302,7 +304,7 @@ class _NodeDexConstellationScreenState
   Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(48),
+        padding: const EdgeInsets.all(AppTheme.spacing48),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -311,7 +313,7 @@ class _NodeDexConstellationScreenState
               size: 64,
               color: context.textTertiary.withValues(alpha: 0.5),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Text(
               'No Constellation Yet',
               style: TextStyle(
@@ -321,7 +323,7 @@ class _NodeDexConstellationScreenState
                 color: context.textPrimary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               'Discover more nodes to see how they connect.\n'
               'Nodes seen together form constellation links.',
@@ -688,7 +690,7 @@ class _BottomInfoBar extends ConsumerWidget {
           size: 14,
           color: context.textTertiary,
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppTheme.spacing6),
         Text(
           '$nodeCount nodes',
           style: TextStyle(
@@ -698,9 +700,9 @@ class _BottomInfoBar extends ConsumerWidget {
             color: context.textSecondary,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppTheme.spacing12),
         Icon(Icons.link, size: 14, color: context.textTertiary),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppTheme.spacing6),
         Text(
           '$edgeCount links',
           style: TextStyle(
@@ -715,7 +717,7 @@ class _BottomInfoBar extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
             color: context.accentColor.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppTheme.radius6),
           ),
           child: Text(
             density.label,
@@ -750,7 +752,7 @@ class _BottomInfoBar extends ConsumerWidget {
       children: [
         // Sigil avatar
         SigilAvatar(sigil: sigil, nodeNum: selectedNodeNum!, size: 32),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppTheme.spacing10),
 
         // Name + trait
         Expanded(
@@ -769,7 +771,7 @@ class _BottomInfoBar extends ConsumerWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppTheme.spacing2),
               Row(
                 children: [
                   Container(
@@ -780,12 +782,12 @@ class _BottomInfoBar extends ConsumerWidget {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTheme.spacing4),
                   Text(
                     trait.primary.displayLabel,
                     style: TextStyle(fontSize: 11, color: context.textTertiary),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Text(
                     '${entry.coSeenCount} links',
                     style: TextStyle(
@@ -807,7 +809,7 @@ class _BottomInfoBar extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: sigil.primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               border: Border.all(
                 color: sigil.primaryColor.withValues(alpha: 0.2),
               ),
@@ -824,7 +826,7 @@ class _BottomInfoBar extends ConsumerWidget {
           ),
         ),
 
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
 
         // Clear selection
         GestureDetector(

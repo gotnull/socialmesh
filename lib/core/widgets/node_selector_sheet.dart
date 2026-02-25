@@ -117,7 +117,7 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
         children: [
           // Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 12, 0),
+            padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 0, 12, 0),
             child: Row(
               children: [
                 Text(
@@ -155,6 +155,7 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
+              maxLength: 100,
               style: TextStyle(color: context.textPrimary, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Search nodes...',
@@ -167,7 +168,7 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
                 filled: true,
                 fillColor: context.background,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                   borderSide: BorderSide.none,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
@@ -273,12 +274,12 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
 
   Widget _buildEmptyState() {
     return Padding(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(AppTheme.spacing32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.search_off, size: 48, color: context.textTertiary),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             _searchQuery.isEmpty
                 ? 'No nodes available'
@@ -331,7 +332,7 @@ class _NodeTile extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: iconColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Stack(
                   children: [
@@ -356,7 +357,7 @@ class _NodeTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

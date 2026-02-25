@@ -177,7 +177,7 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
                   hasScrollBody: false,
                   child: Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(32),
+                      padding: const EdgeInsets.all(AppTheme.spacing32),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -186,7 +186,7 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
                             size: 64,
                             color: context.textTertiary,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
                           Text(
                             'No bug reports yet',
                             style: TextStyle(
@@ -195,7 +195,7 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
                               color: context.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppTheme.spacing8),
                           Text(
                             'Shake your device to report a bug.\n'
                             'Your reports and any responses will appear here.',
@@ -243,7 +243,7 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
                           size: 48,
                           color: context.textTertiary,
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppTheme.spacing12),
                         Text(
                           _searchQuery.isNotEmpty
                               ? 'No reports match your search'
@@ -262,7 +262,8 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
                   padding: const EdgeInsets.only(top: 4, bottom: 12),
                   sliver: SliverList.separated(
                     itemCount: filtered.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppTheme.spacing8),
                     itemBuilder: (context, index) {
                       final report = filtered[index];
                       final isInitialReport =
@@ -287,7 +288,7 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
               hasScrollBody: false,
               child: Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(AppTheme.spacing32),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -296,7 +297,7 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
                         size: 48,
                         color: AppTheme.errorRed,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                       Text(
                         'Failed to load reports',
                         style: TextStyle(
@@ -305,7 +306,7 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
                           color: context.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppTheme.spacing8),
                       Text(
                         '$error',
                         textAlign: TextAlign.center,
@@ -314,7 +315,7 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
                           color: context.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                       TextButton.icon(
                         onPressed: () => ref.invalidate(myBugReportsProvider),
                         icon: const Icon(Icons.refresh),
@@ -393,6 +394,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
     final text = _replyController.text.trim();
     if (text.isEmpty || _isSending) return;
 
+    if (!mounted) return;
     final repository = ref.read(bugReportRepositoryProvider);
     final messenger = ScaffoldMessenger.of(context);
 
@@ -415,7 +417,6 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
         ),
       );
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to send reply: $e');
     } finally {
       if (mounted) {
@@ -449,7 +450,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(
           color: hasUnread
               ? context.accentColor.withValues(alpha: 0.6)
@@ -471,7 +472,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
             },
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -491,7 +492,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       if (hasUnread)
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -500,7 +501,9 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                           ),
                           decoration: BoxDecoration(
                             color: context.accentColor,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius10,
+                            ),
                           ),
                           child: Text(
                             '${report.unreadCount}',
@@ -517,7 +520,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Row(
                     children: [
                       _StatusChip(status: report.status),
@@ -528,7 +531,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                           size: 14,
                           color: context.textTertiary,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Text(
                           '${report.responses.length}',
                           style: TextStyle(
@@ -536,7 +539,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                             color: context.textTertiary,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                       ],
                       Text(
                         dateFormat.format(report.createdAt),
@@ -548,7 +551,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                     ],
                   ),
                   if (report.appVersion != null || report.platform != null) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Text(
                       [
                         if (report.platform != null) report.platform,
@@ -571,7 +574,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
 
             // Full description
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 4),
               child: Text(
                 'Your report',
                 style: TextStyle(
@@ -583,7 +586,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 4, 16, 12),
               child: Text(
                 report.description,
                 style: TextStyle(
@@ -597,7 +600,12 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
             // Screenshot thumbnail if present
             if (report.screenshotUrl != null) ...[
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  0,
+                  16,
+                  12,
+                ),
                 child: GestureDetector(
                   onTap: () {
                     // If the reply field just lost focus (keyboard dismissed),
@@ -615,7 +623,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                     );
                   },
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     child: Container(
                       height: 200,
                       width: double.infinity,
@@ -624,7 +632,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                         border: Border.all(
                           color: context.border.withValues(alpha: 0.3),
                         ),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
                       ),
                       child: Stack(
                         fit: StackFit.expand,
@@ -650,7 +658,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                                         size: 20,
                                         color: context.textTertiary,
                                       ),
-                                      const SizedBox(width: 8),
+                                      const SizedBox(width: AppTheme.spacing8),
                                       Text(
                                         'Screenshot unavailable',
                                         style: TextStyle(
@@ -666,10 +674,12 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                             right: 8,
                             bottom: 8,
                             child: Container(
-                              padding: const EdgeInsets.all(4),
+                              padding: const EdgeInsets.all(AppTheme.spacing4),
                               decoration: BoxDecoration(
                                 color: Colors.black54,
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius6,
+                                ),
                               ),
                               child: const Icon(
                                 Icons.fullscreen_rounded,
@@ -690,7 +700,12 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
             if (hasResponses) ...[
               Divider(height: 1, color: context.border.withValues(alpha: 0.5)),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  12,
+                  16,
+                  4,
+                ),
                 child: Text(
                   'Conversation',
                   style: TextStyle(
@@ -704,14 +719,14 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
               ...report.responses.map(
                 (response) => _ResponseBubble(response: response),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
             ],
 
             // Reply input (or waiting message)
             Divider(height: 1, color: context.border.withValues(alpha: 0.5)),
             if (report.status == BugReportStatus.resolved)
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -720,7 +735,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                       size: 16,
                       color: context.textTertiary,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Text(
                       'This report has been resolved',
                       style: TextStyle(
@@ -734,7 +749,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
               )
             else if (!canReply)
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -743,7 +758,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                       size: 16,
                       color: context.textTertiary,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Text(
                       'Waiting for admin response',
                       style: TextStyle(
@@ -757,7 +772,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
               )
             else
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -773,21 +788,29 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                         hintStyle: TextStyle(color: context.textTertiary),
                         filled: true,
                         fillColor: context.background,
-                        contentPadding: const EdgeInsets.all(14),
+                        contentPadding: const EdgeInsets.all(
+                          AppTheme.spacing14,
+                        ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide(
                             color: context.border.withValues(alpha: 0.5),
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide(
                             color: context.border.withValues(alpha: 0.5),
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                           borderSide: BorderSide(
                             color: context.accentColor.withValues(alpha: 0.6),
                           ),
@@ -800,7 +823,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                       ),
                       onTapOutside: (_) => FocusScope.of(context).unfocus(),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Row(
                       children: [
                         ValueListenableBuilder<TextEditingValue>(
@@ -819,7 +842,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                           height: 40,
                           child: _isSending
                               ? const Padding(
-                                  padding: EdgeInsets.all(10),
+                                  padding: EdgeInsets.all(AppTheme.spacing10),
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                   ),
@@ -872,7 +895,7 @@ class _StatusChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTheme.radius6),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
@@ -927,7 +950,7 @@ class _ScreenshotSkeletonState extends State<_ScreenshotSkeleton>
         return Container(
           decoration: BoxDecoration(
             color: context.card,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
           ),
           child: Stack(
             children: [
@@ -935,7 +958,7 @@ class _ScreenshotSkeletonState extends State<_ScreenshotSkeleton>
               Positioned.fill(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     gradient: LinearGradient(
                       begin: Alignment(-1.0 + (_animation.value * 3), -0.3),
                       end: Alignment(-0.5 + (_animation.value * 3), 0.3),
@@ -959,7 +982,7 @@ class _ScreenshotSkeletonState extends State<_ScreenshotSkeleton>
                       size: 32,
                       color: context.textTertiary.withValues(alpha: 0.4),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     Text(
                       'Loading screenshot...',
                       style: TextStyle(
@@ -1027,7 +1050,7 @@ class _ResponseBubble extends StatelessWidget {
                         ? context.accentColor
                         : context.textSecondary,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppTheme.spacing6),
                   Text(
                     isFounder ? 'Socialmesh' : 'You',
                     style: TextStyle(
@@ -1038,14 +1061,14 @@ class _ResponseBubble extends StatelessWidget {
                           : context.textSecondary,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Text(
                     timeFormat.format(response.createdAt),
                     style: TextStyle(fontSize: 10, color: context.textTertiary),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppTheme.spacing6),
               Text(
                 response.message,
                 style: TextStyle(

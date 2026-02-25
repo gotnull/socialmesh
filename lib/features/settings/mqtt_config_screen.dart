@@ -240,22 +240,23 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                     ),
                   ),
                   if (_enabled) ...[
-                    SizedBox(height: 16),
+                    SizedBox(height: AppTheme.spacing16),
                     const _SectionHeader(title: 'SERVER'),
                     Container(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 2,
                       ),
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
                       decoration: BoxDecoration(
                         color: context.card,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           TextField(
+                            maxLength: 256,
                             controller: _addressController,
                             textInputAction: TextInputAction.next,
                             style: TextStyle(color: context.textPrimary),
@@ -269,15 +270,21 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                               filled: true,
                               fillColor: context.background,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(color: context.border),
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(color: context.border),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(
                                   color: context.accentColor,
                                 ),
@@ -288,8 +295,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                               ),
                             ),
                           ),
-                          SizedBox(height: 16),
+                          SizedBox(height: AppTheme.spacing16),
                           TextField(
+                            maxLength: 256,
                             controller: _rootController,
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) =>
@@ -305,15 +313,21 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                               filled: true,
                               fillColor: context.background,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(color: context.border),
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(color: context.border),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(
                                   color: context.accentColor,
                                 ),
@@ -340,22 +354,23 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         },
                       ),
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppTheme.spacing16),
                     const _SectionHeader(title: 'AUTHENTICATION'),
                     Container(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 2,
                       ),
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
                       decoration: BoxDecoration(
                         color: context.card,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           TextField(
+                            maxLength: 100,
                             controller: _usernameController,
                             textInputAction: TextInputAction.next,
                             style: TextStyle(color: context.textPrimary),
@@ -369,15 +384,21 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                               filled: true,
                               fillColor: context.background,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(color: context.border),
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(color: context.border),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(
                                   color: context.accentColor,
                                 ),
@@ -388,8 +409,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                               ),
                             ),
                           ),
-                          SizedBox(height: 16),
+                          SizedBox(height: AppTheme.spacing16),
                           TextField(
+                            maxLength: 64,
                             controller: _passwordController,
                             obscureText: _obscurePassword,
                             textInputAction: TextInputAction.done,
@@ -406,15 +428,21 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                               filled: true,
                               fillColor: context.background,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(color: context.border),
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(color: context.border),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
                                 borderSide: BorderSide(
                                   color: context.accentColor,
                                 ),
@@ -441,7 +469,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                         ],
                       ),
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: AppTheme.spacing16),
                     const _SectionHeader(title: 'OPTIONS'),
                     _SettingsTile(
                       icon: Icons.enhanced_encryption,
@@ -512,9 +540,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                     ),
                     if (_mapReportingEnabled) ...[_buildMapReportSettings()],
                   ],
-                  SizedBox(height: 16),
+                  SizedBox(height: AppTheme.spacing16),
                   _buildInfoCard(),
-                  SizedBox(height: 32),
+                  SizedBox(height: AppTheme.spacing32),
                 ],
               ),
             ),
@@ -528,15 +556,15 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.accentColor.withAlpha(20),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.accentColor.withAlpha(50)),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.info_outline, color: context.accentColor, size: 20),
-          SizedBox(width: 12),
+          SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Text(
               'MQTT allows your device to bridge the local mesh network '
@@ -568,10 +596,10 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
   Widget _buildMapReportSettings() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -585,7 +613,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
               letterSpacing: 1.2,
             ),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppTheme.spacing16),
           // Publish Interval
           Text(
             'Publish Interval: ${_mapPublishIntervalSecs ~/ 60} minutes',
@@ -595,7 +623,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             'How often to report position to map',
             style: TextStyle(color: context.textSecondary, fontSize: 12),
@@ -620,9 +648,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
               },
             ),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppTheme.spacing16),
           Divider(color: context.border),
-          SizedBox(height: 16),
+          SizedBox(height: AppTheme.spacing16),
           // Position Precision
           Text(
             'Position Precision',
@@ -632,7 +660,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             'Approximate location accuracy for map',
             style: TextStyle(color: context.textSecondary, fontSize: 12),
@@ -695,7 +723,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
       child: Text(
         title,
         style: TextStyle(
@@ -730,14 +758,14 @@ class _SettingsTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Icon(icon, color: iconColor ?? context.textSecondary),
-            SizedBox(width: 16),
+            SizedBox(width: AppTheme.spacing16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -750,7 +778,7 @@ class _SettingsTile extends StatelessWidget {
                       color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     subtitle,
                     style: context.bodySmallStyle?.copyWith(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../models/tak_event.dart';
 import '../utils/cot_affiliation.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Individual map marker for a TAK/CoT entity.
 ///
@@ -65,7 +66,7 @@ class TakMapMarker extends StatelessWidget {
                     height: markerSize,
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       border: Border.all(
                         color: color.withValues(alpha: 0.6),
                         width: 1.5,
@@ -99,7 +100,7 @@ class TakMapMarker extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppTheme.spacing2),
               // Callsign label
               Text(
                 event.displayName,

@@ -45,14 +45,14 @@ class NodeSummaryCard extends StatelessWidget {
 
         // Only show detailed stats when we have enough data.
         if (summary.hasEnoughData) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Time-of-day distribution bar
           _TimeDistributionBar(
             distribution: summary.timeDistribution,
             accentColor: accentColor,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // Stats row
           _StatsRow(summary: summary),
@@ -82,7 +82,7 @@ class _TimeDistributionBar extends StatelessWidget {
       children: [
         // Bar
         ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(AppTheme.radius4),
           child: SizedBox(
             height: 8,
             child: Row(
@@ -98,7 +98,7 @@ class _TimeDistributionBar extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
 
         // Legend
         Wrap(
@@ -157,7 +157,7 @@ class _LegendItem extends StatelessWidget {
             shape: BoxShape.circle,
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         Text(
           '$label ($count)',
           style: TextStyle(
@@ -240,7 +240,7 @@ class _StatChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: context.border.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(
           color: context.border.withValues(alpha: 0.1),
           width: 0.5,
@@ -250,7 +250,7 @@ class _StatChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 13, color: context.textTertiary),
-          const SizedBox(width: 5),
+          const SizedBox(width: AppTheme.spacing5),
           Text(
             label,
             style: TextStyle(

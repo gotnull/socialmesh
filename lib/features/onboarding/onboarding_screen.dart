@@ -359,7 +359,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppTheme.spacing24),
                       Text(
                         'Setting up your device...',
                         style: TextStyle(
@@ -368,7 +368,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppTheme.spacing8),
                       Text(
                         'Checking radio configuration',
                         style: TextStyle(
@@ -432,7 +432,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
                   // Action button
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppTheme.spacing24,
+                      0,
+                      24,
+                      32,
+                    ),
                     child: _buildActionButton(accentColor),
                   ),
                 ],
@@ -478,7 +483,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   : MainAxisAlignment.center,
               children: [
                 // Extra top spacing for non-showcase pages to push content down
-                if (!hasShowcase) const SizedBox(height: 20),
+                if (!hasShowcase) const SizedBox(height: AppTheme.spacing20),
 
                 // Mesh Brain Advisor - uses global config for line/node sizes
                 MeshNodeBrain(
@@ -513,14 +518,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: _buildShowcase(page),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
                 ],
 
                 // Title and description
                 _buildTitleSection(page),
 
                 // Extra bottom spacing for non-showcase pages
-                if (!hasShowcase) const SizedBox(height: 40),
+                if (!hasShowcase) const SizedBox(height: AppTheme.spacing40),
               ],
             ),
           ),
@@ -554,7 +559,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
 
           // Description
           Text(
@@ -598,7 +603,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       )
                     : null,
                 color: isActive ? null : context.border,
-                borderRadius: BorderRadius.circular(5),
+                borderRadius: BorderRadius.circular(AppTheme.radius5),
                 boxShadow: isActive
                     ? [
                         BoxShadow(
@@ -635,7 +640,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     accentColor,
               ],
             ),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radius16),
             boxShadow: [
               BoxShadow(
                 color: accentColor.withValues(alpha: 0.3),
@@ -651,7 +656,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               shadowColor: Colors.transparent,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppTheme.radius16),
               ),
               elevation: 0,
             ),
@@ -666,7 +671,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   ),
                 ),
                 if (isLastPage) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   const Icon(Icons.bluetooth, size: 20),
                 ],
               ],
@@ -714,7 +719,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   glowIntensity: glowIntensity,
                   isPopular: true,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _buildDeviceCard(
                   name: 'Heltec V3',
                   category: 'All-Purpose',
@@ -723,7 +728,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   color: AccentColors.cyan,
                   glowIntensity: glowIntensity,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _buildDeviceCard(
                   name: 'RAK WisMesh',
                   category: 'Professional',
@@ -732,7 +737,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   color: AccentColors.orange,
                   glowIntensity: glowIntensity,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _buildDeviceCard(
                   name: 'LilyGo T-Beam',
                   category: 'Long Range',
@@ -760,10 +765,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   }) {
     return Container(
       width: 160,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTheme.radius14),
         border: Border.all(
           color: isPopular
               ? color.withValues(alpha: 0.5)
@@ -798,7 +803,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       color.withValues(alpha: 0.1),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                   border: Border.all(color: color.withValues(alpha: 0.3)),
                 ),
                 child: Icon(icon, size: 20, color: color),
@@ -812,7 +817,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   ),
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppTheme.radius4),
                   ),
                   child: Text(
                     'POPULAR',
@@ -826,7 +831,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppTheme.spacing10),
           // Category
           Text(
             category.toUpperCase(),
@@ -837,7 +842,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppTheme.spacing2),
           // Name
           Text(
             name,
@@ -921,7 +926,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   borderWidth: 3.0,
                   hasGlow: true,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _buildNodeDexCard(
                   nodeName: 'Base Camp Node',
                   rarityLabel: 'RARE',
@@ -934,7 +939,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   borderWidth: 2.0,
                   hasGlow: false,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _buildNodeDexCard(
                   nodeName: 'Trail Marker',
                   rarityLabel: 'EPIC',
@@ -947,7 +952,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   borderWidth: 2.5,
                   hasGlow: true,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _buildNodeDexCard(
                   nodeName: 'Valley Scout',
                   rarityLabel: 'STANDARD',
@@ -984,7 +989,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       width: 150,
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(
           color: rarityColor.withValues(alpha: 0.4),
           width: borderWidth,
@@ -1002,7 +1007,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const SizedBox(height: 14),
+          const SizedBox(height: AppTheme.spacing14),
           // Sigil placeholder — hexagon icon
           Container(
             width: 48,
@@ -1013,13 +1018,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
             ),
             child: Icon(Icons.hexagon_outlined, color: rarityColor, size: 28),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           // Rarity badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
               color: rarityColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(AppTheme.radius6),
             ),
             child: Text(
               rarityLabel,
@@ -1031,7 +1036,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               ),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppTheme.spacing6),
           // Node name
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -1083,7 +1088,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 12, color: color.withValues(alpha: 0.7)),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppTheme.spacing2),
         Text(
           value,
           style: TextStyle(
@@ -1135,7 +1140,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   glowIntensity: glowIntensity,
                   isLive: true,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _buildSignalCard(
                   authorName: 'Mike',
                   content: 'Base camp is set. Ready when you are.',
@@ -1145,7 +1150,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   color: AccentColors.cyan,
                   glowIntensity: glowIntensity,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _buildSignalCard(
                   authorName: 'Alex',
                   content: 'On my way, ETA 15 min',
@@ -1177,7 +1182,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       width: 200,
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(
           color: isLive
               ? color.withValues(alpha: 0.4)
@@ -1199,7 +1204,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         children: [
           // Header - matches real SignalCard
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             child: Row(
               children: [
                 // Avatar
@@ -1208,11 +1213,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   height: 36,
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTheme.radius10),
                   ),
                   child: Icon(Icons.person, color: color, size: 20),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppTheme.spacing10),
                 // Name and hop count
                 Expanded(
                   child: Column(
@@ -1226,7 +1231,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       // Hop badge - matches ProximityBadge
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -1237,7 +1242,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                           color: hopCount == 0
                               ? AccentColors.green.withValues(alpha: 0.2)
                               : context.surface,
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(AppTheme.radius4),
                         ),
                         child: Text(
                           hopCount == 0
@@ -1290,19 +1295,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           // Image placeholder
           if (hasImage)
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing12, 8, 12, 0),
               child: Container(
                 height: 40,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                   border: Border.all(color: color.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.image_rounded, color: color, size: 16),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     Text(
                       'Photo',
                       style: TextStyle(
@@ -1318,11 +1323,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           // Location
           if (hasLocation)
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing12, 8, 12, 0),
               child: Row(
                 children: [
                   Icon(Icons.location_on, color: AccentColors.green, size: 14),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTheme.spacing4),
                   Text(
                     'Location shared',
                     style: TextStyle(color: AccentColors.green, fontSize: 11),
@@ -1348,7 +1353,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       ? AppTheme.errorRed
                       : context.textTertiary,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 Text(
                   '${ttlMinutes}m remaining',
                   style: TextStyle(
@@ -1402,7 +1407,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   glowIntensity: glowIntensity,
                   isEnabled: true,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _buildAutomationCard(
                   name: 'Base Camp Geofence',
                   description: 'Enters designated area',
@@ -1411,7 +1416,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   glowIntensity: glowIntensity,
                   isEnabled: true,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _buildAutomationCard(
                   name: 'Node Silent Watch',
                   description: 'No contact for 30 min',
@@ -1420,7 +1425,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   glowIntensity: glowIntensity,
                   isEnabled: true,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 _buildAutomationCard(
                   name: 'SOS Keyword',
                   description: 'Message contains "SOS"',
@@ -1448,10 +1453,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     // Matches actual AutomationCard styling
     return Container(
       width: 180,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppTheme.spacing14),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(
           color: isEnabled ? color.withValues(alpha: 0.3) : context.border,
         ),
@@ -1478,7 +1483,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   color: isEnabled
                       ? color.withValues(alpha: 0.2)
                       : context.background,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Icon(
                   icon,
@@ -1493,14 +1498,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 height: 20,
                 decoration: BoxDecoration(
                   color: isEnabled ? AccentColors.green : context.surface,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Align(
                   alignment: isEnabled
                       ? Alignment.centerRight
                       : Alignment.centerLeft,
                   child: Container(
-                    margin: const EdgeInsets.all(2),
+                    margin: const EdgeInsets.all(AppTheme.spacing2),
                     width: 16,
                     height: 16,
                     decoration: BoxDecoration(
@@ -1512,7 +1517,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppTheme.spacing10),
           AutoScrollText(
             name,
             style: TextStyle(
@@ -1524,7 +1529,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
             velocity: 25,
             delayBefore: const Duration(seconds: 2),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppTheme.spacing2),
           AutoScrollText(
             description,
             style: context.captionStyle?.copyWith(color: Colors.grey),
@@ -1545,10 +1550,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
         return Container(
           height: 140,
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           decoration: BoxDecoration(
             color: context.card,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radius16),
             border: Border.all(color: page.accentColor.withValues(alpha: 0.3)),
             boxShadow: [
               BoxShadow(
@@ -1568,7 +1573,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     color: page.accentColor,
                     size: 18,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Text(
                     'Dashboard',
                     style: TextStyle(
@@ -1585,7 +1590,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     ),
                     decoration: BoxDecoration(
                       color: AccentColors.green.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(AppTheme.radius6),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1598,7 +1603,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Text(
                           'LIVE',
                           style: TextStyle(
@@ -1613,7 +1618,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               // Widget grid
               Expanded(
                 child: Row(
@@ -1626,7 +1631,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                         color: AccentColors.cyan,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Expanded(
                       child: _buildDashboardWidget(
                         icon: Icons.battery_5_bar,
@@ -1635,7 +1640,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                         color: AccentColors.green,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Expanded(
                       child: _buildDashboardWidget(
                         icon: Icons.signal_cellular_alt,
@@ -1664,14 +1669,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: color, size: 20),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             value,
             style: TextStyle(

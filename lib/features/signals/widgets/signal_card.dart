@@ -72,7 +72,7 @@ class SignalCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(color: context.border.withValues(alpha: 0.5)),
         ),
         child: Column(
@@ -172,7 +172,7 @@ class _SignalHeader extends ConsumerWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -197,7 +197,7 @@ class _SignalHeader extends ConsumerWidget {
               foregroundColor: avatarColor,
               fallbackIcon: Icons.person,
             ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
 
           // Author info
           Expanded(
@@ -220,7 +220,7 @@ class _SignalHeader extends ConsumerWidget {
                       ),
                     ),
                     if (isOwnMeshSignal) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 5,
@@ -228,7 +228,7 @@ class _SignalHeader extends ConsumerWidget {
                         ),
                         decoration: BoxDecoration(
                           color: AccentColors.yellow.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(AppTheme.radius4),
                         ),
                         child: Text(
                           'you',
@@ -241,7 +241,7 @@ class _SignalHeader extends ConsumerWidget {
                       ),
                     ],
                     if (isBookmarked) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       Icon(
                         Icons.bookmark_rounded,
                         size: 16,
@@ -250,7 +250,7 @@ class _SignalHeader extends ConsumerWidget {
                     ],
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppTheme.spacing2),
                 // Row 2: ShortName · Time · Live indicator · Proximity
                 Row(
                   children: [
@@ -279,7 +279,7 @@ class _SignalHeader extends ConsumerWidget {
                       ),
                     ),
                     if (isLive) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppTheme.spacing6),
                       Container(
                         width: 8,
                         height: 8,
@@ -289,7 +289,7 @@ class _SignalHeader extends ConsumerWidget {
                         ),
                       ),
                     ],
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppTheme.spacing6),
                     ProximityBadge(hopCount: signal.hopCount),
                   ],
                 ),
@@ -300,7 +300,7 @@ class _SignalHeader extends ConsumerWidget {
           // Subscribe button for cloud authors (show even if profile service is disabled)
           if ((!isMeshSignal || signal.authorSnapshot != null) &&
               !isOwnMeshSignal) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             SubscribeButton(
               authorId:
                   signal.authorId.startsWith('mesh_') &&
@@ -333,7 +333,7 @@ class _SignalHeader extends ConsumerWidget {
                           color: context.textSecondary,
                           size: 20,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Text(
                           'Delete',
                           style: TextStyle(color: context.textPrimary),
@@ -351,7 +351,7 @@ class _SignalHeader extends ConsumerWidget {
                           color: context.textSecondary,
                           size: 20,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppTheme.spacing12),
                         Text(
                           'Report',
                           style: TextStyle(color: context.textPrimary),
@@ -418,7 +418,7 @@ class _SignalImage extends ConsumerWidget {
         : () => _showFullscreenImage(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 0),
       child: GestureDetector(
         onTap: onTap,
         child: ClipPath(
@@ -593,7 +593,7 @@ class _SignalImage extends ConsumerWidget {
         child: Container(
           decoration: BoxDecoration(
             color: context.card, // Background color for loading state
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
             border: Border.all(
               color: context.border.withValues(alpha: 0.5),
               width: 3,
@@ -607,7 +607,7 @@ class _SignalImage extends ConsumerWidget {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(9),
+            borderRadius: BorderRadius.circular(AppTheme.radius9),
             child: imageWidget,
           ),
         ),
@@ -665,7 +665,7 @@ class _SignalImage extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -675,7 +675,7 @@ class _SignalImage extends ConsumerWidget {
                   size: 12,
                   color: Colors.white,
                 ),
-                const SizedBox(width: 5),
+                const SizedBox(width: AppTheme.spacing5),
                 Text(
                   isCloud ? 'Cloud' : 'Local',
                   style: const TextStyle(
@@ -694,13 +694,13 @@ class _SignalImage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.photo_library, size: 12, color: Colors.white),
-                  const SizedBox(width: 5),
+                  const SizedBox(width: AppTheme.spacing5),
                   Text(
                     '$totalImages',
                     style: const TextStyle(
@@ -746,7 +746,7 @@ class _SignalImage extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.image, size: 32, color: context.accentColor),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Sign in to view attached media',
               style: TextStyle(
@@ -756,7 +756,7 @@ class _SignalImage extends ConsumerWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             TextButton(
               onPressed: () => _openAccountScreen(context),
               style: TextButton.styleFrom(
@@ -808,7 +808,7 @@ class _SignalImage extends ConsumerWidget {
                 children: [
                   // Animated cloud icon with arrow
                   _SyncingCloudIcon(color: context.accentColor),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTheme.spacing12),
                   // Animated text
                   ShaderMask(
                     shaderCallback: (bounds) => LinearGradient(
@@ -828,7 +828,7 @@ class _SignalImage extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: AppTheme.spacing6),
                   // Animated dots
                   _AnimatedDots(color: context.textTertiary),
                 ],
@@ -925,14 +925,14 @@ class _SignalLocation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 0),
       child: GestureDetector(
         onTap: () => _openMap(context),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             color: context.accentColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
             border: Border.all(
               color: context.accentColor.withValues(alpha: 0.2),
             ),
@@ -941,7 +941,7 @@ class _SignalLocation extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.location_on, size: 16, color: context.accentColor),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Flexible(
                 child: Text(
                   signal.location!.name ?? 'View Location',
@@ -954,7 +954,7 @@ class _SignalLocation extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
               Icon(
                 Icons.open_in_new,
                 size: 12,

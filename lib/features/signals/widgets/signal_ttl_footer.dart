@@ -108,7 +108,7 @@ class _SignalTTLFooterState extends ConsumerState<SignalTTLFooter>
         : context.textTertiary;
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Row(
         children: [
           // TTL indicator with urgency animation
@@ -121,7 +121,7 @@ class _SignalTTLFooterState extends ConsumerState<SignalTTLFooter>
           // View count indicator
           _ViewCountIndicator(signalId: widget.signal.id),
 
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
 
           // Reply indicator
           GestureDetector(
@@ -139,7 +139,7 @@ class _SignalTTLFooterState extends ConsumerState<SignalTTLFooter>
                         ? context.textSecondary
                         : context.textTertiary,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTheme.spacing4),
                   Text(
                     '${widget.signal.commentCount}',
                     style: TextStyle(
@@ -177,7 +177,7 @@ class _SignalTTLFooterState extends ConsumerState<SignalTTLFooter>
             mainAxisSize: MainAxisSize.min,
             children: [
               Opacity(opacity: _pulseAnimation!.value, child: icon),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing4),
               Opacity(opacity: _pulseAnimation!.value, child: text),
             ],
           );
@@ -187,7 +187,11 @@ class _SignalTTLFooterState extends ConsumerState<SignalTTLFooter>
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [icon, const SizedBox(width: 4), text],
+      children: [
+        icon,
+        const SizedBox(width: AppTheme.spacing4),
+        text,
+      ],
     );
   }
 }
@@ -213,7 +217,7 @@ class _ViewCountIndicator extends ConsumerWidget {
               size: 14,
               color: context.textTertiary,
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             Text(
               '$count',
               style: TextStyle(color: context.textTertiary, fontSize: 12),

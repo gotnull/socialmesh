@@ -42,11 +42,11 @@ class ConnectingAnimation extends StatelessWidget {
                   color: context.textPrimary,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               // Animated dots
               const _AnimatedDots(),
               if (showCancel) ...[
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spacing32),
                 TextButton(
                   onPressed: onCancel,
                   child: Text(

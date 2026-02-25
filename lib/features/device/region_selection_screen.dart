@@ -389,8 +389,6 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       );
       navigator.pop();
     } on Exception catch (e) {
-      if (!mounted) return;
-
       // Check if the region was actually applied despite the error
       final postErrorState = ref.read(regionConfigProvider);
       final protocol = ref.read(protocolServiceProvider);
@@ -515,6 +513,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
           '✅ _persistAndDismiss: cannot pop (root route) — '
           'setting appInit to ready so router shows MainShell',
         );
+        if (!mounted) return;
         ref.read(appInitProvider.notifier).setReady();
       }
 
@@ -587,7 +586,12 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
           if (widget.isInitialSetup)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  8,
+                  16,
+                  16,
+                ),
                 child: StatusBanner.accent(
                   title: 'Important: Select Your Region',
                   subtitle:
@@ -603,15 +607,17 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
               child: Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(color: context.border),
                 ),
                 child: TextField(
+                  maxLength: 100,
                   enabled: !isApplying,
                   style: TextStyle(color: context.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Search regions...',
                     hintStyle: TextStyle(color: context.textTertiary),
+                    counterText: '',
                     prefixIcon: Icon(Icons.search, color: context.textTertiary),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
@@ -650,7 +656,12 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
               // Error message
               if (statusText != null)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    8,
+                    16,
+                    0,
+                  ),
                   child: StatusBanner.error(title: statusText),
                 ),
 
@@ -659,7 +670,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
 
               // Save / Continue button
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(minHeight: 56),
                   child: SizedBox(
@@ -675,7 +686,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                         disabledBackgroundColor: context.card,
                         disabledForegroundColor: context.textTertiary,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
                         ),
                       ),
                       child: isApplying
@@ -690,7 +703,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                                     color: Colors.white,
                                   ),
                                 ),
-                                SizedBox(width: 10),
+                                SizedBox(width: AppTheme.spacing10),
                                 Text(
                                   'Applying...',
                                   style: TextStyle(
@@ -725,7 +738,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
         color: isSelected
             ? context.accentColor.withValues(alpha: 0.15)
             : context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(
           color: isSelected ? context.accentColor : context.border,
           width: isSelected ? 2 : 1,
@@ -737,9 +750,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
           onTap: isApplying
               ? null
               : () => setState(() => _selectedRegion = region.code),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Row(
               children: [
                 Container(
@@ -749,7 +762,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                     color: isSelected
                         ? context.accentColor.withValues(alpha: 0.2)
                         : context.background,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTheme.radius10),
                   ),
                   child: Center(
                     child: Icon(
@@ -761,7 +774,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -776,7 +789,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                               : context.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         region.description,
                         style: TextStyle(
@@ -796,7 +809,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                     color: isSelected
                         ? context.accentColor
                         : context.background,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                   child: Text(
                     region.frequency,
@@ -808,7 +821,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                   ),
                 ),
                 if (_currentRegion == region.code && !isSelected) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppTheme.spacing8),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -816,7 +829,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                     ),
                     decoration: BoxDecoration(
                       color: context.accentColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(AppTheme.radius6),
                     ),
                     child: Text(
                       'CURRENT',
@@ -829,7 +842,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                   ),
                 ],
                 if (isSelected) ...[
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppTheme.spacing12),
                   Icon(
                     Icons.check_circle,
                     color: context.accentColor,
@@ -848,10 +861,10 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTheme.spacing12),
         decoration: BoxDecoration(
           color: context.accentColor.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
         ),
         child: Column(
@@ -863,7 +876,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                 color: context.textSecondary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Row(
               children: [
                 TextButton.icon(
@@ -890,7 +903,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 TextButton(
                   onPressed: () => Navigator.of(context).pushNamed('/scanner'),
                   style: TextButton.styleFrom(

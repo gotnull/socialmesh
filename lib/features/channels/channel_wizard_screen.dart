@@ -269,7 +269,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
       ),
       builder: (context) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppTheme.spacing24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,11 +281,11 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                     height: 48,
                     decoration: BoxDecoration(
                       color: stepHelp.color.withAlpha(51),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Icon(stepHelp.icon, color: stepHelp.color),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppTheme.spacing16),
                   Expanded(
                     child: Text(
                       stepHelp.title,
@@ -301,7 +301,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppTheme.spacing20),
               Text(
                 stepHelp.content,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -309,7 +309,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                   height: 1.5,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               // Radio compliance link — contextual legal help
               InkWell(
                 onTap: () {
@@ -319,7 +319,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                     LegalConstants.anchorRadioCompliance,
                   );
                 },
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
@@ -329,7 +329,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                         size: 18,
                         color: context.accentColor,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Expanded(
                         child: Text(
                           'View Radio Compliance Rules',
@@ -536,21 +536,21 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
 
   Widget _buildNameStep(ThemeData theme) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.edit, size: 48, color: context.accentColor),
-          SizedBox(height: 24),
+          SizedBox(height: AppTheme.spacing24),
           Text('Name Your Channel', style: theme.textTheme.headlineMedium),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Choose a name that helps you identify this channel. It will be visible to anyone who joins.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: context.textSecondary,
             ),
           ),
-          SizedBox(height: 32),
+          SizedBox(height: AppTheme.spacing32),
           TextField(
             controller: _nameController,
             style: TextStyle(color: context.textPrimary),
@@ -566,22 +566,22 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
               filled: true,
               fillColor: context.surface,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide.none,
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide.none,
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide(color: context.accentColor, width: 2),
               ),
               counterStyle: TextStyle(color: context.textSecondary),
             ),
             onChanged: (_) => setState(() {}),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           StatusBanner.info(
             title: 'Channel names are limited to 12 alphanumeric characters.',
             margin: EdgeInsets.zero,
@@ -593,27 +593,27 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
 
   Widget _buildPrivacyStep(ThemeData theme) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.security, size: 48, color: AppTheme.primaryPurple),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Text('Choose Privacy Level', style: theme.textTheme.headlineMedium),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Select how secure you want this channel to be. Higher security uses stronger encryption.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Column(
             children: PrivacyLevel.values
                 .map((level) => _buildPrivacyOption(level, theme))
                 .toList(),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           _buildCompatibilityInfo(theme),
         ],
       ),
@@ -630,10 +630,10 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: isSelected ? level.color.withAlpha(26) : context.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(
             color: isSelected ? level.color : Colors.transparent,
             width: 2,
@@ -646,11 +646,11 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
               height: 48,
               decoration: BoxDecoration(
                 color: level.color.withAlpha(51),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Icon(level.icon, color: level.color),
             ),
-            SizedBox(width: 16),
+            SizedBox(width: AppTheme.spacing16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -664,7 +664,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -672,7 +672,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                         ),
                         decoration: BoxDecoration(
                           color: level.color.withAlpha(51),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(AppTheme.radius4),
                         ),
                         child: Text(
                           level.keySize.displayName,
@@ -684,7 +684,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Text(
                     level.description,
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -694,7 +694,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                 ],
               ),
             ),
-            SizedBox(width: 12),
+            SizedBox(width: AppTheme.spacing12),
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: 24,
@@ -757,16 +757,16 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
     }
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: compatibilityColor.withAlpha(26),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(color: compatibilityColor.withAlpha(77)),
       ),
       child: Row(
         children: [
           Icon(compatibilityIcon, color: compatibilityColor, size: 20),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Text(
               compatibilityText,
@@ -782,25 +782,25 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
 
   Widget _buildOptionsStep(ThemeData theme) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.tune, size: 48, color: AppTheme.primaryBlue),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Text('Advanced Options', style: theme.textTheme.headlineMedium),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Configure optional channel settings.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: AppTheme.spacing32),
           // Encryption key section (only for private/maximum)
           if (_privacyLevel == PrivacyLevel.private ||
               _privacyLevel == PrivacyLevel.maximum) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             ChannelKeyField(
               keyBase64: ChannelKeyUtils.keyToBase64(_generatedKey),
               onKeyChanged: (newKey) {
@@ -814,7 +814,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
               expectedKeyBytes: _privacyLevel.keySize.bytes,
               accentColor: _privacyLevel.color,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
           ],
           // Position setting (doesn't require MQTT)
           _buildToggleOption(
@@ -828,12 +828,12 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
               });
             },
           ),
-          SizedBox(height: 24),
+          SizedBox(height: AppTheme.spacing24),
           // MQTT section header
           Row(
             children: [
               Icon(Icons.cloud_outlined, size: 16, color: context.textTertiary),
-              SizedBox(width: 8),
+              SizedBox(width: AppTheme.spacing8),
               Text(
                 'MQTT Settings',
                 style: theme.textTheme.labelMedium?.copyWith(
@@ -844,7 +844,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildToggleOption(
             theme: theme,
             title: 'Uplink Enabled',
@@ -857,7 +857,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
               });
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildToggleOption(
             theme: theme,
             title: 'Downlink Enabled',
@@ -871,13 +871,13 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
             },
           ),
           if (_uplinkEnabled || _downlinkEnabled) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             StatusBanner.warning(
               title:
                   'MQTT must be configured on your device for uplink/downlink to work.',
               margin: EdgeInsets.zero,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             StatusBanner.info(
               title:
                   'Most devices have very limited processing power '
@@ -902,10 +902,10 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
     required ValueChanged<bool> onChanged,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Row(
         children: [
@@ -920,7 +920,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: AppTheme.spacing4),
                 Text(
                   subtitle,
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -930,7 +930,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
               ],
             ),
           ),
-          SizedBox(width: 16),
+          SizedBox(width: AppTheme.spacing16),
           ThemedSwitch(value: value, onChanged: onChanged),
         ],
       ),
@@ -944,7 +944,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             LoadingIndicator(size: 64),
-            SizedBox(height: 24),
+            SizedBox(height: AppTheme.spacing24),
             Text(
               'Creating channel...',
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -960,14 +960,14 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
       final channelUrl = _generateChannelUrl();
 
       return SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.spacing24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Icon(Icons.check_circle, size: 64, color: AppTheme.successGreen),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Text('Channel Created!', style: theme.textTheme.headlineMedium),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Share this QR code with others to let them join.',
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -975,21 +975,21 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 32),
+            SizedBox(height: AppTheme.spacing32),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppTheme.radius16),
               ),
               child: BrandedQrCode(data: channelUrl, size: 200),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               decoration: BoxDecoration(
                 color: context.surface,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Column(
                 children: [
@@ -1005,7 +1005,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Row(
               children: [
                 Expanded(
@@ -1026,7 +1026,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                     ),
                   ),
                 ),
-                SizedBox(width: 16),
+                SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => Navigator.pop(context, true),
@@ -1047,26 +1047,26 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
 
     // Preview step before saving
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.preview, size: 48, color: AppTheme.successGreen),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Text('Review & Create', style: theme.textTheme.headlineMedium),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Review your channel settings before creating.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: context.textSecondary,
             ),
           ),
-          SizedBox(height: 32),
+          SizedBox(height: AppTheme.spacing32),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             decoration: BoxDecoration(
               color: context.surface,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
             child: Column(
               children: [
@@ -1114,18 +1114,18 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
               color: _privacyLevel.color.withAlpha(26),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
               border: Border.all(color: _privacyLevel.color.withAlpha(77)),
             ),
             child: Row(
               children: [
                 Icon(_privacyLevel.icon, color: _privacyLevel.color, size: 20),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Text(
                     _privacyLevel.description,
@@ -1204,7 +1204,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
         : true;
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       decoration: BoxDecoration(
         color: context.surface,
         border: Border(top: BorderSide(color: context.border.withAlpha(128))),
@@ -1224,7 +1224,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                   child: const Text('Back'),
                 ),
               ),
-            if (_currentStep > 0) SizedBox(width: 16),
+            if (_currentStep > 0) SizedBox(width: AppTheme.spacing16),
             Expanded(
               child: FilledButton(
                 onPressed: canProceed

@@ -38,11 +38,11 @@ class TakNavigateScreen extends ConsumerWidget {
     return GlassScaffold.body(
       title: 'Navigate to $callsign',
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.spacing24),
         child: Column(
           children: [
             // Compass with bearing arrow.
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             if (nav.hasUserPosition && nav.bearingDegrees != null)
               _BearingCompass(
                 bearingDegrees: nav.bearingDegrees!,
@@ -50,7 +50,7 @@ class TakNavigateScreen extends ConsumerWidget {
               )
             else
               _NoPositionCard(),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             // Distance and speed info.
             if (nav.hasUserPosition && nav.distanceKm != null) ...[
               Text(
@@ -61,7 +61,7 @@ class TakNavigateScreen extends ConsumerWidget {
                   color: context.textPrimary,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
               Text(
                 nav.formattedBearing ?? '',
                 style: TextStyle(
@@ -70,13 +70,13 @@ class TakNavigateScreen extends ConsumerWidget {
                   fontFamily: 'monospace',
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               Text(
                 nav.targetSpeedText,
                 style: TextStyle(fontSize: 14, color: context.textTertiary),
               ),
               if (nav.formattedEta != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Text(
                   'ETA: ${nav.formattedEta}',
                   style: TextStyle(
@@ -273,7 +273,7 @@ class _NoPositionCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.location_off, size: 48, color: context.textTertiary),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Text(
@@ -312,10 +312,10 @@ class _TargetInfoCard extends StatelessWidget {
     final target = nav.target;
     final icon = cotTypeIcon(target.type);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -324,7 +324,7 @@ class _TargetInfoCard extends StatelessWidget {
           Row(
             children: [
               Icon(icon, color: affiliationColor, size: 20),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: Text(
                   target.callsign ?? target.uid,
@@ -339,7 +339,7 @@ class _TargetInfoCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: affiliationColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: Text(
                   affiliationLabel,
@@ -352,7 +352,7 @@ class _TargetInfoCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _InfoRow(
             label: 'Position',
             value:
@@ -360,7 +360,7 @@ class _TargetInfoCard extends StatelessWidget {
                 '${target.lon.toStringAsFixed(6)}',
             context: context,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
           _InfoRow(
             label: 'Last update',
             value: _formatAge(target.receivedUtcMs),

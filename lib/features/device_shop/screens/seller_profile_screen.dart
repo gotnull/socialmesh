@@ -66,7 +66,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
     Color? iconColor,
   }) {
     return Container(
-      margin: const EdgeInsets.all(8),
+      margin: const EdgeInsets.all(AppTheme.spacing8),
       decoration: BoxDecoration(
         color: context.background.withValues(alpha: 0.7),
         shape: BoxShape.circle,
@@ -81,7 +81,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
       child: IconButton(
         icon: Icon(icon, color: iconColor ?? context.textPrimary, size: 22),
         onPressed: onPressed,
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(AppTheme.spacing8),
         constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
       ),
     );
@@ -110,7 +110,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     'Error loading seller',
                     style: TextStyle(color: context.textPrimary),
@@ -140,7 +140,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                         color: context.textTertiary,
                         size: 48,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spacing16),
                       Text(
                         'Seller not found',
                         style: TextStyle(color: context.textPrimary),
@@ -203,7 +203,12 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                 // Products section header
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppTheme.spacing16,
+                      24,
+                      16,
+                      12,
+                    ),
                     child: Text(
                       'Products (${seller.productCount})',
                       style: TextStyle(
@@ -220,7 +225,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                   loading: () => const SliverToBoxAdapter(
                     child: Center(
                       child: Padding(
-                        padding: EdgeInsets.all(32),
+                        padding: EdgeInsets.all(AppTheme.spacing32),
                         child: CircularProgressIndicator(),
                       ),
                     ),
@@ -228,7 +233,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                   error: (error, stack) => SliverToBoxAdapter(
                     child: Center(
                       child: Padding(
-                        padding: const EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(AppTheme.spacing32),
                         child: Text(
                           'Unable to load products',
                           style: TextStyle(color: context.textSecondary),
@@ -241,7 +246,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                       return SliverToBoxAdapter(
                         child: Center(
                           child: Padding(
-                            padding: const EdgeInsets.all(32),
+                            padding: const EdgeInsets.all(AppTheme.spacing32),
                             child: Column(
                               children: [
                                 Icon(
@@ -249,7 +254,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                                   color: context.textTertiary,
                                   size: 48,
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppTheme.spacing12),
                                 Text(
                                   'No products listed yet',
                                   style: TextStyle(
@@ -281,7 +286,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                       return SliverToBoxAdapter(
                         child: Center(
                           child: Padding(
-                            padding: const EdgeInsets.all(32),
+                            padding: const EdgeInsets.all(AppTheme.spacing32),
                             child: Column(
                               children: [
                                 Icon(
@@ -289,7 +294,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                                   color: context.textTertiary,
                                   size: 48,
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: AppTheme.spacing12),
                                 Text(
                                   'No products match "$_searchQuery"',
                                   style: TextStyle(
@@ -304,7 +309,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                     }
 
                     return SliverPadding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppTheme.spacing12),
                       sliver: SliverGrid(
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
@@ -369,7 +374,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: 40),
+                SizedBox(height: AppTheme.spacing40),
                 // Logo
                 UserAvatar(
                   imageUrl: seller.logoUrl,
@@ -380,7 +385,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                   backgroundColor: context.background,
                   fallbackIcon: Icons.store,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 // Name with badges
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -394,11 +399,11 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                       ),
                     ),
                     if (seller.isVerified) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppTheme.spacing8),
                       Icon(Icons.verified, color: Colors.blue, size: 20),
                     ],
                     if (seller.isOfficialPartner) ...[
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing4),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 6,
@@ -406,7 +411,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                         ),
                         decoration: BoxDecoration(
                           color: Colors.amber.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(AppTheme.radius4),
                         ),
                         child: Text(
                           'Official Partner',
@@ -437,11 +442,11 @@ class _SellerStats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(AppTheme.spacing16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Row(
@@ -516,7 +521,7 @@ class _StatItem extends StatelessWidget {
     return Column(
       children: [
         Icon(icon, color: iconColor, size: 20),
-        SizedBox(height: 4),
+        SizedBox(height: AppTheme.spacing4),
         Text(
           value,
           style: TextStyle(
@@ -561,7 +566,7 @@ class _SellerDescription extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             description,
             style: TextStyle(color: context.textSecondary, height: 1.5),
@@ -588,11 +593,11 @@ class _ContactSection extends ConsumerWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(AppTheme.spacing16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -606,7 +611,7 @@ class _ContactSection extends ConsumerWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
 
           if (hasWebsite)
             _ContactRow(
@@ -689,11 +694,11 @@ class _ContactRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         child: Row(
           children: [
             Icon(icon, color: context.accentColor, size: 20),
-            SizedBox(width: 12),
+            SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -743,10 +748,10 @@ class _DiscountCodeSectionState extends ConsumerState<_DiscountCodeSection>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(
             color: context.accentColor.withValues(alpha: 0.3),
             width: 1,
@@ -758,7 +763,7 @@ class _DiscountCodeSectionState extends ConsumerState<_DiscountCodeSection>
             Row(
               children: [
                 Icon(Icons.local_offer, color: context.accentColor, size: 20),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Partner Discount',
                   style: TextStyle(
@@ -769,13 +774,13 @@ class _DiscountCodeSectionState extends ConsumerState<_DiscountCodeSection>
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             if (!_isRevealed) ...[
               Text(
                 'Exclusive discount code for Socialmesh users',
                 style: TextStyle(color: context.textSecondary, fontSize: 13),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
@@ -787,13 +792,14 @@ class _DiscountCodeSectionState extends ConsumerState<_DiscountCodeSection>
                       sellerName: widget.seller.name,
                       code: widget.seller.discountCode!,
                     );
+                    if (!mounted) return;
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: context.accentColor,
                     side: BorderSide(color: context.accentColor),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                     ),
                   ),
                   child: const Text('Reveal Code'),
@@ -801,10 +807,10 @@ class _DiscountCodeSectionState extends ConsumerState<_DiscountCodeSection>
               ),
             ] else ...[
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spacing12),
                 decoration: BoxDecoration(
                   color: context.background.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                   border: Border.all(
                     color: context.accentColor.withValues(alpha: 0.2),
                   ),
@@ -829,6 +835,7 @@ class _DiscountCodeSectionState extends ConsumerState<_DiscountCodeSection>
                         await Clipboard.setData(
                           ClipboardData(text: widget.seller.discountCode!),
                         );
+                        if (!mounted) return;
                         final logger = ref.read(deviceShopEventLoggerProvider);
                         await logger.logDiscountCopy(
                           sellerId: widget.seller.id,
@@ -846,7 +853,7 @@ class _DiscountCodeSectionState extends ConsumerState<_DiscountCodeSection>
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 'Apply this code at checkout on the seller\'s store',
                 style: TextStyle(color: context.textTertiary, fontSize: 11),

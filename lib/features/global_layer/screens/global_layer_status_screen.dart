@@ -100,6 +100,7 @@ class _GlobalLayerStatusScreenState
     final messenger = ScaffoldMessenger.of(context);
     await haptics.trigger(HapticType.medium);
 
+    if (!mounted) return;
     final connectionNotifier = ref.read(
       globalLayerConnectionStateProvider.notifier,
     );
@@ -122,6 +123,7 @@ class _GlobalLayerStatusScreenState
     final messenger = ScaffoldMessenger.of(context);
     await haptics.trigger(HapticType.medium);
 
+    if (!mounted) return;
     final configNotifier = ref.read(globalLayerConfigProvider.notifier);
     await configNotifier.enable();
 
@@ -182,6 +184,7 @@ class _GlobalLayerStatusScreenState
     final messenger = ScaffoldMessenger.of(context);
     await haptics.trigger(HapticType.light);
 
+    if (!mounted) return;
     final storage = ref.read(globalLayerStorageProvider);
     final summary = await storage.getRedactedDiagnosticsString();
 
@@ -359,12 +362,12 @@ class _ConnectionStateHero extends StatelessWidget {
     final shouldPulse = connectionState.shouldAnimate;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 8),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(
             color: connectionState.statusColor.withValues(alpha: 0.3),
             width: 1.5,
@@ -386,7 +389,7 @@ class _ConnectionStateHero extends StatelessWidget {
                   )
                 : _StatusIcon(connectionState: connectionState),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Status label
             Text(
@@ -397,7 +400,7 @@ class _ConnectionStateHero extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
 
             // Status description
             Text(
@@ -457,10 +460,10 @@ class _BrokerInfoCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Column(
@@ -473,7 +476,7 @@ class _BrokerInfoCard extends StatelessWidget {
                   size: 18,
                   color: context.textSecondary,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Broker',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -483,28 +486,28 @@ class _BrokerInfoCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _InfoRow(label: 'Host', value: config.host),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppTheme.spacing6),
             _InfoRow(label: 'Port', value: '${config.effectivePort}'),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppTheme.spacing6),
             _InfoRow(
               label: 'TLS',
               value: config.useTls ? 'Enabled' : 'Disabled',
               valueColor: config.useTls ? const Color(0xFF4ADE80) : null,
             ),
             if (config.username.isNotEmpty) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: AppTheme.spacing6),
               _InfoRow(label: 'User', value: config.username),
             ],
             if (config.lastConnectedAt != null) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: AppTheme.spacing6),
               _InfoRow(
                 label: 'Last connected',
                 value: _formatTimestamp(config.lastConnectedAt!),
               ),
             ],
-            const SizedBox(height: 6),
+            const SizedBox(height: AppTheme.spacing6),
             _InfoRow(
               label: 'Topics',
               value: '${config.enabledSubscriptions.length} active',
@@ -620,7 +623,7 @@ class _QuickActionsSection extends StatelessWidget {
                       : const Color(0xFF4ADE80),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               // Pause / Resume button
               Expanded(
                 child: _ActionButton(
@@ -632,7 +635,7 @@ class _QuickActionsSection extends StatelessWidget {
                   color: const Color(0xFFFBBF24),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               // Diagnostics button
               Expanded(
                 child: _ActionButton(
@@ -644,7 +647,7 @@ class _QuickActionsSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Row(
             children: [
               // Topic Explorer button
@@ -692,14 +695,14 @@ class _ActionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
           color: effectiveColor.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: effectiveColor.withValues(alpha: 0.2)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 24, color: effectiveColor),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppTheme.spacing6),
             Text(
               label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -735,10 +738,10 @@ class _HealthMetricsCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Column(
@@ -751,7 +754,7 @@ class _HealthMetricsCard extends StatelessWidget {
                   size: 18,
                   color: context.textSecondary,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Health',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -764,7 +767,7 @@ class _HealthMetricsCard extends StatelessWidget {
                   _HealthBadge(isHealthy: metrics.isHealthy),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Metrics grid
             Row(
@@ -787,7 +790,7 @@ class _HealthMetricsCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Row(
               children: [
                 Expanded(
@@ -806,7 +809,7 @@ class _HealthMetricsCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Row(
               children: [
                 Expanded(
@@ -828,12 +831,12 @@ class _HealthMetricsCard extends StatelessWidget {
 
             // Errors summary
             if (metrics.activeErrorCount > 0) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppTheme.spacing10),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEF4444).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                   border: Border.all(
                     color: const Color(0xFFEF4444).withValues(alpha: 0.2),
                   ),
@@ -845,7 +848,7 @@ class _HealthMetricsCard extends StatelessWidget {
                       size: 18,
                       color: Color(0xFFEF4444),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Expanded(
                       child: Text(
                         '${metrics.activeErrorCount} active '
@@ -894,7 +897,7 @@ class _HealthBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
@@ -924,7 +927,7 @@ class _MetricTile extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: 14, color: context.textTertiary),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppTheme.spacing6),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -963,10 +966,10 @@ class _PrivacySummaryCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: context.border),
         ),
         child: Column(
@@ -979,7 +982,7 @@ class _PrivacySummaryCard extends StatelessWidget {
                   size: 18,
                   color: context.textSecondary,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   'Privacy',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -996,7 +999,7 @@ class _PrivacySummaryCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF4ADE80).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
                       border: Border.all(
                         color: const Color(0xFF4ADE80).withValues(alpha: 0.3),
                       ),
@@ -1011,19 +1014,19 @@ class _PrivacySummaryCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             _PrivacyToggleRow(
               label: 'Share Messages',
               description: 'Forward local messages to broker',
               isEnabled: privacy.shareMessages,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppTheme.spacing6),
             _PrivacyToggleRow(
               label: 'Share Telemetry',
               description: 'Publish device health data',
               isEnabled: privacy.shareTelemetry,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppTheme.spacing6),
             _PrivacyToggleRow(
               label: 'Accept Inbound',
               description: 'Receive messages from broker',
@@ -1080,7 +1083,7 @@ class _PrivacyToggleRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
             color: statusColor.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppTheme.radius6),
           ),
           child: Text(
             statusLabel,
@@ -1108,7 +1111,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 16, 20, 8),
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -1139,7 +1142,7 @@ class _TransitionTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: context.card.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
         ),
         child: Row(
           children: [
@@ -1152,7 +1155,7 @@ class _TransitionTile extends StatelessWidget {
                 color: toState.statusColor,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppTheme.spacing10),
 
             // Transition description
             Expanded(

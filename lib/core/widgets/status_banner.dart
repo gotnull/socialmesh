@@ -367,7 +367,7 @@ class StatusBanner extends StatelessWidget {
                       color: bannerColor,
                     ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
           ],
           Expanded(
             child: Column(
@@ -383,7 +383,7 @@ class StatusBanner extends StatelessWidget {
                   ),
                 ),
                 if (subtitle != null) ...[
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     subtitle!,
                     style: TextStyle(
@@ -395,9 +395,12 @@ class StatusBanner extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+          if (trailing != null) ...[
+            const SizedBox(width: AppTheme.spacing12),
+            trailing!,
+          ],
           if (onDismiss != null) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             GestureDetector(
               onTap: onDismiss,
               child: Icon(Icons.close, size: 20, color: bannerColor),

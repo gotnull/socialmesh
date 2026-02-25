@@ -215,7 +215,7 @@ class NodeAvatar extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: _getBatteryColor(),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 border: Border.all(color: context.background, width: 1.5),
                 boxShadow: [
                   BoxShadow(

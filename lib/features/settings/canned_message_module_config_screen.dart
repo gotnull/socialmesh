@@ -250,25 +250,25 @@ class _CannedMessageModuleConfigScreenState
           const SliverFillRemaining(child: ScreenLoadingIndicator())
         else
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _buildOptionsSection(),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 _buildMessagesSection(),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 _buildPresetSection(),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spacing24),
                 if (_configPreset == 0) ...[
                   _buildControlTypeSection(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
                   _buildInputsSection(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
                   _buildKeyMappingSection(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacing24),
                 ],
                 _buildInfoCard(),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spacing32),
               ]),
             ),
           ),
@@ -280,9 +280,9 @@ class _CannedMessageModuleConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -295,7 +295,7 @@ class _CannedMessageModuleConfigScreenState
               letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _SettingsTile(
             icon: Icons.message,
             title: 'Enabled',
@@ -308,7 +308,7 @@ class _CannedMessageModuleConfigScreenState
               },
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _SettingsTile(
             icon: Icons.notifications,
             title: 'Send Bell',
@@ -330,9 +330,9 @@ class _CannedMessageModuleConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -345,11 +345,11 @@ class _CannedMessageModuleConfigScreenState
               letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Row(
             children: [
               Icon(Icons.message, size: 20, color: context.accentColor),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Text(
                 'Messages',
                 style: TextStyle(
@@ -360,7 +360,7 @@ class _CannedMessageModuleConfigScreenState
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           TextField(
             controller: _messagesController,
             maxLines: 4,
@@ -370,15 +370,15 @@ class _CannedMessageModuleConfigScreenState
               hintText: 'Message 1|Message 2|Message 3',
               hintStyle: TextStyle(color: context.textTertiary),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.border),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.border),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.accentColor),
               ),
               filled: true,
@@ -389,7 +389,7 @@ class _CannedMessageModuleConfigScreenState
               setState(() => _messagesChanged = true);
             },
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'Separate messages with | (pipe). These messages will be stored '
             'on the device for use with the canned message input controls.',
@@ -412,9 +412,9 @@ class _CannedMessageModuleConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -427,7 +427,7 @@ class _CannedMessageModuleConfigScreenState
               letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           ...presets.map((item) {
             final isSelected = _configPreset == item.$1;
             return Padding(
@@ -438,9 +438,9 @@ class _CannedMessageModuleConfigScreenState
                   _applyPreset(item.$1);
                 },
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                     border: Border.all(
                       color: isSelected ? context.accentColor : context.border,
                       width: isSelected ? 2 : 1,
@@ -457,7 +457,7 @@ class _CannedMessageModuleConfigScreenState
                             : Icons.radio_button_unchecked,
                         color: isSelected ? context.accentColor : Colors.grey,
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: AppTheme.spacing12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -496,9 +496,9 @@ class _CannedMessageModuleConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -511,7 +511,7 @@ class _CannedMessageModuleConfigScreenState
               letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _SettingsTile(
             icon: Icons.radio_button_checked,
             title: 'Rotary Encoder',
@@ -526,7 +526,7 @@ class _CannedMessageModuleConfigScreenState
                     },
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _SettingsTile(
             icon: Icons.arrow_upward,
             title: 'Up/Down Buttons',
@@ -550,9 +550,9 @@ class _CannedMessageModuleConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -565,15 +565,15 @@ class _CannedMessageModuleConfigScreenState
               letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildGpioPicker('Pin A', _inputbrokerPinA, (value) {
             setState(() => _inputbrokerPinA = value);
           }),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildGpioPicker('Pin B', _inputbrokerPinB, (value) {
             setState(() => _inputbrokerPinB = value);
           }),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildGpioPicker('Press Pin', _inputbrokerPinPress, (value) {
             setState(() => _inputbrokerPinPress = value);
           }),
@@ -594,12 +594,12 @@ class _CannedMessageModuleConfigScreenState
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
             color: context.background,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
             border: Border.all(color: context.border),
           ),
           child: DropdownButton<int>(
@@ -650,9 +650,9 @@ class _CannedMessageModuleConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -665,7 +665,7 @@ class _CannedMessageModuleConfigScreenState
               letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           _buildEventPicker(
             'Clockwise Event',
             _inputbrokerEventCw ??
@@ -675,7 +675,7 @@ class _CannedMessageModuleConfigScreenState
               setState(() => _inputbrokerEventCw = value);
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildEventPicker(
             'Counter-Clockwise Event',
             _inputbrokerEventCcw ??
@@ -685,7 +685,7 @@ class _CannedMessageModuleConfigScreenState
               setState(() => _inputbrokerEventCcw = value);
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildEventPicker(
             'Press Event',
             _inputbrokerEventPress ??
@@ -719,12 +719,12 @@ class _CannedMessageModuleConfigScreenState
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
             color: context.background,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
             border: Border.all(color: context.border),
           ),
           child:
@@ -755,15 +755,15 @@ class _CannedMessageModuleConfigScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.accentColor.withAlpha(20),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.accentColor.withAlpha(50)),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.info_outline, color: context.accentColor, size: 20),
-          SizedBox(width: 12),
+          SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Text(
               'This configures the device-side canned message module which '
@@ -796,7 +796,7 @@ class _SettingsTile extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, color: context.textSecondary, size: 22),
-        SizedBox(width: 12),
+        SizedBox(width: AppTheme.spacing12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

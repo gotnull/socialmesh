@@ -267,14 +267,14 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
               'Gateway URL',
               style: Theme.of(sheetContext).textTheme.titleMedium,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               'Leave empty to use the default gateway',
               style: Theme.of(
                 sheetContext,
               ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             TextField(
               controller: _gatewayUrlController,
               maxLength: 256,
@@ -287,7 +287,7 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
                 fillColor: context.card,
                 counterText: '',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -298,7 +298,7 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
                 Navigator.of(sheetContext).pop();
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -341,14 +341,14 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
               'Callsign Override',
               style: Theme.of(sheetContext).textTheme.titleMedium,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               'Leave empty to use your node name',
               style: Theme.of(
                 sheetContext,
               ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             TextField(
               controller: _callsignController,
               maxLength: 20,
@@ -361,7 +361,7 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
                 fillColor: context.card,
                 counterText: '',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -372,7 +372,7 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
                 Navigator.of(sheetContext).pop();
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -404,7 +404,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 8),
       child: Text(
         title,
         style: TextStyle(
@@ -439,21 +439,21 @@ class _SettingsTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
                 Icon(icon, color: context.textSecondary),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -466,7 +466,7 @@ class _SettingsTile extends StatelessWidget {
                         ),
                       ),
                       if (subtitle != null) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           subtitle!,
                           style: Theme.of(context).textTheme.bodySmall
@@ -504,12 +504,14 @@ class _IntervalSelector extends StatelessWidget {
       onSelected: onChanged,
       offset: const Offset(0, 40),
       color: context.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -521,7 +523,7 @@ class _IntervalSelector extends StatelessWidget {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             Icon(Icons.arrow_drop_down, size: 18, color: context.textTertiary),
           ],
         ),
@@ -556,7 +558,7 @@ class _ProximityAffiliationCheckboxes extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(

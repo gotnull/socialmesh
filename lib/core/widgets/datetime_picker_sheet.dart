@@ -350,7 +350,7 @@ class _TimePickerSheetState extends State<TimePickerSheet> {
 
               // AM/PM selector (12-hour format only)
               if (!widget.use24HourFormat) ...[
-                const SizedBox(width: 16),
+                const SizedBox(width: AppTheme.spacing16),
                 Expanded(
                   flex: 2,
                   child: _AmPmSelector(
@@ -564,7 +564,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
           child: Row(
             children: [
               Icon(Icons.calendar_today, size: 16, color: context.textTertiary),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Text(
                 'Date',
                 style: TextStyle(
@@ -577,7 +577,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
             ],
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         SizedBox(
           height: 140,
           child: Row(
@@ -615,9 +615,9 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
           ),
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         Divider(height: 1, color: context.border),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
 
         // Time picker row
         Padding(
@@ -625,7 +625,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
           child: Row(
             children: [
               Icon(Icons.access_time, size: 16, color: context.textTertiary),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Text(
                 'Time',
                 style: TextStyle(
@@ -638,7 +638,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
             ],
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         SizedBox(
           height: 140,
           child: Row(
@@ -684,7 +684,7 @@ class _DateTimePickerSheetState extends State<DateTimePickerSheet> {
               ),
               // AM/PM
               if (!widget.use24HourFormat) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Expanded(
                   flex: 2,
                   child: _AmPmSelector(
@@ -721,7 +721,7 @@ class _PickerHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing8, 0, 8, 8),
       child: Row(
         children: [
           TextButton(
@@ -834,7 +834,7 @@ class _AmPmSelector extends StatelessWidget {
             onChanged(false);
           },
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _AmPmButton(
           label: 'PM',
           isSelected: isPM,
@@ -868,7 +868,7 @@ class _AmPmButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected ? context.accentColor : context.card,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(
             color: isSelected ? context.accentColor : context.border,
           ),

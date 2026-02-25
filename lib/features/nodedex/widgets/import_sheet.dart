@@ -182,35 +182,35 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
         // Header
         _buildHeader(context),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // Summary stats
         _buildSummary(context, preview),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spacing16),
 
         // Conflict section (if any)
         if (preview.hasConflicts) ...[
           _buildConflictSection(context, preview),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
         ],
 
         // Strategy selector
         if (preview.hasConflicts) ...[
           _buildStrategySelector(context),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
         ],
 
         // Conflict details (expandable)
         if (_showConflictDetails && preview.hasConflicts) ...[
           _buildConflictDetails(context, preview),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
         ],
 
         // Import button
         _buildImportButton(context, preview),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
       ],
     );
   }
@@ -224,7 +224,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
           size: 48,
           color: context.textTertiary.withValues(alpha: 0.4),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
         Text(
           'Nothing to import',
           style: TextStyle(
@@ -233,12 +233,12 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
             color: context.textSecondary,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppTheme.spacing6),
         Text(
           'The file contains no valid NodeDex entries.',
           style: TextStyle(fontSize: 13, color: context.textTertiary),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppTheme.spacing20),
       ],
     );
   }
@@ -259,7 +259,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
             color: context.accentColor,
           ),
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: AppTheme.spacing14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,7 +273,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
                   fontFamily: AppTheme.fontFamily,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppTheme.spacing2),
               Text(
                 'Review before applying',
                 style: TextStyle(fontSize: 12, color: context.textTertiary),
@@ -289,10 +289,10 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
     final isDark = context.isDarkMode;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppTheme.spacing14),
       decoration: BoxDecoration(
         color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTheme.radius14),
         border: Border.all(color: context.border.withValues(alpha: 0.15)),
       ),
       child: Column(
@@ -307,7 +307,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
                   color: AppTheme.successGreen,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: _SummaryCell(
                   icon: Icons.merge_outlined,
@@ -316,7 +316,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
                   color: AppTheme.primaryBlue,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: _SummaryCell(
                   icon: Icons.warning_amber_outlined,
@@ -329,7 +329,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppTheme.spacing10),
           Text(
             '${preview.totalImported} entries in file',
             style: TextStyle(fontSize: 11, color: context.textTertiary),
@@ -341,10 +341,10 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
 
   Widget _buildConflictSection(BuildContext context, ImportPreview preview) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppTheme.spacing14),
       decoration: BoxDecoration(
         color: AppTheme.warningYellow.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTheme.radius14),
         border: Border.all(
           color: AppTheme.warningYellow.withValues(alpha: 0.2),
         ),
@@ -355,7 +355,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
           Row(
             children: [
               Icon(Icons.info_outline, size: 16, color: AppTheme.warningYellow),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: Text(
                   'Some entries have conflicting data',
@@ -368,12 +368,12 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             _buildConflictSummaryText(preview),
             style: TextStyle(fontSize: 12, color: context.textSecondary),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppTheme.spacing10),
           GestureDetector(
             onTap: () {
               HapticFeedback.selectionClick();
@@ -390,7 +390,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
                     color: context.accentColor,
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 Icon(
                   _showConflictDetails ? Icons.expand_less : Icons.expand_more,
                   size: 16,
@@ -434,7 +434,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
             color: context.textPrimary,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppTheme.spacing10),
         _StrategyOption(
           icon: Icons.shield_outlined,
           title: 'Keep Local',
@@ -445,7 +445,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
             setState(() => _strategy = MergeStrategy.keepLocal);
           },
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _StrategyOption(
           icon: Icons.file_download_outlined,
           title: 'Prefer Import',
@@ -456,7 +456,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
             setState(() => _strategy = MergeStrategy.preferImport);
           },
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _StrategyOption(
           icon: Icons.tune_outlined,
           title: 'Review Each',
@@ -481,10 +481,10 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
     final isDark = context.isDarkMode;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppTheme.spacing14),
       decoration: BoxDecoration(
         color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTheme.radius14),
         border: Border.all(color: context.border.withValues(alpha: 0.12)),
       ),
       child: Column(
@@ -498,7 +498,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppTheme.spacing10),
           ...conflicting.map(
             (entry) => _ConflictEntryRow(
               entry: entry,
@@ -563,7 +563,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
               backgroundColor: context.accentColor,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
             ),
           ),
@@ -615,7 +615,6 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
         showGlobalInfoSnackBar('Nothing new to import');
       }
     } catch (e) {
-      if (!mounted) return;
       safeSetState(() => _isImporting = false);
       showErrorSnackBar(context, 'Import failed: $e');
     }
@@ -644,7 +643,7 @@ class _SummaryCell extends StatelessWidget {
     return Column(
       children: [
         Icon(icon, size: 22, color: color),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppTheme.spacing6),
         Text(
           value,
           style: TextStyle(
@@ -654,7 +653,7 @@ class _SummaryCell extends StatelessWidget {
             fontFamily: AppTheme.fontFamily,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppTheme.spacing2),
         Text(
           label,
           style: TextStyle(fontSize: 11, color: context.textTertiary),
@@ -697,7 +696,7 @@ class _StrategyOption extends StatelessWidget {
           color: isSelected
               ? accent.withValues(alpha: 0.08)
               : (isDark ? Colors.white : Colors.black).withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(
             color: isSelected
                 ? accent.withValues(alpha: 0.3)
@@ -711,7 +710,7 @@ class _StrategyOption extends StatelessWidget {
               size: 20,
               color: isSelected ? accent : context.textSecondary,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -724,7 +723,7 @@ class _StrategyOption extends StatelessWidget {
                       color: isSelected ? accent : context.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     description,
                     style: TextStyle(fontSize: 11, color: context.textTertiary),
@@ -779,7 +778,7 @@ class _ConflictEntryRow extends StatelessWidget {
                 size: 14,
                 color: context.accentColor,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppTheme.spacing6),
               Expanded(
                 child: Text(
                   entry.displayName,
@@ -805,7 +804,7 @@ class _ConflictEntryRow extends StatelessWidget {
 
           // Social tag conflict
           if (entry.socialTagConflict != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _FieldConflictRow(
               label: 'Classification',
               localValue:
@@ -830,7 +829,7 @@ class _ConflictEntryRow extends StatelessWidget {
 
           // User note conflict
           if (entry.userNoteConflict != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             _FieldConflictRow(
               label: 'Note',
               localValue: _truncate(
@@ -920,7 +919,7 @@ class _FieldConflictRow extends StatelessWidget {
             color: context.textTertiary,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Row(
           children: [
             // Local value
@@ -934,13 +933,13 @@ class _FieldConflictRow extends StatelessWidget {
                 onTap: canResolve ? () => onToggle(false) : null,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Icon(
               Icons.compare_arrows,
               size: 14,
               color: context.textTertiary.withValues(alpha: 0.4),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             // Import value
             Expanded(
               child: _ConflictValueChip(
@@ -991,7 +990,7 @@ class _ConflictValueChip extends StatelessWidget {
           color: isSelected
               ? color.withValues(alpha: 0.1)
               : (isDark ? Colors.white : Colors.black).withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppTheme.radius10),
           border: Border.all(
             color: isSelected
                 ? color.withValues(alpha: 0.4)
@@ -1018,7 +1017,7 @@ class _ConflictValueChip extends StatelessWidget {
                 ],
               ],
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: AppTheme.spacing3),
             Text(
               value,
               style: TextStyle(

@@ -400,7 +400,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                 children: [
                   // Header area with progress bars and user info
                   Padding(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(AppTheme.spacing8),
                     child: Column(
                       children: [
                         // Progress bars
@@ -413,7 +413,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                               ? _progressController
                               : null,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppTheme.spacing8),
                         // User info header
                         _StoryHeader(
                           story: story,
@@ -451,7 +451,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
@@ -462,10 +462,14 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                             if (_isPaused)
                               Center(
                                 child: Container(
-                                  padding: const EdgeInsets.all(16),
+                                  padding: const EdgeInsets.all(
+                                    AppTheme.spacing16,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.black54,
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radius12,
+                                    ),
                                   ),
                                   child: const Icon(
                                     Icons.pause,
@@ -539,7 +543,7 @@ class _StoryContentState extends State<_StoryContent> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(AppTheme.spacing20),
                 decoration: BoxDecoration(
                   color: Colors.white.withAlpha(20),
                   shape: BoxShape.circle,
@@ -550,7 +554,7 @@ class _StoryContentState extends State<_StoryContent> {
                   size: 48,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               const Text(
                 'Content unavailable',
                 style: TextStyle(
@@ -559,7 +563,7 @@ class _StoryContentState extends State<_StoryContent> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               Text(
                 'This story may have been removed',
                 style: TextStyle(
@@ -640,7 +644,7 @@ class _StoryContentState extends State<_StoryContent> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: backgroundColor ?? Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
             ),
             child: Text(
               overlay.text,
@@ -726,7 +730,7 @@ class _ProgressBars extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.only(right: index < storyCount - 1 ? 4 : 0),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(AppTheme.radius2),
               child: SizedBox(
                 height: 3,
                 child: index < currentIndex
@@ -781,7 +785,7 @@ class _StoryHeader extends StatelessWidget {
                 size: 36,
                 foregroundColor: Colors.white,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -796,7 +800,7 @@ class _StoryHeader extends StatelessWidget {
                         ),
                       ),
                       if (story.authorSnapshot?.isVerified ?? false) ...[
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spacing4),
                         const SimpleVerifiedBadge(size: 14),
                       ],
                     ],
@@ -817,14 +821,14 @@ class _StoryHeader extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.more_vert, color: Colors.white, size: 28),
           iconSize: 28,
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
           onPressed: onOptions,
         ),
         IconButton(
           icon: const Icon(Icons.close, color: Colors.white, size: 28),
           iconSize: 28,
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           constraints: const BoxConstraints(minWidth: 52, minHeight: 52),
           onPressed: onClose,
         ),
@@ -851,7 +855,7 @@ class _OwnerStoryFooter extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.black38,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(AppTheme.radius24),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -861,7 +865,7 @@ class _OwnerStoryFooter extends StatelessWidget {
                   color: Colors.white,
                   size: 18,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   '${story.viewCount}',
                   style: const TextStyle(
@@ -869,7 +873,7 @@ class _OwnerStoryFooter extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 Text(
                   story.viewCount == 1 ? 'view' : 'views',
                   style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
@@ -879,18 +883,18 @@ class _OwnerStoryFooter extends StatelessWidget {
           ),
         ),
         if (story.likeCount > 0) ...[
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.black38,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(AppTheme.radius24),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.favorite, color: Colors.redAccent, size: 18),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   '${story.likeCount}',
                   style: const TextStyle(
@@ -935,7 +939,7 @@ class _ViewerStoryFooter extends ConsumerWidget {
               color: isLiked
                   ? Colors.redAccent.withValues(alpha: 0.3)
                   : Colors.black38,
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(AppTheme.radius28),
               border: isLiked
                   ? Border.all(
                       color: Colors.redAccent.withValues(alpha: 0.5),
@@ -957,7 +961,7 @@ class _ViewerStoryFooter extends ConsumerWidget {
                     size: 22,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   isLiked ? 'Liked' : 'Like',
                   style: TextStyle(
@@ -992,7 +996,7 @@ class _ViewersSheet extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Row(
               children: [
                 Text(
@@ -1017,7 +1021,7 @@ class _ViewersSheet extends ConsumerWidget {
               data: (viewers) {
                 if (viewers.isEmpty) {
                   return Padding(
-                    padding: const EdgeInsets.all(32),
+                    padding: const EdgeInsets.all(AppTheme.spacing32),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1026,7 +1030,7 @@ class _ViewersSheet extends ConsumerWidget {
                           size: 48,
                           color: context.textTertiary,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppTheme.spacing8),
                         Text(
                           'No views yet',
                           style: TextStyle(color: context.textSecondary),
@@ -1047,11 +1051,11 @@ class _ViewersSheet extends ConsumerWidget {
                 );
               },
               loading: () => const Padding(
-                padding: EdgeInsets.all(32),
+                padding: EdgeInsets.all(AppTheme.spacing32),
                 child: CircularProgressIndicator(),
               ),
               error: (e, _) => Padding(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(AppTheme.spacing32),
                 child: Text(
                   'Error loading viewers',
                   style: TextStyle(color: context.textSecondary),

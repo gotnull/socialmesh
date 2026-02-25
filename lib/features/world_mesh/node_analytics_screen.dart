@@ -91,6 +91,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
   Future<void> _fetchLiveData() async {
     if (_isRefreshing) return;
 
+    if (!mounted) return;
     setState(() => _isRefreshing = true);
     try {
       final freshNode = await _meshService.fetchNode(widget.node.nodeNum);
@@ -104,7 +105,6 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
         showErrorSnackBar(context, 'Node not found in mesh');
       }
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackBar(context, 'Failed to refresh: $e');
     } finally {
       if (mounted) {
@@ -177,7 +177,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
           color: context.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.spacing24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -189,13 +189,13 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                 color: context.textPrimary,
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: AppTheme.spacing20),
             ListTile(
               leading: Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppTheme.spacing10),
                 decoration: BoxDecoration(
                   color: AccentColors.blue.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Icon(Icons.link, color: AccentColors.blue),
               ),
@@ -214,10 +214,10 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
             ),
             ListTile(
               leading: Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppTheme.spacing10),
                 decoration: BoxDecoration(
                   color: AccentColors.green.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Icon(Icons.text_snippet, color: AccentColors.green),
               ),
@@ -351,7 +351,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
           color: context.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.spacing24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -363,14 +363,14 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                 color: context.textPrimary,
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: AppTheme.spacing8),
             Text(
               '${_history.length} records',
               style: context.bodySmallStyle?.copyWith(
                 color: context.textTertiary,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Row(
               children: [
                 Expanded(
@@ -390,7 +390,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () {
@@ -410,7 +410,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
           ],
         ),
       ),
@@ -540,49 +540,49 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
       ],
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Status card
               _buildStatusCard(node),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
 
               // Quick actions
               _buildQuickActions(node),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Device info section
               _buildSectionHeader('Device Info'),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _buildDeviceInfoTable(node),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Metrics section
               _buildSectionHeader('Device Metrics'),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _buildMetricsTable(node),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Network section
               _buildSectionHeader('Network'),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _buildNetworkSection(node),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Charts section
               _buildSectionHeader('Trends'),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               NodeHistoryCharts(
                 history: _history,
                 accentColor: context.accentColor,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // History section
               _buildHistorySectionHeader(),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
               _buildHistorySection(),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
             ]),
           ),
         ),
@@ -598,10 +598,10 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     final statusText = presenceStatusText(node.presenceConfidence, lastSeenAge);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Row(
@@ -623,7 +623,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
               ),
             ),
           ),
-          SizedBox(width: 16),
+          SizedBox(width: AppTheme.spacing16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -638,7 +638,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                         color: statusColor,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     Text(
                       statusText,
                       style: TextStyle(
@@ -648,7 +648,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                       ),
                     ),
                     if (_isLiveWatching) ...[
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -656,7 +656,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: AccentColors.green.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(AppTheme.radius4),
                         ),
                         child: Text(
                           'LIVE',
@@ -671,7 +671,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                     ],
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spacing4),
                 Text(
                   '!$_nodeId',
                   style: TextStyle(
@@ -681,7 +681,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                   ),
                 ),
                 if (node.role != 'UNKNOWN') ...[
-                  SizedBox(height: 2),
+                  SizedBox(height: AppTheme.spacing2),
                   Text(
                     _formatRole(node.role),
                     style: context.bodySmallStyle?.copyWith(
@@ -727,7 +727,8 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
               ),
             ),
           ),
-        if (hasLocation && widget.onShowOnMap != null) SizedBox(width: 12),
+        if (hasLocation && widget.onShowOnMap != null)
+          SizedBox(width: AppTheme.spacing12),
         // Refresh button
         Expanded(
           child: OutlinedButton.icon(
@@ -895,7 +896,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -903,14 +904,14 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
         children: [
           // Neighbors
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     Icon(Icons.people, size: 16, color: context.textTertiary),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppTheme.spacing8),
                     Text(
                       'Direct Neighbors (${node.neighbors?.length ?? 0})',
                       style: TextStyle(
@@ -921,7 +922,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 12),
+                SizedBox(height: AppTheme.spacing12),
                 if (node.neighbors == null || node.neighbors!.isEmpty)
                   Text(
                     'No neighbor data available',
@@ -945,14 +946,14 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
           Container(height: 1, color: context.border),
           // Gateways
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppTheme.spacing16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     Icon(Icons.router, size: 16, color: context.textTertiary),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppTheme.spacing8),
                     Text(
                       'Seen by Gateways (${node.seenBy.length})',
                       style: TextStyle(
@@ -963,7 +964,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 12),
+                SizedBox(height: AppTheme.spacing12),
                 if (node.seenBy.isEmpty)
                   Text(
                     'No gateway data available',
@@ -1000,14 +1001,14 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.radio, size: 12, color: color),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Text(
             nodeId.length > 8 ? '${nodeId.substring(0, 8)}...' : nodeId,
             style: TextStyle(
@@ -1017,7 +1018,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
             ),
           ),
           if (snr != null) ...[
-            const SizedBox(width: 6),
+            const SizedBox(width: AppTheme.spacing6),
             Text(
               '${snr.toStringAsFixed(1)}dB',
               style: TextStyle(
@@ -1037,14 +1038,14 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: context.accentColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.router, size: 12, color: context.accentColor),
-          SizedBox(width: 6),
+          SizedBox(width: AppTheme.spacing6),
           Text(
             gateway.length > 12 ? '${gateway.substring(0, 12)}...' : gateway,
             style: TextStyle(
@@ -1062,22 +1063,22 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: _history.isEmpty
           ? Column(
               children: [
                 Icon(Icons.history, size: 40, color: context.textTertiary),
-                SizedBox(height: 12),
+                SizedBox(height: AppTheme.spacing12),
                 Text(
                   'No historical data yet',
                   style: context.bodySecondaryStyle?.copyWith(
                     color: context.textSecondary,
                   ),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: AppTheme.spacing4),
                 Text(
                   'Visit this node again to build history',
                   style: context.bodySmallStyle?.copyWith(
@@ -1117,9 +1118,9 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                       ),
                   ],
                 ),
-                SizedBox(height: 16),
+                SizedBox(height: AppTheme.spacing16),
                 Container(height: 1, color: context.border),
-                SizedBox(height: 16),
+                SizedBox(height: AppTheme.spacing16),
                 // Time info
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1173,7 +1174,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     return Column(
       children: [
         Icon(icon, size: 20, color: context.textTertiary),
-        SizedBox(height: 4),
+        SizedBox(height: AppTheme.spacing4),
         Text(
           value,
           style: TextStyle(

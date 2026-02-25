@@ -196,12 +196,14 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
 
           // Search bar
           TextField(
+            maxLength: 100,
             controller: _searchController,
             onChanged: (value) => setState(() => _searchQuery = value),
             style: TextStyle(color: context.textPrimary),
             decoration: InputDecoration(
               hintText: 'Search variables...',
               hintStyle: TextStyle(color: context.textSecondary),
+              counterText: '',
               prefixIcon: Icon(
                 Icons.search,
                 color: context.textSecondary,
@@ -224,13 +226,13 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
               fillColor: context.background,
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide.none,
               ),
             ),
           ),
 
-          SizedBox(height: 12),
+          SizedBox(height: AppTheme.spacing12),
 
           // Category filter chips
           SingleChildScrollView(
@@ -250,7 +252,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
 
           // "None" option
           _buildBindingTile(null, accentColor),
@@ -291,7 +293,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 14, color: isSelected ? Colors.white : color),
-            SizedBox(width: 4),
+            SizedBox(width: AppTheme.spacing4),
             Text(label),
           ],
         ),
@@ -319,7 +321,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.search_off, size: 48, color: context.textSecondary),
-          SizedBox(height: 8),
+          SizedBox(height: AppTheme.spacing8),
           Text(
             'No variables found',
             style: TextStyle(color: context.textSecondary),
@@ -337,14 +339,14 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
     if (binding == null) {
       return InkWell(
         onTap: () => Navigator.pop(context, ''),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppTheme.spacing12),
           decoration: BoxDecoration(
             color: isSelected
                 ? accentColor.withValues(alpha: 0.1)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
             border: Border.all(
               color: isSelected ? accentColor : Colors.transparent,
             ),
@@ -356,7 +358,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                 height: 36,
                 decoration: BoxDecoration(
                   color: context.background,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: Icon(
                   Icons.block,
@@ -364,7 +366,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                   color: context.textSecondary,
                 ),
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,15 +401,15 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
 
     return InkWell(
       onTap: () => Navigator.pop(context, binding.path),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppTheme.radius8),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTheme.spacing12),
         margin: const EdgeInsets.only(bottom: 4),
         decoration: BoxDecoration(
           color: isSelected
               ? accentColor.withValues(alpha: 0.1)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(
             color: isSelected ? accentColor : Colors.transparent,
           ),
@@ -420,7 +422,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
               height: 36,
               decoration: BoxDecoration(
                 color: categoryColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Icon(
                 _categoryIcon(binding.category),
@@ -428,7 +430,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                 color: categoryColor,
               ),
             ),
-            SizedBox(width: 12),
+            SizedBox(width: AppTheme.spacing12),
 
             // Label and description
             Expanded(
@@ -457,7 +459,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                         ),
                         decoration: BoxDecoration(
                           color: context.background,
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(AppTheme.radius4),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -467,7 +469,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                               size: 10,
                               color: context.textSecondary,
                             ),
-                            SizedBox(width: 2),
+                            SizedBox(width: AppTheme.spacing2),
                             Text(
                               _typeName(binding.valueType),
                               style: TextStyle(
@@ -480,7 +482,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 2),
+                  SizedBox(height: AppTheme.spacing2),
                   Text(
                     binding.description,
                     style: TextStyle(
@@ -488,7 +490,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                       color: context.textSecondary,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  SizedBox(height: AppTheme.spacing4),
                   // Path and unit
                   Row(
                     children: [
@@ -499,7 +501,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                         ),
                         decoration: BoxDecoration(
                           color: context.card,
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: BorderRadius.circular(AppTheme.radius2),
                         ),
                         child: Text(
                           binding.path,
@@ -511,7 +513,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                         ),
                       ),
                       if (binding.unit != null) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppTheme.spacing8),
                         Text(
                           binding.unit!,
                           style: TextStyle(

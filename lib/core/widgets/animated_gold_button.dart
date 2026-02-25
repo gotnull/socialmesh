@@ -128,7 +128,7 @@ class _AnimatedGoldButtonState extends State<AnimatedGoldButton>
                     ],
                     stops: [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0],
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                   boxShadow: [
                     BoxShadow(
                       color: AccentColors.goldBrown.withValues(alpha: 0.5),
@@ -385,7 +385,7 @@ class _AnimatedGoldIconButtonState extends State<AnimatedGoldIconButton>
                     ],
                     stops: const [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0],
                   ),
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(AppTheme.radius18),
                   boxShadow: [
                     BoxShadow(
                       color: AccentColors.goldBrown.withValues(alpha: 0.4),

@@ -25,7 +25,7 @@ class TapbackDisplay extends ConsumerWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppTheme.radius18),
             border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
             color: Colors.white.withValues(alpha: 0.05),
           ),
@@ -33,7 +33,7 @@ class TapbackDisplay extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               for (int i = 0; i < tapbacks.length; i++) ...[
-                if (i > 0) const SizedBox(width: 10),
+                if (i > 0) const SizedBox(width: AppTheme.spacing10),
                 _IndividualTapback(
                   tapback: tapbacks[i],
                   shortName: _resolveShortName(tapbacks[i].fromNodeNum, nodes),
@@ -70,7 +70,7 @@ class _IndividualTapback extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(tapback.emoji, style: const TextStyle(fontSize: 20)),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppTheme.spacing2),
         Text(
           shortName,
           style: context.captionStyle?.copyWith(
@@ -114,10 +114,10 @@ class TapbackPicker extends ConsumerWidget {
             height: 4,
             decoration: BoxDecoration(
               color: context.border,
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(AppTheme.radius2),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spacing20),
           Text(
             'React',
             style: TextStyle(
@@ -126,7 +126,7 @@ class TapbackPicker extends ConsumerWidget {
               color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Wrap(
             spacing: 12,
             runSpacing: 12,
@@ -151,7 +151,7 @@ class TapbackPicker extends ConsumerWidget {
               );
             }).toList(),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
         ],
       ),
     );
@@ -170,13 +170,13 @@ class _TapbackButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         child: Container(
           width: 56,
           height: 56,
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radius16),
           ),
           child: Center(
             child: Text(

@@ -64,13 +64,14 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
           // Search bar in body like Direct Messages
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
               child: Container(
                 decoration: BoxDecoration(
                   color: context.card,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: TextField(
+                  maxLength: 100,
                   controller: _searchController,
                   focusNode: _searchFocusNode,
                   onChanged: _onSearchChanged,
@@ -79,6 +80,7 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
                   decoration: InputDecoration(
                     hintText: 'Search users...',
                     hintStyle: TextStyle(color: context.textTertiary),
+                    counterText: '',
                     prefixIcon: Icon(Icons.search, color: context.textTertiary),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
@@ -131,7 +133,7 @@ class _SuggestionsView extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       children: [
         // Suggested users section
         Text(
@@ -140,7 +142,7 @@ class _SuggestionsView extends ConsumerWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         suggestedAsync.when(
           data: (users) {
             if (users.isEmpty) {
@@ -176,7 +178,7 @@ class _SuggestionsView extends ConsumerWidget {
           ),
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
 
         // Recently active section
         Text(
@@ -185,7 +187,7 @@ class _SuggestionsView extends ConsumerWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         recentAsync.when(
           data: (users) {
             if (users.isEmpty) {
@@ -250,14 +252,14 @@ class _SearchResultsView extends ConsumerWidget {
                   size: 64,
                   color: theme.colorScheme.primary.withAlpha(100),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
                 Text(
                   'No users found',
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.textTheme.bodyLarge?.color?.withAlpha(150),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacing8),
                 Text(
                   'Try a different search term',
                   style: theme.textTheme.bodyMedium?.copyWith(
@@ -294,9 +296,9 @@ class _SearchResultsView extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.error_outline, size: 48),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text('Search failed: $error'),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             FilledButton(
               onPressed: () => ref.invalidate(userSearchProvider(query)),
               child: const Text('Retry'),
@@ -330,11 +332,11 @@ class _UserTile extends StatelessWidget {
             child: Text(user.displayName, overflow: TextOverflow.ellipsis),
           ),
           if (user.isVerified) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             const SimpleVerifiedBadge(size: 16),
           ],
           if (user.isPrivate) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: AppTheme.spacing4),
             Icon(
               Icons.lock,
               size: 14,

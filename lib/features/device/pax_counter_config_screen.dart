@@ -158,20 +158,20 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
       ],
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Header info
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
                   color: context.accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Row(
                   children: [
                     Icon(Icons.people, color: context.accentColor, size: 32),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppTheme.spacing16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +198,7 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Enable PAX Counter
               _SettingsTile(
@@ -215,7 +215,7 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
                 ),
               ),
 
-              SizedBox(height: 12),
+              SizedBox(height: AppTheme.spacing12),
 
               // Note: WiFi/BLE scanning toggles are not exposed by the
               // firmware config proto. Both must be independently disabled
@@ -224,10 +224,10 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
               // Update Interval (only shown when enabled)
               if (_paxCounterEnabled) ...[
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppTheme.spacing16),
                   decoration: BoxDecoration(
                     color: context.card,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,7 +240,7 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
                           color: context.textSecondary,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppTheme.spacing8),
                       Text(
                         '${_paxCounterUpdateInterval ~/ 60} minutes',
                         style: TextStyle(
@@ -249,7 +249,7 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
                           color: context.accentColor,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppTheme.spacing8),
                       SliderTheme(
                         data: SliderThemeData(
                           activeTrackColor: context.accentColor,
@@ -298,7 +298,7 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
                 ),
               ],
 
-              SizedBox(height: 24),
+              SizedBox(height: AppTheme.spacing24),
 
               // Info card
               StatusBanner.accent(
@@ -330,10 +330,10 @@ class _SettingsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -26,30 +26,30 @@ class ARSettingsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionHeader('VIEW MODE'),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildViewModeSelector(),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           _buildSectionHeader('DISTANCE FILTER'),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildDistanceSlider(),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           _buildSectionHeader('NODE FILTERS'),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildFilterToggles(),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
           _buildSectionHeader('HUD ELEMENTS'),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _buildHudToggles(),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
         ],
       ),
     );
@@ -76,13 +76,13 @@ class ARSettingsPanel extends StatelessWidget {
           icon: Icons.grid_view,
           mode: ARViewMode.tactical,
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         _buildModeChip(
           label: 'Explorer',
           icon: Icons.explore,
           mode: ARViewMode.explorer,
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         _buildModeChip(
           label: 'Minimal',
           icon: Icons.radio_button_unchecked,
@@ -108,7 +108,7 @@ class ARSettingsPanel extends StatelessWidget {
             color: isSelected
                 ? const Color(0xFF00E5FF).withValues(alpha: 0.2)
                 : Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
             border: Border.all(
               color: isSelected
                   ? const Color(0xFF00E5FF)
@@ -124,7 +124,7 @@ class ARSettingsPanel extends StatelessWidget {
                     : Colors.white.withValues(alpha: 0.5),
                 size: 24,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacing4),
               Text(
                 label,
                 style: TextStyle(
@@ -167,7 +167,7 @@ class ARSettingsPanel extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         SliderTheme(
           data: SliderThemeData(
             activeTrackColor: const Color(0xFF00E5FF),
@@ -216,7 +216,7 @@ class ARSettingsPanel extends StatelessWidget {
           value: state.showOfflineNodes,
           onTap: onToggleOfflineNodes,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
         _buildToggleRow(
           icon: Icons.star,
           label: 'Favorites Only',
@@ -256,7 +256,7 @@ class ARSettingsPanel extends StatelessWidget {
           color: value
               ? const Color(0xFF00E5FF).withValues(alpha: 0.1)
               : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
           border: Border.all(
             color: value
                 ? const Color(0xFF00E5FF).withValues(alpha: 0.5)
@@ -272,7 +272,7 @@ class ARSettingsPanel extends StatelessWidget {
                   : Colors.white.withValues(alpha: 0.5),
               size: 20,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Text(
                 label,
@@ -288,7 +288,7 @@ class ARSettingsPanel extends StatelessWidget {
               width: 44,
               height: 24,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
                 color: value
                     ? const Color(0xFF00E5FF)
                     : Colors.white.withValues(alpha: 0.1),
@@ -324,7 +324,7 @@ class ARSettingsPanel extends StatelessWidget {
           color: isEnabled
               ? const Color(0xFF00E5FF).withValues(alpha: 0.2)
               : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(
             color: isEnabled
                 ? const Color(0xFF00E5FF)

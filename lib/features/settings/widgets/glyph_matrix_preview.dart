@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../services/glyph_service.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Simplified Glyph Matrix Preview for the pattern builder screen.
 /// Shows a visual representation of the 5-zone glyph interface.
@@ -24,14 +25,14 @@ class GlyphMatrixPreview extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.black,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           border: Border.all(
             color: accentColor.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           child: CustomPaint(
             painter: _ZonePainter(
               activeZones: activeZones,

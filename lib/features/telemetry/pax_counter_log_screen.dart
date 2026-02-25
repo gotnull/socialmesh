@@ -49,7 +49,7 @@ class PaxCounterLogScreen extends ConsumerWidget {
             }
             final sortedLogs = logs.reversed.toList();
             return SliverPadding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) => _PaxCounterCard(log: sortedLogs[index]),
@@ -73,14 +73,14 @@ class PaxCounterLogScreen extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.people_outline, size: 64, color: context.textTertiary),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           Text(
             message,
             style: context.titleSmallStyle?.copyWith(
               color: context.textSecondary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             'PAX counter detects nearby devices',
             style: context.bodySecondaryStyle?.copyWith(
@@ -105,10 +105,10 @@ class _PaxCounterCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,7 +129,7 @@ class _PaxCounterCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: AccentColors.blue.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -139,7 +139,7 @@ class _PaxCounterCard extends StatelessWidget {
                       size: 14,
                       color: AccentColors.blue,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppTheme.spacing4),
                     Text(
                       '$totalDevices',
                       style: const TextStyle(
@@ -153,7 +153,7 @@ class _PaxCounterCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
 
           // BLE and WiFi counts
           Row(
@@ -166,7 +166,7 @@ class _PaxCounterCard extends StatelessWidget {
                   color: AccentColors.blue,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: _DeviceCountTile(
                   icon: Icons.wifi,
@@ -180,7 +180,7 @@ class _PaxCounterCard extends StatelessWidget {
 
           // Uptime if available
           if (log.uptime > 0) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Row(
               children: [
                 Icon(
@@ -188,7 +188,7 @@ class _PaxCounterCard extends StatelessWidget {
                   size: 14,
                   color: Colors.white.withValues(alpha: 0.5),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppTheme.spacing6),
                 Text(
                   'Uptime: ${_formatUptime(log.uptime)}',
                   style: TextStyle(
@@ -230,22 +230,22 @@ class _DeviceCountTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(AppTheme.spacing8),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
             ),
             child: Icon(icon, size: 20, color: color),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

@@ -36,7 +36,7 @@ class MeshHealthContent extends ConsumerWidget {
     final healthColor = _getHealthColor(healthScore);
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         children: [
           // Health score circle
@@ -96,7 +96,7 @@ class MeshHealthContent extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spacing16),
           // Health factors
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -203,7 +203,7 @@ class _HealthFactor extends StatelessWidget {
           size: 18,
           color: isGood ? context.accentColor : context.textTertiary,
         ),
-        SizedBox(height: 4),
+        SizedBox(height: AppTheme.spacing4),
         Text(
           status,
           style: TextStyle(

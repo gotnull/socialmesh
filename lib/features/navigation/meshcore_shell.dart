@@ -292,17 +292,17 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
     return SafeArea(
       bottom: false,
       child: Container(
-        margin: const EdgeInsets.all(12),
+        margin: const EdgeInsets.all(AppTheme.spacing12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: AppTheme.errorRed.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: AppTheme.errorRed.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
             Icon(Icons.link_off_rounded, color: AppTheme.errorRed, size: 20),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Text(
                 'Disconnected from $deviceName',
@@ -422,7 +422,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                       _showAddContact();
                     },
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   _MeshCoreDrawerMenuTile(
                     icon: Icons.add_rounded,
                     label: 'Add Channel',
@@ -433,7 +433,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                       _showAddChannel();
                     },
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   _MeshCoreDrawerMenuTile(
                     icon: Icons.radar_rounded,
                     label: 'Discover Contacts',
@@ -444,7 +444,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                       _showDiscoverContacts();
                     },
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   _MeshCoreDrawerMenuTile(
                     icon: Icons.qr_code_rounded,
                     label: 'My Contact Code',
@@ -456,14 +456,14 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                     },
                   ),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Divider(
                       color: theme.dividerColor.withValues(alpha: dividerAlpha),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
 
                   _MeshCoreDrawerMenuTile(
                     icon: Icons.settings_outlined,
@@ -494,7 +494,12 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
 
             // Footer with settings button and disconnect - matches MainShell
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing16,
+                12,
+                16,
+                16,
+              ),
               child: Row(
                 children: [
                   // Settings button (circular) - matches MainShell _SettingsButton
@@ -567,7 +572,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
             size: 14,
             color: AccentColors.cyan.withValues(alpha: 0.7),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppTheme.spacing6),
           Text(
             title,
             style: TextStyle(
@@ -583,8 +588,6 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
   }
 
   void _reconnect() async {
-    if (!mounted) return;
-
     // Get saved device info
     final settingsAsync = ref.read(settingsServiceProvider);
     final settings = settingsAsync.asData?.value;
@@ -723,7 +726,7 @@ class _MeshCoreDrawerNodeHeader extends ConsumerWidget {
         : 'MC';
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 20, 20, 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -743,7 +746,7 @@ class _MeshCoreDrawerNodeHeader extends ConsumerWidget {
                   )
                 : null,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppTheme.spacing12),
           // Node info - flexible column
           Expanded(
             child: Column(
@@ -765,7 +768,7 @@ class _MeshCoreDrawerNodeHeader extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spacing8),
                     // Connection status indicator (compact) - matches MainShell exactly
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -776,7 +779,7 @@ class _MeshCoreDrawerNodeHeader extends ConsumerWidget {
                         color: isConnected
                             ? AppTheme.successGreen.withValues(alpha: 0.15)
                             : AppTheme.errorRed.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -791,7 +794,7 @@ class _MeshCoreDrawerNodeHeader extends ConsumerWidget {
                               shape: BoxShape.circle,
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: AppTheme.spacing4),
                           Text(
                             isConnected ? 'Online' : 'Offline',
                             style: TextStyle(
@@ -809,7 +812,7 @@ class _MeshCoreDrawerNodeHeader extends ConsumerWidget {
                   ],
                 ),
                 if (isConnected && nodeId.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Text(
                     nodeId,
                     style: TextStyle(
@@ -855,19 +858,19 @@ class _MeshCoreDrawerMenuTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
         ),
         child: Row(
           children: [
             // Icon container - matches MainShell drawer
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(AppTheme.spacing10),
               decoration: BoxDecoration(
                 color: (iconColor ?? theme.colorScheme.primary).withValues(
                   alpha: 0.15,
                 ),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Icon(
                 icon,
@@ -877,7 +880,7 @@ class _MeshCoreDrawerMenuTile extends StatelessWidget {
                     theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: AppTheme.spacing14),
             Expanded(
               child: Text(
                 label,
@@ -941,7 +944,7 @@ class _MeshCoreNavBarItem extends StatelessWidget {
           color: isSelected
               ? accentColor.withValues(alpha: 0.15)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -968,7 +971,7 @@ class _MeshCoreNavBarItem extends StatelessWidget {
                     )
                   : AnimatedMorphIcon(icon: icon, size: 24, color: iconColor),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             isSelected
                 ? ShaderMask(
                     shaderCallback: (bounds) {
@@ -1046,7 +1049,7 @@ class _MeshCoreDeviceSheetContentState
       children: [
         // Header
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 8, 20, 16),
           child: Row(
             children: [
               Container(
@@ -1056,7 +1059,7 @@ class _MeshCoreDeviceSheetContentState
                   color: isConnected
                       ? context.accentColor.withValues(alpha: 0.15)
                       : context.background,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Icon(
                   Icons.router,
@@ -1066,7 +1069,7 @@ class _MeshCoreDeviceSheetContentState
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppTheme.spacing16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1081,7 +1084,7 @@ class _MeshCoreDeviceSheetContentState
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Row(
                       children: [
                         Container(
@@ -1096,7 +1099,7 @@ class _MeshCoreDeviceSheetContentState
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppTheme.spacing6),
                         Text(
                           isConnected
                               ? 'Connected'
@@ -1129,17 +1132,17 @@ class _MeshCoreDeviceSheetContentState
         Expanded(
           child: ListView(
             controller: widget.scrollController,
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppTheme.spacing20),
             children: [
               // Device Info
               _buildSectionTitle(context, 'Device Information'),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _buildDeviceInfoCard(context, selfInfo, nodeId, isConnected),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Quick Actions
               _buildSectionTitle(context, 'Quick Actions'),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.spacing12),
               _MeshCoreActionTile(
                 icon: Icons.person_add_rounded,
                 title: 'Add Contact',
@@ -1199,15 +1202,15 @@ class _MeshCoreDeviceSheetContentState
                   );
                 },
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Connection Actions
               if (isConnected) ...[
                 _buildSectionTitle(context, 'Connection'),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
                 _buildDisconnectButton(context),
               ],
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacing32),
             ],
           ),
         ),
@@ -1238,7 +1241,7 @@ class _MeshCoreDeviceSheetContentState
     return Container(
       decoration: BoxDecoration(
         color: context.background,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.border),
       ),
       child: InfoTable(
@@ -1308,7 +1311,7 @@ class _MeshCoreDeviceSheetContentState
                   : AppTheme.errorRed,
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.radius16),
             ),
           ),
         ),
@@ -1399,7 +1402,7 @@ class _MeshCoreActionTile extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: enabled ? onTap : null,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
             child: Row(
@@ -1409,11 +1412,11 @@ class _MeshCoreActionTile extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Icon(icon, color: context.accentColor, size: 22),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: AppTheme.spacing14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1428,7 +1431,7 @@ class _MeshCoreActionTile extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         subtitle,
                         style: TextStyle(

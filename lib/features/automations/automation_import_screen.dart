@@ -238,23 +238,23 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
   Widget _buildError() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.spacing24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error_outline, size: 64, color: AppTheme.errorRed),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             Text(
               'Import Failed',
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               _error!,
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Go Back'),
@@ -269,14 +269,14 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
     final automation = _automation!;
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Preview Card
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -287,7 +287,7 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
                         color: context.accentColor,
                         size: 32,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacing12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,25 +307,25 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   const Divider(),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTheme.spacing8),
                   Text(
                     'Trigger',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       color: context.accentColor,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Text(automation.trigger.type.displayName),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacing16),
                   Text(
                     'Actions (${automation.actions.length})',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       color: context.accentColor,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacing4),
                   ...automation.actions.map(
                     (action) => Padding(
                       padding: const EdgeInsets.only(bottom: 4),
@@ -336,7 +336,7 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
                             size: 16,
                             color: Colors.grey[400],
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTheme.spacing8),
                           Expanded(
                             child: Text(
                               action.type.displayName,
@@ -349,21 +349,21 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
                   ),
                   if (automation.conditions != null &&
                       automation.conditions!.isNotEmpty) ...[
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppTheme.spacing16),
                     Text(
                       'Conditions (${automation.conditions!.length})',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: context.accentColor,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Text('${automation.conditions!.length} conditions'),
                   ],
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppTheme.spacing24),
 
           // Warning
           StatusBanner.warning(
@@ -384,7 +384,7 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
                   label: const Text('Edit First'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton.icon(
                   onPressed: _importAutomation,

@@ -64,10 +64,10 @@ class _LockedFeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppTheme.spacing24),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -86,7 +86,7 @@ class _LockedFeatureCard extends StatelessWidget {
               size: 32,
             ),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppTheme.spacing16),
           Text(
             featureName,
             style: TextStyle(
@@ -96,14 +96,14 @@ class _LockedFeatureCard extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 8),
+          SizedBox(height: AppTheme.spacing8),
           Text(
             featureDescription,
             style: TextStyle(color: context.textSecondary, fontSize: 14),
             textAlign: TextAlign.center,
           ),
           if (showUpgradeButton) ...[
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.spacing20),
             FilledButton.icon(
               onPressed: () {
                 Navigator.of(context).push(
@@ -136,13 +136,13 @@ class PremiumBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: context.accentColor,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppTheme.radius4),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.lock, size: size - 4, color: Colors.white),
-          const SizedBox(width: 2),
+          const SizedBox(width: AppTheme.spacing2),
           Text(
             'PRO',
             style: TextStyle(
@@ -188,7 +188,7 @@ class PremiumFeatureRow extends ConsumerWidget {
         children: [
           Expanded(child: child),
           if (!hasFeature && showLockIfLocked) ...[
-            SizedBox(width: 8),
+            SizedBox(width: AppTheme.spacing8),
             Icon(Icons.lock_outline, size: 16, color: context.accentColor),
           ],
         ],
@@ -219,7 +219,7 @@ Future<bool> checkFeatureOrShowUpgrade(
         Row(
           children: [
             Icon(Icons.lock_outline, color: context.accentColor),
-            SizedBox(width: 12),
+            SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Text(
                 purchase?.name ?? 'Premium Feature',
@@ -232,13 +232,13 @@ Future<bool> checkFeatureOrShowUpgrade(
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
         Text(
           purchase?.description ??
               'This feature requires a purchase to unlock.',
           style: TextStyle(color: context.textSecondary),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spacing24),
         Row(
           children: [
             Expanded(
@@ -248,17 +248,18 @@ Future<bool> checkFeatureOrShowUpgrade(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   side: BorderSide(color: Colors.grey.shade700),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                 ),
                 child: const Text('Cancel'),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: FilledButton(
                 onPressed: () {
                   Navigator.pop(context);
+                  if (!context.mounted) return;
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const SubscriptionScreen(),
@@ -269,7 +270,7 @@ Future<bool> checkFeatureOrShowUpgrade(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: context.accentColor,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                 ),
                 child: Text(

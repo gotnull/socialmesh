@@ -284,7 +284,7 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
                     child: Row(
                       children: [
                         Icon(Icons.done_all, size: 20),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppTheme.spacing12),
                         Text('Mark all as read'),
                       ],
                     ),
@@ -295,7 +295,7 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
                     child: Row(
                       children: [
                         Icon(Icons.delete_outline, size: 20),
-                        SizedBox(width: 12),
+                        SizedBox(width: AppTheme.spacing12),
                         Text('Clear all'),
                       ],
                     ),
@@ -365,7 +365,7 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
   Widget _buildError(String error) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppTheme.spacing32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -374,7 +374,7 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
               height: 72,
               decoration: BoxDecoration(
                 color: context.surface,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppTheme.radius16),
               ),
               child: Icon(
                 Icons.error_outline,
@@ -382,7 +382,7 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
                 color: context.textTertiary,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppTheme.spacing24),
             Text(
               'Failed to load activity',
               style: TextStyle(
@@ -391,13 +391,13 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               error,
               style: TextStyle(color: context.textTertiary, fontSize: 13),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
             OutlinedButton(
               onPressed: () {
                 AppLogging.social('📬 [ActivityScreen] retry button pressed');
@@ -455,7 +455,9 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
     }
 
     // Bottom padding
-    slivers.add(const SliverToBoxAdapter(child: SizedBox(height: 32)));
+    slivers.add(
+      const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing32)),
+    );
 
     return slivers;
   }
@@ -562,6 +564,7 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
       // Save to local DB so it appears in Presence Feed
       await signalService.saveSignalLocally(cloudSignal);
       // Refresh the signal feed to show the newly cached signal
+      if (!mounted) return null;
       ref.read(signalFeedProvider.notifier).refresh(silent: true);
     } else {
       AppLogging.social(
@@ -683,7 +686,7 @@ class _TimelineActivityTile extends ConsumerWidget {
       height: 36,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
       ),
       child: Center(child: Icon(icon, color: color, size: 18)),
     );
@@ -764,14 +767,14 @@ class _TimelineActivityTile extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Left edge spacing
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
 
               // Timeline indicator with continuous line
               SizedBox(
                 width: 40,
                 child: Column(
                   children: [
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacing8),
                     // Activity type icon (centered)
                     _buildActivityIcon(context),
                     // Vertical line that extends to fill remaining space
@@ -782,7 +785,9 @@ class _TimelineActivityTile extends ConsumerWidget {
                           margin: const EdgeInsets.only(top: 4),
                           decoration: BoxDecoration(
                             color: context.border.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(1),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius1,
+                            ),
                           ),
                         ),
                       ),
@@ -790,7 +795,7 @@ class _TimelineActivityTile extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
 
               // Avatar — mesh actors get SigilAvatar (tappable → NodeDex),
               // no-nodeNum actors get a generic person icon.
@@ -852,7 +857,7 @@ class _TimelineActivityTile extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
 
               // Content — device name + action text
               Expanded(
@@ -893,7 +898,7 @@ class _TimelineActivityTile extends ConsumerWidget {
                         ),
                       ),
                       if (activity.textContent != null) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppTheme.spacing4),
                         Text(
                           activity.textContent!,
                           style: TextStyle(
@@ -904,7 +909,7 @@ class _TimelineActivityTile extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppTheme.spacing4),
                       Text(
                         timeago.format(activity.createdAt),
                         style: TextStyle(
@@ -922,7 +927,7 @@ class _TimelineActivityTile extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(left: 12, top: 8),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
                     child: Image.network(
                       activity.previewImageUrl!,
                       width: 44,
@@ -935,7 +940,7 @@ class _TimelineActivityTile extends ConsumerWidget {
                 ),
 
               // Right edge spacing
-              const SizedBox(width: 12),
+              const SizedBox(width: AppTheme.spacing12),
             ],
           ),
         ),

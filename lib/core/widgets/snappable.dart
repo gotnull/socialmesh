@@ -175,7 +175,6 @@ class SnappableState extends State<Snappable>
       setState(() => _hideOriginal = true);
     } else {
       _hideOriginalTimer = Timer(widget.hideOriginalDelay, () {
-        if (!mounted) return;
         setState(() => _hideOriginal = true);
       });
     }
@@ -232,7 +231,6 @@ class SnappableState extends State<Snappable>
 
   /// I am... IRON MAN   ~Tony Stark
   void reset() {
-    if (!mounted) return;
     _hideOriginalTimer?.cancel();
     setState(() {
       _layers = null;

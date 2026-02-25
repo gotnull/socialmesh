@@ -180,7 +180,7 @@ class MeshMapWidget extends StatelessWidget {
               options: MarkerClusterLayerOptions(
                 maxClusterRadius: clusterRadius.toInt(),
                 size: const Size(48, 48),
-                padding: const EdgeInsets.all(50),
+                padding: const EdgeInsets.all(AppTheme.spacing50),
                 markers: clusteredMarkers!,
                 popupOptions: popupController != null && popupBuilder != null
                     ? PopupOptions(
@@ -248,7 +248,7 @@ class MeshMapWidget extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppTheme.radius4),
                   ),
                   child: Text(
                     mapStyle == MapTileStyle.satellite

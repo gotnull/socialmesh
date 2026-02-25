@@ -417,7 +417,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
           child: Column(
             children: [
               // Spacing between app bar and chip row.
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacing8),
 
               // Filter chip row — view modes + node filters.
               _buildFilterChipRow(_computeFilterCounts(allNodes)),
@@ -497,7 +497,9 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
                             right: 16,
                             bottom: 16 + bottomPadding,
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius12,
+                              ),
                               child: BackdropFilter(
                                 filter: ImageFilter.blur(
                                   sigmaX: 16,
@@ -658,14 +660,14 @@ class _NodeCountBadge extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: context.card.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppTheme.radius20),
               border: Border.all(
                 color: context.border.withValues(alpha: 0.2),
                 width: 0.5,
@@ -696,7 +698,7 @@ class _NodeCountBadge extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spacing8),
                 Text(
                   isFiltered
                       ? '$filteredCount/$totalCount nodes'
@@ -707,7 +709,7 @@ class _NodeCountBadge extends StatelessWidget {
                     color: context.textPrimary,
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacing4),
                 Icon(
                   Icons.chevron_right,
                   size: 16,

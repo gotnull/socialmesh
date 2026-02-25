@@ -216,26 +216,26 @@ class _CoverCard extends StatelessWidget {
             accentColor: highestRarity.borderColor,
           ),
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppTheme.spacing20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Explorer title section
                 _ExplorerTitleSection(progress: progress),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spacing16),
 
                 // Ornamental divider
                 _CoverDivider(color: highestRarity.borderColor),
-                const SizedBox(height: 14),
+                const SizedBox(height: AppTheme.spacing14),
 
                 // Stats grid
                 _StatsGrid(progress: progress),
-                const SizedBox(height: 14),
+                const SizedBox(height: AppTheme.spacing14),
 
                 // Rarity breakdown bar
                 _RarityBreakdownBar(progress: progress),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.spacing12),
 
                 // Trait completion ring
                 _TraitCompletionRow(progress: progress),
@@ -341,7 +341,7 @@ class _ExplorerTitleSection extends StatelessWidget {
       children: [
         // Emblem
         _ExplorerEmblem(title: title, accentColor: highestRarity.borderColor),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppTheme.spacing10),
 
         // Title
         Text(
@@ -354,7 +354,7 @@ class _ExplorerTitleSection extends StatelessWidget {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
 
         // Subtitle
         Text(
@@ -593,7 +593,7 @@ class _StatCell extends StatelessWidget {
           size: 14,
           color: context.textTertiary.withValues(alpha: 0.5),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppTheme.spacing4),
         Text(
           value,
           style: TextStyle(
@@ -603,7 +603,7 @@ class _StatCell extends StatelessWidget {
             color: context.textPrimary,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppTheme.spacing2),
         Text(
           label,
           style: TextStyle(
@@ -690,7 +690,7 @@ class _RarityBreakdownBar extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
 
         // Legend row
         Wrap(
@@ -729,7 +729,7 @@ class _RarityLegendItem extends StatelessWidget {
             shape: BoxShape.circle,
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppTheme.spacing4),
         Text(
           rarity.label,
           style: TextStyle(
@@ -739,7 +739,7 @@ class _RarityLegendItem extends StatelessWidget {
             color: rarity.borderColor.withValues(alpha: 0.85),
           ),
         ),
-        const SizedBox(width: 3),
+        const SizedBox(width: AppTheme.spacing3),
         Text(
           '$count',
           style: TextStyle(
@@ -790,7 +790,7 @@ class _TraitCompletionRow extends StatelessWidget {
                 color: context.textTertiary.withValues(alpha: 0.6),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Text(
               '$completionPercent%',
               style: TextStyle(
@@ -802,7 +802,7 @@ class _TraitCompletionRow extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spacing8),
 
         // Trait dots
         Row(
@@ -843,7 +843,7 @@ class _TraitCompletionRow extends StatelessWidget {
                             : null,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: AppTheme.spacing3),
                     Text(
                       trait.displayLabel
                           .substring(0, math.min(3, trait.displayLabel.length))

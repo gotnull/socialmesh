@@ -428,7 +428,7 @@ class _GalleryTopBar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
               border: Border.all(
                 color: Colors.white.withValues(alpha: 0.1),
                 width: 0.5,
@@ -506,7 +506,7 @@ class _GalleryBottomBar extends ConsumerWidget {
               totalCount: totalCount,
               activeColor: rarity.borderColor,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
           ],
 
           // Node info row.
@@ -529,7 +529,7 @@ class _GalleryBottomBar extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppTheme.spacing6),
               ],
 
               // Name.
@@ -547,14 +547,14 @@ class _GalleryBottomBar extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(width: 8),
+              const SizedBox(width: AppTheme.spacing8),
 
               // Rarity badge.
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: rarity.borderColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
                   border: Border.all(
                     color: rarity.borderColor.withValues(alpha: 0.3),
                     width: 0.5,
@@ -573,7 +573,7 @@ class _GalleryBottomBar extends ConsumerWidget {
             ],
           ),
 
-          const SizedBox(height: 4),
+          const SizedBox(height: AppTheme.spacing4),
 
           // Hint text.
           Text(
@@ -718,7 +718,7 @@ class _EmptyGallery extends StatelessWidget {
           children: [
             // Close button.
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Align(
                 alignment: Alignment.topLeft,
                 child: _GlassButton(
@@ -736,7 +736,7 @@ class _EmptyGallery extends StatelessWidget {
               size: 48,
               color: Colors.white.withValues(alpha: 0.2),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               'No cards to display',
               style: TextStyle(
@@ -745,7 +745,7 @@ class _EmptyGallery extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.5),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               'Discover nodes to fill your collection',
               style: TextStyle(

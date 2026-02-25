@@ -61,9 +61,9 @@ class TakDashboardScreen extends ConsumerWidget {
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               _ForceCountGrid(dashboard: dashboard),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               _ThreatProximityCard(dashboard: dashboard),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacing16),
               _StatusSummaryCard(dashboard: dashboard),
             ]),
           ),
@@ -96,7 +96,7 @@ class _ForceCountGrid extends ConsumerWidget {
             letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.spacing12),
         Row(
           children: [
             Expanded(
@@ -107,7 +107,7 @@ class _ForceCountGrid extends ConsumerWidget {
                 affiliation: CotAffiliation.friendly,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Expanded(
               child: _ForceCountCell(
                 label: 'Hostile',
@@ -116,7 +116,7 @@ class _ForceCountGrid extends ConsumerWidget {
                 affiliation: CotAffiliation.hostile,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Expanded(
               child: _ForceCountCell(
                 label: 'Neutral',
@@ -125,7 +125,7 @@ class _ForceCountGrid extends ConsumerWidget {
                 affiliation: CotAffiliation.neutral,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppTheme.spacing8),
             Expanded(
               child: _ForceCountCell(
                 label: 'Unknown',
@@ -171,7 +171,7 @@ class _ForceCountCell extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
@@ -184,7 +184,7 @@ class _ForceCountCell extends ConsumerWidget {
                 color: color,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               label,
               style: TextStyle(fontSize: 12, color: context.textSecondary),
@@ -208,10 +208,10 @@ class _ThreatProximityCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -226,7 +226,7 @@ class _ThreatProximityCard extends ConsumerWidget {
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           _ProximityRow(
             icon: Icons.warning_amber_rounded,
             iconColor: CotAffiliationColors.hostile,
@@ -237,7 +237,7 @@ class _ThreatProximityCard extends ConsumerWidget {
             distance: dashboard.nearestHostileDistanceKm,
             event: dashboard.nearestHostile,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           _ProximityRow(
             icon: Icons.help_outline,
             iconColor: CotAffiliationColors.unknown,
@@ -289,7 +289,7 @@ class _ProximityRow extends ConsumerWidget {
       child: Row(
         children: [
           Icon(icon, size: 18, color: iconColor),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spacing8),
           Expanded(
             child: Text(
               label,
@@ -331,10 +331,10 @@ class _StatusSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: context.border),
       ),
       child: Column(
@@ -349,7 +349,7 @@ class _StatusSummaryCard extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing12),
           // Connection status
           _StatusRow(
             icon: dashboard.isConnected ? Icons.link : Icons.link_off,
@@ -357,7 +357,7 @@ class _StatusSummaryCard extends StatelessWidget {
             label: 'Connection',
             value: dashboard.isConnected ? 'Connected' : 'Disconnected',
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           // Last event
           _StatusRow(
             icon: Icons.schedule,
@@ -367,7 +367,7 @@ class _StatusSummaryCard extends StatelessWidget {
                 ? _relativeTime(dashboard.lastEventTime!)
                 : 'None',
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           // Total entities
           _StatusRow(
             icon: Icons.people_outline,
@@ -375,7 +375,7 @@ class _StatusSummaryCard extends StatelessWidget {
             label: 'Total entities',
             value: '${dashboard.totalCount}',
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           // Tracked entities
           _StatusRow(
             icon: Icons.visibility,
@@ -386,7 +386,7 @@ class _StatusSummaryCard extends StatelessWidget {
                 ? dashboard.trackedCallsigns.join(', ')
                 : null,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           // Stale entities
           _StatusRow(
             icon: dashboard.staleCount > 0
@@ -396,7 +396,7 @@ class _StatusSummaryCard extends StatelessWidget {
             label: 'Stale entities',
             value: '${dashboard.staleCount}',
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing8),
           // Position publishing
           _StatusRow(
             icon: Icons.publish,
@@ -434,7 +434,7 @@ class _StatusRow extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: 16, color: iconColor),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppTheme.spacing8),
         Text(
           label,
           style: TextStyle(fontSize: 14, color: context.textSecondary),
