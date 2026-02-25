@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — pre-auth gate screen, no navigation chrome
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';

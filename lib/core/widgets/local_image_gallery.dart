@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — immersive fullscreen black gallery overlay
 import 'dart:io';
 
 import 'package:flutter/material.dart';

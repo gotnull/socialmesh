@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — navigation shell root scaffold with drawer and bottom nav
 import 'dart:ui';
 
 import '../../core/constants.dart';

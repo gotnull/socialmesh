@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — immersive transparent card gallery overlay
 
 // Card Gallery Screen — horizontal PageView for browsing collectible cards.
 //

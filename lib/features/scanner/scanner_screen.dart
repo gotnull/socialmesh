@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — BLE connecting state with animated fullscreen overlay
 import 'dart:async';
 import 'dart:io' show Platform;
 

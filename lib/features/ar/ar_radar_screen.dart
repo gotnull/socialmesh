@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — immersive AR camera overlay with black background
 import 'package:socialmesh/core/theme.dart';
 import 'dart:async';
 import 'dart:math' as math;

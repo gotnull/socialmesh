@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — pre-auth onboarding flow, no app bar
 import 'dart:async';
 
 import 'package:flutter/material.dart';

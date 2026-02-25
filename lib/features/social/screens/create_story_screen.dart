@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — immersive fullscreen camera/media editor
 import 'dart:io';
 import 'dart:ui' as ui;
 
