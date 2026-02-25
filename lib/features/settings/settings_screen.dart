@@ -185,6 +185,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: 'View your reports and responses',
           keywords: ['bug', 'report', 'feedback', 'support', 'response'],
           section: 'FEEDBACK',
+          onTap: () {
+            HapticFeedback.selectionClick();
+            Navigator.pushNamed(context, '/my-bug-reports');
+          },
         ),
         _SearchableSettingItem(
           icon: Icons.palette,
@@ -394,6 +398,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: 'Light, medium, or heavy feedback',
           keywords: ['vibration', 'strength', 'intensity'],
           section: 'HAPTIC FEEDBACK',
+          onTap: () =>
+              _showHapticIntensityPicker(context, ref, settingsService),
         ),
 
         // Appearance & Accessibility
@@ -541,6 +547,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: 'Maximum messages to keep',
           keywords: ['history', 'limit', 'storage', 'message', 'keep'],
           section: 'DATA & STORAGE',
+          onTap: () => _showHistoryLimitDialog(context, settingsService),
         ),
         _SearchableSettingItem(
           icon: Icons.download,
@@ -548,6 +555,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: 'Export messages to PDF or CSV',
           keywords: ['export', 'message', 'pdf', 'csv', 'download'],
           section: 'DATA & STORAGE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DataExportScreen()),
+          ),
         ),
         _SearchableSettingItem(
           icon: Icons.ios_share,
@@ -566,6 +577,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: 'Delete all stored messages',
           keywords: ['clear', 'delete', 'remove', 'message', 'clean'],
           section: 'DATA & STORAGE',
+          onTap: () => _confirmClearMessages(context, ref),
         ),
         _SearchableSettingItem(
           icon: Icons.refresh,
@@ -573,6 +585,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: 'Clear all local app data',
           keywords: ['reset', 'clear', 'local', 'data', 'factory'],
           section: 'DATA & STORAGE',
+          onTap: () => _confirmResetLocalData(context, ref),
         ),
         _SearchableSettingItem(
           icon: Icons.delete_forever,
@@ -588,6 +601,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             'wipe',
           ],
           section: 'DATA & STORAGE',
+          onTap: () => _confirmClearData(context, ref),
         ),
 
         // Remote Administration
@@ -604,6 +618,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             'configure',
           ],
           section: 'REMOTE ADMINISTRATION',
+          onTap: () async {
+            final currentTarget = ref.read(remoteAdminProvider).targetNodeNum;
+            final adminNotifier = ref.read(remoteAdminProvider.notifier);
+            final selection = await RemoteAdminSelectorSheet.show(
+              context,
+              currentTarget: currentTarget,
+            );
+            if (!mounted) return;
+            if (selection != null) {
+              if (selection.isLocal) {
+                adminNotifier.clearTarget();
+              } else {
+                adminNotifier.setTarget(selection.nodeNum!, selection.nodeName);
+              }
+            }
+          },
         ),
 
         // Device
@@ -613,6 +643,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: 'Force configuration sync',
           keywords: ['sync', 'force', 'refresh', 'update'],
           section: 'DEVICE',
+          onTap: () => _forceSync(context, ref),
         ),
         _SearchableSettingItem(
           icon: Icons.qr_code_scanner,
@@ -620,6 +651,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: 'Scan QR code for easy setup',
           keywords: ['scan', 'qr', 'device', 'setup', 'connect'],
           section: 'DEVICE',
+          onTap: () => Navigator.pushNamed(context, '/qr-scanner'),
         ),
         _SearchableSettingItem(
           icon: Icons.public,
@@ -737,6 +769,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: 'View connected device details',
           keywords: ['info', 'details', 'hardware', 'version'],
           section: 'DEVICE',
+          onTap: () => _showDeviceInfo(context, ref),
         ),
         _SearchableSettingItem(
           icon: Icons.qr_code_scanner,
@@ -1031,6 +1064,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: 'Meshtastic companion app',
           keywords: ['about', 'version', 'app', 'info'],
           section: 'ABOUT',
+          onTap: () {
+            final appVersion = ref.read(appVersionProvider);
+            final version = appVersion.maybeWhen(
+              data: (v) => v,
+              orElse: () => 'unknown',
+            );
+            showSuccessSnackBar(context, 'Socialmesh v$version');
+          },
         ),
         _SearchableSettingItem(
           icon: Icons.phone_android,
@@ -1038,6 +1079,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: ref.watch(glyphServiceProvider).deviceModel,
           keywords: ['device', 'phone', 'model', 'hardware', 'nothing'],
           section: 'ABOUT',
+          onTap: () => _showDeviceInfo(context, ref),
         ),
         _SearchableSettingItem(
           icon: Icons.help,
@@ -1664,10 +1706,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   child: TextField(
                     controller: _searchController,
                     focusNode: _searchFocusNode,
+                    maxLength: 100,
                     onChanged: (value) =>
                         safeSetState(() => _searchQuery = value),
                     style: TextStyle(color: context.textPrimary),
                     decoration: InputDecoration(
+                      counterText: '',
                       hintText: 'Find a setting',
                       hintStyle: TextStyle(color: context.textTertiary),
                       prefixIcon: Icon(
@@ -2291,6 +2335,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             icon: Icons.download,
                             title: 'Export Messages',
                             subtitle: 'Export messages to PDF or CSV',
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const DataExportScreen(),
+                              ),
+                            ),
                           ),
                           _SettingsTile(
                             icon: Icons.delete_sweep_outlined,

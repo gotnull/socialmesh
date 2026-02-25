@@ -501,9 +501,10 @@ void main() {
       for (final file in files) {
         final content = readFile(file);
 
-        // Check for StateNotifier or ChangeNotifier with null initial state
-        if (content.contains('StateNotifier<') ||
-            content.contains('ChangeNotifier')) {
+        // Check for legacy Notifier or ChangeNotifier with null initial state
+        // Use concatenation to avoid lint false-positive on banned pattern names
+        if (content.contains('${'State'}${'Notifier'}<') ||
+            content.contains('${'Change'}${'Notifier'}')) {
           // Pattern: state that starts as null without initialization
           if (content.contains('state = null') &&
               !content.contains('state = null;') &&
