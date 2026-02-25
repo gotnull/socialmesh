@@ -8,6 +8,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
@@ -25,8 +26,15 @@ class AdminSellersScreen extends ConsumerStatefulWidget {
 
 class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen>
     with LifecycleSafeMixin<AdminSellersScreen> {
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _showInactive = true;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,25 +59,15 @@ class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen>
         ),
       ],
       slivers: [
-        // Search Bar
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            child: TextField(
-              maxLength: 100,
-              decoration: InputDecoration(
-                hintText: 'Search sellers...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-              onChanged: (value) => setState(() => _searchQuery = value),
-            ),
+        // Pinned search header
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SearchFilterHeaderDelegate(
+            searchController: _searchController,
+            searchQuery: _searchQuery,
+            onSearchChanged: (value) => setState(() => _searchQuery = value),
+            hintText: 'Search sellers...',
+            textScaler: MediaQuery.textScalerOf(context),
           ),
         ),
 

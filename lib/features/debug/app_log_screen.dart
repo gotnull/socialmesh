@@ -7,6 +7,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/search_filter_header.dart';
 import '../../services/debug/debug_export_service.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
@@ -407,42 +408,15 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
         ),
       ],
       slivers: [
-        // Search bar
-        SliverToBoxAdapter(
-          child: Container(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            child: TextField(
-              maxLength: 200,
-              controller: _searchController,
-              style: TextStyle(color: context.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Search logs...',
-                hintStyle: TextStyle(color: context.textTertiary),
-                prefixIcon: Icon(Icons.search, color: context.textTertiary),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(Icons.clear, color: context.textTertiary),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: context.card,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-              onChanged: (value) {
-                setState(() => _searchQuery = value);
-              },
-            ),
+        // Pinned search header
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SearchFilterHeaderDelegate(
+            searchController: _searchController,
+            searchQuery: _searchQuery,
+            onSearchChanged: (value) => setState(() => _searchQuery = value),
+            hintText: 'Search logs...',
+            textScaler: MediaQuery.textScalerOf(context),
           ),
         ),
 

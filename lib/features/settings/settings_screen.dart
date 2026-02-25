@@ -29,6 +29,7 @@ import 'background_connection_screen.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
+import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/ico_help_system.dart';
@@ -1700,55 +1701,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ),
           ],
           slivers: [
-            // Search bar
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppTheme.spacing16,
-                  8,
-                  16,
-                  8,
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
-                    maxLength: 100,
-                    onChanged: (value) =>
-                        safeSetState(() => _searchQuery = value),
-                    style: TextStyle(color: context.textPrimary),
-                    decoration: InputDecoration(
-                      counterText: '',
-                      hintText: 'Find a setting',
-                      hintStyle: TextStyle(color: context.textTertiary),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: context.textTertiary,
-                      ),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                color: context.textTertiary,
-                              ),
-                              onPressed: () {
-                                _searchController.clear();
-                                safeSetState(() => _searchQuery = '');
-                              },
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                    ),
-                  ),
-                ),
+            // Pinned search header
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: SearchFilterHeaderDelegate(
+                searchController: _searchController,
+                searchQuery: _searchQuery,
+                onSearchChanged: (value) =>
+                    safeSetState(() => _searchQuery = value),
+                hintText: 'Find a setting',
+                focusNode: _searchFocusNode,
+                textScaler: MediaQuery.textScalerOf(context),
               ),
             ),
             // Content - search results or settings list

@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/search_filter_header.dart';
+import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../../../utils/snackbar.dart';
@@ -41,6 +43,7 @@ class _UserPurchasesAdminScreenState
     extends ConsumerState<UserPurchasesAdminScreen>
     with LifecycleSafeMixin<UserPurchasesAdminScreen> {
   final _searchController = TextEditingController();
+  String _searchQuery = '';
   bool _isLoading = false;
   List<_UserWithPurchases> _users = [];
   String? _error;
@@ -360,7 +363,7 @@ class _UserPurchasesAdminScreenState
   }
 
   List<_UserWithPurchases> get _filteredUsers {
-    final query = _searchController.text.toLowerCase().trim();
+    final query = _searchQuery.toLowerCase().trim();
 
     return _users.where((user) {
       // Apply category filter first
@@ -557,34 +560,67 @@ class _UserPurchasesAdminScreenState
           ]),
         ),
 
-        // Search bar
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              maxLength: 100,
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search users...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {});
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: context.surface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  borderSide: BorderSide.none,
-                ),
+        // Pinned search header with filter chips
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SearchFilterHeaderDelegate(
+            searchController: _searchController,
+            searchQuery: _searchQuery,
+            onSearchChanged: (value) => setState(() => _searchQuery = value),
+            hintText: 'Search users...',
+            textScaler: MediaQuery.textScalerOf(context),
+            rebuildKey: Object.hashAll([
+              _activeFilter,
+              _users.length,
+              _excludedUserIds.length,
+            ]),
+            filterChips: [
+              SectionFilterChip(
+                label: 'All',
+                count: _countForFilter(_UserFilter.all),
+                isSelected: _activeFilter == _UserFilter.all,
+                onTap: () => setState(() => _activeFilter = _UserFilter.all),
               ),
-              onChanged: (_) => setState(() {}),
-            ),
+              SectionFilterChip(
+                label: 'Paying',
+                count: _countForFilter(_UserFilter.paying),
+                isSelected: _activeFilter == _UserFilter.paying,
+                color: AccentColors.green,
+                onTap: () => setState(() => _activeFilter = _UserFilter.paying),
+              ),
+              SectionFilterChip(
+                label: 'Free',
+                count: _countForFilter(_UserFilter.free),
+                isSelected: _activeFilter == _UserFilter.free,
+                onTap: () => setState(() => _activeFilter = _UserFilter.free),
+              ),
+              if (_hasExclusions)
+                SectionFilterChip(
+                  label: 'Excluded',
+                  count: _countForFilter(_UserFilter.excluded),
+                  isSelected: _activeFilter == _UserFilter.excluded,
+                  color: AppTheme.errorRed,
+                  onTap: () =>
+                      setState(() => _activeFilter = _UserFilter.excluded),
+                ),
+              SectionFilterChip(
+                label: 'Anonymous',
+                count: _countForFilter(_UserFilter.anonymous),
+                isSelected: _activeFilter == _UserFilter.anonymous,
+                onTap: () =>
+                    setState(() => _activeFilter = _UserFilter.anonymous),
+              ),
+              if (_users.any((u) => u.isDeleted))
+                SectionFilterChip(
+                  label: 'Deleted',
+                  count: _countForFilter(_UserFilter.deleted),
+                  isSelected: _activeFilter == _UserFilter.deleted,
+                  color: AppTheme.errorRed,
+                  icon: Icons.delete_outline,
+                  onTap: () =>
+                      setState(() => _activeFilter = _UserFilter.deleted),
+                ),
+            ],
           ),
         ),
 
@@ -601,37 +637,6 @@ class _UserPurchasesAdminScreenState
             ),
           ),
         ),
-
-        // Filter chips
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildFilterChip(context, _UserFilter.all, 'All'),
-                  const SizedBox(width: AppTheme.spacing8),
-                  _buildFilterChip(context, _UserFilter.paying, 'Paying'),
-                  const SizedBox(width: AppTheme.spacing8),
-                  _buildFilterChip(context, _UserFilter.free, 'Free'),
-                  if (_hasExclusions) ...[
-                    const SizedBox(width: AppTheme.spacing8),
-                    _buildFilterChip(context, _UserFilter.excluded, 'Excluded'),
-                  ],
-                  const SizedBox(width: AppTheme.spacing8),
-                  _buildFilterChip(context, _UserFilter.anonymous, 'Anonymous'),
-                  if (_users.any((u) => u.isDeleted)) ...[
-                    const SizedBox(width: AppTheme.spacing8),
-                    _buildFilterChip(context, _UserFilter.deleted, 'Deleted'),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-
-        const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing16)),
 
         // Content
         if (_isLoading)
@@ -682,7 +687,7 @@ class _UserPurchasesAdminScreenState
                   ),
                   const SizedBox(height: AppTheme.spacing16),
                   Text(
-                    _searchController.text.isNotEmpty
+                    _searchQuery.isNotEmpty
                         ? 'No users match your search'
                         : 'No users found',
                     style: TextStyle(color: context.textSecondary),
@@ -717,66 +722,6 @@ class _UserPurchasesAdminScreenState
             }, childCount: _filteredUsers.length),
           ),
       ],
-    );
-  }
-
-  Widget _buildFilterChip(
-    BuildContext context,
-    _UserFilter filter,
-    String label,
-  ) {
-    final isActive = _activeFilter == filter;
-    final count = _countForFilter(filter);
-
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        setState(() => _activeFilter = filter);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive
-              ? context.accentColor.withValues(alpha: 0.2)
-              : context.surface,
-          borderRadius: BorderRadius.circular(AppTheme.radius20),
-          border: Border.all(
-            color: isActive ? context.accentColor : context.border,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                color: isActive ? context.accentColor : context.textSecondary,
-              ),
-            ),
-            const SizedBox(width: AppTheme.spacing6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: isActive
-                    ? context.accentColor.withValues(alpha: 0.15)
-                    : context.card,
-                borderRadius: BorderRadius.circular(AppTheme.radius10),
-              ),
-              child: Text(
-                '$count',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isActive ? context.accentColor : context.textTertiary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

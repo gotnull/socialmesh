@@ -13,8 +13,9 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
+import '../../../core/widgets/search_filter_header.dart';
+import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/status_banner.dart';
-import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../providers/help_providers.dart';
 import '../../../core/theme.dart';
@@ -406,56 +407,6 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
             ),
           ],
           slivers: [
-            // Search bar
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppTheme.spacing16,
-                  8,
-                  16,
-                  8,
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (value) => setState(() => _searchQuery = value),
-                    maxLength: 100,
-                    style: TextStyle(color: context.textPrimary),
-                    decoration: InputDecoration(
-                      hintText: 'Search signals',
-                      hintStyle: TextStyle(color: context.textTertiary),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: context.textTertiary,
-                      ),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                color: context.textTertiary,
-                              ),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _searchQuery = '');
-                              },
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      counterText: '',
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
             // iOS Airplane Mode banner
             if (Platform.isIOS &&
                 !connectivity.hasInternet &&
@@ -464,9 +415,9 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppTheme.spacing16,
-                    0,
-                    16,
                     8,
+                    16,
+                    0,
                   ),
                   child: Container(
                     padding: const EdgeInsets.all(AppTheme.spacing12),
@@ -501,168 +452,131 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
                 ),
               ),
 
-            // Filter chips row with view toggle at end
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 44,
-                child: Row(
-                  children: [
-                    // Scrollable filter chips and sort button
-                    Expanded(
-                      child: EdgeFade.end(
-                        fadeSize: 32,
-                        fadeColor: context.background,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.only(left: 16),
-                          children: [
-                            _FilterChip(
-                              label: 'All',
-                              count: allCount,
-                              isSelected: _activeFilter == SignalFilter.all,
-                              onTap: () => setState(
-                                () => _activeFilter = SignalFilter.all,
-                              ),
-                            ),
-                            const SizedBox(width: AppTheme.spacing8),
-                            _FilterChip(
-                              label: 'Saved',
-                              count: savedCount,
-                              isSelected: _activeFilter == SignalFilter.saved,
-                              color: AccentColors.yellow,
-                              icon: Icons.bookmark_rounded,
-                              onTap: () => setState(
-                                () => _activeFilter = SignalFilter.saved,
-                              ),
-                            ),
-                            const SizedBox(width: AppTheme.spacing8),
-                            _FilterChip(
-                              label: 'Nearby',
-                              count: nearbyCount,
-                              isSelected: _activeFilter == SignalFilter.nearby,
-                              color: context.accentColor,
-                              icon: Icons.near_me,
-                              onTap: () => setState(
-                                () => _activeFilter = SignalFilter.nearby,
-                              ),
-                            ),
-                            const SizedBox(width: AppTheme.spacing8),
-                            _FilterChip(
-                              label: 'Mesh',
-                              count: meshCount,
-                              isSelected:
-                                  _activeFilter == SignalFilter.meshOnly,
-                              color: AccentColors.cyan,
-                              icon: Icons.router,
-                              onTap: () => setState(
-                                () => _activeFilter = SignalFilter.meshOnly,
-                              ),
-                            ),
-                            const SizedBox(width: AppTheme.spacing8),
-                            _FilterChip(
-                              label: 'Media',
-                              count: mediaCount,
-                              isSelected:
-                                  _activeFilter == SignalFilter.withMedia,
-                              color: AccentColors.purple,
-                              icon: Icons.image,
-                              onTap: () => setState(
-                                () => _activeFilter = SignalFilter.withMedia,
-                              ),
-                            ),
-                            const SizedBox(width: AppTheme.spacing8),
-                            _FilterChip(
-                              label: 'Location',
-                              count: withLocationCount,
-                              isSelected:
-                                  _activeFilter == SignalFilter.withLocation,
-                              color: context.accentColor,
-                              icon: Icons.location_on,
-                              onTap: () => setState(
-                                () => _activeFilter = SignalFilter.withLocation,
-                              ),
-                            ),
-                            const SizedBox(width: AppTheme.spacing8),
-                            _FilterChip(
-                              label: 'Replies',
-                              count: withCommentsCount,
-                              isSelected:
-                                  _activeFilter == SignalFilter.withComments,
-                              color: AccentColors.blue,
-                              icon: Icons.chat_bubble_outline,
-                              onTap: () => setState(
-                                () => _activeFilter = SignalFilter.withComments,
-                              ),
-                            ),
-                            const SizedBox(width: AppTheme.spacing8),
-                            _FilterChip(
-                              label: 'Expiring',
-                              count: expiringSoonCount,
-                              isSelected:
-                                  _activeFilter == SignalFilter.expiringSoon,
-                              color: AppTheme.warningYellow,
-                              icon: Icons.schedule,
-                              onTap: () => setState(
-                                () => _activeFilter = SignalFilter.expiringSoon,
-                              ),
-                            ),
-                            if (hiddenCount > 0) ...[
-                              const SizedBox(width: AppTheme.spacing8),
-                              _FilterChip(
-                                label: 'Hidden',
-                                count: hiddenCount,
-                                isSelected:
-                                    _activeFilter == SignalFilter.hidden,
-                                color: context.textTertiary,
-                                icon: Icons.visibility_off,
-                                onTap: () => setState(
-                                  () => _activeFilter = SignalFilter.hidden,
-                                ),
-                              ),
-                            ],
-                            const SizedBox(width: AppTheme.spacing8),
-                            _SortButton(
-                              sortOrder: _sortOrder,
-                              onChanged: (order) =>
-                                  setState(() => _sortOrder = order),
-                            ),
-                            const SizedBox(width: AppTheme.spacing8),
-                          ],
-                        ),
-                      ),
+            // Pinned search and filter controls
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: SearchFilterHeaderDelegate(
+                searchController: _searchController,
+                searchQuery: _searchQuery,
+                onSearchChanged: (value) =>
+                    setState(() => _searchQuery = value),
+                hintText: 'Search signals',
+                textScaler: MediaQuery.textScalerOf(context),
+                rebuildKey: Object.hashAll([
+                  _activeFilter,
+                  _sortOrder,
+                  ref.watch(signalViewModeProvider),
+                  allCount,
+                  savedCount,
+                  nearbyCount,
+                  meshCount,
+                  mediaCount,
+                  withLocationCount,
+                  withCommentsCount,
+                  expiringSoonCount,
+                  hiddenCount,
+                ]),
+                filterChips: [
+                  SectionFilterChip(
+                    label: 'All',
+                    count: allCount,
+                    isSelected: _activeFilter == SignalFilter.all,
+                    onTap: () =>
+                        setState(() => _activeFilter = SignalFilter.all),
+                  ),
+                  SectionFilterChip(
+                    label: 'Saved',
+                    count: savedCount,
+                    isSelected: _activeFilter == SignalFilter.saved,
+                    color: AccentColors.yellow,
+                    icon: Icons.bookmark_rounded,
+                    onTap: () =>
+                        setState(() => _activeFilter = SignalFilter.saved),
+                  ),
+                  SectionFilterChip(
+                    label: 'Nearby',
+                    count: nearbyCount,
+                    isSelected: _activeFilter == SignalFilter.nearby,
+                    color: context.accentColor,
+                    icon: Icons.near_me,
+                    onTap: () =>
+                        setState(() => _activeFilter = SignalFilter.nearby),
+                  ),
+                  SectionFilterChip(
+                    label: 'Mesh',
+                    count: meshCount,
+                    isSelected: _activeFilter == SignalFilter.meshOnly,
+                    color: AccentColors.cyan,
+                    icon: Icons.router,
+                    onTap: () =>
+                        setState(() => _activeFilter = SignalFilter.meshOnly),
+                  ),
+                  SectionFilterChip(
+                    label: 'Media',
+                    count: mediaCount,
+                    isSelected: _activeFilter == SignalFilter.withMedia,
+                    color: AccentColors.purple,
+                    icon: Icons.image,
+                    onTap: () =>
+                        setState(() => _activeFilter = SignalFilter.withMedia),
+                  ),
+                  SectionFilterChip(
+                    label: 'Location',
+                    count: withLocationCount,
+                    isSelected: _activeFilter == SignalFilter.withLocation,
+                    color: context.accentColor,
+                    icon: Icons.location_on,
+                    onTap: () => setState(
+                      () => _activeFilter = SignalFilter.withLocation,
                     ),
-                    // View toggle at end
-                    const SizedBox(width: AppTheme.spacing8),
-                    _ViewModeSelector(
-                      viewMode: ref.watch(signalViewModeProvider),
-                      onModeChanged: (mode) => ref
-                          .read(signalViewModeProvider.notifier)
-                          .setMode(mode),
+                  ),
+                  SectionFilterChip(
+                    label: 'Replies',
+                    count: withCommentsCount,
+                    isSelected: _activeFilter == SignalFilter.withComments,
+                    color: AccentColors.blue,
+                    icon: Icons.chat_bubble_outline,
+                    onTap: () => setState(
+                      () => _activeFilter = SignalFilter.withComments,
                     ),
-                    // Gallery button (only visible when media signals exist)
-                    if (mediaCount > 0) ...[
-                      const SizedBox(width: AppTheme.spacing8),
-                      _GalleryButton(
-                        onTap: () =>
-                            SignalGalleryView.show(context, signals: signals),
-                      ),
-                    ],
-                    const SizedBox(width: AppTheme.spacing12),
-                  ],
-                ),
-              ),
-            ),
-
-            // Spacing
-            const SliverToBoxAdapter(
-              child: SizedBox(height: AppTheme.spacing8),
-            ),
-
-            // Divider
-            SliverToBoxAdapter(
-              child: Container(
-                height: 1,
-                color: context.border.withValues(alpha: 0.3),
+                  ),
+                  SectionFilterChip(
+                    label: 'Expiring',
+                    count: expiringSoonCount,
+                    isSelected: _activeFilter == SignalFilter.expiringSoon,
+                    color: AppTheme.warningYellow,
+                    icon: Icons.schedule,
+                    onTap: () => setState(
+                      () => _activeFilter = SignalFilter.expiringSoon,
+                    ),
+                  ),
+                  if (hiddenCount > 0)
+                    SectionFilterChip(
+                      label: 'Hidden',
+                      count: hiddenCount,
+                      isSelected: _activeFilter == SignalFilter.hidden,
+                      color: context.textTertiary,
+                      icon: Icons.visibility_off,
+                      onTap: () =>
+                          setState(() => _activeFilter = SignalFilter.hidden),
+                    ),
+                  _SortButton(
+                    sortOrder: _sortOrder,
+                    onChanged: (order) => setState(() => _sortOrder = order),
+                  ),
+                ],
+                trailingControls: [
+                  _ViewModeSelector(
+                    viewMode: ref.watch(signalViewModeProvider),
+                    onModeChanged: (mode) =>
+                        ref.read(signalViewModeProvider.notifier).setMode(mode),
+                  ),
+                  if (mediaCount > 0)
+                    _GalleryButton(
+                      onTap: () =>
+                          SignalGalleryView.show(context, signals: signals),
+                    ),
+                ],
               ),
             ),
 
@@ -1319,86 +1233,6 @@ class _SignalFeedScreenState extends ConsumerState<SignalFeedScreen>
         }
       }
     }
-  }
-}
-
-/// Filter chip widget (styled consistently with nodes screen)
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.count,
-    required this.isSelected,
-    required this.onTap,
-    this.color,
-    this.icon,
-  });
-
-  final String label;
-  final int count;
-  final bool isSelected;
-  final Color? color;
-  final IconData? icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final chipColor = color ?? AppTheme.primaryBlue;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? chipColor.withValues(alpha: 0.2) : context.card,
-          borderRadius: BorderRadius.circular(AppTheme.radius20),
-          border: Border.all(
-            color: isSelected
-                ? chipColor.withValues(alpha: 0.5)
-                : context.border.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(
-                icon,
-                size: 14,
-                color: isSelected ? chipColor : context.textTertiary,
-              ),
-              const SizedBox(width: AppTheme.spacing4),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? chipColor : context.textSecondary,
-              ),
-            ),
-            const SizedBox(width: AppTheme.spacing6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? chipColor.withValues(alpha: 0.3)
-                    : context.border.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(AppTheme.radius10),
-              ),
-              child: Text(
-                count.toString(),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? chipColor : context.textTertiary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 

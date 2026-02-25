@@ -81,19 +81,19 @@ class MeshHealthNotifier extends Notifier<MeshHealthState> {
       _telemetrySubscription?.cancel();
     });
 
-    // React to connection state changes: auto-start on connect, stop on
-    // disconnect. ref.listen only fires on changes, not the initial value.
+    // React to connection state changes: auto-start on connect (only if the
+    // user has previously enabled monitoring), stop on disconnect.
+    // ref.listen only fires on changes, not the initial value.
     ref.listen<DeviceConnectionState>(unifiedConnectionStateProvider, (
       prev,
       next,
     ) {
       if (next == DeviceConnectionState.connected && !state.isMonitoring) {
-        AppLogging.protocol('MeshHealth: auto-starting on connect');
-        startMonitoring();
+        _autoStartIfUserEnabled();
       } else if (next == DeviceConnectionState.disconnected &&
           state.isMonitoring) {
         AppLogging.protocol('MeshHealth: stopping on disconnect');
-        stopMonitoring();
+        stopMonitoring(persistPreference: false);
       }
     });
 
@@ -103,16 +103,43 @@ class MeshHealthNotifier extends Notifier<MeshHealthState> {
     Future.microtask(() {
       final conn = ref.read(unifiedConnectionStateProvider);
       if (conn == DeviceConnectionState.connected && !state.isMonitoring) {
-        AppLogging.protocol('MeshHealth: auto-starting (already connected)');
-        startMonitoring();
+        _autoStartIfUserEnabled();
       }
     });
 
     return const MeshHealthState();
   }
 
+  /// Auto-start only if the user has previously opted in to mesh health
+  /// monitoring. On a fresh install the preference defaults to false, so
+  /// monitoring stays paused until the user explicitly starts it.
+  void _autoStartIfUserEnabled() {
+    final settings = ref.read(settingsServiceProvider).asData?.value;
+    if (settings == null) return;
+
+    if (settings.meshHealthUserEnabled) {
+      AppLogging.protocol('MeshHealth: auto-starting (user enabled)');
+      _startInternal();
+    } else {
+      AppLogging.protocol(
+        'MeshHealth: skipping auto-start (user has not enabled)',
+      );
+    }
+  }
+
   /// Start monitoring mesh health and subscribe to protocol telemetry.
+  ///
+  /// When called from the UI (dashboard play button), this also persists the
+  /// user's opt-in so that monitoring auto-starts on future connections.
   void startMonitoring() {
+    // Persist the opt-in so auto-start works on reconnect / app restart
+    final settings = ref.read(settingsServiceProvider).asData?.value;
+    settings?.setMeshHealthUserEnabled(true);
+    _startInternal();
+  }
+
+  /// Internal start — shared by [startMonitoring] and [_autoStartIfUserEnabled].
+  void _startInternal() {
     if (state.isMonitoring) return;
 
     final analyzer = ref.read(meshHealthAnalyzerProvider);
@@ -136,7 +163,10 @@ class MeshHealthNotifier extends Notifier<MeshHealthState> {
   }
 
   /// Stop monitoring and cancel all subscriptions.
-  void stopMonitoring() {
+  ///
+  /// When called from the UI (dashboard pause button), this also clears the
+  /// user's opt-in so monitoring will not auto-start on next connection.
+  void stopMonitoring({bool persistPreference = true}) {
     if (!state.isMonitoring) return;
 
     final analyzer = ref.read(meshHealthAnalyzerProvider);
@@ -146,6 +176,11 @@ class MeshHealthNotifier extends Notifier<MeshHealthState> {
     _snapshotSubscription = null;
     _telemetrySubscription?.cancel();
     _telemetrySubscription = null;
+
+    if (persistPreference) {
+      final settings = ref.read(settingsServiceProvider).asData?.value;
+      settings?.setMeshHealthUserEnabled(false);
+    }
 
     state = state.copyWith(isMonitoring: false);
   }
@@ -172,10 +207,12 @@ class MeshHealthNotifier extends Notifier<MeshHealthState> {
   /// Reset all data and restart if currently monitoring.
   void reset() {
     final wasMonitoring = state.isMonitoring;
-    if (wasMonitoring) stopMonitoring();
+    // Use persistPreference: false to avoid clearing the user opt-in
+    // during a reset — the user wants to clear data, not disable monitoring.
+    if (wasMonitoring) stopMonitoring(persistPreference: false);
     ref.read(meshHealthAnalyzerProvider).reset();
     state = const MeshHealthState();
-    if (wasMonitoring) startMonitoring();
+    if (wasMonitoring) _startInternal();
   }
 
   void _onSnapshot(MeshHealthSnapshot snapshot) {

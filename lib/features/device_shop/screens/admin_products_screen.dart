@@ -9,6 +9,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/search_filter_header.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../models/shop_models.dart';
@@ -26,9 +27,16 @@ class AdminProductsScreen extends ConsumerStatefulWidget {
 
 class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen>
     with LifecycleSafeMixin {
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   DeviceCategory? _filterCategory;
   bool _showInactive = true;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,50 +61,35 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen>
         ),
       ],
       slivers: [
-        // Search and Filter Bar
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search products...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                    ),
-                    onChanged: (value) => setState(() => _searchQuery = value),
-                  ),
+        // Pinned search header with category filter
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SearchFilterHeaderDelegate(
+            searchController: _searchController,
+            searchQuery: _searchQuery,
+            onSearchChanged: (value) => setState(() => _searchQuery = value),
+            hintText: 'Search products...',
+            textScaler: MediaQuery.textScalerOf(context),
+            trailingControls: [
+              PopupMenuButton<DeviceCategory?>(
+                icon: Icon(
+                  Icons.filter_list,
+                  color: _filterCategory != null ? context.accentColor : null,
                 ),
-                const SizedBox(width: AppTheme.spacing12),
-                PopupMenuButton<DeviceCategory?>(
-                  icon: Icon(
-                    Icons.filter_list,
-                    color: _filterCategory != null ? context.accentColor : null,
+                tooltip: 'Filter by category',
+                onSelected: (category) =>
+                    setState(() => _filterCategory = category),
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: null,
+                    child: Text('All Categories'),
                   ),
-                  tooltip: 'Filter by category',
-                  onSelected: (category) =>
-                      setState(() => _filterCategory = category),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: null,
-                      child: Text('All Categories'),
-                    ),
-                    ...DeviceCategory.values.map(
-                      (cat) =>
-                          PopupMenuItem(value: cat, child: Text(cat.label)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  ...DeviceCategory.values.map(
+                    (cat) => PopupMenuItem(value: cat, child: Text(cat.label)),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
 

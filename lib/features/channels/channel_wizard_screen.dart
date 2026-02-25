@@ -1204,7 +1204,11 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
         : true;
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing24),
+      padding: const EdgeInsets.only(
+        left: AppTheme.spacing24,
+        right: AppTheme.spacing24,
+        top: AppTheme.spacing12,
+      ),
       decoration: BoxDecoration(
         color: context.surface,
         border: Border(top: BorderSide(color: context.border.withAlpha(128))),

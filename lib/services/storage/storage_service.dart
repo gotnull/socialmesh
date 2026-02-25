@@ -334,6 +334,14 @@ class SettingsService {
   bool get animationsEnabled =>
       _preferences.getBool('animations_enabled') ?? true;
 
+  // Mesh Health auto-monitoring (defaults to false so first install is paused)
+  Future<void> setMeshHealthUserEnabled(bool enabled) async {
+    await _preferences.setBool('mesh_health_user_enabled', enabled);
+  }
+
+  bool get meshHealthUserEnabled =>
+      _preferences.getBool('mesh_health_user_enabled') ?? false;
+
   // Map tile style (index in MapTileStyle enum)
   Future<void> setMapTileStyleIndex(int index) async {
     await _preferences.setInt('map_tile_style_index', index);

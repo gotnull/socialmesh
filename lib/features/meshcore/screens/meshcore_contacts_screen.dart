@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -309,36 +310,11 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     return Column(
       children: [
         // Search bar
-        Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing16),
-          child: TextField(
-            maxLength: 100,
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search contacts...',
-              prefixIcon: Icon(Icons.search, color: context.textTertiary),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                      },
-                    )
-                  : null,
-              filled: true,
-              fillColor: context.card,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
-            onChanged: (value) => setState(() => _searchQuery = value),
-          ),
+        SearchFilterHeader(
+          searchController: _searchController,
+          searchQuery: _searchQuery,
+          onSearchChanged: (value) => setState(() => _searchQuery = value),
+          hintText: 'Search contacts...',
         ),
         // Contacts list
         Expanded(

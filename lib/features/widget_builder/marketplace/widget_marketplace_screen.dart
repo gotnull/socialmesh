@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/search_filter_header.dart';
 import '../../../providers/connectivity_providers.dart';
 import '../../../services/share_link_service.dart';
 import '../../../utils/share_utils.dart';
@@ -39,6 +40,7 @@ class _WidgetMarketplaceScreenState
     with SingleTickerProviderStateMixin, LifecycleSafeMixin {
   late TabController _tabController;
   final _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -71,6 +73,7 @@ class _WidgetMarketplaceScreenState
   }
 
   void _search(String query) {
+    setState(() => _searchQuery = query);
     ref.read(marketplaceSearchProvider.notifier).search(query);
   }
 
@@ -128,41 +131,15 @@ class _WidgetMarketplaceScreenState
             ],
           ),
           slivers: [
-            // Search bar
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(AppTheme.spacing16),
-                child: TextField(
-                  maxLength: 100,
-                  controller: _searchController,
-                  onChanged: (value) => _search(value),
-                  style: TextStyle(color: context.textPrimary),
-                  decoration: InputDecoration(
-                    hintText: 'Search widgets...',
-                    hintStyle: TextStyle(color: context.textTertiary),
-                    prefixIcon: Icon(Icons.search, color: context.textTertiary),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              Icons.clear,
-                              color: context.textTertiary,
-                            ),
-                            onPressed: () {
-                              _searchController.clear();
-                              ref
-                                  .read(marketplaceSearchProvider.notifier)
-                                  .clear();
-                            },
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: context.card,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
+            // Pinned search header
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: SearchFilterHeaderDelegate(
+                searchController: _searchController,
+                searchQuery: _searchQuery,
+                onSearchChanged: _search,
+                hintText: 'Search widgets...',
+                textScaler: MediaQuery.textScalerOf(context),
               ),
             ),
             // Content

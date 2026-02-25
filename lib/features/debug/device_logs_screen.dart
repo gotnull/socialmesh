@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
@@ -421,36 +422,15 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
         ),
       ],
       slivers: [
-        // Search bar
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing8),
-            child: TextField(
-              maxLength: 200,
-              controller: _searchController,
-              style: TextStyle(color: context.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Search logs...',
-                hintStyle: TextStyle(color: context.textTertiary),
-                prefixIcon: Icon(Icons.search, color: context.textSecondary),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(Icons.clear, color: context.textSecondary),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: context.card,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              onChanged: (value) => setState(() => _searchQuery = value),
-            ),
+        // Pinned search header
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SearchFilterHeaderDelegate(
+            searchController: _searchController,
+            searchQuery: _searchQuery,
+            onSearchChanged: (value) => setState(() => _searchQuery = value),
+            hintText: 'Search logs...',
+            textScaler: MediaQuery.textScalerOf(context),
           ),
         ),
 

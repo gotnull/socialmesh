@@ -8,6 +8,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/search_filter_header.dart';
 import '../../models/social.dart';
 
 class AdminPostsScreen extends StatefulWidget {
@@ -20,6 +21,7 @@ class AdminPostsScreen extends StatefulWidget {
 class _AdminPostsScreenState extends State<AdminPostsScreen>
     with StatefulLifecycleSafeMixin<AdminPostsScreen> {
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd HH:mm');
+  final TextEditingController _searchController = TextEditingController();
   bool _showSignalsOnly = false;
   bool _showExpiredOnly = false;
   bool _showWithLocation = false;
@@ -29,6 +31,12 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
   int _lastFilteredCount = 0;
   List<DocumentReference> _filteredDocRefs = [];
   bool _isDeleting = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,24 +67,16 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
         ),
       ],
       slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 4),
-            child: TextField(
-              maxLength: 100,
-              decoration: InputDecoration(
-                hintText: 'Filter by content or author ID',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () => safeSetState(() => _searchQuery = ''),
-                      )
-                    : null,
-              ),
-              onChanged: (value) =>
-                  safeSetState(() => _searchQuery = value.trim()),
-            ),
+        // Pinned search header
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SearchFilterHeaderDelegate(
+            searchController: _searchController,
+            searchQuery: _searchQuery,
+            onSearchChanged: (value) =>
+                safeSetState(() => _searchQuery = value.trim()),
+            hintText: 'Filter by content or author ID',
+            textScaler: MediaQuery.textScalerOf(context),
           ),
         ),
         SliverFillRemaining(

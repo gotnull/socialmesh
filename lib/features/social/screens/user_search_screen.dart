@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
@@ -61,54 +62,16 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
         resizeToAvoidBottomInset: false,
         title: 'Search',
         slivers: [
-          // Search bar in body like Direct Messages
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                ),
-                child: TextField(
-                  maxLength: 100,
-                  controller: _searchController,
-                  focusNode: _searchFocusNode,
-                  onChanged: _onSearchChanged,
-                  style: TextStyle(color: context.textPrimary),
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    hintText: 'Search users...',
-                    hintStyle: TextStyle(color: context.textTertiary),
-                    counterText: '',
-                    prefixIcon: Icon(Icons.search, color: context.textTertiary),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              Icons.clear,
-                              color: context.textTertiary,
-                            ),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _searchQuery = '');
-                            },
-                          )
-                        : null,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Divider
-          SliverToBoxAdapter(
-            child: Container(
-              height: 1,
-              color: context.border.withValues(alpha: 0.3),
+          // Pinned search header
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: SearchFilterHeaderDelegate(
+              searchController: _searchController,
+              searchQuery: _searchQuery,
+              onSearchChanged: _onSearchChanged,
+              hintText: 'Search users...',
+              focusNode: _searchFocusNode,
+              textScaler: MediaQuery.textScalerOf(context),
             ),
           ),
           // Results
