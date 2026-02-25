@@ -29,6 +29,7 @@ class MqttConfigScreen extends ConsumerStatefulWidget {
 class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
     with LifecycleSafeMixin {
   bool _isLoading = false;
+  bool _isSaving = false;
   bool _enabled = false;
   final _addressController = TextEditingController();
   final _usernameController = TextEditingController();
@@ -62,7 +63,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
   }
 
   void _applyConfig(module_pb.ModuleConfig_MQTTConfig config) {
-    setState(() {
+    safeSetState(() {
       _enabled = config.enabled;
       _addressController.text = config.address;
       _usernameController.text = config.username;
@@ -126,7 +127,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
   }
 
   Future<void> _saveConfig() async {
-    safeSetState(() => _isLoading = true);
+    safeSetState(() => _isSaving = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
       final target = AdminTarget.fromNullable(
@@ -158,7 +159,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      safeSetState(() => _isLoading = false);
+      safeSetState(() => _isSaving = false);
     }
   }
 
@@ -172,8 +173,8 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: TextButton(
-              onPressed: _isLoading ? null : _saveConfig,
-              child: _isLoading
+              onPressed: (_isLoading || _isSaving) ? null : _saveConfig,
+              child: _isSaving
                   ? LoadingIndicator(size: 20)
                   : Text(
                       'Save',

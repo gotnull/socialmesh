@@ -11,6 +11,7 @@ import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../services/protocol/admin_target.dart';
+import '../../core/logging.dart';
 
 class SerialConfigScreen extends ConsumerStatefulWidget {
   const SerialConfigScreen({super.key});
@@ -22,8 +23,9 @@ class SerialConfigScreen extends ConsumerStatefulWidget {
 class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
     with LifecycleSafeMixin {
   bool _serialEnabled = false;
-  bool _rxdGpioEnabled = false;
-  bool _txdGpioEnabled = false;
+  bool _echo = false;
+  int _rxdGpio = 0;
+  int _txdGpio = 0;
   bool _overrideConsoleSerialPort = false;
   int _baudRate = 115200;
   int _timeout = 5;
@@ -77,8 +79,9 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
   void _applyConfig(module_pb.ModuleConfig_SerialConfig config) {
     safeSetState(() {
       _serialEnabled = config.enabled;
-      _rxdGpioEnabled = config.rxd > 0;
-      _txdGpioEnabled = config.txd > 0;
+      _echo = config.echo;
+      _rxdGpio = config.rxd;
+      _txdGpio = config.txd;
       _overrideConsoleSerialPort = config.overrideConsoleSerialPort;
       // baud is stored as index
       if (config.baud.value >= 0 && config.baud.value < _baudRates.length) {
@@ -112,10 +115,15 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
       });
 
       // Request fresh config from device
-      await protocol.getModuleConfig(
-        admin_pbenum.AdminMessage_ModuleConfigType.SERIAL_CONFIG,
-        target: target,
-      );
+      try {
+        await protocol.getModuleConfig(
+          admin_pbenum.AdminMessage_ModuleConfigType.SERIAL_CONFIG,
+          target: target,
+        );
+      } catch (e) {
+        AppLogging.protocol('Failed to load serial config: $e');
+        safeSetState(() => _isLoading = false);
+      }
     } else {
       safeSetState(() => _isLoading = false);
     }
@@ -154,9 +162,9 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
       );
       await protocol.setSerialConfig(
         enabled: _serialEnabled,
-        echo: false,
-        rxd: _rxdGpioEnabled ? 1 : 0,
-        txd: _txdGpioEnabled ? 1 : 0,
+        echo: _echo,
+        rxd: _rxdGpio,
+        txd: _txdGpio,
         baud: _baudRates.indexOf(_baudRate),
         timeout: _timeout,
         mode: _modeValues[_mode] ?? 0,
@@ -237,23 +245,34 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                     ),
                     _buildDivider(),
                     _buildSwitchTile(
-                      icon: Icons.input,
-                      title: 'RXD GPIO',
-                      subtitle: 'Enable RXD GPIO pin',
-                      value: _rxdGpioEnabled,
+                      icon: Icons.repeat_rounded,
+                      title: 'Echo',
+                      subtitle: 'Echo sent packets back to the serial port',
+                      value: _echo,
                       onChanged: (value) {
-                        setState(() => _rxdGpioEnabled = value);
+                        setState(() => _echo = value);
                         _markChanged();
                       },
                     ),
                     _buildDivider(),
-                    _buildSwitchTile(
-                      icon: Icons.output,
-                      title: 'TXD GPIO',
-                      subtitle: 'Enable TXD GPIO pin',
-                      value: _txdGpioEnabled,
+                    _buildGpioPicker(
+                      icon: Icons.input,
+                      title: 'RXD GPIO Pin',
+                      subtitle: 'Receive data GPIO pin number',
+                      value: _rxdGpio,
                       onChanged: (value) {
-                        setState(() => _txdGpioEnabled = value);
+                        setState(() => _rxdGpio = value);
+                        _markChanged();
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildGpioPicker(
+                      icon: Icons.output,
+                      title: 'TXD GPIO Pin',
+                      subtitle: 'Transmit data GPIO pin number',
+                      value: _txdGpio,
+                      onChanged: (value) {
+                        setState(() => _txdGpio = value);
                         _markChanged();
                       },
                     ),
@@ -631,6 +650,76 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
             value: value,
             onChanged: onChanged,
             activeThumbColor: context.accentColor,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGpioPicker({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required int value,
+    required ValueChanged<int> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: context.accentColor, size: 20),
+          ),
+          SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: context.bodySmallStyle?.copyWith(
+                    color: context.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            width: 80,
+            child: DropdownButton<int>(
+              value: value,
+              isExpanded: true,
+              dropdownColor: context.card,
+              style: TextStyle(fontSize: 14, color: context.textPrimary),
+              underline: Container(height: 1, color: context.border),
+              items: List.generate(49, (i) {
+                return DropdownMenuItem<int>(
+                  value: i,
+                  child: Text(
+                    i == 0 ? 'Unset' : 'Pin $i',
+                    style: TextStyle(fontSize: 14, color: context.textPrimary),
+                  ),
+                );
+              }),
+              onChanged: (v) {
+                if (v != null) onChanged(v);
+              },
+            ),
           ),
         ],
       ),

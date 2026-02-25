@@ -51,7 +51,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
   }
 
   void _applyConfig(config_pb.Config_BluetoothConfig config) {
-    setState(() {
+    safeSetState(() {
       _enabled = config.enabled;
       _mode = config.mode;
       _fixedPin = config.fixedPin > 0 ? config.fixedPin : 123456;

@@ -28,8 +28,6 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
     with LifecycleSafeMixin {
   bool _paxCounterEnabled = false;
   int _paxCounterUpdateInterval = 1800; // 30 minutes default
-  bool _wifiEnabled = true;
-  bool _bleEnabled = true;
   bool _hasChanges = false;
   bool _isSaving = false;
   bool _isLoading = true;
@@ -104,8 +102,6 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
       await protocol.setPaxCounterConfig(
         enabled: _paxCounterEnabled,
         updateInterval: _paxCounterEnabled ? _paxCounterUpdateInterval : 0,
-        wifiEnabled: _wifiEnabled,
-        bleEnabled: _bleEnabled,
         target: target,
       );
 
@@ -221,90 +217,12 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
 
               SizedBox(height: 12),
 
-              // Detection Methods
+              // Note: WiFi/BLE scanning toggles are not exposed by the
+              // firmware config proto. Both must be independently disabled
+              // at the firmware level for PAX counter to work correctly.
+
+              // Update Interval (only shown when enabled)
               if (_paxCounterEnabled) ...[
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Detection Methods',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: context.textSecondary,
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.wifi,
-                                size: 20,
-                                color: context.accentColor,
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'WiFi Scanning',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                          ThemedSwitch(
-                            value: _wifiEnabled,
-                            onChanged: (value) {
-                              setState(() {
-                                _wifiEnabled = value;
-                                _hasChanges = true;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.bluetooth,
-                                size: 20,
-                                color: context.accentColor,
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Bluetooth Scanning',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                          ThemedSwitch(
-                            value: _bleEnabled,
-                            onChanged: (value) {
-                              setState(() {
-                                _bleEnabled = value;
-                                _hasChanges = true;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 12),
-
-                // Update Interval
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(

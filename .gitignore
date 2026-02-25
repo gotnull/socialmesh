@@ -19,6 +19,8 @@ meshtastic-android/
 .firebase
 android/.kotlin/sessions/
 .github/copilot-instructions.md
+CLAUDE.md
+.claude/
 /assets/screenshots/
 
 # Backend services (proprietary, not part of public repo)
@@ -72,12 +74,15 @@ firebase-service-account.json
 /scripts/verify_hosting_headers.sh
 /scripts/tak/
 /scripts/notification-icons/
+/scripts/hooks/
 
 # IntelliJ related
 *.iml
 *.ipr
 *.iws
 .idea/
+
+.vscode/tasks.json
 
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line

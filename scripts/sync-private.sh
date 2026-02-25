@@ -37,6 +37,7 @@ SYNC_DIRS=(
   web-bugs-redirect
   web-redirect
   web-sprints-redirect
+  .claude
 )
 
 # Individual files to sync (relative to repo root)
@@ -55,6 +56,7 @@ SYNC_FILES=(
   ios/Runner/GoogleService-Info.plist
   android/app/upload-keystore.jks
   android/upload-keystore.jks
+  CLAUDE.md
 )
 
 # Patterns to exclude from rsync (node_modules, build artifacts, CI workflows, etc.)
@@ -439,6 +441,16 @@ cmd_pull() {
       warn "  $file (not in private repo, skipping)"
     fi
   done
+
+  # Auto-configure git hooks if the hooks directory was pulled
+  if [ -d "$PUBLIC_REPO/scripts/hooks" ] && [ -f "$PUBLIC_REPO/scripts/hooks/pre-commit" ]; then
+    local current_hooks_path
+    current_hooks_path=$(cd "$PUBLIC_REPO" && git config core.hooksPath 2>/dev/null || true)
+    if [ "$current_hooks_path" != "scripts/hooks" ]; then
+      (cd "$PUBLIC_REPO" && git config core.hooksPath scripts/hooks)
+      ok "  Configured git core.hooksPath = scripts/hooks"
+    fi
+  fi
 
   echo ""
   ok "Pull complete. Private files restored to working directory."

@@ -45,6 +45,8 @@ class _CannedMessageModuleConfigScreenState
   int _configPreset = 0; // 0=Manual, 1=RAK Rotary Encoder, 2=CardKB
   StreamSubscription<module_pb.ModuleConfig_CannedMessageConfig>?
   _configSubscription;
+  StreamSubscription<String>? _messagesSubscription;
+  bool _isSaving = false;
 
   // Device-side canned messages (pipe-separated)
   late TextEditingController _messagesController;
@@ -60,12 +62,13 @@ class _CannedMessageModuleConfigScreenState
   @override
   void dispose() {
     _configSubscription?.cancel();
+    _messagesSubscription?.cancel();
     _messagesController.dispose();
     super.dispose();
   }
 
   void _applyConfig(module_pb.ModuleConfig_CannedMessageConfig config) {
-    setState(() {
+    safeSetState(() {
       _enabled = config.enabled;
       _sendBell = config.sendBell;
       _rotary1Enabled = config.rotary1Enabled;
@@ -104,11 +107,25 @@ class _CannedMessageModuleConfigScreenState
           if (mounted) _applyConfig(config);
         });
 
+        // Listen for canned messages text response
+        _messagesSubscription = protocol.cannedMessageTextStream.listen((
+          messages,
+        ) {
+          if (mounted && !_messagesChanged) {
+            safeSetState(() {
+              _messagesController.text = messages;
+            });
+          }
+        });
+
         // Request fresh config from device
         await protocol.getModuleConfig(
           admin.AdminMessage_ModuleConfigType.CANNEDMSG_CONFIG,
           target: target,
         );
+
+        // Request canned messages text from device
+        await protocol.getCannedMessages(target: target);
       }
     } catch (e) {
       // Device may disconnect between isConnected check and getModuleConfig
@@ -120,7 +137,7 @@ class _CannedMessageModuleConfigScreenState
   }
 
   Future<void> _saveConfig() async {
-    safeSetState(() => _isLoading = true);
+    safeSetState(() => _isSaving = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
       final target = AdminTarget.fromNullable(
@@ -173,7 +190,7 @@ class _CannedMessageModuleConfigScreenState
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      safeSetState(() => _isLoading = false);
+      safeSetState(() => _isSaving = false);
     }
   }
 
@@ -216,11 +233,13 @@ class _CannedMessageModuleConfigScreenState
       title: 'Canned Messages Module',
       actions: [
         TextButton(
-          onPressed: _isLoading ? null : _saveConfig,
+          onPressed: (_isLoading || _isSaving) ? null : _saveConfig,
           child: Text(
             'Save',
             style: TextStyle(
-              color: _isLoading ? Colors.grey : context.accentColor,
+              color: (_isLoading || _isSaving)
+                  ? Colors.grey
+                  : context.accentColor,
               fontWeight: FontWeight.w600,
             ),
           ),

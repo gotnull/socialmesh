@@ -57,7 +57,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
   }
 
   void _applyConfig(config_pb.Config_DisplayConfig config) {
-    setState(() {
+    safeSetState(() {
       _screenOnSecs = config.screenOnSecs > 0 ? config.screenOnSecs : 60;
       _autoCarouselSecs = config.autoScreenCarouselSecs;
       _flipScreen = config.flipScreen;

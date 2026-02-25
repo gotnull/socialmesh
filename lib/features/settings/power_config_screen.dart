@@ -53,7 +53,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
   }
 
   void _applyConfig(config_pb.Config_PowerConfig config) {
-    setState(() {
+    safeSetState(() {
       _isPowerSaving = config.isPowerSaving;
       _waitBluetoothSecs = config.waitBluetoothSecs > 0
           ? config.waitBluetoothSecs

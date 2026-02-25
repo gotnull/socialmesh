@@ -254,7 +254,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
   }
 
   void _applyDeviceConfig(config_pb.Config_DeviceConfig config) {
-    setState(() {
+    safeSetState(() {
       final nodeInfoSecs = config.nodeInfoBroadcastSecs > 0
           ? config.nodeInfoBroadcastSecs
           : 10800;
@@ -296,7 +296,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
   }
 
   void _applyUserConfig(pb.User user) {
-    setState(() {
+    safeSetState(() {
       // Only overwrite user-facing values when the user has NOT started
       // editing — same guard as _applyDeviceConfig to prevent the stream
       // response from silently reverting in-progress edits.

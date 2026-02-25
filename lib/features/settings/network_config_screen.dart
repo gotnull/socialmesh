@@ -59,7 +59,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
   }
 
   void _applyConfig(config_pb.Config_NetworkConfig config) {
-    setState(() {
+    safeSetState(() {
       _wifiEnabled = config.wifiEnabled;
       _ethEnabled = config.ethEnabled;
       _ssidController.text = config.wifiSsid;

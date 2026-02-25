@@ -30,6 +30,7 @@ class PositionConfigScreen extends ConsumerStatefulWidget {
 class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
     with LifecycleSafeMixin {
   bool _isLoading = false;
+  bool _isSaving = false;
   config_pbenum.Config_PositionConfig_GpsMode? _gpsMode;
   bool _smartBroadcastEnabled = true;
   bool _fixedPosition = false;
@@ -184,7 +185,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
   }
 
   void _applyConfig(config_pb.Config_PositionConfig config) {
-    setState(() {
+    safeSetState(() {
       _gpsMode = config.gpsMode;
       _smartBroadcastEnabled = config.positionBroadcastSmartEnabled;
       _fixedPosition = config.fixedPosition;
@@ -238,28 +239,30 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
   }
 
   Future<void> _saveConfig() async {
-    safeSetState(() => _isLoading = true);
+    safeSetState(() => _isSaving = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
       final target = AdminTarget.fromNullable(
         ref.read(remoteAdminTargetProvider),
       );
 
-      // If fixed position is enabled, set the fixed position first
-      if (_fixedPosition) {
-        final lat = double.tryParse(_latController.text);
-        final lon = double.tryParse(_lonController.text);
-        final alt = int.tryParse(_altController.text) ?? 0;
+      // Fixed position set/remove is local-only (uses localAdmin routing)
+      if (target.isLocal) {
+        if (_fixedPosition) {
+          final lat = double.tryParse(_latController.text);
+          final lon = double.tryParse(_lonController.text);
+          final alt = int.tryParse(_altController.text) ?? 0;
 
-        if (lat != null && lon != null) {
-          await protocol.setFixedPosition(
-            latitude: lat,
-            longitude: lon,
-            altitude: alt,
-          );
+          if (lat != null && lon != null) {
+            await protocol.setFixedPosition(
+              latitude: lat,
+              longitude: lon,
+              altitude: alt,
+            );
+          }
+        } else {
+          await protocol.removeFixedPosition();
         }
-      } else {
-        await protocol.removeFixedPosition();
       }
 
       await protocol.setPositionConfig(
@@ -288,12 +291,13 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      safeSetState(() => _isLoading = false);
+      safeSetState(() => _isSaving = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isRemote = ref.watch(remoteAdminTargetProvider) != null;
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold(
@@ -302,8 +306,8 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: TextButton(
-              onPressed: _isLoading ? null : _saveConfig,
-              child: _isLoading
+              onPressed: (_isLoading || _isSaving) ? null : _saveConfig,
+              child: _isSaving
                   ? LoadingIndicator(size: 20)
                   : Text(
                       'Save',
@@ -485,223 +489,234 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                     ),
                   ),
                   SizedBox(height: 16),
-                  const _SectionHeader(title: 'FIXED POSITION'),
-                  _SettingsTile(
-                    icon: Icons.pin_drop,
-                    iconColor: _fixedPosition ? context.accentColor : null,
-                    title: 'Use Fixed Position',
-                    subtitle: 'Manually set position instead of using GPS',
-                    trailing: ThemedSwitch(
-                      value: _fixedPosition,
-                      onChanged: (value) {
-                        HapticFeedback.selectionClick();
-                        setState(() => _fixedPosition = value);
-                      },
-                    ),
-                  ),
-                  if (_fixedPosition) ...[
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 2,
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: context.card,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _latController,
-                            style: TextStyle(color: context.textPrimary),
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            textInputAction: TextInputAction.next,
-                            decoration: InputDecoration(
-                              labelText: 'Latitude',
-                              labelStyle: TextStyle(
-                                color: context.textSecondary,
-                              ),
-                              hintText: 'e.g., 37.7749',
-                              hintStyle: TextStyle(color: Colors.grey.shade600),
-                              filled: true,
-                              fillColor: context.background,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: context.border),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: context.border),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(
-                                  color: context.accentColor,
-                                ),
-                              ),
-                              prefixIcon: Icon(
-                                Icons.arrow_upward,
-                                color: context.textSecondary,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                          TextField(
-                            controller: _lonController,
-                            style: TextStyle(color: context.textPrimary),
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            textInputAction: TextInputAction.next,
-                            decoration: InputDecoration(
-                              labelText: 'Longitude',
-                              labelStyle: TextStyle(
-                                color: context.textSecondary,
-                              ),
-                              hintText: 'e.g., -122.4194',
-                              hintStyle: TextStyle(color: Colors.grey.shade600),
-                              filled: true,
-                              fillColor: context.background,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: context.border),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: context.border),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(
-                                  color: context.accentColor,
-                                ),
-                              ),
-                              prefixIcon: Icon(
-                                Icons.arrow_forward,
-                                color: context.textSecondary,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                          TextField(
-                            controller: _altController,
-                            style: TextStyle(color: context.textPrimary),
-                            keyboardType: TextInputType.number,
-                            textInputAction: TextInputAction.done,
-                            onSubmitted: (_) =>
-                                FocusScope.of(context).unfocus(),
-                            decoration: InputDecoration(
-                              labelText: 'Altitude (meters)',
-                              labelStyle: TextStyle(
-                                color: context.textSecondary,
-                              ),
-                              hintText: 'e.g., 100',
-                              hintStyle: TextStyle(color: Colors.grey.shade600),
-                              filled: true,
-                              fillColor: context.background,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: context.border),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: context.border),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(
-                                  color: context.accentColor,
-                                ),
-                              ),
-                              prefixIcon: Icon(
-                                Icons.height,
-                                color: context.textSecondary,
-                              ),
-                            ),
-                          ),
-                        ],
+                  // Fixed position is local-only (uses localAdmin routing)
+                  if (!isRemote) ...[
+                    const _SectionHeader(title: 'FIXED POSITION'),
+                    _SettingsTile(
+                      icon: Icons.pin_drop,
+                      iconColor: _fixedPosition ? context.accentColor : null,
+                      title: 'Use Fixed Position',
+                      subtitle: 'Manually set position instead of using GPS',
+                      trailing: ThemedSwitch(
+                        value: _fixedPosition,
+                        onChanged: (value) {
+                          HapticFeedback.selectionClick();
+                          setState(() => _fixedPosition = value);
+                        },
                       ),
                     ),
-                    // Use Current Location Button
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: _isGettingLocation
-                            ? null
-                            : _useCurrentLocation,
-                        icon: _isGettingLocation
-                            ? SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: context.accentColor,
-                                ),
-                              )
-                            : Icon(
-                                Icons.my_location,
-                                color: context.accentColor,
-                              ),
-                        label: Text(
-                          _isGettingLocation
-                              ? 'Getting Location...'
-                              : 'Use Current Location',
-                          style: TextStyle(
-                            color: context.accentColor,
-                            fontWeight: FontWeight.w500,
-                          ),
+                    if (_fixedPosition) ...[
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 2,
                         ),
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: context.accentColor),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: _latController,
+                              style: TextStyle(color: context.textPrimary),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: 'Latitude',
+                                labelStyle: TextStyle(
+                                  color: context.textSecondary,
+                                ),
+                                hintText: 'e.g., 37.7749',
+                                hintStyle: TextStyle(
+                                  color: Colors.grey.shade600,
+                                ),
+                                filled: true,
+                                fillColor: context.background,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: context.border),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: context.border),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                    color: context.accentColor,
+                                  ),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.arrow_upward,
+                                  color: context.textSecondary,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            TextField(
+                              controller: _lonController,
+                              style: TextStyle(color: context.textPrimary),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: 'Longitude',
+                                labelStyle: TextStyle(
+                                  color: context.textSecondary,
+                                ),
+                                hintText: 'e.g., -122.4194',
+                                hintStyle: TextStyle(
+                                  color: Colors.grey.shade600,
+                                ),
+                                filled: true,
+                                fillColor: context.background,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: context.border),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: context.border),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                    color: context.accentColor,
+                                  ),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.arrow_forward,
+                                  color: context.textSecondary,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            TextField(
+                              controller: _altController,
+                              style: TextStyle(color: context.textPrimary),
+                              keyboardType: TextInputType.number,
+                              textInputAction: TextInputAction.done,
+                              onSubmitted: (_) =>
+                                  FocusScope.of(context).unfocus(),
+                              decoration: InputDecoration(
+                                labelText: 'Altitude (meters)',
+                                labelStyle: TextStyle(
+                                  color: context.textSecondary,
+                                ),
+                                hintText: 'e.g., 100',
+                                hintStyle: TextStyle(
+                                  color: Colors.grey.shade600,
+                                ),
+                                filled: true,
+                                fillColor: context.background,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: context.border),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: context.border),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                    color: context.accentColor,
+                                  ),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.height,
+                                  color: context.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: context.accentColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: context.accentColor.withValues(alpha: 0.3),
+                      // Use Current Location Button
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: context.accentColor.withValues(alpha: 0.8),
-                            size: 20,
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Fixed position is useful for stationary installations like routers or base stations.',
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 13,
-                              ),
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _isGettingLocation
+                              ? null
+                              : _useCurrentLocation,
+                          icon: _isGettingLocation
+                              ? SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: context.accentColor,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.my_location,
+                                  color: context.accentColor,
+                                ),
+                          label: Text(
+                            _isGettingLocation
+                                ? 'Getting Location...'
+                                : 'Use Current Location',
+                            style: TextStyle(
+                              color: context.accentColor,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ],
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: context.accentColor),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.accentColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: context.accentColor.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: context.accentColor.withValues(alpha: 0.8),
+                              size: 20,
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Fixed position is useful for stationary installations like routers or base stations.',
+                                style: TextStyle(
+                                  color: context.textSecondary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ], // end if (!isRemote)
                   SizedBox(height: 16),
                   if (_smartBroadcastEnabled) ...[
                     const _SectionHeader(title: 'SMART BROADCAST SETTINGS'),

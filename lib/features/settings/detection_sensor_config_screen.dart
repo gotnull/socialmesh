@@ -78,57 +78,55 @@ class _DetectionSensorConfigScreenState
       _triggerType = config.detectionTriggerType;
       _nameController.text = _name;
       _pinController.text = _monitorPin.toString();
-      _isLoading = false;
     });
   }
 
   Future<void> _loadCurrentConfig() async {
     AppLogging.settings('[DetectionSensor] Loading config...');
-    final protocol = ref.read(protocolServiceProvider);
-    final target = AdminTarget.fromNullable(
-      ref.read(remoteAdminTargetProvider),
-    );
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
 
-    // Load app-side notification preference
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    final notifEnabled = prefs.getBool('enableDetectionNotifications') ?? false;
-    safeSetState(() => _notificationsEnabled = notifEnabled);
+      // Load app-side notification preference
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+      final notifEnabled =
+          prefs.getBool('enableDetectionNotifications') ?? false;
+      safeSetState(() => _notificationsEnabled = notifEnabled);
 
-    // Apply cached config immediately if available (local only)
-    if (target.isLocal) {
-      final cached = protocol.currentDetectionSensorConfig;
-      if (cached != null) {
-        AppLogging.settings('[DetectionSensor] Applying cached config');
-        _applyConfig(cached);
-      }
-    }
-
-    // Only request from device if connected
-    if (protocol.isConnected) {
-      // Listen for config response
-      _configSubscription = protocol.detectionSensorConfigStream.listen((
-        config,
-      ) {
-        if (mounted) {
-          AppLogging.settings('[DetectionSensor] Config received via stream');
-          _applyConfig(config);
+      // Apply cached config immediately if available (local only)
+      if (target.isLocal) {
+        final cached = protocol.currentDetectionSensorConfig;
+        if (cached != null) {
+          AppLogging.settings('[DetectionSensor] Applying cached config');
+          _applyConfig(cached);
         }
-      });
+      }
 
-      // Request fresh config from device
-      AppLogging.settings('[DetectionSensor] Requesting config from device');
-      try {
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription = protocol.detectionSensorConfigStream.listen((
+          config,
+        ) {
+          if (mounted) {
+            AppLogging.settings('[DetectionSensor] Config received via stream');
+            _applyConfig(config);
+          }
+        });
+
+        // Request fresh config from device
+        AppLogging.settings('[DetectionSensor] Requesting config from device');
         await protocol.getModuleConfig(
           admin_pbenum.AdminMessage_ModuleConfigType.DETECTIONSENSOR_CONFIG,
           target: target,
         );
-      } catch (e) {
-        AppLogging.settings('[DetectionSensor] Error requesting config: $e');
-        safeShowSnackBar('Failed to load config');
       }
-    } else {
-      AppLogging.settings('[DetectionSensor] Not connected, skipping load');
+    } catch (e) {
+      AppLogging.settings('[DetectionSensor] Error loading config: $e');
+    } finally {
       safeSetState(() => _isLoading = false);
     }
   }

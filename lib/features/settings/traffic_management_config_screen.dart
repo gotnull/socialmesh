@@ -28,6 +28,7 @@ class _TrafficManagementConfigScreenState
     extends ConsumerState<TrafficManagementConfigScreen>
     with LifecycleSafeMixin {
   bool _isLoading = false;
+  bool _isSaving = false;
 
   // Master toggle
   bool _enabled = false;
@@ -71,7 +72,7 @@ class _TrafficManagementConfigScreenState
   }
 
   void _applyConfig(module_pb.ModuleConfig_TrafficManagementConfig config) {
-    setState(() {
+    safeSetState(() {
       _enabled = config.enabled;
       _positionDedupEnabled = config.positionDedupEnabled;
       _positionPrecisionBits = config.positionPrecisionBits > 0
@@ -138,7 +139,7 @@ class _TrafficManagementConfigScreenState
   }
 
   Future<void> _saveConfig() async {
-    safeSetState(() => _isLoading = true);
+    safeSetState(() => _isSaving = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
       final target = AdminTarget.fromNullable(
@@ -171,7 +172,7 @@ class _TrafficManagementConfigScreenState
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      safeSetState(() => _isLoading = false);
+      safeSetState(() => _isSaving = false);
     }
   }
 
@@ -181,11 +182,13 @@ class _TrafficManagementConfigScreenState
       title: 'Traffic Management',
       actions: [
         TextButton(
-          onPressed: _isLoading ? null : _saveConfig,
+          onPressed: (_isLoading || _isSaving) ? null : _saveConfig,
           child: Text(
             'Save',
             style: TextStyle(
-              color: _isLoading ? Colors.grey : context.accentColor,
+              color: (_isLoading || _isSaving)
+                  ? Colors.grey
+                  : context.accentColor,
               fontWeight: FontWeight.w600,
             ),
           ),

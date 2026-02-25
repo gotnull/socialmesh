@@ -319,6 +319,8 @@ class ProtocolService {
   _externalNotificationConfigController;
   final StreamController<module_pb.ModuleConfig_CannedMessageConfig>
   _cannedMessageConfigController;
+  final StreamController<String> _cannedMessageTextController;
+  final StreamController<String> _ringtoneTextController;
   final StreamController<module_pb.ModuleConfig_TrafficManagementConfig>
   _trafficManagementConfigController;
   final StreamController<pb.ClientNotification> _clientNotificationController;
@@ -466,6 +468,8 @@ class ProtocolService {
            StreamController<
              module_pb.ModuleConfig_CannedMessageConfig
            >.broadcast(),
+       _cannedMessageTextController = StreamController<String>.broadcast(),
+       _ringtoneTextController = StreamController<String>.broadcast(),
        _trafficManagementConfigController =
            StreamController<
              module_pb.ModuleConfig_TrafficManagementConfig
@@ -691,6 +695,13 @@ class ProtocolService {
   /// Current canned message config
   module_pb.ModuleConfig_CannedMessageConfig? get currentCannedMessageConfig =>
       _currentCannedMessageConfig;
+
+  /// Stream of canned message text updates (pipe-separated)
+  Stream<String> get cannedMessageTextStream =>
+      _cannedMessageTextController.stream;
+
+  /// Stream of ringtone text updates (RTTTL format)
+  Stream<String> get ringtoneTextStream => _ringtoneTextController.stream;
 
   /// Stream of traffic management config updates
   Stream<module_pb.ModuleConfig_TrafficManagementConfig>
@@ -1549,6 +1560,11 @@ class ProtocolService {
         'Admin message variant: ${adminMsg.whichPayloadVariant()}',
       );
 
+      // Only cache config responses from the local node. Remote admin
+      // responses are emitted to streams for the requesting screen but must
+      // not overwrite the local device's cached config.
+      final isLocalResponse = _myNodeNum != null && packet.from == _myNodeNum;
+
       if (adminMsg.hasGetConfigResponse()) {
         final config = adminMsg.getConfigResponse;
 
@@ -1558,8 +1574,10 @@ class ProtocolService {
           AppLogging.protocol(
             'Received LoRa config - region: ${loraConfig.region.name}',
           );
-          _currentRegion = loraConfig.region;
-          _currentLoraConfig = loraConfig;
+          if (isLocalResponse) {
+            _currentRegion = loraConfig.region;
+            _currentLoraConfig = loraConfig;
+          }
           _regionController.add(loraConfig.region);
           _loraConfigController.add(loraConfig);
         }
@@ -1575,7 +1593,9 @@ class ProtocolService {
             'positionBroadcastSecs=${posConfig.positionBroadcastSecs}, '
             'gpsUpdateInterval=${posConfig.gpsUpdateInterval}',
           );
-          _currentPositionConfig = posConfig;
+          if (isLocalResponse) {
+            _currentPositionConfig = posConfig;
+          }
           _positionConfigController.add(posConfig);
         }
 
@@ -1585,7 +1605,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received Device config - role: ${deviceConfig.role.name}',
           );
-          _currentDeviceConfig = deviceConfig;
+          if (isLocalResponse) {
+            _currentDeviceConfig = deviceConfig;
+          }
           _deviceConfigController.add(deviceConfig);
         }
 
@@ -1595,7 +1617,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received Display config - screenOnSecs: ${displayConfig.screenOnSecs}',
           );
-          _currentDisplayConfig = displayConfig;
+          if (isLocalResponse) {
+            _currentDisplayConfig = displayConfig;
+          }
           _displayConfigController.add(displayConfig);
         }
 
@@ -1605,7 +1629,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received Power config - isPowerSaving: ${powerConfig.isPowerSaving}',
           );
-          _currentPowerConfig = powerConfig;
+          if (isLocalResponse) {
+            _currentPowerConfig = powerConfig;
+          }
           _powerConfigController.add(powerConfig);
         }
 
@@ -1615,7 +1641,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received Network config - wifiEnabled: ${networkConfig.wifiEnabled}',
           );
-          _currentNetworkConfig = networkConfig;
+          if (isLocalResponse) {
+            _currentNetworkConfig = networkConfig;
+          }
           _networkConfigController.add(networkConfig);
         }
 
@@ -1625,7 +1653,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received Bluetooth config - enabled: ${btConfig.enabled}',
           );
-          _currentBluetoothConfig = btConfig;
+          if (isLocalResponse) {
+            _currentBluetoothConfig = btConfig;
+          }
           _bluetoothConfigController.add(btConfig);
         }
 
@@ -1635,7 +1665,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received Security config - isManaged: ${secConfig.isManaged}',
           );
-          _currentSecurityConfig = secConfig;
+          if (isLocalResponse) {
+            _currentSecurityConfig = secConfig;
+          }
           _securityConfigController.add(secConfig);
         }
       } else if (adminMsg.hasGetModuleConfigResponse()) {
@@ -1647,7 +1679,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received MQTT config - enabled: ${mqttConfig.enabled}',
           );
-          _currentMqttConfig = mqttConfig;
+          if (isLocalResponse) {
+            _currentMqttConfig = mqttConfig;
+          }
           _mqttConfigController.add(mqttConfig);
         }
 
@@ -1657,7 +1691,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received Telemetry config - deviceInterval: ${telemetryConfig.deviceUpdateInterval}',
           );
-          _currentTelemetryConfig = telemetryConfig;
+          if (isLocalResponse) {
+            _currentTelemetryConfig = telemetryConfig;
+          }
           _telemetryConfigController.add(telemetryConfig);
         }
 
@@ -1667,7 +1703,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received PAX counter config - enabled: ${paxConfig.enabled}',
           );
-          _currentPaxCounterConfig = paxConfig;
+          if (isLocalResponse) {
+            _currentPaxCounterConfig = paxConfig;
+          }
           _paxCounterConfigController.add(paxConfig);
         }
 
@@ -1677,7 +1715,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received Ambient Lighting config - ledState: ${ambientConfig.ledState}',
           );
-          _currentAmbientLightingConfig = ambientConfig;
+          if (isLocalResponse) {
+            _currentAmbientLightingConfig = ambientConfig;
+          }
           _ambientLightingConfigController.add(ambientConfig);
         }
 
@@ -1687,7 +1727,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received Serial config - enabled: ${serialConfig.enabled}',
           );
-          _currentSerialConfig = serialConfig;
+          if (isLocalResponse) {
+            _currentSerialConfig = serialConfig;
+          }
           _serialConfigController.add(serialConfig);
         }
 
@@ -1697,7 +1739,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received Store Forward config - enabled: ${sfConfig.enabled}',
           );
-          _currentStoreForwardConfig = sfConfig;
+          if (isLocalResponse) {
+            _currentStoreForwardConfig = sfConfig;
+          }
           _storeForwardConfigController.add(sfConfig);
         }
 
@@ -1707,7 +1751,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received Detection Sensor config - enabled: ${dsConfig.enabled}',
           );
-          _currentDetectionSensorConfig = dsConfig;
+          if (isLocalResponse) {
+            _currentDetectionSensorConfig = dsConfig;
+          }
           _detectionSensorConfigController.add(dsConfig);
         }
 
@@ -1717,7 +1763,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received Range Test config - enabled: ${rtConfig.enabled}',
           );
-          _currentRangeTestConfig = rtConfig;
+          if (isLocalResponse) {
+            _currentRangeTestConfig = rtConfig;
+          }
           _rangeTestConfigController.add(rtConfig);
         }
 
@@ -1727,7 +1775,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received External Notification config - enabled: ${extNotifConfig.enabled}',
           );
-          _currentExternalNotificationConfig = extNotifConfig;
+          if (isLocalResponse) {
+            _currentExternalNotificationConfig = extNotifConfig;
+          }
           _externalNotificationConfigController.add(extNotifConfig);
         }
 
@@ -1737,7 +1787,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received Canned Message config - enabled: ${cannedConfig.enabled}',
           );
-          _currentCannedMessageConfig = cannedConfig;
+          if (isLocalResponse) {
+            _currentCannedMessageConfig = cannedConfig;
+          }
           _cannedMessageConfigController.add(cannedConfig);
         }
 
@@ -1747,7 +1799,9 @@ class ProtocolService {
           AppLogging.protocol(
             'Received Traffic Management config - enabled: ${tmConfig.enabled}',
           );
-          _currentTrafficManagementConfig = tmConfig;
+          if (isLocalResponse) {
+            _currentTrafficManagementConfig = tmConfig;
+          }
           _trafficManagementConfigController.add(tmConfig);
         }
       } else if (adminMsg.hasGetChannelResponse()) {
@@ -1757,6 +1811,20 @@ class ProtocolService {
           'Received channel response: index=${channel.index}, role=${channel.role.name}',
         );
         _handleChannel(channel);
+      } else if (adminMsg.hasGetCannedMessageModuleMessagesResponse()) {
+        // Handle canned messages text response (pipe-separated string)
+        final messages = adminMsg.getCannedMessageModuleMessagesResponse;
+        AppLogging.protocol(
+          'Received canned messages text (${messages.length} chars)',
+        );
+        _cannedMessageTextController.add(messages);
+      } else if (adminMsg.hasGetRingtoneResponse()) {
+        // Handle ringtone text response (RTTTL format)
+        final ringtone = adminMsg.getRingtoneResponse;
+        AppLogging.protocol(
+          'Received ringtone text (${ringtone.length} chars)',
+        );
+        _ringtoneTextController.add(ringtone);
       } else if (adminMsg.hasGetDeviceMetadataResponse()) {
         // Handle device metadata response - update node with firmware version
         final metadata = adminMsg.getDeviceMetadataResponse;

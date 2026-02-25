@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -584,6 +585,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
   int _playingPresetIndex = -1;
   bool _playingCustomPreset = false;
   String? _validationError;
+  StreamSubscription<String>? _ringtoneSubscription;
 
   // Currently selected ringtone info (unified across all sources)
   String? _selectedName;
@@ -695,6 +697,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
 
   @override
   void dispose() {
+    _ringtoneSubscription?.cancel();
     _rtttlController.dispose();
     _rtttlPlayer.dispose();
     super.dispose();
@@ -721,6 +724,32 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
           _selectedSource = settings.selectedRingtoneSource;
         }
       });
+
+      // Also request the current ringtone from the device
+      final protocol = ref.read(protocolServiceProvider);
+      if (protocol.isConnected) {
+        final target = AdminTarget.fromNullable(
+          ref.read(remoteAdminTargetProvider),
+        );
+
+        _ringtoneSubscription = protocol.ringtoneTextStream.listen((
+          deviceRtttl,
+        ) {
+          if (mounted && deviceRtttl.isNotEmpty) {
+            // Only populate if user hasn't already selected something locally
+            if (_rtttlController.text.isEmpty) {
+              safeSetState(() {
+                _rtttlController.text = deviceRtttl;
+                _selectedName = 'Device Ringtone';
+                _selectedDescription = 'Currently set on device';
+                _selectedSource = 'device';
+              });
+            }
+          }
+        });
+
+        await protocol.getRingtone(target: target);
+      }
     } catch (e) {
       // Continue with defaults
     } finally {
@@ -907,7 +936,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
     final target = AdminTarget.fromNullable(
       ref.read(remoteAdminTargetProvider),
     );
-    setState(() => _saving = true);
+    safeSetState(() => _saving = true);
 
     try {
       await protocol.setRingtone(_rtttlController.text.trim(), target: target);

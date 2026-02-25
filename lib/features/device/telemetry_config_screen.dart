@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
@@ -123,6 +124,8 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
           target: target,
         );
       }
+    } catch (e) {
+      AppLogging.protocol('Failed to load telemetry config: $e');
     } finally {
       safeSetState(() => _isLoading = false);
     }
@@ -264,16 +267,33 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
                 },
                 description:
                     'Temperature, humidity, barometric pressure, gas resistance',
-                additionalWidget: _ToggleTile(
-                  title: 'Display on Screen',
-                  subtitle: 'Show environment data on device screen',
-                  value: _environmentDisplayOnScreen,
-                  onChanged: (value) {
-                    setState(() {
-                      _environmentDisplayOnScreen = value;
-                      _hasChanges = true;
-                    });
-                  },
+                additionalWidget: Column(
+                  children: [
+                    _ToggleTile(
+                      title: 'Display on Screen',
+                      subtitle: 'Show environment data on device screen',
+                      value: _environmentDisplayOnScreen,
+                      onChanged: (value) {
+                        setState(() {
+                          _environmentDisplayOnScreen = value;
+                          _hasChanges = true;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _ToggleTile(
+                      title: 'Display Fahrenheit',
+                      subtitle:
+                          'Show temperature in Fahrenheit instead of Celsius',
+                      value: _environmentDisplayFahrenheit,
+                      onChanged: (value) {
+                        setState(() {
+                          _environmentDisplayFahrenheit = value;
+                          _hasChanges = true;
+                        });
+                      },
+                    ),
+                  ],
                 ),
               ),
 

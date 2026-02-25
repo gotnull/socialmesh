@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/safety/lifecycle_mixin.dart';
+import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -103,6 +104,8 @@ class _AmbientLightingConfigScreenState
           target: target,
         );
       }
+    } catch (e) {
+      AppLogging.protocol('Failed to load ambient lighting config: $e');
     } finally {
       safeSetState(() => _isLoading = false);
     }

@@ -31,6 +31,7 @@ class RadioConfigScreen extends ConsumerStatefulWidget {
 class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
     with LifecycleSafeMixin<RadioConfigScreen> {
   bool _isLoading = false;
+  bool _isSaving = false;
   config_pbenum.Config_LoRaConfig_RegionCode? _selectedRegion;
   config_pbenum.Config_LoRaConfig_ModemPreset? _selectedModemPreset;
   int _hopLimit = 3;
@@ -128,7 +129,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
     final settingsFuture = ref.read(settingsServiceProvider.future);
     final navigator = Navigator.of(context);
 
-    safeSetState(() => _isLoading = true);
+    safeSetState(() => _isSaving = true);
     try {
       await protocol.setLoRaConfig(
         region:
@@ -166,7 +167,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
         showErrorSnackBar(context, 'Failed to save: $e');
       }
     } finally {
-      safeSetState(() => _isLoading = false);
+      safeSetState(() => _isSaving = false);
     }
   }
 
@@ -188,8 +189,8 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: TextButton(
-              onPressed: _isLoading ? null : _saveConfig,
-              child: _isLoading
+              onPressed: (_isLoading || _isSaving) ? null : _saveConfig,
+              child: _isSaving
                   ? LoadingIndicator(size: 20)
                   : Text(
                       'Save',
