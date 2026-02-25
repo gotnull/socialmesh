@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/help/help_content.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../features/onboarding/widgets/mesh_node_brain.dart';
 import '../../../providers/help_providers.dart';
@@ -383,32 +384,17 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
     });
   }
 
-  void _showResetDialog(BuildContext context) {
-    showDialog(
+  void _showResetDialog(BuildContext context) async {
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
-        title: const Text('Reset Help Progress?'),
-        content: const Text(
+      title: 'Reset Help Progress?',
+      message:
           'This will mark all help topics as unread and show help hints again. You can replay any tour from the help center.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              ref.read(helpProvider.notifier).resetAll();
-              Navigator.pop(context);
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.primaryMagenta,
-            ),
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Reset',
+      isDestructive: true,
     );
+    if (confirmed == true) {
+      ref.read(helpProvider.notifier).resetAll();
+    }
   }
 }

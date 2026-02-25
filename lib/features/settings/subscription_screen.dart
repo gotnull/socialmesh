@@ -7,6 +7,7 @@ import '../../core/logging.dart';
 import '../../providers/connectivity_providers.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/animated_gold_button.dart';
 import '../../core/widgets/legal_document_sheet.dart';
@@ -854,71 +855,64 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
   }
 
   void _showAllUnlockedCelebration() {
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => Dialog(
-        backgroundColor: context.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Lottie animation
-              SizedBox(
-                width: 200,
-                height: 200,
-                child: Lottie.asset(
-                  'assets/lottie/unlocked.json',
-                  repeat: true,
-                  fit: BoxFit.contain,
-                ),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'All Features Unlocked!',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: context.accentColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 12),
-              Text(
-                'You now have access to everything Socialmesh has to offer. Thank you for your support!',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: context.textSecondary,
-                  height: 1.4,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.accentColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    'Awesome!',
-                    style: context.titleSmallStyle?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+      isDismissible: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Lottie animation
+          SizedBox(
+            width: 200,
+            height: 200,
+            child: Lottie.asset(
+              'assets/lottie/unlocked.json',
+              repeat: true,
+              fit: BoxFit.contain,
+            ),
           ),
-        ),
+          SizedBox(height: 16),
+          Text(
+            'All Features Unlocked!',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: context.accentColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 12),
+          Text(
+            'You now have access to everything Socialmesh has to offer. Thank you for your support!',
+            style: TextStyle(
+              fontSize: 15,
+              color: context.textSecondary,
+              height: 1.4,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: FilledButton.styleFrom(
+                backgroundColor: context.accentColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Awesome!',
+                style: context.titleSmallStyle?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

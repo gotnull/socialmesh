@@ -596,15 +596,25 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
     final socialService = ref.read(socialServiceProvider);
 
     final reasonController = TextEditingController();
-    final reason = await showDialog<String>(
+    final reason = await AppBottomSheet.show<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Report Post'),
-        content: Column(
+      child: Builder(
+        builder: (sheetContext) => Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Why are you reporting this post?'),
+            Text(
+              'Report Post',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Why are you reporting this post?',
+              style: TextStyle(color: context.textSecondary),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: reasonController,
@@ -614,21 +624,48 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
+              maxLength: 500,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(sheetContext),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: Colors.grey.shade700),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(
+                      sheetContext,
+                      reasonController.text.trim(),
+                    ),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: context.accentColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Report'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, reasonController.text.trim()),
-            child: const Text('Report'),
-          ),
-        ],
       ),
     );
+    reasonController.dispose();
 
     if (!mounted) return;
     if (reason != null && reason.isNotEmpty) {
@@ -980,10 +1017,7 @@ class _CommentTileState extends ConsumerState<_CommentTile>
     // Capture provider before any await
     final socialService = ref.read(socialServiceProvider);
 
-    final reason = await showDialog<String>(
-      context: sheetContext,
-      builder: (dialogCtx) => _ReportReasonDialog(),
-    );
+    final reason = await _showReportReasonSheet(sheetContext);
 
     if (!mounted) return;
     if (reason != null && reason.isNotEmpty) {
@@ -1004,25 +1038,12 @@ class _CommentTileState extends ConsumerState<_CommentTile>
   }
 
   Future<void> _confirmDelete(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Comment'),
-        content: const Text('Are you sure you want to delete this comment?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Comment',
+      message: 'Are you sure you want to delete this comment?',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
 
     if (confirmed == true && widget.onDelete != null) {
@@ -1412,16 +1433,11 @@ class _CommentInput extends StatelessWidget {
   }
 }
 
-/// Dialog for selecting a report reason
-class _ReportReasonDialog extends StatefulWidget {
-  @override
-  State<_ReportReasonDialog> createState() => _ReportReasonDialogState();
-}
+/// Shows a bottom sheet for selecting a report reason.
+Future<String?> _showReportReasonSheet(BuildContext context) {
+  String? selectedReason;
 
-class _ReportReasonDialogState extends State<_ReportReasonDialog> {
-  String? _selectedReason;
-
-  static const _reasons = [
+  const reasons = [
     'Spam',
     'Harassment or bullying',
     'Hate speech',
@@ -1431,58 +1447,92 @@ class _ReportReasonDialogState extends State<_ReportReasonDialog> {
     'Other',
   ];
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  return AppBottomSheet.show<String>(
+    context: context,
+    child: StatefulBuilder(
+      builder: (context, setState) {
+        final theme = Theme.of(context);
 
-    return AlertDialog(
-      title: const Text('Report Comment'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Why are you reporting this comment?',
-            style: theme.textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 16),
-          ..._reasons.map(
-            (reason) => InkWell(
-              onTap: () => setState(() => _selectedReason = reason),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    Icon(
-                      _selectedReason == reason
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_unchecked,
-                      size: 20,
-                      color: _selectedReason == reason
-                          ? theme.colorScheme.primary
-                          : theme.hintColor,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(reason, style: theme.textTheme.bodyMedium),
-                  ],
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Report Comment',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Why are you reporting this comment?',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: context.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...reasons.map(
+              (reason) => InkWell(
+                onTap: () => setState(() => selectedReason = reason),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Icon(
+                        selectedReason == reason
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        size: 20,
+                        color: selectedReason == reason
+                            ? context.accentColor
+                            : theme.hintColor,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(reason, style: theme.textTheme.bodyMedium),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _selectedReason != null
-              ? () => Navigator.pop(context, _selectedReason)
-              : null,
-          child: const Text('Report'),
-        ),
-      ],
-    );
-  }
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: Colors.grey.shade700),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: selectedReason != null
+                        ? () => Navigator.pop(context, selectedReason)
+                        : null,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: AppTheme.errorRed,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Report'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    ),
+  );
 }

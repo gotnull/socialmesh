@@ -1987,63 +1987,78 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     DeviceInfo device,
     ProtocolDetectionResult detection,
   ) {
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber, color: Colors.orange),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.warning_amber, color: Colors.orange),
+              const SizedBox(width: 12),
+              Text(
                 'Unknown Protocol',
-                style: Theme.of(context).textTheme.titleMedium,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'This device was not detected as Meshtastic or MeshCore.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: context.cardAlt,
+              borderRadius: BorderRadius.circular(8),
             ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('This device was not detected as Meshtastic or MeshCore.'),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: context.cardAlt,
-                borderRadius: BorderRadius.circular(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Detection: ${detection.reason}',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(fontFamily: 'monospace'),
+                ),
+                Text(
+                  'Confidence: ${(detection.confidence * 100).toStringAsFixed(0)}%',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(fontFamily: 'monospace'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'This device cannot be connected automatically. '
+            'Only Meshtastic and MeshCore devices are supported.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: context.accentColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Detection: ${detection.reason}',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelSmall?.copyWith(fontFamily: 'monospace'),
-                  ),
-                  Text(
-                    'Confidence: ${(detection.confidence * 100).toStringAsFixed(0)}%',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelSmall?.copyWith(fontFamily: 'monospace'),
-                  ),
-                ],
-              ),
+              child: const Text('OK'),
             ),
-            const SizedBox(height: 12),
-            Text(
-              'This device cannot be connected automatically. '
-              'Only Meshtastic and MeshCore devices are supported.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
           ),
         ],
       ),

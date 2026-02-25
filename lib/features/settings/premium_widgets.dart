@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
 import 'subscription_screen.dart';
@@ -210,38 +211,75 @@ Future<bool> checkFeatureOrShowUpgrade(
 
   final purchase = OneTimePurchases.getByFeature(feature);
 
-  await showDialog(
+  await AppBottomSheet.show(
     context: context,
-    builder: (context) => AlertDialog(
-      backgroundColor: context.card,
-      title: Row(
-        children: [
-          Icon(Icons.lock_outline, color: context.accentColor),
-          SizedBox(width: 12),
-          Text(purchase?.name ?? 'Premium Feature'),
-        ],
-      ),
-      content: Text(
-        purchase?.description ?? 'This feature requires a purchase to unlock.',
-        style: TextStyle(color: context.textSecondary),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.lock_outline, color: context.accentColor),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                purchase?.name ?? 'Premium Feature',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
+                ),
+              ),
+            ),
+          ],
         ),
-        FilledButton(
-          onPressed: () {
-            Navigator.pop(context);
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-            );
-          },
-          child: Text(
-            purchase != null
-                ? 'Unlock \$${purchase.price.toStringAsFixed(2)}'
-                : 'View Upgrades',
-          ),
+        const SizedBox(height: 12),
+        Text(
+          purchase?.description ??
+              'This feature requires a purchase to unlock.',
+          style: TextStyle(color: context.textSecondary),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(color: Colors.grey.shade700),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Cancel'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const SubscriptionScreen(),
+                    ),
+                  );
+                },
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: context.accentColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  purchase != null
+                      ? 'Unlock \$${purchase.price.toStringAsFixed(2)}'
+                      : 'View Upgrades',
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     ),

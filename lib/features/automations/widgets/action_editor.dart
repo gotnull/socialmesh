@@ -987,68 +987,75 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
   }
 
   void _showShortcutHelp(BuildContext context) {
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: Row(
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.lightbulb_outline, color: Colors.amber),
-            SizedBox(width: 8),
-            Text('Using Shortcuts'),
+            Row(
+              children: [
+                Icon(Icons.lightbulb_outline, color: Colors.amber),
+                SizedBox(width: 8),
+                Text(
+                  'Using Shortcuts',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Setting up your shortcut:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            _buildHelpStep(
+              '1',
+              'Add "Get Dictionary from" action\nSelect "Shortcut Input"',
+            ),
+            _buildHelpStep(
+              '2',
+              'Add "Get Value for" action\nSet key (e.g., node_name) and select "Dictionary"',
+            ),
+            _buildHelpStep(
+              '3',
+              'Use the extracted value in your actions\n(e.g., Send Message, Show Notification)',
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Available keys in the dictionary:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            _buildKeyItem('node_name', 'Name of the node'),
+            _buildKeyItem('node_num', 'Node number'),
+            _buildKeyItem('trigger', 'Trigger type (nodeOffline, etc.)'),
+            _buildKeyItem('battery', 'Battery % (if available)'),
+            _buildKeyItem('latitude', 'GPS latitude (if available)'),
+            _buildKeyItem('longitude', 'GPS longitude (if available)'),
+            _buildKeyItem('message', 'Message text (if applicable)'),
+            _buildKeyItem('timestamp', 'Event timestamp'),
+            const SizedBox(height: 16),
+            StatusBanner.warning(
+              title:
+                  'Note: Shortcuts app will briefly open when triggered. This is an iOS limitation.',
+              margin: EdgeInsets.zero,
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Got it'),
+              ),
+            ),
           ],
         ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Setting up your shortcut:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              _buildHelpStep(
-                '1',
-                'Add "Get Dictionary from" action\nSelect "Shortcut Input"',
-              ),
-              _buildHelpStep(
-                '2',
-                'Add "Get Value for" action\nSet key (e.g., node_name) and select "Dictionary"',
-              ),
-              _buildHelpStep(
-                '3',
-                'Use the extracted value in your actions\n(e.g., Send Message, Show Notification)',
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Available keys in the dictionary:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              _buildKeyItem('node_name', 'Name of the node'),
-              _buildKeyItem('node_num', 'Node number'),
-              _buildKeyItem('trigger', 'Trigger type (nodeOffline, etc.)'),
-              _buildKeyItem('battery', 'Battery % (if available)'),
-              _buildKeyItem('latitude', 'GPS latitude (if available)'),
-              _buildKeyItem('longitude', 'GPS longitude (if available)'),
-              _buildKeyItem('message', 'Message text (if applicable)'),
-              _buildKeyItem('timestamp', 'Event timestamp'),
-              const SizedBox(height: 16),
-              StatusBanner.warning(
-                title:
-                    'Note: Shortcuts app will briefly open when triggered. This is an iOS limitation.',
-                margin: EdgeInsets.zero,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Got it'),
-          ),
-        ],
       ),
     );
   }

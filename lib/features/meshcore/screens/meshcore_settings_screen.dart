@@ -879,34 +879,45 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
   }
 
   void _showAbout(BuildContext context) {
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: const Text(
-          'About SocialMesh',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Version $_appVersion',
-              style: const TextStyle(color: Colors.white70),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'About SocialMesh',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'SocialMesh is a mesh radio companion app supporting '
-              'Meshtastic and MeshCore devices.',
-              style: TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Version $_appVersion',
+            style: TextStyle(color: context.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'SocialMesh is a mesh radio companion app supporting '
+            'Meshtastic and MeshCore devices.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => Navigator.pop(context),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: context.accentColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Close'),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Close', style: TextStyle(color: AccentColors.cyan)),
           ),
         ],
       ),

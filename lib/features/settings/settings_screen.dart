@@ -3048,74 +3048,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     }
 
     // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: Theme.of(dialogContext).cardColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Theme.of(dialogContext).colorScheme.outline),
-        ),
-        title: Row(
-          children: [
-            Icon(
-              Icons.sync,
-              color: Theme.of(dialogContext).colorScheme.primary,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Force Sync',
-                style: TextStyle(
-                  color: Theme.of(dialogContext).colorScheme.onSurface,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
+      title: 'Force Sync',
+      message:
           'This will clear all local messages, nodes, and channels, then re-sync everything from the connected device.\n\nAre you sure you want to continue?',
-          style: TextStyle(
-            color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Sync'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Sync',
     );
 
     if (confirmed != true) return;
     if (!context.mounted) return;
 
     // Show loading indicator
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        content: Row(
-          children: [
-            LoadingIndicator(size: 40),
-            const SizedBox(width: 20),
-            Text(
-              'Syncing from device...',
-              style: TextStyle(color: context.textPrimary),
-            ),
-          ],
-        ),
+      isDismissible: false,
+      child: Row(
+        children: [
+          LoadingIndicator(size: 40),
+          const SizedBox(width: 20),
+          Text(
+            'Syncing from device...',
+            style: TextStyle(color: context.textPrimary),
+          ),
+        ],
       ),
     );
 
@@ -3158,30 +3114,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     final automationsNotifier = ref.read(automationsProvider.notifier);
     final automations = ref.read(automationsProvider).value ?? [];
     final signalService = ref.read(signalServiceProvider);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: Text(
-          'Clear All Data',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Text(
+      title: 'Clear All Data',
+      message:
           'This will delete ALL app data: messages, nodes, channels, settings, keys, signals, bookmarks, automations, widgets, and saved preferences. This action cannot be undone.',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
-            child: const Text('Clear All'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Clear All',
+      isDestructive: true,
     );
 
     if (confirmed == true && context.mounted) {

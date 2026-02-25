@@ -355,27 +355,13 @@ class _ModerationQueueListState extends ConsumerState<_ModerationQueueList>
     final socialService = ref.read(socialServiceProvider);
 
     final contentType = item['contentType'] as String? ?? 'content';
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Reject & Delete'),
-        content: Text(
+      title: 'Reject & Delete',
+      message:
           'This will delete the $contentType and issue a warning to the user. Continue?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            child: const Text('Reject'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Reject',
+      isDestructive: true,
     );
 
     if (confirmed == true && context.mounted) {
@@ -1048,27 +1034,12 @@ class _ReportsList extends ConsumerWidget {
     // Capture provider before async gap
     final socialService = ref.read(socialServiceProvider);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Delete $type'),
-        content: Text(
-          'This will permanently delete the reported $type. Continue?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete $type',
+      message: 'This will permanently delete the reported $type. Continue?',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
 
     if (confirmed == true && context.mounted) {
@@ -1236,10 +1207,10 @@ class _ReportsList extends ConsumerWidget {
 
     try {
       // Show loading
-      showDialog(
+      AppBottomSheet.show(
         context: context,
-        barrierDismissible: false,
-        builder: (ctx) => const Center(child: CircularProgressIndicator()),
+        isDismissible: false,
+        child: const Center(child: CircularProgressIndicator()),
       );
 
       AppLogging.social('[BanUser] Calling Firebase Function banUser');

@@ -271,24 +271,13 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
     DocumentReference docRef,
   ) async {
     final confirmed =
-        await showDialog<bool>(
+        await AppBottomSheet.showConfirm(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Delete post?'),
-            content: const Text(
+          title: 'Delete post?',
+          message:
               'Deleting a post removes it from Firebase immediately. This cannot be undone.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Delete'),
-              ),
-            ],
-          ),
+          confirmLabel: 'Delete',
+          isDestructive: true,
         ) ??
         false;
 

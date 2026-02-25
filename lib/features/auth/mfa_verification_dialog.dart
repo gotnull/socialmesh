@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/safety/lifecycle_mixin.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 
 import '../../core/theme.dart';
 import 'mfa_error_messages.dart';
@@ -28,10 +29,10 @@ class MFAVerificationDialog extends ConsumerStatefulWidget {
     BuildContext context,
     MultiFactorResolver resolver,
   ) {
-    return showDialog<UserCredential>(
+    return AppBottomSheet.show<UserCredential>(
       context: context,
-      barrierDismissible: false,
-      builder: (_) => MFAVerificationDialog(resolver: resolver),
+      isDismissible: false,
+      child: MFAVerificationDialog(resolver: resolver),
     );
   }
 
@@ -168,101 +169,121 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: context.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Row(
-        children: [
-          Icon(Icons.security, color: context.accentColor),
-          const SizedBox(width: 12),
-          Text('Verify Identity', style: TextStyle(color: context.textPrimary)),
-        ],
-      ),
-      content: SizedBox(
-        width: 300,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
           children: [
-            if (_isSendingCode) ...[
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: CircularProgressIndicator(),
-                ),
+            Icon(Icons.security, color: context.accentColor),
+            const SizedBox(width: 12),
+            Text(
+              'Verify Identity',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
               ),
-              Text(
-                'Sending verification code...',
-                style: TextStyle(color: context.textSecondary),
-                textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (_isSendingCode) ...[
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: CircularProgressIndicator(),
+            ),
+          ),
+          Text(
+            'Sending verification code...',
+            style: TextStyle(color: context.textSecondary),
+            textAlign: TextAlign.center,
+          ),
+        ] else ...[
+          Text(
+            'Enter the code sent to ${_getMaskedPhone()}',
+            style: TextStyle(fontSize: 14, color: context.textSecondary),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _codeController,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            enabled: !_isVerifying,
+            autofocus: true,
+            style: TextStyle(
+              color: context.textPrimary,
+              fontSize: 24,
+              letterSpacing: 8,
+            ),
+            textAlign: TextAlign.center,
+            decoration: InputDecoration(
+              counterText: '',
+              hintText: '000000',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: context.border),
               ),
-            ] else ...[
-              Text(
-                'Enter the code sent to ${_getMaskedPhone()}',
-                style: TextStyle(fontSize: 14, color: context.textSecondary),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: context.border),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _codeController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                enabled: !_isVerifying,
-                autofocus: true,
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontSize: 24,
-                  letterSpacing: 8,
-                ),
-                textAlign: TextAlign.center,
-                decoration: InputDecoration(
-                  counterText: '',
-                  hintText: '000000',
-                  border: OutlineInputBorder(
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: context.accentColor, width: 2),
+              ),
+            ),
+            onSubmitted: (_) => _verifyCode(),
+          ),
+        ],
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            _errorMessage!,
+            style: const TextStyle(color: Colors.red, fontSize: 13),
+            textAlign: TextAlign.center,
+          ),
+        ],
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _isVerifying ? null : () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(color: Colors.grey.shade700),
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: context.border),
                   ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: context.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: context.accentColor,
-                      width: 2,
+                ),
+                child: const Text('Cancel'),
+              ),
+            ),
+            if (!_isSendingCode) ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: _isVerifying ? null : _verifyCode,
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
+                  child: _isVerifying
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Verify'),
                 ),
-                onSubmitted: (_) => _verifyCode(),
-              ),
-            ],
-            if (_errorMessage != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.red, fontSize: 13),
-                textAlign: TextAlign.center,
               ),
             ],
           ],
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isVerifying ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        if (!_isSendingCode)
-          FilledButton(
-            onPressed: _isVerifying ? null : _verifyCode,
-            child: _isVerifying
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Verify'),
-          ),
       ],
     );
   }

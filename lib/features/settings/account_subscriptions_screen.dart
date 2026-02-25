@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/legal_document_sheet.dart';
@@ -1392,26 +1393,58 @@ class _AccountSubscriptionsScreenState
         : e.existingProviders.first;
 
     // Capture before async gap
-    final cardColor = context.card;
     final authService = ref.read(authServiceProvider);
 
-    final shouldLink = await showDialog<bool>(
+    final shouldLink = await AppBottomSheet.show<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: cardColor,
-        title: const Text('Link GitHub Account'),
-        content: Text(
-          'An account with ${e.email} already exists using $providerName.\n\n'
-          'Sign in with $providerName to link your GitHub account?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Link GitHub Account',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text('Sign in with $providerName'),
+          const SizedBox(height: 12),
+          Text(
+            'An account with ${e.email} already exists using $providerName.\n\n'
+            'Sign in with $providerName to link your GitHub account?',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text('Sign in with $providerName'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1460,22 +1493,12 @@ class _AccountSubscriptionsScreenState
     // Capture provider ref before await
     final authService = ref.read(authServiceProvider);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Sign Out'),
-          ),
-        ],
-      ),
+      title: 'Sign Out',
+      message: 'Are you sure you want to sign out?',
+      confirmLabel: 'Sign Out',
+      cancelLabel: 'Cancel',
     );
 
     if (confirmed == true && mounted) {

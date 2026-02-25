@@ -7,6 +7,7 @@ import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../models/mesh_models.dart';
@@ -225,66 +226,88 @@ class _UniversalQrScannerScreenState
   }
 
   Future<bool?> _showNodeExistsDialog(MeshNode existing, String? newName) {
-    return showDialog<bool>(
+    return AppBottomSheet.show<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Node Already Exists',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'This node is already in your list as "${existing.displayName}".',
-              style: TextStyle(color: context.textSecondary, fontSize: 14),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Node Already Exists',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
-            if (newName != null && newName != existing.longName) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: context.accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: context.accentColor,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Update name to "$newName" and add to favorites?',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.accentColor,
-                        ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'This node is already in your list as "${existing.displayName}".',
+            style: TextStyle(color: context.textSecondary, fontSize: 14),
+          ),
+          if (newName != null && newName != existing.longName) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: context.accentColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: context.accentColor,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Update name to "$newName" and add to favorites?',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: context.accentColor,
                       ),
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: context.textSecondary),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: context.accentColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Update'),
                 ),
               ),
             ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
-            ),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: context.accentColor),
-            child: const Text('Update'),
           ),
         ],
       ),
@@ -299,38 +322,63 @@ class _UniversalQrScannerScreenState
   }) {
     final displayName =
         longName ?? shortName ?? '!${nodeNum.toRadixString(16)}';
-    return showDialog<bool>(
+    return AppBottomSheet.show<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Add Node', style: TextStyle(color: context.textPrimary)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Add "$displayName" to your tracked nodes?',
-              style: TextStyle(color: context.textSecondary, fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            _buildNodeInfoRow('Node ID', '!${nodeNum.toRadixString(16)}'),
-            if (longName != null) _buildNodeInfoRow('Name', longName),
-            if (shortName != null) _buildNodeInfoRow('Short', shortName),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Add Node',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: context.accentColor),
-            child: const Text('Add Node'),
+          const SizedBox(height: 12),
+          Text(
+            'Add "$displayName" to your tracked nodes?',
+            style: TextStyle(color: context.textSecondary, fontSize: 14),
+          ),
+          const SizedBox(height: 16),
+          _buildNodeInfoRow('Node ID', '!${nodeNum.toRadixString(16)}'),
+          if (longName != null) _buildNodeInfoRow('Name', longName),
+          if (shortName != null) _buildNodeInfoRow('Short', shortName),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: context.textSecondary),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: context.accentColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Add Node'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -537,75 +585,100 @@ class _UniversalQrScannerScreenState
   }
 
   Future<bool?> _showChannelImportConfirmation(ChannelConfig channel) {
-    return showDialog<bool>(
+    return AppBottomSheet.show<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Import Channel',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildChannelInfoRow('Name', channel.name),
-            const SizedBox(height: 8),
-            _buildChannelInfoRow('Slot', '${channel.index}'),
-            const SizedBox(height: 8),
-            _buildChannelInfoRow(
-              'Encryption',
-              '${channel.psk.length * 8}-bit AES',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Import Channel',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: context.accentColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: context.accentColor,
-                    size: 18,
+          ),
+          const SizedBox(height: 16),
+          _buildChannelInfoRow('Name', channel.name),
+          const SizedBox(height: 8),
+          _buildChannelInfoRow('Slot', '${channel.index}'),
+          const SizedBox(height: 8),
+          _buildChannelInfoRow(
+            'Encryption',
+            '${channel.psk.length * 8}-bit AES',
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: context.accentColor, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'The channel will be synced to your connected device.',
+                    style: TextStyle(fontSize: 13, color: context.accentColor),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'The channel will be synced to your connected device.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.accentColor,
-                      ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context, null),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                ],
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: context.textSecondary),
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, null),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'Edit First',
-              style: TextStyle(color: context.accentColor),
-            ),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: context.accentColor),
-            child: const Text('Import'),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: context.accentColor),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Edit First',
+                    style: TextStyle(color: context.accentColor),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: context.accentColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Import'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

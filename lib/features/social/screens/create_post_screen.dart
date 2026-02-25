@@ -13,6 +13,7 @@ import 'package:geocoding/geocoding.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/user_avatar.dart';
@@ -86,35 +87,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
   Future<void> _handleClose() async {
     // If there are uploaded images or content, confirm before closing
     if (_imageUrls.isNotEmpty || _contentController.text.trim().isNotEmpty) {
-      final shouldDiscard = await showDialog<bool>(
+      final shouldDiscard = await AppBottomSheet.showConfirm(
         context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: context.card,
-          title: Text(
-            'Discard post?',
-            style: TextStyle(color: context.textPrimary),
-          ),
-          content: Text(
-            _imageUrls.isNotEmpty
-                ? 'Your uploaded images will be deleted.'
-                : 'Your draft will be lost.',
-            style: TextStyle(color: context.textSecondary),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(
-                'Keep editing',
-                style: TextStyle(color: context.textSecondary),
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Discard'),
-            ),
-          ],
-        ),
+        title: 'Discard post?',
+        message: _imageUrls.isNotEmpty
+            ? 'Your uploaded images will be deleted.'
+            : 'Your draft will be lost.',
+        confirmLabel: 'Discard',
+        isDestructive: true,
       );
 
       if (shouldDiscard != true) return;
@@ -1030,61 +1010,91 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
 
   void _enterLocationManually() {
     final controller = TextEditingController();
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Enter Location',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: TextField(
-          controller: controller,
-          style: TextStyle(color: context.textPrimary),
-          decoration: InputDecoration(
-            hintText: 'e.g., San Francisco, CA',
-            hintStyle: TextStyle(color: context.textTertiary),
-            filled: true,
-            fillColor: context.background,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: context.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: context.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: context.accentColor, width: 2),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Enter Location',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
           ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            maxLength: 100,
+            style: TextStyle(color: context.textPrimary),
+            decoration: InputDecoration(
+              hintText: 'e.g., San Francisco, CA',
+              hintStyle: TextStyle(color: context.textTertiary),
+              filled: true,
+              fillColor: context.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: context.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: context.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: context.accentColor, width: 2),
+              ),
             ),
+            autofocus: true,
           ),
-          FilledButton(
-            onPressed: () {
-              final name = controller.text.trim();
-              if (name.isNotEmpty) {
-                setState(() {
-                  _location = PostLocation(
-                    name: name,
-                    latitude: 0,
-                    longitude: 0,
-                  );
-                });
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text('Add'),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: context.textSecondary),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    final name = controller.text.trim();
+                    if (name.isNotEmpty) {
+                      setState(() {
+                        _location = PostLocation(
+                          name: name,
+                          latitude: 0,
+                          longitude: 0,
+                        );
+                      });
+                    }
+                    Navigator.pop(context);
+                  },
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: context.accentColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Add'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

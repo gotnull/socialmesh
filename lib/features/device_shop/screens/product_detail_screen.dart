@@ -10,6 +10,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../providers/auth_providers.dart';
@@ -1241,32 +1242,64 @@ Price: ${product.formattedPrice}${product.purchaseUrl != null ? '\n\n${product.p
   }
 
   void _showPurchaseDialog(ShopProduct product) {
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: Text('Purchase', style: TextStyle(color: context.textPrimary)),
-        content: Text(
-          'Contact the seller to purchase this product.',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Purchase',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      SellerProfileScreen(sellerId: product.sellerId),
+          const SizedBox(height: 12),
+          Text(
+            'Contact the seller to purchase this product.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancel'),
                 ),
-              );
-            },
-            child: Text('Contact Seller'),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            SellerProfileScreen(sellerId: product.sellerId),
+                      ),
+                    );
+                  },
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Contact Seller'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

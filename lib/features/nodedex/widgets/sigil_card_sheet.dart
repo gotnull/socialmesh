@@ -343,52 +343,51 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
   // ---------------------------------------------------------------------------
 
   void _showRarityInfo(BuildContext context) {
-    showDialog<void>(
+    AppBottomSheet.show<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: context.border.withValues(alpha: 0.5)),
-        ),
-        title: Text(
-          'Card Rarity',
-          style: TextStyle(
-            color: context.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Card Rarity',
+            style: TextStyle(
+              color: context.textPrimary,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'A card\'s rarity reflects how often you\'ve encountered '
-              'this node on the mesh. The more you cross paths, the '
-              'rarer the card becomes.',
-              style: TextStyle(
-                color: context.textSecondary,
-                fontSize: 14,
-                height: 1.5,
+          const SizedBox(height: 12),
+          Text(
+            'A card\'s rarity reflects how often you\'ve encountered '
+            'this node on the mesh. The more you cross paths, the '
+            'rarer the card becomes.',
+            style: TextStyle(
+              color: context.textSecondary,
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildRarityRow(CardRarity.common, 'Under 5 encounters'),
+          const SizedBox(height: 8),
+          _buildRarityRow(CardRarity.uncommon, '5 - 19 encounters'),
+          const SizedBox(height: 8),
+          _buildRarityRow(CardRarity.rare, '20 - 49 encounters'),
+          const SizedBox(height: 8),
+          _buildRarityRow(CardRarity.epic, '50 - 99 encounters'),
+          const SizedBox(height: 8),
+          _buildRarityRow(CardRarity.legendary, '100+ encounters'),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Got it',
+                style: TextStyle(color: SemanticColors.onAccent),
               ),
             ),
-            const SizedBox(height: 16),
-            _buildRarityRow(CardRarity.common, 'Under 5 encounters'),
-            const SizedBox(height: 8),
-            _buildRarityRow(CardRarity.uncommon, '5 - 19 encounters'),
-            const SizedBox(height: 8),
-            _buildRarityRow(CardRarity.rare, '20 - 49 encounters'),
-            const SizedBox(height: 8),
-            _buildRarityRow(CardRarity.epic, '50 - 99 encounters'),
-            const SizedBox(height: 8),
-            _buildRarityRow(CardRarity.legendary, '100+ encounters'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Got it', style: TextStyle(color: context.accentColor)),
           ),
         ],
       ),

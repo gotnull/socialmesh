@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../models/widget_schema.dart';
@@ -692,33 +693,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     }
 
     // Show confirmation dialog
-    final shouldClose = await showDialog<bool>(
+    final shouldClose = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: Text(
-          'Discard Changes?',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Text(
+      title: 'Discard Changes?',
+      message:
           'You have unsaved changes. Are you sure you want to close without saving?',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep Editing'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.errorRed,
-              foregroundColor: SemanticColors.onAccent,
-            ),
-            child: const Text('Discard'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Discard',
+      isDestructive: true,
     );
 
     AppLogging.widgets('[WidgetWizard] Dialog result: $shouldClose');
@@ -766,55 +747,78 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
           ? _selectedActions.length
           : _selectedBindings.length;
 
-      final shouldSwitch = await showDialog<bool>(
+      final shouldSwitch = await AppBottomSheet.show<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: context.card,
-          title: Row(
-            children: [
-              Icon(Icons.warning_amber_rounded, color: AppTheme.warningYellow),
-              SizedBox(width: 12),
-              Text(
-                'Switch Template?',
-                style: TextStyle(color: context.textPrimary),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'You have $itemCount $currentDataType selected.',
-                style: TextStyle(color: context.textSecondary),
-              ),
-              SizedBox(height: 12),
-              Text(
-                '"${template.name}" uses $newDataType instead, so your current selections won\'t be used.',
-                style: TextStyle(color: context.textSecondary),
-              ),
-              SizedBox(height: 12),
-              Text(
-                'What would you like to do?',
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontWeight: FontWeight.w500,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: AppTheme.warningYellow,
                 ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Keep Current Template'),
+                SizedBox(width: 12),
+                Text(
+                  'Switch Template?',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.accentColor,
-                foregroundColor: SemanticColors.onAccent,
+            const SizedBox(height: 16),
+            Text(
+              'You have $itemCount $currentDataType selected.',
+              style: TextStyle(color: context.textSecondary),
+            ),
+            SizedBox(height: 12),
+            Text(
+              '"${template.name}" uses $newDataType instead, so your current selections won\'t be used.',
+              style: TextStyle(color: context.textSecondary),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'What would you like to do?',
+              style: TextStyle(
+                color: context.textPrimary,
+                fontWeight: FontWeight.w500,
               ),
-              child: const Text('Switch Template'),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: Colors.grey.shade700),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Keep Current'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: context.accentColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Switch'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -2514,36 +2518,66 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
   }
 
   void _showMergeConfirmationDialog() {
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: Text(
-          'Merge Charts?',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Text(
-          'You have selected different chart types for each series. '
-          'Merging will combine all series into a single multi-line chart view. '
-          'Individual chart types will no longer apply.\n\n'
-          'Do you want to continue?',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Merge Charts?',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _migrateToMerged();
-              setState(() => _mergeCharts = true);
-            },
-            child: Text('Merge', style: TextStyle(color: context.accentColor)),
+          const SizedBox(height: 12),
+          Text(
+            'You have selected different chart types for each series. '
+            'Merging will combine all series into a single multi-line chart view. '
+            'Individual chart types will no longer apply.\n\n'
+            'Do you want to continue?',
+            style: TextStyle(color: context.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: context.textSecondary),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _migrateToMerged();
+                    setState(() => _mergeCharts = true);
+                  },
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: context.accentColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Merge'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

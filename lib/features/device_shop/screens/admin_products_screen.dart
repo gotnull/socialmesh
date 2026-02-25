@@ -1275,25 +1275,12 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
     // Capture providers before async gap
     final service = ref.read(deviceShopServiceProvider);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Product'),
-        content: const Text(
-          'Are you sure you want to permanently delete this product?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Product',
+      message: 'Are you sure you want to permanently delete this product?',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
 
     if (confirmed == true && mounted) {

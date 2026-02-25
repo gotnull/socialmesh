@@ -9,6 +9,7 @@ import '../../providers/connection_providers.dart' as conn;
 import '../../providers/splash_mesh_provider.dart';
 import '../../services/protocol/admin_target.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 
 /// Screen for device management actions like reboot, shutdown, factory reset
@@ -39,63 +40,83 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
     if (!mounted) return;
 
     if (requiresConfirmation) {
-      final confirmed = await showDialog<bool>(
+      final confirmed = await AppBottomSheet.show<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
-          backgroundColor: Theme.of(dialogContext).cardColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: Theme.of(dialogContext).colorScheme.outline,
-            ),
-          ),
-          title: Row(
-            children: [
-              Icon(
-                causesDisconnect
-                    ? Icons.warning_amber_rounded
-                    : Icons.info_outline,
-                color: causesDisconnect
-                    ? AppTheme.warningYellow
-                    : Theme.of(dialogContext).colorScheme.primary,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  actionName,
-                  style: TextStyle(
-                    color: Theme.of(dialogContext).colorScheme.onSurface,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  causesDisconnect
+                      ? Icons.warning_amber_rounded
+                      : Icons.info_outline,
+                  color: causesDisconnect
+                      ? AppTheme.warningYellow
+                      : Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    actionName,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          content: Text(
-            warningMessage ??
-                'Are you sure you want to $actionName? This action cannot be undone.',
-            style: TextStyle(
-              color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
+              ],
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
+            const SizedBox(height: 12),
+            Text(
+              warningMessage ??
+                  'Are you sure you want to $actionName? This action cannot be undone.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: Colors.grey.shade700),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              style: FilledButton.styleFrom(
-                backgroundColor: causesDisconnect
-                    ? AppTheme.warningYellow
-                    : Theme.of(dialogContext).colorScheme.primary,
-                foregroundColor: causesDisconnect ? Colors.black : Colors.white,
-              ),
-              child: const Text('Confirm'),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: causesDisconnect
+                          ? AppTheme.warningYellow
+                          : Theme.of(context).colorScheme.primary,
+                      foregroundColor: causesDisconnect
+                          ? Colors.black
+                          : Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Confirm'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

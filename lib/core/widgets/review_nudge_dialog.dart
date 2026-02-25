@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../safety/lifecycle_mixin.dart';
+import '../widgets/app_bottom_sheet.dart';
 import '../../providers/review_providers.dart';
 
 /// A dialog that asks the user if they're enjoying the app and offers
@@ -24,10 +25,9 @@ class ReviewNudgeDialog extends ConsumerStatefulWidget {
     BuildContext context, {
     required String surface,
   }) async {
-    final result = await showDialog<bool>(
+    final result = await AppBottomSheet.show<bool>(
       context: context,
-      barrierDismissible: true,
-      builder: (context) => ReviewNudgeDialog(surface: surface),
+      child: ReviewNudgeDialog(surface: surface),
     );
     return result ?? false;
   }
@@ -73,61 +73,80 @@ class _ReviewNudgeDialogState extends ConsumerState<ReviewNudgeDialog>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return AlertDialog(
-      backgroundColor: colorScheme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      icon: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: colorScheme.primaryContainer,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          Icons.favorite_rounded,
-          size: 32,
-          color: colorScheme.primary,
-        ),
-      ),
-      title: Text(
-        'Enjoying Socialmesh?',
-        style: theme.textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-        textAlign: TextAlign.center,
-      ),
-      content: Text(
-        'Your feedback helps us improve the app and reach more mesh enthusiasts.',
-        style: theme.textTheme.bodyMedium?.copyWith(
-          color: colorScheme.onSurfaceVariant,
-        ),
-        textAlign: TextAlign.center,
-      ),
-      actionsAlignment: MainAxisAlignment.center,
-      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-      actions: [
-        // Not now button
-        TextButton(
-          onPressed: _isLoading ? null : _handleNotNow,
-          child: Text(
-            'Not now',
-            style: TextStyle(color: colorScheme.onSurfaceVariant),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: colorScheme.primaryContainer,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.favorite_rounded,
+            size: 32,
+            color: colorScheme.primary,
           ),
         ),
-        const SizedBox(width: 8),
-        // Rate it button
-        FilledButton.icon(
-          onPressed: _isLoading ? null : _handleRateIt,
-          icon: _isLoading
-              ? SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: colorScheme.onPrimary,
+        const SizedBox(height: 16),
+        Text(
+          'Enjoying Socialmesh?',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Your feedback helps us improve the app and reach more mesh enthusiasts.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _isLoading ? null : _handleNotNow,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(color: Colors.grey.shade700),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                )
-              : const Icon(Icons.star_rounded, size: 18),
-          label: Text(_isLoading ? 'Opening...' : 'Rate it'),
+                ),
+                child: Text(
+                  'Not now',
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: _isLoading ? null : _handleRateIt,
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: _isLoading
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colorScheme.onPrimary,
+                        ),
+                      )
+                    : const Icon(Icons.star_rounded, size: 18),
+                label: Text(_isLoading ? 'Opening...' : 'Rate it'),
+              ),
+            ),
+          ],
         ),
       ],
     );

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/ico_help_system.dart';
@@ -184,83 +185,88 @@ class _MeshReachabilityScreenState
   }
 
   void _showInfoDialog(BuildContext context) {
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: Row(
+      maxHeightFraction: 0.85,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.info_outline, color: context.textSecondary),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'About Reachability',
-                style: TextStyle(color: context.textPrimary),
+            Row(
+              children: [
+                Icon(Icons.info_outline, color: context.textSecondary),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'About Reachability',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const _InfoSection(
+              title: 'What is this?',
+              content:
+                  'This screen shows a probabilistic estimate of how likely '
+                  'your messages will reach each node. It is NOT a guarantee '
+                  'of delivery.',
+            ),
+            const SizedBox(height: 16),
+            const _InfoSection(
+              title: 'Scoring Model',
+              content:
+                  'Opportunistic Mesh Reach Likelihood Model (v1) — BETA\n\n'
+                  'A heuristic scoring model that estimates likelihood of '
+                  'reaching a node based on observed RF metrics and packet '
+                  'history. This score represents likelihood, not reachability. '
+                  'Meshtastic forwards packets opportunistically without routing. '
+                  'A high score does not guarantee delivery.',
+            ),
+            const SizedBox(height: 16),
+            const _InfoSection(
+              title: 'How is it calculated?',
+              content:
+                  'The likelihood score combines several factors:\n'
+                  '• Freshness: How recently we heard from the node\n'
+                  '• Path Depth: Number of hops observed\n'
+                  '• Signal Quality: RSSI and SNR when available\n'
+                  '• Observation Pattern: Direct vs relayed packets\n'
+                  '• ACK History: DM acknowledgement success rate',
+            ),
+            const SizedBox(height: 16),
+            const _InfoSection(
+              title: 'What the levels mean',
+              content:
+                  '• High: Strong recent indicators, but not guaranteed\n'
+                  '• Medium: Moderate confidence based on available data\n'
+                  '• Low: Weak or stale indicators, delivery unlikely',
+            ),
+            const SizedBox(height: 16),
+            const _InfoSection(
+              title: 'Important limitations',
+              content:
+                  '• Meshtastic has no true routing tables\n'
+                  '• No end-to-end acknowledgements exist\n'
+                  '• Forwarding is opportunistic\n'
+                  '• Mesh topology changes constantly\n'
+                  '• All estimates based on passive observation only',
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Got it'),
               ),
             ),
           ],
         ),
-        content: const SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _InfoSection(
-                title: 'What is this?',
-                content:
-                    'This screen shows a probabilistic estimate of how likely '
-                    'your messages will reach each node. It is NOT a guarantee '
-                    'of delivery.',
-              ),
-              SizedBox(height: 16),
-              _InfoSection(
-                title: 'Scoring Model',
-                content:
-                    'Opportunistic Mesh Reach Likelihood Model (v1) — BETA\n\n'
-                    'A heuristic scoring model that estimates likelihood of '
-                    'reaching a node based on observed RF metrics and packet '
-                    'history. This score represents likelihood, not reachability. '
-                    'Meshtastic forwards packets opportunistically without routing. '
-                    'A high score does not guarantee delivery.',
-              ),
-              SizedBox(height: 16),
-              _InfoSection(
-                title: 'How is it calculated?',
-                content:
-                    'The likelihood score combines several factors:\n'
-                    '• Freshness: How recently we heard from the node\n'
-                    '• Path Depth: Number of hops observed\n'
-                    '• Signal Quality: RSSI and SNR when available\n'
-                    '• Observation Pattern: Direct vs relayed packets\n'
-                    '• ACK History: DM acknowledgement success rate',
-              ),
-              SizedBox(height: 16),
-              _InfoSection(
-                title: 'What the levels mean',
-                content:
-                    '• High: Strong recent indicators, but not guaranteed\n'
-                    '• Medium: Moderate confidence based on available data\n'
-                    '• Low: Weak or stale indicators, delivery unlikely',
-              ),
-              SizedBox(height: 16),
-              _InfoSection(
-                title: 'Important limitations',
-                content:
-                    '• Meshtastic has no true routing tables\n'
-                    '• No end-to-end acknowledgements exist\n'
-                    '• Forwarding is opportunistic\n'
-                    '• Mesh topology changes constantly\n'
-                    '• All estimates based on passive observation only',
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Got it'),
-          ),
-        ],
       ),
     );
   }

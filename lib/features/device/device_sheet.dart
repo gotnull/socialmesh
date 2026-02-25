@@ -440,28 +440,15 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
   }
 
   Future<void> _showResetNodeDbDialog(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: const Text('Reset Node Database'),
-        content: const Text(
+      title: 'Reset Node Database',
+      message:
           'This will clear all learned nodes from the device and app. '
           'The device will need to rediscover nodes on the mesh.\n\n'
           'Are you sure you want to continue?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Reset',
+      isDestructive: true,
     );
 
     if (confirmed == true && context.mounted) {

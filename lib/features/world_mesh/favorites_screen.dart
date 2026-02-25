@@ -339,32 +339,12 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
             ),
           ),
           confirmDismiss: (direction) async {
-            return await showDialog<bool>(
+            return await AppBottomSheet.showConfirm(
                   context: context,
-                  builder: (ctx) => AlertDialog(
-                    backgroundColor: context.card,
-                    title: Text(
-                      'Remove Favorite?',
-                      style: TextStyle(color: context.textPrimary),
-                    ),
-                    content: Text(
-                      'Remove ${item.displayName} from your favorites?',
-                      style: TextStyle(color: context.textSecondary),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Cancel'),
-                      ),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.errorRed,
-                        ),
-                        child: const Text('Remove'),
-                      ),
-                    ],
-                  ),
+                  title: 'Remove Favorite?',
+                  message: 'Remove ${item.displayName} from your favorites?',
+                  confirmLabel: 'Remove',
+                  isDestructive: true,
                 ) ??
                 false;
           },

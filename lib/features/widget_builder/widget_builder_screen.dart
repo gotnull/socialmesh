@@ -20,6 +20,7 @@ import 'marketplace/widget_marketplace_service.dart';
 import 'marketplace/marketplace_providers.dart';
 import 'widget_share_utils.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/widget_preview_card.dart';
@@ -1193,106 +1194,135 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     final delStorage = ref.read(widgetStorageServiceProvider).asData?.value;
     final profileNotifier = ref.read(userProfileProvider.notifier);
 
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: dialogContext.card,
-        title: Row(
-          children: [
-            if (isOnDashboard) ...[
-              Icon(
-                Icons.warning_amber_rounded,
-                color: AppTheme.warningYellow,
-                size: 24,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isOnDashboard) ...[
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: AppTheme.warningYellow,
+                  size: 24,
+                ),
+                SizedBox(width: 8),
+              ],
+              Text(
+                'Delete Widget?',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
+                ),
               ),
-              SizedBox(width: 8),
             ],
-            Text(
-              'Delete Widget?',
-              style: TextStyle(color: dialogContext.textPrimary),
-            ),
-          ],
-        ),
-        content: Text(
-          warningMessage,
-          style: TextStyle(color: dialogContext.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: dialogContext.textSecondary),
-            ),
           ),
-          TextButton(
-            onPressed: () async {
-              // Pop dialog immediately
-              Navigator.pop(dialogContext);
+          const SizedBox(height: 12),
+          Text(
+            warningMessage,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: context.textSecondary),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () async {
+                    // Pop bottom sheet immediately
+                    Navigator.pop(context);
 
-              // Remove from local state first so the card disappears
-              // and the 3-dot menu is no longer accessible.
-              final schemaId = schema.id;
-              final schemaName = schema.name;
-              safeSetState(() {
-                // Defensive copy — guards against an unmodifiable list
-                // reaching _myWidgets (e.g. via provider snapshot).
-                _myWidgets = List.of(_myWidgets)
-                  ..removeWhere((w) => w.id == schemaId);
-              });
+                    // Remove from local state first so the card disappears
+                    // and the 3-dot menu is no longer accessible.
+                    final schemaId = schema.id;
+                    final schemaName = schema.name;
+                    safeSetState(() {
+                      // Defensive copy — guards against an unmodifiable list
+                      // reaching _myWidgets (e.g. via provider snapshot).
+                      _myWidgets = List.of(_myWidgets)
+                        ..removeWhere((w) => w.id == schemaId);
+                    });
 
-              // Remove from dashboard if needed (sync, no await)
-              if (isOnDashboard) {
-                final widgetToRemove = dashboardWidgets.firstWhere(
-                  (w) => w.schemaId == schemaId && w.isVisible,
-                );
-                dashboardNotifier.removeWidget(widgetToRemove.id);
-              }
+                    // Remove from dashboard if needed (sync, no await)
+                    if (isOnDashboard) {
+                      final widgetToRemove = dashboardWidgets.firstWhere(
+                        (w) => w.schemaId == schemaId && w.isVisible,
+                      );
+                      dashboardNotifier.removeWidget(widgetToRemove.id);
+                    }
 
-              // Delete from local storage and get marketplace ID
-              AppLogging.sync(
-                '[WidgetBuilder] DELETE widget — id=$schemaId, name=$schemaName',
-              );
-              final marketplaceId = await delStorage?.deleteWidget(schemaId);
-              AppLogging.widgets(
-                '[WidgetBuilder] Deleted widget $schemaId, marketplaceId=$marketplaceId',
-              );
-              AppLogging.sync(
-                '[WidgetBuilder] Widget deleted from storage, '
-                'triggering drainOutboxNow()...',
-              );
+                    // Delete from local storage and get marketplace ID
+                    AppLogging.sync(
+                      '[WidgetBuilder] DELETE widget — id=$schemaId, name=$schemaName',
+                    );
+                    final marketplaceId = await delStorage?.deleteWidget(
+                      schemaId,
+                    );
+                    AppLogging.widgets(
+                      '[WidgetBuilder] Deleted widget $schemaId, marketplaceId=$marketplaceId',
+                    );
+                    AppLogging.sync(
+                      '[WidgetBuilder] Widget deleted from storage, '
+                      'triggering drainOutboxNow()...',
+                    );
 
-              // Drain outbox immediately so the deletion syncs promptly
-              // (matching the pattern used by Automations)
-              final syncService = ref.read(widgetSyncServiceProvider);
-              AppLogging.sync(
-                '[WidgetBuilder] syncService=${syncService != null ? "exists(enabled=${syncService.isEnabled})" : "NULL"}',
-              );
-              await syncService?.drainOutboxNow();
-              AppLogging.sync(
-                '[WidgetBuilder] drainOutboxNow() complete after delete',
-              );
+                    // Drain outbox immediately so the deletion syncs promptly
+                    // (matching the pattern used by Automations)
+                    final syncService = ref.read(widgetSyncServiceProvider);
+                    AppLogging.sync(
+                      '[WidgetBuilder] syncService=${syncService != null ? "exists(enabled=${syncService.isEnabled})" : "NULL"}',
+                    );
+                    await syncService?.drainOutboxNow();
+                    AppLogging.sync(
+                      '[WidgetBuilder] drainOutboxNow() complete after delete',
+                    );
 
-              if (!mounted) return;
+                    if (!mounted) return;
 
-              // Remove from user profile using marketplace ID (or schema ID as fallback)
-              final idToRemoveFromProfile = marketplaceId ?? schemaId;
-              await profileNotifier.removeInstalledWidget(
-                idToRemoveFromProfile,
-              );
-              AppLogging.widgets(
-                '[WidgetBuilder] Removed $idToRemoveFromProfile from profile',
-              );
+                    // Remove from user profile using marketplace ID (or schema ID as fallback)
+                    final idToRemoveFromProfile = marketplaceId ?? schemaId;
+                    await profileNotifier.removeInstalledWidget(
+                      idToRemoveFromProfile,
+                    );
+                    AppLogging.widgets(
+                      '[WidgetBuilder] Removed $idToRemoveFromProfile from profile',
+                    );
 
-              if (!mounted) return;
+                    if (!mounted) return;
 
-              // Update marketplace IDs tracking
-              safeSetState(() {
-                _marketplaceIds.remove(marketplaceId ?? schemaId);
-              });
-              showGlobalSuccessSnackBar('Deleted "$schemaName"');
-            },
-            child: Text('Delete', style: TextStyle(color: AppTheme.errorRed)),
+                    // Update marketplace IDs tracking
+                    safeSetState(() {
+                      _marketplaceIds.remove(marketplaceId ?? schemaId);
+                    });
+                    showGlobalSuccessSnackBar('Deleted "$schemaName"');
+                  },
+                  child: Text(
+                    'Delete',
+                    style: TextStyle(color: AppTheme.errorRed),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1319,81 +1349,99 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
     // Show confirmation dialog with submission requirements
     AppLogging.marketplace('📋 Showing confirmation dialog...');
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.show<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: Text(
-          'Submit to Marketplace',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Submit "${schema.name}" for marketplace approval?',
-              style: TextStyle(color: context.textSecondary),
-            ),
-            SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: context.background,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: context.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 16,
-                        color: context.accentColor,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'Review Guidelines',
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    '• Widget will be reviewed for quality\n'
-                    '• Similar widgets may be rejected\n'
-                    '• You\'ll be credited as the author',
-                    style: TextStyle(
-                      color: context.textTertiary,
-                      fontSize: 12,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Submit to Marketplace',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: context.accentColor,
+          const SizedBox(height: 12),
+          Text(
+            'Submit "${schema.name}" for marketplace approval?',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.textSecondary),
+          ),
+          SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: context.background,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: context.border),
             ),
-            child: const Text('Submit', style: TextStyle(color: Colors.white)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: context.accentColor,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Review Guidelines',
+                      style: TextStyle(
+                        color: context.accentColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• Widget will be reviewed for quality\n'
+                  '• Similar widgets may be rejected\n'
+                  '• You\'ll be credited as the author',
+                  style: TextStyle(
+                    color: context.textTertiary,
+                    fontSize: 12,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: context.accentColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Submit'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1409,10 +1457,10 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
     // Show loading indicator
     AppLogging.marketplace('⏳ Showing loading indicator...');
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
+      isDismissible: false,
+      child: const Center(child: CircularProgressIndicator()),
     );
 
     try {
@@ -1455,75 +1503,83 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         );
         // Show duplicate warning
         if (mounted) {
-          showDialog(
+          AppBottomSheet.show(
             context: context,
-            builder: (context) => AlertDialog(
-              backgroundColor: context.card,
-              title: Row(
-                children: [
-                  Icon(
-                    Icons.warning_amber_rounded,
-                    color: AppTheme.warningYellow,
-                    size: 24,
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Similar Widget Found',
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'A similar widget already exists in the marketplace:',
-                    style: TextStyle(color: context.textSecondary),
-                  ),
-                  SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: context.background,
-                      borderRadius: BorderRadius.circular(8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: AppTheme.warningYellow,
+                      size: 24,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                    SizedBox(width: 8),
+                    Text(
+                      'Similar Widget Found',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'A similar widget already exists in the marketplace:',
+                  style: TextStyle(color: context.textSecondary),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: context.background,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        duplicateCheck.duplicateName ?? 'Unknown',
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (duplicateCheck.similarityScore != null) ...[
+                        const SizedBox(height: 4),
                         Text(
-                          duplicateCheck.duplicateName ?? 'Unknown',
+                          'Similarity: ${(duplicateCheck.similarityScore! * 100).toInt()}%',
                           style: TextStyle(
-                            color: context.textPrimary,
-                            fontWeight: FontWeight.w600,
+                            color: context.textTertiary,
+                            fontSize: 12,
                           ),
                         ),
-                        if (duplicateCheck.similarityScore != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            'Similarity: ${(duplicateCheck.similarityScore! * 100).toInt()}%',
-                            style: TextStyle(
-                              color: context.textTertiary,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
                       ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Consider making your widget more unique before submitting.',
+                  style: TextStyle(color: context.textTertiary, fontSize: 13),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: context.accentColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'Consider making your widget more unique before submitting.',
-                    style: TextStyle(color: context.textTertiary, fontSize: 13),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    'OK',
-                    style: TextStyle(color: context.accentColor),
+                    child: const Text('OK'),
                   ),
                 ),
               ],

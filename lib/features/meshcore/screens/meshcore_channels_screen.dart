@@ -557,152 +557,209 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     );
   }
 
-  void _showJoinHashtagDialog() {
+  void _showJoinHashtagDialog() async {
     final controller = TextEditingController();
 
-    showDialog(
+    final name = await AppBottomSheet.show<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        title: const Text(
-          'Join Hashtag Channel',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: 'Channel Name',
-            labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-            prefixText: '#',
-            prefixStyle: TextStyle(color: AccentColors.purple),
-            hintText: 'general',
-            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.05),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+      child: Builder(
+        builder: (sheetContext) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Join Hashtag Channel',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
             ),
-          ),
-          style: const TextStyle(color: Colors.white),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              maxLength: 32,
+              decoration: InputDecoration(
+                labelText: 'Channel Name',
+                prefixText: '#',
+                prefixStyle: TextStyle(color: AccentColors.purple),
+                hintText: 'general',
+              ),
+              style: TextStyle(color: context.textPrimary),
             ),
-          ),
-          TextButton(
-            onPressed: () async {
-              final name = controller.text.trim();
-              if (name.isEmpty) {
-                showErrorSnackBar(ctx, 'Please enter a channel name');
-                return;
-              }
-
-              Navigator.pop(ctx);
-
-              // Find next available index
-              final channelsState = ref.read(meshCoreChannelsProvider);
-              final existingIndices = channelsState.channels
-                  .map((c) => c.index)
-                  .toSet();
-              var newIndex = 0;
-              for (var i = 0; i < 8; i++) {
-                if (!existingIndices.contains(i)) {
-                  newIndex = i;
-                  break;
-                }
-              }
-
-              final channel = MeshCoreChannel.publicChannel(newIndex, name);
-              await ref
-                  .read(meshCoreChannelsProvider.notifier)
-                  .setChannel(channel);
-
-              if (mounted) {
-                showSuccessSnackBar(context, 'Joined #$name');
-              }
-            },
-            child: Text('Join', style: TextStyle(color: AccentColors.purple)),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(sheetContext),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: Colors.grey.shade700),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      final text = controller.text.trim();
+                      if (text.isEmpty) {
+                        showErrorSnackBar(
+                          sheetContext,
+                          'Please enter a channel name',
+                        );
+                        return;
+                      }
+                      Navigator.pop(sheetContext, text);
+                    },
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: AccentColors.purple,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Join'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
+
+    controller.dispose();
+    if (name == null || name.isEmpty || !mounted) return;
+
+    // Find next available index
+    final channelsState = ref.read(meshCoreChannelsProvider);
+    final existingIndices = channelsState.channels.map((c) => c.index).toSet();
+    var newIndex = 0;
+    for (var i = 0; i < 8; i++) {
+      if (!existingIndices.contains(i)) {
+        newIndex = i;
+        break;
+      }
+    }
+
+    final channel = MeshCoreChannel.publicChannel(newIndex, name);
+    await ref.read(meshCoreChannelsProvider.notifier).setChannel(channel);
+
+    if (mounted) {
+      showSuccessSnackBar(context, 'Joined #$name');
+    }
   }
 
   void _showEnterCodeDialog() {
     final controller = TextEditingController();
 
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        title: const Text(
-          'Enter Channel Code',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: 'Paste channel code here...',
-            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.05),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Enter Channel Code',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
           ),
-          style: const TextStyle(color: Colors.white, fontFamily: 'monospace'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            autofocus: true,
+            maxLines: 3,
+            maxLength: 256,
+            decoration: InputDecoration(
+              hintText: 'Paste channel code here...',
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.05),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            style: const TextStyle(
+              color: Colors.white,
+              fontFamily: 'monospace',
             ),
           ),
-          TextButton(
-            onPressed: () {
-              final code = controller.text.trim();
-              if (code.isEmpty) {
-                showErrorSnackBar(ctx, 'Please enter a channel code');
-                return;
-              }
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    final code = controller.text.trim();
+                    if (code.isEmpty) {
+                      showErrorSnackBar(context, 'Please enter a channel code');
+                      return;
+                    }
 
-              // Find next available channel index
-              final channelsState = ref.read(meshCoreChannelsProvider);
-              final existingIndices = channelsState.channels
-                  .map((c) => c.index)
-                  .toSet();
-              var newIndex = 0;
-              for (var i = 0; i < 8; i++) {
-                if (!existingIndices.contains(i)) {
-                  newIndex = i;
-                  break;
-                }
-              }
+                    // Find next available channel index
+                    final channelsState = ref.read(meshCoreChannelsProvider);
+                    final existingIndices = channelsState.channels
+                        .map((c) => c.index)
+                        .toSet();
+                    var newIndex = 0;
+                    for (var i = 0; i < 8; i++) {
+                      if (!existingIndices.contains(i)) {
+                        newIndex = i;
+                        break;
+                      }
+                    }
 
-              final channel = parseChannelCode(code, index: newIndex);
-              if (channel != null) {
-                Navigator.pop(ctx);
-                ref.read(meshCoreChannelsProvider.notifier).setChannel(channel);
-                showSuccessSnackBar(context, 'Joined ${channel.displayName}');
-              } else {
-                showErrorSnackBar(
-                  ctx,
-                  'Invalid channel code format (expected: name:pskHex)',
-                );
-              }
-            },
-            child: Text('Join', style: TextStyle(color: AccentColors.purple)),
+                    final channel = parseChannelCode(code, index: newIndex);
+                    if (channel != null) {
+                      Navigator.pop(context);
+                      ref
+                          .read(meshCoreChannelsProvider.notifier)
+                          .setChannel(channel);
+                      showSuccessSnackBar(
+                        context,
+                        'Joined ${channel.displayName}',
+                      );
+                    } else {
+                      showErrorSnackBar(
+                        context,
+                        'Invalid channel code format (expected: name:pskHex)',
+                      );
+                    }
+                  },
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: context.accentColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Join'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -784,43 +841,24 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     );
   }
 
-  void _confirmLeaveChannel(MeshCoreChannel channel) {
-    showDialog(
+  void _confirmLeaveChannel(MeshCoreChannel channel) async {
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        title: const Text(
-          'Leave Channel?',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Text(
-          'Are you sure you want to leave ${channel.displayName}?',
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              // Clear channel by setting empty name and default PSK
-              await ref
-                  .read(meshCoreChannelsProvider.notifier)
-                  .setChannel(MeshCoreChannel.empty(channel.index));
-              if (mounted) {
-                showSuccessSnackBar(context, 'Left ${channel.displayName}');
-              }
-            },
-            child: Text('Leave', style: TextStyle(color: AppTheme.errorRed)),
-          ),
-        ],
-      ),
+      title: 'Leave Channel?',
+      message: 'Are you sure you want to leave ${channel.displayName}?',
+      confirmLabel: 'Leave',
+      isDestructive: true,
     );
+
+    if (confirmed != true || !mounted) return;
+
+    // Clear channel by setting empty name and default PSK
+    await ref
+        .read(meshCoreChannelsProvider.notifier)
+        .setChannel(MeshCoreChannel.empty(channel.index));
+    if (mounted) {
+      showSuccessSnackBar(context, 'Left ${channel.displayName}');
+    }
   }
 
   void _disconnect() async {

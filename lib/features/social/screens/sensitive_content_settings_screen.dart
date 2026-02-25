@@ -328,10 +328,10 @@ class StrikeWarningDialog extends ConsumerStatefulWidget {
     final strikes = await strikesFuture;
     if (strikes.isEmpty || !context.mounted) return;
 
-    await showDialog<void>(
+    await AppBottomSheet.show<void>(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => StrikeWarningDialog(strikes: strikes),
+      isDismissible: false,
+      child: StrikeWarningDialog(strikes: strikes),
     );
   }
 
@@ -375,91 +375,95 @@ class _StrikeWarningDialogState extends ConsumerState<StrikeWarningDialog>
     final isWarning = strike.type == 'warning';
     final isSuspension = strike.type == 'suspension';
 
-    return AlertDialog(
-      icon: Icon(
-        isSuspension
-            ? Icons.block
-            : isWarning
-            ? Icons.warning_amber_rounded
-            : Icons.error_outline,
-        size: 48,
-        color: isSuspension
-            ? Colors.red
-            : isWarning
-            ? Colors.orange
-            : Colors.red.shade700,
-      ),
-      title: Text(
-        isSuspension
-            ? 'Account Suspended'
-            : isWarning
-            ? 'Community Guidelines Warning'
-            : 'Strike Against Your Account',
-        textAlign: TextAlign.center,
-      ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              strike.reason,
-              style: context.bodySecondaryStyle?.copyWith(
-                color: context.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (strike.expiresAt != null) ...[
-              _InfoRow(label: 'Expires', value: _formatDate(strike.expiresAt!)),
-            ],
-            _InfoRow(label: 'Date', value: _formatDate(strike.createdAt)),
-            if (strike.contentType != null) ...[
-              _InfoRow(label: 'Content Type', value: strike.contentType!),
-            ],
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: context.surfaceVariant.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                isSuspension
-                    ? 'Your account is temporarily suspended. You cannot post, '
-                          'comment, or create stories during this time.'
-                    : 'Repeated violations may result in account suspension or '
-                          'permanent ban. Please review our Community Guidelines.',
-                style: context.bodySmallStyle?.copyWith(
-                  color: context.textSecondary,
-                ),
-              ),
-            ),
-            if (widget.strikes.length > 1) ...[
-              const SizedBox(height: 12),
-              Text(
-                '${_currentIndex + 1} of ${widget.strikes.length} notices',
-                style: context.bodySmallStyle?.copyWith(
-                  color: context.textSecondary,
-                ),
-              ),
-            ],
-          ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          isSuspension
+              ? Icons.block
+              : isWarning
+              ? Icons.warning_amber_rounded
+              : Icons.error_outline,
+          size: 48,
+          color: isSuspension
+              ? Colors.red
+              : isWarning
+              ? Colors.orange
+              : Colors.red.shade700,
         ),
-      ),
-      actions: [
-        FilledButton(
-          onPressed: _isAcknowledging ? null : _acknowledgeAndNext,
-          child: _isAcknowledging
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(
-                  _currentIndex < widget.strikes.length - 1
-                      ? 'Next'
-                      : 'I Understand',
-                ),
+        const SizedBox(height: 16),
+        Text(
+          isSuspension
+              ? 'Account Suspended'
+              : isWarning
+              ? 'Community Guidelines Warning'
+              : 'Strike Against Your Account',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: context.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          strike.reason,
+          style: context.bodySecondaryStyle?.copyWith(
+            color: context.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (strike.expiresAt != null) ...[
+          _InfoRow(label: 'Expires', value: _formatDate(strike.expiresAt!)),
+        ],
+        _InfoRow(label: 'Date', value: _formatDate(strike.createdAt)),
+        if (strike.contentType != null) ...[
+          _InfoRow(label: 'Content Type', value: strike.contentType!),
+        ],
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: context.surfaceVariant.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            isSuspension
+                ? 'Your account is temporarily suspended. You cannot post, '
+                      'comment, or create stories during this time.'
+                : 'Repeated violations may result in account suspension or '
+                      'permanent ban. Please review our Community Guidelines.',
+            style: context.bodySmallStyle?.copyWith(
+              color: context.textSecondary,
+            ),
+          ),
+        ),
+        if (widget.strikes.length > 1) ...[
+          const SizedBox(height: 12),
+          Text(
+            '${_currentIndex + 1} of ${widget.strikes.length} notices',
+            style: context.bodySmallStyle?.copyWith(
+              color: context.textSecondary,
+            ),
+          ),
+        ],
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: _isAcknowledging ? null : _acknowledgeAndNext,
+            child: _isAcknowledging
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(
+                    _currentIndex < widget.strikes.length - 1
+                        ? 'Next'
+                        : 'I Understand',
+                  ),
+          ),
         ),
       ],
     );

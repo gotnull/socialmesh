@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/safety/error_handler.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/content_moderation_warning.dart';
 import '../../core/widgets/default_banner.dart';
@@ -860,23 +861,56 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
         ? 'Apple'
         : e.existingProviders.first;
 
-    final shouldLink = await showDialog<bool>(
+    final shouldLink = await AppBottomSheet.show<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: const Text('Link GitHub Account'),
-        content: Text(
-          'An account with ${e.email} already exists using $providerName.\n\n'
-          'Sign in with $providerName to link your GitHub account?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Link GitHub Account',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('Sign in with $providerName'),
+          const SizedBox(height: 12),
+          Text(
+            'An account with ${e.email} already exists using $providerName.\n\n'
+            'Sign in with $providerName to link your GitHub account?',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.grey.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text('Sign in with $providerName'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -964,23 +998,11 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       return;
     }
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Sign Out'),
-          ),
-        ],
-      ),
+      title: 'Sign Out',
+      message: 'Are you sure you want to sign out?',
+      confirmLabel: 'Sign Out',
     );
 
     if (confirmed == true && context.mounted) {
@@ -1008,50 +1030,34 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       return;
     }
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppBottomSheet.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        title: const Text('Delete Account'),
-        content: const Text(
+      title: 'Delete Account',
+      message:
           'This will permanently delete your account and all associated data. This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.errorRed),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
 
     if (confirmed != true || !context.mounted) return;
 
     // Show a non-dismissable loading indicator while deletion runs.
-    showDialog(
+    AppBottomSheet.show(
       context: context,
-      barrierDismissible: false,
-      builder: (_) => PopScope(
+      isDismissible: false,
+      child: PopScope(
         canPop: false,
-        child: AlertDialog(
-          backgroundColor: context.card,
-          content: Row(
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Text(
-                  'Deleting account...',
-                  style: TextStyle(color: context.textPrimary),
-                ),
+        child: Row(
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Text(
+                'Deleting account...',
+                style: TextStyle(color: context.textPrimary),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

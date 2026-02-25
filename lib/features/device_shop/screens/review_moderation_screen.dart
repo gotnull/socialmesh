@@ -199,10 +199,70 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
     // Capture provider before async gap
     final shopService = ref.read(deviceShopServiceProvider);
 
-    final reason = await showDialog<String>(
+    final reasonController = TextEditingController();
+    final reason = await AppBottomSheet.show<String>(
       context: context,
-      builder: (context) => const _RejectReasonDialog(),
+      child: Builder(
+        builder: (sheetContext) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Reject Review',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: 'Reason for rejection',
+                hintText: 'e.g., Inappropriate content, spam, etc.',
+              ),
+              maxLines: 3,
+              maxLength: 500,
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(sheetContext),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: Colors.grey.shade700),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () =>
+                        Navigator.pop(sheetContext, reasonController.text),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: AppTheme.errorRed,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Reject'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
+    reasonController.dispose();
 
     if (reason == null || reason.isEmpty) return;
     if (!mounted) return;
@@ -509,49 +569,6 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
           ],
         ),
       ),
-    );
-  }
-}
-
-class _RejectReasonDialog extends StatefulWidget {
-  const _RejectReasonDialog();
-
-  @override
-  State<_RejectReasonDialog> createState() => _RejectReasonDialogState();
-}
-
-class _RejectReasonDialogState extends State<_RejectReasonDialog> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Reject Review'),
-      content: TextField(
-        controller: _controller,
-        decoration: const InputDecoration(
-          labelText: 'Reason for rejection',
-          hintText: 'e.g., Inappropriate content, spam, etc.',
-        ),
-        maxLines: 3,
-        autofocus: true,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, _controller.text),
-          child: const Text('Reject'),
-        ),
-      ],
     );
   }
 }
