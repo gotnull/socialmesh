@@ -380,6 +380,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               horizontal: 16,
               vertical: 14,
             ),
+            counterText: '',
           ),
           onChanged: (value) {
             setState(() {

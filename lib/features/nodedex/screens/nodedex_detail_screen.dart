@@ -1395,6 +1395,7 @@ class _UserNoteCard extends StatelessWidget {
                       fontSize: 10,
                       color: context.textTertiary,
                     ),
+                    counterText: '',
                   ),
                 ),
               )

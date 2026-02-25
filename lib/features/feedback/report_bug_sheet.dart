@@ -281,6 +281,7 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                               ),
                               borderSide: BorderSide.none,
                             ),
+                            counterText: '',
                           ),
                           style: TextStyle(color: context.textPrimary),
                           onTapOutside: (_) => FocusScope.of(context).unfocus(),

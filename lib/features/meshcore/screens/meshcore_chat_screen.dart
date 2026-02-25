@@ -677,6 +677,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                   horizontal: 16,
                   vertical: 10,
                 ),
+                counterText: '',
               ),
               style: const TextStyle(color: Colors.white),
               onSubmitted: (_) => _sendMessage(),

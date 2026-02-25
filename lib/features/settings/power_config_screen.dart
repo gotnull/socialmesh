@@ -336,6 +336,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                                           color: context.border,
                                         ),
                                       ),
+                                      counterText: '',
                                     ),
                                     initialValue: _adcMultiplier
                                         .toStringAsFixed(2),

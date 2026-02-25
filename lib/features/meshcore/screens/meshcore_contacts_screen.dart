@@ -666,6 +666,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                 borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide.none,
               ),
+              counterText: '',
             ),
             style: const TextStyle(
               color: Colors.white,

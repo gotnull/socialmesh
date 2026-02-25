@@ -220,6 +220,7 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard>
               decoration: const InputDecoration(
                 labelText: 'Reason for rejection',
                 hintText: 'e.g., Inappropriate content, spam, etc.',
+                counterText: '',
               ),
               maxLines: 3,
               maxLength: 500,

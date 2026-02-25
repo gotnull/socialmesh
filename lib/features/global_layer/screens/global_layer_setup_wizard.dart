@@ -2123,6 +2123,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
           horizontal: 14,
           vertical: 14,
         ),
+        counterText: '',
       ),
     );
   }

@@ -225,24 +225,31 @@ class _IcoHelpAppBarButtonState extends ConsumerState<IcoHelpAppBarButton>
   @override
   Widget build(BuildContext context) {
     final helpState = ref.watch(helpProvider);
-    final isHelpActive = helpState.activeTourId != null;
+    final isThisTourActive = helpState.activeTourId == widget.topicId;
 
     return AnimatedBuilder(
       animation: _ringController,
       builder: (context, child) {
-        final ringOpacity = isHelpActive
+        final ringOpacity = isThisTourActive
             ? 0.5 + (_ringController.value * 0.5)
             : 0.0;
-        final ringScale = isHelpActive
+        final ringScale = isThisTourActive
             ? 1.0 + (_ringController.value * 0.15)
             : 1.0;
 
         return GestureDetector(
           onTap: () {
             HapticFeedback.lightImpact();
-            if (isHelpActive) {
+            final activeTourId = ref.read(helpProvider).activeTourId;
+            if (activeTourId == widget.topicId) {
+              // Tapping while this topic's tour is active — dismiss it
               ref.read(helpProvider.notifier).dismissTopic(widget.topicId);
+            } else if (activeTourId != null) {
+              // Different tour is active — cancel it and start this one
+              ref.read(helpProvider.notifier).cancelTour();
+              ref.read(helpProvider.notifier).startTour(widget.topicId);
             } else {
+              // No tour active — start this one
               ref.read(helpProvider.notifier).startTour(widget.topicId);
             }
           },
@@ -255,7 +262,7 @@ class _IcoHelpAppBarButtonState extends ConsumerState<IcoHelpAppBarButton>
               alignment: Alignment.center,
               children: [
                 // Animated ring when help mode is active
-                if (isHelpActive)
+                if (isThisTourActive)
                   Transform.scale(
                     scale: ringScale,
                     child: Container(
@@ -278,13 +285,13 @@ class _IcoHelpAppBarButtonState extends ConsumerState<IcoHelpAppBarButton>
                   height: 32,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isHelpActive
+                    color: isThisTourActive
                         ? context.accentColor.withValues(alpha: 0.2)
                         : Colors.transparent,
                   ),
                   child: Icon(
-                    isHelpActive ? Icons.help : Icons.help_outline,
-                    color: isHelpActive
+                    isThisTourActive ? Icons.help : Icons.help_outline,
+                    color: isThisTourActive
                         ? context.accentColor
                         : context.textSecondary,
                     size: 22,

@@ -415,7 +415,7 @@ class PremiumTextField extends ConsumerWidget {
       return TextField(
         maxLength: 100,
         controller: controller,
-        decoration: baseDecoration,
+        decoration: baseDecoration.copyWith(counterText: ''),
         maxLines: maxLines,
       );
     }
@@ -432,6 +432,7 @@ class PremiumTextField extends ConsumerWidget {
             maxLength: 100,
             controller: controller,
             decoration: baseDecoration.copyWith(
+              counterText: '',
               suffixIcon: Icon(
                 Icons.lock,
                 size: 18,

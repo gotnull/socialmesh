@@ -148,6 +148,7 @@ class _TakFilterBarState extends ConsumerState<TakFilterBar> {
                   ),
                   filled: true,
                   fillColor: theme.colorScheme.surface.withValues(alpha: 0.5),
+                  counterText: '',
                 ),
                 style: theme.textTheme.bodySmall,
                 onChanged: (query) {

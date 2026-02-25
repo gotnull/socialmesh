@@ -35,6 +35,9 @@ jobs:
       - name: Check formatting
         run: dart format --set-exit-if-changed .
 
+      - name: Socialmesh lint
+        run: bash scripts/hooks/socialmesh-lint.sh --all
+
       - name: Analyze
         run: flutter analyze
 

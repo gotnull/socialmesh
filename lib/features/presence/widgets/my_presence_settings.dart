@@ -143,6 +143,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings>
                         },
                       )
                     : null,
+                counterText: '',
               ),
               onChanged: (_) => setState(() {}),
               autofocus: true,

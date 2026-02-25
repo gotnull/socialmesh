@@ -983,6 +983,7 @@ class _NodeListPanel extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radius10),
                     borderSide: BorderSide.none,
                   ),
+                  counterText: '',
                 ),
                 onChanged: onSearchChanged,
               ),

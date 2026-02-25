@@ -1014,6 +1014,7 @@ class _EncounterConfigState extends State<_EncounterConfig> {
                 borderRadius: BorderRadius.circular(AppTheme.radius4),
                 borderSide: const BorderSide(color: _kQueryAccent),
               ),
+              counterText: '',
             ),
             onChanged: (val) {
               final parsed = int.tryParse(val);
@@ -1183,6 +1184,7 @@ class _NameConfigState extends State<_NameConfig> {
             borderRadius: BorderRadius.circular(AppTheme.radius6),
             borderSide: const BorderSide(color: _kQueryAccent),
           ),
+          counterText: '',
         ),
         onChanged: (val) {
           widget.config.substring = val;

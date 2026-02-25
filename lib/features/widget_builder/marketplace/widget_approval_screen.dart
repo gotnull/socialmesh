@@ -132,6 +132,7 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen>
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide.none,
               ),
+              counterText: '',
             ),
             style: TextStyle(color: context.textPrimary),
           ),

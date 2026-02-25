@@ -1299,7 +1299,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     return HelpTourController(
       topicId: 'signal_creation',
       stepKeys: const {},
-      child: GlassScaffold.body(
+      child: GlassScaffold(
         leading: IconButton(
           icon: Icon(
             Icons.close,
@@ -1345,677 +1345,703 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
           ),
           const IcoHelpAppBarButton(topicId: 'signal_creation'),
         ],
-        body: GestureDetector(
-          onTap: _dismissKeyboard,
-          behavior: HitTestBehavior.opaque,
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(
-                    AppTheme.spacing20,
-                    8,
-                    20,
-                    20,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (myNodeNum == null &&
-                          connectivity.isBleConnected &&
-                          Platform.isIOS) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: context.card,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius8,
-                            ),
-                            border: Border.all(
-                              color: context.border.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                Icons.warning_amber_rounded,
-                                size: 18,
-                                color: context.textTertiary,
-                              ),
-                              const SizedBox(width: AppTheme.spacing8),
-                              Expanded(
-                                child: Text(
-                                  'Connected to BLE but no mesh traffic detected. On iOS, Airplane Mode can block BLE traffic even when connected. Turn off Airplane Mode or toggle Bluetooth.',
-                                  style: TextStyle(
-                                    color: context.textTertiary,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spacing16),
-                      ],
-
-                      // Modern floating input container with gradient accent border
-                      FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: SlideTransition(
-                          position: _slideAnimation,
-                          child: GradientBorderContainer(
-                            borderRadius: 24,
-                            borderWidth: 4,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Text input area
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    20,
-                                    16,
-                                    20,
-                                    8,
-                                  ),
-                                  child: TextField(
-                                    controller: _contentController,
-                                    focusNode: _contentFocusNode,
-                                    enabled: !_isSubmitting,
-                                    maxLines: 8,
-                                    minLines: 5,
-                                    maxLength: _maxLength,
-                                    maxLengthEnforcement:
-                                        MaxLengthEnforcement.enforced,
-                                    textCapitalization:
-                                        TextCapitalization.sentences,
-                                    inputFormatters: [
-                                      LengthLimitingTextInputFormatter(
-                                        _maxLength,
-                                      ),
-                                    ],
-                                    style: TextStyle(
-                                      color: context.textPrimary,
-                                      fontSize: 16,
-                                      height: 1.4,
-                                    ),
-                                    decoration: InputDecoration(
-                                      hintText: 'What are you signaling?',
-                                      hintStyle: TextStyle(
-                                        color: context.textTertiary,
-                                        fontSize: 16,
-                                      ),
-                                      border: InputBorder.none,
-                                      enabledBorder: InputBorder.none,
-                                      focusedBorder: InputBorder.none,
-                                      disabledBorder: InputBorder.none,
-                                      errorBorder: InputBorder.none,
-                                      focusedErrorBorder: InputBorder.none,
-                                      isDense: true,
-                                      contentPadding: EdgeInsets.zero,
-                                      counterText: '',
-                                    ),
-                                    onChanged: (_) => setState(() {}),
-                                  ),
-                                ),
-                                // Bottom action bar
-                                Container(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    12,
-                                    0,
-                                    12,
-                                    10,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      // Image button
-                                      if (canUseCloud)
-                                        _InputActionButton(
-                                          icon: Icons.image_outlined,
-                                          isSelected:
-                                              _imageLocalPaths.isNotEmpty,
-                                          isLoading: _isValidatingImage,
-                                          label: _imageLocalPaths.isNotEmpty
-                                              ? '${_imageLocalPaths.length}'
-                                              : null,
-                                          onTap: () {
-                                            if (canUseCloud &&
-                                                !_isSubmitting &&
-                                                !_isValidatingImage) {
-                                              _pickImage();
-                                              return;
-                                            }
-                                            if (!canUseCloud &&
-                                                connectivity.hasInternet) {
-                                              HapticFeedback.mediumImpact();
-                                              setState(
-                                                () => _cloudBannerHighlight =
-                                                    true,
-                                              );
-                                              _bannerShakeController.forward(
-                                                from: 0,
-                                              );
-                                            }
-                                          },
-                                        ),
-                                      // Location button (toggle: tap to add or remove)
-                                      _InputActionButton(
-                                        icon: _location != null
-                                            ? Icons.location_off_outlined
-                                            : Icons.location_on_outlined,
-                                        isSelected: _location != null,
-                                        isLoading:
-                                            _isLoadingLocation ||
-                                            isAcquiringLocation,
-                                        isEnabled: hasNodeLocation,
-                                        tooltip: hasNodeLocation
-                                            ? (_location != null
-                                                  ? 'Remove location'
-                                                  : 'Add location')
-                                            : (isAcquiringLocation
-                                                  ? 'Acquiring device location...'
-                                                  : 'No device connected'),
-                                        onTap:
-                                            _isSubmitting || _isLoadingLocation
-                                            ? null
-                                            : () {
-                                                if (_location != null) {
-                                                  _removeLocation();
-                                                } else {
-                                                  _getLocation();
-                                                }
-                                              },
-                                        onDisabledTap:
-                                            !hasNodeLocation &&
-                                                !isAcquiringLocation
-                                            ? () {
-                                                HapticFeedback.lightImpact();
-                                                showInfoSnackBar(
-                                                  context,
-                                                  'Connect a device to add location to your signal.',
-                                                );
-                                              }
-                                            : null,
-                                      ),
-                                      // TTL button (shows current selection)
-                                      _InputActionButton(
-                                        icon: Icons.timer_outlined,
-                                        label: _getTTLShortText(),
-                                        onTap: _isSubmitting
-                                            ? null
-                                            : () => _showTTLPicker(context),
-                                      ),
-                                      // Settings
-                                      _InputActionButton(
-                                        icon: Icons.tune,
-                                        isEnabled: hasNodeLocation,
-                                        onTap: _isSubmitting || !hasNodeLocation
-                                            ? null
-                                            : () {
-                                                Navigator.of(context).push(
-                                                  MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        const SignalSettingsScreen(),
-                                                  ),
-                                                );
-                                              },
-                                      ),
-                                      const Spacer(),
-                                      // Character count
-                                      SizedBox(
-                                        width: 36,
-                                        height: 36,
-                                        child: Stack(
-                                          alignment: Alignment.center,
-                                          children: [
-                                            CircularProgressIndicator(
-                                              value:
-                                                  (_contentController
-                                                              .text
-                                                              .length /
-                                                          _maxLength)
-                                                      .clamp(0.0, 1.0),
-                                              strokeWidth: 2.5,
-                                              backgroundColor: context.border
-                                                  .withValues(alpha: 0.2),
-                                              color: _remainingChars < 0
-                                                  ? Colors.red
-                                                  : _remainingChars < 20
-                                                  ? Colors.orange
-                                                  : context.accentColor,
-                                            ),
-                                            Text(
-                                              '$_remainingChars',
-                                              style: TextStyle(
-                                                color: _remainingChars < 0
-                                                    ? Colors.red
-                                                    : _remainingChars < 20
-                                                    ? Colors.orange
-                                                    : context.textTertiary,
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+        slivers: [
+          SliverFillRemaining(
+            hasScrollBody: true,
+            child: Column(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _dismissKeyboard,
+                    behavior: HitTestBehavior.opaque,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
                       ),
-
-                      // Intent picker row
-                      const SizedBox(height: AppTheme.spacing16),
-                      _PresenceIntentRow(
-                        intent: _selectedIntent,
-                        onTap: _isSubmitting ? null : _showIntentPicker,
+                      padding: const EdgeInsets.fromLTRB(
+                        AppTheme.spacing20,
+                        AppTheme.spacing8,
+                        AppTheme.spacing20,
+                        AppTheme.spacing20,
                       ),
-
-                      // Short status field
-                      const SizedBox(height: AppTheme.spacing12),
-                      _ShortStatusField(
-                        controller: _statusController,
-                        enabled: !_isSubmitting,
-                        onChanged: (_) => setState(() {}),
-                      ),
-
-                      // Images preview grid
-                      if (showImages) ...[
-                        const SizedBox(height: AppTheme.spacing16),
-                        ScaleTransition(
-                          scale: _imageScaleAnimation,
-                          child: FadeTransition(
-                            opacity: _imageFadeAnimation,
-                            child: _buildImagesGrid(),
-                          ),
-                        ),
-                      ],
-
-                      // Location loading indicator
-                      if (_isLoadingLocation && _location == null) ...[
-                        const SizedBox(height: AppTheme.spacing12),
-                        FadeTransition(
-                          opacity: _locationLoadingController,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: context.card,
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radius12,
-                              ),
-                              border: Border.all(
-                                color: context.border.withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: context.accentColor,
-                                  ),
-                                ),
-                                const SizedBox(width: AppTheme.spacing10),
-                                Text(
-                                  'Retrieving device location...',
-                                  style: TextStyle(
-                                    color: context.textSecondary,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-
-                      // Location preview (only if no images - otherwise shown as pill on image)
-                      if (_location != null && !showImages) ...[
-                        const SizedBox(height: AppTheme.spacing12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: context.card,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius12,
-                            ),
-                            border: Border.all(
-                              color: context.border.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.location_on,
-                                size: 18,
-                                color: context.accentColor,
-                              ),
-                              const SizedBox(width: AppTheme.spacing10),
-                              Expanded(
-                                child: Text(
-                                  _location!.name ?? 'Current location',
-                                  style: TextStyle(
-                                    color: context.textPrimary,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                              BouncyTap(
-                                onTap: _isSubmitting ? null : _removeLocation,
-                                child: Icon(
-                                  Icons.close,
-                                  size: 18,
-                                  color: context.textTertiary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-
-                      const SizedBox(height: AppTheme.spacing16),
-
-                      // Privacy note
-                      Row(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.shield_outlined,
-                            size: 14,
-                            color: context.textTertiary,
-                          ),
-                          const SizedBox(width: AppTheme.spacing6),
-                          Expanded(
-                            child: Text(
-                              'Signal location uses mesh device position, rounded to ~${signalRadiusMeters}m.',
-                              style: TextStyle(
-                                color: context.textTertiary,
-                                fontSize: 11,
+                          if (myNodeNum == null &&
+                              connectivity.isBleConnected &&
+                              Platform.isIOS) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: context.card,
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius8,
+                                ),
+                                border: Border.all(
+                                  color: context.border.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.warning_amber_rounded,
+                                    size: 18,
+                                    color: context.textTertiary,
+                                  ),
+                                  const SizedBox(width: AppTheme.spacing8),
+                                  Expanded(
+                                    child: Text(
+                                      'Connected to BLE but no mesh traffic detected. On iOS, Airplane Mode can block BLE traffic even when connected. Turn off Airplane Mode or toggle Bluetooth.',
+                                      style: TextStyle(
+                                        color: context.textTertiary,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: AppTheme.spacing16),
+                          ],
+
+                          // Modern floating input container with gradient accent border
+                          FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: SlideTransition(
+                              position: _slideAnimation,
+                              child: GradientBorderContainer(
+                                borderRadius: 24,
+                                borderWidth: 4,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Text input area
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        AppTheme.spacing20,
+                                        AppTheme.spacing16,
+                                        AppTheme.spacing20,
+                                        AppTheme.spacing8,
+                                      ),
+                                      child: TextField(
+                                        controller: _contentController,
+                                        focusNode: _contentFocusNode,
+                                        enabled: !_isSubmitting,
+                                        maxLines: 8,
+                                        minLines: 5,
+                                        maxLength: _maxLength,
+                                        maxLengthEnforcement:
+                                            MaxLengthEnforcement.enforced,
+                                        textCapitalization:
+                                            TextCapitalization.sentences,
+                                        inputFormatters: [
+                                          LengthLimitingTextInputFormatter(
+                                            _maxLength,
+                                          ),
+                                        ],
+                                        style: TextStyle(
+                                          color: context.textPrimary,
+                                          fontSize: 16,
+                                          height: 1.4,
+                                        ),
+                                        decoration: InputDecoration(
+                                          hintText: 'What are you signaling?',
+                                          hintStyle: TextStyle(
+                                            color: context.textTertiary,
+                                            fontSize: 16,
+                                          ),
+                                          border: InputBorder.none,
+                                          enabledBorder: InputBorder.none,
+                                          focusedBorder: InputBorder.none,
+                                          disabledBorder: InputBorder.none,
+                                          errorBorder: InputBorder.none,
+                                          focusedErrorBorder: InputBorder.none,
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.zero,
+                                          counterText: '',
+                                        ),
+                                        onChanged: (_) => setState(() {}),
+                                      ),
+                                    ),
+                                    // Bottom action bar
+                                    Container(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        AppTheme.spacing12,
+                                        0,
+                                        AppTheme.spacing12,
+                                        AppTheme.spacing10,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          // Image button
+                                          if (canUseCloud)
+                                            _InputActionButton(
+                                              icon: Icons.image_outlined,
+                                              isSelected:
+                                                  _imageLocalPaths.isNotEmpty,
+                                              isLoading: _isValidatingImage,
+                                              label: _imageLocalPaths.isNotEmpty
+                                                  ? '${_imageLocalPaths.length}'
+                                                  : null,
+                                              onTap: () {
+                                                if (canUseCloud &&
+                                                    !_isSubmitting &&
+                                                    !_isValidatingImage) {
+                                                  _pickImage();
+                                                  return;
+                                                }
+                                                if (!canUseCloud &&
+                                                    connectivity.hasInternet) {
+                                                  HapticFeedback.mediumImpact();
+                                                  setState(
+                                                    () =>
+                                                        _cloudBannerHighlight =
+                                                            true,
+                                                  );
+                                                  _bannerShakeController
+                                                      .forward(from: 0);
+                                                }
+                                              },
+                                            ),
+                                          // Location button (toggle: tap to add or remove)
+                                          _InputActionButton(
+                                            icon: _location != null
+                                                ? Icons.location_off_outlined
+                                                : Icons.location_on_outlined,
+                                            isSelected: _location != null,
+                                            isLoading:
+                                                _isLoadingLocation ||
+                                                isAcquiringLocation,
+                                            isEnabled: hasNodeLocation,
+                                            tooltip: hasNodeLocation
+                                                ? (_location != null
+                                                      ? 'Remove location'
+                                                      : 'Add location')
+                                                : (isAcquiringLocation
+                                                      ? 'Acquiring device location...'
+                                                      : 'No device connected'),
+                                            onTap:
+                                                _isSubmitting ||
+                                                    _isLoadingLocation
+                                                ? null
+                                                : () {
+                                                    if (_location != null) {
+                                                      _removeLocation();
+                                                    } else {
+                                                      _getLocation();
+                                                    }
+                                                  },
+                                            onDisabledTap:
+                                                !hasNodeLocation &&
+                                                    !isAcquiringLocation
+                                                ? () {
+                                                    HapticFeedback.lightImpact();
+                                                    showInfoSnackBar(
+                                                      context,
+                                                      'Connect a device to add location to your signal.',
+                                                    );
+                                                  }
+                                                : null,
+                                          ),
+                                          // TTL button (shows current selection)
+                                          _InputActionButton(
+                                            icon: Icons.timer_outlined,
+                                            label: _getTTLShortText(),
+                                            onTap: _isSubmitting
+                                                ? null
+                                                : () => _showTTLPicker(context),
+                                          ),
+                                          // Settings
+                                          _InputActionButton(
+                                            icon: Icons.tune,
+                                            isEnabled: hasNodeLocation,
+                                            onTap:
+                                                _isSubmitting ||
+                                                    !hasNodeLocation
+                                                ? null
+                                                : () {
+                                                    Navigator.of(context).push(
+                                                      MaterialPageRoute(
+                                                        builder: (_) =>
+                                                            const SignalSettingsScreen(),
+                                                      ),
+                                                    );
+                                                  },
+                                          ),
+                                          const Spacer(),
+                                          // Character count
+                                          SizedBox(
+                                            width: 36,
+                                            height: 36,
+                                            child: Stack(
+                                              alignment: Alignment.center,
+                                              children: [
+                                                CircularProgressIndicator(
+                                                  value:
+                                                      (_contentController
+                                                                  .text
+                                                                  .length /
+                                                              _maxLength)
+                                                          .clamp(0.0, 1.0),
+                                                  strokeWidth: 2.5,
+                                                  backgroundColor: context
+                                                      .border
+                                                      .withValues(alpha: 0.2),
+                                                  color: _remainingChars < 0
+                                                      ? Colors.red
+                                                      : _remainingChars < 20
+                                                      ? Colors.orange
+                                                      : context.accentColor,
+                                                ),
+                                                Text(
+                                                  '$_remainingChars',
+                                                  style: TextStyle(
+                                                    color: _remainingChars < 0
+                                                        ? Colors.red
+                                                        : _remainingChars < 20
+                                                        ? Colors.orange
+                                                        : context.textTertiary,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
-                        ],
-                      ),
 
-                      const SizedBox(height: AppTheme.spacing16),
+                          // Intent picker row
+                          const SizedBox(height: AppTheme.spacing16),
+                          _PresenceIntentRow(
+                            intent: _selectedIntent,
+                            onTap: _isSubmitting ? null : _showIntentPicker,
+                          ),
 
-                      // Cloud availability banner
-                      if (!canUseCloud)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Builder(
-                            builder: (context) {
-                              final canTapToSubscribe =
-                                  !meshOnlyDebug && connectivity.hasInternet;
-                              final banner = Container(
-                                padding: const EdgeInsets.all(
-                                  AppTheme.spacing12,
+                          // Short status field
+                          const SizedBox(height: AppTheme.spacing12),
+                          _ShortStatusField(
+                            controller: _statusController,
+                            enabled: !_isSubmitting,
+                            onChanged: (_) => setState(() {}),
+                          ),
+
+                          // Images preview grid
+                          if (showImages) ...[
+                            const SizedBox(height: AppTheme.spacing16),
+                            ScaleTransition(
+                              scale: _imageScaleAnimation,
+                              child: FadeTransition(
+                                opacity: _imageFadeAnimation,
+                                child: _buildImagesGrid(),
+                              ),
+                            ),
+                          ],
+
+                          // Location loading indicator
+                          if (_isLoadingLocation && _location == null) ...[
+                            const SizedBox(height: AppTheme.spacing12),
+                            FadeTransition(
+                              opacity: _locationLoadingController,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: context.accentColor.withValues(
-                                    alpha: 0.15,
-                                  ),
+                                  color: context.card,
                                   borderRadius: BorderRadius.circular(
                                     AppTheme.radius12,
                                   ),
                                   border: Border.all(
-                                    color: context.accentColor.withValues(
-                                      alpha: 0.4,
+                                    color: context.border.withValues(
+                                      alpha: 0.3,
                                     ),
-                                    width: _cloudBannerHighlight ? 2 : 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: context.accentColor,
+                                      ),
+                                    ),
+                                    const SizedBox(width: AppTheme.spacing10),
+                                    Text(
+                                      'Retrieving device location...',
+                                      style: TextStyle(
+                                        color: context.textSecondary,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+
+                          // Location preview (only if no images - otherwise shown as pill on image)
+                          if (_location != null && !showImages) ...[
+                            const SizedBox(height: AppTheme.spacing12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: context.card,
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius12,
+                                ),
+                                border: Border.all(
+                                  color: context.border.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.location_on,
+                                    size: 18,
+                                    color: context.accentColor,
+                                  ),
+                                  const SizedBox(width: AppTheme.spacing10),
+                                  Expanded(
+                                    child: Text(
+                                      _location!.name ?? 'Current location',
+                                      style: TextStyle(
+                                        color: context.textPrimary,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                  BouncyTap(
+                                    onTap: _isSubmitting
+                                        ? null
+                                        : _removeLocation,
+                                    child: Icon(
+                                      Icons.close,
+                                      size: 18,
+                                      color: context.textTertiary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+
+                          const SizedBox(height: AppTheme.spacing16),
+
+                          // Privacy note
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.shield_outlined,
+                                size: 14,
+                                color: context.textTertiary,
+                              ),
+                              const SizedBox(width: AppTheme.spacing6),
+                              Expanded(
+                                child: Text(
+                                  'Signal location uses mesh device position, rounded to ~${signalRadiusMeters}m.',
+                                  style: TextStyle(
+                                    color: context.textTertiary,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: AppTheme.spacing16),
+
+                          // Cloud availability banner
+                          if (!canUseCloud)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Builder(
+                                builder: (context) {
+                                  final canTapToSubscribe =
+                                      !meshOnlyDebug &&
+                                      connectivity.hasInternet;
+                                  final banner = Container(
+                                    padding: const EdgeInsets.all(
+                                      AppTheme.spacing12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: context.accentColor.withValues(
+                                        alpha: 0.15,
+                                      ),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radius12,
+                                      ),
+                                      border: Border.all(
+                                        color: context.accentColor.withValues(
+                                          alpha: 0.4,
+                                        ),
+                                        width: _cloudBannerHighlight ? 2 : 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Icon(
+                                          Icons.cloud_off,
+                                          size: 18,
+                                          color: context.accentColor,
+                                        ),
+                                        const SizedBox(
+                                          width: AppTheme.spacing8,
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            meshOnlyDebug
+                                                ? 'Mesh-only debug mode enabled. Signals use local DB + mesh only.'
+                                                : connectivity.hasInternet
+                                                ? 'Sign in to enable images and cloud features.'
+                                                : 'Offline: images and cloud features unavailable.',
+                                            style: TextStyle(
+                                              color: context.textSecondary,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                        if (canTapToSubscribe) ...[
+                                          const SizedBox(
+                                            width: AppTheme.spacing8,
+                                          ),
+                                          Icon(
+                                            Icons.chevron_right,
+                                            size: 20,
+                                            color: context.accentColor,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  );
+
+                                  final animatedBanner = AnimatedBuilder(
+                                    animation: _bannerShakeAnimation,
+                                    builder: (ctx, child) {
+                                      final t = _bannerShakeAnimation.value;
+                                      final dx = sin(t * pi * 4) * 8; // shake
+                                      return Transform.translate(
+                                        offset: Offset(dx, 0),
+                                        child: child,
+                                      );
+                                    },
+                                    child: banner,
+                                  );
+
+                                  if (!canTapToSubscribe) {
+                                    return GestureDetector(
+                                      onTap: _dismissKeyboard,
+                                      child: animatedBanner,
+                                    );
+                                  }
+
+                                  return BouncyTap(
+                                    onTap: () {
+                                      _dismissKeyboard();
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const AccountSubscriptionsScreen(),
+                                        ),
+                                      );
+                                    },
+                                    child: animatedBanner,
+                                  );
+                                },
+                              ),
+                            ),
+
+                          if (Platform.isIOS &&
+                              !connectivity.hasInternet &&
+                              connectivity.isBleConnected)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Container(
+                                padding: const EdgeInsets.all(
+                                  AppTheme.spacing12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: context.card,
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius8,
+                                  ),
+                                  border: Border.all(
+                                    color: context.border.withValues(
+                                      alpha: 0.3,
+                                    ),
                                   ),
                                 ),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Icon(
-                                      Icons.cloud_off,
+                                      Icons.airplanemode_active,
                                       size: 18,
-                                      color: context.accentColor,
+                                      color: context.textTertiary,
                                     ),
                                     const SizedBox(width: AppTheme.spacing8),
                                     Expanded(
                                       child: Text(
-                                        meshOnlyDebug
-                                            ? 'Mesh-only debug mode enabled. Signals use local DB + mesh only.'
-                                            : connectivity.hasInternet
-                                            ? 'Sign in to enable images and cloud features.'
-                                            : 'Offline: images and cloud features unavailable.',
+                                        'iOS Airplane Mode can pause BLE mesh traffic even when connected. If signals stop, turn off Airplane Mode or toggle Bluetooth.',
                                         style: TextStyle(
-                                          color: context.textSecondary,
+                                          color: context.textTertiary,
                                           fontSize: 12,
                                         ),
                                       ),
                                     ),
-                                    if (canTapToSubscribe) ...[
-                                      const SizedBox(width: AppTheme.spacing8),
-                                      Icon(
-                                        Icons.chevron_right,
-                                        size: 20,
-                                        color: context.accentColor,
-                                      ),
-                                    ],
                                   ],
                                 ),
-                              );
-
-                              final animatedBanner = AnimatedBuilder(
-                                animation: _bannerShakeAnimation,
-                                builder: (ctx, child) {
-                                  final t = _bannerShakeAnimation.value;
-                                  final dx = sin(t * pi * 4) * 8; // shake
-                                  return Transform.translate(
-                                    offset: Offset(dx, 0),
-                                    child: child,
-                                  );
-                                },
-                                child: banner,
-                              );
-
-                              if (!canTapToSubscribe) {
-                                return GestureDetector(
-                                  onTap: _dismissKeyboard,
-                                  child: animatedBanner,
-                                );
-                              }
-
-                              return BouncyTap(
-                                onTap: () {
-                                  _dismissKeyboard();
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          const AccountSubscriptionsScreen(),
-                                    ),
-                                  );
-                                },
-                                child: animatedBanner,
-                              );
-                            },
-                          ),
-                        ),
-
-                      if (Platform.isIOS &&
-                          !connectivity.hasInternet &&
-                          connectivity.isBleConnected)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Container(
-                            padding: const EdgeInsets.all(AppTheme.spacing12),
-                            decoration: BoxDecoration(
-                              color: context.card,
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radius8,
-                              ),
-                              border: Border.all(
-                                color: context.border.withValues(alpha: 0.3),
                               ),
                             ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  Icons.airplanemode_active,
-                                  size: 18,
-                                  color: context.textTertiary,
-                                ),
-                                const SizedBox(width: AppTheme.spacing8),
-                                Expanded(
-                                  child: Text(
-                                    'iOS Airplane Mode can pause BLE mesh traffic even when connected. If signals stop, turn off Airplane Mode or toggle Bluetooth.',
-                                    style: TextStyle(
-                                      color: context.textTertiary,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
 
-                      // Info banner
-                      StatusBanner(
-                        type: StatusBannerType.custom,
-                        color: context.textTertiary,
-                        title:
-                            'Signals are temporary. They fade automatically and exist only while active.',
-                        borderRadius: 8,
+                          // Info banner
+                          StatusBanner(
+                            type: StatusBannerType.custom,
+                            color: context.textTertiary,
+                            title:
+                                'Signals are temporary. They fade automatically and exist only while active.',
+                            borderRadius: 8,
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              // Bottom send button
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position:
-                      Tween<Offset>(
-                        begin: const Offset(0, 0.3),
-                        end: Offset.zero,
-                      ).animate(
-                        CurvedAnimation(
-                          parent: _entryAnimationController,
-                          curve: const Interval(
-                            0.3,
-                            1.0,
-                            curve: Curves.easeOutCubic,
-                          ),
-                        ),
-                      ),
-                  child: Container(
-                    padding: EdgeInsets.fromLTRB(
-                      20,
-                      12,
-                      20,
-                      12 + MediaQuery.of(context).padding.bottom,
-                    ),
-                    decoration: BoxDecoration(
-                      color: context.background,
-                      border: Border(
-                        top: BorderSide(
-                          color: context.border.withValues(alpha: 0.2),
-                        ),
-                      ),
-                    ),
-                    child: Tooltip(
-                      message: submitBlockedReason ?? '',
-                      child: BouncyTap(
-                        onTap: canSubmit ? _submitSignal : null,
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          decoration: BoxDecoration(
-                            gradient: canSubmit
-                                ? LinearGradient(
-                                    begin: Alignment.centerLeft,
-                                    end: Alignment.centerRight,
-                                    colors: [
-                                      gradientColors[0],
-                                      gradientColors[1],
-                                    ],
-                                  )
-                                : null,
-                            color: canSubmit
-                                ? null
-                                : context.border.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius16,
+                // Send Signal button
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0, 0.3),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: _entryAnimationController,
+                            curve: const Interval(
+                              0.3,
+                              1.0,
+                              curve: Curves.easeOutCubic,
                             ),
-                            boxShadow: canSubmit
-                                ? [
-                                    BoxShadow(
-                                      color: gradientColors[0].withValues(
-                                        alpha: 0.4,
-                                      ),
-                                      blurRadius: 16,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ]
-                                : null,
                           ),
-                          child: _isSubmitting
-                              ? const Center(
-                                  child: SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      color: Colors.white,
+                        ),
+                    child: Container(
+                      padding: EdgeInsets.fromLTRB(
+                        AppTheme.spacing20,
+                        AppTheme.spacing12,
+                        AppTheme.spacing20,
+                        AppTheme.spacing12 +
+                            MediaQuery.of(context).padding.bottom,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.background,
+                        border: Border(
+                          top: BorderSide(
+                            color: context.border.withValues(alpha: 0.2),
+                          ),
+                        ),
+                      ),
+                      child: Tooltip(
+                        message: submitBlockedReason ?? '',
+                        child: BouncyTap(
+                          onTap: canSubmit ? _submitSignal : null,
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppTheme.spacing16,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: canSubmit
+                                  ? LinearGradient(
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                      colors: [
+                                        gradientColors[0],
+                                        gradientColors[1],
+                                      ],
+                                    )
+                                  : null,
+                              color: canSubmit
+                                  ? null
+                                  : context.border.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius16,
+                              ),
+                              boxShadow: canSubmit
+                                  ? [
+                                      BoxShadow(
+                                        color: gradientColors[0].withValues(
+                                          alpha: 0.4,
+                                        ),
+                                        blurRadius: 16,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: _isSubmitting
+                                ? const Center(
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.sensors,
-                                      size: 22,
-                                      color: canSubmit
-                                          ? Colors.white
-                                          : context.textTertiary,
-                                    ),
-                                    const SizedBox(width: AppTheme.spacing10),
-                                    Text(
-                                      'Send Signal',
-                                      style: TextStyle(
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.sensors,
+                                        size: 22,
                                         color: canSubmit
                                             ? Colors.white
                                             : context.textTertiary,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 16,
                                       ),
-                                    ),
-                                  ],
-                                ),
+                                      const SizedBox(width: AppTheme.spacing10),
+                                      Text(
+                                        'Send Signal',
+                                        style: TextStyle(
+                                          color: canSubmit
+                                              ? Colors.white
+                                              : context.textTertiary,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

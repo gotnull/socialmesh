@@ -1258,6 +1258,13 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
               const SizedBox(width: AppTheme.spacing12),
               Expanded(
                 child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.errorRed,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    ),
+                  ),
                   onPressed: () async {
                     // Pop bottom sheet immediately
                     Navigator.pop(context);
@@ -1327,9 +1334,9 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
                     });
                     showGlobalSuccessSnackBar('Deleted "$schemaName"');
                   },
-                  child: Text(
+                  child: const Text(
                     'Delete',
-                    style: TextStyle(color: AppTheme.errorRed),
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
               ),

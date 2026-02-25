@@ -996,6 +996,7 @@ class _AddTopicSheetState extends ConsumerState<_AddTopicSheet> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
+              counterText: '',
             ),
             textInputAction: TextInputAction.next,
             onChanged: (_) => setState(() {}),
@@ -1019,6 +1020,7 @@ class _AddTopicSheetState extends ConsumerState<_AddTopicSheet> {
               suffixIcon: _validation != null && _validation!.isValid
                   ? const Icon(Icons.check_circle, color: AppTheme.successGreen)
                   : null,
+              counterText: '',
             ),
             textInputAction: TextInputAction.done,
             onChanged: (_) => _validate(),
@@ -1121,6 +1123,7 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
+                    counterText: '',
                   ),
                   textInputAction: TextInputAction.next,
                   onChanged: (_) => setState(() {}),
@@ -1143,6 +1146,7 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
+                    counterText: '',
                   ),
                   textInputAction: TextInputAction.done,
                   onChanged: (_) => setState(() {}),

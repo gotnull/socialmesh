@@ -540,6 +540,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
                   color: context.textTertiary,
                   fontWeight: FontWeight.w400,
                 ),
+                counterText: '',
               ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),

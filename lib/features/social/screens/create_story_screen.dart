@@ -1304,6 +1304,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen>
                     autofocus: true,
                     onChanged: (_) => safeSetState(() {}),
                     onSubmitted: (_) => _finishTextInput(),
+                    decoration: const InputDecoration(counterText: ''),
                   ),
                 ),
               ),

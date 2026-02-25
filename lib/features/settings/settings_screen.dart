@@ -2824,6 +2824,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             },
                           ),
                           _SettingsTile(
+                            icon: Icons.help,
+                            title: 'Help Center',
+                            subtitle:
+                                'Interactive guides with Ico, your mesh guide',
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const HelpCenterScreen(),
+                              ),
+                            ),
+                          ),
+                          _SettingsTile(
                             icon: Icons.help_outline,
                             title: 'Help & Support',
                             subtitle: 'FAQ, troubleshooting, and contact info',

@@ -272,6 +272,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                           color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
+                      counterText: '',
                     ),
                   ),
 
@@ -302,6 +303,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                           color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
+                      counterText: '',
                     ),
                     maxLines: 2,
                   ),

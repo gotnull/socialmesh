@@ -421,6 +421,7 @@ class _ActionButtons extends ConsumerWidget {
             decoration: const InputDecoration(
               labelText: 'Assignee User ID',
               hintText: 'Enter user ID',
+              counterText: '',
             ),
           ),
           const SizedBox(height: AppTheme.spacing24),
@@ -487,6 +488,7 @@ class _ActionButtons extends ConsumerWidget {
             decoration: const InputDecoration(
               labelText: 'Note',
               hintText: 'Optional note for this transition',
+              counterText: '',
             ),
           ),
           const SizedBox(height: AppTheme.spacing24),

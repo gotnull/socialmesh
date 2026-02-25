@@ -512,6 +512,7 @@ class _RejectNotesSheetState extends State<_RejectNotesSheet> {
             decoration: const InputDecoration(
               labelText: 'Additional notes (optional)',
               border: OutlineInputBorder(),
+              counterText: '',
             ),
             maxLines: 2,
           ),

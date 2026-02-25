@@ -1049,21 +1049,13 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
       initialChildSize: 0.7,
       minChildSize: 0.5,
       maxChildSize: 0.9,
+      title: 'RTTTL Format Guide',
       builder: (scrollController) => SingleChildScrollView(
         controller: scrollController,
-        padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 24, 24),
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'RTTTL Format Guide',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: context.textPrimary,
-              ),
-            ),
-            SizedBox(height: AppTheme.spacing16),
             _buildHelpSection(
               'What is RTTTL?',
               'Ring Tone Text Transfer Language (RTTTL) is a format for creating musical output with simple text strings.',

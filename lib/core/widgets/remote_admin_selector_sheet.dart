@@ -178,6 +178,7 @@ class _RemoteAdminSelectorSheetState
                   vertical: 10,
                 ),
                 isDense: true,
+                counterText: '',
               ),
               onChanged: (value) => setState(() => _searchQuery = value),
             ),

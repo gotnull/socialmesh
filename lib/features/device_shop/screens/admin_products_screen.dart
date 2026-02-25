@@ -592,6 +592,7 @@ class _AdminProductEditScreenState extends ConsumerState<AdminProductEditScreen>
                     decoration: const InputDecoration(
                       labelText: 'Short Description',
                       hintText: 'Brief summary (max 150 chars)',
+                      counterText: '',
                     ),
                     maxLength: 150,
                   ),

@@ -330,7 +330,10 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
             TextField(
               maxLength: 100,
               onChanged: (value) => setSheetState(() => input = value.trim()),
-              decoration: const InputDecoration(hintText: 'DELETE'),
+              decoration: const InputDecoration(
+                hintText: 'DELETE',
+                counterText: '',
+              ),
             ),
             const SizedBox(height: AppTheme.spacing24),
             Row(

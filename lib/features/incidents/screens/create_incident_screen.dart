@@ -182,6 +182,7 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen>
         borderRadius: BorderRadius.circular(AppTheme.radius12),
         borderSide: const BorderSide(color: Colors.red),
       ),
+      counterText: '',
     );
   }
 

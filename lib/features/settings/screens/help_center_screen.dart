@@ -93,9 +93,10 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
         resizeToAvoidBottomInset: false,
         title: 'Help Center',
         slivers: [
-          // Ico mascot + progress header
-          SliverToBoxAdapter(
-            child: _ProgressHeader(
+          // Ico mascot + progress header (pinned, collapses on scroll)
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _ProgressHeaderDelegate(
               completedCount: completedCount,
               totalCount: totalCount,
             ),
@@ -256,7 +257,7 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
 
       slivers.add(
         SliverPersistentHeader(
-          pinned: true,
+          pinned: false,
           delegate: SectionHeaderDelegate(
             title: category,
             count: categoryTopics.length,
@@ -274,7 +275,7 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
               return _HelpTopicTile(
                 topic: topic,
                 isCompleted: isCompleted,
-                onTap: () => _startTour(topic.id),
+                onTap: () => _showTopicDetail(topic, isCompleted),
               );
             }, childCount: categoryTopics.length),
           ),
@@ -295,7 +296,7 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
           return _HelpTopicTile(
             topic: topic,
             isCompleted: isCompleted,
-            onTap: () => _startTour(topic.id),
+            onTap: () => _showTopicDetail(topic, isCompleted),
           );
         }, childCount: topics.length),
       ),
@@ -306,28 +307,111 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
   // Actions
   // ---------------------------------------------------------------------------
 
-  void _startTour(String topicId) {
+  void _showTopicDetail(HelpTopic topic, bool isCompleted) {
     ref.haptics.buttonTap();
 
-    // Capture refs before any async gap
-    final helpNotifier = ref.read(helpProvider.notifier);
-    final helpState = ref.read(helpProvider);
+    AppBottomSheet.showScrollable(
+      context: context,
+      initialChildSize: 0.75,
+      minChildSize: 0.4,
+      maxChildSize: 0.92,
+      title: topic.title,
+      footer: isCompleted
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: AppTheme.successGreen,
+                  size: 18,
+                ),
+                const SizedBox(width: AppTheme.spacing8),
+                Text(
+                  'Completed',
+                  style: TextStyle(
+                    color: AppTheme.successGreen,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            )
+          : SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  final helpNotifier = ref.read(helpProvider.notifier);
+                  helpNotifier.startTour(topic.id);
+                  helpNotifier.completeTour();
+                  Navigator.pop(context);
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.primaryMagenta,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppTheme.spacing14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  ),
+                ),
+                child: const Text(
+                  'Mark as Complete',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+      builder: (scrollController) {
+        return _TopicDetailContent(
+          topic: topic,
+          isCompleted: isCompleted,
+          scrollController: scrollController,
+          screenName: _screenNameForTopic(topic.id),
+        );
+      },
+    );
+  }
 
-    // Reset topic if already completed (replay)
-    if (helpState.isTopicCompleted(topicId)) {
-      helpNotifier.resetTopic(topicId);
-    }
-
-    // Navigate back and start tour
-    Navigator.pop(context);
-
-    // Delay to allow navigation to complete, then start tour
-    Future.delayed(const Duration(milliseconds: 500), () {
-      // helpNotifier is a captured Notifier — safe to call even if
-      // this widget is disposed, since it operates on provider state
-      // not widget state.
-      helpNotifier.startTour(topicId);
-    });
+  /// Returns a human-readable screen name for a topic, giving the user
+  /// context about where to find the feature in the app.
+  String? _screenNameForTopic(String topicId) {
+    return switch (topicId) {
+      'channels_overview' ||
+      'channel_creation' ||
+      'encryption_levels' => 'Channels',
+      'message_routing' => 'Messages',
+      'nodes_overview' || 'node_roles' => 'Nodes',
+      'signals_overview' || 'signal_detail' => 'Signal Feed',
+      'signal_creation' => 'Create Signal',
+      'device_connection' => 'Scanner',
+      'region_selection' => 'Region Selection',
+      'radio_config_overview' => 'Radio Config',
+      'signal_metrics' => 'Nodes',
+      'mesh_health_overview' => 'Mesh Health',
+      'reachability_overview' => 'Reachability',
+      'traceroute_overview' => 'Trace Route Log',
+      'map_overview' => 'Map',
+      'world_mesh_overview' => 'World Mesh',
+      'globe_overview' => 'Globe',
+      'mesh_3d_overview' => 'Mesh 3D',
+      'routes_overview' => 'Routes',
+      'timeline_overview' => 'Timeline',
+      'presence_overview' => 'Presence',
+      'aether_overview' => 'Aether',
+      'tak_gateway_overview' => 'TAK Gateway',
+      'dashboard_overview' => 'Widget Dashboard',
+      'widget_builder_overview' => 'Widget Builder',
+      'marketplace_overview' => 'Widget Marketplace',
+      'device_shop_overview' => 'Device Shop',
+      'nodedex_overview' ||
+      'nodedex_album' ||
+      'nodedex_detail' ||
+      'nodedex_constellation' => 'NodeDex',
+      'settings_overview' => 'Settings',
+      'profile_overview' => 'Profile',
+      'automations_overview' => 'Automations',
+      _ => null,
+    };
   }
 
   Future<void> _showResetDialog() async {
@@ -388,98 +472,198 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
 }
 
 // =============================================================================
-// Progress Header
+// Progress Header Delegate (pinned, collapses on scroll)
 // =============================================================================
 
-class _ProgressHeader extends StatelessWidget {
+class _ProgressHeaderDelegate extends SliverPersistentHeaderDelegate {
   final int completedCount;
   final int totalCount;
 
-  const _ProgressHeader({
+  _ProgressHeaderDelegate({
     required this.completedCount,
     required this.totalCount,
   });
 
+  static const double _maxHeight = 104.0;
+  static const double _minHeight = 40.0;
+
   @override
-  Widget build(BuildContext context) {
+  double get maxExtent => _maxHeight;
+
+  @override
+  double get minExtent => _minHeight;
+
+  @override
+  bool shouldRebuild(covariant _ProgressHeaderDelegate oldDelegate) {
+    return completedCount != oldDelegate.completedCount ||
+        totalCount != oldDelegate.totalCount;
+  }
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     final progress = totalCount > 0 ? completedCount / totalCount : 0.0;
     final allDone = completedCount == totalCount && totalCount > 0;
+    final barColor = allDone ? AppTheme.successGreen : AppTheme.primaryMagenta;
+
+    // 0.0 = fully expanded, 1.0 = fully collapsed
+    final collapseRatio = (shrinkOffset / (_maxHeight - _minHeight)).clamp(
+      0.0,
+      1.0,
+    );
+    // Expanded content fades out in the first 60% of collapse
+    final expandedOpacity = (1.0 - (collapseRatio / 0.6)).clamp(0.0, 1.0);
+    // Compact bar fades in during the last 40% of collapse
+    final compactOpacity = ((collapseRatio - 0.6) / 0.4).clamp(0.0, 1.0);
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 8),
-      child: Row(
+      color: context.background,
+      child: Stack(
         children: [
-          // Ico mascot
-          SizedBox(
-            width: 72,
-            height: 72,
-            child: MeshNodeBrain(
-              mood: allDone ? MeshBrainMood.happy : MeshBrainMood.inviting,
-              size: 60,
-            ),
-          ),
-          const SizedBox(width: AppTheme.spacing16),
-
-          // Text + progress bar
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  allDone
-                      ? 'Great work! All topics complete.'
-                      : 'Hey! I\'m Ico, your mesh guide.',
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
+          // Expanded state: Ico + text + progress bar
+          if (expandedOpacity > 0)
+            Opacity(
+              opacity: expandedOpacity,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  AppTheme.spacing12,
+                  AppTheme.spacing16,
+                  AppTheme.spacing8,
                 ),
-                const SizedBox(height: AppTheme.spacing4),
-                Text(
-                  allDone
-                      ? 'You can replay any tour anytime.'
-                      : 'Tap a topic to learn with interactive guides.',
-                  style: TextStyle(color: context.textSecondary, fontSize: 13),
-                ),
-                const SizedBox(height: AppTheme.spacing10),
-
-                // Progress bar + count
-                Row(
+                child: Row(
                   children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(AppTheme.radius4),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          minHeight: 6,
-                          backgroundColor: context.border.withValues(
-                            alpha: 0.3,
-                          ),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            allDone
-                                ? AppTheme.successGreen
-                                : AppTheme.primaryMagenta,
-                          ),
-                        ),
+                    SizedBox(
+                      width: 72,
+                      height: 72,
+                      child: MeshNodeBrain(
+                        mood: allDone
+                            ? MeshBrainMood.happy
+                            : MeshBrainMood.inviting,
+                        size: 60,
                       ),
                     ),
-                    const SizedBox(width: AppTheme.spacing12),
-                    Text(
-                      '$completedCount / $totalCount',
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: AppTheme.spacing16),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            allDone
+                                ? 'Great work! All topics complete.'
+                                : 'Hey! I\'m Ico, your mesh guide.',
+                            style: TextStyle(
+                              color: context.textPrimary,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spacing4),
+                          Text(
+                            allDone
+                                ? 'You can replay any tour anytime.'
+                                : 'Tap a topic to learn with interactive guides.',
+                            style: TextStyle(
+                              color: context.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spacing10),
+                          _ProgressBar(
+                            progress: progress,
+                            barColor: barColor,
+                            label: '$completedCount / $totalCount',
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ],
+              ),
+            ),
+
+          // Compact state: just progress bar + count
+          if (compactOpacity > 0)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Opacity(
+                opacity: compactOpacity,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing16,
+                    vertical: AppTheme.spacing10,
+                  ),
+                  child: _ProgressBar(
+                    progress: progress,
+                    barColor: barColor,
+                    label: '$completedCount / $totalCount',
+                  ),
+                ),
+              ),
+            ),
+
+          // Bottom border
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              height: 1,
+              color: context.border.withValues(alpha: compactOpacity * 0.3),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+// =============================================================================
+// Progress Bar (shared between expanded and compact states)
+// =============================================================================
+
+class _ProgressBar extends StatelessWidget {
+  final double progress;
+  final Color barColor;
+  final String label;
+
+  const _ProgressBar({
+    required this.progress,
+    required this.barColor,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppTheme.radius4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: context.border.withValues(alpha: 0.3),
+              valueColor: AlwaysStoppedAnimation<Color>(barColor),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppTheme.spacing12),
+        Text(
+          label,
+          style: TextStyle(
+            color: context.textTertiary,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -586,8 +770,10 @@ class _HelpTopicTile extends StatelessWidget {
                         label: '${topic.steps.length} steps',
                       ),
                       _MetadataChip(
-                        icon: isCompleted ? Icons.replay : Icons.play_arrow,
-                        label: isCompleted ? 'Replay' : 'Start',
+                        icon: isCompleted
+                            ? Icons.visibility
+                            : Icons.auto_stories_outlined,
+                        label: isCompleted ? 'Review' : 'View',
                         color: isCompleted
                             ? AppTheme.successGreen
                             : AppTheme.primaryMagenta,
@@ -633,6 +819,188 @@ class _MetadataChip extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+// =============================================================================
+// Topic Detail Content (scrollable bottom sheet body)
+// =============================================================================
+
+class _TopicDetailContent extends StatelessWidget {
+  final HelpTopic topic;
+  final bool isCompleted;
+  final ScrollController scrollController;
+  final String? screenName;
+
+  const _TopicDetailContent({
+    required this.topic,
+    required this.isCompleted,
+    required this.scrollController,
+    required this.screenName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      controller: scrollController,
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
+      children: [
+        // Description
+        Text(
+          topic.description,
+          style: TextStyle(
+            color: context.textSecondary,
+            fontSize: 14,
+            height: 1.4,
+          ),
+        ),
+
+        // Related screen hint
+        if (screenName != null) ...[
+          const SizedBox(height: AppTheme.spacing12),
+          Row(
+            children: [
+              Icon(Icons.place_outlined, size: 14, color: context.textTertiary),
+              const SizedBox(width: AppTheme.spacing4),
+              Text(
+                'Find this in: $screenName',
+                style: TextStyle(
+                  color: context.textTertiary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
+
+        const SizedBox(height: AppTheme.spacing20),
+
+        // Guide steps
+        ...topic.steps.asMap().entries.map(
+          (entry) => _StepCard(
+            stepNumber: entry.key + 1,
+            totalSteps: topic.steps.length,
+            step: entry.value,
+          ),
+        ),
+
+        const SizedBox(height: AppTheme.spacing12),
+      ],
+    );
+  }
+}
+
+// =============================================================================
+// Step Card (single help step rendered as readable guide content)
+// =============================================================================
+
+class _StepCard extends StatelessWidget {
+  final int stepNumber;
+  final int totalSteps;
+  final HelpStep step;
+
+  const _StepCard({
+    required this.stepNumber,
+    required this.totalSteps,
+    required this.step,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing12),
+      padding: const EdgeInsets.all(AppTheme.spacing14),
+      decoration: BoxDecoration(
+        color: context.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Step number
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryMagenta.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '$stepNumber',
+              style: TextStyle(
+                color: AppTheme.primaryMagenta,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing12),
+
+          // Step text with **bold** rendering
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: AppTheme.spacing4),
+              child: Text.rich(
+                TextSpan(
+                  children: _parseMarkdownBold(
+                    step.bubbleText,
+                    baseColor: context.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Parses **bold** markdown markers into styled [TextSpan]s.
+  /// Matches the rendering used by the in-app help tour speech bubbles.
+  static List<TextSpan> _parseMarkdownBold(
+    String text, {
+    required Color baseColor,
+  }) {
+    final spans = <TextSpan>[];
+    final regex = RegExp(r'\*\*(.+?)\*\*');
+    var lastEnd = 0;
+
+    for (final match in regex.allMatches(text)) {
+      if (match.start > lastEnd) {
+        spans.add(
+          TextSpan(
+            text: text.substring(lastEnd, match.start),
+            style: TextStyle(color: baseColor, fontSize: 14, height: 1.5),
+          ),
+        );
+      }
+      spans.add(
+        TextSpan(
+          text: match.group(1),
+          style: TextStyle(
+            color: AppTheme.primaryMagenta,
+            fontSize: 14,
+            height: 1.5,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+      lastEnd = match.end;
+    }
+
+    if (lastEnd < text.length) {
+      spans.add(
+        TextSpan(
+          text: text.substring(lastEnd),
+          style: TextStyle(color: baseColor, fontSize: 14, height: 1.5),
+        ),
+      );
+    }
+
+    return spans;
   }
 }
 

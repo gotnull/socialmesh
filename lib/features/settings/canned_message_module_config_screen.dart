@@ -384,6 +384,7 @@ class _CannedMessageModuleConfigScreenState
               filled: true,
               fillColor: context.surface,
               counterStyle: TextStyle(color: context.textTertiary),
+              counterText: '',
             ),
             onChanged: (value) {
               setState(() => _messagesChanged = true);

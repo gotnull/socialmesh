@@ -624,6 +624,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
               decoration: const InputDecoration(
                 hintText: 'Describe the issue...',
                 border: OutlineInputBorder(),
+                counterText: '',
               ),
               maxLines: 3,
               maxLength: 500,

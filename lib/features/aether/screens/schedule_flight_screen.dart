@@ -1417,6 +1417,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
           borderRadius: BorderRadius.circular(AppTheme.radius12),
           borderSide: BorderSide(color: AppTheme.errorRed),
         ),
+        counterText: '',
       ),
     );
   }
@@ -1775,6 +1776,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
               borderRadius: BorderRadius.circular(AppTheme.radius12),
               borderSide: BorderSide(color: AppTheme.errorRed),
             ),
+            counterText: '',
           ),
         ),
         if (_validationResult != null) ...[

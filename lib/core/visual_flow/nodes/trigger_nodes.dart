@@ -885,6 +885,7 @@ class _TextInputFieldState extends State<_TextInputField> {
             borderRadius: BorderRadius.circular(AppTheme.radius6),
             borderSide: BorderSide(color: kEventSignalColor, width: 1.5),
           ),
+          counterText: '',
         ),
       ),
     );
@@ -979,6 +980,7 @@ class _NodeNumFieldState extends State<_NodeNumField> {
                     color: kEventSignalColor.withValues(alpha: 0.6),
                   ),
                 ),
+                counterText: '',
               ),
             ),
           ),

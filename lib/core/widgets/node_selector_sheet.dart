@@ -176,6 +176,7 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
                   vertical: 10,
                 ),
                 isDense: true,
+                counterText: '',
               ),
               onChanged: (value) => setState(() => _searchQuery = value),
             ),

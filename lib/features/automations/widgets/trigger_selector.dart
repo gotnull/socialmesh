@@ -329,6 +329,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.border),
               ),
+              counterText: '',
             ),
           ),
         ],
@@ -385,6 +386,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.border),
               ),
+              counterText: '',
             ),
           ),
           const SizedBox(height: AppTheme.spacing16),
@@ -589,6 +591,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radius8),
                     ),
+                    counterText: '',
                   ),
                   onChanged: (value) {
                     final lat = double.tryParse(value);
@@ -620,6 +623,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radius8),
                     ),
+                    counterText: '',
                   ),
                   onChanged: (value) {
                     final lon = double.tryParse(value);

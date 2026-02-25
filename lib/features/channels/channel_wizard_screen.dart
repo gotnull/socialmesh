@@ -578,6 +578,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                 borderSide: BorderSide(color: context.accentColor, width: 2),
               ),
               counterStyle: TextStyle(color: context.textSecondary),
+              counterText: '',
             ),
             onChanged: (_) => setState(() {}),
           ),
@@ -1204,57 +1205,56 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
         : true;
 
     return Container(
-      padding: const EdgeInsets.only(
-        left: AppTheme.spacing24,
-        right: AppTheme.spacing24,
-        top: AppTheme.spacing12,
+      padding: EdgeInsets.fromLTRB(
+        AppTheme.spacing24,
+        AppTheme.spacing12,
+        AppTheme.spacing24,
+        AppTheme.spacing12 + MediaQuery.of(context).padding.bottom,
       ),
       decoration: BoxDecoration(
-        color: context.surface,
-        border: Border(top: BorderSide(color: context.border.withAlpha(128))),
+        color: context.background,
+        border: Border(
+          top: BorderSide(color: context.border.withValues(alpha: 0.2)),
+        ),
       ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            if (_currentStep > 0)
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _previousStep,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: BorderSide(color: context.border),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: const Text('Back'),
-                ),
-              ),
-            if (_currentStep > 0) SizedBox(width: AppTheme.spacing16),
+      child: Row(
+        children: [
+          if (_currentStep > 0)
             Expanded(
-              child: FilledButton(
-                onPressed: canProceed
-                    ? () {
-                        FocusScope.of(context).unfocus();
-                        if (_currentStep == _totalSteps - 1) {
-                          _saveChannel();
-                        } else {
-                          _nextStep();
-                        }
-                      }
-                    : null,
-                style: FilledButton.styleFrom(
-                  backgroundColor: context.accentColor,
-                  disabledBackgroundColor: context.accentColor.withAlpha(77),
+              child: OutlinedButton(
+                onPressed: _previousStep,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: BorderSide(color: context.border),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: Text(
-                  _currentStep == _totalSteps - 1
-                      ? 'Create Channel'
-                      : 'Continue',
-                ),
+                child: const Text('Back'),
               ),
             ),
-          ],
-        ),
+          if (_currentStep > 0) SizedBox(width: AppTheme.spacing16),
+          Expanded(
+            child: FilledButton(
+              onPressed: canProceed
+                  ? () {
+                      FocusScope.of(context).unfocus();
+                      if (_currentStep == _totalSteps - 1) {
+                        _saveChannel();
+                      } else {
+                        _nextStep();
+                      }
+                    }
+                  : null,
+              style: FilledButton.styleFrom(
+                backgroundColor: context.accentColor,
+                disabledBackgroundColor: context.accentColor.withAlpha(77),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: Text(
+                _currentStep == _totalSteps - 1 ? 'Create Channel' : 'Continue',
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

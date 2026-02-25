@@ -277,6 +277,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                             });
                           },
                         ),
+                        counterText: '',
                       ),
                       onChanged: (value) {
                         _validateAndDetectKey(value);

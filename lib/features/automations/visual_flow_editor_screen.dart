@@ -693,6 +693,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                counterText: '',
               ),
               onChanged: (_) {
                 ref.read(visualFlowProvider.notifier).markDirty();

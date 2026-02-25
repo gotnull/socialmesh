@@ -621,6 +621,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                       borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.border),
                     ),
+                    counterText: '',
                   ),
                   onChanged: (value) {
                     final parsed = int.tryParse(value);
@@ -742,6 +743,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                       borderRadius: BorderRadius.circular(AppTheme.radius8),
                       borderSide: BorderSide(color: context.border),
                     ),
+                    counterText: '',
                   ),
                   onChanged: (value) {
                     final parsed = double.tryParse(value);

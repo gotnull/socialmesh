@@ -467,6 +467,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
                   color: isValidPrivateKey ? context.border : AppTheme.errorRed,
                 ),
               ),
+              counterText: '',
             ),
             onChanged: (value) {
               setState(() => _privateKey = value);
@@ -809,6 +810,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
                 color: isValid ? context.border : AppTheme.errorRed,
               ),
             ),
+            counterText: '',
           ),
           onChanged: onChanged,
         ),

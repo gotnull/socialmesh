@@ -384,6 +384,7 @@ class _StoryTextEditorState extends State<StoryTextEditor> {
                                 border: InputBorder.none,
                                 isDense: true,
                                 contentPadding: EdgeInsets.zero,
+                                counterText: '',
                               ),
                               onChanged: (_) => setState(() {}),
                             ),

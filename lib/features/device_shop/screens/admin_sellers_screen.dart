@@ -464,6 +464,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                     decoration: const InputDecoration(
                       labelText: 'Seller Name *',
                       hintText: 'e.g., LilyGO, RAK Wireless',
+                      counterText: '',
                     ),
                     validator: (v) => v?.isEmpty == true ? 'Required' : null,
                   ),
@@ -475,6 +476,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                     decoration: const InputDecoration(
                       labelText: 'Description',
                       hintText: 'Brief description of the seller',
+                      counterText: '',
                     ),
                     maxLines: 3,
                   ),
@@ -489,6 +491,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                       labelText: 'Website URL *',
                       hintText: 'https://...',
                       prefixIcon: Icon(Icons.link),
+                      counterText: '',
                     ),
                     keyboardType: TextInputType.url,
                     validator: (v) => v?.isEmpty == true ? 'Required' : null,
@@ -502,6 +505,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                       labelText: 'Contact Email',
                       hintText: 'support@example.com',
                       prefixIcon: Icon(Icons.email),
+                      counterText: '',
                     ),
                     keyboardType: TextInputType.emailAddress,
                   ),
@@ -515,6 +519,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                     decoration: const InputDecoration(
                       labelText: 'Countries',
                       hintText: 'US, CA, UK, DE (comma separated)',
+                      counterText: '',
                     ),
                   ),
                   const SizedBox(height: AppTheme.spacing24),
@@ -720,6 +725,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
                 labelText: 'Discount Code',
                 hintText: 'e.g., MESH10',
                 prefixIcon: Icon(Icons.local_offer),
+                counterText: '',
               ),
               textCapitalization: TextCapitalization.characters,
             ),
@@ -730,6 +736,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
               decoration: const InputDecoration(
                 labelText: 'Display Label',
                 hintText: 'e.g., 10% off for Socialmesh users',
+                counterText: '',
               ),
             ),
             const SizedBox(height: AppTheme.spacing16),
@@ -772,6 +779,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen>
               decoration: const InputDecoration(
                 labelText: 'Terms & Conditions',
                 hintText: 'e.g., Cannot be combined with other offers',
+                counterText: '',
               ),
               maxLines: 2,
             ),

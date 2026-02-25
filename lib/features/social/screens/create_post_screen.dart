@@ -1048,6 +1048,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                 borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide(color: context.accentColor, width: 2),
               ),
+              counterText: '',
             ),
             autofocus: true,
           ),

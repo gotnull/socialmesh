@@ -2013,6 +2013,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
               borderRadius: BorderRadius.circular(AppTheme.radius4),
               borderSide: BorderSide(color: context.border),
             ),
+            counterText: '',
           ),
         ),
       ],
@@ -2913,6 +2914,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
             decoration: InputDecoration(
               hintText: 'Enter widget name',
               hintStyle: TextStyle(color: context.textTertiary),
+              counterText: '',
             ),
           ),
           const SizedBox(height: AppTheme.spacing24),

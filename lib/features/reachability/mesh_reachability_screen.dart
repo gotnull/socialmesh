@@ -167,31 +167,26 @@ class _MeshReachabilityScreenState
   }
 
   void _showInfoDialog(BuildContext context) {
-    AppBottomSheet.show(
+    AppBottomSheet.showScrollable(
       context: context,
-      maxHeightFraction: 0.85,
-      child: SingleChildScrollView(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.85,
+      title: 'About Reachability',
+      footer: SizedBox(
+        width: double.infinity,
+        child: FilledButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Got it'),
+        ),
+      ),
+      builder: (scrollController) => SingleChildScrollView(
+        controller: scrollController,
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                Icon(Icons.info_outline, color: context.textSecondary),
-                SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: Text(
-                    'About Reachability',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.spacing16),
             const _InfoSection(
               title: 'What is this?',
               content:
@@ -239,14 +234,7 @@ class _MeshReachabilityScreenState
                   '• Mesh topology changes constantly\n'
                   '• All estimates based on passive observation only',
             ),
-            const SizedBox(height: AppTheme.spacing24),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Got it'),
-              ),
-            ),
+            const SizedBox(height: AppTheme.spacing16),
           ],
         ),
       ),

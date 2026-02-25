@@ -471,6 +471,7 @@ class VariableTextFieldState extends State<VariableTextField> {
           vertical: 12,
         ),
         errorText: hasError ? 'Invalid: ${invalidVars.join(", ")}' : null,
+        counterText: '',
       ),
     );
   }

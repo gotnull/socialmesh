@@ -924,6 +924,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
+              counterText: '',
             ),
           ),
           SizedBox(height: AppTheme.spacing8),
@@ -978,6 +979,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
                 icon: const Icon(Icons.help_outline, size: 20),
                 onPressed: () => _showShortcutHelp(context),
               ),
+              counterText: '',
             ),
           ),
           const SizedBox(height: AppTheme.spacing8),
@@ -1395,6 +1397,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet>
                   borderRadius: BorderRadius.circular(AppTheme.radius12),
                   borderSide: BorderSide.none,
                 ),
+                counterText: '',
               ),
             ),
           ),

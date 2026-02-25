@@ -1507,6 +1507,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
                         fontSize: 10,
                         color: context.textTertiary,
                       ),
+                      counterText: '',
                     ),
                   ),
                 ],

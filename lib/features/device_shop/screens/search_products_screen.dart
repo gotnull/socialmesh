@@ -97,6 +97,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
           horizontal: 16,
           vertical: 12,
         ),
+        counterText: '',
       ),
       onChanged: _onSearchChanged,
       onSubmitted: _performSearch,

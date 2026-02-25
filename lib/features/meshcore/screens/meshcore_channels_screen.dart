@@ -584,6 +584,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                 prefixText: '#',
                 prefixStyle: TextStyle(color: AccentColors.purple),
                 hintText: 'general',
+                counterText: '',
               ),
               style: TextStyle(color: context.textPrimary),
             ),
@@ -687,6 +688,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                 borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide.none,
               ),
+              counterText: '',
             ),
             style: const TextStyle(
               color: Colors.white,

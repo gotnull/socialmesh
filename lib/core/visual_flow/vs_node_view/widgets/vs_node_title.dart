@@ -104,6 +104,7 @@ class _VSNodeTitleState extends State<VSNodeTitle> {
                           horizontal: 6,
                           vertical: 8,
                         ),
+                        counterText: '',
                       ),
                       onTapOutside: (_) => _cancelRename(),
                       onSubmitted: _commitRename,

@@ -2791,6 +2791,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
                               label: 'Callsign',
                               hint: 'Amateur radio callsign or identifier',
                               icon: Icons.badge_outlined,
+                              maxLength: 10,
                               textCapitalization: TextCapitalization.characters,
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
@@ -2956,6 +2957,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
               borderRadius: BorderRadius.circular(AppTheme.radius12),
               borderSide: BorderSide(color: context.accentColor),
             ),
+            counterText: '',
           ),
           maxLines: 3,
           maxLength: 200,
@@ -3016,7 +3018,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
               borderRadius: BorderRadius.circular(AppTheme.radius12),
               borderSide: BorderSide(color: context.accentColor),
             ),
-            counterText: maxLength != null ? null : '',
+            counterText: '',
           ),
           maxLines: maxLines,
           maxLength: maxLength,

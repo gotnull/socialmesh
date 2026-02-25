@@ -505,6 +505,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                 borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide.none,
               ),
+              counterText: '',
             ),
           ),
           const SizedBox(height: AppTheme.spacing16),

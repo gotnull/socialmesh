@@ -433,6 +433,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
                     horizontal: 14,
                     vertical: 14,
                   ),
+                  counterText: '',
                 ),
                 maxLength: 200,
                 maxLines: 2,

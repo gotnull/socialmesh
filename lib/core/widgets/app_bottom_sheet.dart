@@ -100,13 +100,20 @@ class AppBottomSheet extends StatelessWidget {
     );
   }
 
-  /// Shows a scrollable bottom sheet with drag handle
+  /// Shows a scrollable bottom sheet with drag handle.
+  ///
+  /// Optionally provide [title] to pin a header above the scrollable content,
+  /// and [footer] to pin a widget (typically a button) below it. Both stay
+  /// fixed while the body scrolls, matching the pattern used in the create
+  /// signal screen.
   static Future<T?> showScrollable<T>({
     required BuildContext context,
     required Widget Function(ScrollController controller) builder,
     double initialChildSize = 0.6,
     double minChildSize = 0.3,
     double maxChildSize = 0.9,
+    String? title,
+    Widget? footer,
   }) {
     HapticFeedback.lightImpact();
     return showModalBottomSheet<T>(
@@ -128,7 +135,39 @@ class AppBottomSheet extends StatelessWidget {
             child: Column(
               children: [
                 const _DragPill(),
+                // Pinned title row
+                if (title != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppTheme.spacing24,
+                      0,
+                      AppTheme.spacing24,
+                      AppTheme.spacing12,
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
                 Expanded(child: builder(scrollController)),
+                // Pinned footer
+                if (footer != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppTheme.spacing24,
+                      AppTheme.spacing8,
+                      AppTheme.spacing24,
+                      AppTheme.spacing16,
+                    ),
+                    child: footer,
+                  ),
               ],
             ),
           ),
@@ -566,6 +605,7 @@ class BottomSheetTextField extends StatelessWidget {
           borderSide: const BorderSide(color: AppTheme.errorRed, width: 2),
         ),
         counterStyle: TextStyle(color: context.textSecondary),
+        counterText: '',
       ),
     );
   }

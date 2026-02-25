@@ -440,6 +440,7 @@ class _TextEditorSheetState extends State<_TextEditorSheet> {
                       fontWeight: FontWeight.w600,
                     ),
                     border: InputBorder.none,
+                    counterText: '',
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
