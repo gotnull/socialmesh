@@ -195,8 +195,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
 
       // Eagerly activate the org claims provider so cached claims are
       // available immediately for enterprise query layers.
-      // ignore: unused_local_variable
-      final claims = ref.read(claimsProvider);
+      ref.read(claimsProvider);
 
       // Eagerly activate Cloud Sync services so they start on login,
       // not only when the user navigates to specific screens.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Vendored from vs_node_view v2.1.1
 // Original: https://github.com/Cunibon/vs_node_view
 // License: BSD-3-Clause (see LICENSE in this directory)

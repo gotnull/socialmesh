@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Glass App Bar Widget Tests
 //
 // Tests the glassmorphic app bar components to verify:

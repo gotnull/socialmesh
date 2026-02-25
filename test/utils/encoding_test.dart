@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/utils/encoding.dart';

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Vendored from vs_node_view v2.1.1 — BSD-3-Clause
 // Import paths rewritten for Socialmesh vendoring.
 // Modified: Enlarged touch targets for mobile usability (min 44dp hit area).

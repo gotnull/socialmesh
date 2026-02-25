@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 import 'package:flutter_test/flutter_test.dart';
 
 /// Assertion helper: verifies actions executed in expected order

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/features/widget_builder/models/widget_schema.dart';
 
