@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — CustomScrollView with SliverAppBar gradient header
 import 'dart:async';
 
 import 'package:flutter/material.dart';

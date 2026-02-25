@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — CustomScrollView with SliverPersistentHeader
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

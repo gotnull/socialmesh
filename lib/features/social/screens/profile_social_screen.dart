@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — CustomScrollView with conditional SliverAppBar and tabs
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';

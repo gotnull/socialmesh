@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// lint-allow: scaffold — full-bleed map Stack with overlaid panels, no app bar
 import 'dart:io';
 
 import 'package:flutter/material.dart';
