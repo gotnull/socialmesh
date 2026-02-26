@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
+import 'app_lifecycle_provider.dart';
 import 'auth_providers.dart';
 import 'connection_providers.dart';
 import '../core/logging.dart';
@@ -30,7 +31,26 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
     // Initial state
     _connectivity = Connectivity();
     _sub = _connectivity.onConnectivityChanged.listen(_onPlatformChanged);
-    _periodicTimer = Timer.periodic(_periodicCheckInterval, (_) => checkNow());
+    _startPeriodicTimer();
+
+    // Pause/resume the periodic reachability ping when the app is
+    // backgrounded/foregrounded. Pinging google.com every 10 seconds in the
+    // background wakes the network stack and drains battery for zero benefit.
+    ref.listen<bool>(appLifecycleProvider, (previous, isForeground) {
+      if (isForeground) {
+        _startPeriodicTimer();
+        // Run an immediate check so the UI has fresh data on resume.
+        checkNow();
+        AppLogging.connection(
+          '🔋 Connectivity: periodic timer resumed (app foregrounded)',
+        );
+      } else {
+        _stopPeriodicTimer();
+        AppLogging.connection(
+          '🔋 Connectivity: periodic timer paused (app backgrounded)',
+        );
+      }
+    });
 
     // Register cleanup
     ref.onDispose(() {
@@ -58,6 +78,16 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
 
   DateTime? _lastReachabilityCheck;
   bool? _lastReachable;
+
+  void _startPeriodicTimer() {
+    _periodicTimer?.cancel();
+    _periodicTimer = Timer.periodic(_periodicCheckInterval, (_) => checkNow());
+  }
+
+  void _stopPeriodicTimer() {
+    _periodicTimer?.cancel();
+    _periodicTimer = null;
+  }
 
   // For tests, allow forcing the state
   void setOnline(bool online, {String reason = 'forced'}) {

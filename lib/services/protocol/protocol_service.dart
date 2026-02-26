@@ -867,6 +867,7 @@ class ProtocolService {
   /// Start periodic RSSI polling from BLE connection
   void _startRssiPolling() {
     _rssiTimer?.cancel();
+    _rssiPaused = false;
     _rssiTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
       final rssi = await _transport.readRssi();
       if (rssi != null && rssi != _lastRssi) {
@@ -874,6 +875,34 @@ class ProtocolService {
         _rssiController.add(rssi);
       }
     });
+  }
+
+  /// Whether RSSI polling is currently paused (app backgrounded).
+  bool _rssiPaused = false;
+
+  /// Pause RSSI polling to conserve battery while the app is backgrounded.
+  ///
+  /// BLE `readRssi()` every 2 seconds wakes the Bluetooth stack and triggers
+  /// Live Activity UserDefaults writes. Over an 8-hour night that is ~14,400
+  /// unnecessary BLE round-trips. Pausing eliminates this entirely; the Live
+  /// Activity keeps the last-known value on the lock screen.
+  void pauseRssiPolling() {
+    if (_rssiPaused) return;
+    _rssiPaused = true;
+    _rssiTimer?.cancel();
+    _rssiTimer = null;
+    AppLogging.protocol('🔋 RSSI polling paused (app backgrounded)');
+  }
+
+  /// Resume RSSI polling when the app returns to the foreground.
+  void resumeRssiPolling() {
+    if (!_rssiPaused) return;
+    _rssiPaused = false;
+    // Only resume if the service is actively connected.
+    if (_transport.isConnected && _configurationComplete) {
+      _startRssiPolling();
+      AppLogging.protocol('🔋 RSSI polling resumed (app foregrounded)');
+    }
   }
 
   /// Poll for configuration data in background (non-blocking)
@@ -1843,8 +1872,12 @@ class ProtocolService {
           'hwModel=${metadata.hwModel.name}, hasWifi=${metadata.hasWifi}',
         );
 
-        // Update our node with the firmware version and other metadata
-        if (_myNodeNum != null && _nodes.containsKey(_myNodeNum)) {
+        // Only update local node — remote metadata responses must not
+        // overwrite the local device's cached firmware version or hardware
+        // model.
+        if (isLocalResponse &&
+            _myNodeNum != null &&
+            _nodes.containsKey(_myNodeNum)) {
           final existingNode = _nodes[_myNodeNum]!;
 
           // Determine hardware model - use metadata if valid, otherwise infer
@@ -5447,12 +5480,19 @@ class ProtocolService {
       'target=$target',
     );
 
-    // Read-modify-write: clone the device's current config so we preserve
+    // Read-modify-write: clone the device's cached config so we preserve
     // any firmware fields we don't expose in the UI.  Building a brand-new
     // Config_DeviceConfig from scratch zeroes out unknown fields, which can
     // cause the firmware to silently reject or mishandle the config.
+    //
+    // IMPORTANT: only use the cached config for LOCAL targets.
+    // _currentDeviceConfig always holds the LOCAL device's config (only
+    // updated when isLocalResponse is true in _handleAdminMessage).
+    // Cloning it for a remote target would contaminate the remote device
+    // with the local device's internal field values.
+    final isLocalTarget = target == null || target.isLocal;
     final config_pb.Config_DeviceConfig deviceConfig;
-    if (_currentDeviceConfig != null) {
+    if (isLocalTarget && _currentDeviceConfig != null) {
       // Clone by round-tripping through serialization — this preserves
       // every field the device sent us, including ones our generated
       // protobuf doesn't know about (unknown fields).
@@ -5460,14 +5500,15 @@ class ProtocolService {
         _currentDeviceConfig!.writeToBuffer(),
       );
       AppLogging.protocol(
-        'setDeviceConfig: cloned current config '
+        'setDeviceConfig: cloned local config '
         '(${_currentDeviceConfig!.writeToBuffer().length} bytes), '
         'existing role=${deviceConfig.role.name}',
       );
     } else {
       deviceConfig = config_pb.Config_DeviceConfig();
       AppLogging.protocol(
-        'setDeviceConfig: no cached config — building from scratch',
+        'setDeviceConfig: ${isLocalTarget ? 'no cached config' : 'remote target'} '
+        '— building from scratch',
       );
     }
 

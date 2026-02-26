@@ -11,6 +11,7 @@ import '../models/mesh_models.dart';
 import '../models/node_encounter.dart';
 import '../models/presence_confidence.dart';
 import '../providers/app_providers.dart';
+import '../providers/app_lifecycle_provider.dart';
 import '../features/automations/automation_providers.dart';
 import '../services/extended_presence_service.dart';
 
@@ -227,7 +228,26 @@ class PresenceNotifier extends Notifier<Map<int, NodePresence>> {
   @override
   Map<int, NodePresence> build() {
     ref.onDispose(() => _timer?.cancel());
-    _timer ??= Timer.periodic(_tickInterval, (_) => _recompute());
+    _startTimer();
+
+    // Pause/resume the periodic recompute timer when the app is
+    // backgrounded/foregrounded. Recomputing all node presence states every
+    // 30 seconds in the background serves no purpose — the UI is not visible.
+    ref.listen<bool>(appLifecycleProvider, (previous, isForeground) {
+      if (isForeground) {
+        _startTimer();
+        // Recompute immediately so the UI has fresh presence on resume.
+        _recompute();
+        AppLogging.debug(
+          '🔋 Presence: periodic timer resumed (app foregrounded)',
+        );
+      } else {
+        _stopTimer();
+        AppLogging.debug(
+          '🔋 Presence: periodic timer paused (app backgrounded)',
+        );
+      }
+    });
 
     ref.listen<Map<int, MeshNode>>(
       nodesProvider,
@@ -240,6 +260,16 @@ class PresenceNotifier extends Notifier<Map<int, NodePresence>> {
       logTransitions: false,
     );
     return initial;
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(_tickInterval, (_) => _recompute());
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    _timer = null;
   }
 
   void _recompute() {

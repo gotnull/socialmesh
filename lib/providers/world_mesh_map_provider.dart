@@ -8,6 +8,7 @@ import '../features/world_mesh/services/node_cache_service.dart';
 import '../features/world_mesh/world_mesh_filters.dart';
 import '../models/world_mesh_node.dart';
 import '../models/presence_confidence.dart';
+import '../providers/app_lifecycle_provider.dart';
 import '../providers/connectivity_providers.dart';
 import '../services/world_mesh_map_service.dart';
 
@@ -82,6 +83,25 @@ class WorldMeshMapNotifier extends Notifier<AsyncValue<WorldMeshMapState>> {
     // Start periodic refresh
     _startPeriodicRefresh();
 
+    // Pause/resume the periodic cloud fetch when the app is
+    // backgrounded/foregrounded. Fetching from the cloud API every 2 minutes
+    // while the screen is off wastes battery and network for zero benefit.
+    ref.listen<bool>(appLifecycleProvider, (previous, isForeground) {
+      if (isForeground) {
+        _startPeriodicRefresh();
+        // Immediate refresh so the UI has fresh data on resume.
+        refresh();
+        AppLogging.maps(
+          '🔋 WorldMeshMap: periodic refresh resumed (app foregrounded)',
+        );
+      } else {
+        _stopPeriodicRefresh();
+        AppLogging.maps(
+          '🔋 WorldMeshMap: periodic refresh paused (app backgrounded)',
+        );
+      }
+    });
+
     // Initial fetch
     _fetchNodes(isInitial: true);
     return const AsyncValue.loading();
@@ -92,6 +112,11 @@ class WorldMeshMapNotifier extends Notifier<AsyncValue<WorldMeshMapState>> {
     _refreshTimer = Timer.periodic(_refreshInterval, (_) {
       refresh();
     });
+  }
+
+  void _stopPeriodicRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
   }
 
   Future<void> _fetchNodes({bool isInitial = false}) async {

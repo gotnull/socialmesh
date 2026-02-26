@@ -48,6 +48,7 @@ import 'providers/subscription_providers.dart';
 import 'providers/cloud_sync_entitlement_providers.dart';
 import 'providers/analytics_providers.dart';
 import 'providers/signal_providers.dart';
+import 'providers/app_lifecycle_provider.dart';
 import 'providers/connectivity_providers.dart';
 import 'providers/presence_providers.dart';
 import 'providers/glyph_provider.dart';
@@ -395,6 +396,11 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
+
+    // Notify the centralized lifecycle provider so all timer-based providers
+    // can pause/resume automatically (battery drain prevention).
+    ref.read(appLifecycleProvider.notifier).didChangeAppLifecycleState(state);
+
     if (state == AppLifecycleState.resumed) {
       // Mark app as active for lifecycle-aware commands
       ref.read(lifecycleCommandManagerProvider).setAppActive(true);
@@ -406,6 +412,8 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       ref.read(userPresenceServiceProvider).setOnline();
       // Process any due scheduled automations on resume
       _processScheduledAutomationsOnResume();
+      // Resume RSSI polling (paused on background to save battery).
+      _resumeProtocolPolling();
     } else if (state == AppLifecycleState.paused) {
       // Only trigger background handoff when the app is *truly* paused
       // (i.e. no longer visible). `inactive` (notification shade, system
@@ -420,11 +428,33 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       ref.read(userPresenceServiceProvider).setOffline();
       // Sync scheduled automations to platform scheduler for background execution
       _syncScheduledAutomationsToPlatform();
+      // Pause RSSI polling to conserve battery. BLE readRssi() every 2s
+      // wakes the Bluetooth stack and triggers Live Activity UserDefaults
+      // writes — ~14,400 unnecessary BLE round-trips over an 8-hour night.
+      _pauseProtocolPolling();
     } else if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
       // Mark lifecycle as inactive but do NOT enable the background message
       // processor — the foreground ProtocolService is still handling data.
       ref.read(lifecycleCommandManagerProvider).setAppActive(false);
+    }
+  }
+
+  /// Pause BLE RSSI polling when the app is backgrounded.
+  void _pauseProtocolPolling() {
+    try {
+      ref.read(protocolServiceProvider).pauseRssiPolling();
+    } catch (_) {
+      // Protocol service may not be initialized yet — safe to ignore.
+    }
+  }
+
+  /// Resume BLE RSSI polling when the app returns to the foreground.
+  void _resumeProtocolPolling() {
+    try {
+      ref.read(protocolServiceProvider).resumeRssiPolling();
+    } catch (_) {
+      // Protocol service may not be initialized yet — safe to ignore.
     }
   }
 

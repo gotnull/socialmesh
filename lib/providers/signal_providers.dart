@@ -11,6 +11,7 @@ import '../services/notifications/push_notification_service.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/signal_service.dart';
 import '../utils/location_privacy.dart';
+import 'app_lifecycle_provider.dart';
 import 'app_providers.dart';
 import 'auth_providers.dart';
 import 'presence_providers.dart';
@@ -193,6 +194,31 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     _startLifecycleObserver();
     _wireMeshIntegration();
     _wireFcmSignalBinding();
+
+    // Pause/resume all three timers when the app is backgrounded/foregrounded.
+    // - _countdownTimer ticks every SECOND for UI that isn't visible.
+    // - _refreshTimer refreshes every 30s from cloud — pointless in background.
+    // - _cleanupTimer runs every minute — harmless but wasteful.
+    // Combined these fire ~120 times/minute in the background for zero benefit.
+    ref.listen<bool>(appLifecycleProvider, (previous, isForeground) {
+      if (isForeground) {
+        _startCleanupTimer();
+        _startAutoRefresh();
+        _startCountdownTimer();
+        // Immediate refresh so the UI has fresh data on resume.
+        _cleanupExpired();
+        refresh(silent: true);
+        AppLogging.social('🔋 SignalFeed: timers resumed (app foregrounded)');
+      } else {
+        _cleanupTimer?.cancel();
+        _cleanupTimer = null;
+        _refreshTimer?.cancel();
+        _refreshTimer = null;
+        _countdownTimer?.cancel();
+        _countdownTimer = null;
+        AppLogging.social('🔋 SignalFeed: timers paused (app backgrounded)');
+      }
+    });
 
     // Cleanup when disposed
     ref.onDispose(() {
