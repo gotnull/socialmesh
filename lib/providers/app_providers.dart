@@ -2294,6 +2294,15 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
   /// Last SNR value from received mesh packets.
   double? _lastSnr;
 
+  /// Debounce timer for node-triggered Live Activity updates.
+  ///
+  /// During initial config the radio dumps ~42 NodeInfo packets in rapid
+  /// succession. Each one triggers [_updateFromNodes] which crosses the
+  /// Flutter→native bridge to write UserDefaults. Debouncing coalesces
+  /// the burst into a single write after the storm settles (500 ms).
+  Timer? _nodeUpdateDebounce;
+  static const _nodeUpdateDebounceDelay = Duration(milliseconds: 500);
+
   @override
   bool build() {
     _liveActivityService = ref.watch(liveActivityServiceProvider);
@@ -2303,6 +2312,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       _channelUtilSubscription?.cancel();
       _rssiSubscription?.cancel();
       _snrSubscription?.cancel();
+      _nodeUpdateDebounce?.cancel();
       _liveActivityService.endAllActivities();
     });
 
@@ -2334,10 +2344,15 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       });
     }, fireImmediately: true);
 
-    // Listen for node updates to refresh battery/signal/online count
+    // Listen for node updates to refresh battery/signal/online count.
+    // Debounced to avoid 42+ rapid UserDefaults writes during initial
+    // config when the radio dumps all NodeInfo packets at once.
     ref.listen<Map<int, MeshNode>>(nodesProvider, (previous, current) {
       if (!state || !_liveActivityService.isActive) return;
-      _updateFromNodes(current);
+      _nodeUpdateDebounce?.cancel();
+      _nodeUpdateDebounce = Timer(_nodeUpdateDebounceDelay, () {
+        _updateFromNodes(current);
+      });
     });
   }
 
@@ -2552,6 +2567,8 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     _rssiSubscription = null;
     _snrSubscription?.cancel();
     _snrSubscription = null;
+    _nodeUpdateDebounce?.cancel();
+    _nodeUpdateDebounce = null;
     _lastBleRssi = null;
     _lastSnr = null;
     await _liveActivityService.endActivity();

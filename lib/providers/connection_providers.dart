@@ -532,6 +532,31 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       final transport = ref.read(transportProvider);
       final protocol = ref.read(protocolServiceProvider);
 
+      // Guard: if the protocol is already configured (e.g. another code path
+      // already called start() for this connection), skip the redundant start.
+      // Without this, the second start() clears _configurationComplete, creates
+      // a fresh completer, and waits 30 seconds for config packets that were
+      // already consumed — wasting battery on BLE polling and producing a
+      // misleading TimeoutException in logs.
+      if (protocol.configurationComplete && protocol.myNodeNum != null) {
+        AppLogging.connection(
+          '🔌 _initializeProtocolAfterAutoReconnect: SKIPPING — '
+          'protocol already configured (myNodeNum=${protocol.myNodeNum})',
+        );
+        // Still update state to connected if needed
+        if (state.state != DevicePairingState.connected) {
+          state = state.copyWith(
+            state: DevicePairingState.connected,
+            lastConnectedAt: DateTime.now(),
+            myNodeNum: protocol.myNodeNum,
+            reason: DisconnectReason.none,
+            reconnectAttempts: 0,
+            connectionSessionId: _nextConnectionSessionId(),
+          );
+        }
+        return;
+      }
+
       // Get device info from transport or use stored info
       final deviceName = state.device?.name ?? 'Unknown';
       protocol.setDeviceName(deviceName);
