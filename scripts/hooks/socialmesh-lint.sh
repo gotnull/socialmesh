@@ -285,6 +285,12 @@ check_file() {
     windows/flutter/CMakeLists.txt) return 0 ;;
   esac
 
+  # Skip this lint script itself -- it contains banned patterns as part
+  # of its rule definitions (e.g. the railway domain grep pattern)
+  case "$file" in
+    scripts/hooks/socialmesh-lint.sh) return 0 ;;
+  esac
+
   # Classify file
   local in_lib=false
   local in_lib_generated=false
