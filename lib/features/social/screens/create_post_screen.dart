@@ -14,6 +14,7 @@ import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/user_avatar.dart';
@@ -262,70 +263,55 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
             ),
 
             // Bottom toolbar
-            Container(
-              decoration: BoxDecoration(
-                color: context.card,
-                border: Border(
-                  top: BorderSide(color: context.border.withValues(alpha: 0.3)),
-                ),
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
+            BottomActionBar(
+              horizontalPadding: AppTheme.spacing12,
+              child: Row(
+                children: [
+                  _buildToolbarButton(
+                    icon: Icons.image_outlined,
+                    isActive: _imageUrls.isNotEmpty,
+                    onTap: _isSubmitting || _imageUrls.length >= _maxImages
+                        ? null
+                        : () => _addImage(),
+                    tooltip: _imageUrls.isEmpty
+                        ? 'Add image'
+                        : '${_imageUrls.length}/$_maxImages images',
                   ),
-                  child: Row(
-                    children: [
-                      _buildToolbarButton(
-                        icon: Icons.image_outlined,
-                        isActive: _imageUrls.isNotEmpty,
-                        onTap: _isSubmitting || _imageUrls.length >= _maxImages
-                            ? null
-                            : () => _addImage(),
-                        tooltip: _imageUrls.isEmpty
-                            ? 'Add image'
-                            : '${_imageUrls.length}/$_maxImages images',
-                      ),
-                      const SizedBox(width: AppTheme.spacing4),
-                      _buildToolbarButton(
-                        icon: Icons.location_on_outlined,
-                        isActive: _location != null,
-                        onTap: _isSubmitting ? null : _addLocation,
-                        tooltip: 'Add location',
-                      ),
-                      const SizedBox(width: AppTheme.spacing4),
-                      _buildToolbarButton(
-                        icon: Icons.router_outlined,
-                        isActive: _nodeId != null,
-                        onTap: _isSubmitting ? null : _tagNode,
-                        tooltip: 'Tag node',
-                      ),
-                      const Spacer(),
-                      // Character count
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: context.background,
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radius12,
-                          ),
-                        ),
-                        child: Text(
-                          '${_contentController.text.length}',
-                          style: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: AppTheme.spacing4),
+                  _buildToolbarButton(
+                    icon: Icons.location_on_outlined,
+                    isActive: _location != null,
+                    onTap: _isSubmitting ? null : _addLocation,
+                    tooltip: 'Add location',
                   ),
-                ),
+                  const SizedBox(width: AppTheme.spacing4),
+                  _buildToolbarButton(
+                    icon: Icons.router_outlined,
+                    isActive: _nodeId != null,
+                    onTap: _isSubmitting ? null : _tagNode,
+                    tooltip: 'Tag node',
+                  ),
+                  const Spacer(),
+                  // Character count
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    ),
+                    child: Text(
+                      '${_contentController.text.length}',
+                      style: TextStyle(
+                        color: context.textTertiary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

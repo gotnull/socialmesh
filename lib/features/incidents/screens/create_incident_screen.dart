@@ -9,6 +9,7 @@ import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/permission_gate.dart';
 import '../../../providers/app_providers.dart';
@@ -320,53 +321,51 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen>
             theme.colorScheme.primary.withValues(alpha: 0.8),
           ];
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing16),
-        child: PermissionGate(
-          permission: Permission.createIncident,
-          child: BouncyTap(
-            onTap: _isSubmitting ? null : _submit,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: gradientColors),
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-              ),
-              child: _isSubmitting
-                  ? const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(width: AppTheme.spacing10),
-                        Text(
-                          'Creating...',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    )
-                  : const Text(
-                      'Create Incident',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
+    return BottomActionBar(
+      horizontalPadding: AppTheme.spacing16,
+      child: PermissionGate(
+        permission: Permission.createIncident,
+        child: BouncyTap(
+          onTap: _isSubmitting ? null : _submit,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: gradientColors),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
+            child: _isSubmitting
+                ? const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(width: AppTheme.spacing10),
+                      Text(
+                        'Creating...',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  )
+                : const Text(
+                    'Create Incident',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
           ),
         ),
       ),

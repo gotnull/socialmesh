@@ -11,6 +11,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../core/widgets/map_controls.dart';
@@ -613,17 +614,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
             bottom: 0,
             left: 0,
             right: 0,
-            child: Container(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
-                16 + MediaQuery.of(context).padding.bottom,
-              ),
-              decoration: BoxDecoration(
-                color: context.card,
-                border: Border(top: BorderSide(color: context.border)),
-              ),
+            child: BottomActionBar(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

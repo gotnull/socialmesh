@@ -12,6 +12,7 @@ import '../models/aether_flight.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_gradient_background.dart';
+import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/datetime_picker_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/info_chip.dart';
@@ -968,19 +969,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildMyNodeBar(myNode),
-        Container(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            12,
-            20,
-            12 + MediaQuery.of(context).padding.bottom,
-          ),
-          decoration: BoxDecoration(
-            color: context.background,
-            border: Border(
-              top: BorderSide(color: context.border.withValues(alpha: 0.2)),
-            ),
-          ),
+        BottomActionBar(
           child: GestureDetector(
             onTap: !_isSaving && myNode != null ? _save : null,
             child: Container(

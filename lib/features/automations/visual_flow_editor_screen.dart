@@ -737,8 +737,10 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
         bottom: bottomPadding + 8,
       ),
       decoration: BoxDecoration(
-        color: context.card.withValues(alpha: 0.95),
-        border: Border(top: BorderSide(color: context.border)),
+        color: context.background,
+        border: Border(
+          top: BorderSide(color: context.border.withValues(alpha: 0.2)),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/premium_gating.dart';
 import '../../models/subscription_models.dart';
@@ -436,51 +437,49 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
             theme.colorScheme.primary.withValues(alpha: 0.8),
           ];
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing16),
-        child: BouncyTap(
-          onTap: _isSaving ? null : _save,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: gradientColors),
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
-            ),
-            child: _isSaving
-                ? const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(width: AppTheme.spacing10),
-                      Text(
-                        'Saving...',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  )
-                : Text(
-                    _isEditing ? 'Save Changes' : 'Create Automation',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
+    return BottomActionBar(
+      horizontalPadding: AppTheme.spacing16,
+      child: BouncyTap(
+        onTap: _isSaving ? null : _save,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: gradientColors),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
           ),
+          child: _isSaving
+              ? const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: AppTheme.spacing10),
+                    Text(
+                      'Saving...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                )
+              : Text(
+                  _isEditing ? 'Save Changes' : 'Create Automation',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
         ),
       ),
     );

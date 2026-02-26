@@ -75,7 +75,8 @@ firebase-service-account.json
 /scripts/verify_hosting_headers.sh
 /scripts/tak/
 /scripts/notification-icons/
-/scripts/hooks/
+/scripts/hooks/*
+!/scripts/hooks/socialmesh-lint.sh
 
 # IntelliJ related
 *.iml

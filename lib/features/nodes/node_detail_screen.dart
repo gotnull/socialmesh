@@ -1181,7 +1181,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
           decoration: BoxDecoration(
             color: context.background,
             border: Border(
-              top: BorderSide(color: context.border.withValues(alpha: 0.3)),
+              top: BorderSide(color: context.border.withValues(alpha: 0.2)),
             ),
           ),
           padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 12),

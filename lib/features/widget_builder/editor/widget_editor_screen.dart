@@ -10,6 +10,7 @@ import '../widget_sync_providers.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
+import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../utils/snackbar.dart';
 import 'selectors/icon_selector.dart';
@@ -258,59 +259,50 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
   }
 
   Widget _buildBottomToolbar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        border: Border(top: BorderSide(color: context.border)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Row(
-            children: [
-              // Add element button
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: _showElementPicker,
-                  icon: Icon(Icons.add, size: 20),
-                  label: const Text('Add Element'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: context.accentColor,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
+    return BottomActionBar(
+      horizontalPadding: AppTheme.spacing8,
+      child: Row(
+        children: [
+          // Add element button
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: _showElementPicker,
+              icon: Icon(Icons.add, size: 20),
+              label: const Text('Add Element'),
+              style: FilledButton.styleFrom(
+                backgroundColor: context.accentColor,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+          if (_selectedElementId != null) ...[
+            SizedBox(width: AppTheme.spacing8),
+            // Edit selected element
+            OutlinedButton.icon(
+              onPressed: _showPropertySheet,
+              icon: const Icon(Icons.tune, size: 20),
+              label: const Text('Edit'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: BorderSide(color: context.border),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
                 ),
               ),
-              if (_selectedElementId != null) ...[
-                SizedBox(width: AppTheme.spacing8),
-                // Edit selected element
-                OutlinedButton.icon(
-                  onPressed: _showPropertySheet,
-                  icon: const Icon(Icons.tune, size: 20),
-                  label: const Text('Edit'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: BorderSide(color: context.border),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 16,
-                    ),
-                  ),
-                ),
-                SizedBox(width: AppTheme.spacing8),
-                // Delete selected element
-                IconButton(
-                  onPressed: () => _deleteElement(_selectedElementId!),
-                  icon: Icon(Icons.delete_outline, color: AppTheme.errorRed),
-                  style: IconButton.styleFrom(
-                    backgroundColor: context.background,
-                    padding: const EdgeInsets.all(AppTheme.spacing12),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
+            ),
+            SizedBox(width: AppTheme.spacing8),
+            // Delete selected element
+            IconButton(
+              onPressed: () => _deleteElement(_selectedElementId!),
+              icon: Icon(Icons.delete_outline, color: AppTheme.errorRed),
+              style: IconButton.styleFrom(
+                backgroundColor: context.background,
+                padding: const EdgeInsets.all(AppTheme.spacing12),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

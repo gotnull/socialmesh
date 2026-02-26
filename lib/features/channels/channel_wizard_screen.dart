@@ -11,6 +11,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/branded_qr_code.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/channel_key_field.dart';
@@ -1204,19 +1205,8 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
         ? _nameController.text.trim().isNotEmpty
         : true;
 
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        AppTheme.spacing24,
-        AppTheme.spacing12,
-        AppTheme.spacing24,
-        AppTheme.spacing12 + MediaQuery.of(context).padding.bottom,
-      ),
-      decoration: BoxDecoration(
-        color: context.background,
-        border: Border(
-          top: BorderSide(color: context.border.withValues(alpha: 0.2)),
-        ),
-      ),
+    return BottomActionBar(
+      horizontalPadding: AppTheme.spacing24,
       child: Row(
         children: [
           if (_currentStep > 0)

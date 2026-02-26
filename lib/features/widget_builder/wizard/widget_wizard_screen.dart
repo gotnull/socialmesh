@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../models/widget_schema.dart';
@@ -4096,96 +4097,88 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     final isLastStep = _currentStep == _steps.length - 1;
     final canContinue = _canContinue();
 
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: context.card,
-        border: Border(top: BorderSide(color: context.border)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Add to Dashboard checkbox on last step
-            if (isLastStep && !isEditing)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: GestureDetector(
-                  onTap: () =>
-                      setState(() => _addToDashboard = !_addToDashboard),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 22,
-                        height: 22,
-                        decoration: BoxDecoration(
+    return BottomActionBar(
+      horizontalPadding: AppTheme.spacing16,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Add to Dashboard checkbox on last step
+          if (isLastStep && !isEditing)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: GestureDetector(
+                onTap: () => setState(() => _addToDashboard = !_addToDashboard),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: _addToDashboard
+                            ? context.accentColor
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(AppTheme.radius6),
+                        border: Border.all(
                           color: _addToDashboard
                               ? context.accentColor
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(AppTheme.radius6),
-                          border: Border.all(
-                            color: _addToDashboard
-                                ? context.accentColor
-                                : context.textSecondary,
-                            width: 2,
-                          ),
-                        ),
-                        child: _addToDashboard
-                            ? Icon(
-                                Icons.check,
-                                size: 16,
-                                color: SemanticColors.onAccent,
-                              )
-                            : null,
-                      ),
-                      const SizedBox(width: AppTheme.spacing10),
-                      Text(
-                        'Add to Dashboard',
-                        style: TextStyle(
-                          color: context.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                              : context.textSecondary,
+                          width: 2,
                         ),
                       ),
-                    ],
+                      child: _addToDashboard
+                          ? Icon(
+                              Icons.check,
+                              size: 16,
+                              color: SemanticColors.onAccent,
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: AppTheme.spacing10),
+                    Text(
+                      'Add to Dashboard',
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          // Continue / Create button
+          Row(
+            children: [
+              const Spacer(),
+              SizedBox(
+                width: 160,
+                child: ElevatedButton(
+                  onPressed: canContinue
+                      ? (isLastStep ? _create : _goNext)
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.accentColor,
+                    foregroundColor: SemanticColors.onAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    ),
+                  ),
+                  child: Text(
+                    isLastStep
+                        ? (isEditing ? 'Save Changes' : 'Create Widget')
+                        : 'Continue',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
               ),
-            // Continue / Create button
-            Row(
-              children: [
-                const Spacer(),
-                SizedBox(
-                  width: 160,
-                  child: ElevatedButton(
-                    onPressed: canContinue
-                        ? (isLastStep ? _create : _goNext)
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.accentColor,
-                      foregroundColor: SemanticColors.onAccent,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                    ),
-                    child: Text(
-                      isLastStep
-                          ? (isEditing ? 'Save Changes' : 'Create Widget')
-                          : 'Continue',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }

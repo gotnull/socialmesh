@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/navigation.dart';
 import '../../utils/snackbar.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -195,8 +196,6 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
     return DraggableScrollableSheet(
       initialChildSize: 0.82,
       minChildSize: 0.55,
@@ -338,21 +337,7 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                   ),
                 ),
                 // Fixed bottom section: shake toggle + send button
-                Container(
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    border: Border(
-                      top: BorderSide(
-                        color: context.border.withValues(alpha: 0.2),
-                      ),
-                    ),
-                  ),
-                  padding: EdgeInsets.fromLTRB(
-                    20,
-                    12,
-                    20,
-                    bottomInset > 0 ? bottomInset + 12 : bottomPadding + 12,
-                  ),
+                BottomActionBar(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [

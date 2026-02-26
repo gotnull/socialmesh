@@ -19,6 +19,7 @@ import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/local_image_gallery.dart';
@@ -1944,22 +1945,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                             ),
                           ),
                         ),
-                    child: Container(
-                      padding: EdgeInsets.fromLTRB(
-                        AppTheme.spacing20,
-                        AppTheme.spacing12,
-                        AppTheme.spacing20,
-                        AppTheme.spacing12 +
-                            MediaQuery.of(context).padding.bottom,
-                      ),
-                      decoration: BoxDecoration(
-                        color: context.background,
-                        border: Border(
-                          top: BorderSide(
-                            color: context.border.withValues(alpha: 0.2),
-                          ),
-                        ),
-                      ),
+                    child: BottomActionBar(
                       child: Tooltip(
                         message: submitBlockedReason ?? '',
                         child: BouncyTap(

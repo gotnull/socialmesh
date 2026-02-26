@@ -144,6 +144,7 @@ file_has_changes() {
 # ---------------------------------------------------------------------------
 # Outputs structured markers (one per line, no ANSI):
 #   CHECK:DIRS:<space-separated list of changed dirs>
+#   CHECK:FILES:<file1>,<file2>,...  (up to 30 changed file paths)
 #   CHECK:HOSTING:<space-separated hosting targets>
 #   CHECK:NO_CHANGES
 #   CHECK:ERROR:<message>
@@ -157,6 +158,7 @@ cmd_check() {
   excludes=$(build_excludes)
   local changed_dirs=()
   local hosting_targets=()
+  local changed_files=()
 
   # Check directories for changes
   for dir in "${SYNC_DIRS[@]}"; do
@@ -167,11 +169,33 @@ cmd_check() {
         if [[ -v "HOSTING_TARGETS[$dir]" ]]; then
           hosting_targets+=("hosting:${HOSTING_TARGETS[$dir]}")
         fi
+        # Collect file-level detail for new directories (limit per-dir)
+        while IFS= read -r f; do
+          [ -n "$f" ] && changed_files+=("$dir/$f")
+        done < <(cd "$PUBLIC_REPO/$dir" && find . -type f \
+          -not -path "*/node_modules/*" \
+          -not -path "*/.dart_tool/*" \
+          -not -path "*/build/*" \
+          -not -path "*/__pycache__/*" \
+          -not -path "*/.venv/*" \
+          -not -name "*.pyc" \
+          -not -name ".DS_Store" \
+          | sed 's|^\./||' | sort | head -30)
       elif dir_has_changes "$PUBLIC_REPO/$dir" "$PRIVATE_REPO/$dir"; then
         changed_dirs+=("$dir")
         if [[ -v "HOSTING_TARGETS[$dir]" ]]; then
           hosting_targets+=("hosting:${HOSTING_TARGETS[$dir]}")
         fi
+        # Collect file-level detail via rsync dry-run itemized output
+        # Each line starts with an action code (e.g. ">f..T......") followed by the path
+        while IFS= read -r line; do
+          # Extract filename: skip the itemize prefix (11 chars + space)
+          local fname="${line:12}"
+          [ -n "$fname" ] && changed_files+=("$dir/$fname")
+        done < <(rsync -a --delete --dry-run --itemize-changes \
+          $(build_excludes) \
+          "$PUBLIC_REPO/$dir/" "$PRIVATE_REPO/$dir/" 2>/dev/null \
+          | grep '^[<>ch.*]f' | head -30)
       fi
     fi
   done
@@ -180,6 +204,7 @@ cmd_check() {
   for file in "${SYNC_FILES[@]}"; do
     if [ -f "$PUBLIC_REPO/$file" ]; then
       if file_has_changes "$PUBLIC_REPO/$file" "$PRIVATE_REPO/$file"; then
+        changed_files+=("$file")
         local fdir
         fdir=$(dirname "$file")
         # Dedupe: only add if parent dir not already listed
@@ -212,6 +237,22 @@ cmd_check() {
     echo "CHECK:NO_CHANGES"
   else
     echo "CHECK:DIRS:${changed_dirs[*]}"
+    if [ ${#changed_files[@]} -gt 0 ]; then
+      # Truncate to 30 files max, join with commas
+      local file_list=""
+      local count=0
+      for f in "${changed_files[@]}"; do
+        [ $count -ge 30 ] && break
+        [ -n "$file_list" ] && file_list+=","
+        file_list+="$f"
+        ((count++)) || true
+      done
+      local total=${#changed_files[@]}
+      if [ "$total" -gt 30 ]; then
+        file_list+=",... and $((total - 30)) more"
+      fi
+      echo "CHECK:FILES:$file_list"
+    fi
     if [ ${#hosting_targets[@]} -gt 0 ]; then
       echo "CHECK:HOSTING:${hosting_targets[*]}"
     fi

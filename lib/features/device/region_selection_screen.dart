@@ -9,6 +9,7 @@ import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../services/storage/storage_service.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../providers/app_providers.dart';
@@ -649,7 +650,8 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
           // behind the fixed bottom bar
           const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
         ],
-        bottomNavigationBar: SafeArea(
+        bottomNavigationBar: BottomActionBar(
+          horizontalPadding: 0,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -670,7 +672,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
 
               // Save / Continue button
               Padding(
-                padding: const EdgeInsets.all(AppTheme.spacing16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing16,
+                ),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(minHeight: 56),
                   child: SizedBox(

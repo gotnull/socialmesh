@@ -29,6 +29,7 @@ import '../../../core/mqtt/mqtt_topic_builder.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/accessibility_providers.dart';
 import '../../../providers/mqtt_providers.dart';
@@ -570,18 +571,9 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
 
   Widget _buildBottomBar(BuildContext context) {
     final isLastStep = _currentStep == _totalSteps - 1;
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        AppTheme.spacing24,
-        12,
-        24,
-        12 + bottomPadding,
-      ),
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: context.border, width: 0.5)),
-      ),
+    return BottomActionBar(
+      horizontalPadding: AppTheme.spacing24,
       child: SizedBox(
         width: double.infinity,
         height: 50,

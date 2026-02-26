@@ -11,6 +11,7 @@ import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../providers/auth_providers.dart';
@@ -1032,137 +1033,124 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
   }
 
   Widget _buildBottomBar(ShopProduct product, bool isAdmin) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: context.card,
-        border: Border(top: BorderSide(color: context.border)),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Marketplace disclaimer
-            Container(
-              padding: const EdgeInsets.all(AppTheme.spacing12),
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: context.background.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(AppTheme.radius8),
-                border: Border.all(
-                  color: context.accentColor.withValues(alpha: 0.2),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: context.accentColor,
-                    size: 16,
-                  ),
-                  const SizedBox(width: AppTheme.spacing8),
-                  Expanded(
-                    child: Text(
-                      'Purchases completed on seller\'s official store',
-                      style: TextStyle(
-                        color: context.textSecondary,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
+    return BottomActionBar(
+      horizontalPadding: AppTheme.spacing16,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Marketplace disclaimer
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spacing12),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: context.background.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
+              border: Border.all(
+                color: context.accentColor.withValues(alpha: 0.2),
+                width: 1,
               ),
             ),
-            Row(
+            child: Row(
               children: [
-                // Price summary
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Total',
-                        style: TextStyle(
-                          color: context.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                      Text(
-                        '\$${_getEffectivePrice(product).toStringAsFixed(2)}',
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Admin edit button
-                if (isAdmin) ...[
-                  const SizedBox(width: AppTheme.spacing8),
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      ref
-                          .read(productFormProvider.notifier)
-                          .loadProduct(product);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              AdminProductEditScreen(product: product),
-                        ),
-                      ).then(
-                        (_) =>
-                            ref.invalidate(singleProductProvider(product.id)),
-                      );
-                    },
-                    icon: Icon(Icons.edit, size: 18),
-                    label: const Text('Edit'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: context.accentColor,
-                      side: BorderSide(color: context.accentColor),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 16,
-                        horizontal: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                    ),
-                  ),
-                ],
+                Icon(Icons.info_outline, color: context.accentColor, size: 16),
                 const SizedBox(width: AppTheme.spacing8),
-                // Buy button
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: product.isInStock
-                        ? () => _buyProduct(product)
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.accentColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                      disabledBackgroundColor: context.border,
-                    ),
-                    child: Text(
-                      product.isInStock ? 'Buy Now' : 'Out of Stock',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  child: Text(
+                    'Purchases completed on seller\'s official store',
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 11,
                     ),
                   ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          Row(
+            children: [
+              // Price summary
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total',
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                    Text(
+                      '\$${_getEffectivePrice(product).toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: context.accentColor,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Admin edit button
+              if (isAdmin) ...[
+                const SizedBox(width: AppTheme.spacing8),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    ref.read(productFormProvider.notifier).loadProduct(product);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            AdminProductEditScreen(product: product),
+                      ),
+                    ).then(
+                      (_) => ref.invalidate(singleProductProvider(product.id)),
+                    );
+                  },
+                  icon: Icon(Icons.edit, size: 18),
+                  label: const Text('Edit'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.accentColor,
+                    side: BorderSide(color: context.accentColor),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(width: AppTheme.spacing8),
+              // Buy button
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: product.isInStock
+                      ? () => _buyProduct(product)
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.accentColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    ),
+                    disabledBackgroundColor: context.border,
+                  ),
+                  child: Text(
+                    product.isInStock ? 'Buy Now' : 'Out of Stock',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
