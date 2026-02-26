@@ -384,6 +384,10 @@ class MeshNode {
   final bool hasWifi; // Whether device has WiFi
   final bool hasBluetooth; // Whether device has Bluetooth
 
+  // RF Metadata
+  final int? hopCount; // Hops away from this node (0 = direct neighbor)
+  final bool viaMqtt; // Whether node was discovered via MQTT transport
+
   MeshNode({
     required this.nodeNum,
     this.longName,
@@ -483,6 +487,9 @@ class MeshNode {
     // Connectivity
     this.hasWifi = false,
     this.hasBluetooth = false,
+    // RF Metadata
+    this.hopCount,
+    this.viaMqtt = false,
   });
 
   MeshNode copyWith({
@@ -586,6 +593,9 @@ class MeshNode {
     // Connectivity
     bool? hasWifi,
     bool? hasBluetooth,
+    // RF Metadata
+    int? hopCount,
+    bool? viaMqtt,
   }) {
     return MeshNode(
       nodeNum: nodeNum ?? this.nodeNum,
@@ -688,6 +698,9 @@ class MeshNode {
       // Connectivity
       hasWifi: hasWifi ?? this.hasWifi,
       hasBluetooth: hasBluetooth ?? this.hasBluetooth,
+      // RF Metadata
+      hopCount: hopCount ?? this.hopCount,
+      viaMqtt: viaMqtt ?? this.viaMqtt,
     );
   }
 

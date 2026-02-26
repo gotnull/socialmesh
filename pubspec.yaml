@@ -38,6 +38,9 @@ dependencies:
   # QR Code
   mobile_scanner: ^7.2.0
 
+  # Markdown rendering (Help Center knowledge base articles)
+  flutter_markdown: ^0.7.6
+
   # UI/UX
   cupertino_icons: ^1.0.8
   flutter_map: ^8.2.2
@@ -150,6 +153,15 @@ flutter:
     - assets/app_icons/source/
     - assets/rtttl_library.json
     - assets/banned_words.json
+    - assets/help/manifest.json
+    - assets/help/getting-started/
+    - assets/help/mesh-basics/
+    - assets/help/channels/
+    - assets/help/messaging/
+    - assets/help/nodes/
+    - assets/help/device/
+    - assets/help/network/
+    - assets/help/safety/
     - assets/lottie/
     - assets/models/
     - assets/globe/

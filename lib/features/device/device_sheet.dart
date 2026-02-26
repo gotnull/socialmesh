@@ -496,10 +496,18 @@ class _DeviceInfoCard extends ConsumerWidget {
         ? context.accentColor
         : context.textTertiary;
 
-    final rssiColor = device?.rssi != null
-        ? (device!.rssi! > -70
+    // Use live BLE RSSI from the protocol service's polling timer (updated
+    // every 2s) instead of the stale scan-time DeviceInfo.rssi which is
+    // frozen at whatever value CoreBluetooth reported during discovery.
+    final bleRssiAsync = ref.watch(currentRssiProvider);
+    final liveRssi = isConnected ? bleRssiAsync.value : null;
+    // Fall back to scan-time RSSI only when not connected (pre-connection info)
+    final displayRssi = liveRssi ?? device?.rssi;
+
+    final rssiColor = displayRssi != null
+        ? (displayRssi > -70
               ? context.accentColor
-              : device!.rssi! > -85
+              : displayRssi > -85
               ? AppTheme.warningYellow
               : AppTheme.errorRed)
         : null;
@@ -594,10 +602,10 @@ class _DeviceInfoCard extends ConsumerWidget {
               icon: Icons.tag,
               iconColor: context.accentColor,
             ),
-          if (device?.rssi != null && isConnected)
+          if (displayRssi != null && isConnected)
             InfoTableRow(
               label: 'Signal Strength',
-              value: '${device!.rssi} dBm',
+              value: '$displayRssi dBm',
               icon: Icons.signal_cellular_alt,
               iconColor: rssiColor,
             ),

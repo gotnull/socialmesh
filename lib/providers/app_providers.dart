@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'dart:collection';
+import 'dart:math' as math;
 
 import 'package:collection/collection.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -2281,7 +2282,17 @@ final liveActivityServiceProvider = Provider<LiveActivityService>((ref) {
 // Live Activity manager - monitors connection and updates Live Activity
 class LiveActivityManagerNotifier extends Notifier<bool> {
   StreamSubscription<double>? _channelUtilSubscription;
+  StreamSubscription<int>? _rssiSubscription;
+  StreamSubscription<double>? _snrSubscription;
   late LiveActivityService _liveActivityService;
+
+  /// Last BLE RSSI value from the protocol service's polling timer.
+  /// This is the Bluetooth signal strength between the phone and the radio,
+  /// NOT the mesh radio's self-RSSI (which is always null for the local node).
+  int? _lastBleRssi;
+
+  /// Last SNR value from received mesh packets.
+  double? _lastSnr;
 
   @override
   bool build() {
@@ -2290,6 +2301,8 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     // Set up disposal
     ref.onDispose(() {
       _channelUtilSubscription?.cancel();
+      _rssiSubscription?.cancel();
+      _snrSubscription?.cancel();
       _liveActivityService.endAllActivities();
     });
 
@@ -2344,8 +2357,13 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
         myNode?.longName ?? connectedDevice?.name ?? 'Meshtastic';
     final shortName = myNode?.shortName ?? '????';
     final batteryLevel = myNode?.batteryLevel;
-    final rssi = myNode?.rssi;
-    final snr = myNode?.snr;
+
+    // Use BLE RSSI (phone↔radio Bluetooth signal) instead of myNode.rssi
+    // (mesh radio self-RSSI, which is always null for the local node).
+    _lastBleRssi = protocol.lastRssi;
+    _lastSnr = protocol.lastSnr;
+    final rssi = _lastBleRssi;
+    final snr = _lastSnr?.toInt();
 
     final activeCount = _activeNodeCount(nodes);
     final totalCount = nodes.length;
@@ -2388,6 +2406,24 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     if (success) {
       state = true;
 
+      // Set up BLE RSSI listener — updates the Live Activity signal strength
+      // in real time, including when the screen is locked (BLE polling
+      // continues in the background via ProtocolService._startRssiPolling).
+      _rssiSubscription?.cancel();
+      _rssiSubscription = protocol.rssiStream.listen((rssi) {
+        if (!_liveActivityService.isActive) return;
+        _lastBleRssi = rssi;
+        _liveActivityService.updateActivity(signalStrength: rssi);
+      });
+
+      // Set up SNR listener — updates from received mesh packets
+      _snrSubscription?.cancel();
+      _snrSubscription = protocol.snrStream.listen((snr) {
+        if (!_liveActivityService.isActive) return;
+        _lastSnr = snr;
+        _liveActivityService.updateActivity(snr: snr.toInt());
+      });
+
       // Set up telemetry listener for channel utilization updates
       _channelUtilSubscription?.cancel();
       _channelUtilSubscription = protocol.channelUtilStream.listen((
@@ -2410,8 +2446,8 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
 
         _liveActivityService.updateActivity(
           batteryLevel: currentNode?.batteryLevel,
-          signalStrength: currentNode?.rssi,
-          snr: currentNode?.snr,
+          signalStrength: _lastBleRssi,
+          snr: _lastSnr?.toInt(),
           nodesOnline: currentOnlineCount,
           totalNodes: currentNodes.length,
           channelUtilization: channelUtil,
@@ -2449,8 +2485,8 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       deviceName: myNode.longName,
       shortName: myNode.shortName,
       batteryLevel: myNode.batteryLevel,
-      signalStrength: myNode.rssi,
-      snr: myNode.snr,
+      signalStrength: _lastBleRssi,
+      snr: _lastSnr?.toInt(),
       nodesOnline: onlineCount,
       totalNodes: totalCount,
       channelUtilization: myNode.channelUtilization,
@@ -2512,6 +2548,12 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
   Future<void> _endLiveActivity() async {
     _channelUtilSubscription?.cancel();
     _channelUtilSubscription = null;
+    _rssiSubscription?.cancel();
+    _rssiSubscription = null;
+    _snrSubscription?.cancel();
+    _snrSubscription = null;
+    _lastBleRssi = null;
+    _lastSnr = null;
     await _liveActivityService.endActivity();
     state = false;
     AppLogging.debug('📱 Ended Live Activity - device disconnected');
@@ -3400,6 +3442,73 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   final Set<int> _fallbackLoggedNodes = {};
   final Set<int> _bleStripLoggedNodes = {};
 
+  /// Haversine distance in meters between two lat/lon points.
+  static double _haversineMeters(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
+    const earthRadius = 6371000.0; // meters
+    final dLat = (lat2 - lat1) * (math.pi / 180);
+    final dLon = (lon2 - lon1) * (math.pi / 180);
+    final a =
+        (math.sin(dLat / 2) * math.sin(dLat / 2)) +
+        math.cos(lat1 * (math.pi / 180)) *
+            math.cos(lat2 * (math.pi / 180)) *
+            (math.sin(dLon / 2) * math.sin(dLon / 2));
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadius * c;
+  }
+
+  /// Compute distance from myNode to [node] and return the node with
+  /// the distance field set. Returns [node] unchanged if either node
+  /// lacks a valid position.
+  MeshNode _withDistance(MeshNode node, MeshNode? myNode) {
+    if (myNode == null || !myNode.hasPosition || !node.hasPosition) {
+      return node;
+    }
+    if (node.nodeNum == myNode.nodeNum) return node;
+    final d = _haversineMeters(
+      myNode.latitude!,
+      myNode.longitude!,
+      node.latitude!,
+      node.longitude!,
+    );
+    return node.copyWith(distance: d);
+  }
+
+  /// Recompute distance for every node relative to [myNode] and
+  /// update state in a single pass. Only called when myNode's
+  /// position changes.
+  void _recomputeAllDistances(MeshNode myNode) {
+    if (!myNode.hasPosition) return;
+    final updated = <int, MeshNode>{};
+    var changed = false;
+    for (final entry in state.entries) {
+      final node = entry.value;
+      if (node.nodeNum == myNode.nodeNum || !node.hasPosition) {
+        updated[entry.key] = node;
+        continue;
+      }
+      final d = _haversineMeters(
+        myNode.latitude!,
+        myNode.longitude!,
+        node.latitude!,
+        node.longitude!,
+      );
+      if (node.distance != d) {
+        updated[entry.key] = node.copyWith(distance: d);
+        changed = true;
+      } else {
+        updated[entry.key] = node;
+      }
+    }
+    if (changed) {
+      state = updated;
+    }
+  }
+
   /// Debounced batch save: collect node updates and flush after a delay
   final Map<int, MeshNode> _pendingSaves = {};
   Timer? _saveTimer;
@@ -3581,6 +3690,80 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           // Always preserve user preferences from DeviceFavoritesService
           isFavorite: favoritesSet.contains(node.nodeNum),
           isIgnored: ignoredSet.contains(node.nodeNum),
+          // Preserve stored telemetry that protocol nodes from the
+          // initial NodeDB dump don't carry. These fields arrive via
+          // later telemetry packets; without this the stored last-known
+          // values are clobbered with null on every reconnect.
+          temperature: node.temperature ?? existing.temperature,
+          humidity: node.humidity ?? existing.humidity,
+          voltage: node.voltage ?? existing.voltage,
+          channelUtilization:
+              node.channelUtilization ?? existing.channelUtilization,
+          airUtilTx: node.airUtilTx ?? existing.airUtilTx,
+          uptimeSeconds: node.uptimeSeconds ?? existing.uptimeSeconds,
+          barometricPressure:
+              node.barometricPressure ?? existing.barometricPressure,
+          gasResistance: node.gasResistance ?? existing.gasResistance,
+          iaq: node.iaq ?? existing.iaq,
+          lux: node.lux ?? existing.lux,
+          whiteLux: node.whiteLux ?? existing.whiteLux,
+          irLux: node.irLux ?? existing.irLux,
+          uvLux: node.uvLux ?? existing.uvLux,
+          windDirection: node.windDirection ?? existing.windDirection,
+          windSpeed: node.windSpeed ?? existing.windSpeed,
+          windGust: node.windGust ?? existing.windGust,
+          windLull: node.windLull ?? existing.windLull,
+          weight: node.weight ?? existing.weight,
+          radiation: node.radiation ?? existing.radiation,
+          rainfall1h: node.rainfall1h ?? existing.rainfall1h,
+          rainfall24h: node.rainfall24h ?? existing.rainfall24h,
+          soilMoisture: node.soilMoisture ?? existing.soilMoisture,
+          soilTemperature: node.soilTemperature ?? existing.soilTemperature,
+          envDistance: node.envDistance ?? existing.envDistance,
+          envCurrent: node.envCurrent ?? existing.envCurrent,
+          envVoltage: node.envVoltage ?? existing.envVoltage,
+          ch1Voltage: node.ch1Voltage ?? existing.ch1Voltage,
+          ch1Current: node.ch1Current ?? existing.ch1Current,
+          ch2Voltage: node.ch2Voltage ?? existing.ch2Voltage,
+          ch2Current: node.ch2Current ?? existing.ch2Current,
+          ch3Voltage: node.ch3Voltage ?? existing.ch3Voltage,
+          ch3Current: node.ch3Current ?? existing.ch3Current,
+          pm10Standard: node.pm10Standard ?? existing.pm10Standard,
+          pm25Standard: node.pm25Standard ?? existing.pm25Standard,
+          pm100Standard: node.pm100Standard ?? existing.pm100Standard,
+          pm10Environmental:
+              node.pm10Environmental ?? existing.pm10Environmental,
+          pm25Environmental:
+              node.pm25Environmental ?? existing.pm25Environmental,
+          pm100Environmental:
+              node.pm100Environmental ?? existing.pm100Environmental,
+          particles03um: node.particles03um ?? existing.particles03um,
+          particles05um: node.particles05um ?? existing.particles05um,
+          particles10um: node.particles10um ?? existing.particles10um,
+          particles25um: node.particles25um ?? existing.particles25um,
+          particles50um: node.particles50um ?? existing.particles50um,
+          particles100um: node.particles100um ?? existing.particles100um,
+          co2: node.co2 ?? existing.co2,
+          numPacketsTx: node.numPacketsTx ?? existing.numPacketsTx,
+          numPacketsRx: node.numPacketsRx ?? existing.numPacketsRx,
+          numPacketsRxBad: node.numPacketsRxBad ?? existing.numPacketsRxBad,
+          numOnlineNodes: node.numOnlineNodes ?? existing.numOnlineNodes,
+          numTotalNodes: node.numTotalNodes ?? existing.numTotalNodes,
+          numTxDropped: node.numTxDropped ?? existing.numTxDropped,
+          noiseFloor: node.noiseFloor ?? existing.noiseFloor,
+          nodeStatus: node.nodeStatus ?? existing.nodeStatus,
+          firmwareVersion: node.firmwareVersion ?? existing.firmwareVersion,
+          hasWifi: node.hasWifi || existing.hasWifi,
+          hasBluetooth: node.hasBluetooth || existing.hasBluetooth,
+          positionTimestamp:
+              node.positionTimestamp ?? existing.positionTimestamp,
+          firstHeard: existing.firstHeard ?? node.firstHeard,
+          distance: node.distance ?? existing.distance,
+          satsInView: node.satsInView ?? existing.satsInView,
+          gpsAccuracy: node.gpsAccuracy ?? existing.gpsAccuracy,
+          groundSpeed: node.groundSpeed ?? existing.groundSpeed,
+          groundTrack: node.groundTrack ?? existing.groundTrack,
+          precisionBits: node.precisionBits ?? existing.precisionBits,
         );
       } else {
         // New node - apply favorites/ignored from service
@@ -3595,6 +3778,15 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       _logFallbackIfNeeded(node);
     }
 
+    // Compute distances now that all nodes (including myNode) are loaded.
+    final myNodeNum = ref.read(myNodeNumProvider);
+    if (myNodeNum != null) {
+      final myNode = state[myNodeNum];
+      if (myNode != null && myNode.hasPosition) {
+        _recomputeAllDistances(myNode);
+      }
+    }
+
     // Listen for new nodes
     _nodeSubscription = protocol.nodeStream.listen((node) {
       if (!ref.mounted) return;
@@ -3606,7 +3798,10 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       final currentIgnored = _deviceFavorites?.ignored ?? <int>{};
 
       if (existing != null) {
-        // Preserve stored properties that don't come from protocol
+        // Preserve stored properties that don't come from protocol.
+        // The protocol service emits MeshNode via copyWith, so fields
+        // already on the node are preserved. But position and user
+        // preferences need explicit merging.
         node = node.copyWith(
           // Preserve position if new node doesn't have one
           latitude: node.hasPosition ? node.latitude : existing.latitude,
@@ -3615,6 +3810,8 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           // Always preserve user preferences from DeviceFavoritesService
           isFavorite: currentFavorites.contains(node.nodeNum),
           isIgnored: currentIgnored.contains(node.nodeNum),
+          // Preserve firstHeard — always keep the earliest value
+          firstHeard: existing.firstHeard ?? node.firstHeard,
         );
       } else {
         // New node - apply favorites/ignored from service
@@ -3633,7 +3830,28 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       final identities = ref.read(nodeIdentityProvider);
       node = _mergeIdentity(node, identities[node.nodeNum]);
 
-      state = {...state, node.nodeNum: node};
+      // Compute distance from myNode for this node (or recompute all
+      // when myNode's own position changes).
+      final myNodeNum = ref.read(myNodeNumProvider);
+      if (myNodeNum != null) {
+        if (node.nodeNum == myNodeNum) {
+          // myNode updated — check if position changed
+          final posChanged =
+              existing == null ||
+              existing.latitude != node.latitude ||
+              existing.longitude != node.longitude;
+          state = {...state, node.nodeNum: node};
+          if (posChanged && node.hasPosition) {
+            _recomputeAllDistances(node);
+          }
+        } else {
+          final myNode = state[myNodeNum];
+          node = _withDistance(node, myNode);
+          state = {...state, node.nodeNum: node};
+        }
+      } else {
+        state = {...state, node.nodeNum: node};
+      }
 
       _logFallbackIfNeeded(node);
 

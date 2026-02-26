@@ -1140,9 +1140,20 @@ class ProtocolService {
     // Emit per-packet telemetry for mesh health analysis
     _emitPacketTelemetry(packet);
 
-    // Update lastHeard for the sender node (keeps node online status accurate)
-    // This ensures any packet from a node updates its online status
-    _updateNodeLastHeard(packet.from);
+    // Update lastHeard (and RF metadata) for the sender node.
+    // rxRssi/rxSnr are per-packet RF metrics that tell us how strong
+    // the sender's signal was when our radio received it. Propagating
+    // them to MeshNode keeps the per-node signal data fresh for the UI
+    // (node cards, node detail, nearby nodes, AR, 3D mesh, NodeDex).
+    // hopCount and viaMqtt are also refreshed so the "hops away" and
+    // MQTT badge stay current as mesh topology changes.
+    _updateNodeLastHeard(
+      packet.from,
+      rxRssi: packet.hasRxRssi() ? packet.rxRssi : null,
+      rxSnr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
+      hopCount: _computeHopCount(packet),
+      viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : null,
+    );
 
     // Extract and emit SNR from received packets
     if (packet.hasRxSnr()) {
@@ -1312,12 +1323,7 @@ class ProtocolService {
       }
 
       // Calculate hop count from mesh packet metadata
-      // hopStart field is not available in current generated protobuf
-      // Set to null until protobuf is updated to include hopStart
-      final int? hopCount = null;
-      AppLogging.social(
-        '📡 Signals: hopCount unavailable (hopStart not in generated proto) -> storing null',
-      );
+      final int? hopCount = _computeHopCount(packet);
 
       final signalPacket = MeshSignalPacket.fromPayload(
         packet.from,
@@ -2144,6 +2150,10 @@ class ProtocolService {
           nodeNum: packet.from,
           lastHeard: DateTime.now(),
           firstHeard: DateTime.now(),
+          rssi: packet.hasRxRssi() ? packet.rxRssi : null,
+          snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
+          hopCount: _computeHopCount(packet),
+          viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : false,
         );
         _nodes[packet.from] = placeholderNode;
         _nodeController.add(placeholderNode);
@@ -2638,6 +2648,11 @@ class ProtocolService {
           airUtilTx: airUtilTx,
           uptimeSeconds: uptimeSeconds,
           lastHeard: DateTime.now(),
+          firstHeard: DateTime.now(),
+          rssi: packet.hasRxRssi() ? packet.rxRssi : null,
+          snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
+          hopCount: _computeHopCount(packet),
+          viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : false,
           avatarColor: avatarColor,
           isFavorite: false,
         );
@@ -2740,8 +2755,12 @@ class ProtocolService {
           latitude: position.latitudeI / 1e7,
           longitude: position.longitudeI / 1e7,
           altitude: position.hasAltitude() ? position.altitude : null,
+          rssi: packet.hasRxRssi() ? packet.rxRssi : null,
           snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
           lastHeard: DateTime.now(),
+          firstHeard: DateTime.now(),
+          hopCount: _computeHopCount(packet),
+          viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : false,
           avatarColor: avatarColor,
           isFavorite: false,
           positionTimestamp: DateTime.now(),
@@ -2849,8 +2868,12 @@ class ProtocolService {
             userId: user.hasId() ? user.id : null,
             hardwareModel: hwModel,
             role: role,
+            rssi: packet.hasRxRssi() ? packet.rxRssi : null,
             snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
             lastHeard: DateTime.now(),
+            firstHeard: DateTime.now(),
+            hopCount: _computeHopCount(packet),
+            viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : false,
             avatarColor: avatarColor,
             isFavorite: false,
           );
@@ -2868,12 +2891,36 @@ class ProtocolService {
     }
   }
 
-  /// Update lastHeard timestamp for a node (marks it as online)
-  /// This is called for any packet received from a node
-  void _updateNodeLastHeard(int nodeNum) {
+  /// Update lastHeard timestamp and RF signal metadata for a node.
+  ///
+  /// Called for every incoming mesh packet. [rxRssi] and [rxSnr] are
+  /// the per-packet RF metrics from the radio — they tell us how strong
+  /// the sender's LoRa signal was when our radio received it. Storing
+  /// them on [MeshNode] makes per-node signal strength available to
+  /// node cards, node detail, nearby nodes, AR, 3D mesh, and NodeDex.
+  ///
+  /// Packets from our own node (local BLE deliveries) lack RF metrics
+  /// and will pass null for both, leaving existing values unchanged.
+  ///
+  /// [hopCount] is derived from hopStart - hopLimit on the packet.
+  /// [viaMqtt] indicates whether the packet traversed MQTT transport.
+  /// Both are null-safe: null means "no update", preserving existing values.
+  void _updateNodeLastHeard(
+    int nodeNum, {
+    int? rxRssi,
+    int? rxSnr,
+    int? hopCount,
+    bool? viaMqtt,
+  }) {
     final node = _nodes[nodeNum];
     if (node != null) {
-      final updatedNode = node.copyWith(lastHeard: DateTime.now());
+      final updatedNode = node.copyWith(
+        lastHeard: DateTime.now(),
+        rssi: rxRssi ?? node.rssi,
+        snr: rxSnr ?? node.snr,
+        hopCount: hopCount ?? node.hopCount,
+        viaMqtt: viaMqtt ?? node.viaMqtt,
+      );
       _nodes[nodeNum] = updatedNode;
       _nodeController.add(updatedNode);
     }
@@ -3074,6 +3121,12 @@ class ProtocolService {
         isMuted: nodeInfo.hasIsMuted()
             ? nodeInfo.isMuted
             : existingNode.isMuted,
+        viaMqtt: nodeInfo.hasViaMqtt()
+            ? nodeInfo.viaMqtt
+            : existingNode.viaMqtt,
+        hopCount: nodeInfo.hasHopsAway()
+            ? nodeInfo.hopsAway
+            : existingNode.hopCount,
       );
     } else {
       // Use null for empty strings to trigger fallback display logic, sanitize to prevent UTF-16 crashes
@@ -3102,11 +3155,14 @@ class ProtocolService {
             ? nodeInfo.deviceMetrics.batteryLevel
             : null,
         lastHeard: deviceLastHeard,
+        firstHeard: DateTime.now(),
         role: role,
         avatarColor: avatarColor,
         isFavorite: false,
         hasPublicKey: hasPublicKey,
         isMuted: nodeInfo.hasIsMuted() ? nodeInfo.isMuted : false,
+        viaMqtt: nodeInfo.hasViaMqtt() ? nodeInfo.viaMqtt : false,
+        hopCount: nodeInfo.hasHopsAway() ? nodeInfo.hopsAway : null,
       );
     }
 

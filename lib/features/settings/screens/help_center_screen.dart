@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/help/help_article.dart';
 import '../../../core/help/help_content.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
@@ -13,10 +14,16 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../features/onboarding/widgets/mesh_node_brain.dart';
+import '../../../providers/help_article_providers.dart';
 import '../../../providers/help_providers.dart';
 import '../../../services/haptic_service.dart';
+import 'help_article_screen.dart';
 
-/// Help Center screen with searchable topics, category filtering, and tour replay
+/// Help Center screen with knowledge-base articles and guided tours.
+///
+/// The main view shows educational articles about Meshtastic, searchable
+/// and filterable by category. An expandable section at the bottom provides
+/// access to the in-app guided tour system.
 class HelpCenterScreen extends ConsumerStatefulWidget {
   const HelpCenterScreen({super.key});
 
@@ -28,7 +35,8 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
     with LifecycleSafeMixin<HelpCenterScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  String? _selectedCategory;
+  HelpArticleCategory? _selectedCategory;
+  bool _showInteractiveTours = false;
 
   @override
   void dispose() {
@@ -36,43 +44,35 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
     super.dispose();
   }
 
-  List<HelpTopic> _filteredTopics(HelpState helpState) {
-    var topics = _selectedCategory != null
-        ? HelpContent.getTopicsByCategory(_selectedCategory!)
-        : HelpContent.topicsByPriority;
+  List<HelpArticle> _filteredArticles(List<HelpArticle> articles) {
+    var result = _selectedCategory != null
+        ? articles.where((a) => a.category == _selectedCategory).toList()
+        : articles;
 
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
-      topics = topics.where((topic) {
-        return topic.title.toLowerCase().contains(query) ||
-            topic.description.toLowerCase().contains(query) ||
-            topic.steps.any(
-              (step) => step.bubbleText.toLowerCase().contains(query),
-            );
+      result = result.where((article) {
+        return article.title.toLowerCase().contains(query) ||
+            article.description.toLowerCase().contains(query);
       }).toList();
     }
 
-    return topics;
+    return result;
   }
 
-  int _completedCount(HelpState helpState) {
-    return HelpContent.allTopics
-        .where((t) => helpState.isTopicCompleted(t.id))
-        .length;
+  int _categoryCount(List<HelpArticle> articles, HelpArticleCategory category) {
+    return articles.where((a) => a.category == category).length;
   }
 
-  int _categoryCount(String category) {
-    return HelpContent.getTopicsByCategory(category).length;
-  }
-
-  /// Group topics by category, preserving category order from HelpContent.
-  Map<String, List<HelpTopic>> _groupByCategory(List<HelpTopic> topics) {
-    final grouped = <String, List<HelpTopic>>{};
-    // Maintain category ordering from HelpContent.allCategories
-    for (final cat in HelpContent.allCategories) {
-      final catTopics = topics.where((t) => t.category == cat).toList();
-      if (catTopics.isNotEmpty) {
-        grouped[cat] = catTopics;
+  /// Group articles by category, preserving enum order.
+  Map<HelpArticleCategory, List<HelpArticle>> _groupByCategory(
+    List<HelpArticle> articles,
+  ) {
+    final grouped = <HelpArticleCategory, List<HelpArticle>>{};
+    for (final cat in HelpArticleCategory.values) {
+      final catArticles = articles.where((a) => a.category == cat).toList();
+      if (catArticles.isNotEmpty) {
+        grouped[cat] = catArticles;
       }
     }
     return grouped;
@@ -80,95 +80,153 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
 
   @override
   Widget build(BuildContext context) {
+    final articlesAsync = ref.watch(helpArticlesProvider);
+    final readState = ref.watch(helpArticleReadProvider);
     final helpState = ref.watch(helpProvider);
-    final topics = _filteredTopics(helpState);
-    final completedCount = _completedCount(helpState);
-    final totalCount = HelpContent.allTopics.length;
-    final isSearching = _searchQuery.isNotEmpty;
-    final isFiltered = _selectedCategory != null;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: GlassScaffold(
-        resizeToAvoidBottomInset: false,
-        title: 'Help Center',
-        slivers: [
-          // Ico mascot + progress header (pinned, collapses on scroll)
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _ProgressHeaderDelegate(
-              completedCount: completedCount,
-              totalCount: totalCount,
+      child: articlesAsync.when(
+        data: (articles) =>
+            _buildContent(context, articles, readState, helpState),
+        loading: () => GlassScaffold(
+          title: 'Help Center',
+          slivers: [
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: CircularProgressIndicator()),
             ),
-          ),
+          ],
+        ),
+        error: (_, _) => GlassScaffold(
+          title: 'Help Center',
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Text(
+                  'Failed to load help content',
+                  style: TextStyle(color: context.textSecondary),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-          // Pinned search + category filter chips
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: SearchFilterHeaderDelegate(
-              textScaler: MediaQuery.textScalerOf(context),
-              searchController: _searchController,
-              searchQuery: _searchQuery,
-              hintText: 'Search help topics',
-              onSearchChanged: (value) {
-                safeSetState(() => _searchQuery = value);
-              },
-              rebuildKey: Object.hashAll([
-                _selectedCategory,
-                completedCount,
-                totalCount,
-              ]),
-              filterChips: [
-                SectionFilterChip(
-                  label: 'All',
-                  count: totalCount,
-                  isSelected: _selectedCategory == null,
+  Widget _buildContent(
+    BuildContext context,
+    List<HelpArticle> articles,
+    HelpArticleReadState readState,
+    HelpState helpState,
+  ) {
+    final filtered = _filteredArticles(articles);
+    final readCount = readState.readCount(articles);
+    final totalCount = articles.length;
+    final isSearching = _searchQuery.isNotEmpty;
+    final isFiltered = _selectedCategory != null;
+
+    return GlassScaffold(
+      resizeToAvoidBottomInset: false,
+      title: 'Help Center',
+      slivers: [
+        // Ico mascot + progress header (pinned, collapses on scroll)
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _ProgressHeaderDelegate(
+            completedCount: readCount,
+            totalCount: totalCount,
+            label: 'articles read',
+          ),
+        ),
+
+        // Pinned search + category filter chips
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: SearchFilterHeaderDelegate(
+            textScaler: MediaQuery.textScalerOf(context),
+            searchController: _searchController,
+            searchQuery: _searchQuery,
+            hintText: 'Search articles',
+            onSearchChanged: (value) {
+              safeSetState(() => _searchQuery = value);
+            },
+            rebuildKey: Object.hashAll([
+              _selectedCategory,
+              readCount,
+              totalCount,
+            ]),
+            filterChips: [
+              SectionFilterChip(
+                label: 'All',
+                count: totalCount,
+                isSelected: _selectedCategory == null,
+                onTap: () {
+                  ref.haptics.toggle();
+                  safeSetState(() => _selectedCategory = null);
+                },
+              ),
+              ...HelpArticleCategory.values.map(
+                (category) => SectionFilterChip(
+                  label: category.displayName,
+                  count: _categoryCount(articles, category),
+                  isSelected: _selectedCategory == category,
+                  color: category.color,
+                  icon: category.icon,
                   onTap: () {
                     ref.haptics.toggle();
-                    safeSetState(() => _selectedCategory = null);
+                    safeSetState(() => _selectedCategory = category);
                   },
                 ),
-                ...HelpContent.allCategories.map(
-                  (category) => SectionFilterChip(
-                    label: category,
-                    count: _categoryCount(category),
-                    isSelected: _selectedCategory == category,
-                    color: _categoryColor(category),
-                    icon: _categoryIcon(category),
-                    onTap: () {
-                      ref.haptics.toggle();
-                      safeSetState(() => _selectedCategory = category);
-                    },
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
 
-          // Content: grouped topics, empty state, or search results
-          if (topics.isEmpty)
-            _buildEmptyState(isSearching, isFiltered)
-          else if (_selectedCategory == null && !isSearching)
-            // Grouped by category with sticky headers
-            ..._buildGroupedSlivers(topics, helpState)
-          else
-            // Flat list for filtered / search views
-            _buildFlatList(topics, helpState),
+        // Content: grouped articles, empty state, or search results
+        if (filtered.isEmpty)
+          _buildEmptyState(isSearching, isFiltered)
+        else if (_selectedCategory == null && !isSearching)
+          // Grouped by category with sticky headers
+          ..._buildGroupedSlivers(filtered, readState)
+        else
+          // Flat list for filtered / search views
+          _buildFlatList(filtered, readState),
 
-          // Settings section
-          SliverToBoxAdapter(
-            child: _HelpSettingsSection(
-              helpState: helpState,
-              onResetProgress: () => _showResetDialog(),
-            ),
+        // Interactive Tours expandable section
+        SliverToBoxAdapter(
+          child: _InteractiveToursSection(
+            helpState: helpState,
+            isExpanded: _showInteractiveTours,
+            onToggle: () {
+              ref.haptics.toggle();
+              safeSetState(
+                () => _showInteractiveTours = !_showInteractiveTours,
+              );
+            },
+            onTopicTap: (topic, isCompleted) =>
+                _showTopicDetail(topic, isCompleted),
           ),
+        ),
 
-          // Bottom safe area padding
-          SliverToBoxAdapter(
-            child: SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+        // Settings section
+        SliverToBoxAdapter(
+          child: _HelpSettingsSection(
+            helpState: helpState,
+            readState: readState,
+            onResetProgress: () => _showResetDialog(),
           ),
-        ],
-      ),
+        ),
+
+        // Bottom safe area padding
+        SliverToBoxAdapter(
+          child: SizedBox(
+            height: MediaQuery.of(context).padding.bottom + AppTheme.spacing16,
+          ),
+        ),
+      ],
     );
   }
 
@@ -184,13 +242,13 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
           config: AnimatedEmptyStateConfig(
             icons: const [
               Icons.search_off_rounded,
-              Icons.help_outline,
+              Icons.article_outlined,
               Icons.lightbulb_outline,
               Icons.school_outlined,
             ],
             taglines: const [
-              'No topics match your search.\nTry different keywords.',
-              'Search by topic name, description,\nor step content.',
+              'No articles match your search.\nTry different keywords.',
+              'Search by article title\nor description.',
             ],
             titlePrefix: 'No ',
             titleKeyword: 'results',
@@ -209,15 +267,15 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.help_outline,
+                Icons.article_outlined,
                 size: 56,
                 color: context.textTertiary.withValues(alpha: 0.4),
               ),
               const SizedBox(height: AppTheme.spacing16),
               Text(
                 isFiltered
-                    ? 'No topics in this category'
-                    : 'No help topics available',
+                    ? 'No articles in this category'
+                    : 'No articles available',
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
@@ -228,7 +286,8 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
               const SizedBox(height: AppTheme.spacing8),
               Text(
                 isFiltered
-                    ? 'Try selecting a different category from the filter chips above.'
+                    ? 'Try selecting a different category from the '
+                          'filter chips above.'
                     : 'Help content is being prepared. Check back soon.',
                 style: TextStyle(
                   fontSize: 13,
@@ -245,22 +304,22 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
   }
 
   List<Widget> _buildGroupedSlivers(
-    List<HelpTopic> topics,
-    HelpState helpState,
+    List<HelpArticle> articles,
+    HelpArticleReadState readState,
   ) {
-    final grouped = _groupByCategory(topics);
+    final grouped = _groupByCategory(articles);
     final slivers = <Widget>[];
 
     for (final entry in grouped.entries) {
       final category = entry.key;
-      final categoryTopics = entry.value;
+      final categoryArticles = entry.value;
 
       slivers.add(
         SliverPersistentHeader(
           pinned: false,
           delegate: SectionHeaderDelegate(
-            title: category,
-            count: categoryTopics.length,
+            title: category.displayName,
+            count: categoryArticles.length,
           ),
         ),
       );
@@ -270,14 +329,14 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
           padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
-              final topic = categoryTopics[index];
-              final isCompleted = helpState.isTopicCompleted(topic.id);
-              return _HelpTopicTile(
-                topic: topic,
-                isCompleted: isCompleted,
-                onTap: () => _showTopicDetail(topic, isCompleted),
+              final article = categoryArticles[index];
+              final isRead = readState.isRead(article.id);
+              return _HelpArticleTile(
+                article: article,
+                isRead: isRead,
+                onTap: () => _openArticle(article),
               );
-            }, childCount: categoryTopics.length),
+            }, childCount: categoryArticles.length),
           ),
         ),
       );
@@ -286,19 +345,22 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
     return slivers;
   }
 
-  Widget _buildFlatList(List<HelpTopic> topics, HelpState helpState) {
+  Widget _buildFlatList(
+    List<HelpArticle> articles,
+    HelpArticleReadState readState,
+  ) {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
-          final topic = topics[index];
-          final isCompleted = helpState.isTopicCompleted(topic.id);
-          return _HelpTopicTile(
-            topic: topic,
-            isCompleted: isCompleted,
-            onTap: () => _showTopicDetail(topic, isCompleted),
+          final article = articles[index];
+          final isRead = readState.isRead(article.id);
+          return _HelpArticleTile(
+            article: article,
+            isRead: isRead,
+            onTap: () => _openArticle(article),
           );
-        }, childCount: topics.length),
+        }, childCount: articles.length),
       ),
     );
   }
@@ -306,6 +368,14 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
   // ---------------------------------------------------------------------------
   // Actions
   // ---------------------------------------------------------------------------
+
+  void _openArticle(HelpArticle article) {
+    ref.haptics.buttonTap();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => HelpArticleScreen(article: article)),
+    );
+  }
 
   void _showTopicDetail(HelpTopic topic, bool isCompleted) {
     ref.haptics.buttonTap();
@@ -372,8 +442,7 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
     );
   }
 
-  /// Returns a human-readable screen name for a topic, giving the user
-  /// context about where to find the feature in the app.
+  /// Returns a human-readable screen name for a topic.
   String? _screenNameForTopic(String topicId) {
     return switch (topicId) {
       'channels_overview' ||
@@ -417,15 +486,16 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
   Future<void> _showResetDialog() async {
     ref.haptics.buttonTap();
 
-    // Capture notifier before await
+    // Capture notifiers before await
     final helpNotifier = ref.read(helpProvider.notifier);
+    final readNotifier = ref.read(helpArticleReadProvider.notifier);
 
     final confirmed = await AppBottomSheet.showConfirm(
       context: context,
       title: 'Reset Help Progress?',
       message:
-          'This will mark all help topics as unread and show help hints again. '
-          'You can replay any tour from the help center.',
+          'This will mark all articles as unread and reset interactive tour '
+          'progress. You can start fresh.',
       confirmLabel: 'Reset',
       isDestructive: true,
     );
@@ -435,39 +505,8 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
     if (confirmed == true) {
       HapticFeedback.heavyImpact();
       helpNotifier.resetAll();
+      readNotifier.resetAll();
     }
-  }
-
-  // ---------------------------------------------------------------------------
-  // Category theming
-  // ---------------------------------------------------------------------------
-
-  Color _categoryColor(String category) {
-    return switch (category) {
-      HelpContent.catChannels => AccentColors.blue,
-      HelpContent.catMessaging => AccentColors.green,
-      HelpContent.catNodes => AccentColors.yellow,
-      HelpContent.catDevice => AccentColors.orange,
-      HelpContent.catNetwork => AccentColors.cyan,
-      HelpContent.catAutomations => AccentColors.purple,
-      HelpContent.catSettings => AccentColors.pink,
-      HelpContent.catLegal => AccentColors.red,
-      _ => AppTheme.primaryMagenta,
-    };
-  }
-
-  IconData _categoryIcon(String category) {
-    return switch (category) {
-      HelpContent.catChannels => Icons.forum_outlined,
-      HelpContent.catMessaging => Icons.chat_outlined,
-      HelpContent.catNodes => Icons.hexagon_outlined,
-      HelpContent.catDevice => Icons.developer_board_outlined,
-      HelpContent.catNetwork => Icons.cell_tower,
-      HelpContent.catAutomations => Icons.bolt_outlined,
-      HelpContent.catSettings => Icons.tune,
-      HelpContent.catLegal => Icons.gavel_outlined,
-      _ => Icons.help_outline,
-    };
   }
 }
 
@@ -478,10 +517,12 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
 class _ProgressHeaderDelegate extends SliverPersistentHeaderDelegate {
   final int completedCount;
   final int totalCount;
+  final String label;
 
   _ProgressHeaderDelegate({
     required this.completedCount,
     required this.totalCount,
+    this.label = 'articles read',
   });
 
   static const double _maxHeight = 104.0;
@@ -514,9 +555,7 @@ class _ProgressHeaderDelegate extends SliverPersistentHeaderDelegate {
       0.0,
       1.0,
     );
-    // Expanded content fades out in the first 60% of collapse
     final expandedOpacity = (1.0 - (collapseRatio / 0.6)).clamp(0.0, 1.0);
-    // Compact bar fades in during the last 40% of collapse
     final compactOpacity = ((collapseRatio - 0.6) / 0.4).clamp(0.0, 1.0);
 
     return Container(
@@ -554,8 +593,8 @@ class _ProgressHeaderDelegate extends SliverPersistentHeaderDelegate {
                         children: [
                           Text(
                             allDone
-                                ? 'Great work! All topics complete.'
-                                : 'Hey! I\'m Ico, your mesh guide.',
+                                ? 'You\'ve read everything!'
+                                : 'Learn how Meshtastic works',
                             style: TextStyle(
                               color: context.textPrimary,
                               fontSize: 15,
@@ -565,8 +604,10 @@ class _ProgressHeaderDelegate extends SliverPersistentHeaderDelegate {
                           const SizedBox(height: AppTheme.spacing4),
                           Text(
                             allDone
-                                ? 'You can replay any tour anytime.'
-                                : 'Tap a topic to learn with interactive guides.',
+                                ? 'Come back anytime to refresh your '
+                                      'knowledge.'
+                                : 'Tap an article to learn about mesh '
+                                      'networking, radio settings, and more.',
                             style: TextStyle(
                               color: context.textSecondary,
                               fontSize: 13,
@@ -625,7 +666,7 @@ class _ProgressHeaderDelegate extends SliverPersistentHeaderDelegate {
 }
 
 // =============================================================================
-// Progress Bar (shared between expanded and compact states)
+// Progress Bar
 // =============================================================================
 
 class _ProgressBar extends StatelessWidget {
@@ -669,17 +710,17 @@ class _ProgressBar extends StatelessWidget {
 }
 
 // =============================================================================
-// Help Topic Tile
+// Help Article Tile (knowledge base entry)
 // =============================================================================
 
-class _HelpTopicTile extends StatelessWidget {
-  final HelpTopic topic;
-  final bool isCompleted;
+class _HelpArticleTile extends StatelessWidget {
+  final HelpArticle article;
+  final bool isRead;
   final VoidCallback onTap;
 
-  const _HelpTopicTile({
-    required this.topic,
-    required this.isCompleted,
+  const _HelpArticleTile({
+    required this.article,
+    required this.isRead,
     required this.onTap,
   });
 
@@ -694,29 +735,25 @@ class _HelpTopicTile extends StatelessWidget {
           color: context.surface,
           borderRadius: BorderRadius.circular(AppTheme.radius12),
           border: Border.all(
-            color: isCompleted
+            color: isRead
                 ? AppTheme.successGreen.withValues(alpha: 0.3)
                 : context.border,
-            width: isCompleted ? 2 : 1,
+            width: isRead ? 2 : 1,
           ),
         ),
         child: Row(
           children: [
-            // Topic icon
+            // Article category icon
             Container(
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: isCompleted
-                    ? AppTheme.successGreen.withValues(alpha: 0.1)
-                    : AppTheme.primaryMagenta.withValues(alpha: 0.1),
+                color: article.category.color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Icon(
-                topic.icon,
-                color: isCompleted
-                    ? AppTheme.successGreen
-                    : AppTheme.primaryMagenta,
+                article.icon,
+                color: article.category.color,
                 size: 22,
               ),
             ),
@@ -731,7 +768,7 @@ class _HelpTopicTile extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          topic.title,
+                          article.title,
                           style: TextStyle(
                             color: context.textPrimary,
                             fontSize: 15,
@@ -739,7 +776,7 @@ class _HelpTopicTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (isCompleted)
+                      if (isRead)
                         Padding(
                           padding: const EdgeInsets.only(left: 8),
                           child: Icon(
@@ -752,7 +789,7 @@ class _HelpTopicTile extends StatelessWidget {
                   ),
                   const SizedBox(height: AppTheme.spacing2),
                   Text(
-                    topic.description,
+                    article.description,
                     style: TextStyle(
                       color: context.textSecondary,
                       fontSize: 13,
@@ -766,17 +803,17 @@ class _HelpTopicTile extends StatelessWidget {
                     runSpacing: 4,
                     children: [
                       _MetadataChip(
-                        icon: Icons.play_circle_outline,
-                        label: '${topic.steps.length} steps',
+                        icon: Icons.schedule,
+                        label: '${article.readingTimeMinutes} min',
                       ),
                       _MetadataChip(
-                        icon: isCompleted
+                        icon: isRead
                             ? Icons.visibility
-                            : Icons.auto_stories_outlined,
-                        label: isCompleted ? 'Review' : 'View',
-                        color: isCompleted
+                            : Icons.article_outlined,
+                        label: isRead ? 'Read' : 'Unread',
+                        color: isRead
                             ? AppTheme.successGreen
-                            : AppTheme.primaryMagenta,
+                            : article.category.color,
                       ),
                     ],
                   ),
@@ -791,7 +828,7 @@ class _HelpTopicTile extends StatelessWidget {
 }
 
 // =============================================================================
-// Metadata Chip (inline label for topic cards)
+// Metadata Chip
 // =============================================================================
 
 class _MetadataChip extends StatelessWidget {
@@ -823,7 +860,222 @@ class _MetadataChip extends StatelessWidget {
 }
 
 // =============================================================================
-// Topic Detail Content (scrollable bottom sheet body)
+// Interactive Tours Section (expandable)
+// =============================================================================
+
+class _InteractiveToursSection extends StatelessWidget {
+  final HelpState helpState;
+  final bool isExpanded;
+  final VoidCallback onToggle;
+  final void Function(HelpTopic topic, bool isCompleted) onTopicTap;
+
+  const _InteractiveToursSection({
+    required this.helpState,
+    required this.isExpanded,
+    required this.onToggle,
+    required this.onTopicTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final completedCount = HelpContent.allTopics
+        .where((t) => helpState.isTopicCompleted(t.id))
+        .length;
+    final totalCount = HelpContent.allTopics.length;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        AppTheme.spacing20,
+        AppTheme.spacing16,
+        0,
+      ),
+      decoration: BoxDecoration(
+        color: context.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        children: [
+          // Header (always visible, tappable to expand/collapse)
+          BouncyTap(
+            onTap: onToggle,
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.spacing14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AccentColors.purple.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppTheme.radius10),
+                    ),
+                    child: Icon(
+                      Icons.touch_app_outlined,
+                      color: AccentColors.purple,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Interactive Tours',
+                          style: TextStyle(
+                            color: context.textPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.spacing2),
+                        Text(
+                          '$completedCount / $totalCount completed',
+                          style: TextStyle(
+                            color: context.textTertiary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(Icons.expand_more, color: context.textTertiary),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Expanded content: tour topic list
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: _buildTourList(context),
+            crossFadeState: isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 250),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTourList(BuildContext context) {
+    return Column(
+      children: [
+        Divider(color: context.border.withValues(alpha: 0.3), height: 1),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing12,
+            AppTheme.spacing8,
+            AppTheme.spacing12,
+            AppTheme.spacing12,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(
+                  bottom: AppTheme.spacing8,
+                  left: AppTheme.spacing2,
+                ),
+                child: Text(
+                  'Step-by-step walkthroughs for app features. These tours '
+                  'guide you through each screen with Ico.',
+                  style: TextStyle(
+                    color: context.textTertiary,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              ...HelpContent.allTopics.take(8).map((topic) {
+                final isCompleted = helpState.isTopicCompleted(topic.id);
+                return _TourTopicRow(
+                  topic: topic,
+                  isCompleted: isCompleted,
+                  onTap: () => onTopicTap(topic, isCompleted),
+                );
+              }),
+              if (HelpContent.allTopics.length > 8)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppTheme.spacing4),
+                  child: Center(
+                    child: Text(
+                      '+ ${HelpContent.allTopics.length - 8} more tours',
+                      style: TextStyle(
+                        color: context.textTertiary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// =============================================================================
+// Tour Topic Row (compact, for the expandable section)
+// =============================================================================
+
+class _TourTopicRow extends StatelessWidget {
+  final HelpTopic topic;
+  final bool isCompleted;
+  final VoidCallback onTap;
+
+  const _TourTopicRow({
+    required this.topic,
+    required this.isCompleted,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BouncyTap(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing6),
+        child: Row(
+          children: [
+            Icon(
+              isCompleted ? Icons.check_circle : Icons.play_circle_outline,
+              size: 18,
+              color: isCompleted ? AppTheme.successGreen : context.textTertiary,
+            ),
+            const SizedBox(width: AppTheme.spacing10),
+            Expanded(
+              child: Text(
+                topic.title,
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Text(
+              '${topic.steps.length} steps',
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Topic Detail Content (scrollable bottom sheet body for tours)
 // =============================================================================
 
 class _TopicDetailContent extends StatelessWidget {
@@ -892,7 +1144,7 @@ class _TopicDetailContent extends StatelessWidget {
 }
 
 // =============================================================================
-// Step Card (single help step rendered as readable guide content)
+// Step Card (single help step)
 // =============================================================================
 
 class _StepCard extends StatelessWidget {
@@ -959,7 +1211,6 @@ class _StepCard extends StatelessWidget {
   }
 
   /// Parses **bold** markdown markers into styled [TextSpan]s.
-  /// Matches the rendering used by the in-app help tour speech bubbles.
   static List<TextSpan> _parseMarkdownBold(
     String text, {
     required Color baseColor,
@@ -1010,17 +1261,24 @@ class _StepCard extends StatelessWidget {
 
 class _HelpSettingsSection extends ConsumerWidget {
   final HelpState helpState;
+  final HelpArticleReadState readState;
   final VoidCallback onResetProgress;
 
   const _HelpSettingsSection({
     required this.helpState,
+    required this.readState,
     required this.onResetProgress,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 0),
+      margin: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        AppTheme.spacing16,
+        AppTheme.spacing16,
+        0,
+      ),
       padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.surface,
@@ -1079,7 +1337,7 @@ class _HelpSettingsSection extends ConsumerWidget {
             child: OutlinedButton.icon(
               onPressed: onResetProgress,
               icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Reset All Help Progress'),
+              label: const Text('Reset All Progress'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AccentColors.cyan,
                 side: BorderSide(color: AccentColors.cyan),
@@ -1096,7 +1354,7 @@ class _HelpSettingsSection extends ConsumerWidget {
 }
 
 // =============================================================================
-// Help Setting Row (replaces SwitchListTile)
+// Help Setting Row
 // =============================================================================
 
 class _HelpSettingRow extends StatelessWidget {

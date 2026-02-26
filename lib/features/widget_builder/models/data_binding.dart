@@ -585,6 +585,78 @@ class BindingRegistry {
       category: BindingCategory.node,
       valueType: String,
     ),
+
+    // RF Metadata
+    BindingDefinition(
+      path: 'node.hopCount',
+      label: 'Hop Count',
+      description: 'Number of hops from this node (0 = direct neighbor)',
+      category: BindingCategory.node,
+      valueType: int,
+      minValue: 0,
+      maxValue: 7,
+    ),
+    BindingDefinition(
+      path: 'node.viaMqtt',
+      label: 'Via MQTT',
+      description: 'Whether this node was last heard via MQTT transport',
+      category: BindingCategory.node,
+      valueType: bool,
+    ),
+    BindingDefinition(
+      path: 'node.firstHeard',
+      label: 'First Heard',
+      description: 'When the node was first discovered',
+      category: BindingCategory.node,
+      valueType: DateTime,
+    ),
+
+    // Additional Network Stats
+    BindingDefinition(
+      path: 'node.numPacketsRxBad',
+      label: 'Bad Packets RX',
+      description: 'Bad packets received',
+      category: BindingCategory.network,
+      valueType: int,
+    ),
+
+    // Additional Power Channels
+    BindingDefinition(
+      path: 'node.ch2Voltage',
+      label: 'Channel 2 Voltage',
+      description: 'Power channel 2 voltage',
+      category: BindingCategory.power,
+      valueType: double,
+      unit: 'V',
+      defaultFormat: '{value}V',
+    ),
+    BindingDefinition(
+      path: 'node.ch2Current',
+      label: 'Channel 2 Current',
+      description: 'Power channel 2 current',
+      category: BindingCategory.power,
+      valueType: double,
+      unit: 'A',
+      defaultFormat: '{value}A',
+    ),
+    BindingDefinition(
+      path: 'node.ch3Voltage',
+      label: 'Channel 3 Voltage',
+      description: 'Power channel 3 voltage',
+      category: BindingCategory.power,
+      valueType: double,
+      unit: 'V',
+      defaultFormat: '{value}V',
+    ),
+    BindingDefinition(
+      path: 'node.ch3Current',
+      label: 'Channel 3 Current',
+      description: 'Power channel 3 current',
+      category: BindingCategory.power,
+      valueType: double,
+      unit: 'A',
+      defaultFormat: '{value}A',
+    ),
   ];
 
   /// Get bindings filtered by category
@@ -872,6 +944,14 @@ class DataBindingEngine {
       case 'node.distance':
         return 1250.0;
 
+      // RF Metadata
+      case 'node.hopCount':
+        return 2;
+      case 'node.viaMqtt':
+        return false;
+      case 'node.firstHeard':
+        return DateTime.now().subtract(const Duration(days: 3));
+
       // Network
       case 'network.nodeCount':
       case 'network.totalNodes':
@@ -889,6 +969,8 @@ class DataBindingEngine {
         return 24;
       case 'messaging.recentCount':
         return 0;
+      case 'node.numPacketsRxBad':
+        return 3;
 
       default:
         return null;
@@ -896,17 +978,27 @@ class DataBindingEngine {
   }
 
   /// Resolve device-level fields (from protocol streams)
+  ///
+  /// These represent the BLE connection to the radio (RSSI, SNR) and
+  /// radio-level telemetry (channel utilization). They are NOT the same
+  /// as per-node LoRa signal metrics on [MeshNode] — do not fall back
+  /// to node model fields here.
   dynamic _resolveDevicePath(String field) {
     switch (field) {
       case 'rssi':
-        // Prefer real-time device data, fall back to node data
-        return _deviceRssi ?? _currentNode?.rssi;
+        // BLE RSSI from protocol polling — phone↔radio signal strength.
+        // Do NOT fall back to _currentNode?.rssi which is per-node LoRa
+        // RSSI (a completely different measurement).
+        return _deviceRssi;
       case 'snr':
-        // Prefer real-time device data, fall back to node data
-        return _deviceSnr ?? _currentNode?.snr;
+        // SNR from last received mesh packet.
+        // Do NOT fall back to _currentNode?.snr — the device-level SNR
+        // stream is the authoritative source for the connected radio.
+        return _deviceSnr;
       case 'channelUtil':
       case 'channelUtilization':
-        // Prefer real-time device data, fall back to node data
+        // Channel utilization from device telemetry. Fall back to node
+        // model value since both represent the same radio-reported metric.
         return _deviceChannelUtil ?? _currentNode?.channelUtilization;
       default:
         return null;
@@ -966,9 +1058,9 @@ class DataBindingEngine {
 
       // Signal - prefer real-time device data when available
       case 'snr':
-        return _deviceSnr ?? node.snr;
+        return node.snr;
       case 'rssi':
-        return _deviceRssi ?? node.rssi;
+        return node.rssi;
       case 'distance':
         return node.distance;
 
@@ -1072,6 +1164,14 @@ class DataBindingEngine {
         return node.noiseFloor;
       case 'nodeStatus':
         return node.nodeStatus;
+
+      // RF Metadata
+      case 'hopCount':
+        return node.hopCount;
+      case 'viaMqtt':
+        return node.viaMqtt;
+      case 'firstHeard':
+        return node.firstHeard;
 
       default:
         return null;

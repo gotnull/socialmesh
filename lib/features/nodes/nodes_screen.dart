@@ -130,6 +130,8 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     final recentlyDiscoveredCount = allNodes
         .where((n) => n.isRecentlyDiscovered)
         .length;
+    final rfCount = allNodes.where((n) => !n.viaMqtt).length;
+    final mqttCount = allNodes.where((n) => n.viaMqtt).length;
 
     return GestureDetector(
       onTap: _dismissKeyboard,
@@ -227,6 +229,8 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                   favoritesCount,
                   withPositionCount,
                   recentlyDiscoveredCount,
+                  rfCount,
+                  mqttCount,
                 ]),
                 filterChips: [
                   SectionFilterChip(
@@ -278,6 +282,23 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                     onTap: () => setState(
                       () => _activeFilter = NodeFilter.recentlyDiscovered,
                     ),
+                  ),
+                  SectionFilterChip(
+                    label: 'RF',
+                    count: rfCount,
+                    isSelected: _activeFilter == NodeFilter.rf,
+                    color: AccentColors.emerald,
+                    icon: Icons.cell_tower,
+                    onTap: () => setState(() => _activeFilter = NodeFilter.rf),
+                  ),
+                  SectionFilterChip(
+                    label: 'MQTT',
+                    count: mqttCount,
+                    isSelected: _activeFilter == NodeFilter.mqtt,
+                    color: AccentColors.sky,
+                    icon: Icons.cloud_outlined,
+                    onTap: () =>
+                        setState(() => _activeFilter = NodeFilter.mqtt),
                   ),
                   _SortButton(
                     sortOrder: _sortOrder,
@@ -768,6 +789,10 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
             .toList();
       case NodeFilter.recentlyDiscovered:
         return nodes.where((n) => n.isRecentlyDiscovered).toList();
+      case NodeFilter.rf:
+        return nodes.where((n) => !n.viaMqtt).toList();
+      case NodeFilter.mqtt:
+        return nodes.where((n) => n.viaMqtt).toList();
     }
   }
 
@@ -911,6 +936,8 @@ enum NodeFilter {
   favorites,
   withPosition,
   recentlyDiscovered,
+  rf,
+  mqtt,
 }
 
 /// Sort order options for the nodes list
@@ -1483,42 +1510,115 @@ class _NodeCard extends StatelessWidget {
                   Icon(Icons.place, size: 14, color: context.textTertiary),
                 ],
               ),
-              // Signal bars
-              if (node.rssi != null) ...[
+              // RF metadata row: RSSI, hops, transport
+              if (node.rssi != null ||
+                  node.hopCount != null ||
+                  node.viaMqtt) ...[
                 SizedBox(height: AppTheme.spacing8),
-                Row(
+                Wrap(
+                  spacing: AppTheme.spacing8,
+                  runSpacing: AppTheme.spacing4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Icon(
-                      Icons.signal_cellular_alt,
-                      size: 14,
-                      color: context.textTertiary,
-                    ),
-                    SizedBox(width: AppTheme.spacing6),
-                    Text(
-                      'Signal Good',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.textTertiary,
-                      ),
-                    ),
-                    SizedBox(width: AppTheme.spacing12),
-                    // Signal strength bars
-                    Row(
-                      children: List.generate(4, (i) {
-                        return Container(
-                          margin: const EdgeInsets.only(right: 3),
-                          width: 4,
-                          height: 12 + (i * 3.0),
-                          decoration: BoxDecoration(
-                            color: i < signalBars
-                                ? context.accentColor
-                                : context.textTertiary.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius1,
+                    // RSSI
+                    if (node.rssi != null)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Signal strength bars
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(4, (i) {
+                              return Container(
+                                margin: const EdgeInsets.only(right: 2),
+                                width: 3,
+                                height: 8 + (i * 2.5),
+                                decoration: BoxDecoration(
+                                  color: i < signalBars
+                                      ? context.accentColor
+                                      : context.textTertiary.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius1,
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                          SizedBox(width: AppTheme.spacing4),
+                          Text(
+                            '${node.rssi} dBm',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.textTertiary,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
                           ),
-                        );
-                      }),
+                        ],
+                      ),
+                    // Hop count
+                    if (node.hopCount != null)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.route,
+                            size: 12,
+                            color: context.textTertiary,
+                          ),
+                          SizedBox(width: AppTheme.spacing2),
+                          Text(
+                            node.hopCount == 0
+                                ? 'Direct'
+                                : '${node.hopCount} '
+                                      '${node.hopCount == 1 ? 'hop' : 'hops'}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    // Transport badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: node.viaMqtt
+                            ? AccentColors.sky.withValues(alpha: 0.15)
+                            : AccentColors.emerald.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(AppTheme.radius4),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            node.viaMqtt
+                                ? Icons.cloud_outlined
+                                : Icons.cell_tower,
+                            size: 10,
+                            color: node.viaMqtt
+                                ? AccentColors.sky
+                                : AccentColors.emerald,
+                          ),
+                          SizedBox(width: AppTheme.spacing2),
+                          Text(
+                            node.viaMqtt ? 'MQTT' : 'RF',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: node.viaMqtt
+                                  ? AccentColors.sky
+                                  : AccentColors.emerald,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

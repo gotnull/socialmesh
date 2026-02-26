@@ -496,12 +496,19 @@ void main() {
       });
 
       test('device.snr resolves to snr', () {
+        // device.snr is the BLE/protocol-level SNR, set via setDeviceSignal
+        // — it does NOT fall back to node.snr (which is per-node LoRa SNR)
+        engine.setDeviceSignal(snr: 8.0);
         final binding = BindingSchema(path: 'device.snr');
         final value = engine.resolveBinding(binding);
-        expect(value, 8);
+        expect(value, 8.0);
       });
 
       test('device.rssi resolves to rssi', () {
+        // device.rssi is the BLE RSSI from protocol polling, set via
+        // setDeviceSignal — it does NOT fall back to node.rssi (which is
+        // per-node LoRa RSSI, a completely different measurement)
+        engine.setDeviceSignal(rssi: -95);
         final binding = BindingSchema(path: 'device.rssi');
         final value = engine.resolveBinding(binding);
         expect(value, -95);

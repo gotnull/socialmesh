@@ -1,0 +1,294 @@
+{
+  "articles": [
+    {
+      "id": "what-is-meshtastic",
+      "title": "What is Meshtastic?",
+      "description": "An introduction to the Meshtastic mesh networking project and what it makes possible.",
+      "category": "getting-started",
+      "icon": "radio",
+      "order": 1,
+      "file": "assets/help/getting-started/what-is-meshtastic.md",
+      "readingTime": 3
+    },
+    {
+      "id": "what-is-lora",
+      "title": "What is LoRa?",
+      "description": "The radio technology behind Meshtastic — long range, low power, licence-free.",
+      "category": "getting-started",
+      "icon": "cell_tower",
+      "order": 2,
+      "file": "assets/help/getting-started/what-is-lora.md",
+      "readingTime": 3
+    },
+    {
+      "id": "first-steps",
+      "title": "Your First Steps",
+      "description": "What to do after connecting your radio for the first time.",
+      "category": "getting-started",
+      "icon": "route",
+      "order": 3,
+      "file": "assets/help/getting-started/first-steps.md",
+      "readingTime": 3
+    },
+    {
+      "id": "how-mesh-networking-works",
+      "title": "How Mesh Networking Works",
+      "description": "Understand how messages hop from node to node without the internet.",
+      "category": "mesh-basics",
+      "icon": "hub",
+      "order": 1,
+      "file": "assets/help/mesh-basics/how-mesh-networking-works.md",
+      "readingTime": 4
+    },
+    {
+      "id": "hop-limit",
+      "title": "Hop Limit Explained",
+      "description": "Why messages don't travel forever and how hop limits keep the mesh healthy.",
+      "category": "mesh-basics",
+      "icon": "swap_horiz",
+      "order": 2,
+      "file": "assets/help/mesh-basics/hop-limit.md",
+      "readingTime": 3
+    },
+    {
+      "id": "range-and-coverage",
+      "title": "Range and Coverage",
+      "description": "What affects how far your radio can reach — terrain, antenna, power, and line of sight.",
+      "category": "mesh-basics",
+      "icon": "terrain",
+      "order": 3,
+      "file": "assets/help/mesh-basics/range-and-coverage.md",
+      "readingTime": 3
+    },
+    {
+      "id": "mesh-vs-internet",
+      "title": "Mesh vs Internet",
+      "description": "How a mesh network differs from cellular and Wi-Fi and when each is useful.",
+      "category": "mesh-basics",
+      "icon": "compare_arrows",
+      "order": 4,
+      "file": "assets/help/mesh-basics/mesh-vs-internet.md",
+      "readingTime": 3
+    },
+    {
+      "id": "what-are-channels",
+      "title": "What Are Channels?",
+      "description": "How channels organise conversations on the mesh — like walkie-talkie frequencies.",
+      "category": "channels",
+      "icon": "forum",
+      "order": 1,
+      "file": "assets/help/channels/what-are-channels.md",
+      "readingTime": 3
+    },
+    {
+      "id": "channel-encryption",
+      "title": "Channel Encryption",
+      "description": "How your messages are encrypted and what the channel key does.",
+      "category": "channels",
+      "icon": "lock",
+      "order": 2,
+      "file": "assets/help/channels/channel-encryption.md",
+      "readingTime": 3
+    },
+    {
+      "id": "primary-vs-secondary",
+      "title": "Primary vs Secondary Channels",
+      "description": "The difference between your main channel and additional channels.",
+      "category": "channels",
+      "icon": "key",
+      "order": 3,
+      "file": "assets/help/channels/primary-vs-secondary.md",
+      "readingTime": 2
+    },
+    {
+      "id": "sharing-channels",
+      "title": "Sharing Channels",
+      "description": "How to invite others to your channel using QR codes and URLs.",
+      "category": "channels",
+      "icon": "share",
+      "order": 4,
+      "file": "assets/help/channels/sharing-channels.md",
+      "readingTime": 2
+    },
+    {
+      "id": "how-messages-travel",
+      "title": "How Messages Travel",
+      "description": "The journey of a message from your phone through the mesh to its destination.",
+      "category": "messaging",
+      "icon": "chat",
+      "order": 1,
+      "file": "assets/help/messaging/how-messages-travel.md",
+      "readingTime": 3
+    },
+    {
+      "id": "direct-vs-broadcast",
+      "title": "Direct vs Broadcast Messages",
+      "description": "The difference between sending to one person and sending to everyone on a channel.",
+      "category": "messaging",
+      "icon": "near_me",
+      "order": 2,
+      "file": "assets/help/messaging/direct-vs-broadcast.md",
+      "readingTime": 2
+    },
+    {
+      "id": "store-and-forward",
+      "title": "Store and Forward",
+      "description": "How powered nodes can store messages for offline users and deliver them later.",
+      "category": "messaging",
+      "icon": "store_forward",
+      "order": 3,
+      "file": "assets/help/messaging/store-and-forward.md",
+      "readingTime": 3
+    },
+    {
+      "id": "message-reliability",
+      "title": "Message Reliability",
+      "description": "Why some messages arrive and others don't — and what affects delivery.",
+      "category": "messaging",
+      "icon": "check_circle",
+      "order": 4,
+      "file": "assets/help/messaging/message-reliability.md",
+      "readingTime": 3
+    },
+    {
+      "id": "what-is-a-node",
+      "title": "What is a Node?",
+      "description": "Every radio on the mesh is a node — here's what that means.",
+      "category": "nodes",
+      "icon": "hexagon",
+      "order": 1,
+      "file": "assets/help/nodes/what-is-a-node.md",
+      "readingTime": 2
+    },
+    {
+      "id": "node-roles",
+      "title": "Node Roles Explained",
+      "description": "Client, Router, Repeater — what each role does and when to use it.",
+      "category": "nodes",
+      "icon": "account_tree",
+      "order": 2,
+      "file": "assets/help/nodes/node-roles.md",
+      "readingTime": 4
+    },
+    {
+      "id": "understanding-node-info",
+      "title": "Understanding Node Info",
+      "description": "What the numbers, icons, and metadata on a node entry actually mean.",
+      "category": "nodes",
+      "icon": "info",
+      "order": 3,
+      "file": "assets/help/nodes/understanding-node-info.md",
+      "readingTime": 3
+    },
+    {
+      "id": "connecting-your-device",
+      "title": "Connecting Your Device",
+      "description": "How Bluetooth Low Energy (BLE) connects your phone to your Meshtastic radio.",
+      "category": "device",
+      "icon": "bluetooth",
+      "order": 1,
+      "file": "assets/help/device/connecting-your-device.md",
+      "readingTime": 3
+    },
+    {
+      "id": "region-settings",
+      "title": "Region Settings",
+      "description": "Why your region matters — frequency plans, power limits, and legal compliance.",
+      "category": "device",
+      "icon": "public",
+      "order": 2,
+      "file": "assets/help/device/region-settings.md",
+      "readingTime": 3
+    },
+    {
+      "id": "radio-parameters",
+      "title": "Radio Parameters",
+      "description": "Spreading factor, bandwidth, and coding rate — what they mean in plain language.",
+      "category": "device",
+      "icon": "settings_input",
+      "order": 3,
+      "file": "assets/help/device/radio-parameters.md",
+      "readingTime": 4
+    },
+    {
+      "id": "supported-hardware",
+      "title": "Supported Hardware",
+      "description": "Which Meshtastic-compatible radios work with Socialmesh.",
+      "category": "device",
+      "icon": "memory",
+      "order": 4,
+      "file": "assets/help/device/supported-hardware.md",
+      "readingTime": 3
+    },
+    {
+      "id": "snr-and-rssi",
+      "title": "SNR and RSSI",
+      "description": "Signal-to-noise ratio and signal strength — what good and bad numbers look like.",
+      "category": "network",
+      "icon": "signal_cellular",
+      "order": 1,
+      "file": "assets/help/network/snr-and-rssi.md",
+      "readingTime": 3
+    },
+    {
+      "id": "mesh-health",
+      "title": "Mesh Health",
+      "description": "How to tell if your mesh is performing well and what degrades it.",
+      "category": "network",
+      "icon": "network_check",
+      "order": 2,
+      "file": "assets/help/network/mesh-health.md",
+      "readingTime": 3
+    },
+    {
+      "id": "traceroute",
+      "title": "Traceroute",
+      "description": "How traceroute reveals the path a message took through the mesh.",
+      "category": "network",
+      "icon": "timeline",
+      "order": 3,
+      "file": "assets/help/network/traceroute.md",
+      "readingTime": 2
+    },
+    {
+      "id": "position-sharing",
+      "title": "Position Sharing",
+      "description": "How nodes share their location on the mesh and what controls you have.",
+      "category": "network",
+      "icon": "radar",
+      "order": 4,
+      "file": "assets/help/network/position-sharing.md",
+      "readingTime": 3
+    },
+    {
+      "id": "radio-regulations",
+      "title": "Radio Regulations",
+      "description": "The legal rules around LoRa frequencies — licence-free doesn't mean rule-free.",
+      "category": "safety",
+      "icon": "gavel",
+      "order": 1,
+      "file": "assets/help/safety/radio-regulations.md",
+      "readingTime": 3
+    },
+    {
+      "id": "airtime-and-duty-cycle",
+      "title": "Airtime and Duty Cycle",
+      "description": "Why you can't transmit all the time and how duty cycle limits work.",
+      "category": "safety",
+      "icon": "timer",
+      "order": 2,
+      "file": "assets/help/safety/airtime-and-duty-cycle.md",
+      "readingTime": 3
+    },
+    {
+      "id": "responsible-use",
+      "title": "Responsible Use",
+      "description": "Best practices for being a good mesh citizen and keeping the airwaves healthy.",
+      "category": "safety",
+      "icon": "security",
+      "order": 3,
+      "file": "assets/help/safety/responsible-use.md",
+      "readingTime": 2
+    }
+  ]
+}
