@@ -88,7 +88,7 @@ dependencies:
   firebase_auth: ^6.0.1
   firebase_storage: ^13.0.4
   firebase_messaging: ^16.0.4
-  characters: ^1.4.0
+  characters: ^1.4.1
   cloud_firestore: ^6.1.0
   cloud_functions: ^6.0.4
   google_sign_in: ^7.2.0
