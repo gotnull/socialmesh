@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -187,9 +188,10 @@ void main() {
       test('rejects when max pending reached', () async {
         // Fill up pending slots.
         for (var i = 0; i < MrrpConstants.mrrpMaxPendingRequests; i++) {
-          // ignore: unawaited_futures
-          dispatcher.sendRequest(
-            _makeRequest(serviceId: MrrpServiceId.echoTest),
+          unawaited(
+            dispatcher.sendRequest(
+              _makeRequest(serviceId: MrrpServiceId.echoTest),
+            ),
           );
         }
 
