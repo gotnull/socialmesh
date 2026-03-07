@@ -413,6 +413,14 @@ class BackgroundMessageProcessor {
 
       final isChannelMessage = message.channel != null && message.channel! > 0;
 
+      // Per-type notification toggle from Settings → Notifications.
+      if (isChannelMessage) {
+        if (!(prefs.getBool('channel_notifications_enabled') ?? true)) return;
+      } else {
+        if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
+      }
+
+      // Background-specific toggle from Background Connection Settings.
       if (isChannelMessage) {
         if (!(prefs.getBool(_kBgChannelToggle) ?? true)) return;
       } else {

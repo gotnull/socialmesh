@@ -280,6 +280,22 @@ class PushNotificationService {
     final notification = message.notification;
     if (notification == null) return;
 
+    // Respect user notification preferences for mesh message types.
+    // The content refresh event above has already been emitted so the
+    // message is persisted regardless — we only suppress the visible
+    // notification here.
+    final pushType = message.data['type'] as String?;
+    if (pushType == 'channel_message' || pushType == 'direct_message') {
+      final prefs = await SharedPreferences.getInstance();
+      final masterEnabled = prefs.getBool('notifications_enabled') ?? true;
+      if (!masterEnabled) return;
+      if (pushType == 'channel_message') {
+        if (!(prefs.getBool('channel_notifications_enabled') ?? true)) return;
+      } else {
+        if (!(prefs.getBool('dm_notifications_enabled') ?? true)) return;
+      }
+    }
+
     // Try to get image URL from data payload
     final imageUrl = message.data['imageUrl'] as String?;
     final notificationType = message.data['type'] as String?;
