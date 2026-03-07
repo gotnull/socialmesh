@@ -115,13 +115,26 @@ class _MrrpServiceTileState extends State<MrrpServiceTile> {
             child: GestureDetector(
               // lint-allow: haptic-feedback — toggle control, not navigation action
               onTap: () => setState(() => _showRawHex = !_showRawHex),
-              child: Text(
-                l10n.mrrpHarnessRawHex,
-                style: TextStyle(
-                  color: context.accentColor,
-                  decoration: TextDecoration.underline,
-                  fontSize: 12,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _showRawHex
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    size: 14,
+                    color: context.accentColor,
+                  ),
+                  const SizedBox(width: AppTheme.spacing4),
+                  Text(
+                    l10n.mrrpHarnessRawHex,
+                    style: TextStyle(
+                      color: context.accentColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

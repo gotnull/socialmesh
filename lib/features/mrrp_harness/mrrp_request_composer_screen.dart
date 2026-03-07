@@ -193,7 +193,7 @@ class _MrrpRequestComposerScreenState
                   controller: _payloadController,
                   maxLength: MrrpConstants.mrrpMaxPayload * 2,
                   decoration: InputDecoration(
-                    hintText: 'DEADBEEF', // lint-allow: hardcoded-string
+                    hintText: '0xDEADBEEF', // lint-allow: hardcoded-string
                     hintStyle: TextStyle(
                       color: context.textSecondary.withAlpha(128),
                     ),
@@ -484,7 +484,10 @@ class _MrrpRequestComposerScreenState
   }
 
   Uint8List? _parseHexPayload(String text) {
-    final hex = text.replaceAll(RegExp(r'\s+'), '');
+    var hex = text.replaceAll(RegExp(r'\s+'), '');
+    if (hex.startsWith('0x') || hex.startsWith('0X')) {
+      hex = hex.substring(2);
+    }
     if (hex.isEmpty) return Uint8List(0);
     if (hex.length.isOdd) return null;
     if (!RegExp(r'^[0-9a-fA-F]+$').hasMatch(hex)) return null;
