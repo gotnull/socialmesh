@@ -47,7 +47,9 @@ class _MrrpHarnessHomeScreenState extends ConsumerState<MrrpHarnessHomeScreen> {
     final serviceCount = registry?.count ?? 0;
     final rateLimiter = ref.read(sipRateLimiterProvider);
     final isConnected = ref.watch(
-      transportProvider.select((t) => t.state == DeviceConnectionState.connected),
+      transportProvider.select(
+        (t) => t.state == DeviceConnectionState.connected,
+      ),
     );
     final cachedServices = ref.watch(mrrpCachedServicesProvider);
     final remotePeerCount = cachedServices.length;
