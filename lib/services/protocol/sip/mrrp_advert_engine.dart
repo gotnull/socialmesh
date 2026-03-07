@@ -20,6 +20,7 @@ import 'package:crypto/crypto.dart';
 import '../../../core/logging.dart';
 import 'mrrp_codec.dart';
 import 'mrrp_constants.dart';
+import 'mrrp_counters.dart';
 import 'mrrp_frame.dart';
 import 'mrrp_messages_advert.dart';
 import 'mrrp_service_registry.dart';
@@ -57,6 +58,9 @@ class MrrpAdvertEngine {
 
   /// Callback when the advert cache changes.
   void Function()? onCacheChanged;
+
+  /// Instrumentation counters (optional, injected by provider layer).
+  MrrpCounters? counters;
 
   /// Cache of discovered services from remote peers.
   final Map<_AdvertCacheKey, MrrpCachedService> _advertCache = {};
@@ -144,6 +148,7 @@ class MrrpAdvertEngine {
 
     final sent = await onSend?.call(encoded) ?? false;
     if (sent) {
+      counters?.recordServiceAdvertSent();
       AppLogging.mrrp(
         'MRRP_ADVERT: SERVICE_ADVERT broadcast, '
         '${_registry.count} services, '
@@ -333,5 +338,24 @@ class MrrpAdvertEngine {
 
   void _purgeExpiredEntries() {
     _advertCache.removeWhere((_, v) => v.isExpired);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Simulated peer injection (harness only)
+  // ---------------------------------------------------------------------------
+
+  /// Inject a simulated peer's services into the advert cache.
+  ///
+  /// Used by the Simulated Peer Lab to make virtual peers visible
+  /// in the peer inspector, service browser, and request composer.
+  void injectSimulatedPeer(int nodeId, List<MrrpAdvertDescriptor> descriptors) {
+    _cacheServicesFromPeer(nodeId, descriptors);
+  }
+
+  /// Remove all cached services for a simulated peer.
+  void removeSimulatedPeer(int nodeId) {
+    _advertCache.removeWhere((key, _) => key.nodeId == nodeId);
+    _lastAdvertHash.remove(nodeId);
+    onCacheChanged?.call();
   }
 }

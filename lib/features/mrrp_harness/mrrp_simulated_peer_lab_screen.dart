@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,56 +10,15 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../providers/mrrp_providers.dart';
 import '../../services/haptic_service.dart';
+import '../../services/protocol/sip/mrrp_constants.dart';
+import '../../services/protocol/sip/mrrp_messages_advert.dart';
 import '../../services/protocol/sip/mrrp_simulated_peer.dart';
 import '../../services/protocol/sip/mrrp_types.dart';
 
 /// Maximum simultaneous simulated peers.
 const _kMaxSimPeers = 4;
-
-/// Provider for the simulated peer list (session-scoped, not persisted).
-final _simPeersProvider =
-    NotifierProvider<_SimPeersNotifier, List<MrrpSimulatedPeer>>(
-      _SimPeersNotifier.new,
-    );
-
-class _SimPeersNotifier extends Notifier<List<MrrpSimulatedPeer>> {
-  int _nextIndex = 1;
-
-  @override
-  List<MrrpSimulatedPeer> build() => [];
-
-  void add(MrrpSimulatedPeer peer) {
-    state = [...state, peer];
-  }
-
-  void remove(String simId) {
-    state = state.where((p) => p.simId != simId).toList();
-  }
-
-  void updateMode(String simId, SimResponseMode mode) {
-    state = [
-      for (final p in state)
-        if (p.simId == simId) ...[p..mode = mode] else p,
-    ];
-  }
-
-  void updateDelay(String simId, int seconds) {
-    state = [
-      for (final p in state)
-        if (p.simId == simId) ...[p..delaySeconds = seconds] else p,
-    ];
-  }
-
-  void updateErrorStatus(String simId, MrrpStatusCode status) {
-    state = [
-      for (final p in state)
-        if (p.simId == simId) ...[p..errorStatus = status] else p,
-    ];
-  }
-
-  int allocateIndex() => _nextIndex++;
-}
 
 /// Simulated Peer Lab — create and manage virtual MRRP peers.
 class MrrpSimulatedPeerLabScreen extends ConsumerWidget {
@@ -66,7 +27,7 @@ class MrrpSimulatedPeerLabScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final simPeers = ref.watch(_simPeersProvider);
+    final simPeers = ref.watch(mrrpSimPeersProvider);
     final canCreate = simPeers.length < _kMaxSimPeers;
 
     // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
@@ -139,7 +100,7 @@ class MrrpSimulatedPeerLabScreen extends ConsumerWidget {
   void _createSimPeer(BuildContext context, WidgetRef ref) {
     ref.read(hapticServiceProvider).trigger(HapticType.medium);
 
-    final notifier = ref.read(_simPeersProvider.notifier);
+    final notifier = ref.read(mrrpSimPeersProvider.notifier);
     final index = notifier.allocateIndex();
     final simId = 'SIM-$index'; // lint-allow: hardcoded-string
     final nodeId = MrrpSimulatedPeer.generateNodeId(index);
@@ -151,6 +112,24 @@ class MrrpSimulatedPeerLabScreen extends ConsumerWidget {
     );
 
     notifier.add(peer);
+
+    // Inject into advert cache so peer inspector and composer see it.
+    final advertEngine = ref.read(mrrpAdvertEngineProvider);
+    if (advertEngine != null) {
+      advertEngine.injectSimulatedPeer(nodeId, [
+        MrrpAdvertDescriptor(
+          serviceId: MrrpServiceId.echoTest,
+          serviceType: MrrpServiceType.test,
+          versionMajor: MrrpConstants.mrrpVersionMajor,
+          versionMinor: MrrpConstants.mrrpVersionMinor,
+          serviceFlags:
+              MrrpServiceFlags.supportsRequest |
+              MrrpServiceFlags.supportsResponse |
+              MrrpServiceFlags.testOnly,
+          metadata: Uint8List(0),
+        ),
+      ]);
+    }
 
     AppLogging.mrrpHarness(
       'MRRP_SIM: created peer $simId '
@@ -222,7 +201,13 @@ class _SimPeerCard extends ConsumerWidget {
                       ref
                           .read(hapticServiceProvider)
                           .trigger(HapticType.medium);
-                      ref.read(_simPeersProvider.notifier).remove(peer.simId);
+                      // Remove from advert cache first.
+                      ref
+                          .read(mrrpAdvertEngineProvider)
+                          ?.removeSimulatedPeer(peer.nodeId);
+                      ref
+                          .read(mrrpSimPeersProvider.notifier)
+                          .remove(peer.simId);
                     },
                   ),
                 ],
@@ -275,7 +260,7 @@ class _SimPeerCard extends ConsumerWidget {
                 onSelectionChanged: (v) {
                   ref.read(hapticServiceProvider).trigger(HapticType.light);
                   ref
-                      .read(_simPeersProvider.notifier)
+                      .read(mrrpSimPeersProvider.notifier)
                       .updateMode(peer.simId, v.first);
                 },
               ),
@@ -299,7 +284,7 @@ class _SimPeerCard extends ConsumerWidget {
                 onSelectionChanged: (v) {
                   ref.read(hapticServiceProvider).trigger(HapticType.light);
                   ref
-                      .read(_simPeersProvider.notifier)
+                      .read(mrrpSimPeersProvider.notifier)
                       .updateMode(peer.simId, v.first);
                 },
               ),
@@ -322,7 +307,7 @@ class _SimPeerCard extends ConsumerWidget {
                       '${peer.delaySeconds}s', // lint-allow: hardcoded-string
                   onChanged: (v) {
                     ref
-                        .read(_simPeersProvider.notifier)
+                        .read(mrrpSimPeersProvider.notifier)
                         .updateDelay(peer.simId, v.round());
                   },
                 ),
@@ -361,7 +346,7 @@ class _SimPeerCard extends ConsumerWidget {
                   onChanged: (v) {
                     if (v == null) return;
                     ref
-                        .read(_simPeersProvider.notifier)
+                        .read(mrrpSimPeersProvider.notifier)
                         .updateErrorStatus(peer.simId, v);
                   },
                 ),

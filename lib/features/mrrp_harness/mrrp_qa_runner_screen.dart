@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/section_header.dart';
@@ -20,7 +21,8 @@ class MrrpQaRunnerScreen extends ConsumerStatefulWidget {
   ConsumerState<MrrpQaRunnerScreen> createState() => _MrrpQaRunnerScreenState();
 }
 
-class _MrrpQaRunnerScreenState extends ConsumerState<MrrpQaRunnerScreen> {
+class _MrrpQaRunnerScreenState extends ConsumerState<MrrpQaRunnerScreen>
+    with LifecycleSafeMixin {
   late final List<QaScenario> _scenarios;
 
   @override
@@ -29,7 +31,7 @@ class _MrrpQaRunnerScreenState extends ConsumerState<MrrpQaRunnerScreen> {
     _scenarios = buildQaScenarios();
   }
 
-  void _runScenario(int scenarioIndex) {
+  Future<void> _runScenario(int scenarioIndex) async {
     ref.read(hapticServiceProvider).trigger(HapticType.light);
 
     final scenario = _scenarios[scenarioIndex];
@@ -41,7 +43,7 @@ class _MrrpQaRunnerScreenState extends ConsumerState<MrrpQaRunnerScreen> {
 
     for (var i = 0; i < scenario.steps.length; i++) {
       final step = scenario.steps[i];
-      final passed = step.verify(null);
+      final passed = await step.verify(ref);
       step.status = passed ? QaStepStatus.pass : QaStepStatus.fail;
       step.actualOutcome = passed
           ? step.expectedOutcome
@@ -58,14 +60,14 @@ class _MrrpQaRunnerScreenState extends ConsumerState<MrrpQaRunnerScreen> {
       '(${scenario.passedCount}/${scenario.steps.length} steps)',
     );
 
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
-  void _runAll() {
+  Future<void> _runAll() async {
     ref.read(hapticServiceProvider).trigger(HapticType.medium);
 
     for (var i = 0; i < _scenarios.length; i++) {
-      _runScenario(i);
+      await _runScenario(i);
     }
 
     final passed = _scenarios.where((s) => s.passed).length;
@@ -73,7 +75,7 @@ class _MrrpQaRunnerScreenState extends ConsumerState<MrrpQaRunnerScreen> {
       'MRRP_QA: all scenarios complete -> $passed/${_scenarios.length} passed', // lint-allow: hardcoded-string
     );
 
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   @override

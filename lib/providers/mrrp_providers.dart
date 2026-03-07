@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/constants.dart';
 import '../services/protocol/sip/mrrp_advert_engine.dart';
+import '../services/protocol/sip/mrrp_counters.dart';
 import '../services/protocol/sip/mrrp_dedup_cache.dart';
 import '../services/protocol/sip/mrrp_dispatcher.dart';
 import '../services/protocol/sip/mrrp_engine.dart';
@@ -22,6 +23,8 @@ import '../services/protocol/sip/mrrp_service_echo.dart';
 import '../services/protocol/sip/mrrp_service_meetup.dart';
 import '../services/protocol/sip/mrrp_service_profile.dart';
 import '../services/protocol/sip/mrrp_service_registry.dart';
+import '../services/protocol/sip/mrrp_simulated_peer.dart';
+import '../services/protocol/sip/mrrp_traffic_event.dart';
 import '../services/protocol/sip/mrrp_types.dart';
 import '../services/protocol/sip/sip_types.dart';
 import 'app_providers.dart';
@@ -133,6 +136,94 @@ final mrrpDispatcherProvider = Provider<MrrpDispatcher?>((ref) {
   return MrrpDispatcher(registry: registry);
 });
 
+/// MRRP counters — session-scoped instrumentation (shared singleton).
+final mrrpCountersProvider = Provider<MrrpCounters>((ref) {
+  final counters = MrrpCounters();
+  counters.onChange = () {
+    ref.read(mrrpCountersEpochProvider.notifier).bump();
+  };
+  return counters;
+});
+
+/// Maximum events retained in the traffic console.
+const _kMaxTrafficEvents = 200;
+
+/// Provider for the traffic event stream (session-scoped).
+final mrrpTrafficEventsProvider =
+    NotifierProvider<MrrpTrafficEventsNotifier, List<MrrpTrafficEvent>>(
+      MrrpTrafficEventsNotifier.new,
+    );
+
+/// Notifier managing the bounded traffic event list.
+class MrrpTrafficEventsNotifier extends Notifier<List<MrrpTrafficEvent>> {
+  @override
+  List<MrrpTrafficEvent> build() => [];
+
+  /// Add a traffic event (newest first, bounded).
+  void add(MrrpTrafficEvent event) {
+    final updated = [event, ...state];
+    if (updated.length > _kMaxTrafficEvents) {
+      state = updated.sublist(0, _kMaxTrafficEvents);
+    } else {
+      state = updated;
+    }
+  }
+
+  /// Clear all events.
+  void clear() => state = [];
+}
+
+/// Registry of simulated MRRP peers (session-scoped).
+final mrrpSimPeersProvider =
+    NotifierProvider<MrrpSimPeersNotifier, List<MrrpSimulatedPeer>>(
+      MrrpSimPeersNotifier.new,
+    );
+
+/// Notifier managing the simulated peer list.
+class MrrpSimPeersNotifier extends Notifier<List<MrrpSimulatedPeer>> {
+  int _nextIndex = 1;
+
+  @override
+  List<MrrpSimulatedPeer> build() => [];
+
+  /// Add a simulated peer.
+  void add(MrrpSimulatedPeer peer) {
+    state = [...state, peer];
+  }
+
+  /// Remove a simulated peer by ID.
+  void remove(String simId) {
+    state = state.where((p) => p.simId != simId).toList();
+  }
+
+  /// Update the response mode for a simulated peer.
+  void updateMode(String simId, SimResponseMode mode) {
+    state = [
+      for (final p in state)
+        if (p.simId == simId) ...[p..mode = mode] else p,
+    ];
+  }
+
+  /// Update the delay for a simulated peer.
+  void updateDelay(String simId, int seconds) {
+    state = [
+      for (final p in state)
+        if (p.simId == simId) ...[p..delaySeconds = seconds] else p,
+    ];
+  }
+
+  /// Update the error status for a simulated peer.
+  void updateErrorStatus(String simId, MrrpStatusCode status) {
+    state = [
+      for (final p in state)
+        if (p.simId == simId) ...[p..errorStatus = status] else p,
+    ];
+  }
+
+  /// Allocate the next sequential index.
+  int allocateIndex() => _nextIndex++;
+}
+
 /// Bumped whenever advert cache changes so downstream providers rebuild.
 final mrrpAdvertEpochProvider = NotifierProvider<_MrrpAdvertEpoch, int>(
   _MrrpAdvertEpoch.new,
@@ -203,6 +294,21 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
   dispatcher.onSend = sendViaSip;
   advertEngine.onSend = sendViaSip;
 
+  // Wire counters.
+  final counters = ref.read(mrrpCountersProvider);
+  dispatcher.counters = counters;
+  advertEngine.counters = counters;
+
+  // Wire sim peer interception on dispatcher.
+  dispatcher.onSimPeerRequest = (frame) async {
+    final simPeers = ref.read(mrrpSimPeersProvider);
+    final matching = simPeers.where(
+      (p) => p.serviceIds.contains(frame.serviceId),
+    );
+    if (matching.isEmpty) return null;
+    return matching.first.handleRequest(frame);
+  };
+
   final engine = MrrpEngine(
     registry: registry,
     advertEngine: advertEngine,
@@ -210,6 +316,12 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
     dedupCache: dedupCache,
     onSend: sendViaSip,
   );
+
+  // Wire counters and traffic event callback on engine.
+  engine.counters = counters;
+  engine.onTrafficEvent = (event) {
+    ref.read(mrrpTrafficEventsProvider.notifier).add(event);
+  };
 
   // Attach to protocol service.
   final protocol = ref.read(protocolServiceProvider);

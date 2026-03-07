@@ -15,10 +15,12 @@ import '../../../core/logging.dart';
 import 'mrrp_advert_engine.dart';
 import 'mrrp_codec.dart';
 import 'mrrp_constants.dart';
+import 'mrrp_counters.dart';
 import 'mrrp_dedup_cache.dart';
 import 'mrrp_dispatcher.dart';
 import 'mrrp_frame.dart';
 import 'mrrp_service_registry.dart';
+import 'mrrp_traffic_event.dart';
 import 'mrrp_types.dart';
 
 /// Callback to send an MRRP frame encoded inside a SIP mrrpData payload.
@@ -31,6 +33,12 @@ class MrrpEngine {
   final MrrpDispatcher dispatcher;
   final MrrpDedupCache dedupCache;
   final MrrpSendCallback? onSend;
+
+  /// Instrumentation counters (optional, injected by provider layer).
+  MrrpCounters? counters;
+
+  /// Callback for traffic event reporting to the harness console.
+  void Function(MrrpTrafficEvent event)? onTrafficEvent;
 
   bool _running = false;
 
@@ -131,15 +139,49 @@ class MrrpEngine {
     _routeFrame(frame, senderNodeId);
   }
 
+  /// Record a traffic event for the harness console.
+  void _recordTraffic(
+    String direction,
+    MrrpFrame frame, {
+    int? peerNodeId,
+    required int sizeBytes,
+    MrrpStatusCode? status,
+  }) {
+    onTrafficEvent?.call(
+      MrrpTrafficEvent(
+        timestamp: DateTime.now(),
+        direction: direction,
+        msgType: frame.msgType,
+        serviceId: frame.serviceId != 0 ? frame.serviceId : null,
+        actionId: frame.actionId != 0 ? frame.actionId : null,
+        requestId: frame.requestId != 0 ? frame.requestId : null,
+        peerNodeId: peerNodeId,
+        sizeBytes: sizeBytes,
+        status: status,
+      ),
+    );
+  }
+
   void _routeFrame(MrrpFrame frame, int senderNodeId) {
+    // Record inbound traffic event.
+    _recordTraffic(
+      'RX', // lint-allow: hardcoded-string
+      frame,
+      peerNodeId: senderNodeId,
+      sizeBytes: MrrpCodec.encode(frame)?.length ?? 0,
+    );
+
     switch (frame.msgType) {
       case MrrpMessageType.serviceAdvert:
+        counters?.recordServiceAdvertReceived();
         advertEngine.handleServiceAdvert(frame, senderNodeId);
 
       case MrrpMessageType.serviceDirReq:
+        counters?.recordServiceDirRequestReceived();
         _handleServiceDirReq(frame, senderNodeId);
 
       case MrrpMessageType.serviceDirResp:
+        counters?.recordServiceDirResponseReceived();
         advertEngine.handleServiceDirResp(frame, senderNodeId);
 
       case MrrpMessageType.request:
@@ -169,6 +211,7 @@ class MrrpEngine {
   void _handleServiceDirReq(MrrpFrame frame, int senderNodeId) {
     final responseFrame = advertEngine.handleServiceDirReq(frame, senderNodeId);
     if (responseFrame != null) {
+      counters?.recordServiceDirResponseSent();
       _sendFrame(responseFrame);
     }
   }
@@ -182,8 +225,10 @@ class MrrpEngine {
 
     if (dedupCache.isDuplicate(dedupKey)) {
       // Duplicate request — check for cached response to replay.
+      counters?.recordDuplicateRequestIgnored();
       final cachedResponse = dedupCache.checkAndRecordRequest(dedupKey);
       if (cachedResponse != null) {
+        counters?.recordCachedResponseServed();
         _sendFrame(cachedResponse);
       }
       return;
@@ -204,6 +249,7 @@ class MrrpEngine {
   void _handleInboundResponse(MrrpFrame frame) {
     if (!dedupCache.checkAndRecordResponse(frame.requestId)) {
       // Duplicate response — suppress.
+      counters?.recordDuplicateResponseIgnored();
       return;
     }
     dispatcher.handleResponse(frame);
@@ -226,6 +272,13 @@ class MrrpEngine {
     AppLogging.mrrp(
       'MRRP_TX: ${frame.msgType.name} req_id=0x${frame.requestId.toRadixString(16)}, '
       '${frame.payloadLen}B payload, ${encoded.length}B total', // lint-allow: hardcoded-string
+    );
+
+    // Record outbound traffic event.
+    _recordTraffic(
+      'TX', // lint-allow: hardcoded-string
+      frame,
+      sizeBytes: encoded.length,
     );
 
     final send = onSend;

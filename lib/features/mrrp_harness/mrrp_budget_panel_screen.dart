@@ -13,11 +13,6 @@ import '../../providers/sip_providers.dart';
 import '../../services/protocol/sip/mrrp_counters.dart';
 import '../../services/protocol/sip/mrrp_types.dart';
 
-/// Provider for MRRP counters (session-scoped).
-final mrrpCountersProvider = Provider<MrrpCounters>((ref) {
-  return MrrpCounters();
-});
-
 /// Budget & Timing Panel — rate limiter state and protocol metrics.
 class MrrpBudgetPanelScreen extends ConsumerWidget {
   const MrrpBudgetPanelScreen({super.key});
