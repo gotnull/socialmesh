@@ -26,27 +26,42 @@ import 'mrrp_traffic_console_screen.dart';
 ///
 /// Shows protocol status, connected radio state, SIP peer count,
 /// registered MRRP services, budget usage, and quick action buttons.
-class MrrpHarnessHomeScreen extends ConsumerWidget {
+class MrrpHarnessHomeScreen extends ConsumerStatefulWidget {
   const MrrpHarnessHomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MrrpHarnessHomeScreen> createState() =>
+      _MrrpHarnessHomeScreenState();
+}
+
+class _MrrpHarnessHomeScreenState extends ConsumerState<MrrpHarnessHomeScreen> {
+  String _lastLogSignature = '';
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final sipEnabled = ref.watch(sipEnabledProvider);
     final mrrpEnabled = ref.watch(mrrpEnabledProvider);
     final peerCount = ref.watch(sipPeerCountProvider);
     final registry = ref.watch(mrrpServiceRegistryProvider);
     final serviceCount = registry?.count ?? 0;
-    final rateLimiter = ref.watch(sipRateLimiterProvider);
-    final transport = ref.watch(transportProvider);
-    final isConnected = transport.state == DeviceConnectionState.connected;
+    final rateLimiter = ref.read(sipRateLimiterProvider);
+    final isConnected = ref.watch(
+      transportProvider.select((t) => t.state == DeviceConnectionState.connected),
+    );
     final cachedServices = ref.watch(mrrpCachedServicesProvider);
     final remotePeerCount = cachedServices.length;
 
-    AppLogging.mrrpHarness(
-      'MRRP_HARNESS: home build — sip=$sipEnabled, mrrp=$mrrpEnabled, '
-      'peers=$peerCount, services=$serviceCount', // lint-allow: hardcoded-string
-    );
+    // Deduplicate identical log lines across rebuilds.
+    final sig =
+        '$sipEnabled|$mrrpEnabled|$peerCount|$serviceCount'; // lint-allow: hardcoded-string
+    if (sig != _lastLogSignature) {
+      _lastLogSignature = sig;
+      AppLogging.mrrpHarness(
+        'MRRP_HARNESS: home build — sip=$sipEnabled, mrrp=$mrrpEnabled, '
+        'peers=$peerCount, services=$serviceCount', // lint-allow: hardcoded-string
+      );
+    }
 
     // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
     return GestureDetector(
