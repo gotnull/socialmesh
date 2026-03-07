@@ -338,6 +338,10 @@ class MrrpAdvertEngine {
 
   void _purgeExpiredEntries() {
     _advertCache.removeWhere((_, v) => v.isExpired);
+
+    // Clean _lastAdvertHash for peers with no remaining cache entries.
+    final livePeers = _advertCache.keys.map((k) => k.nodeId).toSet();
+    _lastAdvertHash.removeWhere((nodeId, _) => !livePeers.contains(nodeId));
   }
 
   // ---------------------------------------------------------------------------

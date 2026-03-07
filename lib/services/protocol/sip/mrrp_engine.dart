@@ -40,6 +40,9 @@ class MrrpEngine {
   /// Callback for traffic event reporting to the harness console.
   void Function(MrrpTrafficEvent event)? onTrafficEvent;
 
+  /// Per-sender inbound request timestamps for rate limiting.
+  final Map<int, List<DateTime>> _inboundRequestTimestamps = {};
+
   bool _running = false;
 
   MrrpEngine({
@@ -85,6 +88,7 @@ class MrrpEngine {
     advertEngine.dispose();
     dispatcher.dispose();
     dedupCache.clear();
+    _inboundRequestTimestamps.clear();
   }
 
   // ---------------------------------------------------------------------------
@@ -185,7 +189,20 @@ class MrrpEngine {
         advertEngine.handleServiceDirResp(frame, senderNodeId);
 
       case MrrpMessageType.request:
-        _handleInboundRequest(frame, senderNodeId);
+        if (_isInboundRequestThrottled(senderNodeId)) {
+          counters?.recordBudgetThrottle();
+          return;
+        }
+        _handleInboundRequest(frame, senderNodeId).catchError((
+          Object error,
+          StackTrace stack,
+        ) {
+          AppLogging.mrrp(
+            'MRRP_ENGINE: unhandled error in request handler '
+            'req_id=0x${frame.requestId.toRadixString(16)}: '
+            '$error', // lint-allow: hardcoded-string
+          );
+        });
 
       case MrrpMessageType.response:
         _handleInboundResponse(frame);
@@ -202,6 +219,38 @@ class MrrpEngine {
           '(reserved for future use)', // lint-allow: hardcoded-string
         );
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Inbound per-sender rate limiting
+  // ---------------------------------------------------------------------------
+
+  /// Returns true if [senderNodeId] has exceeded the inbound request rate
+  /// limit (max N requests per 60 seconds). Records the timestamp if allowed.
+  bool _isInboundRequestThrottled(int senderNodeId) {
+    final now = DateTime.now();
+    final cutoff = now.subtract(const Duration(seconds: 60));
+
+    final timestamps = _inboundRequestTimestamps[senderNodeId];
+    if (timestamps != null) {
+      timestamps.removeWhere((t) => t.isBefore(cutoff));
+      if (timestamps.length >=
+          MrrpConstants.mrrpMaxInboundRequestsPerSenderPer60s) {
+        AppLogging.mrrp(
+          'MRRP_ENGINE: inbound request throttled for '
+          'peer=0x${senderNodeId.toRadixString(16)}', // lint-allow: hardcoded-string
+        );
+        return true;
+      }
+      timestamps.add(now);
+    } else {
+      _inboundRequestTimestamps[senderNodeId] = [now];
+    }
+
+    // Prune senders with no recent timestamps.
+    _inboundRequestTimestamps.removeWhere((_, ts) => ts.isEmpty);
+
+    return false;
   }
 
   // ---------------------------------------------------------------------------

@@ -285,9 +285,23 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
   if (dedupCache == null) return null;
 
   // SIP transport send callback — shared by engine, dispatcher, and advert.
+  // Rate-limited via SipRateLimiter to enforce the 1024 bytes/60s airtime
+  // budget shared with SIP discovery frames.
   Future<bool> sendViaSip(Uint8List sipPayload) async {
+    final limiter = ref.read(sipRateLimiterProvider);
+    if (!limiter.canSend(sipPayload.length)) {
+      ref.read(mrrpCountersProvider).recordBudgetThrottle();
+      return false;
+    }
     final protocol = ref.read(protocolServiceProvider);
-    return protocol.sendSipPayload(sipPayload, SipMessageType.mrrpData);
+    final sent = await protocol.sendSipPayload(
+      sipPayload,
+      SipMessageType.mrrpData,
+    );
+    if (sent) {
+      limiter.recordSend(sipPayload.length);
+    }
+    return sent;
   }
 
   // Wire send callbacks on dispatcher and advert engine.

@@ -153,4 +153,11 @@ abstract final class MrrpConstants {
 
   /// Maximum peers tracked in the advertisement cache.
   static const int mrrpMaxTrackedPeers = 16;
+
+  // ---------------------------------------------------------------------------
+  // Inbound rate limiting
+  // ---------------------------------------------------------------------------
+
+  /// Maximum inbound requests accepted from a single sender within 60 seconds.
+  static const int mrrpMaxInboundRequestsPerSenderPer60s = 4;
 }
