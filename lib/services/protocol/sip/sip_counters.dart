@@ -402,6 +402,8 @@ class SipCounters {
         return 'DM_DELETE';
       case SipMessageType.error:
         return 'ERROR';
+      case SipMessageType.mrrpData:
+        return 'MRRP_DATA';
     }
   }
 }

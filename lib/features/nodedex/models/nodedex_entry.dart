@@ -694,6 +694,13 @@ class NodeDexEntry {
   /// independent of the Meshtastic long/short name. Null for non-SIP peers.
   final String? sipDisplayName;
 
+  /// Comma-separated list of MRRP service IDs advertised by this peer.
+  ///
+  /// Populated when a SERVICE_ADVERT frame is received from the peer.
+  /// Each value is a decimal service ID (e.g. "1,2,3").
+  /// Null for non-MRRP or pre-MRRP peers.
+  final String? mrrpServiceIds;
+
   /// Maximum number of encounter records to retain.
   static const int maxEncounterRecords = 50;
 
@@ -735,6 +742,7 @@ class NodeDexEntry {
     this.sipPersonaId,
     this.sipIdentityState,
     this.sipDisplayName,
+    this.mrrpServiceIds,
   });
 
   /// Create a new entry for a freshly discovered node.
@@ -861,6 +869,8 @@ class NodeDexEntry {
     bool clearSipIdentityState = false,
     String? sipDisplayName,
     bool clearSipDisplayName = false,
+    String? mrrpServiceIds,
+    bool clearMrrpServiceIds = false,
   }) {
     // Auto-stamp when socialTag changes via copyWith.
     final effectiveStMs = clearSocialTag || socialTag != null
@@ -913,6 +923,9 @@ class NodeDexEntry {
       sipDisplayName: clearSipDisplayName
           ? null
           : (sipDisplayName ?? this.sipDisplayName),
+      mrrpServiceIds: clearMrrpServiceIds
+          ? null
+          : (mrrpServiceIds ?? this.mrrpServiceIds),
     );
   }
 
@@ -1222,6 +1235,9 @@ class NodeDexEntry {
     final String? mergedSipDisplayName = lastSeen.isAfter(other.lastSeen)
         ? (sipDisplayName ?? other.sipDisplayName)
         : (other.sipDisplayName ?? sipDisplayName);
+    final String? mergedMrrpServiceIds = lastSeen.isAfter(other.lastSeen)
+        ? (mrrpServiceIds ?? other.mrrpServiceIds)
+        : (other.mrrpServiceIds ?? mrrpServiceIds);
 
     return NodeDexEntry(
       nodeNum: nodeNum,
@@ -1251,6 +1267,7 @@ class NodeDexEntry {
       sipPersonaId: mergedSipPersonaId,
       sipIdentityState: mergedSipIdentityState,
       sipDisplayName: mergedSipDisplayName,
+      mrrpServiceIds: mergedMrrpServiceIds,
     );
   }
 
@@ -1349,6 +1366,7 @@ class NodeDexEntry {
       if (sipPersonaId != null) 'sip_pid': base64Encode(sipPersonaId!),
       if (sipIdentityState != null) 'sip_st': sipIdentityState!.name,
       if (sipDisplayName != null) 'sip_dn': sipDisplayName,
+      if (mrrpServiceIds != null) 'mrrp_svc': mrrpServiceIds,
     };
   }
 
@@ -1423,6 +1441,7 @@ class NodeDexEntry {
                 .firstOrNull
           : null,
       sipDisplayName: json['sip_dn'] as String?,
+      mrrpServiceIds: json['mrrp_svc'] as String?,
     );
   }
 
@@ -1459,7 +1478,8 @@ class NodeDexEntry {
           coSeenNodes.length == other.coSeenNodes.length &&
           sipCapable == other.sipCapable &&
           sipIdentityState == other.sipIdentityState &&
-          sipDisplayName == other.sipDisplayName;
+          sipDisplayName == other.sipDisplayName &&
+          mrrpServiceIds == other.mrrpServiceIds;
 
   @override
   int get hashCode => Object.hash(
@@ -1471,6 +1491,7 @@ class NodeDexEntry {
     messageCount,
     sipCapable,
     sipIdentityState,
+    mrrpServiceIds,
   );
 
   @override

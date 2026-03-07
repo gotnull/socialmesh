@@ -356,6 +356,32 @@ class AppFeatureFlags {
       return false;
     }
   }
+
+  /// Whether the MRRP (Mesh Request/Response Protocol) feature is enabled.
+  /// Set `MRRP_ENABLED=true` in `.env` to enable.
+  /// Requires [isSipEnabled] to be true. Default: false.
+  static bool get isMrrpEnabled {
+    if (!isSipEnabled) return false;
+    try {
+      final raw = dotenv.env['MRRP_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the MRRP protocol harness UI is enabled.
+  /// Set `MRRP_HARNESS_ENABLED=true` in `.env` to enable.
+  /// Requires [isMrrpEnabled] to be true. Default: false.
+  static bool get isMrrpHarnessEnabled {
+    if (!isMrrpEnabled) return false;
+    try {
+      final raw = dotenv.env['MRRP_HARNESS_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
 /// Privacy level for content visibility

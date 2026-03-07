@@ -16873,6 +16873,12 @@ abstract class AppLocalizations {
   /// **'Device'**
   String get nodedexDeviceTitle;
 
+  /// Title for the MRRP services section on the NodeDex detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'MRRP Services'**
+  String get nodedexMrrpServicesTitle;
+
   /// Title for the node management screen
   ///
   /// In en, this message translates to:
@@ -53481,6 +53487,834 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{peerName} wants to start an ephemeral DM session.'**
   String notificationSipHandshakeRequestBody(String peerName);
+
+  /// Title for the MRRP protocol harness home screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol Harness'**
+  String get mrrpHarnessTitle;
+
+  /// Drawer label for the MRRP protocol harness.
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol Harness'**
+  String get mrrpHarnessDrawerLabel;
+
+  /// Label for SIP enabled/disabled status on harness home.
+  ///
+  /// In en, this message translates to:
+  /// **'SIP'**
+  String get mrrpHarnessStatusSip;
+
+  /// Label for MRRP enabled/disabled status on harness home.
+  ///
+  /// In en, this message translates to:
+  /// **'MRRP'**
+  String get mrrpHarnessStatusMrrp;
+
+  /// Status text when a protocol feature is enabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get mrrpHarnessStatusEnabled;
+
+  /// Status text when a protocol feature is disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get mrrpHarnessStatusDisabled;
+
+  /// Label for connected radio state on harness home.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio'**
+  String get mrrpHarnessRadioState;
+
+  /// Status text when a radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get mrrpHarnessRadioConnected;
+
+  /// Status text when no radio is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get mrrpHarnessRadioDisconnected;
+
+  /// Label for current channel summary on harness home.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel'**
+  String get mrrpHarnessChannel;
+
+  /// Shown when no channel is available.
+  ///
+  /// In en, this message translates to:
+  /// **'No channel'**
+  String get mrrpHarnessChannelNone;
+
+  /// Label for active SIP peer count on harness home.
+  ///
+  /// In en, this message translates to:
+  /// **'SIP Peers'**
+  String get mrrpHarnessSipPeers;
+
+  /// Label for active MRRP services count on harness home.
+  ///
+  /// In en, this message translates to:
+  /// **'MRRP Services'**
+  String get mrrpHarnessMrrpServices;
+
+  /// Label for budget usage snapshot on harness home.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget'**
+  String get mrrpHarnessBudget;
+
+  /// Budget usage display showing remaining vs capacity.
+  ///
+  /// In en, this message translates to:
+  /// **'{remaining}/{capacity} bytes'**
+  String mrrpHarnessBudgetValue(int remaining, int capacity);
+
+  /// Quick action button to scan for SIP peers.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan for Peers'**
+  String get mrrpHarnessScanPeers;
+
+  /// Quick action button to browse MRRP services.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse Services'**
+  String get mrrpHarnessBrowseServices;
+
+  /// Quick action button to open the request composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Composer'**
+  String get mrrpHarnessOpenComposer;
+
+  /// Quick action button to open the traffic console.
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic Console'**
+  String get mrrpHarnessOpenTraffic;
+
+  /// Section header for protocol status items on harness home.
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol Status'**
+  String get mrrpHarnessSectionStatus;
+
+  /// Section header for quick action buttons on harness home.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Actions'**
+  String get mrrpHarnessSectionActions;
+
+  /// Title for the live peer inspector screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Peer Inspector'**
+  String get mrrpHarnessPeerInspectorTitle;
+
+  /// Service count badge on a peer tile.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {count, plural, =1{service} other{services}}'**
+  String mrrpHarnessPeerServices(int count);
+
+  /// Timestamp of last SERVICE_ADVERT from a peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Last advert: {time}'**
+  String mrrpHarnessPeerLastAdvert(String time);
+
+  /// Button to trigger SERVICE_DIR_REQ to refresh a peer's service directory.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh Directory'**
+  String get mrrpHarnessRefreshDirectory;
+
+  /// Title for the service directory browser screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Browser'**
+  String get mrrpHarnessServiceBrowserTitle;
+
+  /// Version display for a service descriptor.
+  ///
+  /// In en, this message translates to:
+  /// **'v{major}.{minor}'**
+  String mrrpHarnessServiceVersion(int major, int minor);
+
+  /// Decoded service flags for a service descriptor.
+  ///
+  /// In en, this message translates to:
+  /// **'Flags: {flags}'**
+  String mrrpHarnessServiceFlags(String flags);
+
+  /// Label for expanding raw hex view of a descriptor.
+  ///
+  /// In en, this message translates to:
+  /// **'Raw hex'**
+  String get mrrpHarnessRawHex;
+
+  /// Title for the request composer screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Composer'**
+  String get mrrpHarnessComposerTitle;
+
+  /// Hint for peer selection in the request composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Select peer'**
+  String get mrrpHarnessSelectPeer;
+
+  /// Hint for service selection in the request composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Select service'**
+  String get mrrpHarnessSelectService;
+
+  /// Hint for action selection in the request composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Select action'**
+  String get mrrpHarnessSelectAction;
+
+  /// Label for payload preset selector.
+  ///
+  /// In en, this message translates to:
+  /// **'Payload preset'**
+  String get mrrpHarnessPayloadPreset;
+
+  /// Label for raw hex payload editor.
+  ///
+  /// In en, this message translates to:
+  /// **'Raw hex payload'**
+  String get mrrpHarnessPayloadRawHex;
+
+  /// Label for request TTL selector.
+  ///
+  /// In en, this message translates to:
+  /// **'Request TTL'**
+  String get mrrpHarnessRequestTtl;
+
+  /// Shows the encoded byte size of the request.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} bytes encoded'**
+  String mrrpHarnessEncodedSize(int size);
+
+  /// Send button label in the request composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get mrrpHarnessSend;
+
+  /// Title for the response viewer screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Response'**
+  String get mrrpHarnessResponseTitle;
+
+  /// Shown while waiting for a response.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for response…'**
+  String get mrrpHarnessResponsePending;
+
+  /// Shown when a request times out.
+  ///
+  /// In en, this message translates to:
+  /// **'Request timed out'**
+  String get mrrpHarnessResponseTimeout;
+
+  /// Response status code display.
+  ///
+  /// In en, this message translates to:
+  /// **'Status: {status}'**
+  String mrrpHarnessResponseStatus(String status);
+
+  /// Response round-trip latency display.
+  ///
+  /// In en, this message translates to:
+  /// **'Latency: {ms}ms'**
+  String mrrpHarnessResponseLatency(int ms);
+
+  /// Marker when a response was deduplicated.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate response'**
+  String get mrrpHarnessResponseDuplicate;
+
+  /// Marker when a response was from cache.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached response'**
+  String get mrrpHarnessResponseCached;
+
+  /// Title for the simulated peer lab screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulated Peer Lab'**
+  String get mrrpHarnessSimLabTitle;
+
+  /// Button to create a new simulated peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Simulated Peer'**
+  String get mrrpHarnessSimCreate;
+
+  /// Badge shown on simulated peers in the peer inspector.
+  ///
+  /// In en, this message translates to:
+  /// **'SIM'**
+  String get mrrpHarnessSimBadge;
+
+  /// Label for response mode selector on simulated peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Response mode'**
+  String get mrrpHarnessSimResponseMode;
+
+  /// Normal response mode for simulated peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get mrrpHarnessSimModeNormal;
+
+  /// Delayed response mode for simulated peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Delayed'**
+  String get mrrpHarnessSimModeDelayed;
+
+  /// Error response mode for simulated peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get mrrpHarnessSimModeError;
+
+  /// Timeout response mode for simulated peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeout'**
+  String get mrrpHarnessSimModeTimeout;
+
+  /// Duplicate response mode for simulated peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get mrrpHarnessSimModeDuplicate;
+
+  /// Malformed response mode for simulated peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Malformed'**
+  String get mrrpHarnessSimModeMalformed;
+
+  /// Warning when max simulated peers reached.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum 4 simulated peers'**
+  String get mrrpHarnessSimMaxPeers;
+
+  /// Confirmation dialog for deleting a simulated peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete simulated peer?'**
+  String get mrrpHarnessSimDeleteConfirm;
+
+  /// Label for service selection on simulated peer configuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get mrrpHarnessSimServices;
+
+  /// Label for delay duration input on simulated peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Delay (seconds)'**
+  String get mrrpHarnessSimDelay;
+
+  /// Label for error status code selector on simulated peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Error status code'**
+  String get mrrpHarnessSimErrorCode;
+
+  /// Title for the traffic console screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic Console'**
+  String get mrrpHarnessTrafficTitle;
+
+  /// Shown when no MRRP events have been recorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No MRRP traffic yet'**
+  String get mrrpHarnessTrafficEmpty;
+
+  /// Description for empty traffic console.
+  ///
+  /// In en, this message translates to:
+  /// **'MRRP events will appear here as traffic flows.'**
+  String get mrrpHarnessTrafficEmptyDescription;
+
+  /// Filter label for peer in traffic console.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by peer'**
+  String get mrrpHarnessTrafficFilterPeer;
+
+  /// Filter label for message type in traffic console.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by type'**
+  String get mrrpHarnessTrafficFilterType;
+
+  /// Filter label for service in traffic console.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by service'**
+  String get mrrpHarnessTrafficFilterService;
+
+  /// Action to copy a traffic event to clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy event'**
+  String get mrrpHarnessTrafficCopy;
+
+  /// Action to export all traffic events.
+  ///
+  /// In en, this message translates to:
+  /// **'Export events'**
+  String get mrrpHarnessTrafficExport;
+
+  /// Direction indicator (TX or RX) on a traffic event.
+  ///
+  /// In en, this message translates to:
+  /// **'{direction}'**
+  String mrrpHarnessTrafficDirection(String direction);
+
+  /// Title for the budget/timing panel screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget & Timing'**
+  String get mrrpHarnessBudgetTitle;
+
+  /// Label for remaining byte budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining budget'**
+  String get mrrpHarnessBudgetRemaining;
+
+  /// Label for sends blocked by budget counter.
+  ///
+  /// In en, this message translates to:
+  /// **'Sends blocked'**
+  String get mrrpHarnessBudgetBlocked;
+
+  /// Label for duplicate suppression hits counter.
+  ///
+  /// In en, this message translates to:
+  /// **'Dedup hits'**
+  String get mrrpHarnessBudgetDedupHits;
+
+  /// Label for timeout counters.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeouts'**
+  String get mrrpHarnessBudgetTimeouts;
+
+  /// Label for SERVICE_ADVERT cadence timing.
+  ///
+  /// In en, this message translates to:
+  /// **'Advert cadence'**
+  String get mrrpHarnessBudgetAdvertCadence;
+
+  /// Label for response latency metrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Latency'**
+  String get mrrpHarnessBudgetLatency;
+
+  /// Empty state headline for peer inspector.
+  ///
+  /// In en, this message translates to:
+  /// **'No MRRP peers discovered'**
+  String get mrrpHarnessNoPeers;
+
+  /// Empty state description for peer inspector.
+  ///
+  /// In en, this message translates to:
+  /// **'MRRP-capable peers will appear here when discovered.'**
+  String get mrrpHarnessNoPeersDescription;
+
+  /// Shown when a peer has no advertised services.
+  ///
+  /// In en, this message translates to:
+  /// **'No services'**
+  String get mrrpHarnessNoServices;
+
+  /// Button to issue a test REQUEST to a peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Test Request'**
+  String get mrrpHarnessTestRequest;
+
+  /// Quick action button to open the simulated peer lab.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulated Peers'**
+  String get mrrpHarnessOpenSimLab;
+
+  /// Quick action button to open fixture replay panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixture Replay'**
+  String get mrrpHarnessOpenFixtures;
+
+  /// Title of the fixture replay screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixture Replay'**
+  String get mrrpHarnessFixtureTitle;
+
+  /// Section header for valid test vector fixtures.
+  ///
+  /// In en, this message translates to:
+  /// **'Test Vectors'**
+  String get mrrpHarnessFixtureVectors;
+
+  /// Section header for malformed/fuzz test case fixtures.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuzz Cases'**
+  String get mrrpHarnessFixtureFuzz;
+
+  /// Button label to replay a single fixture.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay'**
+  String get mrrpHarnessFixtureReplay;
+
+  /// Button label to replay all fixtures in sequence.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay All'**
+  String get mrrpHarnessFixtureReplayAll;
+
+  /// Label shown when a fixture replay matches expected values.
+  ///
+  /// In en, this message translates to:
+  /// **'PASS'**
+  String get mrrpHarnessFixturePass;
+
+  /// Label shown when a fixture replay does not match expected values.
+  ///
+  /// In en, this message translates to:
+  /// **'FAIL'**
+  String get mrrpHarnessFixtureFail;
+
+  /// Label shown when codec decode returns null for a valid test vector.
+  ///
+  /// In en, this message translates to:
+  /// **'Decode returned null'**
+  String get mrrpHarnessFixtureDecodeNull;
+
+  /// Label shown when codec decode succeeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Decode OK'**
+  String get mrrpHarnessFixtureDecodeOk;
+
+  /// Label prefix for expected value in field comparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected'**
+  String get mrrpHarnessFixtureExpected;
+
+  /// Label prefix for actual decoded value in field comparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual'**
+  String get mrrpHarnessFixtureActual;
+
+  /// Summary line after batch replay showing pass count.
+  ///
+  /// In en, this message translates to:
+  /// **'{passed}/{total} passed'**
+  String mrrpHarnessFixtureSummary(int passed, int total);
+
+  /// Shows the byte length of a fixture vector.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} bytes'**
+  String mrrpHarnessFixtureBytes(int count);
+
+  /// Shows how many decoded fields match expected values.
+  ///
+  /// In en, this message translates to:
+  /// **'{matched}/{total} fields match'**
+  String mrrpHarnessFixtureFieldsMatch(int matched, int total);
+
+  /// Label for fuzz case that was correctly rejected by decoder.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected (expected)'**
+  String get mrrpHarnessFixtureRejected;
+
+  /// Label for fuzz case that was unexpectedly accepted by decoder.
+  ///
+  /// In en, this message translates to:
+  /// **'Not rejected (unexpected)'**
+  String get mrrpHarnessFixtureNotRejected;
+
+  /// Empty state when no fixture data is loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'No fixtures available'**
+  String get mrrpHarnessFixtureEmpty;
+
+  /// Button label to open the QA scenario runner.
+  ///
+  /// In en, this message translates to:
+  /// **'QA Scenarios'**
+  String get mrrpHarnessOpenQaRunner;
+
+  /// Title for the QA scenario runner screen.
+  ///
+  /// In en, this message translates to:
+  /// **'QA Scenario Runner'**
+  String get mrrpHarnessQaTitle;
+
+  /// Section header for the list of QA scenarios.
+  ///
+  /// In en, this message translates to:
+  /// **'Scenarios'**
+  String get mrrpHarnessQaScenarios;
+
+  /// Tooltip for the run-all-scenarios button.
+  ///
+  /// In en, this message translates to:
+  /// **'Run All'**
+  String get mrrpHarnessQaRunAll;
+
+  /// Step count label for a QA scenario.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} steps'**
+  String mrrpHarnessQaSteps(int count);
+
+  /// Button label to run a single scenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Run'**
+  String get mrrpHarnessQaRunScenario;
+
+  /// Step result label: passed.
+  ///
+  /// In en, this message translates to:
+  /// **'PASS'**
+  String get mrrpHarnessQaStepPass;
+
+  /// Step result label: failed.
+  ///
+  /// In en, this message translates to:
+  /// **'FAIL'**
+  String get mrrpHarnessQaStepFail;
+
+  /// Step result label: not yet executed.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get mrrpHarnessQaStepPending;
+
+  /// Scenario result label: all steps passed.
+  ///
+  /// In en, this message translates to:
+  /// **'PASSED'**
+  String get mrrpHarnessQaScenarioPass;
+
+  /// Scenario result label: one or more steps failed.
+  ///
+  /// In en, this message translates to:
+  /// **'FAILED'**
+  String get mrrpHarnessQaScenarioFail;
+
+  /// Summary of QA run results.
+  ///
+  /// In en, this message translates to:
+  /// **'{passed}/{total} scenarios passed'**
+  String mrrpHarnessQaSummary(int passed, int total);
+
+  /// Empty state when no QA scenarios are available.
+  ///
+  /// In en, this message translates to:
+  /// **'No scenarios defined'**
+  String get mrrpHarnessQaEmpty;
+
+  /// Label shown while a scenario is executing.
+  ///
+  /// In en, this message translates to:
+  /// **'Running...'**
+  String get mrrpHarnessQaRunning;
+
+  /// Label for expected outcome in a QA step.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected'**
+  String get mrrpHarnessQaExpected;
+
+  /// Label for actual outcome in a QA step.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual'**
+  String get mrrpHarnessQaActual;
+
+  /// Section header for traffic counters in budget panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic Counters'**
+  String get mrrpHarnessCountersSectionTraffic;
+
+  /// Section header for dedup counters in budget panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Dedup & Cache'**
+  String get mrrpHarnessCountersSectionDedup;
+
+  /// Section header for error counters in budget panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Errors & Rejections'**
+  String get mrrpHarnessCountersSectionErrors;
+
+  /// Section header for harness activity counters.
+  ///
+  /// In en, this message translates to:
+  /// **'Harness Activity'**
+  String get mrrpHarnessCountersSectionHarness;
+
+  /// Counter label: total requests sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests Sent'**
+  String get mrrpHarnessCountersReqSent;
+
+  /// Counter label: total requests received.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests Received'**
+  String get mrrpHarnessCountersReqRecv;
+
+  /// Counter label: total responses sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Responses Sent'**
+  String get mrrpHarnessCountersRespSent;
+
+  /// Counter label: total responses received.
+  ///
+  /// In en, this message translates to:
+  /// **'Responses Received'**
+  String get mrrpHarnessCountersRespRecv;
+
+  /// Counter label: service directory requests sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Dir Requests Sent'**
+  String get mrrpHarnessCountersDirReqSent;
+
+  /// Counter label: service directory requests received.
+  ///
+  /// In en, this message translates to:
+  /// **'Dir Requests Received'**
+  String get mrrpHarnessCountersDirReqRecv;
+
+  /// Counter label: service directory responses sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Dir Responses Sent'**
+  String get mrrpHarnessCountersDirRespSent;
+
+  /// Counter label: service directory responses received.
+  ///
+  /// In en, this message translates to:
+  /// **'Dir Responses Received'**
+  String get mrrpHarnessCountersDirRespRecv;
+
+  /// Counter label: duplicate requests ignored.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate Requests Ignored'**
+  String get mrrpHarnessCountersDupReq;
+
+  /// Counter label: duplicate responses ignored.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate Responses Ignored'**
+  String get mrrpHarnessCountersDupResp;
+
+  /// Counter label: cached responses served.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached Responses Served'**
+  String get mrrpHarnessCountersCachedResp;
+
+  /// Counter label: request timeouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Timeouts'**
+  String get mrrpHarnessCountersReqTimeouts;
+
+  /// Counter label: response timeouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Response Timeouts'**
+  String get mrrpHarnessCountersRespTimeouts;
+
+  /// Counter label: request cancellations.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellations'**
+  String get mrrpHarnessCountersCancellations;
+
+  /// Counter label: errors sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Errors Sent'**
+  String get mrrpHarnessCountersErrSent;
+
+  /// Counter label: errors received.
+  ///
+  /// In en, this message translates to:
+  /// **'Errors Received'**
+  String get mrrpHarnessCountersErrRecv;
+
+  /// Counter label: payload too large rejections.
+  ///
+  /// In en, this message translates to:
+  /// **'Payload Too Large'**
+  String get mrrpHarnessCountersPayloadReject;
+
+  /// Counter label: harness actions performed.
+  ///
+  /// In en, this message translates to:
+  /// **'Harness Actions'**
+  String get mrrpHarnessCountersHarnessActions;
+
+  /// Counter label: simulated faults injected.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulated Faults'**
+  String get mrrpHarnessCountersSimFaults;
 }
 
 class _AppLocalizationsDelegate

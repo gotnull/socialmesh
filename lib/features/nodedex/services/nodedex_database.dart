@@ -22,7 +22,7 @@ import '../../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int nodedexSchemaVersion = 7;
+const int nodedexSchemaVersion = 8;
 
 /// Table and column name constants for NodeDex SQLite schema.
 abstract final class NodeDexTables {
@@ -57,6 +57,9 @@ abstract final class NodeDexTables {
   static const colSipPersonaId = 'sip_persona_id';
   static const colSipIdentityState = 'sip_identity_state';
   static const colSipDisplayName = 'sip_display_name';
+
+  // -- MRRP service columns (v8) --
+  static const colMrrpServiceIds = 'mrrp_service_ids';
 
   // -- nodedex_encounters --
   static const encounters = 'nodedex_encounters';
@@ -225,7 +228,8 @@ class NodeDexDatabase {
         ${NodeDexTables.colSipPubkey} BLOB,
         ${NodeDexTables.colSipPersonaId} BLOB,
         ${NodeDexTables.colSipIdentityState} TEXT,
-        ${NodeDexTables.colSipDisplayName} TEXT
+        ${NodeDexTables.colSipDisplayName} TEXT,
+        ${NodeDexTables.colMrrpServiceIds} TEXT
       )
     ''');
     batch.execute(
@@ -458,6 +462,17 @@ class NodeDexDatabase {
       );
       AppLogging.storage(
         'NodeDexDatabase: v7 migration — added SIP identity columns',
+      );
+    }
+    if (oldVersion < 8) {
+      // v8: Add MRRP service IDs column so NodeDex can display what
+      // MRRP services a peer advertises via SERVICE_ADVERT frames.
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colMrrpServiceIds} TEXT', // lint-allow: hardcoded-string
+      );
+      AppLogging.storage(
+        'NodeDexDatabase: v8 migration — added mrrp_service_ids column',
       );
     }
   }

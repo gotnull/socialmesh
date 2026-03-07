@@ -67,6 +67,8 @@ class AppLogging {
   static bool? _taskSyncLoggingEnabled;
   static bool? _fileTransferLoggingEnabled;
   static bool? _sipLoggingEnabled;
+  static bool? _mrrpDebugEnabled;
+  static bool? _mrrpHarnessDebugEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -560,6 +562,29 @@ class AppLogging {
     if (sipLoggingEnabled) debugPrint('SIP: $message');
   }
 
+  /// MRRP protocol debug logging.
+  /// Enable with MRRP_DEBUG=true in .env file.
+  static bool get mrrpDebugEnabled {
+    _mrrpDebugEnabled ??= _safeGetEnv('MRRP_DEBUG')?.toLowerCase() == 'true';
+    return _mrrpDebugEnabled!;
+  }
+
+  static void mrrp(String message) {
+    if (mrrpDebugEnabled) debugPrint('MRRP: $message');
+  }
+
+  /// MRRP harness debug logging.
+  /// Enable with MRRP_HARNESS_DEBUG=true in .env file.
+  static bool get mrrpHarnessDebugEnabled {
+    _mrrpHarnessDebugEnabled ??=
+        _safeGetEnv('MRRP_HARNESS_DEBUG')?.toLowerCase() == 'true';
+    return _mrrpHarnessDebugEnabled!;
+  }
+
+  static void mrrpHarness(String message) {
+    if (mrrpHarnessDebugEnabled) debugPrint('MRRP_HARNESS: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -603,6 +628,8 @@ class AppLogging {
     _taskSyncLoggingEnabled = null;
     _fileTransferLoggingEnabled = null;
     _sipLoggingEnabled = null;
+    _mrrpDebugEnabled = null;
+    _mrrpHarnessDebugEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

@@ -39,6 +39,9 @@ enum SipMessageType {
   dmReaction(0x42),
   dmDelete(0x43),
 
+  // MRRP (Mesh Request/Response Protocol)
+  mrrpData(0x50),
+
   // Error
   error(0x7E);
 

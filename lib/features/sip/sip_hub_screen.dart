@@ -32,6 +32,7 @@ import '../../features/nodedex/services/trait_engine.dart';
 import '../../features/nodedex/widgets/sigil_painter.dart';
 import '../../features/nodes/node_display_name_resolver.dart';
 import '../../models/mesh_models.dart';
+import '../../core/constants.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/sip_providers.dart';
 import '../../services/haptic_service.dart';
@@ -40,6 +41,7 @@ import '../../services/protocol/sip/sip_discovery.dart';
 import '../../services/protocol/sip/sip_dm.dart';
 import '../../services/protocol/sip/sip_handshake.dart';
 import '../../utils/snackbar.dart';
+import '../mrrp_harness/mrrp_harness_home_screen.dart';
 import 'sip_dm_screen.dart';
 
 /// SIP Hub — discover nearby Socialmesh peers, handshake, and chat.
@@ -226,6 +228,13 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     );
   }
 
+  void _openHarness() {
+    ref.read(hapticServiceProvider).trigger(HapticType.light);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const MrrpHarnessHomeScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -300,6 +309,9 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
               if (value == 'counters') {
                 _showCounters(); // lint-allow: hardcoded-string
               }
+              if (value == 'harness') {
+                _openHarness(); // lint-allow: hardcoded-string
+              }
             },
             itemBuilder: (context) => [
               PopupMenuItem(
@@ -325,6 +337,16 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
                   visualDensity: VisualDensity.compact,
                 ),
               ),
+              if (AppFeatureFlags.isMrrpHarnessEnabled)
+                PopupMenuItem(
+                  value: 'harness', // lint-allow: hardcoded-string
+                  child: ListTile(
+                    leading: const Icon(Icons.hub),
+                    title: Text(l10n.mrrpHarnessDrawerLabel),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
             ],
           ),
         ],

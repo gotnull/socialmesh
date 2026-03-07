@@ -12881,6 +12881,10 @@
     "@nodedexDeviceTitle": {
         "description": "Title for the node management screen"
     },
+    "nodedexMrrpServicesTitle": "MRRP Services",
+    "@nodedexMrrpServicesTitle": {
+        "description": "Title for the MRRP services section on the NodeDex detail screen."
+    },
     "nodedexDiscoveryTitle": "Discovery",
     "@nodedexDiscoveryTitle": {
         "description": "Title for the node management screen"
@@ -40601,5 +40605,659 @@
                 "example": "Node 1A2B"
             }
         }
+    },
+
+    "mrrpHarnessTitle": "Protocol Harness",
+    "@mrrpHarnessTitle": {
+        "description": "Title for the MRRP protocol harness home screen."
+    },
+    "mrrpHarnessDrawerLabel": "Protocol Harness",
+    "@mrrpHarnessDrawerLabel": {
+        "description": "Drawer label for the MRRP protocol harness."
+    },
+    "mrrpHarnessStatusSip": "SIP",
+    "@mrrpHarnessStatusSip": {
+        "description": "Label for SIP enabled/disabled status on harness home."
+    },
+    "mrrpHarnessStatusMrrp": "MRRP",
+    "@mrrpHarnessStatusMrrp": {
+        "description": "Label for MRRP enabled/disabled status on harness home."
+    },
+    "mrrpHarnessStatusEnabled": "Enabled",
+    "@mrrpHarnessStatusEnabled": {
+        "description": "Status text when a protocol feature is enabled."
+    },
+    "mrrpHarnessStatusDisabled": "Disabled",
+    "@mrrpHarnessStatusDisabled": {
+        "description": "Status text when a protocol feature is disabled."
+    },
+    "mrrpHarnessRadioState": "Radio",
+    "@mrrpHarnessRadioState": {
+        "description": "Label for connected radio state on harness home."
+    },
+    "mrrpHarnessRadioConnected": "Connected",
+    "@mrrpHarnessRadioConnected": {
+        "description": "Status text when a radio is connected."
+    },
+    "mrrpHarnessRadioDisconnected": "Disconnected",
+    "@mrrpHarnessRadioDisconnected": {
+        "description": "Status text when no radio is connected."
+    },
+    "mrrpHarnessChannel": "Channel",
+    "@mrrpHarnessChannel": {
+        "description": "Label for current channel summary on harness home."
+    },
+    "mrrpHarnessChannelNone": "No channel",
+    "@mrrpHarnessChannelNone": {
+        "description": "Shown when no channel is available."
+    },
+    "mrrpHarnessSipPeers": "SIP Peers",
+    "@mrrpHarnessSipPeers": {
+        "description": "Label for active SIP peer count on harness home."
+    },
+    "mrrpHarnessMrrpServices": "MRRP Services",
+    "@mrrpHarnessMrrpServices": {
+        "description": "Label for active MRRP services count on harness home."
+    },
+    "mrrpHarnessBudget": "Budget",
+    "@mrrpHarnessBudget": {
+        "description": "Label for budget usage snapshot on harness home."
+    },
+    "mrrpHarnessBudgetValue": "{remaining}/{capacity} bytes",
+    "@mrrpHarnessBudgetValue": {
+        "description": "Budget usage display showing remaining vs capacity.",
+        "placeholders": {
+            "remaining": {
+                "type": "int",
+                "example": "812"
+            },
+            "capacity": {
+                "type": "int",
+                "example": "1024"
+            }
+        }
+    },
+    "mrrpHarnessScanPeers": "Scan for Peers",
+    "@mrrpHarnessScanPeers": {
+        "description": "Quick action button to scan for SIP peers."
+    },
+    "mrrpHarnessBrowseServices": "Browse Services",
+    "@mrrpHarnessBrowseServices": {
+        "description": "Quick action button to browse MRRP services."
+    },
+    "mrrpHarnessOpenComposer": "Open Composer",
+    "@mrrpHarnessOpenComposer": {
+        "description": "Quick action button to open the request composer."
+    },
+    "mrrpHarnessOpenTraffic": "Traffic Console",
+    "@mrrpHarnessOpenTraffic": {
+        "description": "Quick action button to open the traffic console."
+    },
+    "mrrpHarnessSectionStatus": "Protocol Status",
+    "@mrrpHarnessSectionStatus": {
+        "description": "Section header for protocol status items on harness home."
+    },
+    "mrrpHarnessSectionActions": "Quick Actions",
+    "@mrrpHarnessSectionActions": {
+        "description": "Section header for quick action buttons on harness home."
+    },
+    "mrrpHarnessPeerInspectorTitle": "Peer Inspector",
+    "@mrrpHarnessPeerInspectorTitle": {
+        "description": "Title for the live peer inspector screen."
+    },
+    "mrrpHarnessPeerServices": "{count} {count, plural, =1{service} other{services}}",
+    "@mrrpHarnessPeerServices": {
+        "description": "Service count badge on a peer tile.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "example": "3"
+            }
+        }
+    },
+    "mrrpHarnessPeerLastAdvert": "Last advert: {time}",
+    "@mrrpHarnessPeerLastAdvert": {
+        "description": "Timestamp of last SERVICE_ADVERT from a peer.",
+        "placeholders": {
+            "time": {
+                "type": "String",
+                "example": "2m ago"
+            }
+        }
+    },
+    "mrrpHarnessRefreshDirectory": "Refresh Directory",
+    "@mrrpHarnessRefreshDirectory": {
+        "description": "Button to trigger SERVICE_DIR_REQ to refresh a peer's service directory."
+    },
+    "mrrpHarnessServiceBrowserTitle": "Service Browser",
+    "@mrrpHarnessServiceBrowserTitle": {
+        "description": "Title for the service directory browser screen."
+    },
+    "mrrpHarnessServiceVersion": "v{major}.{minor}",
+    "@mrrpHarnessServiceVersion": {
+        "description": "Version display for a service descriptor.",
+        "placeholders": {
+            "major": {
+                "type": "int",
+                "example": "1"
+            },
+            "minor": {
+                "type": "int",
+                "example": "0"
+            }
+        }
+    },
+    "mrrpHarnessServiceFlags": "Flags: {flags}",
+    "@mrrpHarnessServiceFlags": {
+        "description": "Decoded service flags for a service descriptor.",
+        "placeholders": {
+            "flags": {
+                "type": "String",
+                "example": "request, response, handshake"
+            }
+        }
+    },
+    "mrrpHarnessRawHex": "Raw hex",
+    "@mrrpHarnessRawHex": {
+        "description": "Label for expanding raw hex view of a descriptor."
+    },
+    "mrrpHarnessComposerTitle": "Request Composer",
+    "@mrrpHarnessComposerTitle": {
+        "description": "Title for the request composer screen."
+    },
+    "mrrpHarnessSelectPeer": "Select peer",
+    "@mrrpHarnessSelectPeer": {
+        "description": "Hint for peer selection in the request composer."
+    },
+    "mrrpHarnessSelectService": "Select service",
+    "@mrrpHarnessSelectService": {
+        "description": "Hint for service selection in the request composer."
+    },
+    "mrrpHarnessSelectAction": "Select action",
+    "@mrrpHarnessSelectAction": {
+        "description": "Hint for action selection in the request composer."
+    },
+    "mrrpHarnessPayloadPreset": "Payload preset",
+    "@mrrpHarnessPayloadPreset": {
+        "description": "Label for payload preset selector."
+    },
+    "mrrpHarnessPayloadRawHex": "Raw hex payload",
+    "@mrrpHarnessPayloadRawHex": {
+        "description": "Label for raw hex payload editor."
+    },
+    "mrrpHarnessRequestTtl": "Request TTL",
+    "@mrrpHarnessRequestTtl": {
+        "description": "Label for request TTL selector."
+    },
+    "mrrpHarnessEncodedSize": "{size} bytes encoded",
+    "@mrrpHarnessEncodedSize": {
+        "description": "Shows the encoded byte size of the request.",
+        "placeholders": {
+            "size": {
+                "type": "int",
+                "example": "52"
+            }
+        }
+    },
+    "mrrpHarnessSend": "Send",
+    "@mrrpHarnessSend": {
+        "description": "Send button label in the request composer."
+    },
+    "mrrpHarnessResponseTitle": "Response",
+    "@mrrpHarnessResponseTitle": {
+        "description": "Title for the response viewer screen."
+    },
+    "mrrpHarnessResponsePending": "Waiting for response…",
+    "@mrrpHarnessResponsePending": {
+        "description": "Shown while waiting for a response."
+    },
+    "mrrpHarnessResponseTimeout": "Request timed out",
+    "@mrrpHarnessResponseTimeout": {
+        "description": "Shown when a request times out."
+    },
+    "mrrpHarnessResponseStatus": "Status: {status}",
+    "@mrrpHarnessResponseStatus": {
+        "description": "Response status code display.",
+        "placeholders": {
+            "status": {
+                "type": "String",
+                "example": "OK (0)"
+            }
+        }
+    },
+    "mrrpHarnessResponseLatency": "Latency: {ms}ms",
+    "@mrrpHarnessResponseLatency": {
+        "description": "Response round-trip latency display.",
+        "placeholders": {
+            "ms": {
+                "type": "int",
+                "example": "1200"
+            }
+        }
+    },
+    "mrrpHarnessResponseDuplicate": "Duplicate response",
+    "@mrrpHarnessResponseDuplicate": {
+        "description": "Marker when a response was deduplicated."
+    },
+    "mrrpHarnessResponseCached": "Cached response",
+    "@mrrpHarnessResponseCached": {
+        "description": "Marker when a response was from cache."
+    },
+    "mrrpHarnessSimLabTitle": "Simulated Peer Lab",
+    "@mrrpHarnessSimLabTitle": {
+        "description": "Title for the simulated peer lab screen."
+    },
+    "mrrpHarnessSimCreate": "Create Simulated Peer",
+    "@mrrpHarnessSimCreate": {
+        "description": "Button to create a new simulated peer."
+    },
+    "mrrpHarnessSimBadge": "SIM",
+    "@mrrpHarnessSimBadge": {
+        "description": "Badge shown on simulated peers in the peer inspector."
+    },
+    "mrrpHarnessSimResponseMode": "Response mode",
+    "@mrrpHarnessSimResponseMode": {
+        "description": "Label for response mode selector on simulated peer."
+    },
+    "mrrpHarnessSimModeNormal": "Normal",
+    "@mrrpHarnessSimModeNormal": {
+        "description": "Normal response mode for simulated peer."
+    },
+    "mrrpHarnessSimModeDelayed": "Delayed",
+    "@mrrpHarnessSimModeDelayed": {
+        "description": "Delayed response mode for simulated peer."
+    },
+    "mrrpHarnessSimModeError": "Error",
+    "@mrrpHarnessSimModeError": {
+        "description": "Error response mode for simulated peer."
+    },
+    "mrrpHarnessSimModeTimeout": "Timeout",
+    "@mrrpHarnessSimModeTimeout": {
+        "description": "Timeout response mode for simulated peer."
+    },
+    "mrrpHarnessSimModeDuplicate": "Duplicate",
+    "@mrrpHarnessSimModeDuplicate": {
+        "description": "Duplicate response mode for simulated peer."
+    },
+    "mrrpHarnessSimModeMalformed": "Malformed",
+    "@mrrpHarnessSimModeMalformed": {
+        "description": "Malformed response mode for simulated peer."
+    },
+    "mrrpHarnessSimMaxPeers": "Maximum 4 simulated peers",
+    "@mrrpHarnessSimMaxPeers": {
+        "description": "Warning when max simulated peers reached."
+    },
+    "mrrpHarnessSimDeleteConfirm": "Delete simulated peer?",
+    "@mrrpHarnessSimDeleteConfirm": {
+        "description": "Confirmation dialog for deleting a simulated peer."
+    },
+    "mrrpHarnessSimServices": "Services",
+    "@mrrpHarnessSimServices": {
+        "description": "Label for service selection on simulated peer configuration."
+    },
+    "mrrpHarnessSimDelay": "Delay (seconds)",
+    "@mrrpHarnessSimDelay": {
+        "description": "Label for delay duration input on simulated peer."
+    },
+    "mrrpHarnessSimErrorCode": "Error status code",
+    "@mrrpHarnessSimErrorCode": {
+        "description": "Label for error status code selector on simulated peer."
+    },
+    "mrrpHarnessTrafficTitle": "Traffic Console",
+    "@mrrpHarnessTrafficTitle": {
+        "description": "Title for the traffic console screen."
+    },
+    "mrrpHarnessTrafficEmpty": "No MRRP traffic yet",
+    "@mrrpHarnessTrafficEmpty": {
+        "description": "Shown when no MRRP events have been recorded."
+    },
+    "mrrpHarnessTrafficEmptyDescription": "MRRP events will appear here as traffic flows.",
+    "@mrrpHarnessTrafficEmptyDescription": {
+        "description": "Description for empty traffic console."
+    },
+    "mrrpHarnessTrafficFilterPeer": "Filter by peer",
+    "@mrrpHarnessTrafficFilterPeer": {
+        "description": "Filter label for peer in traffic console."
+    },
+    "mrrpHarnessTrafficFilterType": "Filter by type",
+    "@mrrpHarnessTrafficFilterType": {
+        "description": "Filter label for message type in traffic console."
+    },
+    "mrrpHarnessTrafficFilterService": "Filter by service",
+    "@mrrpHarnessTrafficFilterService": {
+        "description": "Filter label for service in traffic console."
+    },
+    "mrrpHarnessTrafficCopy": "Copy event",
+    "@mrrpHarnessTrafficCopy": {
+        "description": "Action to copy a traffic event to clipboard."
+    },
+    "mrrpHarnessTrafficExport": "Export events",
+    "@mrrpHarnessTrafficExport": {
+        "description": "Action to export all traffic events."
+    },
+    "mrrpHarnessTrafficDirection": "{direction}",
+    "@mrrpHarnessTrafficDirection": {
+        "description": "Direction indicator (TX or RX) on a traffic event.",
+        "placeholders": {
+            "direction": {
+                "type": "String",
+                "example": "TX"
+            }
+        }
+    },
+    "mrrpHarnessBudgetTitle": "Budget & Timing",
+    "@mrrpHarnessBudgetTitle": {
+        "description": "Title for the budget/timing panel screen."
+    },
+    "mrrpHarnessBudgetRemaining": "Remaining budget",
+    "@mrrpHarnessBudgetRemaining": {
+        "description": "Label for remaining byte budget."
+    },
+    "mrrpHarnessBudgetBlocked": "Sends blocked",
+    "@mrrpHarnessBudgetBlocked": {
+        "description": "Label for sends blocked by budget counter."
+    },
+    "mrrpHarnessBudgetDedupHits": "Dedup hits",
+    "@mrrpHarnessBudgetDedupHits": {
+        "description": "Label for duplicate suppression hits counter."
+    },
+    "mrrpHarnessBudgetTimeouts": "Timeouts",
+    "@mrrpHarnessBudgetTimeouts": {
+        "description": "Label for timeout counters."
+    },
+    "mrrpHarnessBudgetAdvertCadence": "Advert cadence",
+    "@mrrpHarnessBudgetAdvertCadence": {
+        "description": "Label for SERVICE_ADVERT cadence timing."
+    },
+    "mrrpHarnessBudgetLatency": "Latency",
+    "@mrrpHarnessBudgetLatency": {
+        "description": "Label for response latency metrics."
+    },
+    "mrrpHarnessNoPeers": "No MRRP peers discovered",
+    "@mrrpHarnessNoPeers": {
+        "description": "Empty state headline for peer inspector."
+    },
+    "mrrpHarnessNoPeersDescription": "MRRP-capable peers will appear here when discovered.",
+    "@mrrpHarnessNoPeersDescription": {
+        "description": "Empty state description for peer inspector."
+    },
+    "mrrpHarnessNoServices": "No services",
+    "@mrrpHarnessNoServices": {
+        "description": "Shown when a peer has no advertised services."
+    },
+    "mrrpHarnessTestRequest": "Test Request",
+    "@mrrpHarnessTestRequest": {
+        "description": "Button to issue a test REQUEST to a peer."
+    },
+    "mrrpHarnessOpenSimLab": "Simulated Peers",
+    "@mrrpHarnessOpenSimLab": {
+        "description": "Quick action button to open the simulated peer lab."
+    },
+    "mrrpHarnessOpenFixtures": "Fixture Replay",
+    "@mrrpHarnessOpenFixtures": {
+        "description": "Quick action button to open fixture replay panel."
+    },
+    "mrrpHarnessFixtureTitle": "Fixture Replay",
+    "@mrrpHarnessFixtureTitle": {
+        "description": "Title of the fixture replay screen."
+    },
+    "mrrpHarnessFixtureVectors": "Test Vectors",
+    "@mrrpHarnessFixtureVectors": {
+        "description": "Section header for valid test vector fixtures."
+    },
+    "mrrpHarnessFixtureFuzz": "Fuzz Cases",
+    "@mrrpHarnessFixtureFuzz": {
+        "description": "Section header for malformed/fuzz test case fixtures."
+    },
+    "mrrpHarnessFixtureReplay": "Replay",
+    "@mrrpHarnessFixtureReplay": {
+        "description": "Button label to replay a single fixture."
+    },
+    "mrrpHarnessFixtureReplayAll": "Replay All",
+    "@mrrpHarnessFixtureReplayAll": {
+        "description": "Button label to replay all fixtures in sequence."
+    },
+    "mrrpHarnessFixturePass": "PASS",
+    "@mrrpHarnessFixturePass": {
+        "description": "Label shown when a fixture replay matches expected values."
+    },
+    "mrrpHarnessFixtureFail": "FAIL",
+    "@mrrpHarnessFixtureFail": {
+        "description": "Label shown when a fixture replay does not match expected values."
+    },
+    "mrrpHarnessFixtureDecodeNull": "Decode returned null",
+    "@mrrpHarnessFixtureDecodeNull": {
+        "description": "Label shown when codec decode returns null for a valid test vector."
+    },
+    "mrrpHarnessFixtureDecodeOk": "Decode OK",
+    "@mrrpHarnessFixtureDecodeOk": {
+        "description": "Label shown when codec decode succeeds."
+    },
+    "mrrpHarnessFixtureExpected": "Expected",
+    "@mrrpHarnessFixtureExpected": {
+        "description": "Label prefix for expected value in field comparison."
+    },
+    "mrrpHarnessFixtureActual": "Actual",
+    "@mrrpHarnessFixtureActual": {
+        "description": "Label prefix for actual decoded value in field comparison."
+    },
+    "mrrpHarnessFixtureSummary": "{passed}/{total} passed",
+    "@mrrpHarnessFixtureSummary": {
+        "description": "Summary line after batch replay showing pass count.",
+        "placeholders": {
+            "passed": {
+                "type": "int",
+                "example": "7"
+            },
+            "total": {
+                "type": "int",
+                "example": "7"
+            }
+        }
+    },
+    "mrrpHarnessFixtureBytes": "{count} bytes",
+    "@mrrpHarnessFixtureBytes": {
+        "description": "Shows the byte length of a fixture vector.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "example": "20"
+            }
+        }
+    },
+    "mrrpHarnessFixtureFieldsMatch": "{matched}/{total} fields match",
+    "@mrrpHarnessFixtureFieldsMatch": {
+        "description": "Shows how many decoded fields match expected values.",
+        "placeholders": {
+            "matched": {
+                "type": "int",
+                "example": "7"
+            },
+            "total": {
+                "type": "int",
+                "example": "7"
+            }
+        }
+    },
+    "mrrpHarnessFixtureRejected": "Rejected (expected)",
+    "@mrrpHarnessFixtureRejected": {
+        "description": "Label for fuzz case that was correctly rejected by decoder."
+    },
+    "mrrpHarnessFixtureNotRejected": "Not rejected (unexpected)",
+    "@mrrpHarnessFixtureNotRejected": {
+        "description": "Label for fuzz case that was unexpectedly accepted by decoder."
+    },
+    "mrrpHarnessFixtureEmpty": "No fixtures available",
+    "@mrrpHarnessFixtureEmpty": {
+        "description": "Empty state when no fixture data is loaded."
+    },
+    "mrrpHarnessOpenQaRunner": "QA Scenarios",
+    "@mrrpHarnessOpenQaRunner": {
+        "description": "Button label to open the QA scenario runner."
+    },
+    "mrrpHarnessQaTitle": "QA Scenario Runner",
+    "@mrrpHarnessQaTitle": {
+        "description": "Title for the QA scenario runner screen."
+    },
+    "mrrpHarnessQaScenarios": "Scenarios",
+    "@mrrpHarnessQaScenarios": {
+        "description": "Section header for the list of QA scenarios."
+    },
+    "mrrpHarnessQaRunAll": "Run All",
+    "@mrrpHarnessQaRunAll": {
+        "description": "Tooltip for the run-all-scenarios button."
+    },
+    "mrrpHarnessQaSteps": "{count} steps",
+    "@mrrpHarnessQaSteps": {
+        "description": "Step count label for a QA scenario.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "mrrpHarnessQaRunScenario": "Run",
+    "@mrrpHarnessQaRunScenario": {
+        "description": "Button label to run a single scenario."
+    },
+    "mrrpHarnessQaStepPass": "PASS",
+    "@mrrpHarnessQaStepPass": {
+        "description": "Step result label: passed."
+    },
+    "mrrpHarnessQaStepFail": "FAIL",
+    "@mrrpHarnessQaStepFail": {
+        "description": "Step result label: failed."
+    },
+    "mrrpHarnessQaStepPending": "Pending",
+    "@mrrpHarnessQaStepPending": {
+        "description": "Step result label: not yet executed."
+    },
+    "mrrpHarnessQaScenarioPass": "PASSED",
+    "@mrrpHarnessQaScenarioPass": {
+        "description": "Scenario result label: all steps passed."
+    },
+    "mrrpHarnessQaScenarioFail": "FAILED",
+    "@mrrpHarnessQaScenarioFail": {
+        "description": "Scenario result label: one or more steps failed."
+    },
+    "mrrpHarnessQaSummary": "{passed}/{total} scenarios passed",
+    "@mrrpHarnessQaSummary": {
+        "description": "Summary of QA run results.",
+        "placeholders": {
+            "passed": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "mrrpHarnessQaEmpty": "No scenarios defined",
+    "@mrrpHarnessQaEmpty": {
+        "description": "Empty state when no QA scenarios are available."
+    },
+    "mrrpHarnessQaRunning": "Running...",
+    "@mrrpHarnessQaRunning": {
+        "description": "Label shown while a scenario is executing."
+    },
+    "mrrpHarnessQaExpected": "Expected",
+    "@mrrpHarnessQaExpected": {
+        "description": "Label for expected outcome in a QA step."
+    },
+    "mrrpHarnessQaActual": "Actual",
+    "@mrrpHarnessQaActual": {
+        "description": "Label for actual outcome in a QA step."
+    },
+    "mrrpHarnessCountersSectionTraffic": "Traffic Counters",
+    "@mrrpHarnessCountersSectionTraffic": {
+        "description": "Section header for traffic counters in budget panel."
+    },
+    "mrrpHarnessCountersSectionDedup": "Dedup & Cache",
+    "@mrrpHarnessCountersSectionDedup": {
+        "description": "Section header for dedup counters in budget panel."
+    },
+    "mrrpHarnessCountersSectionErrors": "Errors & Rejections",
+    "@mrrpHarnessCountersSectionErrors": {
+        "description": "Section header for error counters in budget panel."
+    },
+    "mrrpHarnessCountersSectionHarness": "Harness Activity",
+    "@mrrpHarnessCountersSectionHarness": {
+        "description": "Section header for harness activity counters."
+    },
+    "mrrpHarnessCountersReqSent": "Requests Sent",
+    "@mrrpHarnessCountersReqSent": {
+        "description": "Counter label: total requests sent."
+    },
+    "mrrpHarnessCountersReqRecv": "Requests Received",
+    "@mrrpHarnessCountersReqRecv": {
+        "description": "Counter label: total requests received."
+    },
+    "mrrpHarnessCountersRespSent": "Responses Sent",
+    "@mrrpHarnessCountersRespSent": {
+        "description": "Counter label: total responses sent."
+    },
+    "mrrpHarnessCountersRespRecv": "Responses Received",
+    "@mrrpHarnessCountersRespRecv": {
+        "description": "Counter label: total responses received."
+    },
+    "mrrpHarnessCountersDirReqSent": "Dir Requests Sent",
+    "@mrrpHarnessCountersDirReqSent": {
+        "description": "Counter label: service directory requests sent."
+    },
+    "mrrpHarnessCountersDirReqRecv": "Dir Requests Received",
+    "@mrrpHarnessCountersDirReqRecv": {
+        "description": "Counter label: service directory requests received."
+    },
+    "mrrpHarnessCountersDirRespSent": "Dir Responses Sent",
+    "@mrrpHarnessCountersDirRespSent": {
+        "description": "Counter label: service directory responses sent."
+    },
+    "mrrpHarnessCountersDirRespRecv": "Dir Responses Received",
+    "@mrrpHarnessCountersDirRespRecv": {
+        "description": "Counter label: service directory responses received."
+    },
+    "mrrpHarnessCountersDupReq": "Duplicate Requests Ignored",
+    "@mrrpHarnessCountersDupReq": {
+        "description": "Counter label: duplicate requests ignored."
+    },
+    "mrrpHarnessCountersDupResp": "Duplicate Responses Ignored",
+    "@mrrpHarnessCountersDupResp": {
+        "description": "Counter label: duplicate responses ignored."
+    },
+    "mrrpHarnessCountersCachedResp": "Cached Responses Served",
+    "@mrrpHarnessCountersCachedResp": {
+        "description": "Counter label: cached responses served."
+    },
+    "mrrpHarnessCountersReqTimeouts": "Request Timeouts",
+    "@mrrpHarnessCountersReqTimeouts": {
+        "description": "Counter label: request timeouts."
+    },
+    "mrrpHarnessCountersRespTimeouts": "Response Timeouts",
+    "@mrrpHarnessCountersRespTimeouts": {
+        "description": "Counter label: response timeouts."
+    },
+    "mrrpHarnessCountersCancellations": "Cancellations",
+    "@mrrpHarnessCountersCancellations": {
+        "description": "Counter label: request cancellations."
+    },
+    "mrrpHarnessCountersErrSent": "Errors Sent",
+    "@mrrpHarnessCountersErrSent": {
+        "description": "Counter label: errors sent."
+    },
+    "mrrpHarnessCountersErrRecv": "Errors Received",
+    "@mrrpHarnessCountersErrRecv": {
+        "description": "Counter label: errors received."
+    },
+    "mrrpHarnessCountersPayloadReject": "Payload Too Large",
+    "@mrrpHarnessCountersPayloadReject": {
+        "description": "Counter label: payload too large rejections."
+    },
+    "mrrpHarnessCountersHarnessActions": "Harness Actions",
+    "@mrrpHarnessCountersHarnessActions": {
+        "description": "Counter label: harness actions performed."
+    },
+    "mrrpHarnessCountersSimFaults": "Simulated Faults",
+    "@mrrpHarnessCountersSimFaults": {
+        "description": "Counter label: simulated faults injected."
     }
 }
