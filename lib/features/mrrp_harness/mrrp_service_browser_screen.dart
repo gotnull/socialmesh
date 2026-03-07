@@ -112,26 +112,37 @@ class MrrpServiceBrowserScreen extends ConsumerWidget {
               final svc = services[index];
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
-                child: Material(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  child: InkWell(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
                     borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    onTap: () {
-                      ref.read(hapticServiceProvider).trigger(HapticType.light);
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => MrrpRequestComposerScreen(
-                            initialPeerNodeId: peerId,
-                            initialServiceId: svc.descriptor.serviceId,
+                    border: Border.all(
+                      color: context.border.withValues(alpha: 0.5),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      onTap: () {
+                        ref
+                            .read(hapticServiceProvider)
+                            .trigger(HapticType.light);
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => MrrpRequestComposerScreen(
+                              initialPeerNodeId: peerId,
+                              initialServiceId: svc.descriptor.serviceId,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    child: MrrpServiceTile(
-                      descriptor: svc.descriptor,
-                      cachedAt: svc.cachedAt,
-                      isExpired: svc.isExpired,
+                        );
+                      },
+                      child: MrrpServiceTile(
+                        descriptor: svc.descriptor,
+                        cachedAt: svc.cachedAt,
+                        isExpired: svc.isExpired,
+                      ),
                     ),
                   ),
                 ),

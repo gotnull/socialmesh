@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/animations.dart';
 import '../../../services/protocol/sip/mrrp_advert_engine.dart';
 
 import 'mrrp_service_tile.dart';
@@ -38,19 +39,36 @@ class MrrpPeerTile extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-      child: Material(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
+          border: Border.all(
+            color: context.border.withValues(alpha: 0.5),
+            width: 0.5,
+          ),
+        ),
         child: Column(
           children: [
-            InkWell(
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
+            BouncyTap(
               onTap: onToggleExpand,
               child: Padding(
-                padding: const EdgeInsets.all(AppTheme.spacing12),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Row(
                   children: [
-                    Icon(Icons.router, size: 24, color: context.accentColor),
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      ),
+                      child: Icon(
+                        Icons.router,
+                        size: 20,
+                        color: context.accentColor,
+                      ),
+                    ),
                     const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Column(
@@ -58,60 +76,130 @@ class MrrpPeerTile extends StatelessWidget {
                         children: [
                           Text(
                             sipPersonaHint ?? nodeHex,
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              fontFamily: AppTheme.fontFamily,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                              color: context.textPrimary,
+                            ),
                           ),
                           const SizedBox(height: AppTheme.spacing2),
                           Text(
                             l10n.mrrpHarnessPeerServices(services.length),
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: context.textSecondary),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: context.textSecondary,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    Icon(
-                      isExpanded ? Icons.expand_less : Icons.expand_more,
-                      color: context.textTertiary,
+                    AnimatedRotation(
+                      turns: isExpanded ? 0.5 : 0.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        Icons.expand_more,
+                        color: context.textTertiary,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-            if (isExpanded) ...[
-              const Divider(height: 1),
-              // Service list
-              ...services.map(
-                (svc) => MrrpServiceTile(
-                  descriptor: svc.descriptor,
-                  cachedAt: svc.cachedAt,
-                  isExpired: svc.isExpired,
-                ),
-              ),
-              // Action buttons
-              Padding(
-                padding: const EdgeInsets.all(AppTheme.spacing8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: onRefreshDirectory,
-                        icon: const Icon(Icons.refresh, size: 18),
-                        label: Text(l10n.mrrpHarnessRefreshDirectory),
-                      ),
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: Column(
+                children: [
+                  Divider(
+                    height: 1,
+                    color: context.border.withValues(alpha: 0.3),
+                  ),
+                  // Service list
+                  ...services.map(
+                    (svc) => MrrpServiceTile(
+                      descriptor: svc.descriptor,
+                      cachedAt: svc.cachedAt,
+                      isExpired: svc.isExpired,
                     ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: onTestRequest,
-                        icon: const Icon(Icons.send, size: 18),
-                        label: Text(l10n.mrrpHarnessTestRequest),
-                      ),
+                  ),
+                  // Action buttons
+                  Padding(
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: onRefreshDirectory,
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(
+                                color: context.accentColor.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius12,
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppTheme.spacing12,
+                              ),
+                            ),
+                            icon: Icon(
+                              Icons.refresh,
+                              size: 16,
+                              color: context.accentColor,
+                            ),
+                            label: Text(
+                              l10n.mrrpHarnessRefreshDirectory,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: context.accentColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.spacing8),
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: onTestRequest,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: context.accentColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius12,
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppTheme.spacing12,
+                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.send,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                            label: Text(
+                              l10n.mrrpHarnessTestRequest,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+              crossFadeState: isExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 200),
+            ),
           ],
         ),
       ),

@@ -38,70 +38,89 @@ class _MrrpServiceTileState extends State<MrrpServiceTile> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing12,
-        vertical: AppTheme.spacing4,
+        horizontal: AppTheme.spacing16,
+        vertical: AppTheme.spacing6,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                _serviceIcon(d.serviceId),
-                size: 18,
-                color: widget.isExpired
-                    ? SemanticColors.muted
-                    : context.accentColor,
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color:
+                      (widget.isExpired
+                              ? SemanticColors.muted
+                              : context.accentColor)
+                          .withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                ),
+                child: Icon(
+                  _serviceIcon(d.serviceId),
+                  size: 14,
+                  color: widget.isExpired
+                      ? SemanticColors.muted
+                      : context.accentColor,
+                ),
               ),
               const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: Text(
                   serviceName,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: widget.isExpired ? SemanticColors.muted : null,
+                    fontSize: 14,
+                    color: widget.isExpired
+                        ? SemanticColors.muted
+                        : context.textPrimary,
                   ),
                 ),
               ),
               Text(
                 l10n.mrrpHarnessServiceVersion(d.versionMajor, d.versionMinor),
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
+                style: TextStyle(
+                  fontFamily: AppTheme.fontFamily,
+                  fontSize: 12,
+                  color: context.textTertiary,
+                ),
               ),
             ],
           ),
           if (flags.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(left: 26, top: AppTheme.spacing2),
+              padding: const EdgeInsets.only(left: 36, top: AppTheme.spacing4),
               child: Wrap(
                 spacing: AppTheme.spacing4,
-                runSpacing: AppTheme.spacing2,
+                runSpacing: AppTheme.spacing4,
                 children: flags.map((f) => _FlagChip(label: f)).toList(),
               ),
             ),
           if (d.metadata.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(left: 26, top: AppTheme.spacing2),
+              padding: const EdgeInsets.only(left: 36, top: AppTheme.spacing4),
               child: Text(
                 String.fromCharCodes(d.metadata),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                style: TextStyle(
                   color: context.textTertiary,
                   fontStyle: FontStyle.italic,
+                  fontSize: 12,
                 ),
               ),
             ),
           // Raw hex toggle
           Padding(
-            padding: const EdgeInsets.only(left: 26, top: AppTheme.spacing2),
+            padding: const EdgeInsets.only(left: 36, top: AppTheme.spacing4),
             child: GestureDetector(
               // lint-allow: haptic-feedback — toggle control, not navigation action
               onTap: () => setState(() => _showRawHex = !_showRawHex),
               child: Text(
                 l10n.mrrpHarnessRawHex,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                style: TextStyle(
                   color: context.accentColor,
                   decoration: TextDecoration.underline,
+                  fontSize: 12,
                 ),
               ),
             ),
@@ -109,21 +128,29 @@ class _MrrpServiceTileState extends State<MrrpServiceTile> {
           if (_showRawHex)
             Padding(
               padding: const EdgeInsets.only(
-                left: 26,
-                top: AppTheme.spacing4,
+                left: 36,
+                top: AppTheme.spacing6,
                 bottom: AppTheme.spacing4,
               ),
               child: Container(
-                padding: const EdgeInsets.all(AppTheme.spacing8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing12,
+                  vertical: AppTheme.spacing8,
+                ),
                 decoration: BoxDecoration(
-                  color: context.surface,
-                  borderRadius: BorderRadius.circular(AppTheme.radius6),
+                  color: context.textPrimary.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  border: Border.all(
+                    color: context.border.withValues(alpha: 0.3),
+                    width: 0.5,
+                  ),
                 ),
                 child: Text(
                   _buildRawHex(d),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace', // lint-allow: hardcoded-string
+                  style: TextStyle(
+                    fontFamily: AppTheme.fontFamily,
                     color: context.textSecondary,
+                    fontSize: 11,
                   ),
                 ),
               ),
@@ -193,19 +220,23 @@ class _FlagChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing6,
-        vertical: 1,
+        horizontal: AppTheme.spacing8,
+        vertical: 3,
       ),
       decoration: BoxDecoration(
-        color: context.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radius4),
-        border: Border.all(color: context.border),
+        color: context.textPrimary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+        border: Border.all(
+          color: context.border.withValues(alpha: 0.3),
+          width: 0.5,
+        ),
       ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+        style: TextStyle(
           color: context.textSecondary,
-          fontSize: 10,
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );

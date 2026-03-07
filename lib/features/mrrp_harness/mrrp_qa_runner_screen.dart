@@ -110,7 +110,15 @@ class _MrrpQaRunnerScreenState extends ConsumerState<MrrpQaRunnerScreen>
                   color: passedCount == total
                       ? SemanticColors.success.withValues(alpha: 0.15)
                       : SemanticColors.error.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  border: Border.all(
+                    color:
+                        (passedCount == total
+                                ? SemanticColors.success
+                                : SemanticColors.error)
+                            .withValues(alpha: 0.3),
+                    width: 0.5,
+                  ),
                 ),
                 child: Text(
                   l10n.mrrpHarnessQaSummary(passedCount, total),
@@ -178,105 +186,116 @@ class _ScenarioTileState extends State<_ScenarioTile> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-      child: Material(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius8),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppTheme.radius8),
-          onTap: () => setState(() => _expanded = !_expanded),
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header row: name + pass/fail badge + run button
-                Row(
-                  children: [
-                    if (hasRun)
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          border: Border.all(
+            color: context.border.withValues(alpha: 0.5),
+            width: 0.5,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.spacing12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header row: name + pass/fail badge + run button
+                  Row(
+                    children: [
+                      if (hasRun)
+                        Icon(
+                          s.passed ? Icons.check_circle : Icons.cancel,
+                          size: 20,
+                          color: s.passed
+                              ? SemanticColors.success
+                              : SemanticColors.error,
+                        )
+                      else
+                        Icon(
+                          Icons.pending_outlined,
+                          size: 20,
+                          color: context.textTertiary,
+                        ),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              s.name,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              l10n.mrrpHarnessQaSteps(s.steps.length),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: context.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (hasRun)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing8,
+                            vertical: AppTheme.spacing2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: s.passed
+                                ? SemanticColors.success.withValues(alpha: 0.15)
+                                : SemanticColors.error.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius4,
+                            ),
+                          ),
+                          child: Text(
+                            s.passed
+                                ? l10n.mrrpHarnessQaScenarioPass
+                                : l10n.mrrpHarnessQaScenarioFail,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: s.passed
+                                      ? SemanticColors.success
+                                      : SemanticColors.error,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ),
+                      const SizedBox(width: AppTheme.spacing8),
+                      TextButton(
+                        onPressed: widget.onRun,
+                        child: Text(l10n.mrrpHarnessQaRunScenario),
+                      ),
                       Icon(
-                        s.passed ? Icons.check_circle : Icons.cancel,
-                        size: 20,
-                        color: s.passed
-                            ? SemanticColors.success
-                            : SemanticColors.error,
-                      )
-                    else
-                      Icon(
-                        Icons.pending_outlined,
-                        size: 20,
+                        _expanded ? Icons.expand_less : Icons.expand_more,
+                        size: 18,
                         color: context.textTertiary,
                       ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Expanded(
+                    ],
+                  ),
+
+                  // Expanded step details
+                  if (_expanded)
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 28,
+                        top: AppTheme.spacing8,
+                      ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            s.name,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          Text(
-                            l10n.mrrpHarnessQaSteps(s.steps.length),
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: context.textSecondary),
-                          ),
+                          for (var i = 0; i < s.steps.length; i++)
+                            _StepRow(step: s.steps[i], index: i + 1),
                         ],
                       ),
                     ),
-                    if (hasRun)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spacing8,
-                          vertical: AppTheme.spacing2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: s.passed
-                              ? SemanticColors.success.withValues(alpha: 0.15)
-                              : SemanticColors.error.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(AppTheme.radius4),
-                        ),
-                        child: Text(
-                          s.passed
-                              ? l10n.mrrpHarnessQaScenarioPass
-                              : l10n.mrrpHarnessQaScenarioFail,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: s.passed
-                                    ? SemanticColors.success
-                                    : SemanticColors.error,
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                      ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    TextButton(
-                      onPressed: widget.onRun,
-                      child: Text(l10n.mrrpHarnessQaRunScenario),
-                    ),
-                    Icon(
-                      _expanded ? Icons.expand_less : Icons.expand_more,
-                      size: 18,
-                      color: context.textTertiary,
-                    ),
-                  ],
-                ),
-
-                // Expanded step details
-                if (_expanded)
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 28,
-                      top: AppTheme.spacing8,
-                    ),
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < s.steps.length; i++)
-                          _StepRow(step: s.steps[i], index: i + 1),
-                      ],
-                    ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

@@ -8,6 +8,7 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
+import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/section_header.dart';
 import '../../providers/app_providers.dart';
@@ -80,58 +81,85 @@ class _MrrpHarnessHomeScreenState extends ConsumerState<MrrpHarnessHomeScreen> {
           ),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _StatusRow(
-                  icon: Icons.wifi_tethering,
-                  label: l10n.mrrpHarnessStatusSip,
-                  value: sipEnabled
-                      ? l10n.mrrpHarnessStatusEnabled
-                      : l10n.mrrpHarnessStatusDisabled,
-                  valueColor: sipEnabled
-                      ? SemanticColors.success
-                      : SemanticColors.error,
-                ),
-                _StatusRow(
-                  icon: Icons.hub,
-                  label: l10n.mrrpHarnessStatusMrrp,
-                  value: mrrpEnabled
-                      ? l10n.mrrpHarnessStatusEnabled
-                      : l10n.mrrpHarnessStatusDisabled,
-                  valueColor: mrrpEnabled
-                      ? SemanticColors.success
-                      : SemanticColors.error,
-                ),
-                _StatusRow(
-                  icon: Icons.bluetooth,
-                  label: l10n.mrrpHarnessRadioState,
-                  value: isConnected
-                      ? l10n.mrrpHarnessRadioConnected
-                      : l10n.mrrpHarnessRadioDisconnected,
-                  valueColor: isConnected
-                      ? SemanticColors.success
-                      : SemanticColors.muted,
-                ),
-                _StatusRow(
-                  icon: Icons.people,
-                  label: l10n.mrrpHarnessSipPeers,
-                  value:
-                      '$peerCount ($remotePeerCount MRRP)', // lint-allow: hardcoded-string
-                ),
-                _StatusRow(
-                  icon: Icons.extension,
-                  label: l10n.mrrpHarnessMrrpServices,
-                  value: '$serviceCount',
-                ),
-                _StatusRow(
-                  icon: Icons.speed,
-                  label: l10n.mrrpHarnessBudget,
-                  value: l10n.mrrpHarnessBudgetValue(
-                    rateLimiter.remainingBytes,
-                    rateLimiter.capacity,
+            sliver: SliverToBoxAdapter(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(AppTheme.radius16),
+                  border: Border.all(
+                    color: context.border.withValues(alpha: 0.5),
+                    width: 0.5,
                   ),
                 ),
-              ]),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
+                child: Column(
+                  children: [
+                    _StatusRow(
+                      icon: Icons.wifi_tethering,
+                      label: l10n.mrrpHarnessStatusSip,
+                      value: sipEnabled
+                          ? l10n.mrrpHarnessStatusEnabled
+                          : l10n.mrrpHarnessStatusDisabled,
+                      valueColor: sipEnabled
+                          ? SemanticColors.success
+                          : SemanticColors.error,
+                    ),
+                    _StatusRow(
+                      icon: Icons.hub,
+                      label: l10n.mrrpHarnessStatusMrrp,
+                      value: mrrpEnabled
+                          ? l10n.mrrpHarnessStatusEnabled
+                          : l10n.mrrpHarnessStatusDisabled,
+                      valueColor: mrrpEnabled
+                          ? SemanticColors.success
+                          : SemanticColors.error,
+                    ),
+                    _StatusRow(
+                      icon: Icons.bluetooth,
+                      label: l10n.mrrpHarnessRadioState,
+                      value: isConnected
+                          ? l10n.mrrpHarnessRadioConnected
+                          : l10n.mrrpHarnessRadioDisconnected,
+                      valueColor: isConnected
+                          ? SemanticColors.success
+                          : SemanticColors.muted,
+                    ),
+                    _StatusRow(
+                      icon: Icons.people,
+                      label: l10n.mrrpHarnessSipPeers,
+                      value:
+                          '$peerCount ($remotePeerCount MRRP)', // lint-allow: hardcoded-string
+                    ),
+                    _StatusRow(
+                      icon: Icons.extension,
+                      label: l10n.mrrpHarnessMrrpServices,
+                      value: '$serviceCount',
+                    ),
+                    const SizedBox(height: AppTheme.spacing8),
+                    // Budget gauge
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(AppTheme.radius4),
+                      child: LinearProgressIndicator(
+                        value: 1.0 - rateLimiter.usageFraction,
+                        backgroundColor: context.surface,
+                        color: rateLimiter.isBudgetHigh
+                            ? SemanticColors.error
+                            : SemanticColors.success,
+                        minHeight: 4,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing6),
+                    _StatusRow(
+                      icon: Icons.speed,
+                      label: l10n.mrrpHarnessBudget,
+                      value: l10n.mrrpHarnessBudgetValue(
+                        rateLimiter.remainingBytes,
+                        rateLimiter.capacity,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
 
@@ -265,18 +293,25 @@ class _StatusRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing6),
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing4),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: context.textSecondary),
+          Icon(icon, size: 16, color: context.textTertiary),
           const SizedBox(width: AppTheme.spacing12),
-          Text(label, style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+          ),
           const Spacer(),
           Text(
             value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            style: TextStyle(
               color: valueColor ?? context.textPrimary,
               fontWeight: FontWeight.w600,
+              fontFamily: AppTheme.fontFamily,
+              fontSize: 13,
             ),
           ),
         ],
@@ -285,7 +320,7 @@ class _StatusRow extends StatelessWidget {
   }
 }
 
-/// A quick action button.
+/// A quick action button with bouncy tap and card styling.
 class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -299,31 +334,43 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: context.card,
-      borderRadius: BorderRadius.circular(AppTheme.radius12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.spacing16,
-            vertical: AppTheme.spacing14,
+    return BouncyTap(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          border: Border.all(
+            color: context.border.withValues(alpha: 0.5),
+            width: 0.5,
           ),
-          child: Row(
-            children: [
-              Icon(icon, size: 22, color: context.accentColor),
-              const SizedBox(width: AppTheme.spacing12),
-              Text(
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing16,
+          vertical: AppTheme.spacing14,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: context.accentColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+              ),
+              child: Icon(icon, size: 18, color: context.accentColor),
+            ),
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: Text(
                 label,
                 style: Theme.of(
                   context,
                 ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
               ),
-              const Spacer(),
-              Icon(Icons.chevron_right, size: 20, color: context.textTertiary),
-            ],
-          ),
+            ),
+            Icon(Icons.chevron_right, size: 20, color: context.textTertiary),
+          ],
         ),
       ),
     );

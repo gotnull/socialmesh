@@ -9,6 +9,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/mrrp_providers.dart';
 import '../../providers/sip_providers.dart';
@@ -96,6 +98,37 @@ class _MrrpRequestComposerScreenState
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold(
         title: l10n.mrrpHarnessComposerTitle,
+        bottomNavigationBar: BottomActionBar(
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: canSend ? _onSend : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.accentColor,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: context.border.withValues(alpha: 0.3),
+                disabledForegroundColor: context.textTertiary,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppTheme.spacing12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                ),
+              ),
+              icon: _sending
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.send, size: 18),
+              label: Text(l10n.mrrpHarnessSend),
+            ),
+          ),
+        ),
         slivers: [
           SliverPadding(
             padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -154,58 +187,101 @@ class _MrrpRequestComposerScreenState
                 const SizedBox(height: AppTheme.spacing16),
 
                 // --- Payload editor ---
-                Text(
-                  l10n.mrrpHarnessPayloadRawHex,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: AppTheme.spacing4),
+                _SectionLabel(label: l10n.mrrpHarnessPayloadRawHex),
+                const SizedBox(height: AppTheme.spacing8),
                 TextField(
                   controller: _payloadController,
                   maxLength: MrrpConstants.mrrpMaxPayload * 2,
                   decoration: InputDecoration(
                     hintText: 'DEADBEEF', // lint-allow: hardcoded-string
-                    border: const OutlineInputBorder(),
+                    hintStyle: TextStyle(
+                      color: context.textSecondary.withAlpha(128),
+                    ),
                     errorText:
                         payloadBytes == null &&
                             _payloadController.text.isNotEmpty
                         ? 'Invalid hex' // lint-allow: hardcoded-string
                         : null,
+                    filled: true,
+                    fillColor: context.background,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      borderSide: BorderSide(
+                        color: context.accentColor,
+                        width: 2,
+                      ),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      borderSide: const BorderSide(color: SemanticColors.error),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      borderSide: const BorderSide(
+                        color: SemanticColors.error,
+                        width: 2,
+                      ),
+                    ),
+                    counterText: '',
                   ),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontFamily: 'monospace', // lint-allow: hardcoded-string
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontFamily: AppTheme.fontFamily,
+                    color: context.textPrimary,
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
-                const SizedBox(height: AppTheme.spacing8),
+                const SizedBox(height: AppTheme.spacing16),
 
                 // --- TTL selector ---
-                Text(
-                  l10n.mrrpHarnessRequestTtl,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: AppTheme.spacing4),
-                SegmentedButton<int>(
-                  segments: const [
-                    ButtonSegment(
-                      value: 5,
-                      label: Text('5s'),
-                    ), // lint-allow: hardcoded-string
-                    ButtonSegment(
-                      value: 10,
-                      label: Text('10s'),
-                    ), // lint-allow: hardcoded-string
-                    ButtonSegment(
-                      value: 15,
-                      label: Text('15s'),
-                    ), // lint-allow: hardcoded-string
-                    ButtonSegment(
-                      value: 30,
-                      label: Text('30s'),
-                    ), // lint-allow: hardcoded-string
-                  ],
-                  selected: {_ttlSeconds},
-                  onSelectionChanged: (v) =>
-                      setState(() => _ttlSeconds = v.first),
+                _SectionLabel(label: l10n.mrrpHarnessRequestTtl),
+                const SizedBox(height: AppTheme.spacing8),
+                Wrap(
+                  spacing: AppTheme.spacing8,
+                  runSpacing: AppTheme.spacing8,
+                  children: [5, 10, 15, 30].map((seconds) {
+                    final isSelected = seconds == _ttlSeconds;
+                    return BouncyTap(
+                      onTap: () => setState(() => _ttlSeconds = seconds),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? context.accentColor.withValues(alpha: 0.15)
+                              : context.card,
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius20,
+                          ),
+                          border: Border.all(
+                            color: isSelected
+                                ? context.accentColor
+                                : context.border.withValues(alpha: 0.5),
+                            width: isSelected ? 2 : 1,
+                          ),
+                        ),
+                        child: Text(
+                          '${seconds}s', // lint-allow: hardcoded-string
+                          style: TextStyle(
+                            color: isSelected
+                                ? context.accentColor
+                                : context.textSecondary,
+                            fontSize: 14,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
                 const SizedBox(height: AppTheme.spacing16),
 
@@ -216,26 +292,6 @@ class _MrrpRequestComposerScreenState
                     color: exceedsMax
                         ? SemanticColors.error
                         : context.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing24),
-
-                // --- Send button ---
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: canSend ? _onSend : null,
-                    icon: _sending
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.send),
-                    label: Text(l10n.mrrpHarnessSend),
                   ),
                 ),
               ]),
@@ -253,22 +309,45 @@ class _MrrpRequestComposerScreenState
     required List<DropdownMenuItem<T>> items,
     required ValueChanged<T?> onChanged,
   }) {
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacing12,
-          vertical: AppTheme.spacing4,
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing12,
+        vertical: AppTheme.spacing4,
+      ),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(
+          color: context.border.withValues(alpha: 0.5),
+          width: 0.5,
         ),
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          value: value,
-          isExpanded: true,
-          items: items,
-          onChanged: onChanged,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+          ),
+          DropdownButtonHideUnderline(
+            child: DropdownButton<T>(
+              value: value,
+              isExpanded: true,
+              isDense: true,
+              items: items,
+              onChanged: onChanged,
+              dropdownColor: context.card,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: context.textPrimary,
+              ),
+              iconEnabledColor: context.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -422,4 +501,22 @@ class _ActionEntry {
   final int id;
   final String name;
   const _ActionEntry(this.id, this.name);
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label.toUpperCase(),
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+        color: context.textTertiary,
+        letterSpacing: 1.2,
+      ),
+    );
+  }
 }

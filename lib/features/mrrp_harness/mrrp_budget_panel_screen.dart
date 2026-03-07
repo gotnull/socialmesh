@@ -37,27 +37,45 @@ class MrrpBudgetPanelScreen extends ConsumerWidget {
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Budget gauge
-              Padding(
-                padding: const EdgeInsets.symmetric(
+              Container(
+                margin: const EdgeInsets.symmetric(
                   vertical: AppTheme.spacing12,
+                ),
+                padding: const EdgeInsets.all(AppTheme.spacing16),
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(AppTheme.radius16),
+                  border: Border.all(
+                    color: context.border.withValues(alpha: 0.5),
+                    width: 0.5,
+                  ),
                 ),
                 child: Column(
                   children: [
-                    LinearProgressIndicator(
-                      value: 1.0 - rateLimiter.usageFraction,
-                      backgroundColor: context.surface,
-                      color: rateLimiter.isBudgetHigh
-                          ? SemanticColors.error
-                          : SemanticColors.success,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(AppTheme.radius4),
+                      child: LinearProgressIndicator(
+                        value: 1.0 - rateLimiter.usageFraction,
+                        minHeight: 6,
+                        backgroundColor: context.textPrimary.withValues(
+                          alpha: 0.06,
+                        ),
+                        color: rateLimiter.isBudgetHigh
+                            ? SemanticColors.error
+                            : SemanticColors.success,
+                      ),
                     ),
-                    const SizedBox(height: AppTheme.spacing8),
+                    const SizedBox(height: AppTheme.spacing12),
                     Text(
                       l10n.mrrpHarnessBudgetValue(
                         rateLimiter.remainingBytes,
                         rateLimiter.capacity,
                       ),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      style: TextStyle(
+                        fontSize: 15,
                         fontWeight: FontWeight.w600,
+                        fontFamily: AppTheme.fontFamily,
+                        color: context.textPrimary,
                       ),
                     ),
                   ],
@@ -287,11 +305,17 @@ class MrrpBudgetPanelScreen extends ConsumerWidget {
       rows.add(
         Padding(
           padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-          child: Material(
-            color: context.card,
-            borderRadius: BorderRadius.circular(AppTheme.radius8),
+          child: Container(
+            decoration: BoxDecoration(
+              color: context.card,
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
+              border: Border.all(
+                color: context.border.withValues(alpha: 0.5),
+                width: 0.5,
+              ),
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(AppTheme.spacing8),
+              padding: const EdgeInsets.all(AppTheme.spacing12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -364,9 +388,11 @@ class _CounterRow extends StatelessWidget {
           const Spacer(),
           Text(
             value,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            style: TextStyle(
+              fontSize: 13,
               fontWeight: FontWeight.w600,
-              fontFamily: 'monospace', // lint-allow: hardcoded-string
+              fontFamily: AppTheme.fontFamily,
+              color: context.textPrimary,
             ),
           ),
         ],

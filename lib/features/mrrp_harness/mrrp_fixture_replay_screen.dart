@@ -764,7 +764,15 @@ class _MrrpFixtureReplayScreenState
                   color: passed == total
                       ? SemanticColors.success.withValues(alpha: 0.15)
                       : SemanticColors.error.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  border: Border.all(
+                    color:
+                        (passed == total
+                                ? SemanticColors.success
+                                : SemanticColors.error)
+                            .withValues(alpha: 0.3),
+                    width: 0.5,
+                  ),
                 ),
                 child: Text(
                   l10n.mrrpHarnessFixtureSummary(passed, total),
@@ -867,49 +875,68 @@ class _UnplayedFixtureTile extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-      child: Material(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius8),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppTheme.radius8),
-          onTap: onReplay,
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing12),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.play_circle_outline,
-                  size: 20,
-                  color: context.accentColor,
-                ),
-                const SizedBox(width: AppTheme.spacing8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        l10n.mrrpHarnessFixtureBytes(byteCount),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.textSecondary,
-                        ),
-                      ),
-                    ],
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          border: Border.all(
+            color: context.border.withValues(alpha: 0.5),
+            width: 0.5,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            onTap: onReplay,
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.spacing12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    ),
+                    child: Icon(
+                      Icons.play_circle_outline,
+                      size: 18,
+                      color: context.accentColor,
+                    ),
                   ),
-                ),
-                Text(
-                  l10n.mrrpHarnessFixtureReplay,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: context.accentColor,
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(width: AppTheme.spacing8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: AppTheme.fontFamily,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          l10n.mrrpHarnessFixtureBytes(byteCount),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: context.textSecondary),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  Text(
+                    l10n.mrrpHarnessFixtureReplay,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: context.accentColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

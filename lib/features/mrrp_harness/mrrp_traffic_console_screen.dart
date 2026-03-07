@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/status_filter_chip.dart';
 import '../../providers/mrrp_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/protocol/sip/mrrp_types.dart';
@@ -78,27 +79,29 @@ class _MrrpTrafficConsoleScreenState
                 spacing: AppTheme.spacing8,
                 runSpacing: AppTheme.spacing4,
                 children: [
-                  _FilterChip(
-                    label: l10n.mrrpHarnessTrafficFilterType,
-                    isActive: _filterType != null,
+                  StatusFilterChip(
+                    label: _filterType != null
+                        ? _filterType!.name
+                        : l10n.mrrpHarnessTrafficFilterType,
+                    icon: Icons.swap_vert,
+                    isSelected: _filterType != null,
                     onTap: _cycleTypeFilter,
-                    displayValue: _filterType?.name,
                   ),
-                  _FilterChip(
-                    label: l10n.mrrpHarnessTrafficFilterPeer,
-                    isActive: _filterPeerId != null,
-                    onTap: () => setState(() => _filterPeerId = null),
-                    displayValue: _filterPeerId != null
+                  StatusFilterChip(
+                    label: _filterPeerId != null
                         ? '0x${_filterPeerId!.toRadixString(16).padLeft(8, '0').toUpperCase()}'
-                        : null,
+                        : l10n.mrrpHarnessTrafficFilterPeer,
+                    icon: Icons.person_outline,
+                    isSelected: _filterPeerId != null,
+                    onTap: () => setState(() => _filterPeerId = null),
                   ),
-                  _FilterChip(
-                    label: l10n.mrrpHarnessTrafficFilterService,
-                    isActive: _filterServiceId != null,
-                    onTap: () => setState(() => _filterServiceId = null),
-                    displayValue: _filterServiceId != null
+                  StatusFilterChip(
+                    label: _filterServiceId != null
                         ? MrrpServiceId.nameOf(_filterServiceId!)
-                        : null,
+                        : l10n.mrrpHarnessTrafficFilterService,
+                    icon: Icons.extension_outlined,
+                    isSelected: _filterServiceId != null,
+                    onTap: () => setState(() => _filterServiceId = null),
                   ),
                 ],
               ),
@@ -171,30 +174,5 @@ class _MrrpTrafficConsoleScreenState
         _filterType = null;
       }
     });
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-  final String? displayValue;
-
-  const _FilterChip({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-    this.displayValue,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ActionChip(
-      label: Text(displayValue ?? label),
-      avatar: isActive
-          ? Icon(Icons.check, size: 16, color: context.accentColor)
-          : null,
-      onPressed: onTap,
-    );
   }
 }

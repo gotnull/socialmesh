@@ -74,100 +74,113 @@ class _MrrpFixtureResultTileState extends State<MrrpFixtureResultTile> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-      child: Material(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius8),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppTheme.radius8),
-          onTap: r.fields.isNotEmpty
-              ? () => setState(() => _expanded = !_expanded)
-              : null,
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header row: name + pass/fail badge
-                Row(
-                  children: [
-                    Icon(
-                      passed ? Icons.check_circle : Icons.cancel,
-                      size: 20,
-                      color: passed
-                          ? SemanticColors.success
-                          : SemanticColors.error,
-                    ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Expanded(
-                      child: Text(
-                        r.name,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.spacing8,
-                        vertical: AppTheme.spacing2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: passed
-                            ? SemanticColors.success.withValues(alpha: 0.15)
-                            : SemanticColors.error.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(AppTheme.radius4),
-                      ),
-                      child: Text(
-                        passed
-                            ? l10n.mrrpHarnessFixturePass
-                            : l10n.mrrpHarnessFixtureFail,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: passed
-                              ? SemanticColors.success
-                              : SemanticColors.error,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    if (r.fields.isNotEmpty) ...[
-                      const SizedBox(width: AppTheme.spacing4),
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          border: Border.all(
+            color: context.border.withValues(alpha: 0.5),
+            width: 0.5,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            onTap: r.fields.isNotEmpty
+                ? () => setState(() => _expanded = !_expanded)
+                : null,
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.spacing12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header row: name + pass/fail badge
+                  Row(
+                    children: [
                       Icon(
-                        _expanded ? Icons.expand_less : Icons.expand_more,
-                        size: 18,
-                        color: context.textTertiary,
+                        passed ? Icons.check_circle : Icons.cancel,
+                        size: 20,
+                        color: passed
+                            ? SemanticColors.success
+                            : SemanticColors.error,
                       ),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Expanded(
+                        child: Text(
+                          r.name,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: AppTheme.fontFamily,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing8,
+                          vertical: AppTheme.spacing2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: passed
+                              ? SemanticColors.success.withValues(alpha: 0.15)
+                              : SemanticColors.error.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(AppTheme.radius4),
+                        ),
+                        child: Text(
+                          passed
+                              ? l10n.mrrpHarnessFixturePass
+                              : l10n.mrrpHarnessFixtureFail,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: passed
+                                    ? SemanticColors.success
+                                    : SemanticColors.error,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                      ),
+                      if (r.fields.isNotEmpty) ...[
+                        const SizedBox(width: AppTheme.spacing4),
+                        Icon(
+                          _expanded ? Icons.expand_less : Icons.expand_more,
+                          size: 18,
+                          color: context.textTertiary,
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-
-                // Subtitle: decode status + field match count
-                Padding(
-                  padding: const EdgeInsets.only(
-                    left: 28,
-                    top: AppTheme.spacing4,
                   ),
-                  child: Text(
-                    _subtitleText(l10n, r),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.textSecondary,
-                    ),
-                  ),
-                ),
 
-                // Expanded field comparisons
-                if (_expanded && r.fields.isNotEmpty)
+                  // Subtitle: decode status + field match count
                   Padding(
                     padding: const EdgeInsets.only(
                       left: 28,
-                      top: AppTheme.spacing8,
+                      top: AppTheme.spacing4,
                     ),
-                    child: Column(
-                      children: r.fields
-                          .map((f) => _FieldRow(field: f))
-                          .toList(),
+                    child: Text(
+                      _subtitleText(l10n, r),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.textSecondary,
+                      ),
                     ),
                   ),
-              ],
+
+                  // Expanded field comparisons
+                  if (_expanded && r.fields.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 28,
+                        top: AppTheme.spacing8,
+                      ),
+                      child: Column(
+                        children: r.fields
+                            .map((f) => _FieldRow(field: f))
+                            .toList(),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -213,9 +226,12 @@ class _FieldRow extends StatelessWidget {
               children: [
                 Text(
                   field.name,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppTheme.fontFamily,
+                    color: context.textPrimary,
+                  ),
                 ),
                 if (!field.matches)
                   Text(
